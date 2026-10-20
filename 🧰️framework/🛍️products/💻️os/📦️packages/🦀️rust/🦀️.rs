@@ -54,7 +54,7 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 include!("📥️mounts/🌱️wp1-leaves/🦀️.rs");
 
 
-use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+pub use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
 pub use semio_framework_os_vcs as os_vcs;
 

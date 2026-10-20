@@ -12,7 +12,7 @@ test("dashboard controls install missing modes once and retain stale installed c
   const oracle = new Ajv({ strict: true }).compile(schema);
   expect(oracle(fixture.launch), JSON.stringify(oracle.errors)).toBe(true);
   expect(oracle([{ ...fixture.launch[0], installed: "yes" }])).toBe(false);
-  const file = new URL("../../../📦️installation/🟦️.ts", import.meta.url), source = readFileSync(file, "utf8"), tree = ts.createSourceFile(file.pathname, source, ts.ScriptTarget.Latest, true);
+  const file = new URL("../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts", import.meta.url), source = readFileSync(file, "utf8"), tree = ts.createSourceFile(file.pathname, source, ts.ScriptTarget.Latest, true);
   const names = ["mayRunStale", "rebuildDashboard", "launchDashboard"], functions = tree.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && names.includes(node.name?.text ?? ""));
   expect(functions).toHaveLength(names.length);
   const compiled = ts.transpileModule(functions.map(node => node.getText(tree).replace(/^export\s+/u, "")).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true });
@@ -21,12 +21,13 @@ test("dashboard controls install missing modes once and retain stale installed c
   try { for (const row of fixture.launch) {
     const original = new AbortController(), control = Object.freeze({ signal: original.signal }), preparation = Object.freeze({ signal: AbortSignal.any([original.signal]) }), invocation = Object.freeze({ fixture: "received" }), options = Object.freeze({ mode: row.mode, control, invocation, workspace: process.cwd() });
     const events: string[] = [], failures = new Error(row.name), dashboardPackageRoot = resolve(import.meta.dir, "../../../📦️packages/🦀️rust");
-    let leased = false, checks = 0, rebuilds = 0, launches = 0;
+    let leased = false, checks = 0, rebuilds = 0, launches = 0, timers = 0, retiredTimers = 0;
     const ports = {
       process: { execPath: process.execPath, env: { SEMIO_BUILD_MODE: "ambient-other-mode" } }, join, dashboardPackageRoot, AbortController, AbortSignal, setTimeout, clearTimeout,
       console: { log: () => {} },
       readBuildMode: (mode: string) => { expect(mode).toBe(row.mode); return mode; },
       compilerAdmissionBudgetV1: (value: unknown) => { expect<unknown>([control, preparation]).toContain(value); return value === preparation ? row.preparationBudget : row.originalBudget; },
+      startOwnedCommandTimeoutV1: (budget:number,expire:()=>void) => { expect(budget).toBe(row.originalBudget); expect(typeof expire).toBe("function"); timers++; return()=>{retiredTimers++;}; },
       buildPreparationBudgetMs: () => 21600000,
       withRequestedIssuedResourceControlV1: async (value: unknown, budget: number, body: (phase: unknown) => Promise<void>) => { expect(value).toBe(control); expect(budget).toBe(21600000); events.push("phase"); try { await body(preparation); } finally { events.push("phase-settled"); } },
       scriptResourceProcessEnvironmentV1: (value: unknown, env: object) => { expect(value).toBe(preparation); return { ...env, preparation }; },
@@ -62,7 +63,7 @@ test("dashboard controls install missing modes once and retain stale installed c
     expect(launches).toBe(row.outcome.startsWith("rebuild-") ? 0 : 1);
     expect(events.filter(event => event === "reader")).toHaveLength(launches); expect(events.filter(event => event === "released")).toHaveLength(launches);
     if (rebuilds && launches) expect(events.indexOf("rebuild")).toBeLessThan(events.indexOf("reader"));
-    expect(leased).toBe(false);
+    expect(leased).toBe(false); expect([timers,retiredTimers]).toEqual([launches,launches]);
   } } finally { database.close(); }
   console.log(`[DEBUG] Actual launch and rebuild bodies matched ${fixture.launch.length} shared installation vectors and independent SQLite/Ajv decisions; no native process was launched`);
 });

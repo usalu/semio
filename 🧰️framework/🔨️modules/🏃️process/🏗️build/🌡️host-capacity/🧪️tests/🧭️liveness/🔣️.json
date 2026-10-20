@@ -1,0 +1,248 @@
+{
+  "staleMilliseconds": 60000,
+  "cases": [
+    {
+      "id": "current-fresh",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": true
+    },
+    {
+      "id": "prior-boot-reused-pid",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 1000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "stale-heartbeat",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 939999
+      },
+      "expected": false
+    },
+    {
+      "id": "dead-pid",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": false,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "boot-tolerance-boundary",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 680000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": true
+    },
+    {
+      "id": "beyond-boot-tolerance",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 679999
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "heartbeat-boundary",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 940000
+      },
+      "expected": true
+    },
+    {
+      "id": "invalid-grant",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 0,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "different-grant-id",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "othergrant1234567",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "invalid-id-path",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "../outside",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000
+      },
+      "expected": false
+    },
+    {
+      "id": "observation-authority",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 1,
+          "cpu": 1,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 12345,
+          "bootAtMs": 800000
+        },
+        "expectedId": "abcdefgh12345678",
+        "pidAlive": true,
+        "nowMs": 1000000,
+        "bootAtMs": 800000,
+        "modifiedAtMs": 999000,
+        "authority": true
+      },
+      "expected": false
+    }
+  ]
+}

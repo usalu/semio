@@ -80,7 +80,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -124,7 +125,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -168,7 +170,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       },
       "executor": "repo:script",
@@ -212,7 +215,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       },
       "executor": "repo:script",
@@ -256,7 +260,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
         }
       },
       "executor": "repo:script",
@@ -294,7 +299,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -316,7 +322,12 @@
         "command": "bun ./📜️script.ts backup-restore-drill",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "residency-watch": {
       "metadata": {
@@ -334,7 +345,8 @@
                 "valueFlag": "--hub"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
         }
       },
       "executor": "repo:script",
@@ -345,7 +357,8 @@
         "command": "bun ./📜️script.ts residency-watch",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "continuous": true
     },
     "boot-watch": {
       "executor": "repo:script",
@@ -356,7 +369,13 @@
         "command": "bun ./📜️script.ts boot-watch",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
     },
     "hub-freshness": {
       "metadata": {
@@ -374,7 +393,8 @@
                 "valueFlag": "--hub"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -423,7 +443,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -441,6 +462,11 @@
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts shutdown-drill",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "docker-image-build": {
@@ -453,6 +479,11 @@
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-build",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "docker-image-check": {
@@ -462,6 +493,11 @@
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-check",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     }
   }

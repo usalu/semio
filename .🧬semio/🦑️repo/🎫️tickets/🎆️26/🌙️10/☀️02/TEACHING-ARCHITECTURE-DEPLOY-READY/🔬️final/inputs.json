@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "status": "held-candidate-unrun",
+  "finalCases": 51,
+  "boundaryCases": 9,
+  "files": [
+    {
+      "path": "📤️fresh/modes.ts",
+      "bytes": 1134,
+      "sha256": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163"
+    },
+    {
+      "path": "🔬️final/archive.py",
+      "bytes": 11749,
+      "sha256": "223a01f98e325159dab4d9b0cd4d73d9c841362065e036e9378a8dd2e6ad1a31"
+    },
+    {
+      "path": "🔬️final/boundary-entry.ts",
+      "bytes": 2934,
+      "sha256": "df2cc6b4338f6d316edb78cc2e46c5856b54219a9e3498f9ca6dab40be39d7a9"
+    },
+    {
+      "path": "🔬️final/boundary.cases.json",
+      "bytes": 648,
+      "sha256": "fdee9ba9badabf59101e8dc1d3a1f55e59c96f6bcf3f3a533b089420fa0b0508"
+    },
+    {
+      "path": "🔬️final/boundary.schema.json",
+      "bytes": 2419,
+      "sha256": "b003632fc8b8090d549e5b6461199550d9d0365f7e4e269a712848fbbbb3e8a4"
+    },
+    {
+      "path": "🔬️final/boundary.ts",
+      "bytes": 2010,
+      "sha256": "a770e4a182d0d9e55163dbbd6f9524664e4cab31ebeb194d29336416f4ed5fcc"
+    },
+    {
+      "path": "🔬️final/cases.json",
+      "bytes": 5733,
+      "sha256": "efe526a29e9c7d7cf4bd014aea26b43ac847af47d1ade43aaae99771f06888a6"
+    },
+    {
+      "path": "🔬️final/core.ts",
+      "bytes": 19438,
+      "sha256": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5"
+    },
+    {
+      "path": "🔬️final/entry.ts",
+      "bytes": 5674,
+      "sha256": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85"
+    },
+    {
+      "path": "🔬️final/integration.ts",
+      "bytes": 9104,
+      "sha256": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25"
+    },
+    {
+      "path": "🔬️final/oracle.py",
+      "bytes": 7863,
+      "sha256": "da0b38abf53c6ae0c5f1cb511f0a4eae4a50a3abb44a68208fc81161c2601bcd"
+    },
+    {
+      "path": "🔬️final/schema.json",
+      "bytes": 16300,
+      "sha256": "a03c634ca158dd45f9a60d31d7a12c3a81191336763d47283a224d74af134c75"
+    },
+    {
+      "path": "🔬️final/tests.ts",
+      "bytes": 10566,
+      "sha256": "95f657b7a85f71c84fc887db2c5ef5b9b2a44f145d80bf47f11423fee64edbfb"
+    }
+  ]
+}

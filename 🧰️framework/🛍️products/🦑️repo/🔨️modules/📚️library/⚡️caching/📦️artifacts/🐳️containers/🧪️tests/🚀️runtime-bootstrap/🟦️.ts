@@ -67,7 +67,26 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
   assert.deepEqual(Bun.JSONC.parse(configSource), require("jsonc-parser").parse(configSource));
   assert.deepEqual(config.postCreateCommand, fixture.postCreateCommand);
-  assert.ok(dockerfile.includes("> /usr/local/bin/semio") && dockerfile.includes('exec bun run --cwd /workspaces/semio dashboard "$@"'), "Native hosts have no `semio` on PATH (`semio …` is `bun run dashboard …`); the container image puts a shim on PATH so the shorthand works literally there");
+  assert.equal(dockerfile.includes('exec bun run --cwd /workspaces/semio dashboard'), false, "The container has no second dashboard launcher");
+  const bootstrap = readFileSync(join(workspace, fixture.postCreateCommand[1]), "utf8"), ownedBootstrap = bootstrap.match(/^repo_bootstrap\(\) \{[\s\S]*?^\}/m)?.[0];
+  assert.ok(ownedBootstrap, "The cold lifecycle uses the owned native installer boundary");
+  const bootstrapStages = ["installer", "help", "setup", "debugger", "browser"];
+  for (const row of fixture.bootstrapCases) {
+    const cutoff = row.failAt === null ? bootstrapStages.length : bootstrapStages.indexOf(row.failAt) + 1;
+    assert.deepEqual(row.expectedCalls, require("lodash").take(bootstrapStages, cutoff), row.id);
+    assert.equal(row.expectedStatus, row.failAt === null ? 0 : 1, row.id);
+    if (process.platform === "win32") continue;
+    const recording = [
+      "set -eu", "exec 3>&1", "native_available=$NATIVE_INITIAL",
+      "log() { :; }",
+      "bun() { [ \"$*\" = \"repo run repo-mcp:install\" ] || return 92; printf 'installer\\n' >&3; [ \"$FAIL_AT\" != installer ] || return 9; native_available=1; }",
+      "repo() { [ \"$native_available\" = 1 ] || return 91; case \"$*\" in --help) phase=help;; 'run workspace:setup') phase=setup;; 'run @semio-tech/repo-developer-tools:setup-debugger') phase=debugger;; *) return 93;; esac; printf '%s\\n' \"$phase\" >&3; [ \"$FAIL_AT\" != \"$phase\" ]; }",
+      "ensure_browser_libraries() { printf 'browser\\n' >&3; }", ownedBootstrap, "repo_bootstrap",
+    ].join("\n");
+    const answer = spawnSync("bash", ["-c", recording], { cwd: workspace, env: { ...process.env, REPO_ROOT: workspace, LOCAL_BIN: "/owned-native-test-bin", SKIP_REPO_BOOTSTRAP: "0", NATIVE_INITIAL: row.nativePresent ? "1" : "0", FAIL_AT: row.failAt ?? "" }, encoding: "utf8", timeout: 5000 });
+    assert.equal(answer.status, row.expectedStatus, row.id + ": " + answer.stderr);
+    assert.deepEqual(answer.stdout.trim().split("\n"), row.expectedCalls, row.id);
+  }
   const nestedMounts = (mounts: readonly Readonly<Record<string, string>>[]) => mounts.filter((mount) => mount.type === "volume" && mount.target!.startsWith("${containerWorkspaceFolder}/"));
   const nested = (mounts: readonly Readonly<Record<string, string>>[]) => nestedMounts(mounts).map((mount) => mount.target!.replace("${containerWorkspaceFolder}", config.workspaceFolder));
   const parsedMounts = config.mounts.map((mount) => Object.fromEntries(mount.split(",").map((pair) => [pair.slice(0, pair.indexOf("=")), pair.slice(pair.indexOf("=") + 1)])));
@@ -92,7 +111,7 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   assert.deepEqual(config.onCreateCommand, ["sudo", "chown", `${config.remoteUser}:${config.remoteUser}`, ...volumes], "Docker creates a named volume nested in the checkout owned by root; the remote user must own it before postCreateCommand installs into it");
   for (const path of fixture.retiredScripts) assert.equal(existsSync(join(workspace, path)), false, `Retired lifecycle bypass: ${path}`);
   const rootTargets = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets;
-  const target = rootTargets[fixture.postCreateCommand[3].split(":")[1]];
+  const target = rootTargets[fixture.setupTarget];
   assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
   assert.ok(target.options.command.endsWith("📜️script.ts setup"));
   assert.deepEqual(target.dependsOn, fixture.postCreateDependsOn, "Container creation must reach every zero-touch prerequisite: language environments, generated sources, agent instruction aliases and both MCP binaries");

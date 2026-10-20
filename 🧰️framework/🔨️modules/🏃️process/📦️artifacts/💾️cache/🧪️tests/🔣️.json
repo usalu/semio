@@ -3049,6 +3049,198 @@
         }
       ],
       "accepted": false
+    },
+    {
+      "name": "Exact Owned Inactive Capsule Four Guards",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf22\u0000ar\u0000tDIR\u0000n{root}/m\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/m",
+          "type": "DIR"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "name": "Exact Owned Inactive Reset Intent Five Guards",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf22\u0000ar\u0000tDIR\u0000n{root}/m\u0000\nf23\u0000ar\u0000tREG\u0000n{root}/.reset.json\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/m",
+          "type": "DIR"
+        },
+        {
+          "fd": 23,
+          "path": "{root}/.reset.json",
+          "type": "REG"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "name": "Over Bound Six Own Guards",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf22\u0000ar\u0000tDIR\u0000n{root}/m\u0000\nf23\u0000ar\u0000tREG\u0000n{root}/.reset.json\u0000\nf24\u0000ar\u0000tREG\u0000n{root}/foreign\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/m",
+          "type": "DIR"
+        },
+        {
+          "fd": 23,
+          "path": "{root}/.reset.json",
+          "type": "REG"
+        },
+        {
+          "fd": 24,
+          "path": "{root}/foreign",
+          "type": "REG"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Exact Inactive Capsule 4 Guards",
+      "guards": [
+        {
+          "fd": 20,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 23,
+          "path": "{root}/m",
+          "type": "DIR"
+        }
+      ],
+      "stdout": "p71\u0000cfixture\u0000\nf20\u0000ar\u0000tDIR\u0000n{root}\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf22\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf23\u0000ar\u0000tDIR\u0000n{root}/m\u0000\n",
+      "accepted": true
+    },
+    {
+      "name": "Exact Inactive Capsule 5 Guards",
+      "guards": [
+        {
+          "fd": 20,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 23,
+          "path": "{root}/m",
+          "type": "DIR"
+        },
+        {
+          "fd": 24,
+          "path": "{root}/.reset.json",
+          "type": "REG"
+        }
+      ],
+      "stdout": "p71\u0000cfixture\u0000\nf20\u0000ar\u0000tDIR\u0000n{root}\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf22\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf23\u0000ar\u0000tDIR\u0000n{root}/m\u0000\nf24\u0000ar\u0000tREG\u0000n{root}/.reset.json\u0000\n",
+      "accepted": true
+    },
+    {
+      "name": "Exact Inactive Capsule 6 Guards",
+      "guards": [
+        {
+          "fd": 20,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 21,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        },
+        {
+          "fd": 22,
+          "path": "{root}/image.json",
+          "type": "REG"
+        },
+        {
+          "fd": 23,
+          "path": "{root}/m",
+          "type": "DIR"
+        },
+        {
+          "fd": 24,
+          "path": "{root}/.reset.json",
+          "type": "REG"
+        },
+        {
+          "fd": 25,
+          "path": "{root}/extra",
+          "type": "REG"
+        }
+      ],
+      "stdout": "p71\u0000cfixture\u0000\nf20\u0000ar\u0000tDIR\u0000n{root}\u0000\nf21\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\nf22\u0000ar\u0000tREG\u0000n{root}/image.json\u0000\nf23\u0000ar\u0000tDIR\u0000n{root}/m\u0000\nf24\u0000ar\u0000tREG\u0000n{root}/.reset.json\u0000\nf25\u0000ar\u0000tREG\u0000n{root}/extra\u0000\n",
+      "accepted": false
     }
   ],
   "selectedCensus": [
@@ -3203,6 +3395,58 @@
       "pathSuffix": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "guardPath": false,
       "pathTruncated": true
+    }
+  ],
+  "selectedCardinality": [
+    {
+      "selection": "filesystem",
+      "guards": 0,
+      "accepted": false
+    },
+    {
+      "selection": "filesystem",
+      "guards": 3,
+      "accepted": true
+    },
+    {
+      "selection": "filesystem",
+      "guards": 4,
+      "accepted": false
+    },
+    {
+      "selection": "filesystem",
+      "guards": 5,
+      "accepted": false
+    },
+    {
+      "selection": "filesystem",
+      "guards": 6,
+      "accepted": false
+    },
+    {
+      "selection": "exact-files",
+      "guards": 0,
+      "accepted": false
+    },
+    {
+      "selection": "exact-files",
+      "guards": 3,
+      "accepted": true
+    },
+    {
+      "selection": "exact-files",
+      "guards": 4,
+      "accepted": true
+    },
+    {
+      "selection": "exact-files",
+      "guards": 5,
+      "accepted": true
+    },
+    {
+      "selection": "exact-files",
+      "guards": 6,
+      "accepted": false
     }
   ]
 }

@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "executable": "repo",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000",
+    "RUST_MIN_STACK": "134217728"
+  },
+  "preconditions": [
+    "Current-domain maintenance settles under strict descriptor and physical-lock custody.",
+    "Controls explicitly releases sole native compiler slot.",
+    "All source and manifest edits captured for canonical publication are stable."
+  ],
+  "steps": [
+    {
+      "id": "filesystem-command-laws",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-filesystem-workspace",
+        "--lib",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "expected": [
+        "Whole actual filesystem library runs, including existing save/recovery, bounded nonempty-tree management, authenticated history and worker laws.",
+        "Current authored full-library roster expects 53 laws, including retained35-law green baseline, DocumentBuffer/browser transitions and segmented history. The actual admitted test roster and whole terminal are authoritative; new laws are unrun until recorded.",
+        "Native adapter identity/race and retained outcome laws pass without a private store, source guard changes or synthetic receipt."
+      ],
+      "expectedTestCounts": {
+        "library": 53
+      }
+    },
+    {
+      "id": "filesystem-check-x86_64-pc-windows-msvc",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "check",
+        "--manifest-path",
+        "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-filesystem-workspace",
+        "--lib",
+        "--target",
+        "x86_64-pc-windows-msvc"
+      ],
+      "expected": [
+        "Actual owned Cargo check --lib succeeds with normal target provisioning; no raw Rustup, linking bypass or test-only platform skip.",
+        "This checks platform branches and types only. Actual x86_64-pc-windows-msvc runtime and filesystem semantics remain unverified."
+      ]
+    },
+    {
+      "id": "filesystem-check-x86_64-unknown-linux-gnu",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "check",
+        "--manifest-path",
+        "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-filesystem-workspace",
+        "--lib",
+        "--target",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "expected": [
+        "Actual owned Cargo check --lib succeeds with normal target provisioning; no raw Rustup, linking bypass or test-only platform skip.",
+        "This checks platform branches and types only. Actual x86_64-unknown-linux-gnu runtime and filesystem semantics remain unverified."
+      ]
+    },
+    {
+      "id": "terminal-editor-controller",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-repo-dashboard-terminal",
+        "--lib",
+        "source_",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "expected": [
+        "Nine actual editor controller laws run, including guided mutation/confirmation, descendant dirty/protected lifecycle, history navigation and worker-spawn refusal.",
+        "Browse/save/reopen/conflict/discard, disconnected worker retirement, committed save and rename after late cancellation, and uncertain post-effect failures preserving exact path/text while freezing affected clean buffers.",
+        "Root-owned per-poll32 progress bound resumes remaining work without losing committed/cancelled outcomes.",
+        "The retained-directory controller also exercises empty Enter refusal, confirmation cancellation, archive settlement with stable retained paths, and read-only reopen; no hidden empty test selection."
+      ],
+      "expectedTestCounts": {
+        "terminal": 9
+      }
+    },
+    {
+      "id": "explicit-language-choice",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-repo-dashboard-preferences",
+        "-p",
+        "semio-framework-repo-dashboard-terminal",
+        "--lib",
+        "language",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "expected": [
+        "Actual neutral language negotiation and unselected chooser state laws run.",
+        "Real preference event reopening preserves explicit language and unresolved projection remains null."
+      ],
+      "expectedTestCounts": {
+        "preferences": 9,
+        "terminal": 8
+      }
+    },
+    {
+      "id": "inferred-native-integration-owner",
+      "args": [
+        "run",
+        "@semio-tech/value-retained-clone-integration-rs:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/📋️project.json",
+      "expected": [
+        "Actual inferred cargoTargets test route runs through NativeScript and the repository owner-command transport under the incoming Original.",
+        "Four public scalar, compound, strict-child and normal-demand integration laws run; retain actual named bodies and whole terminal separately from direct Cargo matrix evidence.",
+        "Installed supervised stop/restart probes remain the cancellation evidence; this successful test route alone does not prove cancellation."
+      ],
+      "expectedTestCounts": {
+        "rust": 4
+      },
+      "status": "pending",
+      "expectedNamedTests": [
+        "scalar_output_and_selected_close_preserve_each_lifecycle",
+        "scalar_compounds_preserve_selected_close_and_single_output_custody",
+        "composite_close_quotes_its_own_child_start_before_the_child_close_protocol",
+        "retained_clone_normal_demand_generic_compounds"
+      ]
+    },
+    {
+      "id": "journey-workspace-lock",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "generate-lockfile",
+        "--manifest-path",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "precondition": "Controls releases the sole Cargo slot; exact standalone workspace has no own lock. Existing Original network policy remains authoritative.",
+      "expected": [
+        "Owned launcher uses explicit kind lock and genuine resolution writer; no --locked suppression in test compilation or synthetic registry result.",
+        "Standalone journey Cargo.lock is authored by the actual resolver; selected manifest and registry resolution retained."
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "build-skill-validation",
+      "args": [
+        "exec",
+        "--projects=workspace",
+        "--",
+        "python",
+        "/Users/ueli/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        ".agents/skills/build"
+      ],
+      "expected": [
+        "Existing skill validator exits zero through repository-owned exec on this host.",
+        "Frontmatter remains unchanged; no scaffold/script/UI metadata introduced."
+      ]
+    },
+    {
+      "id": "canonical-cold-lazy-launch",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-cold-start",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "precondition": "Actual canonical mode receipt is absent, invalid or naturally stale; otherwise refuse proof without mutating it.",
+      "expected": [
+        "Actual launchDashboard rebuilds through authored build→compile children, publishes the authoritative native installation and runs commands --check.",
+        "Same issued Original remains, actual immutable binary digest matches receipt, source freshness is current.",
+        "Second real launch runs commands --check with identical receipt inode/metadata/text and no rebuild."
+      ]
+    },
+    {
+      "id": "canonical-build-and-install",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:build",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Authored native compile and authoritative immutable dashboard installation complete.",
+        "Current source digest and exact manifest/selected-owner lock closure are valid."
+      ]
+    },
+    {
+      "id": "developer-tools-live",
+      "args": [
+        "run",
+        "@semio-tech/repo-developer-tools:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+      "testModule": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧪️tests/🟦️.ts",
+      "expected": [
+        "Existing actual test dispatcher enters bun test through runOwnedCommand with incoming Original signal, bounded300000ms and ticket artifact directory.",
+        "Record real Node Inspector attached/paused then cancellation; real Python Pdb expression42, literal Unicode arguments and exit; actual LLDB clang fixture main breakpoint/argc2/spacedargument/expression42/continue/program marker/normal target exit.",
+        "Actual native Git read-only cases run; GDB availability and skips explicitly recorded. Production native-debugger setup must verify full LLDB Python startup42 without installation on this configured host.",
+        "Terminal plan vectors in this suite are not real shell proof: actual owned shell input/output/exit and durable task receipt must come from installed-journeys PTY gate."
+      ],
+      "acceptance": "A skipped required host debugger is an unmet runtime check, not a passing LLDB/Node/Pdb execution claim.",
+      "status": "pending"
+    },
+    {
+      "id": "os-mcp-native-protocol",
+      "args": [
+        "run",
+        "@semio-tech/framework-os-mcp:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Existing actual compiled OS MCP Vitest suites run against the real native server through SDK, raw JSON-RPC and stdio hygiene cases.",
+        "Retain actual named tests, explicit skips and whole terminal separately from Source staging checks and canonical frontend routing."
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "canonical-os-mcp-stdio-probe",
+      "args": [
+        "run",
+        "@semio-tech/framework-os-mcp:test-canonical-stdio",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "status": "pending",
+      "precondition": "Registered finite test router/target and real OS build plus official repo-mcp install prerequisites; execute only after sole compiler handoff and final source review.",
+      "expected": [
+        "Actual installed repo executable matches official installation receipt, canonical profile binary and native path pin.",
+        "Genuine same Original/control drives exact dev mcp stdio os prefix through owned channel; every stdout line is valid protocol.",
+        "SDK oracle validates handshake/results; real forwarded server/discover proves native readiness beyond warming gateway responses before tools/list.",
+        "Record actual owned-tree shutdown status/signal without claiming natural EOF0; body checks and outer whole terminal remain distinct."
+      ]
+    },
+    {
+      "id": "installed-authority",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-authority",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Actual installed owner checks complete."
+      ]
+    },
+    {
+      "id": "installed-execution",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-execution",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Execution/schema/Original regressions; staged child fixtures are reported separately from actual native runtime."
+      ]
+    },
+    {
+      "id": "installed-journeys",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-journeys",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Actual installed native viewer/PTY editor browse/edit/save/reopen/conflict/discard plus lifecycle journeys.",
+        "Actual installed PTY first-language selection/cancellation/reopen uses independent portable-pty/vt100 and JSON journal observation.",
+        "Actual1MiB Unicode editor and4096-entry directory meet5000ms list/load and1000ms per-interaction visible budgets; dirty-close retention keeps disk bytes unchanged.",
+        "Guided file/folder creation, rename, exact-name removal confirmation/cancellation and retained recovery run in the real installed viewer."
+      ],
+      "expectedTestCounts": {
+        "rust": 34,
+        "ignored": 0
+      }
+    },
+    {
+      "id": "installed-load",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-load",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Actual installed PTY load covers existing16views/50ktyping/10MiB output gates; results and durations retained separately from smoke."
+      ],
+      "expectedTestCounts": {
+        "mandatory": 3,
+        "ignoredExploration": 1
+      }
+    },
+    {
+      "id": "installed-smoke",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-smoke",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Actual installed owner checks complete."
+      ]
+    },
+    {
+      "id": "cross-platform-tui-window-laws",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-windows",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Actual dashboard docking/pointer controls and exact ten TUI libraries through their owning workspace."
+      ],
+      "scope": "Source/native TUI laws; actual installed window proof belongs to installed-journeys."
+    },
+    {
+      "id": "process-deadline",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-process-deadline",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "owner": "controls",
+      "expected": [
+        "Actual process deadline and escalation tests complete under original lifetime."
+      ],
+      "expectedTestCounts": {
+        "daemon": 3,
+        "terminal": 1
+      }
+    }
+  ],
+  "prohibited": [
+    "repo dashboard",
+    "raw cargo/rustc",
+    "unowned artifact copy or installation record fabrication",
+    "parallel native compiler gates"
+  ],
+  "acceptance": "Require each whole owned command terminal, actual named-body counts and explicit skips/exclusions. This plan is an input, not runtime proof."
+}

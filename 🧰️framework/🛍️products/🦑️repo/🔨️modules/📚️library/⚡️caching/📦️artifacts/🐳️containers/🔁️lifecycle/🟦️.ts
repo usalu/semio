@@ -2,11 +2,11 @@
  * `postAttachCommand` → `bun ./📜️script.ts setup devcontainer start|attach`), replacing the retired Bash hooks with one
  * owned, testable implementation. Start: emoji font fallback, ownership of the persisted home volumes and submodules,
  * Claude Code auth storage, git `safe.directory` for the bind-mounted checkout, the SSH commit-signing agent. Attach: the
- * optional GUI tools (GitKraken Desktop + CLI, F3D), the GitKraken workspace, and the git hooks. Every external program
+ * optional F3D viewer and repository hooks. Every external program
  * runs through an injected {@link LifecycleHost} (one argv, never a shell), so each step is exercised against recording
  * hosts on any machine; failures of optional steps are reported and never block the container.
  * https://containers.dev/implementors/json_reference/#lifecycle-scripts */
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,10 +17,8 @@ export type LifecycleAnswer = Readonly<{ status: number; stdout: string; stderr:
 /** 🧩️ Everything the lifecycle touches outside plain files: programs, downloads, time and the log. */
 export type LifecycleHost = Readonly<{
   run: (command: string, args: readonly string[], options?: Readonly<{ input?: string; cwd?: string; env?: Readonly<Record<string, string>> }>) => LifecycleAnswer;
-  spawnDetached: (command: string, args: readonly string[], env: Readonly<Record<string, string>>) => void;
   download: (url: string, destination: string) => Promise<void>;
   fetchJson: (url: string) => Promise<unknown>;
-  sleep: (milliseconds: number) => Promise<void>;
   log: (line: string) => void;
 }>;
 
@@ -34,7 +32,6 @@ export function processLifecycleHost(): LifecycleHost {
       const answer = spawnSync(command, [...args], { encoding: "utf8", input: options.input, cwd: options.cwd, env: options.env ? { ...process.env, ...options.env } : process.env, shell: false });
       return { status: answer.error ? -1 : (answer.status ?? -1), stdout: answer.stdout ?? "", stderr: answer.error ? String(answer.error) : (answer.stderr ?? "") };
     },
-    spawnDetached: (command, args, env) => spawn(command, [...args], { detached: true, stdio: "ignore", env: { ...process.env, ...env } }).unref(),
     download: async (url, destination) => {
       const response = await fetch(url, { signal: AbortSignal.timeout(300_000) });
       if (!response.ok) throw new Error(`download ${url} answered ${response.status}`);
@@ -45,7 +42,6 @@ export function processLifecycleHost(): LifecycleHost {
       if (!response.ok) throw new Error(`${url} answered ${response.status}`);
       return response.json();
     },
-    sleep: (milliseconds) => new Promise((resolveSleep) => setTimeout(resolveSleep, milliseconds)),
     log: (line) => console.log(line),
   };
 }
@@ -117,7 +113,7 @@ export function configureEmojiFonts(host: LifecycleHost): boolean {
 
 //#region 🔒️Ownership
 /** 🔒️ The home directories the devcontainer persists in named volumes, which Docker creates owned by root. */
-export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".gitkraken", ".local/share/GitKrakenCLI", ".local/share/gk", ".config/F3D"] as const;
+export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".config/F3D"] as const;
 
 /** 🧭️ The submodule paths `.gitmodules` declares, from git's own configuration parser. */
 export function submodulePaths(host: LifecycleHost, workspace: string): string[] {
@@ -222,11 +218,10 @@ export function configureSshSigning(host: LifecycleHost, context: LifecycleConte
 
 //#region 📦️Tools
 /** 🧭️ The Debian/GitHub architecture names of `arch` (Node's `process.arch`) per tool, or null where the tool has no build. */
-export function toolArchitectures(arch: string): Readonly<{ debian: string | null; f3d: string | null; gk: string | null }> {
-  if (arch === "x64") return { debian: "amd64", f3d: "x86_64", gk: "amd64" };
-  if (arch === "arm64") return { debian: "arm64", f3d: "arm64", gk: "arm64" };
-  if (arch === "ia32") return { debian: null, f3d: null, gk: "386" };
-  return { debian: null, f3d: null, gk: null };
+export function toolArchitectures(arch: string): Readonly<{ debian: string | null; f3d: string | null }> {
+  if (arch === "x64") return { debian: "amd64", f3d: "x86_64" };
+  if (arch === "arm64") return { debian: "arm64", f3d: "arm64" };
+  return { debian: null, f3d: null };
 }
 
 /** 🔗️ The download URL of the first asset of a GitHub release whose name ends with `suffix`. */
@@ -252,35 +247,6 @@ async function installDebianPackage(host: LifecycleHost, url: string, name: stri
   }
 }
 
-/** 📦️ GitKraken Desktop from its Debian package, unless already on PATH. */
-export async function installGitKrakenDesktop(host: LifecycleHost, context: LifecycleContext): Promise<void> {
-  if (host.run("which", ["gitkraken"]).status === 0) return;
-  const arch = toolArchitectures(context.arch).debian;
-  if (!arch) return host.log(`⚠️  Skipping GitKraken Desktop install for unsupported architecture: ${context.arch}`);
-  mkdirSync(join(context.home, ".gitkraken"), { recursive: true });
-  host.log(await installDebianPackage(host, `https://release.gitkraken.com/linux/gitkraken-${arch}.deb`, "gitkraken") ? "GitKraken Desktop installed." : "⚠️  GitKraken Desktop install failed.");
-}
-
-/** 📦️ The GitKraken CLI `gk` from its latest GitHub release into `~/.local/bin`, unless one answers already. */
-export async function installGitKrakenCli(host: LifecycleHost, context: LifecycleContext): Promise<void> {
-  const local = join(context.home, ".local", "bin", "gk");
-  if (host.run(local, ["--version"]).status === 0 || onPath(host, "gk")) return;
-  const arch = toolArchitectures(context.arch).gk;
-  if (!arch) return host.log(`⚠️  Skipping GitKraken CLI install for unsupported architecture: ${context.arch}`);
-  const url = releaseAssetUrl(await host.fetchJson("https://api.github.com/repos/gitkraken/gk-cli/releases/latest"), `linux_${arch}.zip`);
-  if (!url) return host.log(`⚠️  Unable to resolve GitKraken CLI download URL for architecture: ${arch}`);
-  for (const directory of [join(context.home, ".local", "bin"), join(context.home, ".local", "share", "GitKrakenCLI"), join(context.home, ".local", "share", "gk")]) mkdirSync(directory, { recursive: true });
-  const directory = mkdtempSync(join(tmpdir(), "semio-devcontainer-"));
-  try {
-    await host.download(url, join(directory, "gk.zip"));
-    host.run("unzip", ["-q", join(directory, "gk.zip"), "-d", directory]);
-    host.run("install", ["-m", "0755", join(directory, "gk"), local]);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-  host.log(host.run(local, ["--version"]).status === 0 ? "GitKraken CLI installed." : "⚠️  GitKraken CLI install failed.");
-}
-
 /** 📦️ F3D from its latest GitHub release's Debian package (a pinned 3.4.1 package when the release names none). */
 export async function installF3d(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   if (onPath(host, "f3d")) return;
@@ -291,44 +257,6 @@ export async function installF3d(host: LifecycleHost, context: LifecycleContext)
   host.log(await installDebianPackage(host, url, "f3d") ? "F3D installed." : "⚠️  F3D install failed.");
 }
 //#endregion 📦️Tools
-
-//#region 🐙️GitKrakenWorkspace
-/** 🐙️ What `gk ws info <name>` says about an existing workspace: absent, or present with the repositories it prints. */
-export function gitKrakenWorkspaceState(info: string): "absent" | "present" {
-  return !info.trim() || info.includes("you do not have any workspaces") || info.includes("no workspace with name") ? "absent" : "present";
-}
-
-/** 🐙️ Creates or completes the local GitKraken workspace (default `semio`, `SEMIO_GITKRAKEN_WORKSPACE_NAME`) from the
- * checkout and its submodules and makes it the default; skipped without an authenticated `gk`. */
-export function configureGitKrakenWorkspace(host: LifecycleHost, context: LifecycleContext): void {
-  if (!onPath(host, "gk")) return host.log("⚠️  GitKraken CLI not available, skipping GitKraken workspace bootstrap.");
-  if (host.run("gk", ["auth", "status"]).status !== 0) return host.log("⚠️  GitKraken CLI not authenticated, skipping workspace bootstrap.");
-  const name = context.env.SEMIO_GITKRAKEN_WORKSPACE_NAME || "semio";
-  const repos = [context.workspace, ...submodulePaths(host, context.workspace).map((path) => join(context.workspace, path))].filter((path) => host.run("git", ["-C", path, "rev-parse", "--is-inside-work-tree"]).status === 0);
-  if (!repos.length) return host.log("⚠️  No git repositories found for GitKraken workspace bootstrap.");
-  const info = host.run("gk", ["ws", "info", name]).stdout;
-  const missing = gitKrakenWorkspaceState(info) === "present" ? repos.filter((repo) => !info.includes(repo)) : repos;
-  if (gitKrakenWorkspaceState(info) === "absent") host.run("gk", ["ws", "create", name, "--add-repos", repos.join(",")]);
-  else if (missing.length) host.run("gk", ["ws", "update", name, "--add-repos", missing.join(",")]);
-  if (missing.length) host.run("gk", ["ws", "refresh", name]);
-  host.run("gk", ["ws", "set", name]);
-  host.log(`✅️ GitKraken workspace ${missing.length ? "created or completed" : "already current"} and set as default: ${name}`);
-}
-
-/** 🐙️ Starts GitKraken Desktop on the checkout (a virtual display `:99` when none is set) unless it already runs. */
-export function launchGitKraken(host: LifecycleHost, context: LifecycleContext): void {
-  if (host.run("pgrep", ["-f", "gitkraken"]).stdout.trim()) return host.log("GitKraken is already running.");
-  const display = context.env.DISPLAY || ":99";
-  if (display === ":99" && host.run("pgrep", ["-f", "Xvfb.*:99"]).status !== 0) host.spawnDetached("Xvfb", [":99", "-screen", "0", "1920x1080x24", "-ac", "+extension", "GLX", "+render", "-noreset"], {});
-  host.spawnDetached("gitkraken", ["--no-sandbox", "--no-debug", "--disable-gpu", "--disable-dev-shm-usage", "--path", context.workspace], { DISPLAY: display });
-  host.log("GitKraken launched.");
-}
-
-
-
-
-
-//#endregion 🧩️Extension
 
 //#region 🔁️Lifecycle
 /** 🔧️ Reinstalls the git hooks (micro-commit hooks; blocking pre-commit hooks are dropped) through the workspace script, which needs no built binary. */
@@ -348,13 +276,10 @@ export function devcontainerStart(host: LifecycleHost, context: LifecycleContext
   host.log("✅️ Environment ready.");
 }
 
-/** 🔁️ `setup devcontainer attach`: optional GUI tools (`SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL`), the GitKraken workspace,
- * and git hooks. */
+/** 🔁️ Prepares the optional F3D viewer and repository hooks; developer control remains in the dashboard. */
 export async function devcontainerAttach(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   const skipTools = Boolean(context.env.SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL);
   if (skipTools) host.log("ℹ  Tool installation skipped.");
-  else for (const install of [installGitKrakenDesktop, installGitKrakenCli]) await install(host, context).catch((error: unknown) => host.log(`⚠️  ${String(error)}`));
-  configureGitKrakenWorkspace(host, context);
   if (!skipTools) await installF3d(host, context).catch((error: unknown) => host.log(`⚠️  ${String(error)}`));
   configureRepoHooks(host, context);
   host.log("✅️ Post-attach setup complete.");

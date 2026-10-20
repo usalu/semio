@@ -1,0 +1,1 @@
+try{frame.gate.release();}catch(error){retainedJavascriptDependencyStoreCustodyV1.add(frame.gate);if(!failures.some(previous=>Object.is(previous,error)))failures.push(error);frame.stop.abort(error);}

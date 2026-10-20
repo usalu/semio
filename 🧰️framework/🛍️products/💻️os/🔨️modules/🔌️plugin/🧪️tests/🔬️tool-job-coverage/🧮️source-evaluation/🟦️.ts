@@ -1,5 +1,5 @@
 /** 🧮️ The tool job source evaluator and the exact bounded first step proof builder shared by the proof catalog phases. */
-import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProofCatalogFailures } from "@semio-tech/repo-lib/laws";
+import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProofCatalogFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** ⚗ Evaluates the tool job rows that remain unmigrated for a map of owner sources. */
 export const evaluateToolJobSources = (sources: Record<string, string>) => {

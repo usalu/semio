@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { resolveLanguageV1, type OsLanguageListV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 export type ServiceSession = { readonly schema: "semio.nx.service/v1"; readonly id: string; readonly owner: string; readonly pid: number };
@@ -137,13 +138,9 @@ const progressText = {
   de: { "awaiting-ready-record": "warte darauf, dass der Dev-Server seinen Bereitschaftseintrag veröffentlicht", "verifying-listener": "prüfe die Identität des Listeners", of: "von" },
 } as const;
 
-/** 🗣️ Chooses the progress language like the CLI help: SEMIO_LANGUAGE, then the locale, then the first catalogue language. */
-export function serviceReadyProgressLanguage(environment: Readonly<Record<string, string | undefined>>): "en" | "de" {
-  for (const candidate of [environment.SEMIO_LANGUAGE, environment.LC_ALL, environment.LC_MESSAGES, environment.LANG]) {
-    const language = candidate?.toLowerCase().slice(0, 2);
-    if (language === "en" || language === "de") return language;
-  }
-  return "en";
+/** 🗣️ Chooses the progress language by the shared rule of the CLI help; no language is assumed. */
+export function serviceReadyProgressLanguage(environment: Readonly<Record<string, string | undefined>>, osLanguages?: OsLanguageListV1): "en" | "de" {
+  return resolveLanguageV1(["en", "de"], [], environment, osLanguages).language as "en" | "de";
 }
 
 /** 🔤️ Renders one readiness progress observation as a single log line. */

@@ -1,0 +1,1 @@
+import type {InstalledLedgerSinkV1} from "../🧾️incremental/💾️storage/🟦️.ts";

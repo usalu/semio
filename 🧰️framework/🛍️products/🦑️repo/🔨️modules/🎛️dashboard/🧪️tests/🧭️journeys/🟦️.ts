@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Workspace, get, plain, scenarios, semio, sleep, slug, type Task } from "./🧰️support/🟦️.ts";
 import Ajv from "ajv/dist/2020.js";
+import {Database} from "bun:sqlite";
 
 const feature = join(import.meta.dir, "🥒️.feature");
 const opened: Workspace[] = [];
@@ -48,6 +49,9 @@ describe("cli journeys", () => {
       expect(fixture.localizedForm.tool.description[locale]).toBe(fixture.localizedForm.labels[locale].description);
       for (const parameter of fixture.localizedForm.tool.parameters) expect(parameter.title[locale]).toBe(fixture.localizedForm.labels[locale][parameter.id]);
     }
+  });
+  test("Maximum editor performance data has exact UTF8 bytes and an independent SQLite plan",()=>{
+    const vector=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🧭️journeys/🔣️.json"),"utf8")).nativeEditor.performance,tail=vector.tail+"x".repeat(vector.removedAscii),available=vector.bytes-Buffer.byteLength(vector.prefix)-Buffer.byteLength(tail),repeats=Math.floor(available/Buffer.byteLength(vector.line)),padding=available-repeats*Buffer.byteLength(vector.line),text=vector.prefix+vector.line.repeat(repeats)+".".repeat(padding)+tail,db=new Database(":memory:");try{const oracle=db.query("SELECT cast((?1-length(cast(?2 AS blob))-length(cast(?3 AS blob)))/length(cast(?4 AS blob)) AS integer) repeats, (?1-length(cast(?2 AS blob))-length(cast(?3 AS blob)))%length(cast(?4 AS blob)) padding, length(cast(?5 AS blob)) inserted").get(vector.bytes,vector.prefix,tail,vector.line,vector.insert)as{repeats:number;padding:number;inserted:number};expect({repeats,padding}).toEqual({repeats:oracle.repeats,padding:oracle.padding});expect(Buffer.byteLength(text)).toBe(vector.bytes);expect(vector.bytes-vector.removedAscii+oracle.inserted).toBeLessThanOrEqual(vector.bytes);expect([vector.entries,vector.loadMilliseconds,vector.interactionMilliseconds]).toEqual([4096,5000,1000]);}finally{db.close();}
   });
   test("A listening server waits for a successful HTTP response", async () => {
     const ws = await workspace("http-readiness");

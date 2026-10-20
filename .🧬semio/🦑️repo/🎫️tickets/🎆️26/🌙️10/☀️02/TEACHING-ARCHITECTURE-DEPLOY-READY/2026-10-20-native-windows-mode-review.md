@@ -1,0 +1,9 @@
+# Native Host Permission Mode Review
+
+Exact four-file current roster: [{"file":"schema.json","bytes":7573,"sha256":"10867b93fba2d5eace0b5cfe1c52088dea17248dc3393ffd4698e5d82fc9dbf9"},{"file":"cases.json","bytes":5730,"sha256":"c6444e2d379897171f34ce805c10ffc4ae78d67ddaa9c193c653c586f0f08509"},{"file":"script.ts","bytes":17639,"sha256":"af9e6305693dab66022acc2c7e423af66ec1b5d6fd53289ce5881d3e9c3f1e37"},{"file":"tests.ts","bytes":14760,"sha256":"5be156e455dafcd5aad9171a7f69f4e425c23164103130a3755ef45eddaaa054"}]. No commands/tests/Windowsruntime/privateeffects or Sourceedits.
+
+No material blocker found. stableRead productionpermission admission adds only process.platform!==win32 before requiring POSIXexecute bits. Actualmode still participates in descriptor/named before/after identity comparisons; specialpermission bits remain refused. This permits authentic LinuxELF bytes stored on nativeWindows without fabricating executablehostmode. Linux/macOS retainexecute-bit admission. Guest generatedprogram runs actualLinuxplatform and independently requires exact0700 before/after receive/help; Windows exception cannot relax gueststrictness.
+
+Nine platformneutralrows execute actualstableRead.toString with injectedFS/processplatform, assertdescriptorclosure and modechange refusal; independentSQLite bitwiseprojection computes each outcome. Existing actualguestprogram test now explicitlyusesLinux and wrongguestmodevector. They are prepared implementationtests, not physicalWindows or guesthelp pass. Root will include them in revisedexactcoalescedneutralmanifest.
+
+Separately confirmed directwarm SourceDemanddelta exact53359ff57d19e39a058a1108faacaf1382beffde367e3f242a73993f718489d0/84997B: actualsecond targetScriptSources call asserts identicalarray, compiledmetadata and generateddependencies. No execution claimed.

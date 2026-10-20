@@ -299,6 +299,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "test-toolchain": {
@@ -333,6 +338,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "test-viz-fixtures": {

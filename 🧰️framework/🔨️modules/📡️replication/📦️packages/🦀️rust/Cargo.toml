@@ -52,6 +52,7 @@ semio-framework-replication-local-interaction = { path = "../../📡️wire/🏠
 semio-framework-replication-mutation = { path = "../../🎮️mutation/📦️packages/🦀️rust" }
 semio-framework-replication-mutation-messages = { path = "../../🎮️mutation/📨️messages/📦️packages/🦀️rust" }
 semio-framework-replication-mutation-retained = { path = "../../🎮️mutation/🧳️retained/📦️packages/🦀️rust" }
+semio-framework-replication-mutation-retained-field = { path = "../../🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust" }
 semio-framework-replication-presence = { path = "../../📡️wire/👥️presence/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true

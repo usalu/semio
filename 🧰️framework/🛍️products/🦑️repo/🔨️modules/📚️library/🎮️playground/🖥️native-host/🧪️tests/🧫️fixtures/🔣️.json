@@ -130,13 +130,13 @@
     {
       "mode": "prototype",
       "platform": "linux",
-      "directory": "dist/native-prototype",
+      "directory": ".cache/store/published/0123456789abcdef0123/prototype",
       "suffix": ""
     },
     {
       "mode": "release",
       "platform": "win32",
-      "directory": "dist/native-release",
+      "directory": ".cache/store/published/0123456789abcdef0123/release",
       "suffix": ".exe"
     }
   ],

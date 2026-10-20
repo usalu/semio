@@ -1,5 +1,6 @@
 /** 🎯️ Contract: every task has exactly one tool family and one disposition, agreed by the neutral classifier, an independent Python rule evaluator and a SQLite census. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import coverageSchema from "../../🧬️schema/🎯️coverage.json";
@@ -7,7 +8,7 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema.json";
 import {taskCoverageReportV1,taskCoverageV1,taskDispositionV1,taskFamilyV1,type TaskCoverageInputV1} from "../../🟦️.ts";
 
-const python=Bun.which("python3"),definitions=coverageSchema.definitions,rows=fixture.rows as readonly {name:string;input:TaskCoverageInputV1;expected:{family:string;disposition:string;reason?:string}}[];
+const python=testPythonV1(),definitions=coverageSchema.definitions,rows=fixture.rows as readonly {name:string;input:TaskCoverageInputV1;expected:{family:string;disposition:string;reason?:string}}[];
 const ajv=()=>new Ajv({strict:true}).addSchema(coverageSchema,"coverage");
 
 test("coverage fixture is closed and every row, input and report is admitted by the neutral schema",()=>{

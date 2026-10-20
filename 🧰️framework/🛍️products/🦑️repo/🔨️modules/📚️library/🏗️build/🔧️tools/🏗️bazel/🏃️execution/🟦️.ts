@@ -5,12 +5,14 @@ import type{RepositoryToolingStoreV1}from"../../../../⚡️caching/💾️stora
 import{bunArchiveExecutable,bunDistribution}from"../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import bunManifest from"../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json" with {type:"json"};
 import hermeticSchema from"../../../🏃️execution/🧬️schema/🔒️hermetic.json" with {type:"json"};
+import{HERMETIC_TABLE_V1,hermeticInputsV1,hermeticSelectV1,hermeticStrategiesV1}from"../../../🏃️execution/🔒️hermetic/🟦️.ts";
+import{hermeticDependenciesV1,type HermeticDependenciesV1,type HermeticModulesRowV1}from"../../../🏃️execution/🔒️hermetic/📦️dependencies/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with {type:"json"};
 import type{BazelTaskV1}from"../📋️task-plan/🟦️.ts";
 import{createHash}from"node:crypto";
 import{chmod,lstat,mkdir,mkdtemp,readFile,readlink,rename,rm,symlink,writeFile}from"node:fs/promises";
 import{dirname,join}from"node:path";
-export{BAZEL_HERMETIC_RUNNER}from"./🏭️runner/🟦️.ts";
+export{BAZEL_HERMETIC_DEPENDENCIES,BAZEL_HERMETIC_RUNNER}from"./🏭️runner/🟦️.ts";
 
 const contract=schema.definitions.Contract.const,audit=schema.definitions.Audit.const,reasons=schema.definitions.Reasons.const,bun=bunManifest.definitions.Release.const;
 if(validateJsonSchemaSubset(schema.definitions.ContractShape,contract,schema).length)throw new Error("Closed Bazel execution contract required");
@@ -21,7 +23,7 @@ export type BazelExecutionPlatformV1={readonly id:string;readonly platform:strin
 /** 🧾️ Why a target stays out of the hermetic class: every reason is authored in the schema. */
 export type BazelHermeticReasonV1=keyof typeof reasons;
 /** ⚖️ Whether a target is a hermetic action or keeps host state, with the closed reason. */
-export type BazelHermeticDecisionV1={hermetic:true}|{hermetic:false;reason:BazelHermeticReasonV1};
+export type BazelHermeticDecisionV1={hermetic:true;class?:string}|{hermetic:false;reason:BazelHermeticReasonV1};
 /** 🌍️ The parsed remote execution switch: endpoint, routed platform, extra worker properties and the concurrency bound. */
 export interface BazelRemoteExecutionV1{endpoint:string;platform:string;properties:Readonly<Record<string,string>>;jobs:number}
 /** 🧭️ The platforms one generated workspace declares: the host, an optional remote pool and the provisioned bun executable of each. */
@@ -62,40 +64,67 @@ export function bazelExecutionFlagsV1(options:Readonly<{host:{platform:string;ar
  if(!options.hermetic)return Object.freeze({command:Object.freeze([]),remote:false,platform:host.id,jobs:options.jobs});
  const remote=bazelRemoteExecutionV1(options.environment??{}),ids=[...new Set([host.id,...(remote?[remote.platform]:[])])],command=[`--extra_execution_platforms=${[`//:exec_${host.id.replace("-","_")}`,...(remote?[`//:exec_remote_${remote.platform.replace("-","_")}`]:[])].join(",")}`,`--extra_toolchains=${ids.map(id=>`//:bun_toolchain_${id.replace("-","_")}`).join(",")}`];
  if(remote)command.push(`--remote_executor=${remote.endpoint}`,"--noremote_local_fallback");
+ command.push(`--strategy=${contract.toolchain.mnemonic}=${hermeticStrategiesV1(options.host.platform).filter(name=>remote!==undefined||name!=="remote").join(",")}`);
  const flags={command,remote:remote!==undefined,platform:remote?remote.platform:host.id,jobs:remote?remote.jobs:options.jobs};
  if(validateJsonSchemaSubset(schema.definitions.Flags,flags,schema).length)throw new Error("Closed Bazel execution flags required");
  return Object.freeze({...flags,command:Object.freeze(command)});
 }
 
-/** 🛡️ Decides whether a cacheable task is a hermetic action: it must carry the neutral declaration, a command the runner interprets, declared outputs and file inputs only; anything else keeps host state with its reason. */
+/** 🛡️ Decides whether a cacheable task is a hermetic action: it carries the neutral declaration or a hermetic class selects it, its command is one the runner interprets, its host inputs are only environment values the class table admits and commands the toolchain covers, and it declares outputs; anything else keeps host state with its reason. A task that names its own declaration is a bare hermetic action with no class. */
 export function bazelHermeticDecisionV1(task:BazelTaskV1,cache:{cache:boolean},inputs:readonly unknown[]|(()=>readonly unknown[])):BazelHermeticDecisionV1{
- const semio=(task.definition as {metadata?:{semio?:{hermetic?:unknown;execution?:{kind?:string}}}}).metadata?.semio,execution=task.definition.execution;
+ const semio=(task.definition as {metadata?:{semio?:{hermetic?:unknown;execution?:{kind?:string}}}}).metadata?.semio,execution=task.definition.execution,selected=semio?.hermetic===undefined?hermeticSelectV1({project:task.project,target:task.target,root:task.root}):undefined;
  if(task.definition.continuous)return{hermetic:false,reason:"continuous"};
  if(semio?.execution?.kind==="orchestration")return{hermetic:false,reason:"orchestration"};
- if(semio?.hermetic===undefined)return{hermetic:false,reason:"undeclared"};
- if(validateJsonSchemaSubset(hermeticSchema,semio.hermetic,hermeticSchema).length)throw new Error(`Closed hermetic declaration required: ${task.id}`);
+ if(selected?.kind==="excepted")return{hermetic:false,reason:"excepted"};
+ if(semio?.hermetic===undefined&&selected?.kind!=="class")return{hermetic:false,reason:"undeclared"};
+ if(semio?.hermetic!==undefined&&validateJsonSchemaSubset(hermeticSchema,semio.hermetic,hermeticSchema).length)throw new Error(`Closed hermetic declaration required: ${task.id}`);
  const commands=execution.commands??(execution.command===undefined?[]:[execution.command]),text=JSON.stringify([commands,execution.cwd,execution.env,task.definition.outputs]);
  if(execution.kind!=="command"||execution.program!==undefined||execution.ownerArguments!==undefined||execution.readyWhen!==undefined||!commands.length||commands.some(command=>typeof command!=="string")||/\{options\.|\{env\./u.test(text)||Object.values(execution.env??{}).some(value=>typeof value!=="string"))return{hermetic:false,reason:"unsupported-execution"};
- if((typeof inputs==="function"?inputs():inputs).some(input=>typeof input==="object"&&input!==null&&("runtime"in input||"env"in input)))return{hermetic:false,reason:"host-inputs"};
+ const rows=typeof inputs==="function"?inputs():inputs;
+ if(selected?.kind==="class"?"refused" in hermeticInputsV1(rows,{}):rows.some(input=>typeof input==="object"&&input!==null&&("runtime"in input||"env"in input)))return{hermetic:false,reason:"host-inputs"};
  if(!cache.cache||!Array.isArray(task.definition.outputs))return{hermetic:false,reason:"uncached"};
- return{hermetic:true};
+ return selected?.kind==="class"?{hermetic:true,class:selected.class.id}:{hermetic:true};
 }
 
-/** 🗝️ Builds the closed, content-stable manifest the hermetic runner interprets; it holds no path, environment or implementation identity. */
-export function bazelHermeticManifestV1(task:BazelTaskV1,args:readonly string[]):Record<string,unknown>{
- const execution=task.definition.execution,commands=(execution.commands??(execution.command===undefined?[]:[execution.command])) as string[],manifest={version:1,id:task.id,project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{}),root:task.root,...(execution.cwd===undefined?{}:{cwd:execution.cwd}),args:[...args],...(execution.forwardAllArgs===undefined?{}:{forwardAllArgs:execution.forwardAllArgs}),...(execution.parallel===undefined?{}:{parallel:execution.parallel}),commands,...(execution.env===undefined?{}:{env:{...execution.env}}),outputs:[...(task.definition.outputs??[])]};
+/** 🧭️ What the generator derives for one hermetic action of a class: the declared environment values, the port replacements and the dependency rows with their content-addressed tree. */
+export interface BazelHermeticPlanV1{readonly inputEnv:Readonly<Record<string,string>>;readonly providers:Readonly<Record<string,string>>;readonly dependencies:HermeticDependenciesV1}
+
+/** 🧭️ Derives the plan of one hermetic class member from its declared inputs: the environment values read now, the class's port replacements and the dependency selection of the installed generation; `undefined` keeps the task out of the hermetic classes because its host inputs or its installed dependencies cannot be declared. */
+export function bazelHermeticPlanV1(options:Readonly<{root:string;task:BazelTaskV1;class:string;values:readonly unknown[];declared:readonly string[];environment:Readonly<Record<string,string|undefined>>;check?:()=>void}>):BazelHermeticPlanV1|undefined{
+ const row=HERMETIC_TABLE_V1.classes.find(entry=>entry.id===options.class);if(!row)throw new Error(`Unknown hermetic class: ${options.class}`);
+ const host=hermeticInputsV1(options.values,options.environment);if("refused" in host)return undefined;
+ const dependencies=hermeticDependenciesV1({root:options.root,directories:[options.task.root==="."?"":options.task.root],names:[...row.packages,...host.packages],packages:row.dependencies==="packages",declared:options.declared,...(options.check?{check:options.check}:{})});
+ return dependencies?{inputEnv:host.env,providers:row.providers as Readonly<Record<string,string>>,dependencies}:undefined;
+}
+
+/** 📋️ What the generator adds to one hermetic action's manifest beside its task: the declared input files and, for a class member, the class, the declared environment values, the port replacements and the `node_modules` rows. */
+export interface BazelHermeticManifestDetailsV1{readonly inputs:readonly string[];readonly class?:string;readonly inputEnv?:Readonly<Record<string,string>>;readonly providers?:Readonly<Record<string,string>>;readonly rows?:readonly HermeticModulesRowV1[]}
+
+/** 🗝️ Builds the closed, content-stable manifest the hermetic runner interprets; it holds no path, environment or implementation identity, only workspace-relative declarations. */
+export function bazelHermeticManifestV1(task:BazelTaskV1,args:readonly string[],details:BazelHermeticManifestDetailsV1={inputs:[]}):Record<string,unknown>{
+ const execution=task.definition.execution,commands=(execution.commands??(execution.command===undefined?[]:[execution.command])) as string[],manifest={version:1,id:task.id,project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{}),root:task.root,...(execution.cwd===undefined?{}:{cwd:execution.cwd}),args:[...args],...(execution.forwardAllArgs===undefined?{}:{forwardAllArgs:execution.forwardAllArgs}),...(execution.parallel===undefined?{}:{parallel:execution.parallel}),commands,...(execution.env===undefined?{}:{env:{...execution.env}}),outputs:[...(task.definition.outputs??[])],inputs:[...details.inputs],...(details.class===undefined?{}:{class:details.class,entry:HERMETIC_TABLE_V1.runtime.entry,markers:[...HERMETIC_TABLE_V1.runtime.markers],maximumElapsedMilliseconds:HERMETIC_TABLE_V1.runtime.maximumElapsedMilliseconds,providers:{...(details.providers??{})}}),...(details.inputEnv&&Object.keys(details.inputEnv).length?{inputEnv:{...details.inputEnv}}:{}),...(details.rows?.length?{nodeModules:details.rows.map(row=>({path:row.path,workspace:{...row.workspace},tree:{...row.tree},bin:{...row.bin}}))}:{})};
  if(validateJsonSchemaSubset(schema.definitions.Manifest,manifest,schema).length)throw new Error(`Closed hermetic task manifest required: ${task.id}`);
  return manifest;
 }
+
+/** 🌳️ Builds the closed manifest of one dependency tree: the installed stores it copies from and the `<store index>/<identity>` entries it holds. */
+export function bazelHermeticModulesManifestV1(dependencies:Pick<HermeticDependenciesV1,"stores"|"ids">):{version:1;stores:string[];ids:string[]}{
+ const manifest={version:1 as const,stores:[...dependencies.stores],ids:[...dependencies.ids]};
+ if(validateJsonSchemaSubset(schema.definitions.DependenciesManifest,manifest,schema).length)throw new Error("Closed hermetic dependency manifest required");
+ return manifest;
+}
+
+/** 🏷️ Names a dependency tree by the digest of its store identities alone, never of the installed paths, so every checkout that selects the same entries names the tree, and therefore keys the consuming actions, identically. */
+export function bazelHermeticModulesLabelV1(dependencies:Pick<HermeticDependenciesV1,"ids">):string{return "m_"+createHash("sha256").update(JSON.stringify(dependencies.ids)).digest("hex").slice(0,16);}
 
 /** 🔬️ One spawn of Bazel's JSON execution log: the fields the hermeticity law inspects. */
 export interface BazelExecutionSpawnV1{mnemonic:string;runner:string;commandArgs:readonly string[];environmentVariables:readonly {name:string;value:string}[];inputs:readonly {path:string;isTool?:boolean}[];platform?:{properties?:readonly {name:string;value:string}[]};targetLabel:string}
 
 /** 🔬️ Judges one logged hermetic spawn against what its action declared: an isolated runner, exactly the declared and tool inputs plus its dependency snapshots, the strict environment, no absolute argument and the platform's properties. Returns every violation; an empty list is a hermetic spawn. */
-export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:Readonly<{inputs:readonly string[];tool:string;properties:Readonly<Record<string,string>>}>):string[]{
+export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:Readonly<{inputs:readonly string[];tool:string;properties:Readonly<Record<string,string>>;trees?:readonly string[]}>):string[]{
  const found:string[]=[],paths=spawn.inputs.map(input=>input.path),allowed=new Set([...expected.inputs,expected.tool]),tools=spawn.inputs.filter(input=>input.isTool).map(input=>input.path),pairs=(rows:readonly {name:string;value:string}[])=>JSON.stringify(rows.map(row=>[row.name,row.value]).sort());
  if(!/sandbox|remote/u.test(spawn.runner))found.push(`runner: ${spawn.runner}`);
- for(const path of paths)if(!allowed.has(path)&&!/\.snapshot\/(snapshot\.json|files\/[a-f0-9]{32})$/u.test(path))found.push(`undeclared input: ${path}`);
+ for(const path of paths)if(!allowed.has(path)&&!(expected.trees??[]).some(prefix=>path.startsWith(prefix))&&!/\.snapshot\/(snapshot\.json|files\/[a-f0-9]{32})$/u.test(path))found.push(`undeclared input: ${path}`);
  for(const path of expected.inputs)if(!paths.includes(path))found.push(`missing input: ${path}`);
  if(JSON.stringify(tools)!==JSON.stringify([expected.tool]))found.push(`tool inputs: ${tools.join(",")||"none"}`);
  if(pairs(spawn.environmentVariables)!==pairs(Object.entries(contract.actionEnvironment).map(([name,value])=>({name,value}))))found.push(`environment: ${spawn.environmentVariables.map(row=>row.name).join(",")||"empty"}`);
@@ -146,10 +175,22 @@ def _hermetic_impl(ctx):
     bun = ctx.toolchains["//:${contract.toolchain.type}"].bun
     output = ctx.actions.declare_directory(ctx.label.name + ".snapshot")
     snapshots = [dep[DefaultInfo].files.to_list()[0] for dep in ctx.attr.deps]
-    ctx.actions.run(executable = bun, tools = [bun], arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path] + [snapshot.path for snapshot in snapshots], inputs = depset([ctx.file.manifest, ctx.file.runner] + snapshots, transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = "${contract.toolchain.mnemonic}", progress_message = ctx.attr.identity, env = {${environmentLines}}, use_default_shell_env = False, execution_requirements = {"block-network": "1"}, toolchain = "//:${contract.toolchain.type}")
+    modules = ctx.attr.modules[DefaultInfo].files.to_list()[0] if ctx.attr.modules else None
+    ctx.actions.run(executable = bun, tools = [bun], arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path] + (["--modules=" + modules.path] if modules else []) + [snapshot.path for snapshot in snapshots], inputs = depset([ctx.file.manifest, ctx.file.runner] + snapshots + ([modules] if modules else []), transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = "${contract.toolchain.mnemonic}", progress_message = ctx.attr.identity, env = {${environmentLines}}, use_default_shell_env = False, execution_requirements = {"block-network": "1"}, toolchain = "//:${contract.toolchain.type}")
     return [DefaultInfo(files = depset([output]))]
 
-repo_hermetic_task = rule(implementation = _hermetic_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "identity": attr.string(mandatory = True)})
+repo_hermetic_task = rule(implementation = _hermetic_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "modules": attr.label(), "identity": attr.string(mandatory = True)})
+`;
+
+/** 🌳️ The Starlark rule that builds one dependency tree: a host-state action by design, because it reads the installed dependency stores by the absolute paths of its manifest; its output tree is what hermetic actions take as an input by content, so the stores never enter a hermetic action key. */
+export const BAZEL_HERMETIC_MODULES_STARLARK=`
+def _hermetic_modules_impl(ctx):
+    bun = ctx.toolchains["//:${contract.toolchain.type}"].bun
+    output = ctx.actions.declare_directory(ctx.label.name)
+    ctx.actions.run(executable = bun, tools = [bun], arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path], inputs = [ctx.file.manifest, ctx.file.runner], outputs = [output], mnemonic = "${contract.toolchain.modulesMnemonic}", progress_message = "dependency tree " + ctx.label.name, env = {${environmentLines}}, use_default_shell_env = False, execution_requirements = {"no-sandbox": "1", "no-remote-exec": "1"}, toolchain = "//:${contract.toolchain.type}")
+    return [DefaultInfo(files = depset([output]))]
+
+repo_hermetic_modules = rule(implementation = _hermetic_modules_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True)})
 `;
 
 /** 🔐️ Reads the pinned bun release row for one platform id. */

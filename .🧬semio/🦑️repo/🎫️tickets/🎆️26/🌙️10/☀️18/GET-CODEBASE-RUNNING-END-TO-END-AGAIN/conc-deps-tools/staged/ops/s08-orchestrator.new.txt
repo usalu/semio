@@ -1,0 +1,31 @@
+/** 🧬️ Is what one producer phase hands the next: the state reached, the current generation prefixes and the targets of every live binding. */
+type JavascriptDependencyProducedV1=Readonly<{state:"current"|"ready"|"published";currents:readonly string[];targets:readonly string[]}>;
+/** 🚦️ Runs one synchronization as side-by-side phases: build immutable generations holding only the shared image and the build lease, switch the bindings under a short exclusive gate over already built generations, then collect what no binding references, no reader pins and the retention policy no longer holds. */
+async function runJavascriptDependencyStoreGenerationsV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,selection:JavascriptDependencyStoreSelectionV1):Promise<void>{
+ const frame=requireJavascriptDependencyStoreFrameV1(workspace,store,control),built=await runJavascriptDependencyStoreProducerV1(workspace,store,control,selection,"build");
+ if(built.state==="current")return;
+ const gate=await acquireConcurrentLeaseV1("bindings",frame.workspace,"exclusive",concurrentLeasePortsV1(repositoryLeaseDirectoryV1(frame.workspace),frame.control,frame.control.signal,undefined,javascriptDependencyConcurrencyReportV1(frame.control)),concurrentProtocolV1.wait.maximumPublishMilliseconds);
+ if(!gate)throw Error("Dependency bindings gate required");
+ frame.gate=gate;let failed=false,failure:unknown,published:JavascriptDependencyProducedV1|undefined;
+ try{published=await runJavascriptDependencyStoreProducerV1(workspace,store,control,selection,"publish");}catch(error){failed=true;failure=error;}
+ frame.gate=null;
+ try{gate.release();}catch(error){retainedJavascriptDependencyStoreCustodyV1.add(gate);if(!failed){failed=true;failure=error;}}
+ if(failed)throw failure;
+ await collectJavascriptDependencyStoreGenerationsV1(workspace,store,control,published!);
+}
+/** ♻️ Retires superseded generations through a tombstone rename, so a crash never leaves a half-removed directory under a generation name; a failure only costs disk and never the synchronization that already published. */
+async function collectJavascriptDependencyStoreGenerationsV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,produced:JavascriptDependencyProducedV1):Promise<void>{
+ if(produced.state!=="published")return;
+ const checkpoint=()=>{requireJavascriptDependencyStoreFrameV1(workspace,store,control);},started=performance.now(),container=join(store.root,"j"),report=javascriptDependencyConcurrencyReportV1(control),directory=repositoryLeaseDirectoryV1(workspace),selected=resolve(workspace);
+ try{
+  const names=lstatSync(container,{throwIfNoEntry:false})?.isDirectory()?readdirSync(container):[],tick=async(count:number)=>{checkpoint();await control.publish({resource:"dependencies:collect:"+count,mode:"shared",elapsedMs:performance.now()-started});await control.yieldContinuation();checkpoint();};
+  for(const name of names.filter(name=>/^\.x[a-f0-9]{20}$/u.test(name)))await removeJavascriptDependencyTreeV1(join(container,name),tick);
+  const unreferenced=selectObsoleteJavascriptDependencyGenerationsV1(names,produced.currents,produced.targets),decision=concurrentCollectionV1({rows:unreferenced.map(name=>({name,modifiedAtMs:lstatSync(join(container,name)).mtimeMs})),pointers:readConcurrentPointersV1(store.root),nowMs:Date.now(),freeFraction:concurrentFreeFractionV1(store.root)});
+  let removed=0,pinned=0;
+  for(const name of decision.collect){checkpoint();const pin=await tryConcurrentPinExclusiveV1(directory,selected,name,control,control.signal);if(!pin){pinned++;continue;}let failure:unknown;try{const tombstone=join(container,".x"+name);renameSync(join(container,name),tombstone);await removeJavascriptDependencyTreeV1(tombstone,tick);removed++;}catch(error){failure=error;}try{pin.release();}catch(error){failure??=error;}if(failure)throw failure;}
+  if(removed)await report(concurrentEventV1({event:"collected",count:removed}));
+  if(decision.keep.length+pinned)await report(concurrentEventV1({event:"kept",count:decision.keep.length+pinned}));
+ }catch(error){if(control.signal.aborted)throw error;await writeOwnedCommandOutputV1(process.stderr,"[DATA] Store dependency generation collection failed "+JSON.stringify({version:1,purpose:"current-dependency-generation-collection-failure",message:String((error as Error)?.message??error).slice(0,300)})+"\n",control);}
+}
+/** 🧰 Creates only the six current installer containers through genuine Generic capabilities. */
+async function prepareJavascriptDependencyStoreEnvironmentV1(

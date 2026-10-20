@@ -1,18 +1,177 @@
 {
-  "proxy": { "image": "caddy:sha256-0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52", "pull_policy": "never" },
+  "proctor": {
+    "pull_policy": "never"
+  },
+  "proxy": {
+    "image": "caddy:sha256-0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52",
+    "pull_policy": "never"
+  },
   "cases": [
-    { "tag": "latest", "images": ["ghcr.io/usalu/architecture-course-proctor:latest", "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"] },
-    { "tag": "sha-0123456789ab", "images": ["ghcr.io/usalu/architecture-course-proctor:sha-0123456789ab", "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"] }
+    {
+      "tag": "latest",
+      "images": [
+        "ghcr.io/usalu/architecture-course-proctor:latest",
+        "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"
+      ]
+    },
+    {
+      "tag": "sha-0123456789ab",
+      "images": [
+        "ghcr.io/usalu/architecture-course-proctor:sha-0123456789ab",
+        "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"
+      ]
+    }
+  ],
+  "invalidPolicies": [
+    {
+      "id": "proctor-policy",
+      "replace": "ghcr.io/usalu/architecture-course-proctor:${PROCTOR_TAG:-latest}\n    pull_policy: missing",
+      "with": "ghcr.io/usalu/architecture-course-proctor:${PROCTOR_TAG:-latest}\n    pull_policy: always",
+      "error": "The offline stack requires its authored proctor pull policy"
+    }
   ],
   "invalid": [
-    { "id": "missing-proxy", "replace": "caddy:", "with": "proxy:", "error": "The offline stack requires exactly its proctor and pinned Caddy images" },
-    { "id": "unpinned-proxy", "replace": "@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52", "with": "", "error": "The offline stack requires exactly its proctor and pinned Caddy images" },
-    { "id": "extra-image", "append": "\n  extra:\n    image: busybox:latest\n", "error": "The offline stack requires exactly its proctor and pinned Caddy images" }
+    {
+      "id": "missing-proxy",
+      "replace": "caddy:",
+      "with": "proxy:",
+      "error": "The offline stack requires exactly its proctor and pinned Caddy images"
+    },
+    {
+      "id": "unpinned-proxy",
+      "replace": "@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52",
+      "with": "",
+      "error": "The offline stack requires exactly its proctor and pinned Caddy images"
+    },
+    {
+      "id": "extra-image",
+      "append": "\n  extra:\n    image: busybox:latest\n",
+      "error": "The offline stack requires exactly its proctor and pinned Caddy images"
+    }
   ],
   "updates": [
-    { "currentTag": "sha-0123456789ab", "tag": "sha-abcdef012345", "setting": "PROCTOR_TAG=sha-abcdef012345", "image": "ghcr.io/usalu/architecture-course-proctor:sha-abcdef012345" }
+    {
+      "currentTag": "sha-0123456789ab",
+      "tag": "sha-abcdef012345",
+      "setting": "PROCTOR_TAG=sha-abcdef012345",
+      "image": "ghcr.io/usalu/architecture-course-proctor:sha-abcdef012345"
+    }
   ],
   "registryUpdates": [
-    { "retained": {"PROCTOR_TAG": "sha-0123456789ab", "PROCTOR_HOST": "proctor.example.org", "COURSE_HTTPS_PORT": "8443"}, "selectedTag": "sha-abcdef012345", "image": "ghcr.io/usalu/architecture-course-proctor:sha-abcdef012345" }
-  ]
+    {
+      "retained": {
+        "PROCTOR_TAG": "sha-0123456789ab",
+        "PROCTOR_HOST": "proctor.example.org",
+        "COURSE_HTTPS_PORT": "8443"
+      },
+      "selectedTag": "sha-abcdef012345",
+      "image": "ghcr.io/usalu/architecture-course-proctor:sha-abcdef012345"
+    }
+  ],
+  "imageExport": {
+    "version": 1,
+    "proctor": {
+      "reference": "ghcr.io/usalu/architecture-course-proctor:neutral",
+      "config": "{\"architecture\":\"amd64\",\"os\":\"linux\",\"config\":{\"Labels\":{\"org.opencontainers.image.revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-dirty\"}}}"
+    },
+    "proxy": {
+      "source": "caddy:2.11.4@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "reference": "caddy:sha256-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "config": "{\"architecture\":\"amd64\",\"os\":\"linux\",\"config\":{\"Labels\":{\"org.opencontainers.image.title\":\"Caddy\"}}}"
+    },
+    "cases": [
+      {
+        "id": "stable",
+        "accepted": true
+      },
+      {
+        "id": "root-dot",
+        "accepted": true
+      },
+      {
+        "id": "retag-before-save",
+        "accepted": false
+      },
+      {
+        "id": "retag-after-save",
+        "accepted": false
+      },
+      {
+        "id": "aba-during-save",
+        "accepted": false
+      },
+      {
+        "id": "wrong-config-bytes",
+        "accepted": false
+      },
+      {
+        "id": "missing-proctor-tag",
+        "accepted": false
+      },
+      {
+        "id": "missing-caddy-alias",
+        "accepted": false
+      },
+      {
+        "id": "duplicate-tag",
+        "accepted": false
+      },
+      {
+        "id": "duplicate-config-entry",
+        "accepted": false
+      },
+      {
+        "id": "missing-config",
+        "accepted": false
+      },
+      {
+        "id": "truncated-archive",
+        "accepted": false
+      },
+      {
+        "id": "bad-header-checksum",
+        "accepted": false
+      },
+      {
+        "id": "timestamp-pax",
+        "accepted": true
+      },
+      {
+        "id": "path-pax",
+        "accepted": false
+      },
+      {
+        "id": "hybrid-consistent",
+        "accepted": true
+      },
+      {
+        "id": "hybrid-wrong-config",
+        "accepted": false
+      },
+      {
+        "id": "hybrid-wrong-tag",
+        "accepted": false
+      },
+      {
+        "id": "cancel-before-save",
+        "accepted": false
+      },
+      {
+        "id": "cancel-during-verification",
+        "accepted": false
+      },
+      {
+        "id": "root-dot-slash",
+        "accepted": true
+      },
+      {
+        "id": "shared-config-tags",
+        "accepted": true
+      },
+      {
+        "id": "wrong-platform",
+        "accepted": false
+      }
+    ]
+  }
 }

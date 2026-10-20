@@ -124,6 +124,7 @@ fn close_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, grant: Ret
 
 impl<S:Send+Sync+'static> ArtifactChildCloneCursor<S>{
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        #[cfg(test)] selected_close_tests::record(self as*const Self as usize,body);
         if !self.closing{return Ok(Default::default());}
         if !self.child_id_cursor.terminal_is_empty(){return nested_retained_clone_close_demands::<String>(&self.child_id_cursor,body);}
         if !self.target_cursor.terminal_is_empty(){return nested_retained_clone_close_demands::<ArtifactRef>(&self.target_cursor,body);}
@@ -134,6 +135,7 @@ impl<S:Send+Sync+'static> ArtifactChildCloneCursor<S>{
     }
 }
 impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for ArtifactChildCloneCursor<S> {
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{ArtifactChildCloneCursor::<S>::close_demands(self,body)}
     fn output_ready(&self) -> bool { !self.closing && !self.spent && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
 
@@ -261,3 +263,7 @@ impl<S: Send + Sync + 'static> RetainedClone for ArtifactChild<S> {
         Default::default()
     }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️dispatch/🦀️.rs"]
+mod selected_close_tests;

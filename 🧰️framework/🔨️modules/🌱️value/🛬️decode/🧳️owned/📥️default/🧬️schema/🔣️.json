@@ -4,7 +4,7 @@
   "properties":{
     "id":{"type":"string"},
     "values":{"type":"array","items":{"type":"string"},"default":[]},
-    "scale":{"type":"number","default":0},
+    "scale":{"type":"number","default":0.0},
     "enabled":{"type":"boolean","default":false},
     "media":{"type":"string","enum":["Empty"],"default":"Empty"},
     "optional":{"type":["string","null"],"default":null}

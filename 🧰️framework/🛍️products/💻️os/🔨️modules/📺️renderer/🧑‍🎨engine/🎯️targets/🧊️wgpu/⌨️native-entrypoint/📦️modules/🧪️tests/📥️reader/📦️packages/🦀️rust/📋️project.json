@@ -8,13 +8,6 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🦀️.rs",
       "sharedGlobals"
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {

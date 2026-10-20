@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { compare } from "fast-json-patch";
 import { renderRevisionMatches } from "../../🧬️schema/🪪️render-revision/🟦️.ts";
 import renderSchema from "../../🧬️schema/🪪️render-revision/🔣️.json";
-import renderFixture from "../../🧫️fixtures/🪪️render-revision/🔣️.json";
+import renderFixture from "../🧫️fixtures/🪪️render-revision/🔣️.json";
 
 test("mounted render identity refuses reused counters from another canonical document", () => {
   const validate = new Ajv({ strict: true }).compile(renderSchema);

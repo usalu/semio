@@ -1,0 +1,1 @@
+return Object.freeze({state:"current",currents:[],targets:[]});

@@ -1,0 +1,118 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "directories",
+    "maximumBytes",
+    "records",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "directories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "records": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "sha256"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "record",
+          "fileKey",
+          "expect"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "record": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileKey": {
+            "type": "string"
+          },
+          "expect": {
+            "type": "string"
+          },
+          "maximumBytes": {
+            "type": "integer"
+          },
+          "link": {
+            "enum": [
+              "symbolic",
+              "hard"
+            ]
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "directory",
+          "key",
+          "expect"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "directory": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "expect": {
+            "type": "string"
+          },
+          "maximumBytes": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

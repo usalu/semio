@@ -27,13 +27,6 @@
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
       { "env": "SEMIO_BUILD_BUDGET_MS" }
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "tags": [
@@ -402,12 +395,20 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
         "cwd": "{projectRoot}"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/**"
+      ]
     },
     "document-backbone-binding-check": {
       "executor": "repo:script",

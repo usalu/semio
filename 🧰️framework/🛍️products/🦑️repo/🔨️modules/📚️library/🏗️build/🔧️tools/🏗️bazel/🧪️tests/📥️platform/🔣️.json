@@ -9,7 +9,17 @@
         "container": false,
         "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/Users/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {
@@ -36,7 +46,17 @@
         "container": false,
         "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/usr/local/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {
@@ -63,7 +83,17 @@
         "container": false,
         "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/home/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -87,7 +117,17 @@
         "container": false,
         "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/home/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -111,7 +151,17 @@
         "container": true,
         "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/usr/local/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -135,7 +185,17 @@
         "container": true,
         "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/usr/local/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -159,7 +219,17 @@
         "container": false,
         "outputBase": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/home/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -176,14 +246,24 @@
       }
     },
     {
-      "name": "Linux longest output base",
+      "name": "Linux longest output base refuses the 256 unit rule",
       "input": {
         "platform": "linux",
         "arch": "x64",
         "container": false,
         "outputBase": "/ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/server/0123456789abcdef",
         "bun": "/home/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -194,8 +274,8 @@
         "launcherExtension": "",
         "sourceLink": "dir",
         "emojiLabels": "verified",
-        "fits": true,
-        "refusals": 0,
+        "fits": false,
+        "refusals": 1,
         "warnings": 0
       }
     },
@@ -207,7 +287,17 @@
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
-        "longPaths": "enabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": true,
@@ -234,7 +324,17 @@
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
-        "longPaths": "enabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": true,
@@ -254,41 +354,24 @@
       }
     },
     {
-      "name": "Windows x64 longest output base with long paths",
+      "name": "Windows x64 longest output base with long paths refuses the 256 unit rule",
       "input": {
         "platform": "win32",
         "arch": "x64",
         "container": false,
         "outputBase": "C:\\dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\\0123456789abcdef",
         "bun": "C:\\Users\\dev\\.bun\\bin\\Bun.EXE",
-        "longPaths": "enabled"
-      },
-      "expect": {
-        "fits": true,
-        "refusals": 0,
-        "warnings": 1,
-        "startup": [
-          "--nowindows_enable_symlinks"
-        ],
-        "command": [
-          "--nobuild_runfile_links",
-          "--noenable_runfiles"
-        ],
-        "environment": {},
-        "launcherExtension": ".exe",
-        "sourceLink": "junction",
-        "emojiLabels": "unverified"
-      }
-    },
-    {
-      "name": "Windows x64 without long paths refuses the MAX_PATH budget",
-      "input": {
-        "platform": "win32",
-        "arch": "x64",
-        "container": false,
-        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
-        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
-        "longPaths": "disabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": false,
@@ -308,14 +391,61 @@
       }
     },
     {
-      "name": "Windows x64 unprobed long paths refuses the MAX_PATH budget",
+      "name": "Windows x64 without long paths refuses an overlong closure",
       "input": {
         "platform": "win32",
         "arch": "x64",
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
-        "longPaths": "unprobed"
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 220,
+            "bytes": 260
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "fits": false,
+        "refusals": 1,
+        "warnings": 1,
+        "startup": [
+          "--nowindows_enable_symlinks"
+        ],
+        "command": [
+          "--nobuild_runfile_links",
+          "--noenable_runfiles"
+        ],
+        "environment": {},
+        "launcherExtension": ".exe",
+        "sourceLink": "junction",
+        "emojiLabels": "unverified"
+      }
+    },
+    {
+      "name": "Windows x64 unprobed long paths refuses an overlong closure",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "container": false,
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "bun": "C:\\Users\\dev\\.bun\\bin\\bun.exe",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 220,
+            "bytes": 260
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": false,
@@ -342,7 +472,17 @@
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "C:\\Users\\dev\\.bun\\bin\\bun",
-        "longPaths": "enabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": true,
@@ -369,7 +509,17 @@
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "/usr/local/bin/bun",
-        "longPaths": "enabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": true,
@@ -396,7 +546,17 @@
         "container": false,
         "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
         "bun": "\\\\server\\share\\bun.exe",
-        "longPaths": "enabled"
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "fits": true,
@@ -423,7 +583,17 @@
         "container": false,
         "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -447,7 +617,17 @@
         "container": false,
         "outputBase": "/home/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/usr/local/bin/bun.exe",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {},
@@ -471,7 +651,17 @@
         "container": true,
         "outputBase": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
         "bun": "/Users/dev/.bun/bin/bun",
-        "longPaths": "unprobed"
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
       },
       "expect": {
         "environment": {

@@ -1,10 +1,10 @@
 import {withPlaygroundSessionV1} from "@semio-tech/plugin-registry/playground/session/reading";
-import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{withInfiniteFontArtifactV1}from"@semio-tech/framework-os/modules/infinite/fonts/reading";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** 🧩️ Semantic activation preparation owner. */
+/** 🧩️ Semantic activation preparation owner: a read-only verdict over the staged closure of one lane. Every component is built by its own cached `component` target before the lane prepares, so preparation compiles nothing and refuses a closure that is not staged.
+ * @see ../../../🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts */
 
 import { newestComponentSourceMtime, stagedModuleMtime } from "@semio-tech/framework-plugin/build/freshness";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
@@ -59,7 +59,6 @@ const repoRoot = findWorkspaceRoot();
 import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 
 import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
-import { buildComponentClosureV1, playgroundComponentClosureV1 } from "@semio-tech/framework-plugin/build/driver-stages";
 
 
 
@@ -69,7 +68,6 @@ class PreparationScript extends BundleScript {
     if (args.length !== 3 || typeof variant!=="string" || (renderer!=="react"&&renderer!=="wgpu") || (profile!=="prototype"&&profile!=="release") || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react|wgpu <prototype|release>");
     const playground = playgroundCatalog().find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
-    await buildComponentClosureV1(repoRoot, playgroundComponentClosureV1(variant, "boot"), { facet:"browser",invocation:this.invocation,network:repositoryCargoNetworkV1(this.invocation,repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
     await withPlaygroundSessionV1(this.repoRoot,this.invocation,variant,async session=>{
     const moduleRoot=builtPluginModulesRootIn(repoRoot,profile);
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");

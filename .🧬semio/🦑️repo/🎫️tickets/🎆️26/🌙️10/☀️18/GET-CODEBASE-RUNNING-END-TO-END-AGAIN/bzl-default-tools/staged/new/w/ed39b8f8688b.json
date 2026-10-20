@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "workspace": "/ws",
+  "options": {
+    "version": "8.4.2",
+    "executable": "/tools/bazel",
+    "installBase": "/tools/install/8.4.2/darwin-arm64",
+    "module": "module(name = \"semio_tasks\", version = \"0.0.0\")\n",
+    "lock": "{\"lockFileVersion\":13}\n",
+    "repository": "/deps/repositories"
+  },
+  "files": {
+    "MODULE.bazel": "module(name = \"semio_tasks\", version = \"0.0.0\")\n",
+    "probe.bzl": "def _impl(ctx):\n    out = ctx.actions.declare_directory(ctx.label.name + \"_out\")\n    ctx.actions.run_shell(\n        mnemonic = \"CacheProbe\",\n        inputs = ctx.files.srcs + ctx.files.deps + [ctx.file.script],\n        outputs = [out],\n        command = \"sh \" + ctx.file.script.path + \" \" + out.path,\n        use_default_shell_env = True,\n        execution_requirements = ctx.attr.requirements,\n    )\n    return [DefaultInfo(files = depset([out]))]\n\nprobe_task = rule(\n    implementation = _impl,\n    attrs = {\n        \"srcs\": attr.label_list(allow_files = True),\n        \"deps\": attr.label_list(),\n        \"script\": attr.label(allow_single_file = True, mandatory = True),\n        \"requirements\": attr.string_dict(),\n    },\n)\n",
+    "run/build.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts build\nmkdir -p \"$out\"\nif [ -e 'dist' ]; then mkdir -p \"$out\"/'dist' && cp -pR 'dist'/. \"$out\"/'dist'/; fi\n",
+    "run/test.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts test\nmkdir -p \"$out\"\n",
+    "run/validate.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts validate\nmkdir -p \"$out\"\n",
+    "run/guarded.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts guarded\nmkdir -p \"$out\"\n",
+    "BUILD.bazel": "load(\":probe.bzl\", \"probe_task\")\n\nprobe_task(\n    name = \"build\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\"],\n    deps = [],\n    script = \"run/build.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n\nprobe_task(\n    name = \"test\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\", \"inputs/i-3fec2f6253de.txt\"],\n    deps = [],\n    script = \"run/test.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n\nprobe_task(\n    name = \"validate\",\n    srcs = [\"inputs/volatile.txt\"],\n    deps = [],\n    script = \"run/validate.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\", \"no-cache\": \"1\", \"no-remote\": \"1\"},\n)\n\nprobe_task(\n    name = \"guarded\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\"],\n    deps = [\":validate\"],\n    script = \"run/guarded.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n"
+  },
+  "leaves": {
+    "build": [
+      {
+        "file": "source.json"
+      },
+      {
+        "file": "toolchain.json"
+      },
+      {
+        "file": "📜️script.ts"
+      },
+      {
+        "env": "CACHE_PROBE_MODE"
+      }
+    ],
+    "test": [
+      {
+        "file": "source.json"
+      },
+      {
+        "file": "toolchain.json"
+      },
+      {
+        "file": "📜️script.ts"
+      },
+      {
+        "env": "CACHE_PROBE_MODE"
+      },
+      {
+        "file": "spec.json"
+      }
+    ],
+    "validate": [],
+    "guarded": [
+      {
+        "file": "source.json"
+      },
+      {
+        "file": "toolchain.json"
+      },
+      {
+        "file": "📜️script.ts"
+      },
+      {
+        "env": "CACHE_PROBE_MODE"
+      }
+    ]
+  },
+  "inputNames": {
+    "file:source.json": "inputs/i-b681f8d4b468.txt",
+    "file:toolchain.json": "inputs/i-884796679c4e.txt",
+    "file:📜️script.ts": "inputs/i-1d125ac07da4.txt",
+    "env:CACHE_PROBE_MODE": "inputs/i-b46981fbd3b2.txt",
+    "file:spec.json": "inputs/i-3fec2f6253de.txt"
+  },
+  "contents": {
+    "source.json": "{\"value\":42}",
+    "toolchain.json": "{\"version\":1}",
+    "📜️script.ts": "console.log(1)\n",
+    "spec.json": "{\"case\":1}"
+  },
+  "environment": {
+    "CACHE_PROBE_MODE": "two"
+  },
+  "nonce": "nonce-1",
+  "digests": {
+    "inputs/volatile.txt": "nonce-1\n",
+    "inputs/i-b681f8d4b468.txt": "dc60e632a90329ccfd34fbe904d94704dbbb6669575185e26389854ff64139c3\n",
+    "inputs/i-884796679c4e.txt": "2430f1a2ad2982d0067885488a4c89e21ad1d7c83b115ba8f1b20acc88dfaea8\n",
+    "inputs/i-1d125ac07da4.txt": "3879a5d930ae1999b278a3a498f7de3fd83ba8dae59330fcfa2db31c103ac21d\n",
+    "inputs/i-b46981fbd3b2.txt": "env=two\n",
+    "inputs/i-3fec2f6253de.txt": "2433c6093e1155edd4a65b6c5a17a6f706aefe5d1b75e6cec817cdd71be08d99\n"
+  },
+  "arguments": {
+    "build": [
+      "--batch",
+      "--host_jvm_args=-Xmx1g",
+      "--output_base=/ws/base",
+      "--install_base=/tools/install/8.4.2/darwin-arm64",
+      "--nosystem_rc",
+      "--nohome_rc",
+      "--noworkspace_rc",
+      "build",
+      "//:build",
+      "--lockfile_mode=error",
+      "--incompatible_autoload_externally=",
+      "--repository_cache=/deps/repositories",
+      "--repository_disable_download",
+      "--incompatible_strict_action_env",
+      "--disk_cache=/ws/disk",
+      "--experimental_disk_cache_gc_max_size=64M",
+      "--spawn_strategy=local",
+      "--action_env=PATH",
+      "--action_env=HOME",
+      "--noshow_progress",
+      "--color=no",
+      "--curses=no",
+      "--verbose_failures",
+      "--jobs=1"
+    ]
+  },
+  "workspaceName": {
+    "fixture": "/tmp/fx",
+    "instance": "1:2",
+    "base": "/scratch",
+    "expected": "/scratch/semio-bzl-probe-3967cfab-673aeeb0"
+  }
+}

@@ -18,3 +18,6 @@ export class NativePersistentListReceiving{
  take():ReturnType<PersistentListBuilder<Row>["take"]>{if(!this.ready||!this.#builder)throw Error("original native list output is not ready");this.#phase="spent";return this.#builder.take();}
  close():void{this.#builder?.close();this.#builder=null;this.#row=null;this.#rows=null;this.#original=null;this.#phase="closed";}
 }
+
+/** 📏️ Enclosing metadata keeps its own work allowance before a native child selects payload bytes. */
+export function nativeReceivingChildBody(bodyBytes:number,metadataBytes:number):number{if(!Number.isSafeInteger(bodyBytes)||bodyBytes<0||!Number.isSafeInteger(metadataBytes)||metadataBytes<0)throw Error("Native receiving requires nonnegative safe body extents");return Math.max(0,bodyBytes-metadataBytes);}

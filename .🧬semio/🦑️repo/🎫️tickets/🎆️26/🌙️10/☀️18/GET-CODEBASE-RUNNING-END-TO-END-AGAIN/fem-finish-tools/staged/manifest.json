@@ -1,0 +1,102 @@
+[
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs",
+  "op": "modify",
+  "old": "7602f0c353412244497bd8bdd1389a096351cdef9449f8bfad9204072e946a05",
+  "new": "79776f77aa0d47081a9170c9b5eaf251557c0ec013c233734b3a7474cbe4935c"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧮️triplet-csr-build/🦀️.rs",
+  "op": "add",
+  "old": null,
+  "new": "6fbba1e2f10303d68063d41b84d4fa50fadd94f193bc2c5546068edb293db247"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "87bc1135812d9f18eec6f349a6453bee8825520620ef3fff6f8844273d545100",
+  "new": "7c8754ef24c5f9d85a81b8380420cf5fbc4e76adebd7dad507194705d2eb9cec"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🦀️.rs",
+  "op": "modify",
+  "old": "8314a305fb37c8d20683862a8335b69c0c36310a6ad08b24804c4a101dca2df9",
+  "new": "818df49c34583eac534e2acf5f7c9b805bd7ab048273fb0be941a350e04b90af"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🧪️tests/🔬️unit/🦀️.rs",
+  "op": "modify",
+  "old": "96c2fcae30acd8abc326eddaacba737ceade9cb93c0e66757c88adf645116bb1",
+  "new": "94454b698107d5490cc4acd0f7c3507b56544471c642a699a220079f67de0c99"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🧭️dof-map/🦀️.rs",
+  "op": "add",
+  "old": null,
+  "new": "773be09ca2765ad00438ff195828e9a84b6bf47bb322520156565f55e612f37f"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs",
+  "op": "modify",
+  "old": "91eb76b86cefd0da17d5e4cbab007205a7a3ad47cc53c63f0e0ebf1894529227",
+  "new": "2f65bb39cdd0facd12f2cbe36029d58f5dcdf01dcbbe69446307a50f2781d7b2"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🔶️csr-build-and-run/🦀️.rs",
+  "op": "modify",
+  "old": "2d182e476960cb6cbd3614059019e3dc42755ad1116415b3d3d9a9fe6995155c",
+  "new": "589011c8b3b8bbbdc26b67da99c58f8e046950053f4ce9feb6ecc7b0ac1d7649"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🦀️.rs",
+  "op": "modify",
+  "old": "1b71a3e058035f9377416f6ba106bc5aade087d3263587ca19a16e7e655815b0",
+  "new": "e03de6757997e9707249c90c011aaedb7664334af22624d15f268ee42e7c1e07"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧪️tests/🔬️unit/🦀️.rs",
+  "op": "modify",
+  "old": "b0697a5f2397284bd31095aadc4691827e27705cf630d6e8a1f0604739810c4a",
+  "new": "cd08fb91d4a16f979829e958ed4f46c84da94d33dfae5dc28f1e7a13d4537f88"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧷️job-state-and-construction/🦀️.rs",
+  "op": "modify",
+  "old": "354232c78418977d4cd8b8d16ca528b0043b70588d0ebd4ae73a74f49779f931",
+  "new": "376f36949939d0367aaf5ac63f6c14f5f973777176f687a1191dce8304a84d31"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️solid/🦀️.rs",
+  "op": "modify",
+  "old": "dee18b19d6c22197685cbbbc93fc93dd8d71f28a721f03bd9aa15f7dc618e9e1",
+  "new": "c16329c905e45e50f1dff1923768d6bae00a0a423526b32f5f863f1e393d05ec"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️unit/🍳️assembly-page-and-mounted-admission-laws/🦀️.rs",
+  "op": "delete",
+  "old": "3462ed37648409bc718c19bf2ed84cbf5a282d8dbc0ddb2c0b18da9b91711311"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️unit/🦀️.rs",
+  "op": "modify",
+  "old": "1bf4a68f4c47b73ce5053968d68c9ec5966957ddba0bdc34fda33d4b15fd0b8d",
+  "new": "fc690e181f41b9f9603077520c48632ffdfe224533e581f79c098356a801ee3b"
+ },
+ {
+  "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️unit/🧈️assembly-csr-element-build-and-job-laws/🦀️.rs",
+  "op": "delete",
+  "old": "0ef23921c64373e19dafd20c5d526a87b9b138b59014d05c2235defbab38ab0c"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs",
+  "op": "modify",
+  "old": "b96e6e1cfb2005ee50ac5b17887f5413098d8154991e722ffb458e11b4a75347",
+  "new": "cd881d7cc34801ae8db12b1e077461165f5fbb8a9569e4cdf4f89673010e6454"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+  "op": "modify",
+  "old": "9c9d171e0424f8ec88aec426659c95d0209fd765a36e86ffd1c98bc929f329ca",
+  "new": "f4cd7729e70352261362374ae92e44085b22cd17c59f53c21fdd8afd6c0ae366"
+ }
+]

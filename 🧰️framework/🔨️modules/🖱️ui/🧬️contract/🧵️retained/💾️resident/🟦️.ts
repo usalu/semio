@@ -2,7 +2,7 @@
 import type { UiActivationLease, UiInstanceLifetime } from "../🔌️host/🟦️.ts";
 import { uiResidentComposition, type UiResidentComposition } from "../🔌️host/🏦️composition/🟦️.ts";
 import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
-import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "@semio-tech/value-ts/resident";
+import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "../../../../🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";
 import { bindResidentScopeMatcher } from "../🏘️instance/🪪️resident-scope/🟦️.ts";

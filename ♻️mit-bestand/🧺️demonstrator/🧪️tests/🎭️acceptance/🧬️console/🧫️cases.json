@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "name": "HTTP 400",
+      "message": "Failed to load resource: the server responded with a status of 400 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 401",
+      "message": "Failed to load resource: the server responded with a status of 401 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 402",
+      "message": "Failed to load resource: the server responded with a status of 402 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 403",
+      "message": "Failed to load resource: the server responded with a status of 403 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 404",
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "significant": false
+    },
+    {
+      "name": "HTTP 405",
+      "message": "Failed to load resource: the server responded with a status of 405 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 406",
+      "message": "Failed to load resource: the server responded with a status of 406 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 407",
+      "message": "Failed to load resource: the server responded with a status of 407 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 408",
+      "message": "Failed to load resource: the server responded with a status of 408 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "HTTP 409",
+      "message": "Failed to load resource: the server responded with a status of 409 (Request Failed)",
+      "significant": true
+    },
+    {
+      "name": "Trace errors remain errors",
+      "message": "[TRACE] app failed to publish a scene",
+      "significant": true
+    },
+    {
+      "name": "Application errors mentioning a resource remain errors",
+      "message": "Application rejected update: Failed to load resource: status 404",
+      "significant": true
+    },
+    {
+      "name": "Server failure",
+      "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "significant": true
+    },
+    {
+      "name": "404 without reason",
+      "message": "Failed to load resource: the server responded with a status of 404",
+      "significant": false
+    },
+    {
+      "name": "404 suffix cannot hide application failure",
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found); runtime crashed",
+      "significant": true
+    }
+  ]
+}

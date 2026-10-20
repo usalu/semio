@@ -1,0 +1,69 @@
+[
+  {
+    "name": "owned-dedicated-mount",
+    "stdout": "/dev/disk1 on / (apfs, local)\n/dev/disk8 on /compiler (apfs, local)\n",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/build",
+      "/compiler/target"
+    ],
+    "accepted": true
+  },
+  {
+    "name": "nested-scope-mount-refused",
+    "stdout": "/dev/disk8 on /compiler (apfs, local)\n/dev/disk9 on /compiler/build/debug (apfs, local)\n",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/build",
+      "/compiler/target"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "ordinary-directory-not-mount",
+    "stdout": "/dev/disk1 on / (apfs, local)\n",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/build"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "ambiguous-mount-row-refused",
+    "stdout": "/dev/disk8 on /compiler on /unknown (apfs, local)\n",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/build"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "truncated-mount-row-refused",
+    "stdout": "/dev/disk8 on /compiler (apfs, local)",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/build"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "mounted-scope-ancestor-refused",
+    "stdout": "/dev/disk8 on /compiler (apfs, local)\n/dev/disk9 on /compiler/b (apfs, local)\n",
+    "root": "/compiler",
+    "directories": [
+      "/compiler/b/p",
+      "/compiler/t/p"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "enclosing-parent-mount-shadowed",
+    "stdout": "/dev/disk1 on /parent (apfs, local)\n/dev/disk8 on /parent/compiler (apfs, local)\n",
+    "root": "/parent/compiler",
+    "directories": [
+      "/parent/compiler/build",
+      "/parent/compiler/target"
+    ],
+    "accepted": true
+  }
+]

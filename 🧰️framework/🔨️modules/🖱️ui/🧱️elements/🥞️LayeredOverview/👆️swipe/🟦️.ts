@@ -1,7 +1,8 @@
+/** 👆️ The swipe phase of LayeredOverview: the touch drive, the scroll and pointer-capture helpers and the swipe hook. */
 import { type LayeredOffset, type LayeredCell, type LayeredAxis, type LayeredLanding, flingStep, cellOffset, nearestCell, swipeAxis, swipeDragOffset, swipeStep, LAYERED_WHEEL_QUIET_MS, LAYERED_WHEEL_STEP_PX } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 
-/** 👆️ What the swipe gestures move: the strip's offset now, the occupied cells, a drag that follows the finger, a settle onto a cell, a stop. */
+/** 🕹️ What the swipe gestures move: the strip's offset now, the occupied cells, a drag that follows the finger, a settle onto a cell, a stop. */
 export interface LayeredSwipeDrive {
   readonly offset: () => LayeredOffset;
   readonly cells: () => readonly LayeredCell[];
@@ -17,7 +18,7 @@ export interface LayeredGhost extends LayeredLanding {
   readonly id: string;
 }
 
-/** 👆️ One touch on the overview: where it went down, the cell the strip left, the axis it locked to and, when it scrolls a tall card instead,
+/** 🖐️ One touch on the overview: where it went down, the cell the strip left, the axis it locked to and, when it scrolls a tall card instead,
  * that card's scroller and its position at the lock. */
 interface LayeredTouch {
   readonly id: number;
@@ -74,7 +75,7 @@ function touchVelocity(touch: LayeredTouch, axis: LayeredAxis): number {
   return elapsed > 0 ? (along(axis, last.x, last.y) - along(axis, first.x, first.y)) / elapsed : 0;
 }
 
-/** 👆️ Swiping the strip while `enabled`: a touch or pen that travels past the slop locks to one axis and carries the strip along it toward the
+/** ↔️ Swiping the strip while `enabled`: a touch or pen that travels past the slop locks to one axis and carries the strip along it toward the
  * page that comes in on that side — across an edge the page from the far side, shifted beside the view ({@link swipeWrapTarget}); a rubber band
  * only where the row or column holds no other page — and its release settles there or back ({@link swipeStep}); a touch that starts on a tall card
  * scrolls the card while it can and flings it on release; once a touch is a swipe the root captures its pointer, so the rest of the gesture

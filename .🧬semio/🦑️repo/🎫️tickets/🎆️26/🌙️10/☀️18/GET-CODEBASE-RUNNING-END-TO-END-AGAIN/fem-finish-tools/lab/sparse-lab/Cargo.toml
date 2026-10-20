@@ -1,0 +1,11 @@
+[package]
+name = "semio-s-fem-sparse-lab"
+version = "0.1.0"
+edition = "2021"
+[lib]
+path = "src/lib.rs"
+[dependencies]
+semio-framework-value-paged-list = { path = "../paged-list" }
+semio-framework-value-control-contract = { path = "../control-contract" }
+[dev-dependencies]
+serde_json = "1"

@@ -1,0 +1,9 @@
+# Native Linux Frontend Publication Result
+
+The corrected native producer completed with exit code 0 on Root session 47590. It used the existing repo-mcp build owner, release mode, Linux/amd64/CGO-disabled target axes, skip-cache and a fresh generated/n3 destination. The command entered through the usable native macOS repo executable. No host frontend path was replaced.
+
+The actual published file is 11,767,992 bytes, SHA256 a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c. Root verified a stable nofollow regular single-link executable, ELF64 little-endian machine 62, executable type 2, six bounded program headers and no PT_INTERP. The publication marker is the genuine existing publisher version 1 with the exact repo-mcp Go release owner and files [repo]. The producer Source hash is d8f982cba9dceadf5b3e002acd3b25291e770ca6040e827879f9ffb25d98b522. Root JSON evidence is generated/2026-10-20-native-linux-n3-root-audit.json and the terminal log is generated/2026-10-20-native-linux-frontend-build3.log.
+
+This follows an actual producer RED on session 19034: the wrapper precreated the final directory and the publisher refused it as unowned. The fix removes only that premature mkdir and unused imports. Publisher ownership checks remain intact; the old unowned n2 directory was not adopted or forged. Existing installation tests now contain eight neutral rows and 32 actual-source transformation variants, prepared but not yet run.
+
+This is a verified frontend publication, not a course release. Authenticated Linux transfer and actual guest help remain pending. The worktree was not an atomic whole-source snapshot; the supplied build axes are invocation facts, while ELF identity is directly inspected output evidence. Architecture test session 9854 failed before collection on the shell typegen generated-output self-cycle, so no CI assertion RED, unit pass, Rust pass, browser pass, deploy-check or final redeployable course bundle is claimed.

@@ -34,5 +34,8 @@ semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"
 semio-framework = { workspace = true }
 base64_codec = { path = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework-os = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]

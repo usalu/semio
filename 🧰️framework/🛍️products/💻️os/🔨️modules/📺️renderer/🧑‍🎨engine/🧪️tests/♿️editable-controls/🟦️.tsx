@@ -625,7 +625,7 @@ for (const locale of ["en", "de"] as const) it(`retains metadata actions and rea
   }
 });
 
-import femFieldIntents from "../../🧫️fixtures/🧱️field-intent/🔣️.json";
+import femFieldIntents from "../🧫️fixtures/🧱️field-intent/🔣️.json";
 
 for (const locale of ["en", "de"] as const) for (const law of femFieldIntents.cases) it(`emits only authored FEM detail field ${law.scope}.${law.field} in ${locale}`, async () => {
   const args = { field: law.field, id: law.id };

@@ -79,7 +79,9 @@
           ".cache",
           ".cache/b"
         ],
-        "maximumPathCharacters": 256
+        "maximumPathCharacters": 256,
+        "leaseRetirementIntervalMilliseconds": 15000,
+        "leaseRetirementStamp": ".retired"
       }
     }
   }

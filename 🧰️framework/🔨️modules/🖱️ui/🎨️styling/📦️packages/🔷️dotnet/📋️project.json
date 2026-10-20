@@ -13,6 +13,11 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
         "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "build": {

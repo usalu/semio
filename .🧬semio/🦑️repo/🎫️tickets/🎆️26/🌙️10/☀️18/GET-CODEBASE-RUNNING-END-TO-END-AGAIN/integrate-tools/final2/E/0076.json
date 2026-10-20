@@ -1,0 +1,479 @@
+{
+  "name": "@semio-tech/print",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check"
+      }
+    },
+    "generate": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🎨print-design-token-paints/📜️script.ts generate"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "externalDependencies": []
+        }
+      ],
+      "cache": true
+    },
+    "generate-viz": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate viz"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        { "runtime": "bun --version" }
+      ],
+      "outputs": []
+    },
+    "fonts": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
+      },
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/fonts"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "externalDependencies": []
+        }
+      ]
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "generate"
+      ]
+    },
+    "watch": {
+      "executor": "repo:script",
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "forwardAllArgs": false
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-macro-staging": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "externalDependencies": [
+            "@napi-rs/canvas",
+            "ajv",
+            "markdown-it",
+            "pdfjs-dist",
+            "sharp"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test macro",
+        "forwardAllArgs": false
+      }
+    },
+    "build-viz": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "generate"
+      ],
+      "outputs": []
+    },
+    "watch-viz": {
+      "executor": "repo:script",
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build-viz"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "forwardAllArgs": false
+      }
+    },
+    "test-viz": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz coverage",
+        "forwardAllArgs": false
+      },
+      "outputs": []
+    },
+    "test-viz-full": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz full",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "build-viz"
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*.pdf",
+          "transitive": true
+        }
+      ]
+    },
+    "deps-tectonic": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "test-toolchain": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "deps-tectonic"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/**/*",
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts verify"
+      }
+    },
+    "deps-tex": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "test-viz-fixtures": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz fixtures",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native-grammar": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "phase",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_GRAMMAR_PHASE"
+              },
+              {
+                "id": "diagram-family",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_DIAGRAM_FAMILY"
+              },
+              {
+                "id": "geo-palette-phase",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_GEO_PALETTE_PHASE"
+              },
+              {
+                "id": "geo-planar-phase",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "guard",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_PHASE": "guard"
+                    }
+                  },
+                  {
+                    "id": "admission",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_PHASE": "admission"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "geo-planar-source",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "rust",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_SOURCE": "rust"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test native-grammar",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ]
+    },
+    "generate-font-metrics": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false
+    },
+    "test-measurement": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test measurement",
+        "forwardAllArgs": false
+      }
+    }
+  },
+  "metadata": {
+    "printCatalog": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json"
+  }
+}

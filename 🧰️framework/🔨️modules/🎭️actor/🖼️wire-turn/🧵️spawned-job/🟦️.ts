@@ -9,8 +9,8 @@
 // `decodePackValue`'s injected codec, because nothing in `🎠️kernel`'s own import graph reaches
 // back here — verified, not assumed.
 import type { Effect } from "@semio-tech/framework-effect";
-import type { SpawnedJobCompletion, SpawnedJobStep } from "@semio-tech/framework-effect/spawned-job";
-import { spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "@semio-tech/framework-effect/spawned-job";
+import type { SpawnedJobCompletion, SpawnedJobStep } from "../../../🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts";
+import { spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "../../../🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts";
 import { type WireVariant, coerceWireBytes } from "../🔖️turn-result/🟦️.ts";
 import { wireOptionValue, wireSpawnJob } from "../🟦️.ts";
 // #endregion 🔌️Imports

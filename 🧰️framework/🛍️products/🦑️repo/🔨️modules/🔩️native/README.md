@@ -10,4 +10,6 @@ None — this module carries `🥾️bootstrap` scripts rather than a language p
 
 ## 🧪️ Tests
 
-No owned cases; the bootstrap is exercised by the repository setup runs themselves.
+The repository-owned `repo:test-runtime-bootstrap` suite exercises six cold/warm native-entry and refusal cases through recording shell functions. `repo:test-devcontainer-lifecycle` exercises start/attach behavior through recording hosts. These bounded contracts complement actual setup runs on each supported host.
+
+Human development starts with `repo dashboard` after native installation. The container post-create entry invokes the owned shell bootstrap, which installs the native entry before running repository setup. The Windows bootstrap uses the same repository setup control.

@@ -1,0 +1,255 @@
+{
+  "name": "@teaching/proctor",
+  "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "root": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+  "sourceRoot": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+  "projectType": "application",
+  "tags": [
+    "lang:rust",
+    "role:hub",
+    "family:course"
+  ],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
+      "{projectRoot}/**/*",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/target/**",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/dist/**",
+      "sharedGlobals"
+    ],
+    "cargoSources": [
+      "cargo",
+      "^cargo",
+      "sharedGlobals",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*.rs",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts",
+      "{projectRoot}/📜️script.ts",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/target/**"
+    ],
+    "cargoTests": [
+      "cargoSources",
+      "default",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧬️schema/**/*"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": [
+        "cargoSources"
+      ],
+      "outputs": ["{projectRoot}/.🧾️store/build.json"]
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": [
+        "cargoTests"
+      ],
+      "outputs": []
+    },
+    "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8791,
+              "portEnv": "PROCTOR_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "cargoTests",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" },
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+        { "env": "PROCTOR_COURSE" }
+      ]
+    },
+    "rebuild": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts rebuild"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "health": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts health"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "backup": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts backup",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "restore": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "file",
+                "kind": "text",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts restore",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "erase": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "handle",
+                "kind": "text",
+                "valueFlag": "--handle"
+              },
+              {
+                "id": "tag",
+                "kind": "text",
+                "valueFlag": "--tag"
+              },
+              {
+                "id": "learner",
+                "kind": "text",
+                "valueFlag": "--learner"
+              },
+              {
+                "id": "dry-run",
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts erase",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "prune": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "older-than",
+                "kind": "text",
+                "default": "7d",
+                "required": true,
+                "valueFlag": "--older-than"
+              },
+              {
+                "id": "dry-run",
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts prune",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "capacity": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts capacity",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    }
+  }
+}

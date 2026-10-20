@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram } from "@semio-tech/framework";
-import { VideoRenderJobLedger } from "@semio-tech/framework";
-import { AvcPcmEncoder, avcDecoderConfigurationRecord } from "@semio-tech/framework/raster/video";
+import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram } from "../../../../../../../../../📦️packages/🟦️typescript/🟦️.ts";
+import { VideoRenderJobLedger } from "../../../../../../../../../📦️packages/🟦️typescript/🟦️.ts";
+import { AvcPcmEncoder, avcDecoderConfigurationRecord } from "../../../../../../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🟦️.ts";
 import { cancelVideoRenderExportV1, drawVideoRenderSceneV1, runVideoRenderExportV1, subscribeVideoRenderExportJobsV1, type VideoRenderContext2dV1, type VideoRenderEnvironmentV1, videoRenderExportJobLogV1, videoRenderExportJobsSnapshotV1, videoRenderExportTaskIdV1, videoRenderPath2dV1, type WebCodecsVideoEncoderPortV1 } from "../../🟦️.ts";
-import { videoRenderProgramFixtureUrl } from "@semio-tech/framework/kernel/testing/fixtures";
+import { videoRenderProgramFixtureUrl } from "../../../../../../../../../📦️packages/🟦️typescript/🎠️kernel/🧪️testing/🧫️fixtures/🟦️.ts";
 
 /** 🎥️ Laws of the browser video host, run without a browser: a recording 2D context stands in for the canvas (it fills
  * its pixels with the last fill colour, and a drawn image with a colour derived from its crop, so the first-party tier

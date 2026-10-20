@@ -29,7 +29,8 @@ import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️mod
 import { scriptInvocationEnvironment, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
 import { disagreement, type ProctorContract } from "../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
-import { LAUNCHER_SIGNALS, PROCTOR_STOP_GRACE_MS, buildProctor, developmentDataSettled, proctorDevelopmentEnvironment, proctorOrigin, proctorReady, proctorSourceChanged, proctorSourceDirectories, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { LAUNCHER_SIGNALS, PROCTOR_STOP_GRACE_MS, developmentDataSettled, proctorDevelopmentEnvironment, proctorOrigin, proctorReady, proctorSourceChanged, proctorSourceDirectories, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 
 //#region ⏳️Readiness
 /** 🗣️ Where a progress line of the stack goes. */
@@ -97,6 +98,22 @@ export async function awaitReady(wait: {
       say(`waiting for ${label} (${Math.round((at - started) / 1_000)} s)`);
     }
   }
+}
+/** 📣️ Waits like {@link awaitReady} and only once the probe answered says the neutral ready line `<label> is ready after <ms> ms`, where `label` names the address (`the site at http://127.0.0.1:6061`). Build tools and the dashboard read the printed address as the announcement of readiness and probe it themselves, so this line is never earlier than the answer. */
+export async function awaitAnnounced(wait: Parameters<typeof awaitReady>[0]): Promise<number> {
+  const took = await awaitReady(wait);
+  (wait.say ?? announce)(`${wait.label} is ready after ${took} ms`);
+  return took;
+}
+
+/** 🔌️ The loopback origin the site of `env` listens on: the port in the variable `site.portEnv`, else `site.defaultPort`. */
+export function siteOrigin(env: NodeJS.ProcessEnv, site: { readonly portEnv: string; readonly defaultPort: string }): string {
+  return `http://127.0.0.1:${env[site.portEnv] ?? site.defaultPort}`;
+}
+
+/** 👁️ Whether the proctor of one command follows its sources and course: unless `TEACHING_ARCHITECTURE_COURSE_WATCH` is `off`. */
+export function stackFollowsSources(env: NodeJS.ProcessEnv): boolean {
+  return env.TEACHING_ARCHITECTURE_COURSE_WATCH !== "off";
 }
 //#endregion ⏳️Readiness
 
@@ -263,7 +280,7 @@ class SupervisedProctor {
   async start(watch: boolean): Promise<boolean> {
     if (!(await developmentDataSettled(this.repoRoot, this.env, announce))) return false;
     announce(`building the proctor for ${this.origin} (a first build takes minutes)`);
-    this.artifact = await buildProctor(this.repoRoot, this.invocation, this.env, this.signal);
+    this.artifact = await acquireProctor(this.repoRoot, this.invocation, this.env, this.signal);
     await this.launch();
     if (watch) await this.watch();
     return true;
@@ -302,9 +319,8 @@ class SupervisedProctor {
       announce(`the proctor ended by itself with status ${status}; launching it again in ${Math.round(delay / 1_000)} s — the site keeps everything on the device meanwhile`);
       this.restarting = setTimeout(() => this.schedule("launch"), delay);
     });
-    const took = await awaitReady({ label: `the proctor at ${this.origin}`, probe: () => proctorReady(this.origin), exited: launched.exited, signal: this.signal });
+    await awaitAnnounced({ label: `the proctor at ${this.origin}`, probe: () => proctorReady(this.origin), exited: launched.exited, signal: this.signal });
     this.crashes = 0;
-    announce(`proctor ready at ${this.origin} after ${took} ms`);
   }
 
   private async watch(): Promise<void> {
@@ -353,7 +369,7 @@ class SupervisedProctor {
     let next: ProctorArtifact | undefined;
     if (step === "build") {
       announce("a source of the proctor changed: building it anew while the running one serves");
-      next = await buildProctor(this.repoRoot, this.invocation, this.env, this.signal);
+      next = await acquireProctor(this.repoRoot, this.invocation, this.env, this.signal, undefined, { rebuild: true });
     } else if (this.running !== undefined) announce("the course changed: launching the proctor anew");
     try {
       if (this.stopped) return;
@@ -384,7 +400,7 @@ export async function runDevStack(repoRoot: string, bundleRoot: string, script: 
   const env = proctorDevelopmentEnvironment(repoRoot, scriptInvocationEnvironment(invocation, process.env));
   const proctorUrl = proctorOrigin(env);
   const port = process.env[site.portEnv] ?? site.defaultPort;
-  const siteUrl = `http://127.0.0.1:${port}`;
+  const siteUrl = siteOrigin(process.env, site);
   const interruption = new AbortController();
   const originalCancelled = (): void => interruption.abort(invocation.control.signal.reason);
   invocation.control.signal.addEventListener("abort", originalCancelled, { once: true });
@@ -407,15 +423,14 @@ export async function runDevStack(repoRoot: string, bundleRoot: string, script: 
         announce(`[WARN] that proctor serves ${contract === "foreign" ? "no quiz contract the site speaks" : `an ${contract} quiz contract than the site (wire version ${WIRE_VERSION})`}: the site sends it nothing and keeps everything on the device. Stop it and run this command again to build the current one.`);
     } else {
       proctor = new SupervisedProctor(repoRoot, env, interruption.signal, invocation);
-      if (!(await proctor.start(process.env.TEACHING_ARCHITECTURE_COURSE_WATCH !== "off"))) return;
+      if (!(await proctor.start(stackFollowsSources(process.env)))) return;
     }
     if (await httpAnswers(siteUrl)) announce(`reusing the site that already answers at ${siteUrl}; this command will not stop it`);
     else {
       interruption.signal.throwIfAborted();
       server = launchOwned(process.execPath, [script, "dev-site", ...segments], bundleRoot, scriptInvocationEnvironment(invocation, { ...process.env, SEMIO_BUILD_MODE: courseOriginalBuildModeV1(invocation,"dev"), [site.portEnv]: port, PROCTOR_PORT: env.PROCTOR_PORT }));
-      await awaitReady({ label: `the site at ${siteUrl}`, probe: () => httpAnswers(siteUrl, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: interruption.signal });
+      await awaitAnnounced({ label: `the site at ${siteUrl}`, probe: () => httpAnswers(siteUrl, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: interruption.signal });
     }
-    announce(`site ready at ${siteUrl}, proctor at ${proctorUrl}`);
     if (proctor === undefined && server === undefined) return;
     announce(`Ctrl+C stops ${[proctor && "the proctor", server && "the site"].filter(Boolean).join(" and ")}`);
     const ended = await Promise.race([

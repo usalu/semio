@@ -39,3 +39,4 @@ semio-framework-job = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

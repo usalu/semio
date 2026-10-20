@@ -8,7 +8,7 @@ import { classifyPackageSource, classifyPackageSourceDisposition } from "../../�
 import { packageImplementationAdmitted } from "../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
 import { fixedContractFilename } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
 import { implementationLeafBasenameFinding, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
+import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { basename, dirname } from "node:path";
 import { GENERIC_SEMANTIC_STEMS, type TaxonomyInventory, type TaxonomyInventoryEntry, type TaxonomyPackageRole, type TaxonomyViolation, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { matchDirectoryKind, resolveFileKind, splitLeadingEmojiIdentity, violation } from "../🏷️file-kind-matching/🟦️.ts";

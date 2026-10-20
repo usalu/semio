@@ -1,5 +1,5 @@
-import { foldPathEmojiIdentity, pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { foldPathEmojiIdentity, pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { posix } from "node:path";
 import type { TaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";
 

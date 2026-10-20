@@ -6,6 +6,7 @@ pub struct VecCursor<T: RetainedClone> {
     pub(super) values: Vec<T>,
     pub(super) child: Option<T::Cursor>,
     pub(super) child_value: Option<T>,
+    child_closing: bool,
     pub(super) index: usize,
     pub(super) source: Option<RetainedCloneBinding>,
     pub(super) phase: u8,
@@ -16,7 +17,7 @@ pub struct VecCursor<T: RetainedClone> {
 
 impl<T: RetainedClone> Default for VecCursor<T> {
     fn default() -> Self {
-        Self { values: Vec::new(), child: None, child_value: None, index: 0, source: None, phase: 0, output: None, closing: false, close: RetainedCloneClose::default() }
+        Self { values: Vec::new(), child: None, child_value: None, child_closing: false, index: 0, source: None, phase: 0, output: None, closing: false, close: RetainedCloneClose::default() }
     }
 }
 
@@ -45,7 +46,7 @@ impl<T: RetainedClone> VecCursor<T> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
-    fn output_ready(&self)->bool{self.output.is_some()}
+    fn output_ready(&self)->bool{!self.closing&&self.phase!=3&&self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original clone is closing or spent"))}let original=source.get();if self.phase==0{return Ok(crate::RetirementDemand{capacity_bytes:original.len().checked_mul(size_of::<T>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"vector original reserve overflow"))?,depth:1,..Default::default()})}if self.phase==2||self.index==original.len(){return Ok(crate::RetirementDemand{copy_bytes:if self.output.is_none(){size_of::<Vec<T>>()}else{0},depth:1,..Default::default()})}if T::BITWISE{let width=size_of::<T>();let count=(original.len()-self.index).min(bulk_run_elements(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,..Default::default()},width).max(1));return Ok(crate::RetirementDemand{copy_bytes:count.saturating_mul(width),depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(self.child.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original child absent"))?,body)}let projected=source.project(self.index+1,|values|&values[self.index]);match self.child.as_ref(){Some(child)=>child.advance_demands(projected,body),None=>T::retained_clone_cursor().advance_demands(projected,body)}}
 
     fn advance(&mut self, source: RetainedCloneRef<'_, Vec<T>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
@@ -103,7 +104,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
                     if remaining.maximum_items == 0 {
                         return Ok(RetainedCloneStep::Progress(used));
                     }
-                    self.child = None;
+                    self.child = None;self.child_closing=false;
                     self.values.push(self.child_value.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector child owner is missing"))?);
                     self.index += 1;
                     used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
@@ -143,7 +144,7 @@ self.output = Some(std::mem::take(&mut self.values));
                         return Ok(RetainedCloneStep::Progress(used));
                     }
                     self.child_value = Some(child.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector child completed without an owner"))?);
-                    let _ = child.begin_close();
+                    let _ = child.begin_close();self.child_closing=true;
                     used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
                     continue;
                 }
@@ -152,7 +153,7 @@ self.output = Some(std::mem::take(&mut self.values));
     }
 
     fn take(&mut self) -> Option<Vec<T>> {
-        if self.phase != 2 {
+        if !self.output_ready() {
             return None;
         }
         self.phase = 3;
@@ -169,14 +170,23 @@ self.output = Some(std::mem::take(&mut self.values));
 
     
 
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if let Some(child)=self.child.as_ref(){let mut d=if !self.child_closing||child.terminal_is_empty(){Default::default()}else{child.close_demands(body)?};d.depth=d.depth.max(1);return Ok(d);}
+        if !self.close.is_empty(){return self.close.next_owner_demands::<T>(false,&None,body);}
+        if self.child_value.is_some(){return self.close.next_owner_demands::<T>(true,&None,body);}
+        self.close.next_owner_demands::<Vec<T>>(self.output.is_some()||!self.values.is_empty()||(size_of::<T>()!=0&&self.values.capacity()>0),&self.source,body)
+    }
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement")); }
+        if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(child) = self.child.as_mut() {
-            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !self.child_closing {child.begin_close();self.child_closing=true; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
             if !child.terminal_is_empty() { let step = child.close_step(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
             let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            self.child = None;
+            self.child = None;self.child_closing=false;
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if !self.close.is_empty() { return self.close.step_granted(grant); }

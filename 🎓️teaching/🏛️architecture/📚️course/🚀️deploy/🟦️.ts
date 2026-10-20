@@ -37,7 +37,8 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { requireIssuedScriptInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { buildProctor, type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import course from "../🔣️.json" with { type: "json" };
 import deployment from "./🔣️.json" with { type: "json" };
 
@@ -228,7 +229,7 @@ export async function checkCourse(repoRoot: string, invocation: ScriptInvocation
   const { signal, release } = interruption(invocation), phase = AbortSignal.any([signal, AbortSignal.timeout(1_800_000)]);
   let artifact: ProctorArtifact | undefined;
   try {
-    artifact = await buildProctor(repoRoot, invocation, process.env, phase, courseOriginalBuildModeV1(invocation, "dev"));
+    artifact = await acquireProctor(repoRoot, invocation, process.env, phase, courseOriginalBuildModeV1(invocation, "dev"));
     const status = await artifact.launch(["check", resolve(repoRoot, COURSE)]).exited;
     phase.throwIfAborted();
     if (status !== 0) throw Error(`Authenticated proctor course check exited ${status}`);

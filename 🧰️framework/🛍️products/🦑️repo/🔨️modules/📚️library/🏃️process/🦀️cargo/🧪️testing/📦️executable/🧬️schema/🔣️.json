@@ -11,10 +11,129 @@
     "arguments"
   ],
   "definitions": {
-    "RuntimeKeys": { "const": ["SEMIO_TEST_CLI", "SEMIO_TEST_ARTIFACT_DIR", "SEMIO_KEEP_WORKSPACES", "SEMIO_TYPE_BUDGET_MS"] },
-    "RuntimeEnvironment": { "type": "object", "additionalProperties": false, "properties": { "SEMIO_TEST_CLI": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_TEST_ARTIFACT_DIR": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_KEEP_WORKSPACES": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_TYPE_BUDGET_MS": { "$ref": "#/definitions/RuntimeValue" } } },
-    "RuntimeValue": { "type": "string", "maxLength": 4096, "pattern": "^[^\\u0000]*$" },
-    "EnvironmentCase": { "type": "object", "additionalProperties": false, "required": ["name", "windows", "compiler", "consumer", "accepted", "expected"], "properties": { "name": { "type": "string" }, "windows": { "type": "boolean" }, "compiler": { "type": "object", "additionalProperties": { "type": "string" } }, "consumer": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] } }, "accepted": { "type": "boolean" }, "expected": { "type": ["object", "null"], "additionalProperties": { "type": "string" } } } }
+    "RuntimeKeys": {
+      "const": [
+        "SEMIO_TEST_CLI",
+        "SEMIO_TEST_ARTIFACT_DIR",
+        "SEMIO_KEEP_WORKSPACES",
+        "SEMIO_TYPE_BUDGET_MS"
+      ]
+    },
+    "RuntimeEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SEMIO_TEST_CLI": {
+          "$ref": "#/definitions/RuntimeValue"
+        },
+        "SEMIO_TEST_ARTIFACT_DIR": {
+          "$ref": "#/definitions/RuntimeValue"
+        },
+        "SEMIO_KEEP_WORKSPACES": {
+          "$ref": "#/definitions/RuntimeValue"
+        },
+        "SEMIO_TYPE_BUDGET_MS": {
+          "$ref": "#/definitions/RuntimeValue"
+        }
+      }
+    },
+    "RuntimeValue": {
+      "type": "string",
+      "maxLength": 4096,
+      "pattern": "^[^\\u0000]*$"
+    },
+    "EnvironmentCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "windows",
+        "compiler",
+        "consumer",
+        "accepted",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "windows": {
+          "type": "boolean"
+        },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "consumer": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NetworkProtocol": {
+      "const": {
+        "version": 1,
+        "acquisition": "original-network",
+        "compilerOfflineArgument": "--offline",
+        "compilerOfflineEnvironment": "true",
+        "locked": true
+      }
+    },
+    "NetworkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "offline",
+        "ready",
+        "cancelled",
+        "compile",
+        "fetchOffline"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "offline": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "compile": {
+          "type": "boolean"
+        },
+        "fetchOffline": {
+          "type": "boolean"
+        }
+      }
+    }
   },
   "properties": {
     "version": {

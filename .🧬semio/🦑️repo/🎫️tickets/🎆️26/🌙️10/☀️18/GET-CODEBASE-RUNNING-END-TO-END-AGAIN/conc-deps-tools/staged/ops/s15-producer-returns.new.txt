@@ -1,0 +1,4 @@
+try{await incremental.writeJavascriptDependencyOwnershipIndexV1(store.root,workspace,exportBunWorkspaceOwnershipIndexV1(workspace),checkpoint,()=>control.yieldContinuation());}catch(error){if(control.signal.aborted)throw error;}
+ await store.recheck();checkpoint();
+ return produced;
+}

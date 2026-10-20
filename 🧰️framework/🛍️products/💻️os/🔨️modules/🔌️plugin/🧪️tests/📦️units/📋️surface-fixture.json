@@ -8,8 +8,8 @@
   "files": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
-      "sha256": "2e7796a3f31af9aa3a0d1636620a10d246318cd8de66577f2394ca9da51e1981",
-      "bytes": 2918,
+      "sha256": "06fa22ad995c45f6d7db6d8fc149a4727fdce12c3a44c9c49e7147e8c39294d7",
+      "bytes": 2950,
       "assertions": 35,
       "functions": [
         {
@@ -23,8 +23,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs",
-      "sha256": "4c7199168fd8a73f1828ab128cc282391f3c4cc3db92365fba5bd7cedc48a009",
-      "bytes": 1469,
+      "sha256": "c51c0b5739f9e7f1ab77a628259bbaffbf4d08c21810a4b0ed80b8bc5cb3d42c",
+      "bytes": 1455,
       "assertions": 0,
       "functions": [
         {
@@ -59,8 +59,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs",
-      "sha256": "dc8bf8596f0e7380540d28c37e5fd3c044228aa9c4cd60ea684775cbd71289d8",
-      "bytes": 2901,
+      "sha256": "c26a05ce8f3ca5244c57d64a8fcb1f26b3343a4ce5336b1785e866bb279a8ff1",
+      "bytes": 3089,
       "assertions": 0,
       "functions": [
         {
@@ -92,6 +92,13 @@
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
         },
         {
+          "name": "label",
+          "sha256": "aed69f89670d93d43e2e4b59a32d2812d06ad7a4b2fdbdcce5b6a739a6fedd67",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
           "name": "diff",
           "sha256": "810eff98c741f66836619c813e11550fed175a973aef252f4b54358e94ca3040",
           "assertions": 0,
@@ -101,13 +108,6 @@
         {
           "name": "inverse",
           "sha256": "c87cc85a21e0e5fbc4e1cf63a6f48b8c4b46299b6a32056109b7884288423eb5",
-          "assertions": 0,
-          "law": false,
-          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
-        },
-        {
-          "name": "label",
-          "sha256": "aed69f89670d93d43e2e4b59a32d2812d06ad7a4b2fdbdcce5b6a739a6fedd67",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
@@ -194,13 +194,34 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs",
-      "sha256": "fe61079eafdde1c6f1148f9cae1132421577d63e31d61bfcdd17952dc22dce0d",
-      "bytes": 10174,
-      "assertions": 1,
+      "sha256": "7bdde05ab6b83731fcb2811c81205c2b6f83ecff26d54754167b8ff5bc8c9113",
+      "bytes": 18742,
+      "assertions": 11,
       "functions": [
         {
           "name": "new",
-          "sha256": "0700ebd0c8ed1708c7324b262e7ff6c6ebc8a0afcfe299f233631c9604b4621e",
+          "sha256": "939ec9c1275654383fdeb9a802b9b1b50785fa254fe2c71824436f524867c110",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "from_request",
+          "sha256": "e1528ad6c2ef7348ee0c0584548643d59c9721554824ed9299c5e5c391156f02",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "command",
+          "sha256": "bfe1bfd45131f7a0de559d50ed1ecb1014237ebb196f86c2c5a8fa6cae34be88",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "completion",
+          "sha256": "01377e23de14353814b9c32cf545d6ddbaca6c42b6996d0c3ee2cb8c0e281b71",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
@@ -249,7 +270,7 @@
         },
         {
           "name": "complete",
-          "sha256": "879bb7b22b43c713afe6af3e51c5f78cff239cff6284b77201fb332ada972b84",
+          "sha256": "0b2ef274e495cf228e982ef6ff677b7daae9ba72029d3f3dcee9ec35a5e06fc5",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
@@ -263,28 +284,28 @@
         },
         {
           "name": "terminal_is_empty",
-          "sha256": "12cf909e5f4bacc45ea405715c0f3adf250903b75ea4b4990321b2af534c1915",
+          "sha256": "3fbd1cfafcd7f61fb7d9cc5cda7b45b6f77551431d965f9b1a49832b4b00dfa0",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
         },
         {
           "name": "command_is_released",
-          "sha256": "50f24599f04bc10ed349bd74abbbd9e13d65edbf66896dbc1cf5e23103b5b869",
+          "sha256": "b796ec7b6e3962b6be6153d6ef5350206494637e0cb9df84983e8386e08b0a14",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
         },
         {
           "name": "demand",
-          "sha256": "97ebd12a78916689e5114529326bf923e205a78ed08f6700f8f1093e63ba5292",
+          "sha256": "497b9e1441180dfd971539feb94767d53b24b33280672aa958a32d70b49a8743",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
         },
         {
           "name": "close_step",
-          "sha256": "0502e234c133b6c34bde5beded80a1d7bee714af6da34c83dbe11b13cfe4d912",
+          "sha256": "fb1ac19ede9709e3acc01afc41fedba2f144b01f391c46b6cd0b92b6ba938dec",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
@@ -302,13 +323,62 @@
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "admit_fixture_tool_job",
+          "sha256": "6deab3ca88c34db91db1e6687ac5e6513611dcacd34bf9ec22aedd1476c15ff4",
+          "assertions": 5,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "new",
+          "sha256": "99251e918bc12f34f8e4cbfbca0e0d134b73a0fc3e795d4e52fa588dc5293df8",
+          "assertions": 1,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "close",
+          "sha256": "0c173a5cbc6a510886706d640a434049a3682214a50a56bf8ca152924d78b134",
+          "assertions": 1,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "original_fixture_stock",
+          "sha256": "9780f89ef8adf1444e5a8f99befbdb92b77ca65fc6c87b61470fe0f69c2c5059",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "retire_fixture_owned",
+          "sha256": "131219198ff99710a48e82c1d82357e634dcc1941cf5d93d349c04a64ab6f926",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "close_fixture_decoder",
+          "sha256": "d8e85b518060198dde63978619c31bd8224a2b4b6bae7bd624ae94900361efa4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "admit_registered_fixture",
+          "sha256": "0814333b2f61b63e6be783f3d5a47e8a71f5b2629fb76eafea0ebb4fb6a4bd5c",
+          "assertions": 3,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
         }
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs",
-      "sha256": "372f3a6164fea491eb4a39bb75b66c3be35402ed6eee0baf88a30407ec22a68f",
-      "bytes": 1296,
+      "sha256": "b2ba253aedcdf448e3d76faff21919b49d6a87f8af50b9838afa203eb68301d6",
+      "bytes": 1673,
       "assertions": 0,
       "functions": [
         {
@@ -350,8 +420,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs",
-      "sha256": "d5fca65ba226cc7137bc180f1f79792758677eb64921972feda15c9778435238",
-      "bytes": 8090,
+      "sha256": "bf86c64f299ee1df7d91fa516f9650428e390a82c662cee914e78f03a704c4a9",
+      "bytes": 8446,
       "assertions": 0,
       "functions": [
         {
@@ -370,35 +440,35 @@
         },
         {
           "name": "preparation_factory",
-          "sha256": "14bf335ac9460490b200503c0bf827c81aa44c12151b86200b41750eec922d8d",
+          "sha256": "93040d40e5ae7ea92bd97eb84a7309b3951b15afe2136a26815caf190e5ff48b",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
         },
         {
           "name": "wired_birth_demand",
-          "sha256": "c0bb02cf13b82fa6558f0b192462e48acdd3f4292f1c2096aeba44a2c9593d04",
+          "sha256": "157cc5fff1cf6fa8e32b4dc3bbcf431662200a5680f33c266872fe225333b165",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
         },
         {
           "name": "document_store_owners_source_demands",
-          "sha256": "8616d39962851565df768cfd8c47b2b3e84b053938e198a7b918a1614515bc2b",
+          "sha256": "4392b862ad891ecff9013bff2ab922b6acd665e1cb00c7d05e7dae3720cacf72",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
         },
         {
           "name": "admit_document_store_owners",
-          "sha256": "7eecf50658ff0546c2203972eed246577076788ebd590d32b7b0919cbeed9fbd",
+          "sha256": "4ab7af78db393903f1ceea00dcb487488ccce4fed9719d9e7ac3fc353cc8014f",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
         },
         {
           "name": "funded_document_store_owners",
-          "sha256": "d7e75e65702e11d3e0093a7516e71d86efcd02973703768348b6732d22468cff",
+          "sha256": "282c456aa229fa8ddacaa92c6ea5994bfca064d299dda59f3eb9e8c2573e3e54",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
@@ -407,8 +477,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs",
-      "sha256": "2eb2135e10afe94f8ccd81eb743eabdfacab256434d0b1ddcf1ac8931ba20eec",
-      "bytes": 8485,
+      "sha256": "e5eb9fd3020f21b41431a2f69bacf4a0c303241d92ab62c96c72bbecec7298cc",
+      "bytes": 8608,
       "assertions": 0,
       "functions": [
         {
@@ -468,13 +538,6 @@
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
         },
         {
-          "name": "inverse",
-          "sha256": "9ec3452405a412d75fcccb893cab3b924795d1fbf10c380f5260ed6f35bffbf9",
-          "assertions": 0,
-          "law": false,
-          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
-        },
-        {
           "name": "is_empty",
           "sha256": "c1a91024f86da766141eee013351538320b03b5b8339c1e3ff818df55e58f98d",
           "assertions": 0,
@@ -482,8 +545,8 @@
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
         },
         {
-          "name": "apply",
-          "sha256": "8fffa538fa140d38ffa4cb03ad407580765c1d0bc216de4bc3533222c5a6ee78",
+          "name": "inverse",
+          "sha256": "9ec3452405a412d75fcccb893cab3b924795d1fbf10c380f5260ed6f35bffbf9",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
@@ -491,6 +554,13 @@
         {
           "name": "absorb",
           "sha256": "c6ba74ede8d188e6aa348d90ee14cb4e863192bc08beaf5fdd38376bfa0cd5d3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
+        },
+        {
+          "name": "apply",
+          "sha256": "3298090ba4aa611ad5b0e425c1550b8d1ad9c0431b0f8d6e75f10151faf9a5ad",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🗃️snapshot-diff-and-commands/🦀️.rs"
@@ -541,13 +611,13 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs",
-      "sha256": "eebdb050cd0ccff08245b4f6e6ed37388e71457ac94c03b08d17ac4038c07f2e",
-      "bytes": 12141,
+      "sha256": "176f336ce8e19f35cf09dff1368a9408936b66d8b9af166b5b9b843ac7ef1f58",
+      "bytes": 12975,
       "assertions": 0,
       "functions": [
         {
           "name": "step",
-          "sha256": "7fca7c00a2c6909441b25b64217669b67b65c8c0ae598a97a0f196026fb8bf35",
+          "sha256": "f1e9aa485e5c7745ef050eeecc196d2283b4ba0a7ca3ddc7189221e6f912328b",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs"
@@ -637,15 +707,15 @@
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs"
         },
         {
-          "name": "create_job",
-          "sha256": "bdcd650e6239bcbc425989c7dff8437d4c5164d1f16cf7e3004d0af48e5ef220",
+          "name": "admission_demands",
+          "sha256": "f0154d6e0309230f00df58d26e2677ca9dadb504eb849c3b82aaaf0a98fffdd7",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs"
         },
         {
-          "name": "create_job_from_wire_pages_with_payload",
-          "sha256": "7f0dd5f0be5999abdda95cbfcf862023e705cbc36bf883b609f81d91dc55c26d",
+          "name": "admit_job",
+          "sha256": "9bf7dc1161f517f8fdbe2eaa125c9c6c328e1090d0a2adcd9cc75e5df418b505",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs"
@@ -724,8 +794,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs",
-      "sha256": "0d99b866bbdf0049cbb5391bcc76fb24d056e361568bc265b9cabb48c983af61",
-      "bytes": 15647,
+      "sha256": "95f8096a69aeede261231e1be7c4bf2f9f9422491cce39619414813df5e654f8",
+      "bytes": 15663,
       "assertions": 0,
       "functions": [
         {
@@ -800,7 +870,7 @@
         },
         {
           "name": "build_tool_job",
-          "sha256": "0e7b5ac2e7b73f46825b2df35531c55862827aa8c8e958ea69a246e563fa920f",
+          "sha256": "eb38f9265ba67b56323d811562d8fc3b3a8e52d5ccad653d8091c70d35c972f9",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
@@ -1211,14 +1281,14 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🧵️retained-work-and-child-emission-laws/🦀️.rs",
-      "sha256": "c07b3f5f47bcae3c50542fab1225c44d7f2b862760cd038147ccf681545c79ce",
-      "bytes": 27090,
-      "assertions": 67,
+      "sha256": "15f9cb5635b95951c68ab4cb6eeea93e0ad3ec8e4b57c2bf7e5e1644cf287ab1",
+      "bytes": 27379,
+      "assertions": 68,
       "functions": [
         {
           "name": "retained_command_work_borrows_original_fuel_and_fallback_charges_once",
-          "sha256": "ae4a43ff23df486fdc2d9ebfaadfcb2f1727473f0ad82558db4e43c7e700329f",
-          "assertions": 10,
+          "sha256": "15a6abfc73831bf56d86aa17704ca33f1bd8e692d91ce701b57e9b62e3cda773",
+          "assertions": 11,
           "law": true,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🧵️retained-work-and-child-emission-laws/🦀️.rs"
         },
@@ -1238,7 +1308,7 @@
         },
         {
           "name": "step",
-          "sha256": "8b8e777d3bd13c8df0fb1e96f6bb01829a1f45b09f322762833dad39848b5c0f",
+          "sha256": "de9409c6cece34198dacb9444d1ad4451679e64ed3a55b438c149a36af4cbe80",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🧵️retained-work-and-child-emission-laws/🦀️.rs"
@@ -1315,7 +1385,7 @@
         },
         {
           "name": "child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources",
-          "sha256": "4bc6296f761553594b08f11d1baa5199312c316db50f702c80782adc0d74a58d",
+          "sha256": "d7cdf1961429de0495d2aa48fd35402214d27b918ffa60ac2400cf2a06c5f851",
           "assertions": 28,
           "law": true,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🧵️retained-work-and-child-emission-laws/🦀️.rs"
@@ -1359,6 +1429,11 @@
       "features": []
     },
     {
+      "name": "semio-framework-action-bus",
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
       "name": "semio-framework-artifact-reference",
       "path": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml",
       "features": []
@@ -1386,6 +1461,11 @@
     {
       "name": "semio-framework-job",
       "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-os-command",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
@@ -1461,6 +1541,11 @@
       ]
     },
     {
+      "name": "semio-framework-plugin-testing-caller",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
       "name": "semio-framework-plugin-testing-laws",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
       "features": [
@@ -1510,6 +1595,11 @@
     {
       "name": "semio-framework-value-derive",
       "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-value-snapshot-read",
+      "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     }
   ]

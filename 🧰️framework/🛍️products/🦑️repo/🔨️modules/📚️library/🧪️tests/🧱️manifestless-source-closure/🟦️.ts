@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -120,7 +121,7 @@ describe("manifestless source closure", () => {
         const parsed = ts.createSourceFile(owner.path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
         expect(parsedDiagnostics(parsed), owner.path).toHaveLength(0);
       } else {
-        const parsed = spawnSync("python3", ["-c", "import ast,sys; ast.parse(sys.stdin.read())"], { input: source, encoding: "utf8" });
+        const parsed = spawnSync(testPythonV1()??"python3", ["-c", "import ast,sys; ast.parse(sys.stdin.read())"], { input: source, encoding: "utf8" });
         expect(parsed.status, parsed.stderr).toBe(0);
       }
     }

@@ -33,3 +33,4 @@ semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️pack
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }
+semio-framework-replication = { workspace = true }

@@ -1,0 +1,512 @@
+{
+  "version": 1,
+  "kind": "fresh-production-policy",
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "cohort": "28050e7abe83aa761d75531399984b02",
+  "captureId": "073552025b8258fa9046bb4497737378",
+  "runToken": "d32e2e85f09cedd99d722afcafa79ed9",
+  "engineId": "9ef0c850-ba59-4f21-bd6a-85515b34dd15",
+  "expectedHead": "bfe5c8314f50b3af9030752a2b896e3698fe919c",
+  "tag": "native-28050e7abe83",
+  "versionProof": {
+    "value": "0.1.0",
+    "source": {
+      "path": "/Users/ueli/Documents/semio/Cargo.toml",
+      "bytes": 122740,
+      "sha256": "32adf4589be8502aa63dee245c500d5837d2495eaeaaec8a2a4c9f97f292f259"
+    },
+    "verified": true
+  },
+  "native": {
+    "path": "/tmp/semio-course-native-28050e7abe83aa761d75531399984b02/repo",
+    "sha256": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c",
+    "bytes": 11767992
+  },
+  "critical": [
+    {
+      "path": ".github/workflows/architecture-course.yml",
+      "sha256": "48b33b5b58cd1b4390ac5dec840ba7a9961bc5091c192ad3a3d6a1a4117866c8"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/README.md",
+      "sha256": "19c46b4308354ce638f29b05b65cc66db23f890781b5869df69811b2224598a9"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+      "sha256": "4e9a00685890aefa30a06f2bc6f1089ecce18edcaf65bbe9cbfa25485ac8a529"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+      "sha256": "f402a30139cee7bac15dd9c2a4b352d91ae768efe7a2b7cc8a06efa1517359bb"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "5dd27bd34a4fb5936fac82f0ac7cfa525ebca4349ead5cd67dc3268e11c607b5"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "6b725b97908bf712cf17c528f007811fdad201874da672adb3fc179a678f4959"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+      "sha256": "7225cc84f2335124fbe2ebc0ae097f6825a24ab53419994c953cb9f8fbe2c420"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+      "sha256": "773285a39492865f7d1e4fefba4b0089a24e02368a374bf661b647e34f479e80"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+      "sha256": "ffa4c35e4b6c946f07b7ed94273a7ec5da7af47d3d4568d17323d17618109150"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+      "sha256": "c24bcbe233d11777c63215d2b1d274ae6c7833553a6dc14102daf2cb6a57ea5e"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json",
+      "sha256": "d6e65008db3924a1d576345275aefb2c71036a24fab9ba462fbccf5ee86017fc"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🌐️sealed-publication-and-bundle/🟦️.ts",
+      "sha256": "de03f646b7fe3e50363683dbe385f8d11974e03e11a1480337412b712af795eb"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🏗️site-build/🟦️.ts",
+      "sha256": "34b9cba13d3c069fcdba0865e0b55992a62f8b583813f422c50c63eefb884de1"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🐳️docker-context-and-image/🟦️.ts",
+      "sha256": "cb8d02ac959178dac1c73f746d563de14f535c1bc2ec08550033446dcaae733c"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🛑️cancellation-and-staging/🟦️.ts",
+      "sha256": "bca25e086552a235d4eb84cfcebec20762ea957f95b8a38eab2255c79109c464"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+      "sha256": "44741261b72c33dcea3167c92b4441cb05fbb74f391f8d77d984250cc48ee98e"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧩️compose-caddy-and-workflow/🟦️.ts",
+      "sha256": "b1927ca919ee7526b5aa6286a8339c2763fda83d1f15df3d2d94a385a38151ba"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧰️deploy-fixtures/🟦️.ts",
+      "sha256": "1e4b4f1894ea152f529c3baa4dd658c05d9b9c8764c27d70443506ec598a52fc"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🔣️.json",
+      "sha256": "0d5f8fff06529be16df577c9075dabb7751fa036d00781628b5d45e55fd6dbb8"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🛗️native/🔣️.json",
+      "sha256": "58ca9c85c8bcf261d3c7cb37098120860995a63eb5f497c604bc677efc2b82d5"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🛗️native/🧬️schema/🔣️.json",
+      "sha256": "558d5f99583cbbb9eacc24d1bbc66a11188800cf4ef83033b20f65435ad4aedb"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🔣️.json",
+      "sha256": "8b020274b80c06faa449ee11b7d5f586321660c909636197c254fb9ab351f63b"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json",
+      "sha256": "a35c072c8f093372542eb06cdec5c8dcf10aa5adaff0bfe735ac2e983c16c0a5"
+    },
+    {
+      "path": "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json",
+      "sha256": "bd9a1d551fad271d5317ec28162db59303c8bb9e425e92d789118e2b980b59cb"
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "644a0ba22f4397166c0098ceb14070654f7c866ffde0876c02a5dbdbe3b4cad4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json",
+      "sha256": "4b77099f177e62330edf11165fd8a6aa609bf0eda22174a1cf703a758de3bdf1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+      "sha256": "2de3e85e7e339d2a132d0b98940bb2237b3af48d4f8f37da530e531613b26a30"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+      "sha256": "a4ffc37e4855c46bb1cddd9894e9d7529490e205059b55cf6619e44072829294"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts",
+      "sha256": "3e0918a94d1ff8c6e4fd46d18231f0eb13868efc4729eb8c4fee723287cb6f87"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
+      "sha256": "f3bb37acc90e7f0adb00125677bfac1569d3c0c4509e4655b6bfbd6a8613fdb6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json",
+      "sha256": "9514444037792a02618aad26c896faa78fe34cd7dc0416355a51eb9e665d145f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts",
+      "sha256": "2472d9c6fe4b26bd51ce98ba78035e984f75d36a1ca643bfec01d70fd9f2a58d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json",
+      "sha256": "68496c2436f65afdd348b71010ed7017fcfaad9bfc16f92228610d6aae98b3e3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+      "sha256": "73f34962339f7c2f358d84aa61e84134685ded6134e27d17cb723c36bbebc4c0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧬️schema/📐️law.json",
+      "sha256": "6b201858a9672051ffce1f46188f96d3be2cd1b9330d09906cfa9ac24abe663a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+      "sha256": "0e1ec1d4e7fddd9d69672fccc10cf7f4cf08861a8edc31765c9387e7090cd008"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+      "sha256": "439a17d0bd96fa9dfb6d2b0e8a192c0838d277bbb3a064a8b72d4884a0158f5c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "51faf723910e26675e2f208175cda75b35e6cdc8733ad035dac07afbff994d5e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+      "sha256": "478895db95329d032fc536679a94add28d71317db73b86339a1ce82ae9bb8c87"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+      "sha256": "a1602694244743641c1e992e0c5e162c16908e5f1316d59b6b159025486b6931"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+      "sha256": "71d864748af202b6a534fed8a6c6e82415b8f22f0cb55375daa8a0519d204723"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json",
+      "sha256": "faa27bddcb87f1530b861c607ab4af03347b45f6854564357b5886433e347e26"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json",
+      "sha256": "5cd3488e7a281508f7b53e17ced596a24dd4d50cdf28b97ded5ea392d2ab547f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+      "sha256": "d8f982cba9dceadf5b3e002acd3b25291e770ca6040e827879f9ffb25d98b522"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+      "sha256": "3430da766c59cd88375ba654e977b504806c8b042478794170c52f534bc9a8f9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🔣️.json",
+      "sha256": "54f589f8e69268eb66514612539b8bac069a2ddc6fbe80e9abe1279a9b144c44"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts",
+      "sha256": "2d2d2ce7a38a4211db8e59bdc48c2fb4b0c4f0162a5afff3f114eb472a60dc12"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json",
+      "sha256": "1c7eeb331c7f1ae9588cb5bee4499af3834445333c9d56a6536a77041c372b57"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+      "sha256": "4eb8645a785f78b15d6898986d3ce133fa4f5b917447f004c7222929e7bdd791"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🔣️.json",
+      "sha256": "d1bd91f210b58be7b33da0899a251026475450d33f086f12f381db373ebe5df9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+      "sha256": "5d19c5d1de3ab23ab65012793cf763a082ea22f9cd3e89be59488e48bfd4df46"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
+      "sha256": "08a4e9a5742c41ac7c0122414461942da5a13bf89754ad757af6cbc8bab493f3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts",
+      "sha256": "a1239a4af09b9e01c145a8615bb96cb2b3ef7259a841246ffdd81380851223c7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+      "sha256": "f7d4e05b0adc3c134f69b4561480f43a6b58e35837cb735601dd501571fa7079"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🟦️.ts",
+      "sha256": "603c98af79aff6877d10e2c55783744612abc7918722b1759f450559d25fe362"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🔣️.json",
+      "sha256": "039d655e3320e72da480309df89ad53c65f9514240410bb997444f54c1eb831b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts",
+      "sha256": "833f1ec33e7ecb411d20a718ae520e00ca1cbd7b6c82eb641333c3875276dbc0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧬️schema/🔣️.json",
+      "sha256": "fbb023b90e06ca409ce838d89b7cc5c76240af986ea32745bf358b407417861c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+      "sha256": "931306e1b14cecbd6332c31285e14b66ce7d0028118e28c5d8ec82bca2130d7a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+      "sha256": "23eb9fe2a2583f6bb3f674ce557684e37cbb65c012219e22646de7b6db081f25"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+      "sha256": "454ae86643dde0d0f3346e3174952d29274fbb8c30baebd69dbe80e824d50952"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+      "sha256": "d443dbb08911673dd77d72c69535457690ef6660b9b472b616b2a604de2c6d1c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+      "sha256": "8b8db127d6afe9a3a6667a4f8fbf0223ed6ac7096124fc315eba9158a3d0b67e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+      "sha256": "6bd2e62669067bc3aa8afb40fa5a0917201d1c713174172da2112a190e1a5265"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+      "sha256": "2c517630732bcc0fa218bff51a868e854182481bd0292d63571ebdb82ce421ff"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+      "sha256": "53359ff57d19e39a058a1108faacaf1382beffde367e3f242a73993f718489d0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🔣️.json",
+      "sha256": "c6cc55f25778a45933752d95709e97e27061be693421bbbb3930651febe373bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+      "sha256": "1a751c3fb62662fba5c88d3550ccc33f89507061e4f259e05005401e5c200ef2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🧬️schema/🔣️.json",
+      "sha256": "8a177ee4c48caab9d5644110fc63079e5277e6f28fec3a0fc0b52cfe526d8392"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+      "sha256": "e3dce89a2fcf3074d6b9a3208935bbc5041d6bda99c51b96d455a1019970baaf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json",
+      "sha256": "ab518fb7a1fb79081a2ddef978f187d941afdff3cfbd4fd199b9fca9e558422e"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "32adf4589be8502aa63dee245c500d5837d2495eaeaaec8a2a4c9f97f292f259"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+      "sha256": "adffaa5c3804d1f692005281df13ff50f27c08901ffe4a69b8313d46c0fea3a1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.d.mts",
+      "sha256": "ab9ef277673305dfb175b8867e1876f49d69cb93857ea729f6fe453a313ea5bc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+      "sha256": "76c1ba05406d8882f918558d6034b28737a87cbdfc90f977eb9af1399b89fb5b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ec04859a2b01d033219c25b4019291c29f6eb05fcd66ecfb60e84340d0132619"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+      "sha256": "a7f063445c8f0d923b8eeaf9c114135046a1ff77014466b3955e6527f044f1e1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+      "sha256": "eae3a09980709780b7b235fcd0c33632663b23064b01e7ef538da712d50f13d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",
+      "sha256": "3786475f9195c84370f69a123ba15b0fdac6889a49b0bf34ed0c145386f1bdb8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+      "sha256": "31a02c99a3216a8208cf3afd51efd39ba3d4df981798aa7b7f906619e870b95a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+      "sha256": "b9dd116bcab05e8d97b0977a2c0923e740128a32545497630898828256cb2be7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+      "sha256": "c3e23b368de80f471870cc95fe5d32f81c9b7b532bd48314b3db3bc0bda063f8"
+    }
+  ],
+  "operations": {
+    "create": "be76500814897cf86a2bc41bc104eecb",
+    "receiver": "3959bce863f00f922900a19e61bbe0af",
+    "gitTransfer": "d7aeb1da919a9648799f30f636338a97",
+    "provision": "df25d8eab567d7ee9f2be5176bbd59a4",
+    "facts": "7ef9c303ea2cfb9f39e5fbab86055dff",
+    "export": "8f9cca5be6baafa29caba204ad61d37c",
+    "final": "426eee0179643bb88617129aa8fa2e77"
+  },
+  "inputs": {
+    "entry": {
+      "entrySha256": "7d56cc717ff38539411124e55579064d56fa96d3ecaf8d9ff04a36442350909c",
+      "receiverSha256": "465e81461cf145092a45479a02e49abd94c4f42776877cad7b6c25af2fea6a27",
+      "controllerSha256": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d",
+      "provisionSha256": "af9e6305693dab66022acc2c7e423af66ec1b5d6fd53289ce5881d3e9c3f1e37"
+    },
+    "capture": {
+      "core": "2c940c5e5d795116f56acf65dccbb1d8ffc6f81cf62d7783e37b435f0107e3a2",
+      "host": "7d13d183efdf86e7a68099c71735871855a0d381c520a3a2807b4a06abaa67ab",
+      "entry": "c269b7f2a827a6aa759f889069a3767b94a8ef175114b985ad337d6c30829dd5",
+      "schema": "ac6b9d06a066dbbc0f262b48bc3caf6041e265b919be906e0912f367d990d7c9",
+      "contract": "c2baab37853b53ad8b104c391c9b1ee6f372c5e17c548fba2ad69f7194308aa1"
+    },
+    "gitCapture": {
+      "producer": "ee06f129471657d15774ed6c580211dcb9fadcb1c2428b8d93a9c3a3c2121f4b",
+      "entry": "b32659ed00681822756cd71cbe4a205c4219e805fbdb7cb519de0bbf04b23bdc",
+      "revalidation": "76465f03746fa595413fcfa8ab7fe29d25df7c1b468673604254f88accd9ade5",
+      "core": "2c940c5e5d795116f56acf65dccbb1d8ffc6f81cf62d7783e37b435f0107e3a2",
+      "host": "7d13d183efdf86e7a68099c71735871855a0d381c520a3a2807b4a06abaa67ab",
+      "schema": "5ca60d42f50c962ebf5b48cb15b5e4982f7ff7c8963619559124846a98763bb3",
+      "contract": "c2baab37853b53ad8b104c391c9b1ee6f372c5e17c548fba2ad69f7194308aa1",
+      "sourceSchema": "ac6b9d06a066dbbc0f262b48bc3caf6041e265b919be906e0912f367d990d7c9"
+    },
+    "archive": {
+      "entry": "c258313ed5861553df44767e78d4f6de2b7d170a7e0e91225013d8c78491452e",
+      "archive": "0f6fea9d529fe2e6f55a1f17c238f04f82f9bbdf35cb3d3f1920ab7a34f03b3c",
+      "revalidation": "76465f03746fa595413fcfa8ab7fe29d25df7c1b468673604254f88accd9ade5",
+      "core": "2c940c5e5d795116f56acf65dccbb1d8ffc6f81cf62d7783e37b435f0107e3a2",
+      "host": "7d13d183efdf86e7a68099c71735871855a0d381c520a3a2807b4a06abaa67ab",
+      "schema": "6da6c381097c763f9719127b07b7a99e1975098e75483dcae9ef1ecf8c3baebb",
+      "contract": "c2baab37853b53ad8b104c391c9b1ee6f372c5e17c548fba2ad69f7194308aa1",
+      "gitSchema": "5ca60d42f50c962ebf5b48cb15b5e4982f7ff7c8963619559124846a98763bb3",
+      "sourceSchema": "ac6b9d06a066dbbc0f262b48bc3caf6041e265b919be906e0912f367d990d7c9"
+    },
+    "git": {
+      "scriptSha256": "e5b888a348c90dd052268355f24d0bceb19100b953ee6ce2f60d81673ad7d515",
+      "schemaSha256": "7afc00cc84a49d1eb3ac6c8e80f0ec7f0ed53e134ce37b3e97683676c43743dd",
+      "receiverSha256": "e07952ee2995029db779f4128ef209fba26ecc628ef8f93c035b07b24a468efa",
+      "sourceParserSha256": "465e81461cf145092a45479a02e49abd94c4f42776877cad7b6c25af2fea6a27",
+      "ownershipSha256": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d"
+    },
+    "facts": {
+      "core": "634deb6e44eaec08e1f0db8c7cb9a0a596724bcb01753d7fe8b8cd1a13de5bf1",
+      "entry": "35ed9803d0deb5a4dab5004d23976a1310010e08195d1151bef18c7fb486b14a",
+      "schema": "e4169c72ea82dd818ef3e33f3566cb5af11ad6054685c2f4e00b5478d58206c0",
+      "cases": "5d8b3581ed5dd826a81d38ff1acb06bef0c677cc99434a22722dfc569b699880",
+      "tests": "d0577330a5b4dde3d447275ff89ad038f4b906314408e95f86f8265db4ea17fb",
+      "oracle": "9f401fd60861dcbc45f027843a4978ec1e17f8b9bc83955adbe1259c4a26f533",
+      "controller": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d",
+      "controllerSchema": "13ee7028e2d212d4ab6c7348dd5c3a592f930f38cf8560f1e881aac03eacff55",
+      "finalCore": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5",
+      "modes": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163",
+      "fixture": "55e8ca1dd970ad108261a3822eea023fa09d3de40dae8d0d3b2192f97f5dbaf3",
+      "finalSchema": "a03c634ca158dd45f9a60d31d7a12c3a81191336763d47283a224d74af134c75",
+      "finalFixture": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25",
+      "finalEntry": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85"
+    },
+    "export": {
+      "core": "eb740d8cbcf8d76713ca9083e61fb2e45e444a0d34596368d40632a8e835d48a",
+      "entry": "985c505ca5b34f5d12b711123b93f6f5871eb474c27417bb079bb76651173061",
+      "schema": "cb7101668d5b5688f9d52c42e76a3644ce0e2fd570a9eaed773cdc0a30fa7398",
+      "heldFinalCore": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5",
+      "heldController": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d",
+      "heldGit": "e5b888a348c90dd052268355f24d0bceb19100b953ee6ce2f60d81673ad7d515",
+      "helper": "70b595102d215379bccbd23877a49e52b95ca88957fa739ec7f6b183bbc7bc98",
+      "cases": "d0778a558594d7574130eda94cfbb417acfcf25bbbb8da18bd4b773b06fcae7e",
+      "promotion": "37df5b90be796e092212d0b94b443091cf66af58f7d8fa77642dc66013e618ee",
+      "tests": "55e8ca1dd970ad108261a3822eea023fa09d3de40dae8d0d3b2192f97f5dbaf3",
+      "oracle": "f9191846ab7b80ec3be01ad2900694470c8c067218a70055619ddf15d55b9bc5",
+      "heldFinalIntegration": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25",
+      "modes": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163",
+      "heldFinalEntry": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85",
+      "heldControllerSchema": "13ee7028e2d212d4ab6c7348dd5c3a592f930f38cf8560f1e881aac03eacff55",
+      "heldGitSchema": "7afc00cc84a49d1eb3ac6c8e80f0ec7f0ed53e134ce37b3e97683676c43743dd"
+    },
+    "final": {
+      "📤️fresh/modes.ts": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163",
+      "🔬️final/archive.py": "223a01f98e325159dab4d9b0cd4d73d9c841362065e036e9378a8dd2e6ad1a31",
+      "🔬️final/boundary-entry.ts": "df2cc6b4338f6d316edb78cc2e46c5856b54219a9e3498f9ca6dab40be39d7a9",
+      "🔬️final/boundary.cases.json": "fdee9ba9badabf59101e8dc1d3a1f55e59c96f6bcf3f3a533b089420fa0b0508",
+      "🔬️final/boundary.schema.json": "b003632fc8b8090d549e5b6461199550d9d0365f7e4e269a712848fbbbb3e8a4",
+      "🔬️final/boundary.ts": "a770e4a182d0d9e55163dbbd6f9524664e4cab31ebeb194d29336416f4ed5fcc",
+      "🔬️final/cases.json": "efe526a29e9c7d7cf4bd014aea26b43ac847af47d1ade43aaae99771f06888a6",
+      "🔬️final/core.ts": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5",
+      "🔬️final/entry.ts": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85",
+      "🔬️final/integration.ts": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25",
+      "🔬️final/oracle.py": "da0b38abf53c6ae0c5f1cb511f0a4eae4a50a3abb44a68208fc81161c2601bcd",
+      "🔬️final/schema.json": "a03c634ca158dd45f9a60d31d7a12c3a81191336763d47283a224d74af134c75",
+      "🔬️final/tests.ts": "95f657b7a85f71c84fc887db2c5ef5b9b2a44f145d80bf47f11423fee64edbfb"
+    }
+  },
+  "limits": {
+    "milliseconds": 43200000,
+    "commandMilliseconds": 7200000,
+    "outputBytes": 67108864,
+    "outputLines": 262144,
+    "cleanupMilliseconds": 60000
+  },
+  "milliseconds": {
+    "facts": 300000,
+    "export": 600000,
+    "final": 600000
+  },
+  "authored": {
+    "compose": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+      "bytes": 5288,
+      "sha256": "ffa4c35e4b6c946f07b7ed94273a7ec5da7af47d3d4568d17323d17618109150"
+    },
+    "caddyfile": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+      "bytes": 3655,
+      "sha256": "7225cc84f2335124fbe2ebc0ae097f6825a24ab53419994c953cb9f8fbe2c420"
+    },
+    "bundleProducer": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+      "bytes": 25376,
+      "sha256": "c24bcbe233d11777c63215d2b1d274ae6c7833553a6dc14102daf2cb6a57ea5e"
+    },
+    "dockerfile": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+      "bytes": 2080,
+      "sha256": "773285a39492865f7d1e4fefba4b0089a24e02368a374bf661b647e34f479e80"
+    },
+    "deployment": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json",
+      "bytes": 263,
+      "sha256": "d6e65008db3924a1d576345275aefb2c71036a24fab9ba462fbccf5ee86017fc"
+    },
+    "productSchema": {
+      "path": "/Users/ueli/Documents/semio/🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json",
+      "bytes": 3930,
+      "sha256": "bd9a1d551fad271d5317ec28162db59303c8bb9e425e92d789118e2b980b59cb"
+    }
+  },
+  "python": "python3",
+  "parentInputs": {
+    "schema": "e509edf9c64a0f724e31d967aca9ebec03903e3665bbfd1db8f4f57a23fa360e",
+    "cases": "b858c81f60323cd0f9c3605d4031fbe0d66980dbc3e0493d257640e2872bf516",
+    "parent": "99fd2920619072c8351b27e684c855ba2ce041d1f76aadec22a8838b75c77549",
+    "tests": "d5049446fb6525b7ab2d9554131168e92a9617ef4dc31e7edc01baa348abbbfb",
+    "derive": "0e9a6f708ffdd4e10c53b412a7f83954d1831e18fcc794fab58302ccea11190d",
+    "deriveSchema": "e8847f9dd14b0f0afae911992639cbda21571f4ec5ca28c1b48b8e760e55a729",
+    "deriveCases": "d4a962926a26258f7d294d74c9dc85925afc880238ee9332e8cdbc56ef12bc4c",
+    "deriveTests": "fa136b6ab105e240cec24b0f82d584736bb726a888e4a1c91a622c8ee971f369"
+  },
+  "criticalRoster": "05e77cf1372de74feb97e3e7e9e04cb01844ed1fb5cd0633c744ea6d66e31b82"
+}

@@ -6,6 +6,7 @@ import "../🧊️execution/🚀️launch/🟦️.ts";
 import "../🧊️execution/🛠️bootstrap/🟦️.ts";
 import "../♻️reuse/🟦️.ts";
 import { expect, test } from "bun:test";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020";
 import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
@@ -336,7 +337,7 @@ test("the bootstrap decision matches the independent schema validator for every 
       aliases.push(command as string);
     }
   }
-  const parsed = spawnSync(Bun.which("python3") ?? Bun.which("python") ?? "python3", ["-c", "import json,shlex,sys; print(json.dumps([shlex.split(value) for value in json.load(sys.stdin)]))"], { input: JSON.stringify(aliases), encoding: "utf8", timeout: 5000, maxBuffer: 65536 });
+  const parsed = spawnSync(testPythonV1() ?? Bun.which("python") ?? "python3", ["-c", "import json,shlex,sys; print(json.dumps([shlex.split(value) for value in json.load(sys.stdin)]))"], { input: JSON.stringify(aliases), encoding: "utf8", timeout: 5000, maxBuffer: 65536 });
   expect(parsed.status, parsed.stderr).toBe(0);
   expect(parsed.signal).toBeNull();
   expect(JSON.parse(parsed.stdout)).toEqual(aliases.map(command => command.split(" ")));

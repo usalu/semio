@@ -1,4 +1,116 @@
 {
- "$schema":"http://json-schema.org/draft-07/schema#","title":"Original Record Projection Laws","type":"object","additionalProperties":false,"required":["contract","maximumBytes","maximumTurns","cancelCuts","cases"],
- "properties":{"contract":{"const":"semio.original.record-projection/v1"},"maximumBytes":{"const":4096},"maximumTurns":{"type":"integer","minimum":1},"cancelCuts":{"type":"array","items":{"type":"integer","minimum":0}},"cases":{"type":"array","minItems":2,"items":{"type":"object","additionalProperties":false,"required":["id","values","expected"],"properties":{"id":{"type":"string"},"values":{"type":"array","minItems":32,"maxItems":32,"items":{"type":"string"}},"expected":{"type":"array","minItems":32,"maxItems":32,"items":{"type":"string"}}}}}}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Record Projection Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "maximumBytes",
+    "maximumTurns",
+    "cancelCuts",
+    "cases",
+    "stableOutput"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.original.record-projection/v1"
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "values",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "minItems": 32,
+            "maxItems": 32,
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 32,
+            "maxItems": 32,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "stableOutput": {
+      "const": [
+        {
+          "recordBytes": 2560,
+          "cursorBytes": 256,
+          "pointerBytes": 8,
+          "metadataBytes": 64,
+          "fieldBytes": 1280,
+          "expected": {
+            "birthCopyBytes": 512,
+            "birthCapacityBytes": 2560,
+            "takeCopyBytes": 80,
+            "placementCopyBytes": 2576,
+            "placementReleaseBytes": 1280
+          },
+          "fits": true
+        },
+        {
+          "recordBytes": 1280,
+          "cursorBytes": 256,
+          "pointerBytes": 8,
+          "metadataBytes": 64,
+          "fieldBytes": 40,
+          "expected": {
+            "birthCopyBytes": 512,
+            "birthCapacityBytes": 1280,
+            "takeCopyBytes": 80,
+            "placementCopyBytes": 96,
+            "placementReleaseBytes": 40
+          },
+          "fits": true
+        },
+        {
+          "recordBytes": 8192,
+          "cursorBytes": 256,
+          "pointerBytes": 8,
+          "metadataBytes": 64,
+          "fieldBytes": 4096,
+          "expected": {
+            "birthCopyBytes": 512,
+            "birthCapacityBytes": 8192,
+            "takeCopyBytes": 80,
+            "placementCopyBytes": 8208,
+            "placementReleaseBytes": 4096
+          },
+          "fits": false
+        }
+      ]
+    }
+  }
 }

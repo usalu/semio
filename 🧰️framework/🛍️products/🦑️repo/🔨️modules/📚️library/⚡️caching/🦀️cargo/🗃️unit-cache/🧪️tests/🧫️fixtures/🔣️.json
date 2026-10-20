@@ -1,0 +1,113 @@
+{
+  "laneRoot": "/lane",
+  "externDigests": {
+    "/lane/b/deps/libbar-1.rlib": "1111111111111111111111111111111111111111111111111111111111111111",
+    "/lane/b/deps/libbaz-2.rmeta": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "keyVectors": [
+    {
+      "name": "library with an extern, an incremental directory and a lane-local search path",
+      "arguments": ["--crate-name", "foo", "--edition=2021", "/ws/foo/src/lib.rs", "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat", "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "embed-bitcode=no", "-C", "incremental=/lane/b/inc", "-C", "metadata=abc", "-C", "extra-filename=-abc", "--out-dir", "/lane/b/deps", "-L", "dependency=/lane/b/deps", "--extern", "bar=/lane/b/deps/libbar-1.rlib", "--remap-path-prefix=/lane/b=x"],
+      "cacheable": true,
+      "crateName": "foo",
+      "outDir": "/lane/b/deps",
+      "source": "/ws/foo/src/lib.rs",
+      "externs": ["bar"],
+      "normalized": ["--crate-name", "foo", "--edition=2021", "/ws/foo/src/lib.rs", "--error-format=json", "--json=diagnostic-rendered-ansi,artifacts,future-incompat", "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "embed-bitcode=no", "-C", "metadata=abc", "-C", "extra-filename=-abc", "--extern", "bar=#1111111111111111111111111111111111111111111111111111111111111111", "--remap-path-prefix=@@semio-lane@@/b=x"]
+    },
+    {
+      "name": "the builtin proc_macro extern carries no path",
+      "arguments": ["--crate-name", "mac", "/ws/mac/src/lib.rs", "--json=artifacts", "--crate-type", "proc-macro", "--emit=dep-info,link", "--out-dir", "/lane/b/deps", "--extern", "proc_macro"],
+      "cacheable": true,
+      "crateName": "mac",
+      "outDir": "/lane/b/deps",
+      "source": "/ws/mac/src/lib.rs",
+      "externs": ["proc_macro"],
+      "normalized": ["--crate-name", "mac", "/ws/mac/src/lib.rs", "--json=artifacts", "--crate-type", "proc-macro", "--emit=dep-info,link", "--extern", "proc_macro"]
+    },
+    {
+      "name": "a metadata-only check unit with a private extern",
+      "arguments": ["--crate-name", "baz_user", "/ws/u/src/lib.rs", "--json=artifacts", "--crate-type", "lib", "--emit=dep-info,metadata", "--out-dir", "/lane/b/deps", "--extern", "priv:baz=/lane/b/deps/libbaz-2.rmeta"],
+      "cacheable": true,
+      "crateName": "baz_user",
+      "outDir": "/lane/b/deps",
+      "source": "/ws/u/src/lib.rs",
+      "externs": ["baz"],
+      "normalized": ["--crate-name", "baz_user", "/ws/u/src/lib.rs", "--json=artifacts", "--crate-type", "lib", "--emit=dep-info,metadata", "--extern", "priv:baz=#2222222222222222222222222222222222222222222222222222222222222222"]
+    },
+    {
+      "name": "a test harness executable is cached like a binary",
+      "arguments": ["--crate-name", "foo", "/ws/foo/src/lib.rs", "--json=artifacts", "--emit=dep-info,link", "--test", "--out-dir", "/lane/b/deps"],
+      "cacheable": true,
+      "crateName": "foo",
+      "outDir": "/lane/b/deps",
+      "source": "/ws/foo/src/lib.rs",
+      "externs": [],
+      "normalized": ["--crate-name", "foo", "/ws/foo/src/lib.rs", "--json=artifacts", "--emit=dep-info,link", "--test"]
+    },
+    {"name": "the version probe", "arguments": ["-vV"], "cacheable": false, "reason": "no-source-file"},
+    {"name": "a cfg print probe on stdin", "arguments": ["-", "--crate-name", "___", "--print=cfg"], "cacheable": false, "reason": "no-source-file"},
+    {"name": "a print of file names", "arguments": ["--crate-name", "foo", "/ws/foo/src/lib.rs", "--out-dir", "/lane/b/deps", "--print=file-names", "--json=artifacts", "--emit=link"], "cacheable": false, "reason": "query"},
+    {"name": "no artifact messages requested", "arguments": ["--crate-name", "foo", "/ws/foo/src/lib.rs", "--crate-type", "lib", "--emit=dep-info,link", "--out-dir", "/lane/b/deps"], "cacheable": false, "reason": "no-artifact-messages"},
+    {"name": "a binary linked against a native library", "arguments": ["--crate-name", "tool", "/ws/tool/src/main.rs", "--json=artifacts", "--crate-type", "bin", "--emit=dep-info,link", "--out-dir", "/lane/b/deps", "-l", "static=z", "-L", "native=/lane/b/out"], "cacheable": false, "reason": "native-link"},
+    {"name": "a wasm component library without native inputs", "arguments": ["--crate-name", "plug", "/ws/plug/src/lib.rs", "--json=artifacts", "--crate-type", "cdylib", "--emit=dep-info,link", "--out-dir", "/lane/b/deps", "--target", "wasm32-wasip2"], "cacheable": true, "crateName": "plug", "outDir": "/lane/b/deps", "source": "/ws/plug/src/lib.rs", "externs": [], "normalized": ["--crate-name", "plug", "/ws/plug/src/lib.rs", "--json=artifacts", "--crate-type", "cdylib", "--emit=dep-info,link", "--target", "wasm32-wasip2"]},
+    {"name": "no output directory", "arguments": ["--crate-name", "foo", "/ws/foo/src/lib.rs", "--json=artifacts", "--emit=link"], "cacheable": false, "reason": "no-out-dir"}
+  ],
+  "depInfoVectors": [
+    {
+      "name": "targets, dependencies, empty dependency rules and environment",
+      "text": "/lane/b/deps/foo-abc.d: src/lib.rs src/a.rs\n\nsrc/lib.rs:\nsrc/a.rs:\n# env-dep:CARGO_PKG_NAME=foo\n# env-dep:OPTIONAL\n# env-dep:MULTI=line1\\nline2\n",
+      "dependencies": ["src/lib.rs", "src/a.rs"],
+      "environment": [{"name": "CARGO_PKG_NAME", "value": "foo"}, {"name": "OPTIONAL", "value": null}, {"name": "MULTI", "value": "line1\nline2"}]
+    },
+    {
+      "name": "escaped spaces and two targets",
+      "text": "/lane/b/deps/libfoo-abc.rmeta /lane/b/deps/foo-abc.d: /ws/with\\ space/lib.rs /ws/b.rs\n\n/ws/with\\ space/lib.rs:\n/ws/b.rs:\n",
+      "dependencies": ["/ws/with space/lib.rs", "/ws/b.rs"],
+      "environment": []
+    },
+    {
+      "name": "a checksum comment between rules is ignored",
+      "text": "foo.d: lib.rs\n\nlib.rs:\n# checksum:blake3=00 file_len=1 lib.rs\n# env-dep:X=1\n",
+      "dependencies": ["lib.rs"],
+      "environment": [{"name": "X", "value": "1"}]
+    }
+  ],
+  "laneVectors": [
+    {"name": "flag wins", "flag": "abc", "environment": {"SEMIO_CARGO_LANE": "env"}, "ancestry": [], "lane": "abc"},
+    {"name": "environment next", "environment": {"SEMIO_CARGO_LANE": "env1"}, "ancestry": [{"pid": 10, "started": "Mon Oct 20 10:00:00 2026", "command": "/usr/bin/claude"}], "lane": "env1"},
+    {"name": "no client ancestor falls back to the default lane", "environment": {}, "ancestry": [{"pid": 10, "started": "Mon Oct 20 10:00:00 2026", "command": "zsh"}], "lane": "d"},
+    {"name": "no ancestry falls back to the default lane", "environment": {}, "ancestry": [], "lane": "d"}
+  ],
+  "invalidLanes": ["", "UPPER", "with-dash", "thirteenchars1", "a/b"],
+  "gcVectors": [
+    {
+      "name": "nothing to remove",
+      "input": {"capacityBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 10, "lastUsedMs": 999000, "live": false}], "objects": [{"digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 100, "lastUsedMs": 999000}]},
+      "plan": {"removeLanes": [], "removeIncremental": [], "removeObjects": []}
+    },
+    {
+      "name": "an idle lane is removed, a live idle lane is not",
+      "input": {"capacityBytes": 1000000, "freeBytes": 900000, "nowMs": 100000000, "lanes": [{"id": "old", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": false}, {"id": "olive", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": true}], "objects": []},
+      "plan": {"removeLanes": ["old"], "removeIncremental": [], "removeObjects": []}
+    },
+    {
+      "name": "the object share keeps the newest objects",
+      "input": {"capacityBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [], "objects": [
+        {"digest": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 250, "lastUsedMs": 300},
+        {"digest": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 250, "lastUsedMs": 200},
+        {"digest": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 250, "lastUsedMs": 100}]},
+      "plan": {"removeLanes": [], "removeIncremental": [], "removeObjects": ["2222222222222222222222222222222222222222222222222222222222222222", "3333333333333333333333333333333333333333333333333333333333333333"]}
+    },
+    {
+      "name": "free-space pressure removes incremental directories first, then lanes, then objects",
+      "input": {"capacityBytes": 1000, "freeBytes": 50, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 990000, "live": true}], "objects": [{"digest": "4444444444444444444444444444444444444444444444444444444444444444", "bytes": 200, "lastUsedMs": 10}]},
+      "plan": {"removeLanes": [], "removeIncremental": ["a", "b"], "removeObjects": []}
+    }
+  ],
+  "scenario": {
+    "bounds": {"maximumLockWaitMs": 8000, "slowCrate": "core", "slowMilliseconds": 1500},
+    "sharedCrates": ["core", "mac"],
+    "leaves": ["leaf1", "leaf2", "leaf3"]
+  }
+}

@@ -1,0 +1,29 @@
+--- a/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts
++++ b/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts
+@@ -24,7 +24,9 @@
+   const caddy = `caddy:sha256-${images[1].split("@sha256:")[1]}`;
+   const source = compose.replace(/\r\n/gu, "\n");
+-  const proxy = `  caddy:\n    image: ${images[1]}\n    pull_policy: missing\n`;
+-  if (!source.includes(proxy)) throw Error("The offline stack requires its authored Caddy pull policy");
+-  return { images: [...images, caddy], caddy, compose: source.replace(proxy, `  caddy:\n    image: ${caddy}\n    pull_policy: never\n`) };
++  const proctor = `  proctor:\n    image: ${COURSE_IMAGE_REPOSITORY}:\${PROCTOR_TAG:-latest}\n    pull_policy: missing\n`;
++  if (!source.includes(proctor)) throw Error("The offline stack requires its authored proctor pull policy");
++  const proxy = `  caddy:\n    image: ${images[1]}\n    pull_policy: missing\n`;
++  if (!source.includes(proxy)) throw Error("The offline stack requires its authored Caddy pull policy");
++  return { images: [...images, caddy], caddy, compose: source.replace(proctor, proctor.replace("pull_policy: missing", "pull_policy: never")).replace(proxy, `  caddy:\n    image: ${caddy}\n    pull_policy: never\n`) };
+ }
+ 
+@@ -52,3 +54,3 @@
+     `                           ${localCaddy}`,
+-    "  compose.yaml binds Caddy to that local digest tag with pull_policy: never.",
++    "  compose.yaml binds Caddy to that local digest tag; both services use pull_policy: never.",
+     "",
+--- a/🎓️teaching/🏛️architecture/📚️course/README.md
++++ b/🎓️teaching/🏛️architecture/📚️course/README.md
+@@ -316,5 +316,5 @@
+ | File | What |
+ |---|---|
+-| `compose.yaml`, `Caddyfile` | the stack from the image; staged compose binds the exact pinned Caddy content to its bundled local digest tag and forbids proxy pulls (an image built from other stack files than this checkout's is refused) |
++| `compose.yaml`, `Caddyfile` | the stack from the image; staged compose binds the exact pinned Caddy content to its bundled local digest tag and forbids pulls for both services (an image built from other stack files than this checkout's is refused) |
+ | `.env` | pins `PROCTOR_TAG` to the bundled image and lists the other overrides (`PROCTOR_HOST`, `PROCTOR_ALLOWED_ORIGINS`, `COURSE_HTTP_PORT`, `COURSE_HTTPS_PORT`) as comments |
+ | `certificates/` | empty; the place for a certificate of your own |

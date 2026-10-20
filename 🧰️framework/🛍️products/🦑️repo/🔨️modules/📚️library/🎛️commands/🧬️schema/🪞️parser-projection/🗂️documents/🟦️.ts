@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { EXPORT_NAME, asDict, codePointOrder, isDict, type Dict } from "../🔡️json-text/🟦️.ts";
-import { listModuleTree } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { listModuleTree } from "../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { PARSER_DIRECTORY } from "../📍️parser-files/🟦️.ts";
 import { Owner, type SourceReader } from "../🧾️parser-render/🟦️.ts";
 

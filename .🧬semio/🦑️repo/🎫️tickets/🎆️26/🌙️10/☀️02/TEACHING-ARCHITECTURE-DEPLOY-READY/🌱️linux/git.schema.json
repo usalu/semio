@@ -1,0 +1,496 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fresh Linux Genuine Git Supplement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "cohort",
+    "captureId",
+    "operation",
+    "engineId",
+    "builder",
+    "source",
+    "git",
+    "inputs",
+    "milliseconds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "fresh-linux-git"
+    },
+    "cohort": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "captureId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "engineId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "builder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "image",
+        "created",
+        "user",
+        "runToken",
+        "identityReceiptSha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(?!b28d90788b3e7e94c98667ea3500a976657dad3cd9e33b20365924becadb4cd6$)[a-f0-9]{64}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^semio-course-native-[a-f0-9]{32}$"
+        },
+        "image": {
+          "const": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b"
+        },
+        "created": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 64
+        },
+        "user": {
+          "enum": [
+            "",
+            "0",
+            "0:0",
+            "root",
+            "root:root"
+          ]
+        },
+        "runToken": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "identityReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume",
+        "manifestSha256",
+        "manifestBytes",
+        "captureReceiptSha256",
+        "revision"
+      ],
+      "properties": {
+        "volume": {
+          "type": "string",
+          "pattern": "^semio-course-source-[a-f0-9]{12}-[a-f0-9]{8}$"
+        },
+        "manifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "manifestBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "captureReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head",
+        "created",
+        "manifestSha256",
+        "archiveSha256",
+        "archiveBytes",
+        "files",
+        "bytes",
+        "dirtyAtCapture",
+        "captureReceiptSha256"
+      ],
+      "properties": {
+        "head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "created": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 64
+        },
+        "manifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "archiveSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "archiveBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 536870912
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 32
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "dirtyAtCapture": {
+          "type": "boolean"
+        },
+        "captureReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scriptSha256",
+        "schemaSha256",
+        "receiverSha256",
+        "sourceParserSha256",
+        "ownershipSha256"
+      ],
+      "properties": {
+        "scriptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "schemaSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receiverSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceParserSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "ownershipSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "milliseconds": {
+      "const": 900000
+    }
+  },
+  "definitions": {
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "plan",
+        "path",
+        "proof"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "plan": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "accepted"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "proof": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "binding",
+        "cohort",
+        "captureId",
+        "containerId",
+        "operation",
+        "head",
+        "created",
+        "sourceManifestSha256",
+        "metadataManifestSha256",
+        "archiveSha256",
+        "metadataBytes",
+        "metadataFiles",
+        "sourceBlobs",
+        "guestGitVerified",
+        "sourceRechecked",
+        "parentEnvelopeForwarded",
+        "dirty",
+        "statusScope",
+        "commands",
+        "operationalExcludeSha256",
+        "terminal",
+        "gitEnvironment",
+        "dirtyAtCapture",
+        "dirtyMatchesCapture"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "fresh-linux-git-proved"
+        },
+        "binding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cohort": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "containerId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "created": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 64
+        },
+        "sourceManifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "metadataManifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "archiveSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "metadataFiles": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 32
+        },
+        "sourceBlobs": {
+          "const": 0
+        },
+        "guestGitVerified": {
+          "const": true
+        },
+        "sourceRechecked": {
+          "const": true
+        },
+        "parentEnvelopeForwarded": {
+          "const": false
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "statusScope": {
+          "const": "tracked-only-at-guest-observation"
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "program",
+              "argv",
+              "status",
+              "signal",
+              "stdoutBytes",
+              "stdoutSha256",
+              "stderrBytes",
+              "stderrSha256"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "revision",
+                  "log",
+                  "status"
+                ]
+              },
+              "program": {
+                "const": "/usr/bin/git"
+              },
+              "argv": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "maxLength": 128
+                }
+              },
+              "status": {
+                "const": 0
+              },
+              "signal": {
+                "const": null
+              },
+              "stdoutBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 67108864
+              },
+              "stdoutSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "stderrBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 67108864
+              },
+              "stderrSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "operationalExcludeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "terminal": {
+          "const": true
+        },
+        "gitEnvironment": {
+          "const": {
+            "GIT_DIR": "/repo/.git",
+            "GIT_WORK_TREE": "/repo",
+            "GIT_INDEX_FILE": "/repo/.git/index",
+            "GIT_COMMON_DIR": "/repo/.git",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_NO_REPLACE_OBJECTS": "1",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": "/dev/null"
+          }
+        },
+        "dirtyAtCapture": {
+          "type": "boolean"
+        },
+        "dirtyMatchesCapture": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

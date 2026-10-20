@@ -272,10 +272,10 @@ fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
         assert!(ready);cursor.begin_close();
         let mut terminal=false;let mut born=0;let mut released=0;let mut copied=0;
         for turn in 0usize..100000 {
-            let ((copy,capacity,release),allocation)=observe_retirement_allocations(||{let copy=cursor.next_close_copy_byte_demand().unwrap();(copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap())});
+            let (demand,allocation)=observe_retirement_allocations(||cursor.close_demands(4096).unwrap());let(copy,capacity,release)=(demand.copy_bytes,demand.capacity_bytes,demand.release_bytes);
             assert_eq!(allocation,(0,0));assert!(copy+capacity+release<=4096);
             let (zero,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!(zero.progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64};
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);
             if copy!=0 || capacity!=0 || release!=0 {
                 let below=RetainedCloneGrant {maximum_copy_bytes:copy.saturating_sub(1),maximum_capacity_bytes:capacity.saturating_sub(1),maximum_release_bytes:release.saturating_sub(1),..grant};
                 let (step,allocation)=observe_retirement_allocations(||cursor.close_step(below).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
@@ -554,7 +554,9 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
         assert_eq!(allocation, (0, 0));
         let mut complete = false;
         for turn in 0..100000 {
-            let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
+            let demand=cursor.close_demands(budget).unwrap();
+            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe_retirement_allocations(||cursor.close_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.close_demands(budget).unwrap(),demand);}}
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);
             let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(grant).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));

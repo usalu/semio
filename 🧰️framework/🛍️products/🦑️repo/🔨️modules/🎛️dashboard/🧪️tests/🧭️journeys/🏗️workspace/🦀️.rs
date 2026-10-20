@@ -55,7 +55,7 @@ impl Workspace {
     /// 📂 Generates short-lived metadata under the test artifact root without copying source code.
     pub fn new(name: &str) -> Self {
         let source = fixture_path!("../../../🧫️fixtures/🧭️journeys/🏗️workspace");
-        let artifacts = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let artifacts = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("owning journey artifact directory required"));
         let artifacts = if artifacts.is_absolute() { artifacts } else { std::env::current_dir().unwrap().join(artifacts) };
         let base = artifacts.join(format!("j{:x}.{:x}", std::process::id(), WORKSPACES.fetch_add(1, Ordering::Relaxed)));
         let root = base.join("w");

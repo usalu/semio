@@ -50,6 +50,7 @@ impl DslValueRetainedCloneCursor {
         Self::nested(child.close_demands(copy)?)
     }
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
+        #[cfg(test)] selected_close_tests::record(self as*const Self as usize,copy);
         let s=&self.state;
         if s.child.is_some(){return self.child_close_demands(copy);}
         if !s.close.is_empty(){return s.close.next_owner_demands::<DslValue>(false,&s.source,copy);}
@@ -119,6 +120,7 @@ impl RetainedCloneDemandCursor<DslValue> for DslValueRetainedCloneCursor {
 }
 
 impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{DslValueRetainedCloneCursor::close_demands(self,body)}
     fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
     fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
@@ -192,3 +194,7 @@ impl Drop for DslValueRetainedCloneCursor {
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️dispatch/🦀️.rs"]
+mod selected_close_tests;

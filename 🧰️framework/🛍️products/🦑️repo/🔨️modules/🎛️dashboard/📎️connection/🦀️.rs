@@ -45,9 +45,9 @@ impl Skew {
     /// 💬 The sentence that names the difference.
     pub fn describe(&self) -> String {
         if self.incompatible() {
-            format!("daemon speaks protocol {} but this client speaks {}; stop the daemon once its tasks finish (`semio daemon stop`) and start it again", self.daemon_protocol, self.client_protocol)
+            format!("daemon speaks protocol {} but this client speaks {}; stop the daemon once its tasks finish (`repo dashboard daemon stop`) and start it again", self.daemon_protocol, self.client_protocol)
         } else {
-            format!("daemon build {} differs from this client's build {}; its tasks keep running, `semio daemon stop` and a new start bring the daemon up to date", self.daemon_build, self.client_build)
+            format!("daemon build {} differs from this client's build {}; its tasks keep running, `repo dashboard daemon stop` and a new start bring the daemon up to date", self.daemon_build, self.client_build)
         }
     }
 }

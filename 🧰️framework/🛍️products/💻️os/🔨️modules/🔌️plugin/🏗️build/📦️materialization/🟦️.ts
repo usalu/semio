@@ -1,6 +1,6 @@
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { type CargoDependencyNetworkV1 } from "@semio-tech/repo-lib/cargo";
 import {buildComponentClosureV1} from "../🧩️driver-stages/🟦️.ts";
 /** 🔁️ Builds one iterated component through the same actual managed driver and selected-mode publication. */

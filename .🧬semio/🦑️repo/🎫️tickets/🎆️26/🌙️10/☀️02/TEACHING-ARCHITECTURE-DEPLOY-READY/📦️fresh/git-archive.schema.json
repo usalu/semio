@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Genuine Git Archive Preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "captureId",
+    "head",
+    "metadataManifestSha256",
+    "captureReceiptSha256",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "fresh-git-archive-plan"
+    },
+    "captureId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "head": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "metadataManifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "captureReceiptSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "archive",
+        "revalidation",
+        "core",
+        "host",
+        "schema",
+        "contract",
+        "gitSchema",
+        "sourceSchema"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "archive": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "revalidation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "core": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "host": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "contract": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "gitSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-import { scriptCompilerAdmissionControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🛂️ `teaching-proctor` task router: `bun ./📜️script.ts <build [args…]|test [fundamental|quick|long|exhaustive] [args…]|dev|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
+/** 🛂️ `teaching-proctor` task router: `bun ./📜️script.ts <build|test [fundamental|quick|long|exhaustive] [args…]|dev|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
  *
- * Every verb but `build`, `test` and `capacity` builds the binary and retains an immutable bounded copy of it
- * (`../../🏗️bootstrap/🟦️.ts`), so a running dev proctor never locks the executable any other build writes. `dev` serves
+ * `build` is the only verb that compiles: it leaves the executable as a cached product with a receipt (`../../🏗️bootstrap/🧾️product/🟦️.ts`).
+ * Every other verb but `test` and `capacity` resolves that product and runs a private copy of it, so a running dev proctor never
+ * locks the executable any other build writes, and fails with one English and German error when it is missing or stale. `dev` serves
  * on `PROCTOR_PORT` (8791) over the git-ignored `.🧬semio/🎓️teaching/proctor-dev/` and the architecture course unless
  * the launcher set `PROCTOR_*` itself, and moves that folder aside (saying so) when it holds data of a storage format
  * this proctor does not read; `check` validates a course (default: the dev course); `rebuild` refolds every
@@ -28,17 +28,16 @@ import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃�
 import { runRepositoryCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 
-import {verifyCapturedCargoArtifactsV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { buildAdmittedCargoArtifactsV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-
 import { join } from "node:path";
-import { PROCTOR_LIBRARY_PACKAGES, PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCourse, proctorDevelopmentEnvironment, proctorSelection, runDevelopmentProctor, runProctor } from "../../🏗️bootstrap/🟦️.ts";
+import { PROCTOR_LIBRARY_PACKAGES, PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCourse, proctorDevelopmentEnvironment, proctorSelection } from "../../🏗️bootstrap/🟦️.ts";
+import { buildProctorProduct, runDevelopmentProctor, runProctor } from "../../🏗️bootstrap/🧾️product/🟦️.ts";
 
-/** 🏗️ Builds the crate's bounded cargo artifacts under the caller's explicit compiler mode and network grant. */
+/** 🏗️ Builds the proctor through the issued Cargo launcher in the original mode and leaves it as the cached product every consumer resolves
+ * (`../../🏗️bootstrap/🧾️product/🟦️.ts`): `dist/build/<mode>/<sha256>/proctor` beside `dist/build/<mode>/receipt.json`. */
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildAdmittedCargoArtifactsV1(`${this.root}/Cargo.toml`, segments, this.repoRoot, { producer: "artifact", invocation: this.invocation, consume: verifyCapturedCargoArtifactsV1, control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+    if (segments.length) throw new Error("build takes no arguments; the mode is the original build mode (--configuration=release)\nbuild nimmt keine Argumente; der Modus ist der ursprüngliche Build-Modus (--configuration=release)");
+    await buildProctorProduct(this.repoRoot, this.invocation);
   }
 }
 

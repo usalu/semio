@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "refusals": {
+    "release-required": {
+      "en": "Course publication and rehearsal require the original release build mode; select --configuration=release (also -c release, a :release task suffix or SEMIO_BUILD_MODE=release), for example bun repo run @teaching/architecture-course:publish:release, with --tool=nx or --tool=bazel",
+      "de": "Kurs-Veröffentlichung und Probelauf erfordern den ursprünglichen Build-Modus release; wähle --configuration=release (auch -c release, das Task-Suffix :release oder SEMIO_BUILD_MODE=release), zum Beispiel bun repo run @teaching/architecture-course:publish:release, mit --tool=nx oder --tool=bazel"
+    },
+    "closed-request": {
+      "en": "A closed course intent (dev or release) and a closed original build mode (prototype or release) are required",
+      "de": "Eine geschlossene Kurs-Absicht (dev oder release) und ein geschlossener ursprünglicher Build-Modus (prototype oder release) sind erforderlich"
+    }
+  }
+}

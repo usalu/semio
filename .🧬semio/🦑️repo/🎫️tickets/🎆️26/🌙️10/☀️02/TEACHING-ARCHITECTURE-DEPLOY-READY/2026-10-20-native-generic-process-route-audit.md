@@ -1,0 +1,11 @@
+# Existing Native Generic Process Route Audit
+
+Read-only bounded audit of actual retained prototype help and current Go native entrypoint/root command registry, domain test/hook/MCP handlers. No command or Source edit.
+
+The existing supported generic external process route is `repo exec --projects=workspace -- <program> <literal args…>`. Native PlanNativeEntrypoint selects build for exec and the exact other13build verbs; only dev mcp stdio os selects root workspace script, explicit mcp selects protocol. There is no additional generic process/job/shell spawn verb in the actual native root registry/help. NativeScriptTool is an implementation interface, not an extra callable CLI verb.
+
+Root NewRootWithConfig registers domain commands for entities/tickets/queries/files/hook/test/history etc. Domain test accepts entity IDs/URIs and calls ResolveTestScopes→RunTestScope; it is not an arbitrary executable+argv port. Hook accepts lifecycle event/client, not arbitrary process args. GraphQL dispatch executes its repository schema; inspected MCP tool handlers expose repository operations, not a registered generic execution method. Using those domain paths or a cached build target to smuggle a ticket command would misuse semantics. No legitimate faster generic port was established in this bounded current registry.
+
+OS MCP job_get reads producer-created in-process registry jobs rather than spawning generic external commands; starting OS gateway can stage its absent backend. It does not avoid the bootstrap cost while supplying the same generic owned port. Dashboard is human-only by instruction. These facts leave documented repo exec valid despite its current all-graph admission cost; no invented prohibition or new feature is necessary.
+
+Ownership/progress/cancellation/environment for repo exec are inherited from existing native build invocation and task execution; expensive guest lifetimes still need their explicit destination controls. The all-graph inference before workspace selection is a cost/selection implementation fact, not evidence the route is invalid. Root may use it for ticket neutral tests/observer after current owner state and input review permit. No test/observer was launched by this audit.

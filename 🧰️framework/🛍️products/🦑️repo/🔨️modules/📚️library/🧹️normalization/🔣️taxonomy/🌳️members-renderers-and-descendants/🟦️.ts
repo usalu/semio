@@ -1,6 +1,6 @@
 /** 🌳️ The directory member kinds, projection renderers, descendant contracts and catalog projection contracts. */
 import { posix } from "node:path";
-import { requireRecord, requireString, requireStringArray, type UnknownRecord } from "@semio-tech/schema-validator-ts";
+import { requireRecord, requireString, requireStringArray, type UnknownRecord } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalPrimaryFilenameForKind } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import type { Taxonomy as DiscoveryTaxonomy } from "../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";

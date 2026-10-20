@@ -1,0 +1,26 @@
+{
+ "version": 1,
+ "guard": [
+  {"id": "match-passes-through", "run": {"returns": "match"}, "aborted": false, "expect": {"status": "match", "reason": null, "rethrows": false}},
+  {"id": "mismatch-passes-through", "run": {"returns": "mismatch"}, "aborted": false, "expect": {"status": "mismatch", "reason": null, "rethrows": false}},
+  {"id": "capture-schema-error-is-a-deferral", "run": {"throws": "Closed dependency generation receipt required"}, "aborted": false, "expect": {"status": "deferred", "reason": "capture-failed", "rethrows": false}},
+  {"id": "evidence-capacity-is-a-deferral", "run": {"throws": "Generation evidence capacity exceeded"}, "aborted": false, "expect": {"status": "deferred", "reason": "capture-failed", "rethrows": false}},
+  {"id": "missing-topology-is-a-deferral", "run": {"throws": "Retained workspace topology required"}, "aborted": false, "expect": {"status": "deferred", "reason": "capture-failed", "rethrows": false}},
+  {"id": "cancellation-propagates", "run": {"throws": "aborted"}, "aborted": true, "expect": {"status": null, "reason": null, "rethrows": true}}
+ ],
+ "origin": [
+  {"id": "no-shared-walk-uses-the-pass-start", "shared": null, "pass": 1000, "expect": 1000},
+  {"id": "shared-walk-started-earlier-wins", "shared": 400, "pass": 1000, "expect": 400},
+  {"id": "never-later-than-the-pass", "shared": 1500, "pass": 1000, "expect": 1000},
+  {"id": "equal-starts", "shared": 1000, "pass": 1000, "expect": 1000}
+ ],
+ "decision": [
+  {"id": "replay-confirms-the-owner", "replay": "match", "owner": "aaaaaaaa", "walk": "aaaaaaaa", "expect": "ready"},
+  {"id": "mismatching-replay-and-unchanged-tree-walks-once", "replay": "mismatch", "owner": "aaaaaaaa", "walk": "aaaaaaaa", "expect": "ready"},
+  {"id": "mismatching-replay-and-changed-tree-fails-closed", "replay": "mismatch", "owner": "aaaaaaaa", "walk": "bbbbbbbb", "expect": "custody-changed"},
+  {"id": "deferred-replay-and-changed-tree-fails-closed", "replay": "deferred", "owner": "aaaaaaaa", "walk": "cccccccc", "expect": "custody-changed"},
+  {"id": "throwing-replay-falls-back-and-unchanged-tree-is-ready", "replay": "throws", "owner": "aaaaaaaa", "walk": "aaaaaaaa", "expect": "ready"},
+  {"id": "throwing-replay-falls-back-and-changed-tree-fails-closed", "replay": "throws", "owner": "aaaaaaaa", "walk": "dddddddd", "expect": "custody-changed"}
+ ],
+ "cap": {"fileCap": 67108864, "evidenceCap": 67108864}
+}

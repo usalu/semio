@@ -1,0 +1,10 @@
+import {readdirSync, writeFileSync} from "node:fs";
+import {join, relative, sep} from "node:path";
+const root = process.env.SEMIO_INPUTS_ROOT ?? "/Users/ueli/Documents/semio";
+const {proctorSourceDirectories, proctorSourceChanged} = await import(`${root}/🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts`) as any;
+const directories: string[] = await proctorSourceDirectories(root);
+const files: string[] = [];
+const walk = (directory: string) => { for (const entry of readdirSync(directory, {withFileTypes: true})) { const path = join(directory, entry.name); if (entry.isDirectory()) { if (!["target", "node_modules", "dist", ".git"].includes(entry.name)) walk(path); } else if (proctorSourceChanged(relative(directories[0]!, path))) files.push(relative(root, path).split(sep).join("/")); } };
+for (const directory of directories) walk(directory);
+writeFileSync(process.argv[2]!, JSON.stringify({directories: directories.map(d => relative(root, d).split(sep).join("/")), files: files.sort()}, null, 1));
+console.error("directories", directories.length, "files", files.length);

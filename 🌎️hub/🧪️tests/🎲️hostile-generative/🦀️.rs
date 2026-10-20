@@ -385,7 +385,7 @@ use semio_hub_session_routes::access_grants::issue_directory_socket_grant;
             let state = test_state().await;
             let owner = issue_test_session(&state, "hostile-generative-owner@example.com").await;
             issue_test_session(&state, HOSTILE_GENERATIVE_MEMBER).await;
-            let space_id = create_space_for_test(&state, &owner.user_id, "Hostile generative", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let space_id = create_space_for_test(&state, &owner.user_id, "Hostile generative", directory::os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
             upsert_member_for_test(&state, &space_id, HOSTILE_GENERATIVE_MEMBER, DirectorySpaceRole::Author).await;
             announce_document_for_test(&state, &space_id, "hostile-doc").await;
             let addr = spawn_server(state.clone()).await;
@@ -422,7 +422,7 @@ use semio_hub_session_routes::access_grants::issue_directory_socket_grant;
             let socket_cases = generative["socketCases"].as_u64().unwrap() as usize;
             let frames = generative["framesPerSocketCase"].as_u64().unwrap() as usize;
             let hello = protocol::encode_client_frame(&socket_hello(), Lane::Command).await;
-            let socket_space = create_space_for_test(&state, &owner.user_id, "Hostile generative sockets", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let socket_space = create_space_for_test(&state, &owner.user_id, "Hostile generative sockets", directory::os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
             announce_document_for_test(&state, &socket_space, "hostile-socket-doc").await;
             let mut sequences = 0usize;
             'sockets: for seed in &seeds {

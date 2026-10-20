@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { listModuleTree, readModuleTreeSource, type ModuleTreeOptions } from "@semio-tech/framework-compiler-rs/syntax/module-tree";
+import { listModuleTree, readModuleTreeSource, type ModuleTreeOptions } from "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust/📖️syntax/🌳️module-tree/🟦️.ts";
 
 export type PolicySourceEntry = Readonly<{ name: string; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }>;
 

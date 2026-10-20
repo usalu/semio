@@ -32,7 +32,7 @@ export function isBuildGraphOptionalCachePathV1(path:unknown):boolean;
 /** 📦️ Reserves optional peak bytes under the original serial writer. */
 export function withBuildGraphOptionalPublicationV1(path:string,plan:BuildGraphOptionalPublicationV1,write:()=>void):boolean;
 /** 🔌️ Closes cache handles before the original writer leaves image custody. */
-export function registerBuildGraphOptionalHandleV1(close:()=>void):void;
+export function registerBuildGraphOptionalHandleV1(close:()=>void):()=>void;
 /** 🚰️ Decides whether a writer session must first retire optional leaves down to the low-water mark. */
 export function buildGraphOptionalRetirementDueV1(usedBytes:number,availableBytes:number):boolean;
 /** 🧹️ Defers optional pressure recovery when original exclusive image custody is unavailable. */

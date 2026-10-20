@@ -1,5 +1,5 @@
 /** 📤️ The retained, ephemeral, fresh turn, host only, config and presence publication contract checks. */
-import { toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobStoreBatchPublicationBounded, toolJobEphemeralOneItemPublicationBounded, toolJobPublicationFreshnessBeforeEveryTurn } from "@semio-tech/repo-lib/laws";
+import { toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobStoreBatchPublicationBounded, toolJobEphemeralOneItemPublicationBounded, toolJobPublicationFreshnessBeforeEveryTurn } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 📰 Checks the retained store and plugin publication bounds. */
 export function retainedPublicationChecks() {

@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../⏱️trace/🧮️memory/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

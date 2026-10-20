@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import MarkdownIt from "markdown-it";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Span = Readonly<{ start: number; end: number; value: string }>;
@@ -125,7 +126,7 @@ test("gherkinTokens wires the description scanner into a plain gherkin reference
 test("registers the gherkin description inline-code gate through Nx and the package router", () => {
   const project = JSON.parse(readFileSync(join(library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets["test-gherkin-description-inline-code"]?.options.command).toBe("bun ./📜️script.ts test gherkin-description-inline-code");
-  const router = readFileSync(join(library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const router = readRegisteredTestRoute(resolve(library, "../../../../.."), "gherkin-description-inline-code").text;
   expect(router.match(/segments\[0\] === "gherkin-description-inline-code"/gu)).toHaveLength(1);
   expect(router).toContain("🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts");
 });

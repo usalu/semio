@@ -1,4 +1,4 @@
-import { ephemeralMap } from "@semio-tech/framework-transient";
+import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { readFileSync, readdirSync } from "node:fs";
 import type { PackageMaturity } from "../📜️taxonomy-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
@@ -205,7 +205,7 @@ export function stripEmoji(segment: string): string {
   return segment.replace(/[^\x00-\x7f]/g, "");
 }
 
-/** 🆔️ Falls back to the manifest's own package name, else an emoji-stripped dash-joined owner path, when `readSemioMarker` found no explicit `id`. */
+/** 🆔️ Falls back to the manifest's own package name, else an emoji-stripped dash-joined owner path, when `readSemioMarker` found no explicit `id`; a manifest that cannot be read or parsed falls through to the path-derived id. */
 export function fallbackPackageId(manifestPath: string, lang: PackageLang, ownerRel: string, content?: string): string {
   try {
     if (lang === "🦀️rust") {
@@ -215,9 +215,7 @@ export function fallbackPackageId(manifestPath: string, lang: PackageLang, owner
       const name = (JSON.parse(content ?? readFileSync(manifestPath, "utf8")) as { name?: string }).name;
       if (name) return name;
     }
-  } catch {
-    /* fall through to path-derived id */
-  }
+  } catch {}
   return ownerRel
     .replaceAll("\\", "/")
     .split("/")

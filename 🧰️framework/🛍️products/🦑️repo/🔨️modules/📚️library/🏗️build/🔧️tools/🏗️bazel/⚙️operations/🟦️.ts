@@ -1,4 +1,4 @@
-import {chmod,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,unlink,writeFile} from "node:fs/promises";
+import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,unlink,writeFile} from "node:fs/promises";
 import type {Dirent} from "node:fs";
 import {dirname,join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
@@ -12,6 +12,8 @@ import type {BuildCacheActivityV1,BuildCacheContextV1,BuildCacheStatusV1,BuildCa
 import {bazelCacheLayoutV1,bazelServerBaseV1} from "../💾️storage/🟦️.ts";
 import type {BazelTaskPlanV1} from "../📋️task-plan/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {bazelEvidenceDirectoryV1,bazelEvidenceEventsPathV1} from "../👁️evidence/🟦️.ts";
+import {bazelTestResultsDirectoryV1,exportBazelTestResultsV1} from "../🧾️test-results/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 type Layout=ReturnType<typeof bazelCacheLayoutV1>;
@@ -117,7 +119,7 @@ async function stopBazelServers(bases:readonly string[],walk:Walk):Promise<void>
  }
 }
 
-/** 🗑️ Stops the persistent servers and removes their per-workspace output bases, which hold Bazel's local action cache and execution roots, plus the activity ledger and pending event streams. */
+/** 🗑️ Stops the persistent servers and removes their per-slot output bases, which hold Bazel's local action cache and execution roots, plus the activity ledger and pending event streams. */
 export async function clearBazelServerBasesV1(directory:string,walk:Walk):Promise<number>{
  const rows=await rowsOf(directory);
  if(rows===null)return 0;
@@ -125,14 +127,14 @@ export async function clearBazelServerBasesV1(directory:string,walk:Walk):Promis
  await stopBazelServers(bases,walk);
  let removed=0;
  for(const base of bases){removed+=await emptyDirectory(base,walk,false);}
- for(const row of rows)if(row.name===policy.ledger||row.name.endsWith(policy.eventsSuffix))if(await removeEntry(join(directory,row.name),unlink))removed++;
+ for(const row of rows)if(row.name===policy.ledger||row.name.endsWith(policy.eventsSuffix)||row.name.endsWith(policy.sessionSuffix))if(await removeEntry(join(directory,row.name),unlink))removed++;
  guard(walk);
  return removed;
 }
 
-/** 🧾️ Names the build event stream of one workspace's server beside its output base, so concurrent selections never share a file. */
-export function bazelBuildEventsFileV1(layout:Layout,workspace:string):string{
- const file=bazelServerBaseV1(layout,workspace)+policy.eventsSuffix;
+/** 🧾️ Names the build event stream of one session slot's server beside its output base, so concurrent sessions never share a file. */
+export function bazelBuildEventsFileV1(layout:Layout,slot:string):string{
+ const file=bazelServerBaseV1(layout,slot)+policy.eventsSuffix;
  if(file.length>policy.maximumPath)throw Error("Bazel storage path exceeds 256 characters");
  return file;
 }
@@ -170,14 +172,18 @@ export async function readBazelLedgerV1(layout:Layout):Promise<BuildCacheActivit
 }
 
 /** ✍️ Adds the finished build's metrics to the ledger and drops its event stream; never throws, because bookkeeping must not fail a build. */
-export async function recordBazelBuildMetricsV1(root:string,layout:Layout,workspace:string,phaseControl:ResourceLeaseControl):Promise<void>{
+export async function recordBazelBuildMetricsV1(root:string,layout:Layout,slot:string,phaseControl:ResourceLeaseControl):Promise<void>{
  try{
-  const events=bazelBuildEventsFileV1(layout,workspace);
+  const events=bazelBuildEventsFileV1(layout,slot);
   let text:string;
   try{
    if((await stat(events)).size>policy.maximumEventBytes)return void await rm(events,{force:true});
    text=await readFile(events,"utf8");
   }catch(error){if(missing(error))return;throw error;}
+  const evidence=bazelEvidenceDirectoryV1(process.env);
+  if(evidence!==undefined)await copyFile(events,bazelEvidenceEventsPathV1(evidence));
+  const testResults=bazelTestResultsDirectoryV1(process.env);
+  if(testResults!==undefined)await exportBazelTestResultsV1(text,testResults);
   await rm(events,{force:true});
   const metrics=bazelBuildMetricsV1(text);
   if(metrics===undefined)return;

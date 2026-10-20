@@ -1,5 +1,6 @@
 /** 🧭️ Contract: Bazel source inputs follow the Nx transitive semantics, stay proportional to the inventory through per-directory filegroups, and refuse dangling task dependencies and unbounded caches with precise reports. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {minimatch} from "minimatch";
 import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
@@ -13,7 +14,7 @@ import schema from "./🧬️schema.json";
 import actionsCorpus from "../📥️actions/🔣️.json";
 import component from "../../🧬️schema/🔣️.json";
 
-const api=await import("../../📜️script.ts"),python=Bun.which("python3"),node=Bun.which("node"),link=component.definitions.Actions.const.sources.link;
+const api=await import("../../📜️script.ts"),python=testPythonV1(),node=Bun.which("node"),link=component.definitions.Actions.const.sources.link;
 type Group={groups:readonly string[];files:readonly string[]};
 const universe=[...corpus.cover.universe].sort(),order=(left:string,right:string)=>left<right?-1:left>right?1:0;
 const expand=(groups:ReadonlyMap<string,Group>,name:string,depth=0):string[]=>{if(depth>64)throw Error("Bazel source group cycle: "+name);const row=groups.get(name);if(!row)throw Error("Bazel source group undefined: "+name);return[...row.files,...row.groups.flatMap(child=>expand(groups,child,depth+1))];};

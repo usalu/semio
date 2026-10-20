@@ -8,6 +8,4 @@ pub trait RetainedCloneDemandCursor<T:RetainedClone>:RetainedCloneCursor<T> {
     fn normal_demands(&self,source:RetainedCloneRef<'_,T>,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>;
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

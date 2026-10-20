@@ -5,9 +5,9 @@
 
 //#region 🔌️Adapters
 import { basename } from "node:path";
-import { loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "@semio-tech/repo-lib/inventory";
-import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { pathEmojiStatuteFindings } from "../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { type MutationCatalogAuthority } from "../🗂️taxonomy/🟦️.ts";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";
 //#endregion 🔌️Adapters

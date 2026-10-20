@@ -1,4 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use crate::observe_retirement_allocations;
+#[path="🧫️owner/🦀️.rs"]
+mod refusing_owner;
+use refusing_owner::RefusingCopyDemand;
 fn grant(demand:crate::RetirementDemand,body:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 #[derive(crate::RetainedClone,crate::RetireOwned)]#[value(crate="crate")]
 struct NestedRecord {body:Option<Vec<Vec<Vec<Vec<Vec<Vec<u8>>>>>>>}
@@ -78,4 +83,17 @@ fn derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody()
   original_derived_custody(DerivedOriginalEnum::Payload{count:3,record:DerivedOriginalRecord{small:7,wide:37}},cut,axes);
   original_derived_custody(DerivedOriginalEnum::Empty,cut,axes);
  }
+}
+
+#[test]
+fn retained_clone_erased_copy_demand_propagates_original_owner_refusal(){
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();
+    let owner=RefusingCopyDemand{owner:Some(law["owner"].as_u64().unwrap())};
+    let(result,heap)=observe_retirement_allocations(||crate::ErasedSnapshotRetirement::next_copy_byte_demand(&owner));
+    assert_eq!(heap,(0,0));assert_eq!(format!("{:?}",result.unwrap_err().kind),law["copyDemandRefusal"].as_str().unwrap());assert_eq!(owner.owner,Some(law["owner"].as_u64().unwrap()));
+    let mut ticket:Option<Box<dyn crate::ErasedSnapshotRetirement>>=Some(Box::new(owner));
+    let(result,heap)=observe_retirement_allocations(||crate::factory_ticket_demands(ticket.as_ref().unwrap(),0));assert_eq!(heap,(0,0));assert_eq!(result.unwrap_err().kind,crate::ValueRefusalKind::UnsupportedOwner);assert!(!ticket.as_ref().unwrap().terminal_is_empty());
+    let step=crate::close_factory_ticket(&mut ticket,RetainedCloneGrant{maximum_items:1,..Default::default()}).unwrap();assert!(matches!(step,RetainedCloneStep::Progress(_)));assert!(ticket.as_ref().unwrap().terminal_is_empty());
+    let demand=crate::factory_ticket_demands(ticket.as_ref().unwrap(),0).unwrap();assert_eq!(demand.depth,1);
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut ticket,grant).unwrap());assert_eq!(heap,(0,step.progress().released_bytes));assert!(ticket.is_none());assert!(matches!(step,RetainedCloneStep::Progress(_)));assert!(matches!(crate::close_factory_ticket(&mut ticket,Default::default()).unwrap(),RetainedCloneStep::Complete(_)));
 }

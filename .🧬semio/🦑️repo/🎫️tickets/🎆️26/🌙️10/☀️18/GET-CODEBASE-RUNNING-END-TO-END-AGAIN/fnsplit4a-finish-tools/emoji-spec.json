@@ -1,0 +1,242 @@
+{
+ "files": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/👆️swipe/🟦️.ts",
+   "head": "The swipe phase of LayeredOverview: the touch drive, the scroll and pointer-capture helpers and the swipe hook.",
+   "set": [
+    {
+     "line": 4,
+     "from": "👆",
+     "to": "🕹"
+    },
+    {
+     "line": 20,
+     "from": "👆",
+     "to": "🖐"
+    },
+    {
+     "line": 77,
+     "from": "👆",
+     "to": "↔"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "head": "The types of LayeredOverview: modes, panes, cards, chrome, labels, insets and props.",
+   "set": [
+    {
+     "line": 11,
+     "from": "🥞",
+     "to": "🎴"
+    },
+    {
+     "line": 25,
+     "from": "🥞",
+     "to": "📄"
+    },
+    {
+     "line": 80,
+     "from": "📱",
+     "to": "📍"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "head": "The pane helpers of LayeredOverview: poster capture, reduced motion, cells, hash sync, veil and window helpers.",
+   "set": [
+    {
+     "line": 67,
+     "from": "🔗",
+     "to": "🪞"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx",
+   "head": "The pane of LayeredOverview: mounting, error boundary, placeholder and the card host."
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/💡️hints/🟦️.tsx",
+   "head": "The swipe hints of LayeredOverview: the neighbouring page and its direction at each edge of the view.",
+   "set": [
+    {
+     "line": 41,
+     "from": "🧭",
+     "to": "🧩"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔸️meshes-ref/🟦️.ts",
+   "set": [
+    {
+     "line": 183,
+     "from": "🏁",
+     "to": "📍"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎥️tutorial-orchestration/🔶️scope/🟦️.ts",
+   "set": [
+    {
+     "line": 86,
+     "from": "⏱",
+     "to": "⏯"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx",
+   "set": [
+    {
+     "line": 60,
+     "from": "📤",
+     "to": "🎯"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🔶️catalog/🟦️.ts",
+   "set": [
+    {
+     "line": 52,
+     "from": "👁✏",
+     "to": "🔤"
+    },
+    {
+     "line": 161,
+     "from": "⚖",
+     "to": "💾"
+    },
+    {
+     "line": 178,
+     "from": "⚖",
+     "to": "🤝"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🔸️open-artifact-app/🟦️.ts",
+   "set": [
+    {
+     "line": 111,
+     "from": "👁✏",
+     "to": "🗂"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🟠️open-entries/🟦️.ts",
+   "set": [
+    {
+     "line": 40,
+     "from": "👁✏",
+     "to": "🗃"
+    },
+    {
+     "line": 73,
+     "from": "🧯",
+     "to": "🔒"
+    },
+    {
+     "line": 83,
+     "from": "⚖",
+     "to": "🍞"
+    },
+    {
+     "line": 97,
+     "from": "⚖",
+     "to": "🌉"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟠️close-document/🟦️.ts",
+   "set": [
+    {
+     "line": 114,
+     "from": "🔗",
+     "to": "🧷"
+    },
+    {
+     "line": 185,
+     "from": "📎",
+     "to": "📂"
+    },
+    {
+     "line": 191,
+     "from": "📎",
+     "to": "🔁"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟠️shell-uri/🟦️.ts",
+   "set": [
+    {
+     "line": 79,
+     "from": "🧭",
+     "to": "🚦"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟣️shared/🟦️.tsx",
+   "set": [
+    {
+     "line": 41,
+     "from": "🎨",
+     "to": "📚"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧊️retained-ownership/🟦️.ts",
+   "head": "The cold layout relay and universal retained-ownership contract of the live replay law."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts",
+   "head": "The FEM numerical micro-cursor contract of the live replay law.",
+   "set": [
+    {
+     "line": 3,
+     "from": "🧮",
+     "to": "🔥"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🪟️fem2d-mounted-session/🟦️.ts",
+   "head": "The mounted FEM2D session contract of the live replay law."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🎞️frame-transaction/🟦️.ts",
+   "head": "The frame transaction audit of the mounted interactivity law."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🧭️checked-rust-block-scope/🟦️.ts",
+   "set": [
+    {
+     "line": 5,
+     "from": "🧭",
+     "to": "🔎"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts",
+   "head": "The fixture builders of the transaction-v2 suite: run roots, plans, snapshots and fixture variants."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/💥️child-control/🟦️.ts",
+   "head": "The child-process control of the transaction-v2 suite: the active reference fixture, spawned children and crash drivers."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/📜️boundary-contracts/🟦️.ts",
+   "head": "The boundary contracts of the transaction-v2 suite: fixture and snapshot types, goldens and phase tables."
+  }
+ ]
+}

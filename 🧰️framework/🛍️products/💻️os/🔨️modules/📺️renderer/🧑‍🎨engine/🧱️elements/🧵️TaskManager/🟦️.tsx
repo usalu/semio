@@ -51,7 +51,7 @@ import { type RuntimeMetricsSnapshot } from "@semio-tech/framework";
 import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type VideoRenderJobRow } from "@semio-tech/framework";
 import { videoRenderExportTaskIdV1, videoRenderExportTextV1 } from "../🎥️VideoRenderHost/🟦️.ts";
-import { type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
+import { type AgentConversationEntry } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

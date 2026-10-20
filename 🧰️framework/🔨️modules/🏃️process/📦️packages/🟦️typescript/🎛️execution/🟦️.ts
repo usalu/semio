@@ -1,4 +1,4 @@
-export { captureOwnedCommandV1, runOwnedCommand, startNativeProgress, OwnedCommandFailure, readOwnedCommandOutcome,withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,writeOwnedCommandOutputV1 } from "../../../🎛️owned-execution/🟦️.ts";
+export { startOwnedCommandTimeoutV1, captureOwnedCommandV1, runOwnedCommand, startNativeProgress, OwnedCommandFailure, readOwnedCommandOutcome,withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,writeOwnedCommandOutputV1 } from "../../../🎛️owned-execution/🟦️.ts";
 export type { OwnedCommandOptions, OwnedCommandOutcome,OwnedCommandStreamV1 } from "../../../🎛️owned-execution/🟦️.ts";
 export { captureOwnedProcess } from "../../../📥️capture/🟦️.ts";
 export type { OwnedProcessCaptureOptions, OwnedProcessCaptureResult } from "../../../📥️capture/🟦️.ts";

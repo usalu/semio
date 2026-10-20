@@ -1,0 +1,1 @@
+publishReceipt?withJavascriptDependencyReceiptStorageV1(workspace,invocation,phaseControl,body):withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phaseControl,body);

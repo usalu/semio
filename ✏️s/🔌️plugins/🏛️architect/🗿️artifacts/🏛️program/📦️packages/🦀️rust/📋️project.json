@@ -175,6 +175,11 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate-register-catalog"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "check-register-catalog": {

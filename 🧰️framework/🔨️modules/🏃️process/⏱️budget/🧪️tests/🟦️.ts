@@ -50,7 +50,7 @@ test("build preparation has an authored finite fallback and honors explicit fini
 test("owned process timers preserve a single deadline beyond the native timer range", async () => {
   const owner=resolve(import.meta.dir,".."),corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")),require=createRequire(import.meta.url),ajv=new(require("ajv").default)(),validate=ajv.compile({...schema,$ref:"#/$defs/TimerCase"}),ts=require("typescript"),source=resolve(owner,"../🎛️owned-execution/🟦️.ts"),file=ts.createSourceFile(source,readFileSync(source,"utf8"),ts.ScriptTarget.Latest,true),declaration=file.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text==="startOwnedCommandTimeoutV1");
   expect(declaration).toBeDefined();
-  const implementation=require("esbuild").transformSync(declaration.getText(file),{loader:"ts",format:"cjs"}).code,database=new Database(":memory:");
+  const implementation=require("esbuild").transformSync(declaration.getText(file).replace(/^export /u,""),{loader:"ts",format:"cjs"}).code,database=new Database(":memory:");
   try { for(const row of corpus.timers){
     expect(validate(row),JSON.stringify(validate.errors)).toBe(true);
     let elapsed=0,expirations=0,next=0;const delays:number[]=[],pending=new Map<number,()=>void>();
@@ -65,3 +65,9 @@ test("owned process timers preserve a single deadline beyond the native timer ra
   await expect(runOwnedCommand(process.execPath,["-e","setTimeout(()=>process.exit(0),1000)"],process.cwd(),"process:short-timer",30,{stdout:"ignore",input:""})).rejects.toThrow(/timeout 30ms/u);
   console.log("[DEBUG] process timer laws: 9 neutral cases, 3 real large-budget exits, 1 real finite expiry");
 },15000);
+
+
+test("public bounded timeout validates before scheduling and retires cancellation",async()=>{
+ const owner=resolve(import.meta.dir,".."),corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")),api=await import(resolve(owner,"../🎛️owned-execution/🟦️.ts")),require=createRequire(import.meta.url),valid=new(require("ajv").default)().compile({...schema,$ref:"#/$defs/TimerInputCase"}),db=new Database(":memory:");try{for(const row of corpus.timerInputs){expect(valid(row)).toBe(true);const oracle=db.query("SELECT json_type(?1,'$.budget') IN ('integer','real') AND json_extract(?1,'$.budget')>=0 AND json_extract(?1,'$.budget')<=9007199254740991 AND json_extract(?1,'$.budget')=cast(json_extract(?1,'$.budget')AS INTEGER) AND json_extract(?1,'$.callback')=1 accepted").get(JSON.stringify(row))as{accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);const create=()=>api.startOwnedCommandTimeoutV1(row.budget,row.callback?()=>{}:null);if(row.accepted){const stop=create();stop();stop();}else expect(create).toThrow();}
+ let expired=0;const stop=api.startOwnedCommandTimeoutV1(20,()=>expired++);stop();await new Promise(resolve=>setTimeout(resolve,40));expect(expired).toBe(0);await new Promise<void>(resolve=>api.startOwnedCommandTimeoutV1(10,()=>{expired++;resolve();}));expect(expired).toBe(1);console.log("[DEBUG] public timeout rejects invalid DATA before scheduling, cancels its owned timer and expires a real finite deadline once");}finally{db.close();}
+});

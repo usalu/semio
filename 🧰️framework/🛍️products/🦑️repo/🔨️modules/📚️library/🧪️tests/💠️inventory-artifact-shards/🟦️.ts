@@ -1,3 +1,4 @@
+import { testScratchRootV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash, webcrypto } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -15,7 +16,7 @@ import { taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonical
 type DeepMutable<T> = T extends readonly (infer Element)[] ? DeepMutable<Element>[] : T extends object ? { -readonly [Key in keyof T]: DeepMutable<T[Key]> } : T;
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards");
+const ticketRoot = testScratchRootV1("inventory-artifact-shards");
 mkdirSync(ticketRoot, { recursive: true });
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/💠️inventory-artifact-shards/🔣️.json"), "utf8"));

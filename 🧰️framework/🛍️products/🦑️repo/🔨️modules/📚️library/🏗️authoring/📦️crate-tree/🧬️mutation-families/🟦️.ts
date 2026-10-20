@@ -1,6 +1,6 @@
-import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { collectDecls, superReach, type ModuleDecl } from "../🧱️decl-tree/🟦️.ts";
-import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟦️.ts";
+import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟢️shared/🟦️.ts";
 import { identifierSet, parseRustSourceTree, useLeafNames, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { flattenUse, pruneUseLeaves } from "./🌳️use-tree/🟦️.ts";
 import { hoistAggregateSupport, type AggregateName, type AggregateScope } from "./🧰️support-hoist/🟦️.ts";

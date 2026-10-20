@@ -1,8 +1,7 @@
 /** 🔗️ Resolves the content-addressed closure markers of a hash-representation build graph into the exact workspace files they name, so Bazel declares every imported module and every compacted project Source as an input instead of fingerprinting an environment variable nobody sets. */
 import {createHash} from "node:crypto";
-import {existsSync} from "node:fs";
 import {readFile} from "node:fs/promises";
-import {join,posix} from "node:path";
+import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readExactSourceInventoryV1,withManagedGraphSourceReadBatchV1} from "../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
@@ -57,24 +56,24 @@ function requireWorkspaceName(name:string):string{
  return name;
 }
 
-/** 📜️ Validates one manifest against its closed schema and returns the workspace files it stands for; a lock projection stands for its manifest and the workspace lock that covers it. */
-export function parseBazelClosureManifestV1(kind:BazelClosureKindV1,value:unknown,lockFiles:(manifest:string)=>readonly string[]):readonly string[]{
+/** 📜️ Validates one manifest against its closed schema and returns the workspace files it stands for; a lock projection stands for its crate manifest only: the locked resolution reaches the action key as the crate's resolution identity, not as the whole Cargo.lock file. */
+export function parseBazelClosureManifestV1(kind:BazelClosureKindV1,value:unknown):readonly string[]{
  const definition=kind==="source"?schema.definitions.SourceManifest:schema.definitions.LockManifest;
  if(validateJsonSchemaSubset(definition as never,value as never).length)throw new Error("Closed Bazel closure manifest required");
- const names=kind==="source"?(value as {files:string[]}).files:[(value as {manifest:string}).manifest,...lockFiles((value as {manifest:string}).manifest)];
+ const names=kind==="source"?(value as {files:string[]}).files:[(value as {manifest:string}).manifest];
  if(names.length>policy.maximumFiles)throw new Error("Bazel closure exceeds its finite file bound");
  return Object.freeze([...new Set(names.map(requireWorkspaceName))].sort());
 }
 
 /** 📦️ Loads exactly the markers a plan references, one fetch per family, and refuses a missing manifest. */
-export async function loadBazelClosuresV1(markers:readonly BazelClosureMarkerV1[],fetch:BazelClosureFetchV1,lockFiles:(manifest:string)=>readonly string[]):Promise<BazelClosuresV1>{
+export async function loadBazelClosuresV1(markers:readonly BazelClosureMarkerV1[],fetch:BazelClosureFetchV1):Promise<BazelClosuresV1>{
  const unique=new Map(markers.map(row=>[row.kind+":"+row.key,row])),files=new Map<string,readonly string[]>();
  if(unique.size>policy.maximumManifests)throw new Error("Bazel closure manifest count exceeds its finite bound");
  for(const kind of ["source","lock"] as const){
   const keys=[...unique.values()].filter(row=>row.kind===kind).map(row=>row.key).sort();
   if(!keys.length)continue;
   const rows=await fetch(kind,keys);
-  for(const key of keys){const value=rows.get(key);if(value===undefined)throw new Error(`Bazel closure manifest missing: ${kind} ${key}`);files.set(kind+":"+key,parseBazelClosureManifestV1(kind,value,lockFiles));}
+  for(const key of keys){const value=rows.get(key);if(value===undefined)throw new Error(`Bazel closure manifest missing: ${kind} ${key}`);files.set(kind+":"+key,parseBazelClosureManifestV1(kind,value));}
  }
  return{files(row){const found=files.get(row.kind+":"+row.key);if(!found)throw new Error(`Bazel closure manifest not loaded: ${row.kind} ${row.key}`);return found;}};
 }
@@ -95,15 +94,4 @@ export function managedBazelClosureFetchV1(root:string,control:ResourceLeaseCont
   for(const key of keys){const file=await readExactSourceInventoryV1(batch,policy.namespaces[kind] as Parameters<typeof readExactSourceInventoryV1>[1],key);if(!file||file.sha256!==key)throw new Error("Exact Source inventory identity changed");rows.set(key,file.value);}
   return rows;
  });
-}
-
-/** 🔒️ Finds the workspace lock that covers a Cargo manifest: the nearest Cargo.lock in the manifest's directory or above, inside the workspace. */
-export function workspaceBazelLockFilesV1(root:string):(manifest:string)=>readonly string[]{
- return manifest=>{
-  for(let directory=posix.dirname(manifest);;directory=posix.dirname(directory)){
-   const candidate=directory==="."?policy.lockFile:posix.join(directory,policy.lockFile);
-   if(existsSync(join(root,candidate)))return [candidate];
-   if(directory==="."||directory==="/"||directory==="")return [];
-  }
- };
 }

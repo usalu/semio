@@ -1,0 +1,75 @@
+{
+  "name": "@semio-tech/note-note-js",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/**/*.ts"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test-document-contract": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-document-contract",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/**/*.ts"
+      ],
+      "outputs": []
+    },
+    "test-snapshot-sqlite": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/**/*.ts",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "outputs": []
+    }
+  }
+}

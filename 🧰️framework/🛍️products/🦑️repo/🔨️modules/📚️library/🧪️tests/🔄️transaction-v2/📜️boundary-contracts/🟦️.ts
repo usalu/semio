@@ -1,3 +1,4 @@
+/** 📜️ The boundary contracts of the transaction-v2 suite: fixture and snapshot types, goldens and phase tables. */
 import { type ChildProcess } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";

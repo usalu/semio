@@ -6,7 +6,7 @@ import{withRepositoryBuildGraphConsumerV1}from"../../📥️inputs/💾️storag
 import{types}from"node:util";
 import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
+import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥️inputs/📋️data/📥️load/🟨️.mjs";
 const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
 const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
@@ -53,17 +53,17 @@ export async function inferenceInventoryReferencesHoldV1(root,value,control){
  if(!prefetch||Date.now()-prefetch.at>=INVENTORY_RECORD_VALIDITY_MILLISECONDS){
   prefetch={at:Date.now(),promise:withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
    const all=[];for(const [directory,prefix] of [["build-input-closures","SEMIO_SOURCE_CLOSURE_"],["build-lock-closures","SEMIO_CARGO_LOCK_"]]){let entries=[];try{entries=readdirSync(resolve(store.root,directory));}catch{}for(const entry of entries)if(/^[a-f0-9]{64}\.json$/u.test(entry))all.push(prefix+entry.slice(0,-5));}
-   await verifyInventoryCohortsV1(root,actual,all,false,store.root);
+   await verifyInventoryCohortsV1(root,actual,all,false,store.root,store);
   })};
   inventoryPrefetch.set(root,prefetch);prefetch.promise.catch(()=>{if(inventoryPrefetch.get(root)===prefetch)inventoryPrefetch.delete(root);});
  }
  try{await prefetch.promise;}catch{}
  names=unverified();if(!names.length)return true;
- return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>verifyInventoryCohortsV1(root,actual,names,true,store.root));
+ return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>verifyInventoryCohortsV1(root,actual,names,true,store.root,store));
 }
 
 /** 🔎️ Verifies compact records in cohorts bounded by their actual leaf sizes and remembers each held cohort; a strict caller refuses at the first record that fails, a tolerant caller skips that cohort. */
-async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot){
+async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot,store){
  const budget=Math.floor(readPolicy.maximumMetadataBytes/2),cohorts=[];let cohort=[],total=0;
  for(const name of names){
   const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),leaf=resolve(storeRoot,source?"build-input-closures":"build-lock-closures",name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length)+".json");
@@ -72,14 +72,22 @@ async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot){
   cohort.push(name);total+=size;
  }
  if(cohort.length)cohorts.push(cohort);
+ let done=0;const phase=async()=>{if(++done%128===0){await store.recheck();await control.yieldContinuation();checkResourceLeaseControl(control);}};
  for(const members of cohorts){
-  checkResourceLeaseControl(control);
-  let holds=false;
-  try{holds=await withManagedGraphSourceReadBatchV1(root,control,async batch=>{for(const name of members){const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length),file=await readExactSourceInventoryV1(batch,source?"build-input-closures":"build-lock-closures",key);if(!inferenceInventoryRecordHoldsV1(root,name,file))return false;}return true;});}
-  catch(error){if(strict)throw error;}
+  checkResourceLeaseControl(control);await store.recheck();
+  for(const name of members){
+   const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),directory=resolve(storeRoot,source?"build-input-closures":"build-lock-closures"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length);
+   try{
+    if(!inventoryRecordStillHoldsV1(root,directory,key)){
+     const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);
+     if(!inferenceInventoryRecordHoldsV1(root,name,file)){if(strict)return false;continue;}
+     rememberInventoryRecordV1(root,directory,key,file.stamp);
+    }
+   }catch(error){if(strict)throw error;continue;}
+   if(validInventoryRecords.size>262144)validInventoryRecords.clear();validInventoryRecords.set(root+"\0"+name,Date.now());
+   await phase();
+  }
   checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();
-  if(!holds){if(strict)return false;continue;}
-  const verified=Date.now();if(validInventoryRecords.size>262144)validInventoryRecords.clear();for(const name of members)validInventoryRecords.set(root+"\0"+name,verified);
  }
  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return true;
 }

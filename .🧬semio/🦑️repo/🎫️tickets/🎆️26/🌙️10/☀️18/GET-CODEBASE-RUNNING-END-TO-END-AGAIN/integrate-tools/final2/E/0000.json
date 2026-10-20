@@ -1,0 +1,84 @@
+{
+  "name": "@semio-tech/mit-bestand-praesentation-projektetage",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/**/*.ts",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/**/*",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts"
+    ]
+  },
+  "targets": {
+    "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6050,
+              "portEnv": "PRAESENTATION_PROJEKTETAGE_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "env": {
+          "PRAESENTATION_PROJEKTETAGE_PORT": "6050",
+          "NODE_OPTIONS": "",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "build": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long \"../../🧪️tests/🎞️react-deck/🟦️.tsx\"",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
+    }
+  }
+}

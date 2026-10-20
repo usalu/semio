@@ -37,5 +37,68 @@
       "root": "domain_value",
       "shape": "record"
     }
+  ],
+  "layouts": [
+    {
+      "attribute": "",
+      "representations": [],
+      "accepted": true
+    },
+    {
+      "attribute": "#[repr(C)]",
+      "representations": [
+        "C"
+      ],
+      "accepted": true
+    },
+    {
+      "attribute": "#[repr(transparent)]",
+      "representations": [
+        "transparent"
+      ],
+      "accepted": true
+    },
+    {
+      "attribute": "#[repr(align(8))]",
+      "representations": [
+        "align"
+      ],
+      "accepted": true
+    },
+    {
+      "attribute": "#[doc=\"packed\"]",
+      "representations": [],
+      "accepted": true
+    },
+    {
+      "attribute": "#[repr(packed)]",
+      "representations": [
+        "packed"
+      ],
+      "accepted": false
+    },
+    {
+      "attribute": "#[repr(packed(2))]",
+      "representations": [
+        "packed"
+      ],
+      "accepted": false
+    },
+    {
+      "attribute": "#[repr(C,packed)]",
+      "representations": [
+        "C",
+        "packed"
+      ],
+      "accepted": false
+    },
+    {
+      "attribute": "#[repr(C,packed(2))]",
+      "representations": [
+        "C",
+        "packed"
+      ],
+      "accepted": false
+    }
   ]
 }

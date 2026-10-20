@@ -1,5 +1,5 @@
 //! 📜️ The daemon's event journal: every change of a session's lifecycle, one JSON message per line,
-//! kept local to the machine. The sessions a restarted daemon or an offline `semio tasks` shows are the
+//! kept local to the machine. The sessions a restarted daemon or an offline `repo dashboard tasks` shows are the
 //! projection of this journal; the journal is compacted to that projection whenever it grew far beyond it.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌀️daemon/🔣️.json

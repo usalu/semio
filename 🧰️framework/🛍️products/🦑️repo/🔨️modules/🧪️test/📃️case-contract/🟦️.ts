@@ -4,13 +4,13 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature, type ParsedFeature } from "@semio-tech/framework/test/gherkin";
+import { parseFeature, type ParsedFeature } from "../../../../../📦️packages/🟦️typescript/🧪️test/🥒️gherkin/🟦️.ts";
 import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { type BreachRecord } from "@semio-tech/repo-lib/policy";
-import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "@semio-tech/repo-lib/inventory";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { testAdapterFilenames, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { type DiscoveredCase } from "../🧭️case-discovery/🟦️.ts";
 import { ADAPTER_ENTRY_POINTS, oracleImplementation } from "../🗃️oracle-registry/🟦️.ts";

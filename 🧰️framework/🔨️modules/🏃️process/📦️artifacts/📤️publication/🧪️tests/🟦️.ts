@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {testPythonV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import nativeFs, { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { open } from "node:fs/promises";
 import { mock } from "bun:test";
@@ -35,11 +36,11 @@ export async function testArtifactPublication(output: string): Promise<void> {
     assert.ok(waits > 0, "Waiting must report progress");
     lease.release();
     await pending;
-    const markerOracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps(json.loads((p/sys.argv[2]).read_text())))", staging, fixture.markerFilename], { stdout: "pipe", stderr: "pipe" });
+    const markerOracle = Bun.spawnSync([testPythonV1() ?? "python", "-c", "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps(json.loads((p/sys.argv[2]).read_text())))", staging, fixture.markerFilename], { stdout: "pipe", stderr: "pipe" });
     assert.equal(markerOracle.exitCode, 0, markerOracle.stderr.toString());
     assert.deepEqual(JSON.parse(markerOracle.stdout.toString()), { version: 1, owner: fixture.owner, files: Object.keys(fixture.files).sort() });
     const program = "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps({str(f.relative_to(p)).replace('\\\\','/'):f.read_text() for f in p.rglob('*') if f.is_file() and f.name!='.semio-artifact.json'}))";
-    const oracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
+    const oracle = Bun.spawnSync([testPythonV1() ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
     assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
     assert.deepEqual(JSON.parse(oracle.stdout.toString()), fixture.files);
     assert.equal(fixture.cancellation.point, "identical-eof");
@@ -58,7 +59,7 @@ export async function testArtifactPublication(output: string): Promise<void> {
       assert.equal(eofReads, files.size * 2);
       assert.equal(fixture.cancellation.outcome, "rejected");
       assert.equal(fixture.cancellation.unchanged, true);
-      const preserved = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
+      const preserved = Bun.spawnSync([testPythonV1() ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
       assert.equal(preserved.exitCode, 0, preserved.stderr.toString());
       assert.deepEqual(JSON.parse(preserved.stdout.toString()), fixture.files);
     } finally { prototype.read = read; }
@@ -75,7 +76,7 @@ export async function testArtifactPublication(output: string): Promise<void> {
       } }));
     };
     const verifyBytes = (expected: Record<string, string>): void => {
-      const result = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
+      const result = Bun.spawnSync([testPythonV1() ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
       assert.equal(result.exitCode, 0, result.stderr.toString());
       assert.deepEqual(JSON.parse(result.stdout.toString()), expected);
     };

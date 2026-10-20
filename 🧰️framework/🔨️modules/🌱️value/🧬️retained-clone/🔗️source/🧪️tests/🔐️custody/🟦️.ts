@@ -57,3 +57,6 @@ test("true source and borrow authority callers select one canonical combined clo
   console.log(`[DEBUG] Canonical single close query matches the true source and borrow authority across ${fixture.closeQuery.callers.length} declaring consumers; SQLite preserves the full13call inventory, native resolution remains unrun`);
  }finally{db.close();}
 });
+
+import {sourceTakeDemand} from "../../🟦️.ts";
+test("authority handback selects one whole lease or owner demand and refuses closing custody",async()=>{const {Database}=await import("bun:sqlite"),db=new Database(":memory:");try{const oracle=db.query("SELECT CASE WHEN json_extract(?,'$.closing') OR json_type(?,'$.owner')='null' THEN NULL WHEN json_type(?,'$.lease')!='null' THEN json_extract(?,'$.lease') ELSE json_extract(?,'$.owner') END AS demand");for(const row of fixture.takeQuery){expect(sourceTakeDemand(row)).toEqual(row.expected);const encoded=JSON.stringify(row),result=oracle.get(encoded,encoded,encoded,encoded,encoded)as{demand:string|null};expect(result.demand===null?null:JSON.parse(result.demand)).toEqual(row.expected);}}finally{db.close();}});

@@ -179,7 +179,8 @@
         "priority": {
           "runtime": 0,
           "compile": 1
-        }
+        },
+        "scope": "target"
       }
     },
     "moduleSourceFacts": {
@@ -229,6 +230,251 @@
         "defaultInputs": [
           "default"
         ]
+      }
+    },
+    "taskSourceDemand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "source",
+        "role"
+      ],
+      "properties": {
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "$ref": "#/$defs/sourceDemandRole"
+        }
+      }
+    },
+    "nativeSourceObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectedSource",
+        "selectedNative",
+        "requestedInputs",
+        "dependencyInputs",
+        "inputRole"
+      ],
+      "properties": {
+        "selectedSource": {
+          "type": "boolean"
+        },
+        "selectedNative": {
+          "type": "boolean"
+        },
+        "requestedInputs": {
+          "type": "boolean"
+        },
+        "dependencyInputs": {
+          "type": "boolean"
+        },
+        "inputRole": {
+          "$ref": "#/$defs/sourceInputRole"
+        }
+      }
+    },
+    "nativeSourceDemand": {
+      "enum": [
+        "none",
+        "source",
+        "compile"
+      ]
+    },
+    "nativeAssemblyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "selected",
+        "targets",
+        "inputs",
+        "rootDiscovery",
+        "preparation",
+        "release",
+        "commandExpansion"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "source",
+              "test",
+              "release",
+              "generator"
+            ]
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rootDiscovery": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "preparation": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "release": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "commandExpansion": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "sourceObservationRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "suite",
+        "execution",
+        "observation",
+        "typechecks",
+        "entry"
+      ],
+      "properties": {
+        "target": {
+          "const": "test-native-image-observation"
+        },
+        "suite": {
+          "const": "native-image-observation"
+        },
+        "execution": {
+          "const": "source"
+        },
+        "observation": {
+          "const": "freshness"
+        },
+        "typechecks": {
+          "const": false
+        },
+        "entry": {
+          "const": "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
+        }
+      }
+    },
+    "nativeDiscoveryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "targets",
+        "inputNames",
+        "caret",
+        "observation",
+        "nativeCalls",
+        "preparation",
+        "dependencies",
+        "inputGroups"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "caret": {
+          "type": "boolean"
+        },
+        "observation": {
+          "$ref": "#/$defs/sourceInputRole"
+        },
+        "nativeCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preparation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputGroups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "packageDependency": {
+          "type": "boolean"
+        },
+        "matchedData": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtimeImport": {
+          "type": "boolean"
+        },
+        "rejectSelfGenerated": {
+          "type": "boolean"
+        },
+        "upgradeNative": {
+          "type": "boolean"
+        }
       }
     }
   },

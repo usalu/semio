@@ -33,5 +33,7 @@ semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"
 semio-framework-artifact-workflow-workflow = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-os = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "unset-means-caller-deadline", "environment": {}, "requestedMilliseconds": 0 },
+    { "id": "explicit-ten-minutes", "environment": { "SEMIO_BUILD_BUDGET_MS": "600000" }, "requestedMilliseconds": 600000 },
+    { "id": "explicit-zero", "environment": { "SEMIO_BUILD_BUDGET_MS": "0" }, "requestedMilliseconds": 0 },
+    { "id": "negative-refused", "environment": { "SEMIO_BUILD_BUDGET_MS": "-1" }, "requestedMilliseconds": null },
+    { "id": "fractional-refused", "environment": { "SEMIO_BUILD_BUDGET_MS": "1.5" }, "requestedMilliseconds": null },
+    { "id": "text-refused", "environment": { "SEMIO_BUILD_BUDGET_MS": "soon" }, "requestedMilliseconds": null }
+  ]
+}

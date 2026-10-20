@@ -12,7 +12,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     import("node:path"),
     import("node:url"),
     import("@semio-tech/plugin-window-kits/media"),
-    import("@semio-tech/framework/os/modules/renderer/engine/media/lifecycle"),
+    import("@semio-tech/framework-os/modules/renderer/engine/media/lifecycle"),
     import("../../../📤️SegmentedDownload/🟦️.ts"),
   ]);
   const { createElement } = React;

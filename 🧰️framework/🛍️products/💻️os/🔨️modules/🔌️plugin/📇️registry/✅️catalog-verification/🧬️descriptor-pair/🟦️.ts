@@ -2,8 +2,8 @@
 import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
-import type { PackValue } from "@semio-tech/framework-os";
+import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
+import type { PackValue } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
 import { CATALOG_ID, DESCRIPTOR_JSON_REL_PATH, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES, CATALOG_DESCRIPTOR_PACK_FILENAME, CATALOG_DESCRIPTOR_TOP_LEVEL, CATALOG_MANIFEST_FIELDS, CATALOG_PACKAGE_ID, CATALOG_PLACEHOLDER_PLUGIN_IDS, CATALOG_PLACEHOLDER_VERSION, type CatalogDescriptorIdentity, type OwnerDescriptorPairV1, type StrictCatalogDescriptor } from "../🟦️.ts";
 import { boundedCatalogDiagnostic, isStrictJsonValue, normalizeCatalogDescriptorEnums, pathIsWithin, rejectDuplicateJsonObjectNames } from "../🛡️guards/🟦️.ts";

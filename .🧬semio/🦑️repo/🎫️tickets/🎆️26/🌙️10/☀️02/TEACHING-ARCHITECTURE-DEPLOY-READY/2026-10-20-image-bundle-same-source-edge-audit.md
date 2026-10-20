@@ -1,0 +1,16 @@
+# Image To Bundle Same-Source Edge Audit
+
+Current deploy readiness owner deploy/⚖️readiness/🟦️.ts:35,45–48 propagates one selected tag through mandatory imagebuild,imagecheck,stackcheck then E2E. Successful actual deploy-check therefore includes actual build; standalone imagecheck/bundle success is weaker.
+
+Image owner deploy/🐳️docker-image/🟦️.ts:39 creates VERSION/REVISION/CREATED from actual workspace version and guest sourceRevision. It acquires release proctor:42, runs its actual course check:43–44, and consumes retained withExecutable:45 with rechecks:48,50 through Docker build. Native bootstrap/🟦️.ts:275–284 authenticates captured Cargo output/pins executable; :315–319 verifies streamed native bytes against retained digest-path identity. It does not export that digest as a durable product receipt. Dockerfile copies those exact supplied bytes and runs proctor check in final runtime. The owner prints actual resulting immutable configID, OS/arch/size at image:53.
+
+Existing weak edges: imagecheck:248 checks version/source plus account/health/ports/volumes, but:250 only checks revision/time syntax; it does not compare labels with actual current guest revision/time. expectCheckoutStack:220–221 compares only embedded compose/Caddy bytes. Bundle:111 reads labels without validating currentrevision, :113 compares stackfiles, :123 saves same mutable tag. It neither pins immutable proctor configID through save nor compares executable digest to the build edge. Thus same tag alone could select an old sameversion/stack image and pass these standalone checks. A40hexdirty label is not a whole-source hash.
+
+Smallest useful existing-owner observations, without framework/receipt invention:
+
+- Require actual successful deploy-check imagebuild stage under the dedicated unique tag; retain its actual image:53 immutable configID observation. Capture actual guest sourceRevision/time/version, not host cleanliness or laterhosttree equality.
+- Inspect that same tag/configID after deploy-check and immediately before/after bundle; refuse any change. Compare actual labels to guest version/revision/time. Archive proctor config SHA must equal that pinned ID and its tag mapping. Pinned Caddy local alias must equal the actual authored digest-resolved config and archive mapping.
+- Inspect/reconstruct embedded runtime proctor ordinary-file bytes from that immutable image/archive, record SHA+Linuxx64ELF and selected material/stack identities. This strengthens exported runtime evidence without assuming the now-retired acquisition has a durable receipt.
+- Retain bounded before/after source-boundary hashes around workload if chosen, labeling them observations rather than compiler-input admission. Exact current native compiler source authority is already enforced by existing owner; generated lock/sync changes must be treated as intentional captured cohort evolution, not silently called an atomic snapshot.
+
+No additional registrypublish/cleancommit check is needed; existing publish owner:69–76 has stricter cleanrevision+tagstable gates but pushes externally and is outside localbundle task. Release received the concrete tag/label weakness and minimum observer checks. No commands, runtime observations, Source edits or artifact success claimed.

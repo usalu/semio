@@ -1,0 +1,580 @@
+{
+ "language": [
+  {
+   "env": {},
+   "expected": "en"
+  },
+  {
+   "env": {
+    "LANG": "de_DE.UTF-8"
+   },
+   "expected": "de"
+  },
+  {
+   "env": {
+    "LANG": "en_US.UTF-8"
+   },
+   "expected": "en"
+  },
+  {
+   "env": {
+    "LC_ALL": "de"
+   },
+   "expected": "de"
+  },
+  {
+   "env": {
+    "LANG": "de_DE",
+    "LC_ALL": "fr_FR"
+   },
+   "expected": "de"
+  },
+  {
+   "env": {
+    "LANG": "de_DE.UTF-8",
+    "LC_ALL": "C"
+   },
+   "expected": "de"
+  },
+  {
+   "env": {
+    "LANG": "en_US",
+    "SEMIO_DASHBOARD_LOCALE": "de"
+   },
+   "expected": "de"
+  },
+  {
+   "env": {
+    "LC_MESSAGES": "DE_CH@euro"
+   },
+   "expected": "de"
+  }
+ ],
+ "policy": [
+  {
+   "args": [
+    "show",
+    "projects"
+   ],
+   "env": {},
+   "expected": {
+    "args": [
+     "show",
+     "projects"
+    ],
+    "explicit": false,
+    "policy": "fresh"
+   }
+  },
+  {
+   "args": [
+    "show",
+    "projects",
+    "--graph-policy=current"
+   ],
+   "env": {},
+   "expected": {
+    "args": [
+     "show",
+     "projects"
+    ],
+    "explicit": true,
+    "policy": "current"
+   }
+  },
+  {
+   "args": [
+    "--graph-policy",
+    "current",
+    "show",
+    "projects"
+   ],
+   "env": {},
+   "expected": {
+    "args": [
+     "show",
+     "projects"
+    ],
+    "explicit": true,
+    "policy": "current"
+   }
+  },
+  {
+   "args": [
+    "show",
+    "--graph-policy"
+   ],
+   "env": {},
+   "expected": {
+    "error": true
+   }
+  },
+  {
+   "args": [
+    "exec",
+    "--graph",
+    "out.json",
+    "--",
+    "--graph-policy=current"
+   ],
+   "env": {},
+   "expected": {
+    "args": [
+     "exec",
+     "--graph",
+     "out.json",
+     "--",
+     "--graph-policy=current"
+    ],
+    "explicit": false,
+    "policy": "fresh"
+   }
+  },
+  {
+   "args": [
+    "show",
+    "projects"
+   ],
+   "env": {
+    "SEMIO_BUILD_GRAPH_POLICY": "current"
+   },
+   "expected": {
+    "args": [
+     "show",
+     "projects"
+    ],
+    "explicit": true,
+    "policy": "current"
+   }
+  },
+  {
+   "args": [
+    "show",
+    "projects",
+    "--graph-policy=fresh"
+   ],
+   "env": {
+    "SEMIO_BUILD_GRAPH_POLICY": "current"
+   },
+   "expected": {
+    "args": [
+     "show",
+     "projects"
+    ],
+    "explicit": true,
+    "policy": "fresh"
+   }
+  },
+  {
+   "args": [
+    "show",
+    "projects",
+    "--graph-policy=stale"
+   ],
+   "env": {},
+   "expected": {
+    "error": true
+   }
+  },
+  {
+   "args": [
+    "show",
+    "projects"
+   ],
+   "env": {
+    "SEMIO_BUILD_GRAPH_POLICY": "x"
+   },
+   "expected": {
+    "error": true
+   }
+  },
+  {
+   "args": [
+    "run",
+    "a:b",
+    "--graph=current"
+   ],
+   "env": {},
+   "expected": {
+    "args": [
+     "run",
+     "a:b",
+     "--graph=current"
+    ],
+    "explicit": false,
+    "policy": "fresh"
+   }
+  }
+ ],
+ "shape": {
+  "expected": {
+   "env": {
+    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "rows": [
+     {
+      "fact": {
+       "extract": "project-json",
+       "value": {
+        "name": "a",
+        "nativeRoot": null
+       }
+      },
+      "kind": "field",
+      "path": "pkg/a/project.json"
+     },
+     {
+      "fact": {
+       "s": 6
+      },
+      "kind": "file",
+      "path": "/w/Cargo.toml"
+     }
+    ]
+   },
+   "global": {
+    "edges": [
+     {
+      "source": "npm:x",
+      "target": "npm:y"
+     }
+    ],
+    "externalNodes": {
+     "npm:x": {}
+    },
+    "unavailable": [
+     {
+      "reason": "json",
+      "root": "pkg/z",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "source": "pkg/z/project.json"
+     }
+    ],
+    "version": 1
+   },
+   "owners": [
+    {
+     "config": "pkg/a/project.json",
+     "edges": [
+      {
+       "source": "a",
+       "target": "b"
+      }
+     ],
+     "kind": "project",
+     "name": "a",
+     "node": {
+      "name": "a",
+      "root": "pkg/a",
+      "targets": {
+       "build": {},
+       "test": {}
+      }
+     },
+     "root": "pkg/a",
+     "rows": [
+      {
+       "fact": {
+        "s": 1
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/project.json"
+      },
+      {
+       "fact": {
+        "s": 2
+       },
+       "kind": "file",
+       "path": "/w/shared/x.json"
+      },
+      {
+       "fact": {
+        "s": 4
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/src/x.ts"
+      },
+      {
+       "fact": {
+        "s": 7
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/tests/a.feature"
+      }
+     ],
+     "targets": [
+      "build",
+      "test"
+     ]
+    },
+    {
+     "edges": [],
+     "kind": "project",
+     "name": "root",
+     "node": {
+      "name": "root",
+      "root": ".",
+      "targets": {}
+     },
+     "root": ".",
+     "rows": [
+      {
+       "fact": {
+        "s": 3
+       },
+       "kind": "file",
+       "path": "/w/own.json"
+      }
+     ],
+     "targets": []
+    },
+    {
+     "edges": [],
+     "kind": "unavailable",
+     "name": "u",
+     "node": {
+      "project": "u",
+      "reason": "bad",
+      "root": "pkg/u",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "pkg/u/project.json"
+     },
+     "root": "pkg/u",
+     "rows": [],
+     "targets": []
+    },
+    {
+     "edges": [
+      {
+       "source": "t",
+       "target": "a"
+      }
+     ],
+     "kind": "project",
+     "name": "t",
+     "node": {
+      "name": "t",
+      "root": "pkg/a/tests",
+      "targets": {
+       "test": {}
+      }
+     },
+     "root": "pkg/a/tests",
+     "rows": [
+      {
+       "fact": {
+        "s": 7
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/tests/a.feature"
+      }
+     ],
+     "tag": "tests",
+     "targets": [
+      "test"
+     ]
+    },
+    {
+     "edges": [
+      {
+       "source": "b",
+       "target": "a"
+      }
+     ],
+     "name": "b",
+     "partial": "edges",
+     "rows": [
+      {
+       "fact": {
+        "s": 5
+       },
+       "kind": "file",
+       "path": "/w/pkg/b/src/y.ts"
+      }
+     ]
+    }
+   ],
+   "replaceTags": [
+    "tests",
+    "policy"
+   ]
+  },
+  "part": {
+   "edgeOnly": [
+    {
+     "name": "b"
+    }
+   ],
+   "edges": [
+    {
+     "source": "a",
+     "target": "b"
+    },
+    {
+     "source": "b",
+     "target": "a"
+    },
+    {
+     "source": "npm:x",
+     "target": "npm:y"
+    },
+    {
+     "source": "t",
+     "target": "a"
+    }
+   ],
+   "env": {
+    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "rows": [
+     {
+      "fact": {
+       "extract": "project-json",
+       "value": {
+        "name": "a",
+        "nativeRoot": null
+       }
+      },
+      "kind": "field",
+      "path": "pkg/a/project.json"
+     }
+    ]
+   },
+   "externalNodes": {
+    "npm:x": {}
+   },
+   "owners": [
+    {
+     "config": "pkg/a/project.json",
+     "name": "a",
+     "node": {
+      "name": "a",
+      "root": "pkg/a",
+      "targets": {
+       "build": {},
+       "test": {}
+      }
+     },
+     "nodeRows": [
+      {
+       "fact": {
+        "s": 1
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/project.json"
+      },
+      {
+       "fact": {
+        "s": 2
+       },
+       "kind": "file",
+       "path": "/w/shared/x.json"
+      }
+     ],
+     "root": "pkg/a"
+    },
+    {
+     "name": "root",
+     "node": {
+      "name": "root",
+      "root": ".",
+      "targets": {}
+     },
+     "nodeRows": [
+      {
+       "fact": {
+        "s": 3
+       },
+       "kind": "file",
+       "path": "/w/own.json"
+      }
+     ],
+     "root": "."
+    },
+    {
+     "name": "u",
+     "nodeRows": [],
+     "root": "pkg/u",
+     "unavailable": {
+      "project": "u",
+      "reason": "bad",
+      "root": "pkg/u",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "pkg/u/project.json"
+     }
+    },
+    {
+     "name": "t",
+     "node": {
+      "name": "t",
+      "root": "pkg/a/tests",
+      "targets": {
+       "test": {}
+      }
+     },
+     "nodeRows": [],
+     "root": "pkg/a/tests",
+     "tag": "tests"
+    }
+   ],
+   "parseUnavailable": [
+    {
+     "reason": "json",
+     "root": "pkg/z",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "source": "pkg/z/project.json"
+    }
+   ],
+   "replaceTags": [
+    "tests",
+    "policy"
+   ],
+   "rows": [
+    {
+     "fact": {
+      "s": 1
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/project.json"
+    },
+    {
+     "fact": {
+      "s": 4
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/src/x.ts"
+    },
+    {
+     "fact": {
+      "s": 5
+     },
+     "kind": "file",
+     "path": "/w/pkg/b/src/y.ts"
+    },
+    {
+     "fact": {
+      "s": 6
+     },
+     "kind": "file",
+     "path": "/w/Cargo.toml"
+    },
+    {
+     "fact": {
+      "s": 7
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/tests/a.feature"
+    }
+   ]
+  },
+  "stubs": {
+   "b": {
+    "kind": "project",
+    "root": "pkg/b",
+    "targets": [
+     "build"
+    ]
+   }
+  },
+  "workspaceRoot": "/w"
+ },
+ "version": 1
+}

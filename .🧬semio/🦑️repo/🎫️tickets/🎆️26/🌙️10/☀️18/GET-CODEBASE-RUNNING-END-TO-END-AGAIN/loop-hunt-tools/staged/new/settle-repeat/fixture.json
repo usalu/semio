@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "limit": 4,
+  "scenarios": [
+    { "name": "accepted-first-round", "rounds": [{ "outcome": "value" }], "expect": { "settled": "value", "rounds": 1, "events": [] } },
+    { "name": "conflict-then-value", "rounds": [{ "outcome": "conflict" }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 2, "events": ["conflict"] } },
+    { "name": "genuine-old-failure", "rounds": [{ "outcome": "failure", "message": "E1", "young": false }], "expect": { "settled": "failure", "rounds": 1, "failure": "E1", "events": [] } },
+    { "name": "transient-young-failure-recovers", "rounds": [{ "outcome": "failure", "message": "E1", "young": true }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 2, "events": ["failure"] } },
+    { "name": "changed-facts-failure-recovers", "rounds": [{ "outcome": "failure", "message": "E1", "young": false, "holds": false }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 2, "events": ["failure"] } },
+    { "name": "repeated-young-failure-is-genuine", "rounds": [{ "outcome": "failure", "message": "E1", "young": true }, { "outcome": "failure", "message": "E1", "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 2, "failure": "E1", "events": ["failure"] } },
+    { "name": "repeated-changed-failure-is-genuine", "rounds": [{ "outcome": "failure", "message": "E1", "young": true, "holds": false }, { "outcome": "failure", "message": "E1", "young": true, "holds": false }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 2, "failure": "E1", "events": ["failure"] } },
+    { "name": "different-failures-keep-retrying", "rounds": [{ "outcome": "failure", "message": "E1", "young": true }, { "outcome": "failure", "message": "E2", "young": true }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 3, "events": ["failure", "failure"] } },
+    { "name": "same-message-other-code-keeps-retrying", "rounds": [{ "outcome": "failure", "message": "E1", "code": "A", "young": true }, { "outcome": "failure", "message": "E1", "code": "B", "young": true }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 3, "events": ["failure", "failure"] } },
+    { "name": "conflict-between-failures-resets-repeat", "rounds": [{ "outcome": "failure", "message": "E1", "young": true }, { "outcome": "conflict" }, { "outcome": "failure", "message": "E1", "young": true }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 4, "events": ["failure", "conflict", "failure"] } },
+    { "name": "restart-required-is-never-retried", "rounds": [{ "outcome": "failure", "message": "Stale loaded observation implementation; restart required", "code": "BUILD_AUTHORITY_CHANGED", "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 1, "failure": "Stale loaded observation implementation; restart required", "events": [] } },
+    { "name": "thrown-undefined-repeats", "rounds": [{ "outcome": "failure", "undefined": true, "young": true }, { "outcome": "failure", "undefined": true, "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 2, "failure": null, "events": ["failure"] } },
+    { "name": "conflict-limit", "rounds": [{ "outcome": "conflict" }, { "outcome": "conflict" }, { "outcome": "conflict" }, { "outcome": "conflict" }, { "outcome": "value" }], "expect": { "settled": "conflict", "rounds": 4, "events": ["conflict", "conflict", "conflict", "conflict"] } },
+    { "name": "alternating-failures-hit-limit", "rounds": [{ "outcome": "failure", "message": "E1", "young": true }, { "outcome": "failure", "message": "E2", "young": true }, { "outcome": "failure", "message": "E1", "young": true }, { "outcome": "failure", "message": "E2", "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 4, "failure": "E2", "events": ["failure", "failure", "failure", "failure"] } }
+  ]
+}

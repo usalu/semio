@@ -14,8 +14,8 @@
 
 // #region 🔌️Imports
 import type { Effect } from "@semio-tech/framework-effect";
-import { jobPlacementFromWireName } from "@semio-tech/framework-effect/spawned-job";
-import { videoRenderProgramFromWire } from "@semio-tech/framework-effect/video-render-program";
+import { jobPlacementFromWireName } from "../../🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts";
+import { videoRenderProgramFromWire } from "../../🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts";
 import { TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_HEADER_BYTES, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_RESULT_LANE_MAX, TYPED_OPERATION_RESULT_PAGE_BYTES, TYPED_OPERATION_TOKEN_BYTES, WIRE_SEND_MESSAGE_ROUTED_TARGETS, type WireVariant, coerceWireBytes, isRoutedWireSendMessage, scanTypedOperationPages, shellFrameBytes, shellMessageKind, typedOperationAcknowledgements, typedOperationPageAnswerV1, typedOperationResult, wireSendMessageTargetTag } from "./🔖️turn-result/🟦️.ts";
 // #endregion 🔌️Imports
 

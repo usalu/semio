@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "plan": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "old-builder",
+      "accepted": false
+    },
+    {
+      "id": "old-source",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "accepted": false
+    },
+    {
+      "id": "wrong-volume",
+      "accepted": false
+    },
+    {
+      "id": "wrong-native",
+      "accepted": false
+    },
+    {
+      "id": "arbitrary-command",
+      "accepted": false
+    },
+    {
+      "id": "latest",
+      "accepted": false
+    },
+    {
+      "id": "source-count",
+      "accepted": false
+    },
+    {
+      "id": "wrong-builder-name",
+      "accepted": false
+    },
+    {
+      "id": "wrong-workload",
+      "accepted": false
+    },
+    {
+      "id": "unreviewed-native-hash",
+      "accepted": false
+    },
+    {
+      "id": "unreviewed-native-size",
+      "accepted": false
+    },
+    {
+      "id": "underfunded-cleanup",
+      "accepted": false
+    },
+    {
+      "id": "missing-git-proof",
+      "accepted": false
+    },
+    {
+      "id": "invalid-git-proof",
+      "accepted": false
+    }
+  ],
+  "ownership": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-id",
+      "accepted": false
+    },
+    {
+      "id": "wrong-token",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image",
+      "accepted": false
+    },
+    {
+      "id": "wrong-created",
+      "accepted": false
+    },
+    {
+      "id": "extra-mount",
+      "accepted": false
+    },
+    {
+      "id": "host-bind",
+      "accepted": false
+    },
+    {
+      "id": "not-running",
+      "accepted": false
+    },
+    {
+      "id": "paused",
+      "accepted": false
+    },
+    {
+      "id": "not-dedicated",
+      "accepted": false
+    },
+    {
+      "id": "wrong-workdir",
+      "accepted": false
+    },
+    {
+      "id": "wrong-volume",
+      "accepted": false
+    },
+    {
+      "id": "wrong-workload",
+      "accepted": false
+    }
+  ],
+  "controller": [
+    {
+      "id": "success",
+      "accepted": true
+    },
+    {
+      "id": "step-failure",
+      "accepted": false
+    },
+    {
+      "id": "cancel",
+      "accepted": false
+    },
+    {
+      "id": "deadline",
+      "accepted": false
+    },
+    {
+      "id": "before-identity",
+      "accepted": false
+    },
+    {
+      "id": "after-identity",
+      "accepted": false
+    },
+    {
+      "id": "stop-fallback",
+      "accepted": false
+    },
+    {
+      "id": "stop-foreign",
+      "accepted": false
+    },
+    {
+      "id": "launch-unknown",
+      "accepted": false
+    },
+    {
+      "id": "terminal-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "output-cap",
+      "accepted": false
+    },
+    {
+      "id": "receipt-collision",
+      "accepted": false
+    },
+    {
+      "id": "source-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "launch-unknown-owned",
+      "accepted": false
+    },
+    {
+      "id": "extra-terminal",
+      "accepted": false
+    }
+  ],
+  "guest": [
+    {
+      "id": "exact-launcher-fresh-birth",
+      "accepted": true
+    },
+    {
+      "id": "partial-output-write",
+      "accepted": true
+    }
+  ]
+}

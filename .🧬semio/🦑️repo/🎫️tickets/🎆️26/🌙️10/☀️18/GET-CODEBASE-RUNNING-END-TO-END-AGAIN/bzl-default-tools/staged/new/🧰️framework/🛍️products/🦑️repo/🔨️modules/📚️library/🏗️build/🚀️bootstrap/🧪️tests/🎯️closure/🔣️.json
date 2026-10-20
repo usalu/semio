@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "owners": [
+    { "name": "the deepest declared scope owns a project root", "scopes": [".", "a", "a/b", "c"], "roots": ["a/b/x", "a/y", "c", "d/e"], "expected": [".", "a", "a/b", "c"] },
+    { "name": "a sibling with a common name prefix is not an owner", "scopes": [".", "a"], "roots": ["ab/x", "a-b"], "expected": ["."] },
+    { "name": "the workspace root and empty roots belong to the root scope", "scopes": [".", "a"], "roots": ["", ".", "./"], "expected": ["."] },
+    { "name": "separators, leading dot segments and trailing slashes are normalised", "scopes": [".", "a/b"], "roots": ["./a/b/", "a\\b\\c"], "expected": ["a/b"] },
+    { "name": "repeats collapse and the answer is sorted", "scopes": [".", "z", "m"], "roots": ["z/1", "m", "z/2", "m/q"], "expected": ["m", "z"] },
+    { "name": "no roots need no scope", "scopes": [".", "a"], "roots": [], "expected": [] }
+  ],
+  "plans": [
+    { "name": "default mode installs everything for bazel", "tool": "bazel", "environment": {}, "closure": false, "policyMode": "all" },
+    { "name": "default mode installs everything for nx", "tool": "nx", "environment": {}, "closure": false },
+    { "name": "closure mode narrows a bazel run to the parser package", "tool": "bazel", "environment": { "SEMIO_JS_INSTALL": "closure" }, "closure": true },
+    { "name": "closure mode never narrows an nx run", "tool": "nx", "environment": { "SEMIO_JS_INSTALL": "closure" }, "closure": false },
+    { "name": "the environment can switch closure mode off", "tool": "bazel", "environment": { "SEMIO_JS_INSTALL": "all" }, "closure": false }
+  ],
+  "invalidModes": ["", "minimal", "CLOSURE"],
+  "selections": [
+    { "value": { "kind": "all" }, "valid": true },
+    { "value": { "kind": "scope", "owner": "a" }, "valid": true },
+    { "value": { "kind": "scopes", "owners": ["a", "b"] }, "valid": true },
+    { "value": { "kind": "scopes", "owners": [] }, "valid": false },
+    { "value": { "kind": "scopes", "owners": ["a", "a"] }, "valid": false },
+    { "value": { "kind": "scopes", "owners": [""] }, "valid": false },
+    { "value": { "kind": "scopes", "owner": "a" }, "valid": false },
+    { "value": { "kind": "scopes", "owners": ["a"], "extra": 1 }, "valid": false }
+  ]
+}

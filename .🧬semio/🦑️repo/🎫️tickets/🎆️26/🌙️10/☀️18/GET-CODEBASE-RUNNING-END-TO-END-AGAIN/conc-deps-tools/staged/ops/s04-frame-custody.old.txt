@@ -1,0 +1,1 @@
+requireRepositoryCacheStoreMaintenanceV1(store,frame.workspace,"dependencies");requireRepositoryCacheStoreReadCustodyV1(store,frame.workspace,"dependencies");requireResourceLeaseCustodyV1(frame.gate,repositoryLeaseDirectoryV1(frame.workspace),"javascript-dependency-bindings:"+frame.workspace,frame.control);return frame;}

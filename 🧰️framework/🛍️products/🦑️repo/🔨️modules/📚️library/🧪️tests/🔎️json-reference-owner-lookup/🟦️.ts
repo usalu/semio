@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { visit as visitJsonc } from "jsonc-parser";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -106,7 +107,7 @@ test("registers the JSON owner lookup gate through Nx", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const router = readRegisteredTestRoute(root, "json-reference-owner-lookup").text;
   expect(router.match(/segments\[0\] === "json-reference-owner-lookup"/gu)).toHaveLength(1);
   expect(router).toContain("🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts");
 });

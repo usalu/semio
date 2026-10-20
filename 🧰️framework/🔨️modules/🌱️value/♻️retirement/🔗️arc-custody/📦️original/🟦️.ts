@@ -1,0 +1,4 @@
+/** 📦️ Selects alias retirement, initialized-field ownership, or the final physical release. */
+export function sharedOriginalEvent(state:Readonly<{aliases:number;physicalHandles:number;remainingFields:number}>):"alias"|"owner"|"field"|"wait"|"release"{if(state.aliases>1)return"alias";if(state.aliases===1)return"owner";if(state.remainingFields>0)return"field";return state.physicalHandles>1?"wait":"release";}
+/** 🛡️ Native initialized-field admission refuses unsupported, destructor-bearing, or unfunded owners. */
+export function sharedOriginalAdmitted(state:Readonly<{supported:boolean;birthKnown:boolean;customDrop:boolean;items:number;capacity:number;requiredCapacity:number;depth:number}>):boolean{return state.supported&&state.birthKnown&&!state.customDrop&&state.items>0&&state.capacity>=state.requiredCapacity&&state.depth>0;}

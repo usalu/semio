@@ -1,6 +1,6 @@
 import{ownerEnvironmentV1}from"./🌱️environment/🟦️.ts";
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
-import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1,repositoryCargoConsumptionV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {cargoInvocationManifestV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "./📥️invocation/🛠️preparation/🟦️.ts";
@@ -21,7 +21,7 @@ import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execu
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import {readBuildMode} from "@semio-tech/process/build-mode";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
 
 /** 🌊️ `bun ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through

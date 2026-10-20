@@ -19,13 +19,6 @@
       "default",
       "reads"
     ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
-    ],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
@@ -65,6 +58,11 @@
       }
     },
     "typegen": {
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
       "cache": true,
       "executor": "repo:script",
       "options": {

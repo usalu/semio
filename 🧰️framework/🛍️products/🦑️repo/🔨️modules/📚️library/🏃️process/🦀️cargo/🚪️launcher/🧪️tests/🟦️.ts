@@ -1,4 +1,5 @@
 import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
@@ -47,7 +48,7 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
   const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativeImageStorageV1(options),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
   const storage=await acquireNativeStorageV1({policy,control,port:nativeStorageRetirementPortV1(image.port,async()=>{}),owner:"repo:cargo:isolated-law",kind:"compiler-workspace",bytes:8388608}),base=join(image.root,"cargo","prototype"),isolated=join(base,REPOSITORY_CARGO_LAUNCH_POLICY_V1.isolatedDirectory);
   const db=new Database(":memory:");db.exec("CREATE TABLE expected(name TEXT PRIMARY KEY, removed_after_owner INTEGER NOT NULL, removed_by_sweep INTEGER NOT NULL)");
-  const present=(root:string)=>{const result=spawnSync("python3",["-c","import os,sys;print(int(os.path.isdir(sys.argv[1])))",root],{encoding:"utf8"});expect(result.status,result.stderr).toBe(0);return result.stdout.trim()==="1";};
+  const present=(root:string)=>{const result=spawnSync(testPythonV1()??"python3",["-c","import os,sys;print(int(os.path.isdir(sys.argv[1])))",root],{encoding:"utf8"});expect(result.status,result.stderr).toBe(0);return result.stdout.trim()==="1";};
   const owner=()=>{const nonce=Array.from(crypto.getRandomValues(new Uint8Array(6)),byte=>byte.toString(16).padStart(2,"0")).join(""),marker=join(parent,nonce+".ready");const child=Bun.spawn([process.execPath,"--eval",`import {acquireResourceLease} from ${JSON.stringify(leases)};import {mkdirSync,writeFileSync} from "node:fs";const retained=await acquireResourceLease({directory:${JSON.stringify(isolated)},resource:${JSON.stringify(nonce)},mode:"exclusive",signal:new AbortController().signal,timeoutMs:0});mkdirSync(${JSON.stringify(join(isolated,nonce,"target"))},{recursive:true});writeFileSync(${JSON.stringify(marker)},"ready");setInterval(()=>{if(retained.mode!=="exclusive")throw Error("Original fixture lease required");Bun.gc(true);},10);`],{stdout:"ignore",stderr:"pipe"});return{nonce,marker,child,root:join(isolated,nonce)};};
   try{
    for(const row of fixture.lifecycle){
@@ -66,7 +67,7 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
     if(row.outcome==="return")expect(await settlement).toBe(row.name);else await expect(settlement).rejects.toThrow();
     expect(present(root),row.name).toBe(!row.removedAfterOwner);
    }
-   expect(spawnSync("python3",["-c","import os,sys;print(len([n for n in os.listdir(sys.argv[1])]))",isolated],{encoding:"utf8"}).stdout.trim()).toBe("0");
+   expect(spawnSync(testPythonV1()??"python3",["-c","import os,sys;print(len([n for n in os.listdir(sys.argv[1])]))",isolated],{encoding:"utf8"}).stdout.trim()).toBe("0");
   }finally{db.close();await storage.retire();await image.close();await retireNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control});rmSync(parent,{recursive:true,force:true});}
  });
 }));

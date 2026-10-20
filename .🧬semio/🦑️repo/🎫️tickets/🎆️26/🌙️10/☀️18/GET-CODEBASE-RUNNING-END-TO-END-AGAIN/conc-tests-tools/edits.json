@@ -1,0 +1,167 @@
+[
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import { spawn, spawnSync } from \"node:child_process\";",
+    "new": "import { spawn } from \"node:child_process\";",
+    "count": 1
+   },
+   {
+    "old": "import { join, resolve, sep } from \"node:path\";\nimport { terminateOwnedProcessTree } from \"../../🪓️termination/🟦️.ts\";",
+    "new": "import { join, resolve } from \"node:path\";\nimport { terminateOwnedProcessTree } from \"../../🪓️termination/🟦️.ts\";\nimport { detachDiskImagesUnderV1 } from \"../🏖️sandbox/🖼️images/🟦️.ts\";\nimport { guardArgumentsV1, testCheckoutRootV1, testSandboxEnvironmentV1 } from \"../🏖️sandbox/🟦️.ts\";\n\nexport { attachedDiskImagesV1, detachDiskImagesUnderV1 } from \"../🏖️sandbox/🖼️images/🟦️.ts\";",
+    "count": 1
+   },
+   {
+    "old": "/** 🧲️ Lists the attached macOS disk images through the system tool, deepest backing file first. */\nexport function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string }>[] {\n  if (process.platform !== \"darwin\") return [];\n  const info = spawnSync(\"/usr/bin/hdiutil\", [\"info\", \"-plist\"], { encoding: \"utf8\" });\n  if (info.status !== 0) return [];\n  const json = spawnSync(\"/usr/bin/plutil\", [\"-convert\", \"json\", \"-o\", \"-\", \"-\"], { input: info.stdout, encoding: \"utf8\" });\n  if (json.status !== 0) return [];\n  const rows = (JSON.parse(json.stdout) as { images?: { \"image-path\"?: string; \"system-entities\"?: { \"mount-point\"?: string; \"dev-entry\"?: string }[] }[] }).images ?? [];\n  return rows.flatMap((row) => {\n    const entities = row[\"system-entities\"] ?? [], target = entities.find((entity) => entity[\"mount-point\"])?.[\"mount-point\"] ?? entities[0]?.[\"dev-entry\"];\n    if (!row[\"image-path\"] || !target) return [];\n    let image = row[\"image-path\"];\n    try { image = realpathSync(image); } catch {}\n    return [{ image, target }];\n  }).sort((left, right) => right.image.length - left.image.length);\n}\n\n/** 🧲️ Detaches every disk image whose backing file lives under the root, nested images first. */\nexport function detachDiskImagesUnderV1(root: string): readonly string[] {\n  let real = resolve(root);\n  try { real = realpathSync(real); } catch {}\n  const prefix = real + sep, detached: string[] = [];\n  for (const { image, target } of attachedDiskImagesV1()) {\n    if (!image.startsWith(prefix)) continue;\n    const plain = spawnSync(\"/usr/bin/hdiutil\", [\"detach\", target], { encoding: \"utf8\" });\n    if (plain.status === 0 || spawnSync(\"/usr/bin/hdiutil\", [\"detach\", \"-force\", target], { encoding: \"utf8\" }).status === 0) detached.push(image);\n  }\n  return detached;\n}\n\n",
+    "new": "",
+    "count": 1
+   },
+   {
+    "old": "  const child = spawn(command, [...args], { stdio: options.captureStdout ? [\"inherit\", \"pipe\", \"inherit\"] : \"inherit\", cwd: options.cwd, env: options.env ?? process.env, detached: process.platform !== \"win32\", windowsHide: true });",
+    "new": "  const sandbox = testSandboxEnvironmentV1(options.env ?? process.env, { route: \"test-command\", checkout: testCheckoutRootV1(options.cwd, options.env ?? process.env) });\n  const child = spawn(command, [...guardArgumentsV1(command, args, sandbox.environment)], { stdio: options.captureStdout ? [\"inherit\", \"pipe\", \"inherit\"] : \"inherit\", cwd: options.cwd, env: sandbox.environment, detached: process.platform !== \"win32\", windowsHide: true });",
+    "count": 1
+   },
+   {
+    "old": "    options.signal?.removeEventListener(\"abort\", abort);\n    process.off(\"SIGINT\", interrupt);\n    process.off(\"SIGTERM\", interrupt);\n  }\n}",
+    "new": "    options.signal?.removeEventListener(\"abort\", abort);\n    process.off(\"SIGINT\", interrupt);\n    process.off(\"SIGTERM\", interrupt);\n    sandbox.release();\n  }\n}",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts",
+  "pairs": [
+   {
+    "old": "export { runBudgetedTestCommand, createTestScratchRootV1, disposeTestScratchRootV1, detachDiskImagesUnderV1, attachedDiskImagesV1 } from \"../../../../🧪️testing/🎛️execution/🟦️.ts\";",
+    "new": "export { runBudgetedTestCommand, createTestScratchRootV1, disposeTestScratchRootV1, detachDiskImagesUnderV1, attachedDiskImagesV1 } from \"../../../../🧪️testing/🎛️execution/🟦️.ts\";\nexport { createTestSandboxV1, withTestSandboxV1, testSandboxEnvironmentV1, testScratchRootV1, reserveTestPortV1, reclaimAbandonedTestSandboxesV1, compileLawV1, scanTestsV1, guardArgumentsV1, summarizeGuardReportV1 } from \"../../../../🧪️testing/🏖️sandbox/🟦️.ts\";\nexport type { TestSandboxV1, TestSandboxOptionsV1, TestGuardModeV1, ScanFindingV1 } from \"../../../../🧪️testing/🏖️sandbox/🟦️.ts\";",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import { resolve } from \"node:path\";\n",
+    "new": "import { resolve } from \"node:path\";\nimport { testSandboxEnvironmentV1 } from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts\";\n",
+    "count": 1
+   },
+   {
+    "old": "/** 🧾️ Resolves caller-owned test output or a neutral cache route without naming a ticket. */",
+    "new": "/** 🧾️ Resolves caller-owned test output, or the artifact directory of the per-run test sandbox (private temp root, image root, port leases, reclaimed when its owner dies), without naming a ticket or a shared cache route. */",
+    "count": 1
+   },
+   {
+    "old": "  const artifactRoot = resolve(repoRoot, configured || `.🧬semio/🦑️repo/⚡️cache/🧪️tests/${route}`);\n  mkdirSync(artifactRoot, { recursive: true });\n  return { ...env, SEMIO_TEST_ARTIFACT_DIR: artifactRoot };",
+    "new": "  if (!configured) return testSandboxEnvironmentV1(env, { route, checkout: repoRoot }).environment;\n  const artifactRoot = resolve(repoRoot, configured);\n  mkdirSync(artifactRoot, { recursive: true });\n  return { ...env, SEMIO_TEST_ARTIFACT_DIR: artifactRoot };",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import { repoTestArtifactEnvironment } from \"../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts\";",
+    "new": "import { repoTestArtifactEnvironment } from \"../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts\";\nimport { guardArgumentsV1 } from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts\";",
+    "count": 1
+   },
+   {
+    "old": "[\"test\", \"--timeout\", String(declared.childTimeoutMilliseconds), \"./\" + local, ...(request.pattern === undefined ? [] : [\"--test-name-pattern\", request.pattern])]",
+    "new": "[...guardArgumentsV1(process.execPath, [\"test\", \"--timeout\", String(declared.childTimeoutMilliseconds), \"./\" + local, ...(request.pattern === undefined ? [] : [\"--test-name-pattern\", request.pattern])], environment)]",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧪️tests/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import{test,expect}from\"bun:test\";",
+    "new": "import {testScratchRootV1} from \"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts\";\nimport{test,expect}from\"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "resolve(process.cwd(),\".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated\")",
+    "new": "testScratchRootV1(\"cleanup-command\")",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧪️tests/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import{test,expect}from\"bun:test\";",
+    "new": "import {testScratchRootV1} from \"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts\";\nimport{test,expect}from\"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "resolve(process.cwd(),\".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated\")",
+    "new": "testScratchRootV1(\"cleanup-operation\")",
+    "count": 6
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import{test,expect}from\"bun:test\";",
+    "new": "import {testScratchRootV1} from \"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts\";\nimport{test,expect}from\"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "resolve(process.cwd(),\".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated\")",
+    "new": "testScratchRootV1(\"cleanup-receiver\")",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧪️tests/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import{test,expect}from\"bun:test\";",
+    "new": "import {testScratchRootV1} from \"../../../../🧪️testing/🏖️sandbox/🟦️.ts\";\nimport{test,expect}from\"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "resolve(process.cwd(),\".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated\")",
+    "new": "testScratchRootV1(\"publication-sources\")",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/⏳️phase/🧪️tests/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import{test,expect}from\"bun:test\";",
+    "new": "import {testScratchRootV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport{test,expect}from\"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "resolve(process.cwd(),\".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated\")",
+    "new": "testScratchRootV1(\"compiler-phase\")",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts",
+  "pairs": [
+   {
+    "old": "import { expect, test } from \"bun:test\";",
+    "new": "import { testScratchRootV1 } from \"../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport { expect, test } from \"bun:test\";",
+    "count": 1
+   },
+   {
+    "old": "const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards\");",
+    "new": "const ticketRoot = testScratchRootV1(\"inventory-artifact-shards\");",
+    "count": 1
+   }
+  ]
+ }
+]

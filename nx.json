@@ -36,12 +36,9 @@
       "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
       "!{projectRoot}/.storybook/**"
     ],
-    "cargo": [
-      "{projectRoot}/**/*.rs",
-      "{projectRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml"
+    "cargoToolchain": [
+      "{workspaceRoot}/rustfmt.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
     ],
     "go": [
       "{projectRoot}/**/*.go",
@@ -89,5 +86,6 @@
     }
   ],
   "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts",
+  "maxCacheSize": "3GB",
   "analytics": false
 }

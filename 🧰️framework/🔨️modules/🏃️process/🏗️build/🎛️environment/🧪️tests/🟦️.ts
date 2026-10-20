@@ -30,3 +30,5 @@ test("actual compiler environment disables implicit caches for every dashboard b
   console.log(`[DEBUG] Owned compiler startup verified ${corpus.cases.length*2} runtime environments against SQLite and Ajv without IDE catalogs`);
  }finally{database.close();}
 });
+
+import "../../🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts";

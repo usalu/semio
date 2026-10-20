@@ -1,8 +1,8 @@
 # 🚚️ Architecture course releases, started by hand only (Actions → "architecture course" → Run workflow → repository default branch):
-#   site    — `bun repo run @teaching/architecture-course:publish` builds and verifies the CDN artifact against the production
+#   site    — `repo run @teaching/architecture-course:publish` builds and verifies the CDN artifact against the production
 #             proctor, then GitHub Pages serves it at architektur-und-technologie.de.
-#   proctor — `bun repo run @teaching/architecture-course:docker-image-build` builds the proctor image;
-#             `bun repo run @teaching/architecture-course:docker-image-publish` checks the image and the stack and only then
+#   proctor — `repo run @teaching/architecture-course:docker-image-build` builds the proctor image;
+#             `repo run @teaching/architecture-course:docker-image-publish` checks the image and the stack and only then
 #             pushes it to ghcr.io/usalu/architecture-course-proctor as `sha-<12 commit hex>-<64 image-config hex>`
 #             (the content-addressed rollback target), `<workspace version>` and `latest`, printing the digest and rollback tag.
 # Release jobs run only on the repository's configured default branch. A run started from another branch skips them.
@@ -74,18 +74,29 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
+      - name: Provision the native repository frontend
+        id: native-repo
+        shell: bash
+        run: |
+          native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
+          native_repo_bin="$native_repo_dir/repo"
+          if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+          fi
+          sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
+          printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
       - name: Check generic host tools, capacity and filesystem support before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo preflight
       - name: Install the authored dependency scopes into their owned storage
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo dependencies sync --all
       - name: Test the course and the deployment files
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:test
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:test
       - name: Typecheck the course sources
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:typecheck
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:typecheck
       - name: Install Chromium system dependencies
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:ci-browser-prepare
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:ci-browser-prepare
       - name: Rehearse the learner release against the current proctor
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --
 
   site:
     needs: check
@@ -103,12 +114,23 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
+      - name: Provision the native repository frontend
+        id: native-repo
+        shell: bash
+        run: |
+          native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
+          native_repo_bin="$native_repo_dir/repo"
+          if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+          fi
+          sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
+          printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
       - name: Check generic host tools, capacity and filesystem support before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo preflight
       - name: Install the authored dependency scopes into their owned storage
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo dependencies sync --all
       - name: Build and verify the CDN artifact
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:publish --configuration=release
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:publish --configuration=release
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: 🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/pages/course
@@ -146,16 +168,27 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
+      - name: Provision the native repository frontend
+        id: native-repo
+        shell: bash
+        run: |
+          native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
+          native_repo_bin="$native_repo_dir/repo"
+          if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+          fi
+          sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
+          printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
       - name: Check generic host tools, capacity and filesystem support before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo preflight
       - name: Install the authored dependency scopes into their owned storage
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo dependencies sync --all
       - name: Build the proctor image
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:docker-image-build
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:docker-image-build
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Check the image and the stack, then push
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:docker-image-publish
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run @teaching/architecture-course:docker-image-publish

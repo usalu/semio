@@ -34,7 +34,7 @@ fn dashboard_with(preferences: Preferences) -> (Dashboard, Tui) {
 
 fn small_view(language: &str) -> (Dashboard, Tui) {
     let mut tui = Tui::new(Size { width: 80, height: 24 }, Theme::new(AppearanceName::Dark));
-    let mut dashboard = Dashboard::new(&mut tui, "workspace".into(), Preferences { language: language.into(), ..Default::default() }, std::env::temp_dir().join("unused-dashboard-preferences"), false);
+    let mut dashboard = Dashboard::new(&mut tui, "workspace".into(), Preferences { language: Some(language.into()), ..Default::default() }, std::env::temp_dir().join("unused-dashboard-preferences"), false);
     dashboard.link = Link::offline();
     dashboard.state = LinkState::Connected;
     let loaded = registry();
@@ -43,7 +43,7 @@ fn small_view(language: &str) -> (Dashboard, Tui) {
     (dashboard, tui)
 }
 
-fn view() -> (Dashboard, Tui) { dashboard_with(Preferences::default()) }
+fn view() -> (Dashboard, Tui) { dashboard_with(Preferences {language:Some("en".into()),..Default::default()}) }
 
 fn key(character: char) -> Event { Event::Key(KeyEvent { key: Key::Char(character), mods: 0 }) }
 

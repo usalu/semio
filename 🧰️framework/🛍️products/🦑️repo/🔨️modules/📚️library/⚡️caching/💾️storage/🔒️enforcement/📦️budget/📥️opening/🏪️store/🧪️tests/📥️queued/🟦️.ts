@@ -1,4 +1,5 @@
 import{test,expect,spyOn}from"bun:test";
+import {testPythonV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import ts from"typescript";
@@ -69,7 +70,7 @@ test("every queued caller of whole-image maintenance carries its declared queued
 
 test("nonwaiting cache maintenance exists only where the declared roster explains it",()=>withBuildTestInvocationV1(async original=>{
  const declared=Object.fromEntries(corpus.nonwaiting.map(row=>[row.path,row.sites])),actual=productionSites();expect(actual).toEqual(Object.fromEntries(Object.entries(declared).sort(([left],[right])=>left<right?-1:left>right?1:0)));
- const python=Bun.which("python3");if(!python)throw Error("Independent Python scanning oracle required");
+ const python=testPythonV1();if(!python)throw Error("Independent Python scanning oracle required");
  const result=await captureOwnedCommandResultV1(python,["-I","-c",oracleProgram,JSON.stringify({roots:corpus.roots,excluded:corpus.excludedSegments})],process.cwd(),{control:createIssuedResourceControlV1(original,"fixture:nonwaiting-oracle",0),env:scriptInvocationEnvironment(original,process.env),output:{maximumBytes:1048576,maximumLines:4096}});
  expect(result.status,result.stderr).toBe(0);expect(JSON.parse(result.stdout)).toEqual(actual);
 }),120000);
@@ -84,7 +85,7 @@ except sqlite3.OperationalError as error:
 finally:db.close()`;
 
 test("a concurrent shared holder makes queued maintenance wait with progress and cancellation while opportunistic maintenance defers",()=>withBuildTestInvocationV1(async original=>{
- const python=Bun.which("python3");if(!python)throw Error("Independent Python SQLite oracle required");
+ const python=testPythonV1();if(!python)throw Error("Independent Python SQLite oracle required");
  for(const scenario of corpus.scenarios){
   const parent=mkdtempSync(join(realpathSync(tmpdir()),"qm-")),directory=join(parent,"l"),abort=new AbortController(),resource="native-fixed-image:"+join(parent,"i"),path=leases.resourceLeasePathV1(directory,resource),waits:string[]=[],events:string[]=[];mkdirSync(directory);
   const control=(name:string,signal?:AbortSignal)=>createIssuedResourceControlV1(original,"test:queued-"+name,60000,signal),oracle=async(expected:string)=>{const result=await captureOwnedCommandResultV1(python,["-I","-c",heldProgram,path],process.cwd(),{control:createIssuedResourceControlV1(original,"fixture:queued-oracle",0),env:scriptInvocationEnvironment(original,process.env),output:{maximumBytes:4096,maximumLines:32}});expect(result.status,result.stderr).toBe(0);expect(result.stdout.trim()).toBe(expected);};

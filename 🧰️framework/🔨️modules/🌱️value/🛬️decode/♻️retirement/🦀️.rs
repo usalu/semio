@@ -30,3 +30,7 @@ impl<'decode> NativeDecodeControl<'decode>{
 #[path="🔒️close/🦀️.rs"]
 mod close;
 pub use close::NativeDecodeCloseControl;
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

@@ -1,5 +1,5 @@
 /** ⌨️ Closed native frontend recovery before JavaScript image or graph admission. */
-import {readFileSync} from "node:fs";
+import {captureBoundedSourceRevisionV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -7,29 +7,32 @@ import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "..
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 const protocol=schema.$defs.Protocol.const;
-export type NativeRepoRecoveryPlanV1=Readonly<{target:"build"|"install";owner:string}>;
+export type NativeRepoRecoveryPlanV1=Readonly<{kind:"frontend";target:"build"|"install";owner:string}>|Readonly<{kind:"maintenance";target:"preview"|"retire";owner:string}>|Readonly<{kind:"cache-reset";target:"nx";owner:string}>;
 export type NativeRepoRecoveryContextV1=Readonly<{root:string;repoRoot:string;invocation:ScriptInvocation;control:ResourceLeaseControl}>;
-export type NativeRepoRecoveryPortsV1=Readonly<{build:(context:NativeRepoRecoveryContextV1)=>Promise<void>;install:(context:NativeRepoRecoveryContextV1)=>Promise<void>;child:(root:string,args:readonly string[],original:ScriptInvocation,phase:ResourceLeaseControl)=>Promise<void>}>;
+export type NativeRepoRecoveryPortsV1=Readonly<{build?:(context:NativeRepoRecoveryContextV1)=>Promise<void>;install?:(context:NativeRepoRecoveryContextV1)=>Promise<void>;child?:(root:string,args:readonly string[],original:ScriptInvocation,phase:ResourceLeaseControl)=>Promise<void>;maintenance?:(context:NativeRepoRecoveryContextV1,operation:"preview"|"retire")=>Promise<void>;reset?:(context:NativeRepoRecoveryContextV1)=>Promise<void>}>;
 
 /** 🎯️ Selects only fixed authored recovery commands, retaining ordinary graph semantics otherwise. */
 export function readNativeRepoRecoveryPlanV1(root:string,args:readonly string[]):NativeRepoRecoveryPlanV1|undefined {
- if(args[0]!=="run")return undefined;const target=args[1]?.split(":");if(target?.length!==2||target[0]!==protocol.project||!protocol.targets.includes(target[1]!))return undefined;
- for(let index=2;index<args.length;index++){if(args[index]==="--output"&&args[index+1]==="stream"){index++;continue;}if(!protocol.options.includes(args[index]!)&&!(target[1]==="build"&&protocol.buildOnlyOptions.includes(args[index]!)))return undefined;}
- const owner=join(root,protocol.owner),manifest=JSON.parse(readFileSync(join(owner,"📋️project.json"),"utf8"));
- if(validateJsonSchemaSubset(schema.$defs.Owner,manifest).length)throw Error("Exact authored native recovery owner and dependencies required");
- return Object.freeze({target:target[1] as "build"|"install",owner});
+ if(args[0]!=="run")return undefined;const target=args[1]?.split(":");if(target?.length!==2)return undefined;
+ const maintenance=target[0]===protocol.maintenance.project&&Object.hasOwn(protocol.maintenance.targets,target[1]!),frontend=target[0]===protocol.project&&protocol.targets.includes(target[1]!),reset=target[0]===protocol.reset.project&&Object.hasOwn(protocol.reset.targets,target[1]!);if(!maintenance&&!frontend&&!reset)return undefined;
+ for(let index=2;index<args.length;index++){if(args[index]==="--output"&&args[index+1]==="stream"){index++;continue;}if(!protocol.options.includes(args[index]!)&&!(frontend&&target[1]==="build"&&protocol.buildOnlyOptions.includes(args[index]!)))return undefined;}
+ const owner=join(root,reset?protocol.reset.owner:maintenance?protocol.maintenance.owner:protocol.owner),captured=captureBoundedSourceRevisionV1(join(owner,"📋️project.json"),protocol.maximumOwnerBytes,true),manifest=JSON.parse(captured.text!);
+ if(validateJsonSchemaSubset(reset?schema.$defs.ResetOwner:maintenance?schema.$defs.MaintenanceOwner:schema.$defs.Owner,manifest).length)throw Error("Exact authored native recovery owner and dependencies required");
+ return reset?Object.freeze({kind:"cache-reset",target:"nx",owner:join(root,protocol.reset.scriptRoot)}):maintenance?Object.freeze({kind:"maintenance",target:protocol.maintenance.targets[target[1] as keyof typeof protocol.maintenance.targets] as "preview"|"retire",owner:join(root,protocol.maintenance.scriptRoot)}):Object.freeze({kind:"frontend",target:target[1] as "build"|"install",owner});
 }
 
 /** 🧬️ Closes the installation's authored build dependency before the Original is issued. */
 export function nativeRepoRecoveryBuildDescendantsV1(root:string,args:readonly string[]):readonly (readonly string[])[] {
- return readNativeRepoRecoveryPlanV1(root,args)?.target==="install"?[protocol.buildChild]:[];
+ const plan=readNativeRepoRecoveryPlanV1(root,args);return plan?.kind==="frontend"&&plan.target==="install"?[protocol.buildChild]:[];
 }
 
 /** 🛡️ Executes the existing owner beneath the exact genuine incoming Original and phase. */
 export async function runNativeRepoRecoveryV1(root:string,args:readonly string[],original:ScriptInvocation,phase:ResourceLeaseControl,ports?:NativeRepoRecoveryPortsV1):Promise<boolean> {
  requireIssuedResourceControlInvocationV1(phase,original);checkResourceLeaseControl(phase);const plan=readNativeRepoRecoveryPlanV1(root,args);if(!plan)return false;
- if(!ports){const builder=await import("../../../../💻️client/🔌️mcp/🟦️.ts");checkResourceLeaseControl(phase);ports={build:builder.runBuildScript,install:async context=>(await import("../../../../💻️client/🔌️mcp/📜️script.ts")).installNativeRepoV1(context),child:async(workspace,request,parent,control)=>(await import("../../📥️caller/📤️child/🟦️.ts")).runOwnedBuildChildInvocationV1(workspace,request,parent,control)};}
+ if(!ports){if(plan.kind==="cache-reset")ports={reset:async context=>(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📜️script.ts")).runInactiveNxCacheResetV1(context)};else if(plan.kind==="maintenance")ports={maintenance:async(context,operation)=>(await import("../../../⚡️caching/🧹️pruning/🏪️budget/📜️script.ts")).runInactiveCompilerMaintenanceV1(context,operation)};else{const builder=await import("../../../../💻️client/🔌️mcp/🟦️.ts");checkResourceLeaseControl(phase);ports={build:builder.runBuildScript,install:async context=>(await import("../../../../💻️client/🔌️mcp/📜️script.ts")).installNativeRepoV1(context),child:async(workspace,request,parent,control)=>(await import("../../📥️caller/📤️child/🟦️.ts")).runOwnedBuildChildInvocationV1(workspace,request,parent,control)};}}
  checkResourceLeaseControl(phase);const context=Object.freeze({root:plan.owner,repoRoot:root,invocation:original,control:phase});
- if(plan.target==="install"){await ports.child(root,protocol.buildChild,original,phase);checkResourceLeaseControl(phase);await ports.install(context);}else await ports.build(context);
+ if(plan.kind==="cache-reset"){if(!ports.reset)throw Error("Exact inactive Nx reset owner port required");await ports.reset(context);}
+ else if(plan.kind==="maintenance"){if(!ports.maintenance)throw Error("Exact maintenance owner port required");await ports.maintenance(context,plan.target);}
+ else if(plan.target==="install"){if(!ports.child||!ports.install)throw Error("Exact native installation ports required");await ports.child(root,protocol.buildChild,original,phase);checkResourceLeaseControl(phase);await ports.install(context);}else{if(!ports.build)throw Error("Exact native build port required");await ports.build(context);}
  checkResourceLeaseControl(phase);return true;
 }

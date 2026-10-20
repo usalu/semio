@@ -1,0 +1,12 @@
+// Overlay run of the REAL observation module (live file, patched in memory when VARIANT=patched): 12 projects, one of them always fails, a peer rewrites a shared source every 100 ms.
+import{readFileSync,writeFileSync,mkdirSync,rmSync}from"node:fs";import{join}from"node:path";
+const W="/Users/ueli/Documents/semio",L=join(W,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),variant=process.env.VARIANT??"live",OBS="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
+const ops=JSON.parse(readFileSync(join(import.meta.dir,"staged/ops.json"),"utf8")).edits.filter((e:any)=>e.file===OBS);
+Bun.plugin({name:"loop-hunt-patch",setup(b){b.onLoad({filter:/👁️observation\/🟨️\.mjs$/},async args=>{let text=await Bun.file(args.path).text();if(variant==="patched")for(const op of ops){if(text.split(op.anchor).length!==2)throw Error("anchor drift");text=text.replace(op.anchor,()=>op.replacement);}return{contents:text,loader:"js"};});}});
+const obs:any=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const O="/private/tmp/loop-hunt/overlay2";rmSync(O,{recursive:true,force:true});mkdirSync(O+"/np",{recursive:true});writeFileSync(O+"/F.txt","v0");for(let i=0;i<12;i++)writeFileSync(O+`/p${i}.txt`,"p"+i);
+let version=0;const peer=setInterval(()=>writeFileSync(O+"/F.txt","v"+(++version)+"x".repeat(version%7)),100);
+const rounds:{round:number;kind:string;at:number}[]=[];let roundNo=0,projectRuns=0;const t0=Date.now();
+const loop=async()=>{roundNo++;let cursor=0;const workers=Array.from({length:4},async()=>{while(cursor<12){const i=cursor++;await obs.observeProjectInferenceV1({cachePath:`${O}/np/${i}.json`,key:["x",i],owner:"p"+i,reusable:()=>true},async()=>{projectRuns++;obs.observedFs.readFileSync(O+"/F.txt");obs.observedFs.readFileSync(O+`/p${i}.txt`);await new Promise(r=>setTimeout(r,30));if(i===5)throw Object.assign(Error("deterministic failure of p5"),{code:"E_P5"});return{i};});}});await Promise.all(workers);return"all";};
+let outcome="";try{await obs.observeInference({cachePath:O+"/emoji.json",key:["integration"]},()=>obs.settleObservedComputationV1(loop,{limit:8,onRound:async(e:any)=>{rounds.push({round:e.round,kind:"failure"in e?"failure":"conflict",at:Date.now()-t0});}}));outcome="accepted";}catch(e:any){outcome="thrown: "+e.message;}
+clearInterval(peer);console.log(JSON.stringify({variant,outcome,roundsRun:roundNo,repeatedRounds:rounds.length,projectInferences:projectRuns,seconds:+((Date.now()-t0)/1000).toFixed(1)}));process.exit(0);

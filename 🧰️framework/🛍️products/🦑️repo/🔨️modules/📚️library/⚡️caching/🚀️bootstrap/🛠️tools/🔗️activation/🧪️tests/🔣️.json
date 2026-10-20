@@ -1,0 +1,114 @@
+{
+  "cases": [
+    {
+      "id": "posix-managed",
+      "root": "/repo",
+      "target": "/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "posix",
+      "accepted": true
+    },
+    {
+      "id": "windows-managed",
+      "root": "C:\\repo",
+      "target": "C:\\repo\\.cache\\b\\t\\m\\nx\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "windows",
+      "accepted": true
+    },
+    {
+      "id": "foreign-namespace",
+      "root": "/repo",
+      "target": "/other/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "nested-under-generation",
+      "root": "/repo",
+      "target": "/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "relative-target",
+      "root": "/repo",
+      "target": ".cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "traversal-target",
+      "root": "/repo",
+      "target": "/repo/.cache/b/t/m/nx/other/../aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "malformed-generation",
+      "root": "/repo",
+      "target": "/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "uppercase-generation",
+      "root": "/repo",
+      "target": "/repo/.cache/b/t/m/nx/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "style": "posix",
+      "accepted": false
+    },
+    {
+      "id": "foreign-namespace-windows",
+      "root": "C:\\repo",
+      "target": "D:\\other\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "style": "windows",
+      "accepted": false
+    }
+  ],
+  "activationCases": [
+    {
+      "id": "missing",
+      "kind": "missing",
+      "accepted": true
+    },
+    {
+      "id": "dangling",
+      "kind": "dangling",
+      "accepted": true
+    },
+    {
+      "id": "valid-previous",
+      "kind": "valid",
+      "accepted": true
+    },
+    {
+      "id": "already-current",
+      "kind": "current",
+      "accepted": true
+    },
+    {
+      "id": "foreign",
+      "kind": "foreign",
+      "accepted": false
+    },
+    {
+      "id": "file",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "id": "invalid-prior-receipt",
+      "kind": "invalid-receipt",
+      "accepted": false
+    },
+    {
+      "id": "changed-before-bind",
+      "kind": "mutation",
+      "accepted": false
+    },
+    {
+      "id": "cancel-before-binding",
+      "kind": "cancel",
+      "accepted": false
+    }
+  ]
+}

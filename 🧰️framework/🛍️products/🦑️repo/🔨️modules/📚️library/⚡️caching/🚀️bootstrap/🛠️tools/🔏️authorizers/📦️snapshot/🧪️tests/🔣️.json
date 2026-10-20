@@ -33,5 +33,26 @@
       "kind": "unsorted",
       "schema": true
     }
+  ],
+  "entryRoles": [
+    {
+      "id": "importable-module-remains-inert",
+      "role": "module",
+      "entryMain": false,
+      "importedMain": false
+    },
+    {
+      "id": "program-enters-only-captured-main",
+      "role": "program",
+      "entryMain": true,
+      "importedMain": false
+    }
+  ],
+  "refusedEntryRoles": [
+    null,
+    "auto",
+    "bun",
+    true,
+    {}
   ]
 }

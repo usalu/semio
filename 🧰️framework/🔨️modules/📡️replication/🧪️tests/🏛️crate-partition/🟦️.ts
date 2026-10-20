@@ -28,7 +28,7 @@ test("the partition corpus validates against its closed schema with the independ
   const validate = new Ajv2020({ strict: true }).compile(JSON.parse(read("🧬️schema/🏛️crate-partition/🔣️.json")));
   expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ ...corpus, hidden: true })).toBe(false);
-  expect(corpus.crates.length).toBe(17);
+  expect(corpus.crates.length).toBe(18);
 });
 
 for (const row of corpus.crates) test(`${row.package} parses identically, lists exactly its table and keeps the exact source boundary`, () => {
@@ -114,14 +114,17 @@ test("every crate stays inside the source budget for each target and the deflate
 
 test("no foreign-trait impl targets a type owned by another replication crate", () => {
   const owned = new Map<string, Set<string>>();
+  const traits = new Map<string, Set<string>>();
   const bodies = new Map<string, string[]>();
   for (const row of corpus.crates) {
     const sources = moduleFiles(resolve(owner, row.entry)).filter(file => !file.includes("🧪️tests")).map(file => readFileSync(file, "utf8").replace(/\/\/[^\n]*/g, ""));
     bodies.set(row.package, sources);
+    traits.set(row.package, new Set(sources.flatMap(text => [...text.matchAll(/\btrait\s+([A-Z][A-Za-z0-9_]*)/g)].map(match => match[1]!))));
     for (const text of sources) for (const match of text.matchAll(/\b(?:struct|enum|union|type)\s+([A-Z][A-Za-z0-9_]*)/g)) owned.set(match[1]!, (owned.get(match[1]!) ?? new Set<string>()).add(row.package));
   }
-  for (const [crate, sources] of bodies) for (const text of sources) for (const match of text.matchAll(/\bimpl(?:<[^{>]*(?:<[^>]*>[^{>]*)*>)?\s+(?:[A-Za-z0-9_:<>, &']+\s+for\s+)?([A-Z][A-Za-z0-9_]*)/g)) {
-    const target = match[1]!;
+  for (const [crate, sources] of bodies) for (const text of sources) for (const match of text.matchAll(/\bimpl(?:<[^{>]*(?:<[^>]*>[^{>]*)*>)?\s+(?:([A-Za-z0-9_:<>, &']+)\s+for\s+)?([A-Z][A-Za-z0-9_]*)/g)) {
+    const target = match[2]!, trait = match[1]?.replace(/<.*$/s, "").split("::").pop()?.trim();
+    if (trait !== undefined && traits.get(crate)!.has(trait)) continue;
     const homes = owned.get(target);
     if (homes !== undefined && !homes.has(crate)) expect(`${crate} impls for ${target} owned by ${[...homes].join(",")}`).toBe("");
   }

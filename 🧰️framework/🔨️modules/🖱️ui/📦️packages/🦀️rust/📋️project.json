@@ -30,13 +30,6 @@
       "default",
       "reads"
     ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
-    ],
     "testEnv": [
       {
         "env": "SEMIO_TEST_LEVEL"
@@ -391,7 +384,11 @@
               "en": "Verify shared UI contracts, crate ownership and TUI test dispatch.",
               "de": "Gemeinsame UI-Verträge, Crate-Zuständigkeit und TUI-Testauswahl prüfen."
             }
-          }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts"
+          ]
         }
       }
     },
@@ -418,11 +415,15 @@
       "executor": "repo:script",
       "inputs": [
         "default",
-        "^default"
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
       ],
       "outputs": [],
-      "cache": false,
+      "cache": true,
       "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test text-editor"
       },
       "metadata": {
@@ -441,7 +442,11 @@
               "en": "Check bounded Unicode document edits against independent SQLite mutations.",
               "de": "Begrenzte Unicode-Dokumentbearbeitung mit unabhängigen SQLite-Änderungen prüfen."
             }
-          }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🧪️tests/🟦️.ts"
+          ]
         }
       }
     }

@@ -432,7 +432,8 @@
         "saved",
         "foreign",
         "local",
-        "labels"
+        "labels",
+        "performance"
       ],
       "properties": {
         "directory": {
@@ -526,6 +527,58 @@
                   "minLength": 1
                 }
               }
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "entries",
+            "directory",
+            "file",
+            "prefix",
+            "line",
+            "tail",
+            "removedAscii",
+            "insert",
+            "loadMilliseconds",
+            "interactionMilliseconds"
+          ],
+          "properties": {
+            "bytes": {
+              "const": 1048576
+            },
+            "entries": {
+              "const": 4096
+            },
+            "directory": {
+              "const": "native-max"
+            },
+            "file": {
+              "const": "max.txt"
+            },
+            "prefix": {
+              "const": "START_OF_MAXIMUM\n"
+            },
+            "line": {
+              "const": "row é中\n"
+            },
+            "tail": {
+              "const": "DOCUMENT_END_"
+            },
+            "removedAscii": {
+              "const": 24
+            },
+            "insert": {
+              "const": "終👩‍💻"
+            },
+            "loadMilliseconds": {
+              "const": 5000
+            },
+            "interactionMilliseconds": {
+              "const": 1000
             }
           }
         }

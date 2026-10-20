@@ -20,7 +20,7 @@ impl<T> RetainedCloneCursor<T> for ScalarCursor<T>
 where
     T: RetainedClone + Copy,
 {
-    fn output_ready(&self)->bool{self.value.is_some()}
+    fn output_ready(&self)->bool{!self.closing&&!self.spent&&self.value.is_some()}
     fn advance_demands(&self, source:RetainedCloneRef<'_,T>, _body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"scalar clone cannot quote a closing or spent owner"));}
         Ok(if self.source.is_none(){crate::RetirementDemand{copy_bytes:source.binding_copy_bytes().max(size_of::<T>()),depth:1,..Default::default()}}else if self.value.is_none(){crate::RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}else{Default::default()})
@@ -46,6 +46,7 @@ where
     }
 
     fn take(&mut self) -> Option<T> {
+        if !self.output_ready(){return None;}
         let value = self.value.take();
         if value.is_some() {
             self.spent = true;
@@ -63,9 +64,12 @@ where
 
     
 
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<T>(self.value.is_some(),&self.source,body)}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement")); }
+        if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.close.is_empty() { return self.close.step_granted(grant); }
         if let Some(step) = self.close.begin_granted(&mut self.value, grant)? { return Ok(step); }
         close_retained_binding(&mut self.source, grant)

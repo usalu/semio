@@ -1,5 +1,5 @@
 /** 🧰️ The shared taxonomy v7 parse helpers: the expiry reader, the opaque path exclusion table and the projection types the parse phases use. */
-import { requireString } from "@semio-tech/schema-validator-ts";
+import { requireString } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 export function fixedExpiry(value: unknown, name: string): string | null {
   if (value === null) return null;

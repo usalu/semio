@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "executed": false,
+  "frozenForNeutralReview": true,
+  "preparedCases": {
+    "controller": 46,
+    "admission": 14,
+    "creation": 7,
+    "phaseOwner": 6,
+    "receiverParser": 11,
+    "receiverNamespace": 1,
+    "receiverFinish": 5,
+    "total": 90
+  },
+  "files": [
+    {
+      "file": "🌱️linux/schema.json",
+      "bytes": 16112,
+      "sha256": "13ee7028e2d212d4ab6c7348dd5c3a592f930f38cf8560f1e881aac03eacff55"
+    },
+    {
+      "file": "🌱️linux/cases.json",
+      "bytes": 3124,
+      "sha256": "9068def925368369583dc1c277e98dd2f05dc75088911b2d4eab3ecd6b14412f"
+    },
+    {
+      "file": "🌱️linux/plan.json",
+      "bytes": 916,
+      "sha256": "f0cd8d7ff2ff6083c9318a3948b9d5d831faf4ca9f3d7e78ed765cda504af271"
+    },
+    {
+      "file": "🌱️linux/script.ts",
+      "bytes": 22123,
+      "sha256": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d"
+    },
+    {
+      "file": "🌱️linux/tests.ts",
+      "bytes": 13775,
+      "sha256": "e33db8ddfad486ea290071005d58d518d410fb4d48ea372eac0b0c333d68578f"
+    },
+    {
+      "file": "🌱️linux/entry.schema.json",
+      "bytes": 8433,
+      "sha256": "f749cfe730c295d177e43f5c2e491e8fa72f723331546f30710e0f8bf547524b"
+    },
+    {
+      "file": "🌱️linux/entry.cases.json",
+      "bytes": 2313,
+      "sha256": "3972f949fe7d037cb6c580e9d0e7bff7bd61f109d8be3f1d53d32ba8d2abe46f"
+    },
+    {
+      "file": "🌱️linux/entry.ts",
+      "bytes": 25837,
+      "sha256": "7d56cc717ff38539411124e55579064d56fa96d3ecaf8d9ff04a36442350909c"
+    },
+    {
+      "file": "🌱️linux/entry.tests.ts",
+      "bytes": 16880,
+      "sha256": "dd302e82c43bb8f92088e43e21ddec75ee571570ca1d71de371d919748e46c70"
+    },
+    {
+      "file": "🌱️linux/receiver.py",
+      "bytes": 7387,
+      "sha256": "465e81461cf145092a45479a02e49abd94c4f42776877cad7b6c25af2fea6a27"
+    },
+    {
+      "file": "🌱️linux/receiver.cases.json",
+      "bytes": 1415,
+      "sha256": "49ce0bc0dd513e0086e4c024838e7a488c79779bb7c852400acf9faf2e275c56"
+    },
+    {
+      "file": "🌱️linux/verify.ts",
+      "bytes": 62,
+      "sha256": "dbdd37cd036f38c6e64112dca70335fb7dcbe648a88f7025ff519e5562746aea"
+    }
+  ]
+}

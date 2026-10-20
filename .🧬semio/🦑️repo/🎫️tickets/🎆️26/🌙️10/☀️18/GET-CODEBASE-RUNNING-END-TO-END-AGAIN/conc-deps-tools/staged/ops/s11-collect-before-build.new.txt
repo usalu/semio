@@ -1,0 +1,1 @@
+if(phase==="build")await collectJavascriptDependencyStoreGenerationsV1(workspace,store,control,Object.freeze({state:"published",currents:projection.plans.map(row=>row.plan.generation.slice(0,20)),targets:[...expected.values()].flatMap(row=>row.target===null?[]:[row.target])}));

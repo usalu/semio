@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "now": 4000000000,
+  "corpusSha256": "df51076701b5935b8a603ac451c3ab8b05df9dc9c9a15d1456573f637ddce024",
+  "plans": [
+    {
+      "name": "age removes what was unused long enough and keeps the rest",
+      "target": { "id": "a", "kind": "area", "budgetBytes": null, "unusedAgeMs": 864000000, "quietMs": 3600000, "units": [
+        { "name": "old", "bytes": 100, "recencyMs": 3000000000 },
+        { "name": "young", "bytes": 50, "recencyMs": 3800000000 }
+      ] },
+      "removals": [["old", "age"]], "kept": [], "retained": 50, "over": 0
+    },
+    {
+      "name": "budget evicts the oldest first until the area fits",
+      "target": { "id": "b", "kind": "area", "budgetBytes": 150, "unusedAgeMs": null, "quietMs": 3600000, "units": [
+        { "name": "u3", "bytes": 100, "recencyMs": 3900000000 },
+        { "name": "u1", "bytes": 100, "recencyMs": 3700000000 },
+        { "name": "u2", "bytes": 100, "recencyMs": 3800000000 }
+      ] },
+      "removals": [["u1", "budget"], ["u2", "budget"]], "kept": [], "retained": 100, "over": 0
+    },
+    {
+      "name": "a quiet unit survives the budget and the overshoot is reported",
+      "target": { "id": "c", "kind": "area", "budgetBytes": 150, "unusedAgeMs": null, "quietMs": 3600000, "units": [
+        { "name": "u1", "bytes": 100, "recencyMs": 3700000000 },
+        { "name": "u2", "bytes": 100, "recencyMs": 3999999000 },
+        { "name": "u3", "bytes": 100, "recencyMs": 3999999500 }
+      ] },
+      "removals": [["u1", "budget"]], "kept": [["u2", "quiet"], ["u3", "quiet"]], "retained": 200, "over": 50
+    },
+    {
+      "name": "a held unit of a retired root is kept and everything else goes",
+      "target": { "id": "native:framework", "kind": "retired", "budgetBytes": null, "unusedAgeMs": 0, "quietMs": 86400000, "units": [
+        { "name": "free", "bytes": 10, "recencyMs": 3000000000 },
+        { "name": "busy", "bytes": 20, "recencyMs": 3000000000, "held": "sqlite:/x/busy.sqlite" },
+        { "name": "fresh", "bytes": 30, "recencyMs": 3999990000 }
+      ] },
+      "removals": [["free", "retired"]], "kept": [["busy", "held"], ["fresh", "quiet"]], "retained": 50, "over": 0
+    },
+    {
+      "name": "an area held by its lease keeps every unit",
+      "target": { "id": "d", "kind": "area", "budgetBytes": 10, "unusedAgeMs": 1000, "quietMs": 0, "heldBy": "nx:fixed-cache:/r", "units": [
+        { "name": "x", "bytes": 100, "recencyMs": 1000 },
+        { "name": "y", "bytes": 100, "recencyMs": 2000 }
+      ] },
+      "removals": [], "kept": [["x", "held"], ["y", "held"]], "retained": 200, "over": 190
+    },
+    {
+      "name": "undeclared entries leave only after their root's unused age",
+      "target": { "id": "repository:undeclared", "kind": "undeclared", "budgetBytes": null, "unusedAgeMs": 1209600000, "quietMs": 3600000, "units": [
+        { "name": "tools/stale", "bytes": 7, "recencyMs": 2000000000 },
+        { "name": "scratch", "bytes": 9, "recencyMs": 3000000000 }
+      ] },
+      "removals": [["tools/stale", "undeclared"]], "kept": [], "retained": 9, "over": 0
+    },
+    {
+      "name": "age runs before budget and the budget only sees what is left",
+      "target": { "id": "e", "kind": "area", "budgetBytes": 120, "unusedAgeMs": 864000000, "quietMs": 0, "units": [
+        { "name": "ancient", "bytes": 500, "recencyMs": 1000000000 },
+        { "name": "a", "bytes": 100, "recencyMs": 3500000000 },
+        { "name": "b", "bytes": 100, "recencyMs": 3600000000 }
+      ] },
+      "removals": [["ancient", "age"], ["a", "budget"]], "kept": [], "retained": 100, "over": 0
+    },
+    {
+      "name": "equal recency falls back to the name",
+      "target": { "id": "f", "kind": "area", "budgetBytes": 100, "unusedAgeMs": null, "quietMs": 0, "units": [
+        { "name": "z", "bytes": 100, "recencyMs": 3000000000 },
+        { "name": "m", "bytes": 100, "recencyMs": 3000000000 },
+        { "name": "a", "bytes": 100, "recencyMs": 3000000000 }
+      ] },
+      "removals": [["a", "budget"], ["m", "budget"]], "kept": [], "retained": 100, "over": 0
+    },
+    {
+      "name": "no age and no budget removes nothing",
+      "target": { "id": "g", "kind": "area", "budgetBytes": null, "unusedAgeMs": null, "quietMs": 0, "units": [
+        { "name": "x", "bytes": 1, "recencyMs": 1 }
+      ] },
+      "removals": [], "kept": [], "retained": 1, "over": 0
+    }
+  ],
+  "classification": [
+    { "root": "repository", "path": "go", "kind": "area", "id": "go" },
+    { "root": "repository", "path": "go/00", "kind": "area", "id": "go" },
+    { "root": "repository", "path": "tools", "kind": "container" },
+    { "root": "repository", "path": "tools/ms-playwright", "kind": "area", "id": "playwright" },
+    { "root": "repository", "path": "tools/ms-playwright/chromium-1", "kind": "area", "id": "playwright" },
+    { "root": "repository", "path": "tools/nx-tooling", "kind": "retired", "id": "tools/nx-tooling" },
+    { "root": "repository", "path": "tools/nx-tooling/deep/er", "kind": "retired", "id": "tools/nx-tooling" },
+    { "root": "repository", "path": "tools/unknown", "kind": "undeclared" },
+    { "root": "repository", "path": "leases", "kind": "retired", "id": "leases" },
+    { "root": "repository", "path": "rust", "kind": "container" },
+    { "root": "repository", "path": "rust/fixed", "kind": "area", "id": "rust" },
+    { "root": "repository", "path": "3f08bbea4d32f0217cbc47602b346df628e70cc47ac4a4ef2bac0e9172c14af8", "kind": "area", "id": "query-index" },
+    { "root": "repository", "path": "e1", "kind": "undeclared" },
+    { "root": "repository", "path": ".DS_Store", "kind": "ignored" },
+    { "root": "native", "path": "b", "kind": "container" },
+    { "root": "native", "path": "b/t", "kind": "area", "id": "tools" },
+    { "root": "native", "path": "b/zz", "kind": "undeclared" },
+    { "root": "native", "path": "boot-recovery", "kind": "area", "id": "boot-recovery" },
+    { "root": "native", "path": "held-javascript", "kind": "retired", "id": "held-javascript" },
+    { "root": "native", "path": "qe2e", "kind": "undeclared" }
+  ],
+  "segments": {
+    "accepted": [[], ["go"], ["go", "00"], ["tools"], ["tools", "ms-playwright"], ["tools", "ms-playwright", "x"], ["tools/ms-playwright"], ["vite", "os-shell"], ["tests", "fresh-component", "🗑️generated"], ["agents", "resource-leases"], ["🧪️tests", "route"], ["3f08bbea4d32f0217cbc47602b346df628e70cc47ac4a4ef2bac0e9172c14af8"]],
+    "refused": [["leases"], ["tools", "nx-tooling"], ["tools", "unknown"], ["e1"], ["a", "b"], ["nx"], ["b"], ["rust2"]]
+  },
+  "report": {
+    "workspace": "/w",
+    "generatedAtMs": 4000000000,
+    "partitions": [
+      { "id": "tools", "kind": "partition", "directory": "/w/.cache/b/t", "state": "mounted", "usedBytes": 1073741824, "budgetBytes": 8589934592, "capacityBytes": 8589934592, "partial": false, "owner": "image" },
+      { "id": "graph", "kind": "partition", "directory": "/w/.cache/b/g", "state": "detached", "usedBytes": null, "budgetBytes": 4293918720, "capacityBytes": null, "partial": false, "owner": "image" },
+      { "id": "control", "kind": "control", "directory": "/w/.cache/b/c", "state": "directory", "usedBytes": 4096, "budgetBytes": null, "capacityBytes": null, "partial": false, "owner": "control" }
+    ],
+    "areas": [
+      { "id": "nx-artifacts", "root": "repository", "partition": "rust", "directory": "/w/x", "present": true, "measurable": true, "usedBytes": 4294967296, "budgetBytes": 3221225472, "entries": 10, "partial": false, "over": true, "owner": "nx" },
+      { "id": "cargo-store", "root": "repository", "partition": "rust", "directory": "/w/y", "present": false, "measurable": false, "usedBytes": null, "budgetBytes": 13957595136, "entries": 0, "partial": false, "over": false, "owner": "cargo" },
+      { "id": "go", "root": "repository", "partition": null, "directory": "/w/go", "present": true, "measurable": true, "usedBytes": 536870912, "budgetBytes": 1073741824, "entries": 3, "partial": true, "over": false, "owner": null }
+    ],
+    "roots": [
+      { "id": "repository", "directory": ".🧬semio/🦑️repo/⚡️cache", "usedBytes": 27917287424, "budgetBytes": 21474836480, "partial": true },
+      { "id": "native", "directory": ".cache", "usedBytes": 0, "budgetBytes": 268435456, "partial": false }
+    ],
+    "retired": [ { "root": "repository", "path": "repository:tools/nx-tooling", "kind": "retired", "usedBytes": 8589934592, "entries": 5, "partial": true } ],
+    "undeclared": [ { "root": "repository", "path": "repository:e1", "kind": "undeclared", "usedBytes": 1024, "entries": 1, "partial": false } ]
+  },
+  "reportLines": {
+    "en": [
+      "Cache ledger of /w",
+      "",
+      "Partitions",
+      "  tools: mounted, 1.00 GiB of 8.00 GiB (13%)",
+      "  graph: not mounted, ? of 4.00 GiB (0%)",
+      "  control: 4.00 KiB",
+      "",
+      "Areas inside partitions",
+      "  nx-artifacts (rust): 4.00 GiB of 3.00 GiB (133%) over budget kept by nx",
+      "  cargo-store (rust): ? of 13.00 GiB (0%) kept by cargo (not measurable while unmounted)",
+      "",
+      "Areas of .🧬semio/🦑️repo/⚡️cache: 26.00 GiB (at least) of 20.00 GiB",
+      "  go: 512.00 MiB (at least) of 1.00 GiB (50%)",
+      "",
+      "Areas of .cache: 0 B of 256.00 MiB",
+      "",
+      "Retired roots still present (repo cache gc removes them)",
+      "  repository:tools/nx-tooling: 8.00 GiB (at least)",
+      "Undeclared entries (collected after 14 days unused)",
+      "  repository:e1: 1.00 KiB"
+    ],
+    "de": [
+      "Cache-Bilanz von /w",
+      "",
+      "Partitionen",
+      "  tools: eingehängt, 1.00 GiB von 8.00 GiB (13%)",
+      "  graph: nicht eingehängt, ? von 4.00 GiB (0%)",
+      "  control: 4.00 KiB",
+      "",
+      "Bereiche innerhalb von Partitionen",
+      "  nx-artifacts (rust): 4.00 GiB von 3.00 GiB (133%) über Budget verwaltet von nx",
+      "  cargo-store (rust): ? von 13.00 GiB (0%) verwaltet von cargo (nicht messbar solange nicht eingehängt)",
+      "",
+      "Bereiche von .🧬semio/🦑️repo/⚡️cache: 26.00 GiB (mindestens) von 20.00 GiB",
+      "  go: 512.00 MiB (mindestens) von 1.00 GiB (50%)",
+      "",
+      "Bereiche von .cache: 0 B von 256.00 MiB",
+      "",
+      "Stillgelegte Wurzeln noch vorhanden (repo cache gc entfernt sie)",
+      "  repository:tools/nx-tooling: 8.00 GiB (mindestens)",
+      "Nicht deklarierte Einträge (werden nach 14 Tagen Nichtbenutzung eingesammelt)",
+      "  repository:e1: 1.00 KiB"
+    ]
+  }
+}

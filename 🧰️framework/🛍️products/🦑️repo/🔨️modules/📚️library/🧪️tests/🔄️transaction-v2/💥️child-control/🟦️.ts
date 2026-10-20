@@ -1,3 +1,4 @@
+/** 💥️ The child-process control of the transaction-v2 suite: the active reference fixture, spawned children and crash drivers. */
 import { terminateOwnedProcessTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { afterAll, expect } from "bun:test";
 import { spawn, type ChildProcess } from "node:child_process";

@@ -19,8 +19,21 @@
         "de": "{command} · Deklarierte Paketanbieter prüfen: {completed} Kanten"
       },
       "scope": "original-process-presentation-only",
-      "flush": ["resource-change", "phase-change", "counter-reset", "clock-refusal", "settlement"],
-      "preserved": ["all-original-publish-calls", "all-guards", "all-yields", "command-streams", "errors", "semantic-receipts"]
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "counter-reset",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ]
     },
     "sourceAdmission": {
       "resourcePrefix": "cargo:source-admission:",
@@ -112,17 +125,362 @@
           }
         }
       }
+    },
+    "graphPhase": {
+      "resourcePrefix": "build:graph-phase:",
+      "maximumResourceCharacters": 128,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "countPattern": "^(?:0|[1-9][0-9]{0,15})$",
+      "labels": {
+        "en": {
+          "template": "{command} · {phase}: {done} of {total} {units}",
+          "phases": {
+            "inference": {
+              "label": "Inferring projects",
+              "units": "projects"
+            },
+            "verification": {
+              "label": "Verifying input closures",
+              "units": "closures"
+            },
+            "expansion": {
+              "label": "Expanding input closures",
+              "units": "closures"
+            },
+            "facts": {
+              "label": "Verifying graph facts",
+              "units": "facts"
+            },
+            "assembly": {
+              "label": "Assembling the graph",
+              "units": "projects"
+            }
+          }
+        },
+        "de": {
+          "template": "{command} · {phase}: {done} von {total} {units}",
+          "phases": {
+            "inference": {
+              "label": "Projekte ableiten",
+              "units": "Projekte"
+            },
+            "verification": {
+              "label": "Eingabehüllen prüfen",
+              "units": "Hüllen"
+            },
+            "expansion": {
+              "label": "Eingabehüllen auflösen",
+              "units": "Hüllen"
+            },
+            "facts": {
+              "label": "Graph-Fakten prüfen",
+              "units": "Fakten"
+            },
+            "assembly": {
+              "label": "Graph zusammensetzen",
+              "units": "Projekte"
+            }
+          }
+        }
+      }
+    },
+    "cacheScan": {
+      "resourcePrefix": "cache-scan:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 267,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "labels": {
+        "en": "{command} · Scanning compiler cache: {path} ({seconds} s)",
+        "de": "{command} · Compiler-Cache prüfen: {path} ({seconds} s)"
+      },
+      "scope": "original-process-presentation-only",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "elapsed-reset",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ]
+    },
+    "cacheDelete": {
+      "resourcePrefix": "cache-delete:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 269,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "labels": {
+        "en": "{command} · Removing inactive compiler cache: {path}",
+        "de": "{command} · Inaktiven Compiler-Cache entfernen: {path}"
+      },
+      "scope": "original-process-presentation-only",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ],
+      "elapsedSemantics": "current-unit",
+      "elapsedReset": "retain-pending-within-same-original-work"
+    },
+    "tooling": {
+      "resources": [
+        "nx:source-verification",
+        "nx:storage-planning",
+        "nx:sdk-derivative-recheck",
+        "nx:source-index"
+      ],
+      "namespacePrefix": "nx-sdk-derived-namespace:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 281,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "namespaceDigestPattern": "(?:^|[\\\\/])[0-9a-f]{64}$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "scope": "original-process-presentation-only",
+      "elapsedSemantics": "current-unit",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ],
+      "labels": {
+        "en": {
+          "nx:source-verification": "{command} · Verifying build tools",
+          "nx:storage-planning": "{command} · Planning build tool storage",
+          "nx:sdk-derivative-recheck": "{command} · Verifying build tool integrity",
+          "nx:source-index": "{command} · Reading build tool index",
+          "namespace": "{command} · Preparing build tools"
+        },
+        "de": {
+          "nx:source-verification": "{command} · Build-Werkzeuge prüfen",
+          "nx:storage-planning": "{command} · Speicher für Build-Werkzeuge planen",
+          "nx:sdk-derivative-recheck": "{command} · Integrität der Build-Werkzeuge prüfen",
+          "nx:source-index": "{command} · Build-Werkzeugindex lesen",
+          "namespace": "{command} · Build-Werkzeuge vorbereiten"
+        }
+      }
+    },
+    "dependencyWork": {
+      "minimumPublicationMilliseconds": 5000,
+      "maximumPendingRows": 11,
+      "maximumObservationRank": 10,
+      "maximumCompleted": 9007199254740991,
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "maximumResourceCharacters": 128,
+      "maximumCommandCharacters": 256,
+      "maximumOwnerCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "ownerPattern": "^[^\\u0000-\\u001F\\u007F]+$",
+      "counterPattern": "^(?:0|[1-9][0-9]*)$",
+      "slots": [
+        {
+          "id": "ownership-state",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:state:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-list",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:list:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-readText",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:readText:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-membership",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:membership:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-frontier",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:frontier:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-selection",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:selection:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-publication",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:publication:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "replay",
+          "family": "replay",
+          "resourcePrefix": "dependencies:store-input-replay",
+          "mode": "shared",
+          "counter": false
+        },
+        {
+          "id": "scan",
+          "family": "scan",
+          "resourcePrefix": "javascript-installed-paths:",
+          "mode": "shared",
+          "counter": true
+        },
+        {
+          "id": "ledger",
+          "family": "ledger",
+          "resourcePrefix": "javascript-installed-paths:ledger:",
+          "mode": "shared",
+          "counter": true
+        },
+        {
+          "id": "preservation",
+          "family": "preservation",
+          "resourcePrefix": "javascript-preserving-source:",
+          "mode": "exclusive",
+          "counter": true
+        }
+      ],
+      "families": [
+        "ownership",
+        "replay",
+        "scan",
+        "ledger",
+        "preservation"
+      ],
+      "clockStates": [
+        "unopened",
+        "paced",
+        "unclocked"
+      ],
+      "clockReversal": "drain-and-rebase",
+      "clockNonfinite": "drain-and-await-finite-observation",
+      "ordering": "rank-compressed-latest-observation-within-each-drain",
+      "firstObservation": "one-per-frame-not-per-slot",
+      "dueObservation": "replace-current-slot-before-drain",
+      "reset": "drain-affected-family-and-advance-shared-window",
+      "replayElapsedMilliseconds": 0,
+      "sinkFailure": "dequeue-attempted-row-retain-untouched-rows",
+      "scope": "original-process-presentation-only",
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts",
+        "existing-typed-schedulers"
+      ],
+      "frameStages": [
+        "contribution",
+        "loading",
+        "running",
+        "complete"
+      ]
     }
   },
   "definitions": {
     "ProviderClockCases": {
       "type": "array",
       "items": {
-        "type":"object","additionalProperties":false,"required":["name","steps","expected"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
         "properties": {
-          "name":{"type":"string","minLength":1},
-          "steps":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["at","count","kind"],"properties":{"at":{"type":"number","minimum":0},"elapsed":{"type":"number","minimum":0},"count":{"type":"integer","minimum":0,"maximum":65536},"kind":{"enum":["provider","other","complete"]}}}},
-          "expected":{"type":"array","items":{"type":"string"}}
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "count",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "kind": {
+                  "enum": [
+                    "provider",
+                    "other",
+                    "complete"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -306,6 +664,270 @@
               "string",
               "null"
             ]
+          }
+        }
+      }
+    },
+    "CacheClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "elapsed",
+                "path",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "path": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "cache",
+                    "provider",
+                    "other",
+                    "complete",
+                    "delete"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "ToolingClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "elapsed",
+                "resource",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "tooling",
+                    "complete",
+                    "other"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "DependencyWorkCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected",
+          "human",
+          "after",
+          "throws",
+          "failWrite",
+          "oracle"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "publish",
+                    "flush"
+                  ]
+                },
+                "at": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "enum": [
+                        "NaN",
+                        "Infinity",
+                        "-Infinity"
+                      ]
+                    }
+                  ]
+                },
+                "progress": {
+                  "type": "object",
+                  "required": [
+                    "owner",
+                    "command",
+                    "stage"
+                  ],
+                  "additionalProperties": true,
+                  "properties": {
+                    "owner": {
+                      "type": "string"
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "stage": {
+                      "type": "string"
+                    },
+                    "activity": {
+                      "type": "object",
+                      "required": [
+                        "resource",
+                        "mode",
+                        "elapsedMs"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "resource": {
+                          "type": "string"
+                        },
+                        "mode": {
+                          "enum": [
+                            "shared",
+                            "exclusive"
+                          ]
+                        },
+                        "elapsedMs": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "human": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "throws": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "failWrite": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              }
+            ]
+          },
+          "oracle": {
+            "type": "boolean"
           }
         }
       }

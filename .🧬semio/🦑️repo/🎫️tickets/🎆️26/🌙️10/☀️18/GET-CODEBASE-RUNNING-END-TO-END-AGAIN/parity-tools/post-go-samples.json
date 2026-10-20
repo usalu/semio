@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "defaults": {
+    "phases": [
+      "fresh"
+    ],
+    "checks": [
+      "graph",
+      "closure",
+      "outputs",
+      "results",
+      "inputs",
+      "restore"
+    ],
+    "expectExit": 0,
+    "timeoutSeconds": 3600,
+    "maximumOutputBytes": 1073741824
+  },
+  "samples": [
+    {
+      "id": "course-build",
+      "area": "teaching",
+      "target": "@teaching/architecture-course:build",
+      "phases": [
+        "fresh"
+      ],
+      "timeoutSeconds": 3600,
+      "note": {
+        "en": "Course build.",
+        "de": "Kurs-Build."
+      }
+    },
+    {
+      "id": "course-publish",
+      "area": "teaching",
+      "target": "@teaching/architecture-course:publish",
+      "phases": [
+        "fresh"
+      ],
+      "timeoutSeconds": 3600,
+      "note": {
+        "en": "Course release pages.",
+        "de": "Release-Seiten des Kurses."
+      },
+      "configuration": "release"
+    },
+    {
+      "id": "play-build",
+      "area": "semio-tech",
+      "target": "@semio-tech/semio-tech-play:build",
+      "phases": [
+        "fresh"
+      ],
+      "timeoutSeconds": 3600,
+      "note": {
+        "en": "Semio Tech Play build, outputs its store receipt.",
+        "de": "Semio-Tech-Play-Build, Ausgabe ist der Speicherbeleg."
+      }
+    },
+    {
+      "id": "demo-build",
+      "area": "mit-bestand",
+      "target": "@semio-tech/mit-bestand-demonstrator:build",
+      "phases": [
+        "fresh"
+      ],
+      "timeoutSeconds": 3600,
+      "note": {
+        "en": "Demonstrator release build.",
+        "de": "Release-Build des Demonstrators."
+      },
+      "configuration": "release"
+    },
+    {
+      "id": "demo-bericht-build",
+      "area": "mit-bestand",
+      "target": "@semio-tech/mit-bestand-bericht:build-kompaktbericht",
+      "phases": [
+        "fresh"
+      ],
+      "timeoutSeconds": 3600,
+      "note": {
+        "en": "Compact report print build.",
+        "de": "Druck-Build des Kompaktberichts."
+      }
+    }
+  ]
+}

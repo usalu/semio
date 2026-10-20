@@ -94,6 +94,7 @@ pub use crate::command::{
 };
 #[cfg(any(test, feature = "mutation-testing"))]
 pub use crate::command::mutation_fixture_ops;
+pub use protocol::{MutationAdmission, MutationMessageLedgerRetirement};
 pub use crate::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
 pub use crate::wire::{
     borrow_presence_metadata, BorrowedPresenceMetadata, BorrowedPresenceInteraction, BorrowedPresenceDomain, BorrowedPresenceStrings, decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,

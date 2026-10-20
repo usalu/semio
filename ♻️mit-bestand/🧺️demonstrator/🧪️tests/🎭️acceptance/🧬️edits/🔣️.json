@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generator",
+    "koordinator",
+    "aggregator",
+    "bearbeiten",
+    "verfolgen"
+  ],
+  "properties": {
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heightId",
+        "initial",
+        "changed",
+        "widgetIds",
+        "synapseIds"
+      ],
+      "properties": {
+        "heightId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initial": {
+          "type": "number"
+        },
+        "changed": {
+          "type": "number"
+        },
+        "widgetIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "synapseIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "koordinator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalogueId",
+        "windowIds",
+        "rowPrefix"
+      ],
+      "properties": {
+        "catalogueId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rowPrefix": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "aggregator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kindId",
+        "seedId",
+        "vortexCount",
+        "meshUrl",
+        "windowIds"
+      ],
+      "properties": {
+        "kindId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seedId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vortexCount": {
+          "type": "number"
+        },
+        "meshUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "bearbeiten": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stepId",
+        "label",
+        "machine",
+        "capability",
+        "stepIds"
+      ],
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "machine": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capability": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stepIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "verfolgen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "delta",
+        "collection",
+        "longitude",
+        "latitude"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delta": {
+          "type": "number"
+        },
+        "collection": {
+          "type": "string",
+          "minLength": 1
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "latitude": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

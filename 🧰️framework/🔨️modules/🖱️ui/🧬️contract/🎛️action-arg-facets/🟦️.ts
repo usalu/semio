@@ -1,6 +1,6 @@
 /** 🎛️ The number facets of an action argument as the UI contract needs them: the one mapping every renderer shares, projected from the manifest's argument definition. */
 import { type ShellLocale } from "@semio-tech/framework-manifest/generated/ui-axes";
-import { argControl, type ActionArgDef } from "@semio-tech/framework-manifest/action-types-and-semantics";
+import { argControl, type ActionArgDef } from "../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
 import type { SliderAppearance, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🧩️component/🟦️.ts";
 

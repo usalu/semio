@@ -1,3 +1,4 @@
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
@@ -204,7 +205,7 @@ test("registers the kind-only canonical test through the package router as an ow
   const expected = vector.execution, project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
   expect(project.targets[expected.target]?.cache).toBe(expected.cache);
-  const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const router = readRegisteredTestRoute(root, "typescript-path-collection").text;
   expect(router.match(/segments\[0\] === "typescript-path-collection"/gu)).toHaveLength(1);
   expect(router).toContain(expected.source);
 });

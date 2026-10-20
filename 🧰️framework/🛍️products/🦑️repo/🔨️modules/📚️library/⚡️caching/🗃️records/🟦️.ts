@@ -11,6 +11,13 @@ const PACK_TEMPORARY = /^[0-9a-z]+-[0-9]+-[0-9a-f]{16}\.(?:pack|idx)\.[0-9a-f]{8
 const ORPHAN_MS = 60 * 60 * 1000;
 const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;
 
+/** 🔌️ Packs keep at most this many read descriptors open across every store of the process: the least recently read one is closed first, so a graph that visits thousands of project stores never exhausts the descriptor table. */
+export const RECORD_STORE_DESCRIPTOR_LIMIT = 32;
+const openDescriptors = new Map<string, () => void>();
+
+/** 📊️ Counts the pack descriptors this process currently keeps open (tests and diagnostics). */
+export function openRecordStoreDescriptorCount(): number { return openDescriptors.size; }
+
 /** 📇️ One pack index as persisted next to its pack: every record's key, byte range and value digest prefix. */
 export interface RecordStoreIndex {
   readonly format: typeof RECORD_STORE_FORMAT;
@@ -118,9 +125,19 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
     packs.add(name);
     for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: name, offset, length, digest });
   }
+  const release = (pack: string): void => {
+    const fd = descriptors.get(pack);
+    openDescriptors.delete(`${root}\0${pack}`);
+    descriptors.delete(pack);
+    if (typeof fd === "number") { try { closeSync(fd); } catch {} }
+  };
   const descriptor = (pack: string): number | null => {
-    if (!descriptors.has(pack)) { try { descriptors.set(pack, openSync(join(root, `${pack}.pack`), "r")); } catch { descriptors.set(pack, null); } }
-    return descriptors.get(pack)!;
+    const key = `${root}\0${pack}`, held = descriptors.get(pack);
+    if (typeof held === "number") { openDescriptors.delete(key); openDescriptors.set(key, () => release(pack)); return held; }
+    if (held === null) return null;
+    while (openDescriptors.size >= RECORD_STORE_DESCRIPTOR_LIMIT) { const [oldest, evict] = openDescriptors.entries().next().value!; openDescriptors.delete(oldest); evict(); }
+    try { const fd = openSync(join(root, `${pack}.pack`), "r"); descriptors.set(pack, fd); openDescriptors.set(key, () => release(pack)); return fd; }
+    catch { descriptors.set(pack, null); return null; }
   };
   const read = (key: string): Uint8Array | undefined => {
     const staged = pending.get(key);
@@ -164,7 +181,7 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
       store.flush();
       const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of [...accessed].sort()) { const value = read(key); if (value !== undefined) yield [key, value]; } };
       const retired=[...packs],retiredBytes=retired.reduce((sum,pack)=>sum+statSync(join(root,`${pack}.idx`)).size+statSync(join(root,`${pack}.pack`)).size,0);
-      const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){const fd=descriptors.get(pack);if(typeof fd==="number")closeSync(fd);descriptors.delete(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
+      const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){release(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
       if(!index)return;
       locations.clear();
       for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: index.pack, offset, length, digest });
@@ -172,7 +189,7 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
     },
     close() {
       try{store.flush();}finally{
-      for (const fd of descriptors.values()) if (typeof fd === "number") closeSync(fd);
+      for (const pack of [...descriptors.keys()]) release(pack);
       descriptors.clear();}
     },
     get stats() { return { hits, misses, puts, packs: packs.size, records: locations.size + pending.size, accessed: accessed.size }; },

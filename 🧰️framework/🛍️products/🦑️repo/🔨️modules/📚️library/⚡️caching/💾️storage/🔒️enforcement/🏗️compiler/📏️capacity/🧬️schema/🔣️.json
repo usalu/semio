@@ -53,6 +53,12 @@
         },
         "wait": {
           "type": "boolean"
+        },
+        "mode": {
+          "enum": [
+            "exclusive",
+            "shared"
+          ]
         }
       }
     },

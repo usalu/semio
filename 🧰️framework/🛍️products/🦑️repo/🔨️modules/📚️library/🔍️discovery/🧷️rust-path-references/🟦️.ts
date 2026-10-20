@@ -1,4 +1,4 @@
-import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { RustAssertionMessageSpan } from "../🦀️rust-fact-contracts/🟦️.ts";
 
 /** 🧭️ Resolves assertion messages through Rust tokens and balanced macro arguments, never textual lookalikes. */

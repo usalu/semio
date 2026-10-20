@@ -5,7 +5,7 @@ import Ajv from "ajv/dist/2020";
 import ts from "typescript";
 import caseSchema from "../../../🧬️schema/🛗️zero-touch-closure.json" with { type: "json" };
 import rosterSchema from "../🗂️closures/🧬️schema/🔣️.json" with { type: "json" };
-import { checkZeroTouchClosuresV1, diskZeroTouchTreeV1, readZeroTouchRosterV1, scanModuleSpecifiersV1, workspaceSpecifierTargetV1, zeroTouchClosureFindingsV1, ZERO_TOUCH_CLOSURES_FILE, type ZeroTouchImportKindV1, type ZeroTouchTreeV1 } from "../🟦️.ts";
+import { checkZeroTouchClosuresV1, checkZeroTouchCommandsV1, diskZeroTouchTreeV1, readZeroTouchCommandsV1, readZeroTouchRosterV1, scanModuleSpecifiersV1, workspaceSpecifierTargetV1, zeroTouchClosureFindingsV1, zeroTouchCommandFindingsV1, ZERO_TOUCH_CLOSURES_FILE, ZERO_TOUCH_COMMANDS_FILE, type ZeroTouchCommandV1, type ZeroTouchImportKindV1, type ZeroTouchTreeV1 } from "../🟦️.ts";
 import fixture from "./🔣️.json" with { type: "json" };
 
 const repoRoot = fileURLToPath(new URL("../../../../../../../../../", import.meta.url));
@@ -28,7 +28,7 @@ test("every declared bootstrap source has a full zero-touch closure", () => {
 
 test("every native repository recovery owner has a full zero-touch closure", () => {
  const roster=readZeroTouchRosterV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_CLOSURES_FILE)!);
- for(const entry of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts"])expect(roster.closures.some(closure=>closure.entry===entry&&closure.mode==="full"),entry).toBe(true);
+ for(const entry of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts"])expect(roster.closures.some(closure=>closure.entry===entry&&closure.mode==="full"),entry).toBe(true);
 });
 
 type CaseRow = Readonly<{ name: string; roster: unknown; files: Readonly<Record<string, string>>; closureFiles: Readonly<Record<string, number>>; findings: readonly string[]; details?: Readonly<Record<string, string>> }>;
@@ -72,8 +72,9 @@ const compilerImports = (path: string, text: string): string[] => {
   const add = (specifier: ts.Node | undefined, kind: ZeroTouchImportKindV1): void => { if (specifier && ts.isStringLiteralLike(specifier)) rows.add(`${kind}\0${specifier.text}`); };
   const typeOnly = (clause: ts.ImportClause | undefined): boolean => clause !== undefined && (clause.isTypeOnly || (clause.name === undefined && clause.namedBindings !== undefined && ts.isNamedImports(clause.namedBindings) && clause.namedBindings.elements.length > 0 && clause.namedBindings.elements.every((element) => element.isTypeOnly)));
   const visit = (node: ts.Node): void => {
+    if (ts.isIfStatement(node) && node.expression.getText(source) === "import.meta.vitest") { if (node.elseStatement) visit(node.elseStatement); return; }
     if (ts.isImportDeclaration(node) && !typeOnly(node.importClause)) add(node.moduleSpecifier, "static");
-    else if (ts.isExportDeclaration(node) && !node.isTypeOnly) add(node.moduleSpecifier, "static");
+    else if (ts.isExportDeclaration(node) && !node.isTypeOnly && !(node.exportClause !== undefined && ts.isNamedExports(node.exportClause) && node.exportClause.elements.length > 0 && node.exportClause.elements.every((element) => element.isTypeOnly))) add(node.moduleSpecifier, "static");
     else if (ts.isCallExpression(node) && node.arguments.length === 1) {
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword) add(node.arguments[0], "dynamic");
       else if (ts.isIdentifier(node.expression) && node.expression.text === "require") add(node.arguments[0], "require");
@@ -86,7 +87,7 @@ const compilerImports = (path: string, text: string): string[] => {
 
 test("the system compiler scan agrees with the TypeScript compiler AST on every file of the zero-touch closures", () => {
   const tree = diskZeroTouchTreeV1(repoRoot), roster = readZeroTouchRosterV1(tree.read(ZERO_TOUCH_CLOSURES_FILE)!);
-  const files = new Set<string>(), pending = roster.closures.map((closure) => closure.entry);
+  const files = new Set<string>(), pending = [...roster.closures.map((closure) => closure.entry), ...readZeroTouchCommandsV1(tree.read(ZERO_TOUCH_COMMANDS_FILE)!).map((command) => command.module)];
   while (pending.length) {
     const file = pending.pop()!;
     if (files.has(file)) continue;
@@ -104,7 +105,7 @@ test("the system compiler scan agrees with the TypeScript compiler AST on every 
   for (const file of files) {
     const text = tree.read(file);
     if (text === undefined) continue;
-    const ours = scanModuleSpecifiersV1(file, text).map((entry) => `${entry.kind}\0${entry.specifier}`).sort(), oracle = compilerImports(file, text);
+    const runtime = (row: string): boolean => !/^[a-z]+\0(?:node:|bun:|bun$)/u.test(row), ours = scanModuleSpecifiersV1(file, text).map((entry) => `${entry.kind}\0${entry.specifier}`).filter(runtime).sort(), oracle = compilerImports(file, text).filter(runtime);
     if (JSON.stringify(ours) !== JSON.stringify(oracle)) differences.push(`${file}: ours-only ${ours.filter((row) => !oracle.includes(row)).join(",")} oracle-only ${oracle.filter((row) => !ours.includes(row)).join(",")}`);
   }
   expect(differences).toEqual([]);
@@ -114,4 +115,27 @@ test("the real checkout has no import that leaves a zero-touch closure", () => {
   const result = checkZeroTouchClosuresV1(repoRoot);
   expect(result.findings.map(subject)).toEqual([]);
   expect(Object.keys(result.files).sort()).toEqual(readZeroTouchRosterV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_CLOSURES_FILE)!).closures.map((closure) => closure.id).sort());
+}, 120_000);
+
+type CommandCaseRow = Readonly<{ name: string; commands: readonly ZeroTouchCommandV1[]; seams: readonly string[]; files: Readonly<Record<string, string>>; closureFiles: Readonly<Record<string, number>>; findings: readonly string[]; details?: Readonly<Record<string, string>> }>;
+
+for (const row of fixture.commandCases as unknown as readonly CommandCaseRow[]) {
+  test(`zero-touch command closure: ${row.name}`, () => {
+    const result = zeroTouchCommandFindingsV1(row.commands, row.seams, treeOf(row.files));
+    expect(result.findings.map(subject).sort()).toEqual([...row.findings].sort());
+    expect(result.files).toEqual(row.closureFiles);
+    for (const [key, detail] of Object.entries(row.details ?? {})) expect(result.findings.find((finding) => subject(finding) === key)?.detail).toBe(detail);
+  });
+}
+
+test("a command registry row is closed", () => {
+  expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [] }))).toThrow("Root command registry required");
+  expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [{ id: "a", module: "a.ts", requires: "maybe" }] }))).toThrow("Root command registry row required");
+  expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [{ id: "a", module: "a.ts", requires: "none" }, { id: "a", module: "b.ts", requires: "none" }] }))).toThrow("Root command registry row required");
+});
+
+test("no command of the root registry reaches an import its declared requirement forbids", () => {
+  const result = checkZeroTouchCommandsV1(repoRoot);
+  expect(result.findings.map(subject)).toEqual([]);
+  expect(Object.keys(result.files).sort()).toEqual(readZeroTouchCommandsV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_COMMANDS_FILE)!).map((command) => `command:${command.id}`).sort());
 }, 120_000);

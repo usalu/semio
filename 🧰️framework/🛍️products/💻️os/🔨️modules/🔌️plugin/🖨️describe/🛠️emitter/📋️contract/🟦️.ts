@@ -1,10 +1,10 @@
-import compilerInventory from "@semio-tech/process/artifacts/publication/sources/schema.json";
-import{readBuildMode}from"@semio-tech/process/build-mode";
+import compilerInventory from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️json/🟦️.ts";
+import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import type { RepositoryArtifactRequestV1 } from "@semio-tech/repo-lib/artifacts";
-import { artifactsStorageSchema as policy } from "@semio-tech/repo-lib/artifacts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import type { RepositoryArtifactRequestV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { artifactsStorageSchema as policy } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 export type DescriptorEmitterIntentV1=Readonly<{version:1;mode:"prototype"|"release";platform:"darwin"|"linux"|"win32"}>;
 export const DESCRIPTOR_EMITTER_MANIFEST_V1="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml";
 /** 🛠️ Copies closed tool selection DATA without issuing an executable reader. */

@@ -1,0 +1,122 @@
+import { report } from "../🏃️operation/🟦️.ts";
+import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
+import { normalizeRelative } from "../🛣️path/🟦️.ts";
+import { sha256, assertNoFollowAncestors } from "../📁️input/🟦️.ts";
+import { sourceAdmissionAssertLexical } from "../🚪️source-admission/📁️io/🟦️.ts";
+
+import { lstatSync, readFileSync, readdirSync, readlinkSync } from "node:fs";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { join } from "node:path";
+import type { OpaqueTreeDigest, TaxonomyInventoryOptions, TaxonomyNoFollowTreeDigest, TaxonomyPlan, TaxonomyVerification, TaxonomyViolation } from "../📜️plan-contracts/🟦️.ts";
+import { absolutePath, stableViolations, violation } from "../🏷️file-kind-matching/🟦️.ts";
+import { TransactionRepositoryAuthority, TransactionRepositoryAuthorityError, assertTransactionRepositoryPath, isTransactionRepositoryAuthorityError } from "../🏛️repository-authority/🟦️.ts";
+import { execToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
+interface OpaqueCounts {
+  files: number;
+  directories: number;
+  symlinks: number;
+  others: number;
+}
+
+function noFollowMerkleNode(path: string, counts: OpaqueCounts, format: "opaque-v1" | "path-state-v1", excluded: ReadonlySet<string> = new Set()): string {
+  const stat = lstatSync(path);
+  const numericMode = stat.mode & 0o7777;
+  const mode = numericMode.toString(8);
+  if (stat.isSymbolicLink()) {
+    counts.symlinks++;
+    const target = readlinkSync(path);
+    return format === "opaque-v1" ? sha256(`symlink\u0000${mode}\u0000${target}`) : sha256(canonicalJson({ kind: "symlink", mode: numericMode, target }));
+  }
+  if (stat.isFile()) {
+    counts.files++;
+    return sha256(Buffer.concat([Buffer.from(format === "opaque-v1" ? `file\u0000${mode}\u0000` : `file\u0000${numericMode}\u0000${stat.size}\u0000`), readFileSync(path)]));
+  }
+  if (stat.isDirectory()) {
+    counts.directories++;
+    const children = readdirSync(path).sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).filter((name) => !excluded.has(join(path, name))).map((name) => ({ name: Buffer.from(name).toString("hex"), digest: noFollowMerkleNode(join(path, name), counts, format, excluded) }));
+    return format === "opaque-v1" ? sha256(`directory\u0000${mode}\u0000${children.map((child) => `${child.name}\u0000${child.digest}`).join("\u0000")}`) : sha256(canonicalJson({ kind: "directory", mode: numericMode, children }));
+  }
+  counts.others++;
+  return format === "opaque-v1" ? sha256(`other\u0000${mode}\u0000${stat.size}`) : sha256(canonicalJson({ kind: "other", mode: numericMode, size: stat.size }));
+}
+
+function opaqueNodeDigest(path: string, counts: OpaqueCounts): string { return noFollowMerkleNode(path, counts, "opaque-v1"); }
+
+function noFollowNodeDigest(path: string, counts: OpaqueCounts, excluded: ReadonlySet<string> = new Set()): string { return noFollowMerkleNode(path, counts, "path-state-v1", excluded); }
+
+export function noFollowTreeDigestExcluding(root: string, relativeRoot: string, excludedPaths: readonly string[]): TaxonomyNoFollowTreeDigest {
+  const path = absolutePath(root, normalizeRelative(relativeRoot));
+  const excluded = new Set(excludedPaths.map((entry) => absolutePath(root, entry)));
+  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
+  const digest = noFollowNodeDigest(path, counts, excluded);
+  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
+}
+
+export function transactionTreeDigest(authority: TransactionRepositoryAuthority, logicalRoot: string, physicalRoot: string, excludedPaths: readonly string[]): TaxonomyNoFollowTreeDigest {
+  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
+  let path: string, excluded: Set<string>;
+  try {
+    if (!Array.isArray(excludedPaths)) throw new Error("Transaction tree exclusions must be an explicit array");
+    assertTransactionRepositoryPath(authority, logicalRoot, "subtree", "Transaction logical tree");
+    assertTransactionRepositoryPath(authority, physicalRoot, "subtree", "Transaction physical tree");
+    for (const path of excludedPaths) sourceAdmissionAssertLexical(path, "Transaction tree exclusion", false);
+    path = absolutePath(authority.repoRoot, physicalRoot);
+    excluded = new Set(excludedPaths.map((entry: string) => absolutePath(authority.repoRoot, entry)));
+    assertNoFollowAncestors(authority.repoRoot, path, "Transaction physical tree");
+  } catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+  }
+  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
+  const digest = noFollowNodeDigest(path, counts, excluded);
+  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
+}
+
+/** 🌲️ Computes an exact recursive tree identity without following any symlink. */
+export function noFollowTreeDigest(root: string, relativeRoot: string): TaxonomyNoFollowTreeDigest {
+  const path = absolutePath(root, normalizeRelative(relativeRoot));
+  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
+  const digest = noFollowNodeDigest(path, counts);
+  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
+}
+
+/** 🛡️ Computes a no-follow Merkle digest for an explicitly named opaque tree. */
+export function opaqueTreeDigest(root: string, relativeRoot: string): OpaqueTreeDigest {
+  const normalized = normalizeRelative(relativeRoot);
+  const path = absolutePath(root, normalized);
+  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
+  const digest = opaqueNodeDigest(path, counts);
+  return { algorithm: "sha256-merkle-v1", relativeRoot: normalized, digest, ...counts };
+}
+
+export function repositoryHead(repoRoot: string): string {
+  return execToolSyncV1("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim();
+}
+
+/** 🫧️ The scope a verdict must be computed over for `scope` to be judged whole (verifier closure): a scope inside a mutation facet —
+ * below `<owner>/🧬️schema/🧬️mutations` or `<owner>/🧪️tests/🧫️fixtures/🧬️mutations`, or a `🧬️schema` / `🧪️tests/🧫️fixtures` directory that holds a
+ * `🧬️mutations` (`holdsMutations`) — widens to `<owner>`, the root that owns both the implementation cases and their fixture
+ * bundles, because the case-pairing rules read both sides; every other scope is closed already. */
+export function taxonomyClosedScope(scope: string, holdsMutations: (path: string) => boolean, taxonomy: Pick<LoadedTaxonomy["discoverySchema"], "testsDirName" | "testFixturesDirName" | "schemaScopeOwnerLevels">): string {
+  const segments = scope.replace(/\/+$/u, "").split("/");
+  const levels = taxonomy.schemaScopeOwnerLevels;
+  const at = segments.findIndex((segment, index) => index > 0 && (segment === levels.facetDirName && segments[index - 1] !== levels.moduleMemberDirName || segment === taxonomy.testFixturesDirName && segments[index - 1] === taxonomy.testsDirName && segments[index - 2] !== levels.moduleMemberDirName) && (segments[index + 1] === levels.mutationsFacetDirName || index === segments.length - 1 && holdsMutations(segments.join("/"))));
+  const owner = at > 0 && segments[at] === taxonomy.testFixturesDirName ? at - 1 : at;
+  return owner < 0 ? segments.join("/") : segments.slice(0, owner).join("/");
+}
+
+/** ⚖️ A plan's verdict: its unresolved problems plus one violation per planned move, relocation, symlink retarget, evidence removal and
+ * structured reference edit; clean when none is an error. */
+export function taxonomyPlanVerdict(plan: TaxonomyPlan, progress?: TaxonomyInventoryOptions["progress"]): Pick<TaxonomyVerification, "violations" | "clean"> {
+  const violations: TaxonomyViolation[] = [...plan.unresolved];
+  for (const move of plan.moves) violations.push(violation("normalization-move-required", move.sourcePath, `Path must move to ${move.destinationPath}`));
+  for (const relocation of plan.embeddedTicketRootRelocations) violations.push(violation("embedded-ticket-root-relocation-required", relocation.sourcePath, `Embedded ticket evidence must relocate to ${relocation.destinationPath}`));
+  for (const edit of plan.symlinkTargetEdits) violations.push(violation("symlink-target-edit-required", edit.sourcePath, `Repository-local symlink target must become ${edit.newTarget}`));
+  for (const removal of plan.evidenceRemovals) violations.push(violation("evidence-removal-required", removal.sourcePath, "Redundant evidence must be disposition-staged"));
+  for (const edit of plan.edits) violations.push(violation("reference-edit-required", edit.path, `Structured reference must change at ${edit.structuredLocation}`));
+  const stable = stableViolations(violations);
+  const clean = stable.every((entry) => entry.severity !== "error");
+  report(progress, "verify", "complete", stable.length, stable.length);
+  return { violations: stable, clean };
+}

@@ -1,0 +1,54 @@
+# result-repo-mcp-build: the repo MCP exposes the build and dev surface as tools (staged, not applied)
+
+READY: staged `C/repo-mcp-build-tools/` (29 files: 16 new, 13 anchored edits; dry run on the live tree: no drift; apply, idempotence and undo rehearsed byte-identical on a throwaway tree). Nothing was written outside `C/`. No edit under `📚️library/` or `🏃️process/`, so the set does not wait for chain17, only for GO. Overlay `/private/tmp/repo-mcp-build/` (nice -n 10, one process at a time).
+
+`C` = this ticket folder. `M` = `🧰️framework/🛍️products/🦑️repo/🔨️modules`.
+
+## Apply
+```
+cd /Users/ueli/Documents/semio
+python3 C/repo-mcp-build-tools/apply.py                       # dry run
+python3 C/repo-mcp-build-tools/apply.py --write               # all-or-nothing, originals kept in C/repo-mcp-build-tools/originals/
+python3 C/repo-mcp-build-tools/apply.py --undo --write        # reverse while files still hold our result
+bun repo run repo-mcp:build && bun repo run repo-mcp:install   # then reconnect the MCP (/mcp); the running binary keeps the old tools until then
+```
+
+## What the agent gets (30 build tools next to the 6 ticket/goal tools)
+- One tool per exposed row of the neutral catalogue `M/📚️library/🏗️build/⚙️operations/🔣️catalog.json`, 1:1: `run`, `test` (= run `<project>:test`, with `test_level`), `run_many`, `affected`, `exec`, `cargo`, `show_projects`, `show_project`, `show_targets`, `graph`, `inputs`, `preflight`, `leases_status`, `capacity_status`, `capacity_run`, `cache_status`, `cache_remote`, `remote_execution_status`, `incremental_{list,plan,prepare,run,discard}`, `concurrency_{list,plan,run}`, `dependencies_{ensure,sync,lock}`, `tools_setup`.
+- Generated, not hand-written: name, input schema (flags, types, enums, ranges), argument vector, English+German description, annotations (read-only, destructive, idempotent, open-world) and task support are derived at start from the catalogue plus ONE authored policy `M/🔌️mcp/🖼️assets/🏗️build-surface.json` (schema `M/🔌️mcp/🧬️schema/🏗️build-surface.json`). The policy only says which rows are exposed, kinds, positional shapes, flag types and defaults. A catalogue row that is neither exposed nor excluded with a reason in both languages fails the derivation and the tests, so a new catalogue operation cannot be forgotten. Left out with reasons (resource `repo://build-surface`): `watch`, `reset`, `cache gc|clear|serve`, `remote-execution serve|env`.
+- Queries (`show_*`, `graph`) default to `graph_policy=current` (sealed graph, never waits for the exclusive rebuild); `--json` is bound so results parse.
+- Structured result (`$defs.Result`): ok, exitCode, cancelled, durationMs, exact command, parsed `data` (or bounded stdout/stderr tails, ANSI stripped, 96 KB/48 KB, data 256 KB, text 64 KB), agent, progress count, hint (missing language, stale binary, start failure). The text content carries the same so text-only clients lose nothing. Wrong arguments are a readable tool error (names the accepted arguments), not a protocol error.
+- Progress: the child's typed `[script] {json}` stderr lines (plus the human line that follows) become `notifications/progress` (monotonic counter, message = lease-queue position, graph phase, ...; throttled to one per 500 ms, trailing report never dropped), heartbeat of the last output line every 10 s, "waiting for a free slot" while the 8-slot gate is full.
+- Cancellation: `notifications/cancelled`, `tasks/cancel`, or the connection ending interrupts the child (SIGINT; Windows: kill), 30 s grace for its own cleanup, then kill. Child stdin is the null device (it can never read the protocol stream).
+- Tasks (MCP 2025-11-25 utility): `tools/call` with `task`, `tasks/get|result|list|cancel`, `notifications/tasks/status`, capability advertised, ttl 1 h default / 24 h max, 1024 tasks, 128-bit ids.
+- Agent identity: argument `agent` (default: `SEMIO_AGENT_ID`, `CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`, else client name + digest of client and server process) becomes `SEMIO_AGENT_ID`, `SEMIO_SESSION` and a derived `SEMIO_CARGO_LANE` of the child (the three variables the run-lease, unit-cache lane and TS compiler session already read). `tool`, `workers`, `language` become `SEMIO_BUILD_TOOL`, `SEMIO_BUILD_WORKERS`, `SEMIO_LANGUAGE` (env, not leading flags, see finding 3). Children get a cleaned environment (`SEMIO_SCRIPT_*`, `SEMIO_PROCESS_OWNER_CONTEXT` removed so each call is its own original invocation; `NO_COLOR`).
+- Instructions are tool-neutral (no default tool named; the build policy owns it), English then German; fixture `🚪️entrypoint-contract.json` and the Rust text updated in step. This replaces the `MCP server instructions` edit of the bzl-default `flip` group: after this set the flip needs no MCP edit (its anchors in those three files will refuse; drop that edit).
+
+## Server start and reliability (measured)
+- `repo mcp` ready line on stderr: `ready ... tools=36 buildTools=30 in 2ms`; `initialize` 15 ms before and after; `tools/list` 144 KB in one page, < 5 ms.
+- Real defects fixed that explain the "connection failures" in memory notes:
+  1. The event log was append-only with a hard 100 000 events / 64 MB bound; on the next exchange the session was dropped (`Dispatch` error → `session.drop`). A long, build-heavy session (large results, progress notifications) would die. Production now uses a ring (16 MB / 20 000 events) whose retained window is still a verifiable hash chain (`ReplayEvents` accepts an anchored window). Strict log kept for the contract tests.
+  2. A panic in any handler killed the whole process; handlers are now guarded (internal error + stack on stderr, connection survives).
+  3. 8 handler workers would reject a fleet of subagents (`handler queue full`); default 32.
+  4. SIGTERM/SIGINT now cancel in-flight calls (children interrupted) instead of orphaning builds that hold leases.
+  5. Text blocks without `text` were dropped by `omitempty`; fixed.
+- Pre-existing failing baseline test fixed: `TestRepositoryEntrypointContract` still expected zero arguments while the shared fixture says `["mcp"]`.
+
+## Findings outside this set (not changed; need owners)
+1. LIVE BUG: `repo leases|capacity|incremental|concurrency|inputs|remote-execution ...` fail with `unknown command "leases" for "repo"` (verified on the installed binary): the Go and Rust entrypoint plans route only 13 of the 19 catalogue operations to the build owner. Fixed in this set in both implementations (list, usage line, shared fixture `M/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json` with 6 new vectors) and guarded by a test that every catalogue operation routes to the build owner.
+2. `repo --tool=nx capacity status --json` (leading flag) skips the early `capacity`/`leases` short-circuit in `🏗️build/📜️script.ts:runBuildCliV1` (it tests `args[prefix]`, a leading `--tool=` shifts it) and runs `build:discover`: 2.2 GB RSS, > 3 min under fleet load, ignores SIGINT for ~10 s. Library fix proposed (frozen): normalize leading global flags before the `leases`/`capacity` tests. The MCP avoids it by passing the tool through `SEMIO_BUILD_TOOL`.
+3. Catalogue gaps (library, frozen): subcommands `concurrency run`, `capacity run`, `leases status`, `show *`, `remote-execution *` name no `flags`, so the policy lists them (`flags`, checked as a subset of the operation's flags); adding `flags` to those catalogue rows would make the policy shorter. `graph_policy` text says "fresh (default)"; the tool description appends "Default of this tool: current".
+4. Not done: Rust implementation of the build surface (the shipped `repo` is Go). The language-neutral parts are in place for it: policy, schema, golden vectors `M/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json` (36 vectors: argv, environment, agent, valid/invalid), instruction text already synced in Rust.
+5. `.mcp.json` starts `repo` through PATH; a GUI-launched client without `~/.local/bin` on PATH cannot connect. `native-repo-path` pins the executable but `.mcp.json` does not use it. Not changed (generated file).
+6. Cancellation kills the leader process only (no process groups, to stay cross-platform without build-tagged files); the repo's own interrupt handling cleans its subtree, a kill after the grace period can orphan grandchildren.
+
+## Verification (overlay, nice -n 10)
+- `go vet` clean; `go test -short -count=1` all green (baseline was 26 pass / 1 fail; now includes 5 new test cases), also `-race` clean. New cases: `🏗️build-surface` (derivation from the real catalogue and policy, bilingual, coverage/drift refusal, 36 golden vectors, entrypoint routing of every catalogue operation, instructions), `🏃️build-process` (capture bounds, typed progress, null stdin, interrupt with cleanup, kill after grace, start failure, heartbeat), `🔌️build-session` (MCP client harness over the production pipe: tools/list, structured result, agent/tool/language env, stripped env, readable refusal, failure result, monotonic progress, cancel interrupts child, closing the connection interrupts child, task create/get/result/list/cancel, unsupported task refused, panic survival, slot gate), `⏳️task-store`, `🔁️event-ring`.
+- Third-party oracle: `M/🔌️mcp/🧪️tests/🏗️build-surface/🟦️.ts` re-derives the input schemas independently in TypeScript from the same two authored files and judges all 36 vectors with Ajv (bun test: 5 pass, 75 expects); the `🥒️.feature` states the scenarios language-neutrally. It is a plain vitest-style file, not yet wired as a `defineTestAdapter` harness adapter (the Go/Rust adapters of the differential harness are not written).
+- Black-box MCP client `C/repo-mcp-build-tools/probe.py` against the built overlay binary in a throwaway repo root: 28/28 checks pass (initialize 15 ms, instructions, tasks capability, 36 tools, annotations, bilingual descriptions, refusal, failing child → structured error with exact command and progress, connection survives, resource, clean exit, readiness line).
+- Not run: the real build commands through the installed binary (blocked by finding 1 until rebuilt), the taxonomy/leaf gates for the new member directories (`🗂️catalog 🔨️build 🏃️process 💼️jobs 🪢️session 🧱️results` are registered Go member names; test slugs follow the slug pattern; the new neutral files `🏗️build-surface.*` are unchecked against the file-kind gates), Rust compile of the three Rust edits (string/list edits only).
+
+## After GO
+1. Apply, `bun repo run repo-mcp:build` (its test target runs the new Go cases), `repo-mcp:install`, reconnect `/mcp`.
+2. Smoke through the MCP: `leases_status`, `capacity_status`, `show_projects` (current), `test` of one small project with a progress token, cancel it once.
+3. Tell bzl-default to drop the MCP-instruction anchors (finding in "What the agent gets").

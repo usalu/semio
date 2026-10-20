@@ -2,7 +2,7 @@
 //!
 //! The snapshot is cloned page by page under the grants by the preparation. `Mutation::apply_diff` is whole-snapshot, so the apply turn is one snapshot-sized turn quoted from the exact retained capacity of that clone; the displaced clone is then retired through controlled custody in separately granted release turns.
 use super::{PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
-use semio_framework_os_spr::{apply_diff, MutationDiff, OpBinary};
+use semio_framework_os_spr::{MutationDiff, OpBinary};
 use semio_framework_os_store_snapshot_clone::custody::RetainedEditCustody;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;

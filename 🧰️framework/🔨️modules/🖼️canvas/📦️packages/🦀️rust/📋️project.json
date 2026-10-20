@@ -13,13 +13,6 @@
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
       { "env": "SEMIO_BUILD_BUDGET_MS" }
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "tags": [
@@ -45,7 +38,7 @@
     },
     "stage-runtime-assets": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "sharedGlobals",
         "{projectRoot}/📜️script.ts",
@@ -63,8 +56,7 @@
         "@semio-tech/assets:build"
       ],
       "outputs": [
-        "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/port-assets",
-        "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/guest-assets"
+        "{projectRoot}/.🧾️store/stage-runtime-assets.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
@@ -72,11 +64,8 @@
       },
       "metadata": {
         "semio": {
-          "execution": {
-            "version": 1,
-            "kind": "source"
-          },
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "execution": { "version": 1, "kind": "source" },
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
         }
       }
     }

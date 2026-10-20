@@ -10,8 +10,8 @@ use semio_framework_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the layout editor and viewer surfaces.
     pub enum LayoutApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::layout::LayoutPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::layout::LayoutViewer>>),
+        Editor(VcsArtifactApp<EditorApp<semio_s_artifact_layout_layout_editor::LayoutPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_layout_layout_viewer::LayoutViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
 /// activates one instance whenever a `"2d.layout"` artifact
-/// (`crate::artifacts::layout::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
+/// (`semio_s_artifact_layout_layout_model::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment, no self-tick/`pending_effects` loop found by grep — the
 /// SDK default holds), and it asks the broker for document write access because `LayoutPlayApp`
 /// persists edits back to the open document. No quota declared: layout's ~20 `Effect` call sites
@@ -41,15 +41,15 @@ pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
         .label("Layout")
         .version("0.1.0")
         .package_id("semio:layout")
-        .artifact(crate::artifacts::layout::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::layout::LayoutPlayApp>(crate::editor::layout::create_layout_app())
-        .editor_mutation_roster::<crate::editor::layout::LayoutPlayApp>()
-        .viewer::<crate::viewer::layout::LayoutViewer>(crate::viewer::layout::create_layout_viewer())
-        .viewer_mutation_roster::<crate::viewer::layout::LayoutViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::layout::artifact_kind().id })
+        .artifact(semio_s_artifact_layout_layout::declaration().map_err(PluginAssemblyError::definition)?)
+        .editor::<semio_s_artifact_layout_layout_editor::LayoutPlayApp>(semio_s_artifact_layout_layout_editor::create_layout_app())
+        .editor_mutation_roster::<semio_s_artifact_layout_layout_editor::LayoutPlayApp>()
+        .viewer::<semio_s_artifact_layout_layout_viewer::LayoutViewer>(semio_s_artifact_layout_layout_viewer::create_layout_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_layout_layout_viewer::LayoutViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_layout_layout_model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist layout edits to the open document".into(), optional: false });
-    for declaration in crate::editor::text_font_asset_declarations() {
+    for declaration in semio_s_artifact_layout_layout_editor::text_font_asset_declarations() {
         builder = builder.asset(declaration);
     }
     builder.try_build()

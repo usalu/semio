@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { aliasChains } from "../../../../🏗️authoring/📦️crate-tree/🗺️plan/🧭️module-chains/🟦️.ts";
 import { external } from "../../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
-import { fixturesToRuntime, transformTestClosure } from "../../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { transformTestClosure } from "../../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { fixturesToRuntime } from "../../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
 
 /** 🔹 Registers the leaves fixtures feed literal tests of the artifact crate carve suite. */
 export function registerLeavesFixturesFeedLiteralTests(): void {

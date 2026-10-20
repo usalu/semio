@@ -18,7 +18,11 @@
     "terminalDropBytes",
     "physical",
     "bindingCopyBytes",
-    "bindingAdmissionBytes"
+    "bindingAdmissionBytes",
+    "lifecycle",
+    "compounds",
+    "childClose",
+    "depthAdmission"
   ],
   "properties": {
     "version": {
@@ -78,6 +82,119 @@
     },
     "bindingAdmissionBytes": {
       "const": 8
+    },
+    "lifecycle": {
+      "const": [
+        {
+          "output": false,
+          "closing": false,
+          "spent": false,
+          "ready": false
+        },
+        {
+          "output": false,
+          "closing": false,
+          "spent": true,
+          "ready": false
+        },
+        {
+          "output": false,
+          "closing": true,
+          "spent": false,
+          "ready": false
+        },
+        {
+          "output": false,
+          "closing": true,
+          "spent": true,
+          "ready": false
+        },
+        {
+          "output": true,
+          "closing": false,
+          "spent": false,
+          "ready": true
+        },
+        {
+          "output": true,
+          "closing": false,
+          "spent": true,
+          "ready": false
+        },
+        {
+          "output": true,
+          "closing": true,
+          "spent": false,
+          "ready": false
+        },
+        {
+          "output": true,
+          "closing": true,
+          "spent": true,
+          "ready": false
+        }
+      ]
+    },
+    "compounds": {
+      "const": [
+        "scalar-vector",
+        "owned-vector",
+        "optional-scalar",
+        "optional-vector",
+        "empty-option",
+        "boxed-scalar",
+        "boxed-owned",
+        "tuple"
+      ]
+    },
+    "childClose": {
+      "const": [
+        {
+          "started": false,
+          "empty": false,
+          "stage": "begin"
+        },
+        {
+          "started": false,
+          "empty": true,
+          "stage": "begin"
+        },
+        {
+          "started": true,
+          "empty": false,
+          "stage": "advance"
+        },
+        {
+          "started": true,
+          "empty": true,
+          "stage": "retire"
+        }
+      ]
+    },
+    "depthAdmission": {
+      "const": [
+        {
+          "maximumDepth": 0,
+          "requiredDepth": 1,
+          "refused": true,
+          "allocatedBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "maximumDepth": 1,
+          "requiredDepth": 1,
+          "refused": false,
+          "allocatedBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "maximumDepth": 2,
+          "requiredDepth": 1,
+          "refused": false,
+          "allocatedBytes": 0,
+          "releasedBytes": 0
+        }
+      ]
     }
   }
 }

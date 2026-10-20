@@ -1,7 +1,7 @@
-import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {join,resolve,dirname} from "node:path";
-import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
@@ -13,8 +13,8 @@ import type {CargoDependencyNetworkV1} from "../../../../🏃️process/🦀️c
 import {cargoDirectories,type CargoDirectories} from "../../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import type {CargoPreparationStorageV1} from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
-import {withResourceLeases} from "@semio-tech/process/leases";
-import {readBuildMode} from "@semio-tech/process/build-mode";
+import {withResourceLeases} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧾️ Confines default and explicitly requested reports to the original diagnostics backing. */
 export function runtimeVerificationReportV1(root:string,requested?:string):string{if(validateJsonSchemaSubset(schema,policy).length)throw Error("Closed runtime verification storage policy required");return requireNativeStoragePathV1(root,requested??join(root,policy.reportDirectory,policy.reportName));}

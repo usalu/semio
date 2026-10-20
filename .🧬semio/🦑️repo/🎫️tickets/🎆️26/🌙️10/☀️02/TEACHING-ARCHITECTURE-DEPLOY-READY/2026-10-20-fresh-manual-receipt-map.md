@@ -1,0 +1,74 @@
+# Manual Fresh Receipt to Next Plan Map
+
+Read-only map of current schemas/return shapes; no plan, command or lifecycle implementation was created. All future container IDs, manifest/archive/receipt hashes and image IDs are **unavailable until their real owner completes**. All names below are relative to ticket **🗑️generated/** unless explicitly marked product output. Actual owned child terminal0 is required alongside a success receipt; a file's presence never substitutes for terminal proof. Keep every already held input byte unchanged.
+
+## Hash Notation
+
+- **R(file)** = SHA256 of exact stored bytes, including indentation/newline; **Ref(file)** = actual absolute path + byte length + R(file).
+- **C(value)** = SHA256 of UTF-8 JSON.stringify(parsed value), as these helpers implement their compact JSON binding. This preserves parsed property order; it is not sorted-key JCS. Do not substitute R for C merely because both are SHA256.
+- Every CLI expected-SHA argument authenticates **R(plan file)**. Binding inside Source receiver/Git/observer/exporter may instead be C(plan), as specified below. Input module pins are R(actual reviewed module file), not hashes of receipt objects.
+- A new operation nonce is distinct from cohort/captureId. Preserve the creation runToken; controller workload MUST equal builder.runToken. Preserve exact name semio-course-native-<cohort> and volume semio-course-source-<captureId first12>-<cohort first8>.
+
+## 1. Creation → Source Receiver
+
+Schema/owner: [entry.schema.json](🌱️linux/entry.schema.json), [entry.ts](🌱️linux/entry.ts).
+
+Creation output **fresh-create-receipt-<cohort>.json** must be kind fresh-linux-created, with actual0, sourceEmpty:true, productSourceCopied:false. Check binding=R(fresh-create-<cohort>.json), same cohort/captureId/engineId/image/name/volume/runToken/capturePlanSha256, and actual Linux x64 tool facts. The immutable image remains the schema-pinned infrastructure image; the ID/created/user come only from this actual result.
+
+Receiver plan fresh-receiver-<cohort>.json copies reviewed creation fields; change kind to fresh-linux-receiver and use a fresh operation. Set identity.id/created/user from creation.identity; identity.receiptSha256=R(creation receipt). Set manifest:null. Keep native path/hash/bytes and current four module pins. Set capturePlanSha256=**C(the parsed fresh Source capture plan)**, not its raw file SHA. This same compact capture-plan binding must already be the creation value; Source capture checks it explicitly. Receiver binding passed by capture is C(receiver plan).
+
+## 2. Streamed Source → Git and Provision Inputs
+
+Owner CLI: 📦️fresh/script.ts capture fresh-capture-<captureId>.json R(plan) fresh-receiver-<cohort>.json R(receiver). Source plan uses actual workspaceRoot, mandatory current critical path hash-or-absence roster, and R(core/host/entry/schema/contract).
+
+Outputs: **fresh-capture-claim-<captureId>.json**, **fresh-capture-manifest-<captureId>.json**, **fresh-capture-divergence-<captureId>.json**, **fresh-capture-terminal-<captureId>.json**, and **fresh-source-receipt-<captureId>.json**. The terminal is kind fresh-source-capture-complete; require its C(Source plan)/C(receiver plan) bindings and actual matching manifest SHA/files/sourceBytes. The receiver receipt is the durable transfer proof: state:success, receiverTerminal:true, allSourceHashesVerified:true, exact containerId/captureId/operation/binding, identityReceiptSha256=R(create receipt), clientTerminal.status:0/signal:null, and matching actualFiles/actualBytes/manifestBytes.
+
+Define **M** = exact manifest file and **S** = actual fresh-source-receipt. Require R(M)=S.manifestSha256, byteLength(M)=S.manifestBytes, M.rows.length=S.actualFiles and M.bytes=S.actualBytes. M is emitted compactly and copied byte-identically to /repo/.semio-private/source.json. Its planSha256 is C(Source plan). Keep non-atomic/epoch/divergence provenance; the manifest does not contain a Git HEAD and must not be relabelled final Source.
+
+For later entry plans: manifest={sha256:R(M),bytes:byteLength(M),files:M.rows.length,sourceBytes:M.bytes,captureReceiptSha256:R(S)}. For Git/controller source: manifestSha256=R(M), manifestBytes=byteLength(M), captureReceiptSha256=R(S), volume=creation.volume. **Do not use R(fresh-capture-terminal) for captureReceiptSha256.**
+
+## 3. Fresh Genuine Git Capture → Archive → Guest Proof
+
+Schemas: 📦️fresh/git.schema.json#/definitions/gitCapturePlan; 📦️fresh/git-archive.schema.json; 🌱️linux/git.schema.json.
+
+1. Seal fresh-git-capture-<captureId>.json as kind fresh-genuine-git-plan, using the actual current read-only host HEAD40 and current producer/entry/revalidation/core/host/schema/contract/sourceSchema pins. Source manifest has no HEAD field: do not invent one from M. CLI capture-git.ts capture <file> R(file). Fresh producer revalidates actual host HEAD/ref/index and genuine commit/HEAD-tree metadata; old retained proof cannot be reused.
+2. Require actual0 and **fresh-git-capture-receipt-<captureId>.json** kind fresh-genuine-git-captured, same captureId/head, freshlyGenerated:true, independentHostGitVerified:true, guestGitVerified:false, sourceBlobs:0, metadataRoot=g2/<captureId>. Recheck its actual **g2/<captureId>/git-metadata.json** raw SHA against metadataManifestSha256 and genuine host metadata fences. Capture created is actual commit %cI; files is an actual .git file roster, not a count. It is not a Source snapshot.
+3. Seal **fresh-git-archive-<captureId>.json**: head=capture.head; metadataManifestSha256=capture.metadataManifestSha256; captureReceiptSha256=R(Git capture receipt); all nine current archive module pins. CLI git-transfer.ts prepare <file> R(file). Require actual0 and **fresh-git-archive-receipt-<captureId>.json** kind fresh-git-archive-prepared, preparePlanFileSha256=R(archive plan), same capture/metadata/head/time and sourceBlobs:0. Its archiveSha256/archiveBytes cover the actual complete PAX payload; files/bytes are the actual .git member count/body bytes (not PAX length).
+4. Seal **fresh-git-transfer-<captureId>.json** as kind fresh-linux-git. Builder id/name/image/created/user/runToken from creation; builder.identityReceiptSha256=R(create receipt). Source volume/manifest/manifestBytes/captureReceiptSha256 from M/S; source.revision=archive.head. Git head/created/manifestSha256/archiveSha256/archiveBytes/files/bytes/dirtyAtCapture come from the actual archive receipt; git.captureReceiptSha256=R(Git capture receipt). Use fresh operation, same engine/cohort/captureId and five current guest Git module pins. CLI git-transfer.ts transfer <file> R(file) **R(archive receipt)**. Its guest binding is **C(Git transfer plan)**.
+5. The required inner receipt is **fresh-git-proof-<captureId>.json**, kind fresh-linux-git-terminal. Require accepted:true, guestGitVerified:true, same canonical binding/builder/Source and readGitProof(plan,C(plan),receipt.proof) success: actual /usr/bin/git rev-parse/log/status0, real HEAD/time, archive/metadata digests, sourceBlobs:0, sourceRechecked:true, parentEnvelopeForwarded:false. Dirty and dirtyAtCapture are separate observations; equality is not an admission requirement.
+6. **fresh-git-transfer-terminal-<captureId>.json** is a separate wrapper terminal. Its proof field contains the INNER TERMINAL object, whose own proof field is the actual fresh-linux-git-proved report. Check wrapper accepted:true and actual0, but set controller.source.gitReceiptSha256=**R(inner fresh-git-proof file)**. Exporter/final gitTerminal ref likewise points to the inner file. Never hash only inner.proof or substitute the wrapper's raw SHA.
+
+## 4. Source → Native Provision → Controller21
+
+Provision plan **fresh-provision-<cohort>.json** uses kind fresh-linux-provision, a fresh operation, creation identity+R(create receipt), and the non-null manifest tuple from §2. All other exact creation inputs/engine/native fields remain current. CLI entry.ts provision <file> R(file); its phase binding is **R(provision plan)** (unlike the receiver's compact binding).
+
+Require actual0 and **fresh-provision-receipt-<cohort>.json** kind fresh-linux-native-provisioned, exact binding/cohort/containerId/identityReceiptSha256/sourceManifestSha256/captureReceiptSha256/native. Receive must match native SHA/bytes/ELF and guest mode448 (0700). Help must match SHA/bytes/mode, helpStatus:0, bounded non-empty helpBytes and helpSha256. This proves native frontend usability only.
+
+Seal **fresh-cohort-<cohort>.json** using 🌱️linux/schema.json: builder from creation + dedicated:true + identityReceiptSha256=R(create receipt); workload=builder.runToken; source.root=/repo, volume/M digest+metadata bytes/row count/body bytes from §2, revision=actual proved Git HEAD, atomicHostSnapshot:false, captureReceiptSha256=R(S), gitReceiptSha256=R(inner Git terminal); native fields from actual provision and provisionReceiptSha256=R(provision receipt). Tag must be the reviewed unique non-latest cohort tag. Copy exact schema steps constant (all21), honest whole/per-command/cleanup limits; no new lock/sync is inserted.
+
+CLI script.ts run <file> R(file). Output **linux-terminal-<cohort>-<workload>.json** must satisfy verifyTerminal(cohortPlan,**R(cohort plan)**,receipt), accepted:true, guestTerminal:true, all21 exact argv/status0/signal:null, genuine guest parentEnvelopeForwarded:false, childTerminal/nativeRechecked and null reason. terminal.planSha256 and guest.binding use **R(cohort plan)**, not C(plan). The actual raw guest file remains /tmp/semio-linux-<cohort>/<workload>/output.log; formatted host progress is not its byte representation. Preserve claim files; do not manufacture/remove claims for a retry.
+
+## 5. Actual21 → Read-Only Observer and Exporter
+
+Observer **fresh-facts-<operation>.json**: cohort/engine from current creation, cohortPlan=Ref(actual cohort plan), terminal=Ref(actual21 receipt), schema repository/pinned Caddy constants, fresh operation, reviewed14 module pins and honest milliseconds. CLI 👁️facts/entry.ts <file> R(file); receipt binding is C(observer plan), planFileSha256 is R(plan).
+
+Require actual0 and **o-<operation>/receipt.json**, kind fresh-final-observed/accepted:true. Exact engine/container/cohort/workload/initial Source/native/plan/terminal bindings, complete raw log bytes=terminal.guest.outputBytes, matching repeated build IDs and immutable image/tag/Caddy facts are required. Its **rawLog** is Ref(o-<operation>/output.log); **imageInspect** is Ref(proctor.json); **caddyInspect** is Ref(caddy.json). These files are actual generated outputs, not invented durable product receipts. The observer receipt itself is retained as manual cross-proof; final schema has no extra observerReceipt role.
+
+Exporter **fresh-export-<operation>.json**: exact current cohort/engine/workspaceRoot, fresh operation and current16 input module pins; evidence.cohortPlan/terminal/M/S/Git transfer plan/INNER Git terminal/provision are Ref(actual files) under roles cohortPlan,terminal,sourceManifest,sourceReceipt,gitPlan,gitTerminal,provision. CLI 📤️fresh/entry.ts <file> R(file); binding=C(export plan). It depends on actual21/Git/native/Source, not final verification, avoiding a cycle. Observer and exporter may be manually ordered after21; final requires both actual results.
+
+Require actual0 and **e-copy-<cohort first12>-<operation>.json** kind private-Original-artifact-copy, accepted:true, producerReceipt:false, currentCheckoutBuild:false, status:0/signal:null/cancelled:false/failure:null, exact canonical binding/current cohort/tag/builder/initial Source/destination. Guest cleanup is null on normal completed transfer, otherwise must be actually confirmed. Logical manifest/hash and separately measured hostManifest/hash/hostModes must match present output. Persistent product destination is course TypeScript package **dist/redeploy-<cohort first12>/{site,proctor}**; stage is only generated/e-<operation>. No foreign output may be replaced.
+
+## 6. Actual Facts + Export → Final Verifier
+
+Seal **fresh-final-<operation>.json** using 🔬️final/schema.json, then CLI entry.ts <file> R(file) <systemPython>. Output is **fresh-final-result-<cohort>.json** with planSha256=R(final plan). Require actual0 AND accepted:true; inspect every required check, not receipt presence alone.
+
+- cohort/tag/artifactRoot = same actual cohort/tag and persistent exporter destination.
+- refs.cohortPlan,terminal,sourceReceipt,sourceManifest,gitPlan,gitTerminal,provision,exportReceipt = the same raw Ref files above. refs.imageBuildLog=observer.rawLog; imageInspect=observer.imageInspect; caddyInspect=observer.caddyInspect. Retain observer receipt/actual0 as Root's cross-proof before sealing these refs.
+- beforeLock/afterLock/afterSync/afterGates=null and boundaryEvidence=record-unavailable when no actual authenticated snapshots exist. sourceBoundaryEvidenceComplete remains false; no guest ticket hook is assumed. cargoReceipt/proctorReceipt=null when no actual durable owner receipt exists. Default retained proctor acquisition does not require a fictional dist product receipt. If optional evidence is supplied, it must be genuine and its checks must pass.
+- authored has six actual stable existing Source refs: compose, caddyfile, bundleProducer, dockerfile, deployment, productSchema. Pin actual bytes without copying tracked Source into the ticket. Record their relation to M's rows honestly; without afterGates there is no automatic post-gate Source equality attestation. Do not relabel initial capture as final Source.
+- expected.repository/Caddy = schema constants; expected.created = actual genuine Git proof.created. expected.revision must be that proved HEAD or HEAD-dirty (dirty is an observed producer state, not assumed equal to host capture). expected.version is the actual workspaceCargoVersion of the cohort's workspace Cargo.toml used by the image owner, not course package version or tag. Check observed image labels against these values; do not invent unknown/epoch defaults.
+- Final verifies saved proctor config ID against actual managed build output and image facts, pinned Caddy identity, both saved image configs/layers/ELF, site/bundle hashes, staged never policies, same tag, operator .env/certificates/README rules and authenticated export/physical inventory. Its success is artifact usability + stated evidence limits, not a fabricated postlock owner attribution.
+
+No valid sample plan is supplied. Root must fill each unavailable field only from the corresponding real terminal/receipt and current schema, validate it through the existing owner, then seal the exact next file bytes.
+
+Independent read-only review: [manual map review](2026-10-20-manual-receipt-map-independent-review.md) found no material mapping blocker against current owner code. This is not an execution or receipt validity claim.

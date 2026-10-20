@@ -3,7 +3,7 @@
  */
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { posix, relative, sep } from "node:path";
-import { listSourceFamily, readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { listSourceFamily, readSourceFamilySource } from "../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, TOOL_JOB_HOST_CONFIGURATION_IDS, toolJobAppOwnedRows, toolJobDispositions, toolJobProductionProtocolSource, toolJobProductionSource, type ToolJobProof, toolJobProofIdentity, toolJobProofs, toolJobResolveTypeAlias, toolJobRustBlock, toolJobScanThenMonolithRows, type ToolJobStaticRow, toolJobStaticRows, toolJobFactoryModuleFile } from "../📋️inventory/🟦️.ts";
 import { toolJobMountedDispatchOneTurnExact, toolJobRetainedDispatchSetup } from "../📤️publication/🟦️.ts";

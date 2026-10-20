@@ -1,0 +1,1893 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Concurrent Session Harness",
+  "description": "Workloads of simulated agents working in one checkout copy, the lease classes their waits are attributed to, the pass criteria, the measurements and the report of the concurrency acceptance harness; every build implementation behind the tool-neutral interface is judged by the same contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "id": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "taskId": "^\\S+:\\S+$",
+        "nonce": "^[0-9a-z]{6,32}$",
+        "maximumSessions": 8,
+        "defaultSessions": 3,
+        "maximumSteps": 64,
+        "maximumPathLength": 255,
+        "maximumStepMilliseconds": 1800000,
+        "maximumPauseMilliseconds": 600000,
+        "maximumLines": 200000,
+        "maximumLogBytes": 268435456,
+        "tailLines": 40,
+        "episodeGapMilliseconds": 20000,
+        "scriptRow": "^\\[script\\] (\\{.*\\})$",
+        "queuePrefix": "lease-queue:",
+        "ignoredPrefixes": [
+          "javascript-source-provider:",
+          "javascript-preserving-source:",
+          "cargo:source-admission:",
+          "build:parser-source:",
+          "build:graph-phase:",
+          "cache-scan:",
+          "cache-delete:",
+          "boot-recovery:",
+          "dependencies:",
+          "resource-directory-admission:",
+          "compiler:capacity-subdivision"
+        ],
+        "bazelWait": "Another command \\(pid=(\\d+)\\) is running\\. Waiting for it to complete on the server",
+        "bazelContinuation": "^(?:INFO: |WARNING: )?(?:Another command \\(pid=|Waiting for it to complete)",
+        "bazelResource": "bazel:server",
+        "cargoWait": "^\\s*Blocking waiting for file lock on (.+?)\\s*$",
+        "cargoResourcePrefix": "cargo:",
+        "taskReport": "SEMIO_BUILD_TASK_REPORT",
+        "leaseTrace": "SEMIO_LEASE_TRACE",
+        "nxSkewMilliseconds": 2000,
+        "relations": [
+          "related",
+          "unrelated",
+          "external"
+        ]
+      }
+    },
+    "Tool": {
+      "enum": [
+        "nx",
+        "bazel"
+      ]
+    },
+    "Language": {
+      "enum": [
+        "ts",
+        "rs",
+        "go",
+        "py",
+        "text"
+      ]
+    },
+    "EditOp": {
+      "enum": [
+        "comment",
+        "private-body",
+        "public-api",
+        "whitespace"
+      ]
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "TaskId": {
+      "type": "string",
+      "pattern": "^\\S+:\\S+$"
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "Paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/Path"
+      }
+    },
+    "LocalizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Mode": {
+      "enum": [
+        "shared",
+        "exclusive"
+      ]
+    },
+    "Relation": {
+      "enum": [
+        "related",
+        "unrelated",
+        "external"
+      ]
+    },
+    "Observed": {
+      "enum": [
+        "exact",
+        "window",
+        "ambiguous",
+        "none"
+      ]
+    },
+    "Status": {
+      "enum": [
+        "pass",
+        "fail",
+        "skip"
+      ]
+    },
+    "Scope": {
+      "enum": [
+        "workspace",
+        "project",
+        "host"
+      ]
+    },
+    "EditStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "file",
+        "op",
+        "language"
+      ],
+      "properties": {
+        "kind": {
+          "const": "edit"
+        },
+        "file": {
+          "$ref": "#/definitions/Path"
+        },
+        "op": {
+          "$ref": "#/definitions/EditOp"
+        },
+        "language": {
+          "$ref": "#/definitions/Language"
+        }
+      }
+    },
+    "RevertStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "revert"
+        }
+      }
+    },
+    "RunStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "run"
+        },
+        "target": {
+          "$ref": "#/definitions/TaskId"
+        },
+        "outputs": {
+          "$ref": "#/definitions/Paths"
+        }
+      }
+    },
+    "RepoStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "args"
+      ],
+      "properties": {
+        "kind": {
+          "const": "repo"
+        },
+        "args": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "outputs": {
+          "$ref": "#/definitions/Paths"
+        },
+        "stdout": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BarrierStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "barrier"
+        },
+        "id": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "PauseStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "milliseconds"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pause"
+        },
+        "milliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600000
+        }
+      }
+    },
+    "Step": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/EditStep"
+        },
+        {
+          "$ref": "#/definitions/RevertStep"
+        },
+        {
+          "$ref": "#/definitions/RunStep"
+        },
+        {
+          "$ref": "#/definitions/RepoStep"
+        },
+        {
+          "$ref": "#/definitions/BarrierStep"
+        },
+        {
+          "$ref": "#/definitions/PauseStep"
+        }
+      ]
+    },
+    "SetupStep": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/EditStep"
+        },
+        {
+          "$ref": "#/definitions/RunStep"
+        },
+        {
+          "$ref": "#/definitions/RepoStep"
+        }
+      ]
+    },
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "area",
+        "group",
+        "steps"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "area": {
+          "$ref": "#/definitions/Id"
+        },
+        "group": {
+          "$ref": "#/definitions/Id"
+        },
+        "delayMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600000
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/Step"
+          }
+        }
+      }
+    },
+    "Workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "criteria",
+        "setup",
+        "sessions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "summary": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "criteria": {
+          "$ref": "#/definitions/Id"
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Tool"
+          }
+        },
+        "setup": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/SetupStep"
+          }
+        },
+        "sessions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/definitions/Session"
+          }
+        }
+      }
+    },
+    "LeaseClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "scope",
+        "patterns"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "patterns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "Owners": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Id"
+      }
+    },
+    "RuleNoFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "owners",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "kind": {
+          "const": "no-failure"
+        }
+      }
+    },
+    "RuleSerialEqual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "owners",
+        "kind",
+        "compare"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "kind": {
+          "const": "serial-equal"
+        },
+        "compare": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "exit",
+              "outputs",
+              "stdout"
+            ]
+          }
+        }
+      }
+    },
+    "RuleMaxWait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "owners",
+        "kind",
+        "classes",
+        "relation",
+        "maximumMilliseconds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "kind": {
+          "const": "max-wait"
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "relation": {
+          "enum": [
+            "related",
+            "unrelated",
+            "any"
+          ]
+        },
+        "maximumMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Sessions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "RuleExecutesOnce": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "owners",
+        "kind",
+        "sessions",
+        "excludeUncached"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "kind": {
+          "const": "executes-once"
+        },
+        "sessions": {
+          "$ref": "#/definitions/Sessions"
+        },
+        "excludeUncached": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuleMaxExecuted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "owners",
+        "kind",
+        "sessions",
+        "maximum",
+        "excludeUncached"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "kind": {
+          "const": "max-executed"
+        },
+        "sessions": {
+          "$ref": "#/definitions/Sessions"
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excludeUncached": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Rule": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/RuleNoFailure"
+        },
+        {
+          "$ref": "#/definitions/RuleSerialEqual"
+        },
+        {
+          "$ref": "#/definitions/RuleMaxWait"
+        },
+        {
+          "$ref": "#/definitions/RuleExecutesOnce"
+        },
+        {
+          "$ref": "#/definitions/RuleMaxExecuted"
+        }
+      ]
+    },
+    "Criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "rules"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Rule"
+          }
+        }
+      }
+    },
+    "Labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "workload",
+        "tool",
+        "session",
+        "group",
+        "step",
+        "wall",
+        "wait",
+        "executed",
+        "restored",
+        "cached",
+        "steps",
+        "concurrent",
+        "serial",
+        "leases",
+        "lease",
+        "count",
+        "total",
+        "maximum",
+        "relation",
+        "related",
+        "unrelated",
+        "external",
+        "holders",
+        "rules",
+        "rule",
+        "status",
+        "pass",
+        "fail",
+        "skip",
+        "value",
+        "limit",
+        "owner",
+        "acceptance",
+        "summary",
+        "criteria",
+        "sessions",
+        "milliseconds",
+        "area",
+        "setup",
+        "progress",
+        "cancelled",
+        "unproven",
+        "exact",
+        "window",
+        "ambiguous",
+        "none",
+        "start",
+        "end",
+        "exit",
+        "target",
+        "phase",
+        "list",
+        "uncached",
+        "independent",
+        "refused"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "workload": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "tool": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "session": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "group": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "step": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "wall": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "wait": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "executed": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "restored": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cached": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "steps": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "concurrent": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "serial": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "leases": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "lease": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "count": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "total": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "maximum": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "relation": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "related": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unrelated": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "external": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "holders": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "rules": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "rule": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "status": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "pass": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "fail": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "skip": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "value": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "limit": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "owner": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "acceptance": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "summary": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "criteria": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "sessions": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "milliseconds": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "area": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "setup": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "progress": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cancelled": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unproven": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "exact": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "window": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "ambiguous": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "none": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "start": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "end": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "exit": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "target": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "phase": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "list": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "uncached": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "independent": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "refused": {
+          "$ref": "#/definitions/LocalizedText"
+        }
+      }
+    },
+    "WorkloadSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "labels",
+        "classes",
+        "criteria",
+        "workloads"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "labels": {
+          "$ref": "#/definitions/Labels"
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/LeaseClass"
+          }
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Criteria"
+          }
+        },
+        "workloads": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Workload"
+          }
+        }
+      }
+    },
+    "Wait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "resource",
+        "mode",
+        "source",
+        "precise",
+        "startMs",
+        "endMs",
+        "waitMs",
+        "holderPid",
+        "position"
+      ],
+      "properties": {
+        "class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "$ref": "#/definitions/Mode"
+        },
+        "source": {
+          "enum": [
+            "lease",
+            "trace",
+            "bazel",
+            "cargo"
+          ]
+        },
+        "precise": {
+          "type": "boolean"
+        },
+        "startMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "endMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "waitMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "holderPid": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "position": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "relation": {
+          "$ref": "#/definitions/Relation"
+        },
+        "holders": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executed",
+        "restored",
+        "cached"
+      ],
+      "properties": {
+        "executed": {
+          "$ref": "#/definitions/TaskIds"
+        },
+        "restored": {
+          "$ref": "#/definitions/TaskIds"
+        },
+        "cached": {
+          "$ref": "#/definitions/TaskIds"
+        }
+      }
+    },
+    "TaskIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/TaskId"
+      }
+    },
+    "StepResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "kind",
+        "command",
+        "startMs",
+        "endMs",
+        "exit",
+        "waits",
+        "observation",
+        "observed",
+        "outputs",
+        "stdout"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": [
+            "run",
+            "repo"
+          ]
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "startMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "endMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "exit": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "waits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Wait"
+          }
+        },
+        "observation": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Observation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed": {
+          "$ref": "#/definitions/Observed"
+        },
+        "outputs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stdout": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SessionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "group",
+        "startMs",
+        "endMs",
+        "steps"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "group": {
+          "$ref": "#/definitions/Id"
+        },
+        "startMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "endMs": {
+          "type": "number",
+          "minimum": -1000000000000.0
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StepResult"
+          }
+        }
+      }
+    },
+    "Measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload",
+        "tool",
+        "uncached",
+        "sessions",
+        "serial"
+      ],
+      "properties": {
+        "workload": {
+          "$ref": "#/definitions/Id"
+        },
+        "tool": {
+          "$ref": "#/definitions/Tool"
+        },
+        "uncached": {
+          "$ref": "#/definitions/TaskIds"
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SessionResult"
+          }
+        },
+        "serial": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SessionResult"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuleResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "kind",
+        "owners",
+        "status",
+        "value",
+        "limit",
+        "detail"
+      ],
+      "properties": {
+        "rule": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "enum": [
+            "no-failure",
+            "serial-equal",
+            "max-wait",
+            "executes-once",
+            "max-executed"
+          ]
+        },
+        "owners": {
+          "$ref": "#/definitions/Owners"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "limit": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload",
+        "tool",
+        "criteria",
+        "measurement",
+        "rules"
+      ],
+      "properties": {
+        "workload": {
+          "$ref": "#/definitions/Id"
+        },
+        "tool": {
+          "$ref": "#/definitions/Tool"
+        },
+        "criteria": {
+          "$ref": "#/definitions/Id"
+        },
+        "measurement": {
+          "$ref": "#/definitions/Measurement"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuleResult"
+          }
+        }
+      }
+    },
+    "OwnerTally": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "passed",
+        "failed",
+        "skipped"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/definitions/Id"
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "runs",
+        "passed",
+        "failed",
+        "skipped",
+        "owners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Run"
+          }
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OwnerTally"
+          }
+        }
+      }
+    },
+    "TraceRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "resource",
+        "mode",
+        "startedMs",
+        "acquiredMs",
+        "pid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "$ref": "#/definitions/Mode"
+        },
+        "startedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acquiredMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "holderPid": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "lines",
+        "relations",
+        "evaluations",
+        "mutations",
+        "independence",
+        "workloads",
+        "nx",
+        "digests",
+        "traces",
+        "merges",
+        "tallies"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "classes",
+              "endMs",
+              "lines",
+              "waits"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "classes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/LeaseClass"
+                }
+              },
+              "endMs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "atMs",
+                    "line"
+                  ],
+                  "properties": {
+                    "atMs": {
+                      "type": "number",
+                      "minimum": -1000000000000.0
+                    },
+                    "line": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "waits": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Wait"
+                }
+              }
+            }
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "wait",
+              "self",
+              "others",
+              "relation",
+              "holders"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "wait": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "startMs",
+                  "endMs"
+                ],
+                "properties": {
+                  "startMs": {
+                    "type": "number",
+                    "minimum": -1000000000000.0
+                  },
+                  "endMs": {
+                    "type": "number",
+                    "minimum": -1000000000000.0
+                  }
+                }
+              },
+              "self": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "group"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "group": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "others": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "group",
+                    "intervals"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "group": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "intervals": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "number",
+                          "minimum": -1000000000000.0
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    }
+                  }
+                }
+              },
+              "relation": {
+                "$ref": "#/definitions/Relation"
+              },
+              "holders": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "evaluations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "criteria",
+              "measurement",
+              "results"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "criteria": {
+                "$ref": "#/definitions/Criteria"
+              },
+              "measurement": {
+                "$ref": "#/definitions/Measurement"
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/RuleResult"
+                }
+              }
+            }
+          }
+        },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "text",
+              "op",
+              "language",
+              "nonce",
+              "result"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string"
+              },
+              "op": {
+                "$ref": "#/definitions/EditOp"
+              },
+              "language": {
+                "$ref": "#/definitions/Language"
+              },
+              "nonce": {
+                "type": "string",
+                "minLength": 1
+              },
+              "result": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "independence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "rows",
+              "issues"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "group",
+                    "edits",
+                    "touches"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "group": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "edits": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "touches": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "workloads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "set",
+              "issues"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "set": {},
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "nx": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "record",
+              "ids",
+              "windowStart",
+              "windowEnd",
+              "concurrent",
+              "result"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "record": {},
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "windowStart": {
+                "type": "number",
+                "minimum": -1000000000000.0
+              },
+              "windowEnd": {
+                "type": "number",
+                "minimum": -1000000000000.0
+              },
+              "concurrent": {
+                "type": "boolean"
+              },
+              "result": {}
+            }
+          }
+        },
+        "digests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "parts",
+              "digest"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "text"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "digest": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "traces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "classes",
+              "origin",
+              "text",
+              "waits"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "classes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/LeaseClass"
+                }
+              },
+              "origin": {
+                "type": "number",
+                "minimum": -1000000000000.0
+              },
+              "text": {
+                "type": "string"
+              },
+              "waits": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Wait"
+                }
+              }
+            }
+          }
+        },
+        "merges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "derived",
+              "traced",
+              "waits"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "derived": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Wait"
+                }
+              },
+              "traced": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Wait"
+                }
+              },
+              "waits": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Wait"
+                }
+              }
+            }
+          }
+        },
+        "tallies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "runs",
+              "result"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "runs": {
+                "type": "array",
+                "items": {}
+              },
+              "result": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

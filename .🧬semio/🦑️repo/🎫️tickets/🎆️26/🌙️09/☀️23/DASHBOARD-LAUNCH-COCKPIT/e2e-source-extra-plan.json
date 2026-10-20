@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "executable": "repo",
+  "preserveOriginalRoster": "e2e-source-single-plan.json",
+  "targets": [
+    {
+      "project": "repo",
+      "target": "test-rustup-protocol",
+      "status": "pending"
+    },
+    {
+      "project": "repo",
+      "target": "test-nx-reset",
+      "status": "pending"
+    },
+    {
+      "project": "@semio-tech/value-rs",
+      "target": "test-close-demand-source",
+      "status": "pending"
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "test-language",
+      "status": "pending"
+    },
+    {
+      "project": "@semio-tech/framework-process",
+      "target": "test-windows-conditional-retirement",
+      "status": "pending"
+    },
+    {
+      "project": "repo",
+      "target": "test-authorizers",
+      "status": "pending"
+    },
+    {
+      "project": "repo",
+      "target": "test-runtime-bootstrap",
+      "status": "pending",
+      "command": "repo run repo:test-runtime-bootstrap --skip-cache --output=stream",
+      "scope": "Actual CacheTestScript direct runtime-bootstrap suite; excludes the separately mounted lifecycle recording-host suite."
+    },
+    {
+      "project": "repo",
+      "target": "test-devcontainer-lifecycle",
+      "status": "pending",
+      "command": "repo run repo:test-devcontainer-lifecycle --skip-cache --output=stream",
+      "scope": "Finite direct lifecycle suite with owned artifact root, recording-host start/attach and independent jsdom/lodash oracles; no broad wasm cache contracts."
+    }
+  ]
+}

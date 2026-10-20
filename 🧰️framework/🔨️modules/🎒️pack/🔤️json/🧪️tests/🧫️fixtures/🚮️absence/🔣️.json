@@ -4,6 +4,8 @@
     "🧰️framework/🔨️modules/🎒️pack/🔤️json",
     "🧰️framework/🔨️modules/🌱️value",
     "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/📁️filesystem",
+    "🧰️framework/🔨️modules/📚️compiler",
     "🧰️framework/🔨️modules/🧬️schema/✅️validator"
   ],
   "absentRoots": [

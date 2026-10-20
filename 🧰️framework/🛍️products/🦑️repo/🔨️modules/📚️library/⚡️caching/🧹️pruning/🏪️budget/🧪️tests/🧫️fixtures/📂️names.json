@@ -1,0 +1,32 @@
+[
+  {
+    "name": "exact-absolute-root",
+    "path": "/compiler/build",
+    "accepted": true
+  },
+  {
+    "name": "absolute-outside-closure",
+    "path": "/compiler/other/state",
+    "accepted": true
+  },
+  {
+    "name": "relative-name-refused",
+    "path": "build/unit",
+    "accepted": false
+  },
+  {
+    "name": "unknown-name-refused",
+    "path": "(unknown)",
+    "accepted": false
+  },
+  {
+    "name": "empty-name-refused",
+    "path": "",
+    "accepted": false
+  },
+  {
+    "name": "ambiguous-parent-name-refused",
+    "path": "/compiler/build/../state",
+    "accepted": false
+  }
+]

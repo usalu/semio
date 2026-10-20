@@ -1,0 +1,12 @@
+{
+  "modules": {
+    "ordered": "semio_framework_value_ordered",
+    "snapshot_projection": "semio_framework_value_snapshot_projection",
+    "paged_text": "semio_framework_value_paged_text",
+    "retirement_queue": "semio_framework_value_retirement_queue"
+  },
+  "functions": { "OriginalAliasBatch": "semio_framework_value_original_aliases" },
+  "items": {},
+  "deriveMacroNames": [],
+  "crateAliases": ["retirement_queue"]
+}

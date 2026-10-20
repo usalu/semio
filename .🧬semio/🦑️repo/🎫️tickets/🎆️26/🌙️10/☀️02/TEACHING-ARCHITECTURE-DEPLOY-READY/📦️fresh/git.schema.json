@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Genuine Git Metadata Plans",
+  "definitions": {
+    "gitReusePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "captureId",
+        "retainedManifestSha256",
+        "head"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "fresh-git-reuse-plan"
+        },
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "retainedManifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      }
+    },
+    "gitCapturePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "captureId",
+        "workspaceRoot",
+        "head",
+        "inputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "fresh-genuine-git-plan"
+        },
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "entry",
+            "revalidation",
+            "core",
+            "host",
+            "schema",
+            "contract",
+            "sourceSchema"
+          ],
+          "properties": {
+            "producer": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "entry": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "revalidation": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "core": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "host": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "contract": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "sourceSchema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "neutralCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "files",
+        "archive"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "body"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "archive": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "neutralManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "head",
+        "created",
+        "sourceBlobs",
+        "bytes",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "created": {
+          "type": "string"
+        },
+        "sourceBlobs": {
+          "const": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "files": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.git/(?:HEAD|index|config|packed-refs|refs/[^\\u0000-\\u0020]+|objects/pack/pack-[a-f0-9]{40}\\.(?:pack|idx))$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 134217728
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

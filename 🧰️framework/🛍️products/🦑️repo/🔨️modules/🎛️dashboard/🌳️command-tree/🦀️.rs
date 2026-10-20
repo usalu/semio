@@ -99,7 +99,7 @@ pub fn tree_json(registry: &Registry, node: &CommandNode) -> serde_json::Value {
     serde_json::Value::Object(object)
 }
 
-/// 🧾️ The discovered tree of a repository root as the pretty JSON document `semio command-tree
+/// 🧾️ The discovered tree of a repository root as the pretty JSON document `repo dashboard command-tree
 /// --dump-tree` prints, so a client never has to name the encoder crate itself.
 pub fn tree_json_text(root: &Path) -> String {
     let registry = crate::discover(root, &std::sync::atomic::AtomicBool::new(false));

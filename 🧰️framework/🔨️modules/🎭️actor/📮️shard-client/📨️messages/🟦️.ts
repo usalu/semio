@@ -1,6 +1,6 @@
 import type { OriginalOperationAdmission, OriginalOperationReceipt } from "../../🎟️retained-turn/🟦️.ts";
 import type { ActorCodecRequest } from "../../🧬️codec/🟦️.ts";
-import { hopTrace, hopTraceEpochToTimeline } from "@semio-tech/framework-trace";
+import { hopTrace, hopTraceEpochToTimeline } from "../../../⏱️trace/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope, ShardFrame, ShardJobBudget } from "../📜️wire/🟦️.ts";
 
 export type OutboundMessage =

@@ -121,3 +121,5 @@ test.skipIf(process.platform!=="darwin")("a legacy image with an accumulated log
   expect(existsSync(join(mine,protocol.serviceDirectory,protocol.serviceMarker))).toBe(true);expect(nativeImageVolumeSilencedV1(mine,"open")).toBe(true);
  }finally{for(const mount of attached.reverse())run("/usr/bin/hdiutil",["detach","-force",mount]);rmSync(scratch,{recursive:true,force:true});}
 },120000);
+
+import "../../../🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts";

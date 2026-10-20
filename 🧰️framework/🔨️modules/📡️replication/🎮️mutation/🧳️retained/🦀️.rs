@@ -4,8 +4,7 @@ use super::{ColdMutation, Mutation,MutationMessage,MutationMessageLedgerRetireme
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,admit_retained_clone_progress,admit_retained_clone_close};
 use std::mem::{size_of,ManuallyDrop};
-#[path="🪡️field/🦀️.rs"] pub mod field;
-pub use field::{RetainedFieldPreparation,RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
+pub use semio_framework_replication_mutation_retained_field::{RetainedFieldPreparation,RetainedFieldChange,RetainedRecordChange,RetainedRecordChangeField,RetainedRecordFieldChange,RetainedRecordChangeOwner,boxed_record_field,retained_mutation_demand_fits};
 #[path="✂️span/🦀️.rs"] pub mod span;
 pub use span::RetainedByteSpan;
 #[path="🔎️key/🦀️.rs"] pub mod key;
@@ -67,8 +66,6 @@ pub trait RetainedMutationLeafPreparation<P,M:Mutation<P,Diff:RetainedDiff<P>>,L
  fn close_step(&mut self,context:RetainedMutationCloseContext<'_,M>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
  fn terminal_is_empty(&self)->bool;
 }
-/// 🎟️ Independent five-axis admission precedes every action.
-pub fn retained_mutation_demand_fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 
 /// 🧳️ Original aliases, typed decision custody and exact inverse child survive cancellation.
 pub struct RetainedMutationOwner<P,M:RetainedMutation<P>>{

@@ -209,7 +209,7 @@ fn the_footer_hints_are_generated_from_the_keymap_in_the_chosen_language() {
     assert!(hints.iter().any(|hint| hint.key == "| / v" && hint.label == "split right"));
     dashboard.armed = false;
     assert!(dashboard.footer_hints(&tui).iter().any(|hint| hint.key == "Enter" && hint.label == "select"));
-    let german = Preferences { language: "de".into(), ..Default::default() };
+    let german = Preferences { language: Some("de".into()), ..Default::default() };
     let (mut dashboard, mut tui) = dashboard_with(german);
     dashboard.armed = true;
     assert!(dashboard.footer_hints(&tui).iter().any(|hint| hint.key == "n" && hint.label == "neue Aufgabe"));

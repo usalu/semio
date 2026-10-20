@@ -1,4 +1,5 @@
 import {test,expect} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {build as esbuild} from "esbuild";
 import {withCurrentBunWorkspaceOwnershipV1,readBunWorkspaceListingProjectionV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
@@ -175,7 +176,7 @@ test("generation receipt: the frontier and the seal equal an independent Python 
  const{root,store}=materialize();
  try{
   const{result,walked}=await capture(original,root,store,Date.now()+10000);if(result.status!=="captured")throw Error("captured expected");
-  const{sha256:_,...body}=result.receipt,run=spawnSync("python3",["-I","-c",oracle,root,JSON.stringify(fixtures.rules),JSON.stringify(body)],{encoding:"utf8"});
+  const{sha256:_,...body}=result.receipt,run=spawnSync(testPythonV1()??"python3",["-I","-c",oracle,root,JSON.stringify(fixtures.rules),JSON.stringify(body)],{encoding:"utf8"});
   expect(run.status,run.stderr).toBe(0);
   const python=JSON.parse(run.stdout)as{directories:Record<string,string>;seal:string},ours=Object.fromEntries(walked.paths.filter(path=>path.list).map(path=>[relative(root,path.path),generationProjectionDigestV1(path.list!)]));
   expect(ours).toEqual(python.directories);expect(Object.keys(ours).length).toBeGreaterThan(3);expect(python.seal).toBe(result.receipt.sha256);
@@ -237,7 +238,7 @@ test("generation receipt: the sealed implementation is the actual runtime import
  }
  expect(bundled.size).toBeGreaterThan(50);
  expect([...bundled].filter(path=>!sealed.has(path)),"esbuild bundle inputs missing from the sealed closure").toEqual([]);
- const python=spawnSync("python3",["-I","-c",closureOracle,root,JSON.stringify(protocol.implementation.entries)],{encoding:"utf8",maxBuffer:67108864});expect(python.status,python.stderr).toBe(0);
+ const python=spawnSync(testPythonV1()??"python3",["-I","-c",closureOracle,root,JSON.stringify(protocol.implementation.entries)],{encoding:"utf8",maxBuffer:67108864});expect(python.status,python.stderr).toBe(0);
  const independent=new Set<string>(JSON.parse(python.stdout));expect([...independent].filter(path=>!sealed.has(path)),"python closure inputs missing from the sealed closure").toEqual([]);
  const library=resolve(import.meta.dir,"../../../../..");
  for(const file of fixtures.fences)expect(sealed.has(file),file).toBe(true);

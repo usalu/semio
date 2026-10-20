@@ -9,7 +9,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, encodeJsonPayload } from "../../🟦️.tsx";
+import { type AgentBridgeConfig, useAgentBridge, bridgeProtocols, createDefaultShellState } from "../../🟦️.tsx";
+import { applyInboundShellCommand, buildShellStateFrame, decodeJsonPayload, encodeJsonPayload } from "../../🟢️shared/🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
 import { documentInferencePortFixtureUrl } from "@semio-tech/framework-os-shell/testing/fixtures";
 // #endregion 🔌️Adapters

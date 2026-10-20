@@ -1,0 +1,69 @@
+{
+  "prefix": "repo dashboard",
+  "terminalHeader": "repo dashboard [--root PATH] [--config JOURNAL] [--workspace] [--language en|de] [--appearance dark|light] [--terminology native|reuse] [--renderer react|wgpu-wasm|wgpu-native] [--layout tabs|columns|rows] [--prefix KEY] [--bindings JSON]",
+  "verbs": [
+    "commands",
+    "run",
+    "tasks",
+    "logs",
+    "stop",
+    "restart",
+    "kill",
+    "open",
+    "daemon",
+    "preferences",
+    "catalog",
+    "plugin",
+    "command-tree"
+  ],
+  "cases": [
+    {
+      "command": "repo dashboard",
+      "accepted": true
+    },
+    {
+      "command": "repo dashboard commands --json",
+      "accepted": true
+    },
+    {
+      "command": "repo dashboard --help",
+      "accepted": true
+    },
+    {
+      "command": "semio dashboard",
+      "accepted": false
+    },
+    {
+      "command": "semio --help",
+      "accepted": false
+    },
+    {
+      "command": "repo dashboard dashboard",
+      "accepted": false
+    },
+    {
+      "command": "bun repo dashboard",
+      "accepted": false
+    }
+  ],
+  "assets": [
+    "⌨️usage/🦀️.rs",
+    "🖥️terminal/🦀️.rs",
+    "README.md",
+    "🌀️daemon/⌨️command/🦀️.rs",
+    "🌀️daemon/📜️journal/🦀️.rs",
+    "🌀️daemon/📼️replay/🦀️.rs",
+    "🌀️daemon/🔐️lease/🦀️.rs",
+    "🌀️daemon/🚦️lifecycle/🦀️.rs",
+    "🌀️daemon/🦀️.rs",
+    "🌀️daemon/🕹️control/🦀️.rs",
+    "🌳️command-tree/🦀️.rs",
+    "📎️connection/🦀️.rs",
+    "🖥️terminal/🌐️labels/🦀️.rs",
+    "🖥️terminal/🌐️labels/🧪️tests/🔬️unit/🦀️.rs",
+    "🧪️tests/🧭️journeys/🏋️load/🦀️.rs",
+    "🧬️schema/🎮️registry/🔣️.json",
+    "🧬️schema/🔣️.json",
+    "🧭️cli/🦀️.rs"
+  ]
+}

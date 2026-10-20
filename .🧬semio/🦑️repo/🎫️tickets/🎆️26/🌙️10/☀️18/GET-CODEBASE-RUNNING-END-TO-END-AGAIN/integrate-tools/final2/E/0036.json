@@ -1,0 +1,66 @@
+{
+  "name": "@semio-tech/s-rebuild",
+  "root": "✏️s/🧑‍💻dev/🔁️rebuild",
+  "projectType": "library",
+  "tags": [
+    "scope:s",
+    "lang:typescript",
+    "role:tool"
+  ],
+  "targets": {
+    "rebuild-all": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts rebuild-all",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
+    },
+    "guest-framework-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts guest-framework-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "plan-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts plan-check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,342 @@
+{
+  "cases": [
+    {
+      "id": "same-live-device",
+      "input": {
+        "published": {
+          "dev": "100",
+          "ino": "41",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "100",
+        "currentBackingDevice": "100"
+      },
+      "expected": {
+        "dev": "100",
+        "ino": "41",
+        "mode": 16877
+      }
+    },
+    {
+      "id": "host-reboot-renumbers-backing-device",
+      "input": {
+        "published": {
+          "dev": "16777232",
+          "ino": "422334225",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "16777232",
+        "currentBackingDevice": "16777229"
+      },
+      "expected": {
+        "dev": "16777229",
+        "ino": "422334225",
+        "mode": 16877
+      }
+    },
+    {
+      "id": "parent-native-image-reattach-renumbers-device",
+      "input": {
+        "published": {
+          "dev": "16777266",
+          "ino": "29",
+          "mode": 16832
+        },
+        "publishedBackingDevice": "16777266",
+        "currentBackingDevice": "16777278"
+      },
+      "expected": {
+        "dev": "16777278",
+        "ino": "29",
+        "mode": 16832
+      }
+    },
+    {
+      "id": "different-published-device-namespace",
+      "input": {
+        "published": {
+          "dev": "101",
+          "ino": "41",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "100",
+        "currentBackingDevice": "29"
+      },
+      "expected": null
+    },
+    {
+      "id": "noncanonical-published-device",
+      "input": {
+        "published": {
+          "dev": "0100",
+          "ino": "41",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "0100",
+        "currentBackingDevice": "29"
+      },
+      "expected": null
+    },
+    {
+      "id": "noncanonical-current-device",
+      "input": {
+        "published": {
+          "dev": "100",
+          "ino": "41",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "100",
+        "currentBackingDevice": "029"
+      },
+      "expected": null
+    },
+    {
+      "id": "exact-large-device-and-inode-data",
+      "input": {
+        "published": {
+          "dev": "18446744073709551615",
+          "ino": "18446744073709551614",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "18446744073709551615",
+        "currentBackingDevice": "16777229"
+      },
+      "expected": {
+        "dev": "16777229",
+        "ino": "18446744073709551614",
+        "mode": 16877
+      }
+    },
+    {
+      "id": "invalid-directory-mode",
+      "input": {
+        "published": {
+          "dev": "100",
+          "ino": "41",
+          "mode": -1
+        },
+        "publishedBackingDevice": "100",
+        "currentBackingDevice": "29"
+      },
+      "expected": null
+    },
+    {
+      "id": "extra-binding-authority-refused",
+      "input": {
+        "published": {
+          "dev": "100",
+          "ino": "41",
+          "mode": 16877
+        },
+        "publishedBackingDevice": "100",
+        "currentBackingDevice": "29",
+        "authority": true
+      },
+      "expected": null
+    }
+  ],
+  "inspections": [
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "inactive",
+      "id": "same-device-inactive",
+      "failure": null,
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 1,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "inactive",
+      "id": "published-device-reassigned",
+      "failure": null,
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 1,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "refuse",
+      "id": "foreign-current-backing",
+      "failure": "Exact canonical persistent Native publication required",
+      "captures": 0
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 1,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "refuse",
+      "id": "mounted-image-omitted",
+      "failure": "Torn kernel inventory omits the mounted image",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "wrong-root",
+      "mutation": "none",
+      "expected": "refuse",
+      "id": "wrong-kernel-root",
+      "failure": "Exact bounded persistent Native mounted association required",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": "bootSession",
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "refuse",
+      "id": "old-format-missing-boot",
+      "failure": "Exact canonical persistent Native publication required",
+      "captures": 0
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": "ancestry",
+      "kernel": "absent",
+      "mutation": "none",
+      "expected": "refuse",
+      "id": "old-format-missing-ancestry",
+      "failure": "Exact canonical persistent Native publication required",
+      "captures": 0
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "ancestor",
+      "expected": "refuse",
+      "id": "ancestor-changes-during-inventory",
+      "failure": "Original Native image ancestry changed",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "backing",
+      "expected": "refuse",
+      "id": "backing-changes-during-inventory",
+      "failure": "Exact created Native physical identity required",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "underlying",
+      "expected": "refuse",
+      "id": "underlying-changes-during-inventory",
+      "failure": "Original underlying mount directory changed",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "receipt",
+      "expected": "refuse",
+      "id": "receipt-changes-during-inventory",
+      "failure": "Native receiver receipt changed during observation",
+      "captures": 1
+    },
+    {
+      "publishedDeviceDelta": 0,
+      "backingDeviceDelta": 0,
+      "mountDeviceDelta": 0,
+      "receiptOmit": null,
+      "kernel": "absent",
+      "mutation": "cancel",
+      "expected": "refuse",
+      "id": "cancel-changes-during-inventory",
+      "failure": "Original receiver inventory cancelled",
+      "captures": 1
+    }
+  ],
+  "retirements": [
+    {
+      "id": "same-device",
+      "mutation": "none",
+      "publishedDeviceDelta": 0,
+      "expected": true,
+      "failure": null
+    },
+    {
+      "id": "published-device-renumbered",
+      "mutation": "none",
+      "publishedDeviceDelta": 1,
+      "expected": true,
+      "failure": null
+    },
+    {
+      "id": "published-namespace-mismatch",
+      "mutation": "published",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "published backing"
+    },
+    {
+      "id": "live-ancestor-replaced",
+      "mutation": "ancestor",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "underlying mount directory changed"
+    },
+    {
+      "id": "live-backing-replaced",
+      "mutation": "backing",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "changed"
+    },
+    {
+      "id": "live-underlying-replaced",
+      "mutation": "underlying",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "underlying mount directory changed"
+    },
+    {
+      "id": "receipt-replaced",
+      "mutation": "receipt",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "receipt changed"
+    },
+    {
+      "id": "original-cancel",
+      "mutation": "cancel",
+      "publishedDeviceDelta": 1,
+      "expected": false,
+      "failure": "Original retirement cancelled"
+    }
+  ]
+}

@@ -57,6 +57,14 @@ class TestScript extends BundleScript {
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;
     }
     const options=dashboardOptions(this.invocation,this.repoRoot);
+    if(segments[0]==="cold-start"){
+      if(segments.length!==1)throw Error("Expected test cold-start");
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/❄️cold-start/🟦️.ts"),"--timeout","21600000"],"dashboard:cold-start",options,{...repoTestArtifactEnvironment(this.repoRoot,"dashboard-cold-start"),SEMIO_LOCALE:"en"});return;
+    }
+    if(segments[0]==="language"){
+      if(segments.length!==1)throw Error("Expected test language");
+      await this.bun([join(this.root,"../../🧪️tests/🌐️language/🟦️.ts"),"--timeout","60000"],"dashboard:language-source",options);return;
+    }
     if(segments[0]==="dispatch"){
       if(segments.length!==1)throw Error("Expected test dispatch");
       await this.bun(["--timeout","60000",join(this.root,"../../🧪️tests/🎛️dispatch/🟦️.ts")],"dashboard:dispatch-source",options);return;

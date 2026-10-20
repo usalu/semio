@@ -120,6 +120,14 @@
   "testsSha256": "444010b2aa440eb743d740767b75c201c835d9acb45e6833a376cce6601f726d",
   "remainingFunctions": [
     {
+      "name": "take_fixture_result_page",
+      "sha256": "5d4f54bc8c6ec0ee43c05ff990dd7e3bbd6ebfce35b288f01cbab3e85152bf49"
+    },
+    {
+      "name": "close_fixture_result_page",
+      "sha256": "a36f8b0ba8c1ae4836e5c780f1585487a8daa3d616a5d17836f23a62cb057595"
+    },
+    {
       "name": "dispatch_fixture_action",
       "sha256": "1028ad1946de0db9f835f9342493fd465578881b6f72395cc26f4c4092ed39f8"
     },
@@ -180,6 +188,10 @@
       "sha256": "642125e4ae79e3a045f12fea638e7885a904245932ca25f61d04f6760052fd4a"
     },
     {
+      "name": "fixture_pending_effects",
+      "sha256": "1f692b81026eef5ea0375fbce6016f5171a06c381ea0733c7aadfc2114227a8b"
+    },
+    {
       "name": "fixture_progress",
       "sha256": "adc099338b2b740f828b6cbe93199e808eb6e33433dc8b7e8bd2cbdd234726a1"
     },
@@ -189,7 +201,7 @@
     },
     {
       "name": "fixture_payload_bytes",
-      "sha256": "df08ae7f98b7f847ee6731a9a24cce9ba88aff68bc9409c11789bad866f6ea5b"
+      "sha256": "a0ac32976e84f0c3d91bb5b997b09d2d27d6e832bf8fcefae07471b419b0e00f"
     },
     {
       "name": "fixture_step",
@@ -250,6 +262,38 @@
     {
       "name": "assert_viewer_genesis_children_declared",
       "sha256": "50e27030eb7a1c7d7fc8e8c63ef8659893edf7d12efc6663af0011affdf4e1ba"
+    },
+    {
+      "name": "original_fixture_command_arguments",
+      "sha256": "46b74208e87d597590ad60baaaeba5f706f79e076be31cb377a053b7cf5c9dd2"
+    },
+    {
+      "name": "original_fixture_command_projection_matches_the_closed_unit_and_data_cases",
+      "sha256": "d0b65cb44e7f806b4d2e9e9620ea7b3a9825296e90bcd3c501aaf07eb1403316"
+    },
+    {
+      "name": "dispatch_original_fixture_command",
+      "sha256": "cf09a3c87913269f8099dd7755d3aaac6e1c933471a0edec5d929cca33ba0c68"
+    },
+    {
+      "name": "new",
+      "sha256": "fca5fac65931118569844026a1fdc0651b0dd80fe2a4076b585bd8a0c063adb5"
+    },
+    {
+      "name": "context",
+      "sha256": "a2ea77c09b267fb0c696e723b0b4e5e50178311ae122c2d39b67460dcb9b84ca"
+    },
+    {
+      "name": "receive",
+      "sha256": "ee341fa5f81713ab3d843f9e2b033b0b65a3886d5877f935f16f0bbf082e8938"
+    },
+    {
+      "name": "close",
+      "sha256": "2ed0b821e6a7d74970326f365154671fdc5bd6a5d30fa080d679725a09074b4d"
+    },
+    {
+      "name": "drop",
+      "sha256": "54c65adb994abc2b3563492dd7d456c02fb23336efbfda53ce6e4f58fba86cf2"
     },
     {
       "name": "project_fixture_node",
@@ -341,7 +385,7 @@
     },
     {
       "name": "settle_registered_typed_operation",
-      "sha256": "840c1ad0e929885be2c66a6190bf762657aed5e5e2fa8ef3863fc98642f110eb"
+      "sha256": "ded25d70a0be400a8ff79f483a61fbdfc2e2fdf90227e94eb1680ff451b97156"
     },
     {
       "name": "retain_registered_ownership_receipts",
@@ -381,7 +425,7 @@
     },
     {
       "name": "assert_undo_redo_round_trip",
-      "sha256": "3326d0c60d282e2ef0d33c09f76a554336936ba17fc2b9198edcf986183d71a1"
+      "sha256": "1413b3962df5c07f0241dd6834b0281408f94e17bc05f9c45bb0a9757adb761a"
     },
     {
       "name": "assert_declared_actions_bridge_to_commands",
@@ -389,7 +433,7 @@
     },
     {
       "name": "assert_two_instances_converge",
-      "sha256": "7c43e94fe7e7e141ed81cdb78cd61b262b43227773f51a1635b0987d1819b97d"
+      "sha256": "5c552d9288aa0fec668f7373f86d89e611e8a7dd53f947d4e5b01438d9c3506a"
     },
     {
       "name": "assert_two_registered_instances_converge",
@@ -397,7 +441,7 @@
     },
     {
       "name": "assert_two_registered_instances_converge_with_members",
-      "sha256": "c76938746695c4cb7d0c887481fc64dbf99fb1cd7e2d02731e4960d33a0cf379"
+      "sha256": "2723321b181e4ca581527e09ec3348b311cc121ece19ab2ed57db1be04a6a688"
     },
     {
       "name": "exchange_and_assert_convergence",
@@ -405,7 +449,7 @@
     },
     {
       "name": "assert_ingest_idempotent",
-      "sha256": "6e159cf54d964fd2cbdbc05db5ed16988333cc65275ed1c6a3d202daa2386c40"
+      "sha256": "a4519ac282bee624c5a3506b281c8c0db4d96959535405dd90e64fc984a4688a"
     },
     {
       "name": "assert_registered_ingest_idempotent",
@@ -413,11 +457,11 @@
     },
     {
       "name": "assert_registered_ingest_idempotent_with_members",
-      "sha256": "d4caa2d55e2709c2e0d24d164dffbbf6915864347f2160db100f6229730f2f19"
+      "sha256": "03a238104e8cd2846ec5d5693a07f1868b1db77a195596b9cbb3c3d200faf6e6"
     },
     {
       "name": "assert_proposes_transaction",
-      "sha256": "8dde66bf967cda2d56891f65e054a16be9824ad9d7a22ca4231e5fa9dc1461a8"
+      "sha256": "a76e221895aca6c30d80c0ea4118ca26ba32a5cafc456159b7976333becfe816"
     },
     {
       "name": "assert_transaction_commits_as_one_edit",
@@ -429,7 +473,7 @@
     },
     {
       "name": "declared_verb_lane_name",
-      "sha256": "97a0f83153422af72840484c9d62ba8c368f422d8a50cc2b73bfcc0a85559960"
+      "sha256": "cce4162b44ae9da99c0ec0b2244e63d4672453c3b39d1404b0182b2bebe7ee6e"
     },
     {
       "name": "declared_verb_fingerprint",
@@ -437,7 +481,7 @@
     },
     {
       "name": "declared_verb_refusal",
-      "sha256": "b2727059d5d7f6ae31625e8d36d4ad5f526b8f511cdeea2389fd6b6dd49abf5f"
+      "sha256": "af9ddc873e2031ce4e6c47bf6e1ac35f526cf4154e667ef51d0ae1e408211fac"
     },
     {
       "name": "declared_verb_boot_args",
@@ -577,7 +621,7 @@
     },
     {
       "name": "mounted_job_prepare_snapshot_read",
-      "sha256": "31ef61ac73b9de2bdc57446185e77bd2dedcc619b6836729546deb8c56e890a9"
+      "sha256": "99adc62bbec9a2086a80ab4e882a5d01aa707138ae1b624e75ba9b32f22b9896"
     },
     {
       "name": "register_window_transient_owners",
@@ -653,7 +697,7 @@
     },
     {
       "name": "pending_effects",
-      "sha256": "f1ee97138f58107fe121b65733d6c20683fabd73e4a6dc8247bc3c96588c84e3"
+      "sha256": "159eb3db8ad2379809bf002a0977effc759de3d49a0d79b3f9fa635887ce5ba1"
     },
     {
       "name": "window_engagements",
@@ -713,11 +757,11 @@
     },
     {
       "name": "reduce_editor_command",
-      "sha256": "4b9a8a5b17b0923d3c43600343cdeac8d4d010199ae46785507712451dda52da"
+      "sha256": "35850b853159e2620333c1ef8a728e8cd6bfd1bfbf3d48c4780c8cd36ed2537d"
     },
     {
       "name": "assert_viewer_never_mutates",
-      "sha256": "1a88c8b59c5d7d3cb733fe59aa9d8a51525fefe487b6990f9262beaac01d6f0a"
+      "sha256": "9196d666f365ab27184f196c920df050471f139b1c12ca85308800470a0e6a0f"
     },
     {
       "name": "assert_editor_and_viewer_share_dialect",

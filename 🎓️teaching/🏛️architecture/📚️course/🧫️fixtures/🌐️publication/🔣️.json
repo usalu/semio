@@ -1,5 +1,4 @@
 {
-  "build": { "mode": "release", "owner": "architecture-course:site" },
   "internalFiles": [".semio-artifact.json"],
   "addedFiles": ["_headers"],
   "cases": [

@@ -1,0 +1,30 @@
+{
+  "manifest": [
+    {
+      "name": "remove one dependency entry",
+      "op": "dep_remove",
+      "args": ["[dependencies]", "b"],
+      "input": "[package]\nname = \"x\"\n\n[dependencies]\na = { path = \"../a\" }\nb = { path = \"../b\" }\nc = \"1\"\n\n[dev-dependencies]\nb = { path = \"../b\" }\n",
+      "expected": "[package]\nname = \"x\"\n\n[dependencies]\na = { path = \"../a\" }\nc = \"1\"\n\n[dev-dependencies]\nb = { path = \"../b\" }\n",
+      "dependencies": ["a", "c"],
+      "devDependencies": ["b"]
+    },
+    {
+      "name": "add a dependency entry below another one",
+      "op": "dep_add_after",
+      "args": ["[dependencies]", "a", "n = { path = \"../n\" }"],
+      "input": "[dependencies]\na = { path = \"../a\" }\nc = \"1\"\n",
+      "expected": "[dependencies]\na = { path = \"../a\" }\nn = { path = \"../n\" }\nc = \"1\"\n",
+      "dependencies": ["a", "n", "c"],
+      "devDependencies": []
+    }
+  ],
+  "refusals": [
+    {"name": "missing entry", "op": "dep_remove", "args": ["[dependencies]", "z"], "input": "[dependencies]\na = \"1\"\n"},
+    {"name": "multi-line entry", "op": "dep_remove", "args": ["[dependencies]", "a"], "input": "[dependencies]\na = {\n  path = \"x\" }\n"},
+    {"name": "duplicate add", "op": "dep_add_after", "args": ["[dependencies]", "a", "a = \"2\""], "input": "[dependencies]\na = \"1\"\n"},
+    {"name": "replace anchor twice", "op": "replace_once", "args": ["x", "y"], "input": "x x\n"},
+    {"name": "replace anchor never", "op": "replace_once", "args": ["q", "y"], "input": "x\n"},
+    {"name": "cut with drifted checksum", "op": "cut_between", "args": ["A\n", "C\n", "0000"], "input": "A\nB\nC\n"}
+  ]
+}

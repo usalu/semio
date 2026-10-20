@@ -77,7 +77,7 @@ export function jsonStringCoordinates(content: string, includeEscaped = false): 
   const lexemes = [...content.matchAll(/"(?:\\.|[^"\\])*"|[{}\[\]:,]|true|false|null|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/gu)];
   const rows: JsonStringCoordinate[] = [];
   let cursor = 0;
-  const require = (value: string): void => { if (lexemes[cursor++]?.[0] !== value) throw new Error("Invalid JSON coordinate syntax"); };
+  const expectLexeme = (value: string): void => { if (lexemes[cursor++]?.[0] !== value) throw new Error("Invalid JSON coordinate syntax"); };
   const visit = (pointer: string): void => {
     const token = lexemes[cursor++];
     if (!token) throw new Error("Missing JSON coordinate value");
@@ -87,20 +87,20 @@ export function jsonStringCoordinates(content: string, includeEscaped = false): 
         const key = JSON.parse(lexemes[cursor++]![0]) as string;
         if (typeof key !== "string" || keys.has(key)) throw new Error("Duplicate JSON coordinate key");
         keys.add(key);
-        require(":");
+        expectLexeme(":");
         visit(pointer + "/" + key.replaceAll("~", "~0").replaceAll("/", "~1"));
         if (lexemes[cursor]?.[0] === "}") break;
-        require(",");
+        expectLexeme(",");
       }
-      require("}");
+      expectLexeme("}");
     } else if (token[0] === "[") {
       let index = 0;
       while (lexemes[cursor]?.[0] !== "]") {
         visit(pointer + "/" + index++);
         if (lexemes[cursor]?.[0] === "]") break;
-        require(",");
+        expectLexeme(",");
       }
-      require("]");
+      expectLexeme("]");
     } else if (token[0].startsWith('"')) {
       const value = JSON.parse(token[0]) as string;
       const rawValue = token[0].slice(1, -1);

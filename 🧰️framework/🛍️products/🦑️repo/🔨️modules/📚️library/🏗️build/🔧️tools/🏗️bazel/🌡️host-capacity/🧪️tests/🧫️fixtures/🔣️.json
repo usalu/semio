@@ -1,0 +1,22 @@
+{
+ "concurrency": [
+  {"name": "jobs, cores and memory all allow eight", "pool": {"jobs": 8, "cpu": 8, "memoryMegabytes": 16384}, "action": {"cpu": 1, "memoryMegabytes": 2048}, "count": 12, "expect": 8},
+  {"name": "memory is the narrowest pool", "pool": {"jobs": 8, "cpu": 8, "memoryMegabytes": 6144}, "action": {"cpu": 1, "memoryMegabytes": 2048}, "count": 12, "expect": 3},
+  {"name": "cores are the narrowest pool", "pool": {"jobs": 8, "cpu": 4, "memoryMegabytes": 16384}, "action": {"cpu": 2, "memoryMegabytes": 1024}, "count": 12, "expect": 2},
+  {"name": "jobs are the narrowest bound", "pool": {"jobs": 2, "cpu": 8, "memoryMegabytes": 16384}, "action": {"cpu": 1, "memoryMegabytes": 512}, "count": 12, "expect": 2},
+  {"name": "fewer actions than slots", "pool": {"jobs": 8, "cpu": 8, "memoryMegabytes": 16384}, "action": {"cpu": 1, "memoryMegabytes": 512}, "count": 3, "expect": 3},
+  {"name": "one action larger than the whole pool still runs alone", "pool": {"jobs": 4, "cpu": 2, "memoryMegabytes": 1024}, "action": {"cpu": 4, "memoryMegabytes": 4096}, "count": 3, "expect": 1}
+ ],
+ "resourceSets": {
+  "kinds": {"test": {"cpu": 1, "megabytes": 1536}, "check": {"cpu": 1, "megabytes": 4096}, "generate": {"cpu": 1, "megabytes": 1024}, "build": {"cpu": 2, "megabytes": 2048}, "script": {"cpu": 1, "megabytes": 768}, "service": {"cpu": 1, "megabytes": 2048}},
+  "expect": "def _resources_test(os, inputs):\n    return {\"cpu\": 1, \"memory\": 1536}\n\ndef _resources_check(os, inputs):\n    return {\"cpu\": 1, \"memory\": 4096}\n\ndef _resources_generate(os, inputs):\n    return {\"cpu\": 1, \"memory\": 1024}\n\ndef _resources_build(os, inputs):\n    return {\"cpu\": 2, \"memory\": 2048}\n\ndef _resources_script(os, inputs):\n    return {\"cpu\": 1, \"memory\": 768}\n\n_RESOURCE_SETS = {\"RepoTest\": _resources_test, \"RepoCheck\": _resources_check, \"RepoGenerate\": _resources_generate, \"RepoBuild\": _resources_build, \"RepoScript\": _resources_script}\n\n"
+ },
+ "plan": {"value": {"version": 1, "id": "aaaaaaaa1", "jobs": 3, "cpu": 6, "memoryMegabytes": 6144, "fixedMegabytes": 1536, "floorMegabytes": 6553}, "flags": ["--local_resources=cpu=6", "--local_resources=memory=6144"], "workerHost": {"hostCores": 10, "hostMemoryBytes": 34359738368, "cores": 6, "memoryBytes": 8053063680}},
+ "live": [
+  {"name": "memory bound", "jobs": 8, "cpu": 8, "memoryMegabytes": 4096, "action": {"cpu": 1, "memoryMegabytes": 2048}, "count": 6},
+  {"name": "core bound", "jobs": 8, "cpu": 2, "memoryMegabytes": 16384, "action": {"cpu": 1, "memoryMegabytes": 256}, "count": 6},
+  {"name": "job bound", "jobs": 3, "cpu": 8, "memoryMegabytes": 16384, "action": {"cpu": 1, "memoryMegabytes": 256}, "count": 6},
+  {"name": "wide open", "jobs": 8, "cpu": 8, "memoryMegabytes": 16384, "action": {"cpu": 1, "memoryMegabytes": 256}, "count": 6},
+  {"name": "oversized action on an idle pool", "jobs": 4, "cpu": 2, "memoryMegabytes": 1024, "action": {"cpu": 4, "memoryMegabytes": 4096}, "count": 3}
+ ]
+}

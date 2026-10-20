@@ -1,7 +1,7 @@
 /** 🔀️ Binary backbone message: the ordinal-tagged binary message codec and the document backbone message parsers. */
 
-import type { ExactWireMutationEnvelope } from "@semio-tech/framework-replication";
-import { decodeDocumentBackboneEnvelopeBatchExact, writeVarintU64 } from "@semio-tech/framework-replication";
+import type { ExactWireMutationEnvelope } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
+import { decodeDocumentBackboneEnvelopeBatchExact, writeVarintU64 } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { PACK_TAG_LIST, PACK_TAG_STR, PACK_TAG_STR_INLINE, packBuildSymbols, packEncodeString, packPushBytes, packReadVarintBigInt } from "../../🎁️packs/🟦️.ts";
 import { BACKBONE_GENESIS_MAXIMUM_BYTES, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "../../🪢️wire-contracts/🟦️.ts";
 

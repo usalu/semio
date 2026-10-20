@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "scope": "Path roster only; no final hash or captured Source claim",
+  "paths": [
+    ".github/workflows/architecture-course.yml",
+    "🎓️teaching/🏛️architecture/📚️course/README.md",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🌐️sealed-publication-and-bundle/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🏗️site-build/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🐳️docker-context-and-image/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🛑️cancellation-and-staging/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧩️compose-caddy-and-workflow/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧰️deploy-fixtures/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🔣️.json",
+    "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🔣️.json",
+    "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json",
+    "📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json"
+  ],
+  "mustResealAfter": [
+    "actual architecture CI/offline assertion RED and production GREEN",
+    "final workflow/bundle producer/README changes",
+    "actual native Source regression verdict"
+  ],
+  "noFinalPlan": true
+}

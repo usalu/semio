@@ -1,0 +1,40 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🧪️tests/📂️document-open/🟦️.ts",
+ "function": "registerDocumentOpenTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of registerDocumentOpenTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️before",
+   "doc": "/** 🔶️ The before phase of registerDocumentOpenTests. */",
+   "phases": [
+    {
+     "name": "buildBeforeState",
+     "emoji": "🔷",
+     "doc": "Builds beforeEach, describe, expect, it of registerDocumentOpenTests.",
+     "from": 35,
+     "to": 37
+    }
+   ]
+  },
+  {
+   "dir": "🔸️backbone-worker-offline-resilience",
+   "doc": "/** 🔸️ The backbone worker offline resilience phase of registerDocumentOpenTests. */",
+   "phases": [
+    {
+     "name": "registerBackboneWorkerOfflineResilienceTests",
+     "emoji": "🔹",
+     "doc": "Registers the backbone worker offline resilience tests of registerDocumentOpenTests.",
+     "from": 39,
+     "to": 39
+    }
+   ]
+  }
+ ]
+}

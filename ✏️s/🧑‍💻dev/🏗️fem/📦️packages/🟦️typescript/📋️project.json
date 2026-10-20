@@ -155,7 +155,8 @@
           "workspaceCommand": [
             "verify",
             "fem-live-visual-publication"
-          ]
+          ],
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       }
     },

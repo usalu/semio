@@ -16,8 +16,8 @@
     },
     "dependencies": {
       "type": "array",
-      "minItems": 15,
-      "maxItems": 15,
+      "minItems": 20,
+      "maxItems": 20,
       "uniqueItems": true,
       "items": {
         "type": "string"

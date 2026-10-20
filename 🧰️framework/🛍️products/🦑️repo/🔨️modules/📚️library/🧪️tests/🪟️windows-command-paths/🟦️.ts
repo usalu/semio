@@ -5,6 +5,7 @@
  * @see ../../🧫️fixtures/🔐️owner-only/🔣️.json
  * @see ../../🧫️fixtures/📋️process-table/🔣️.json */
 import { describe, expect, test } from "bun:test";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,7 +21,7 @@ const repoRoot = resolve(libraryRoot, "../../../../..");
 const load = (path: string): any => JSON.parse(readFileSync(join(libraryRoot, path), "utf8"));
 const ownerOnly = load("🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
 const processTable = load("🧪️tests/🧫️fixtures/📋️process-table/🔣️.json");
-const python = Bun.which("python3") ?? Bun.which("python");
+const python = testPythonV1() ?? Bun.which("python");
 const powershell = Bun.which("pwsh") ?? Bun.which("powershell.exe");
 
 /** 📼️ A Windows host that answers from a script and records every command it was asked to run. */

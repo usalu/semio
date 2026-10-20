@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.tech/repo/dashboard-human-usage",
+  "title": "Canonical Dashboard Human Usage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "prefix",
+    "terminalHeader",
+    "verbs",
+    "cases",
+    "assets"
+  ],
+  "properties": {
+    "prefix": {
+      "const": "repo dashboard"
+    },
+    "terminalHeader": {
+      "type": "string",
+      "pattern": "^repo dashboard \\[--root PATH\\]"
+    },
+    "verbs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "commands",
+          "run",
+          "tasks",
+          "logs",
+          "stop",
+          "restart",
+          "kill",
+          "open",
+          "daemon",
+          "preferences",
+          "catalog",
+          "plugin",
+          "command-tree"
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "accepted"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f]+$"
+      }
+    }
+  }
+}

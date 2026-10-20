@@ -62,3 +62,6 @@ path = "../../🧪️tests/⚖️retirement-law/🦀️.rs"
 [dev-dependencies]
 semio-framework-test-typed-input-law = { path = "../../../../../../🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
 semio-framework-os-flow-operators = { path = "../../🗃️operators/📦️packages/🦀️rust", features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework = { workspace = true }

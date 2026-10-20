@@ -1,0 +1,12 @@
+import {readFileSync} from "node:fs";
+import {ROOT, PROJECT, inventory, expandInputs, select} from "./lib-inputs.ts";
+const [target, inferredPath, readsPath] = process.argv.slice(2);
+const manifestPath = process.env.SEMIO_INPUTS_MANIFEST ?? `${ROOT}/${PROJECT}/📋️project.json`;
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+const {patterns} = expandInputs(manifest, ROOT, manifest.targets[target!].inputs ?? ["default"]);
+const declared = select(patterns, inventory());
+const inferred = new Set<string>((inferredPath && inferredPath !== "-" ? JSON.parse(readFileSync(inferredPath, "utf8")).closure : []).map((p: string) => p.replace("{workspaceRoot}/", "")));
+const reads = readsPath!.endsWith(".json") ? JSON.parse(readFileSync(readsPath!, "utf8")).files : readFileSync(readsPath!, "utf8").split("\n").filter(Boolean);
+const gap = reads.filter((p: string) => !declared.has(p) && !inferred.has(p));
+console.log(JSON.stringify({target, declared: declared.size, inferred: inferred.size, reads: reads.length, gap: gap.length}));
+console.log(gap.join("\n"));

@@ -10,7 +10,7 @@ import { publishLocalPresenceWindowViewV1, collectLocalPresenceWindowViewsV1, cl
 /** 🧪️ Canonical viewport wire/schema and exact document/window authority against independent Ajv. */
 export async function testCameraPresenceContract(repoRoot: string): Promise<number> {
   const root = resolve(import.meta.dir, "..");
-  const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const ajv = semioSchemaAjvV1();
   const projections = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json"), "utf8")).projectionCases;
   for (const row of projections) {

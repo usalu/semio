@@ -1,0 +1,1053 @@
+{
+ "version": 1,
+ "groups": [
+  {
+   "id": "D",
+   "title": "cargo ingress without repeated recheck (ingress-perf)",
+   "sets": [
+    "ingress-perf"
+   ],
+   "verify": [],
+   "commands": [],
+   "files": [
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "5074482204e86c8c8aa4d53c9b509343c4200002e643f44557c85214d2037684",
+     "file": "D/0000.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "e58300ef2407113539fce77ea3e66832045d61ee25d47ee18415077275ae7e57",
+     "file": "D/0001.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "7cfab07500db9886790ed516f782f7f260f9a28fc0edb7d8dd8be5ef9b10e1d0",
+     "file": "D/0002.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "ca13077875a182c29eb780ed6a2c75ee42f8cbe24bee46f930e49c8cd8ba944a",
+     "file": "D/0003.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "d326f21ab2b9e0743068a6a741b640e5cf4aa43d2386d15e6885066759c60d82",
+     "resultSha256": "bed70fb9341414dfae3356edceec9c0bacae4104d9916556441419ffff20ee23",
+     "file": "D/0004.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "4f011a8294bdd22fdc3f04255545f3c061f2d160eb3024842c5346c7a6e91f33",
+     "file": "D/0005.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "0ef8cafe820060e40a6e1515c107fde0c139df93052b3a1e5444be090cf902ca",
+     "file": "D/0006.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "ebd690ec670eb1aacf765689283759575123f37e993ade1f13514315dd4821f1",
+     "file": "D/0007.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🔖️revision/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "b682d0e435e602e7568bc52007fcdf97849767a0cd72f8075a7c963e1ff31f22",
+     "file": "D/0008.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🔖️revision/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "8c12ce4523a937a65f5fe5f538e1dad9f0f8667f55505d4ad8eff57698423acc",
+     "file": "D/0009.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🔖️revision/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "5f53da76d1146aff57c757b5d44a92cba61ffc53ec3c3d35eb31895d5fa10d14",
+     "file": "D/0010.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "84efe24c18112790dcdbc49ad4e18c136bea358f9d659e493be16f1ea08c1162",
+     "resultSha256": "df761cb8e0dbd7fbb7b75ba95e8926da0b45af525c22ba0457cfcd9b46db4f42",
+     "file": "D/0011.ts"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+     "op": "replace",
+     "baseSha256": "ce1e51c6ec4875ea2f111166bd8061326f43634847b0d9751ee38d1783650009",
+     "resultSha256": "99afafb7856b37b56c3dbcedf9e87491877b87c9f0c24cdb1b7312b50e3fd118",
+     "file": "D/0012.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "08a693b7a3a9e2a37382f7f88697f92f187ed024c7ab9f3e72b47cbfcb9241b2",
+     "resultSha256": "1b73230d33a7ea07027c853b214e93cc8761d1427b8ce4df66f62d2ec6487de3",
+     "file": "D/0013.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "5649fc15d633b0442185dda15ed03003806994dc2105699214738df1e05c92c7",
+     "resultSha256": "d392eb7209347f8c9f3f1ec6bfec20d6da2b97f7c4419fd029d277ac7f168d5f",
+     "file": "D/0014.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📂️parents/🧬️schema/🔣️.json",
+     "op": "replace",
+     "baseSha256": "e282e8ff366a216b2ce74c99bd74c974c980240097e9977c3e2c2bedde7527b2",
+     "resultSha256": "f18be79aabf48fdd6686bce37fc6a8106974d80eaca9b6bc248347df6fd2a015",
+     "file": "D/0015.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "9aa15a9934144aeb9772224226858b0a1d75492c4f5a7f20eb455be999514bee",
+     "resultSha256": "585f77d5d54ddd5c924f5d890d4a2af44e4b183181f10ca0acc7856a20b88885",
+     "file": "D/0016.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "6193e8ebfb307f5ace7166edd8ffa6b3ff46bde5f116adf5d05a56f43122cd70",
+     "file": "D/0017.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "23e5376e12dc9d3dc5fa490e3f2e7b983dc581053057e452e0d41a9a3ec85bb3",
+     "file": "D/0018.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "03a68a7b7a6a25643d38804e14cd5b96079e3ea20add50515052ffea6660ff27",
+     "file": "D/0019.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "737fcaa69c236f5a78d61196da76bab59e1a3ac96693fcf59814f7279a816170",
+     "file": "D/0020.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "e4e90cb4dacb174a1e910ae152767b545335219750565a33a3f894818e61960f",
+     "file": "D/0021.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "7d972c5f482dceb4d9ea6d2a8f4e1291e7c366df0baa8c931e5e9e084efe4e32",
+     "file": "D/0022.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "67db9509aadb74475c40c91ab5e0ae84d414dcfac9b3ce66d76fa131f137afcc",
+     "resultSha256": "bf861fe857c47463e8e20e5c4c8c19dedfd3c34718ec3ba4cc2653d7624dd92a",
+     "file": "D/0023.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "af6d5ee135fa709a2c7065cbcedd8337ca5d4a5a01555933c3445636a6d3a185",
+     "file": "D/0024.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "aa1d16285fa31f6e956e62c7f3637772978665ee1da257e0936aa8d04c4636c6",
+     "file": "D/0025.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "cfb902feebc3b22ace00ab7f61cfc5d84261386b048fd5e039c3fa6e20cee5bb",
+     "file": "D/0026.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "9cebd5e44798ebf436c608412f9c72d8047a7243dfecfa5c35a21fa3ed413371",
+     "file": "D/0027.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "e0cdce8a4364187ddb73a6a1f303f58c8555a207276432b7c166578db05cce29",
+     "resultSha256": "15ef10aabab9d7c94b8ce32b66caf0c4642cbcac68669ccb29df15be8625b955",
+     "file": "D/0028.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧵️session/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "3790bbab612168795656c75e210ac6ab398f0f3410e41e14a3ba4827cc94eccc",
+     "file": "D/0029.ts"
+    }
+   ]
+  },
+  {
+   "id": "E",
+   "title": "every uncached task declares a reason and verification tasks become cached (uncached-owners)",
+   "sets": [
+    "uncached-owners"
+   ],
+   "verify": [],
+   "commands": [],
+   "files": [
+    {
+     "rel": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "8d117d454faf06f883b008b1f8d51fa70563422117588b9cff1d865cc350eb01",
+     "resultSha256": "22dba9bd31f440cc004f8e35ea25bb985ebc7a4f39f47403ad0c22ef17e63f84",
+     "file": "E/0000.json"
+    },
+    {
+     "rel": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+     "op": "replace",
+     "baseSha256": "41c98af2e7d7593eeece9ab6ae8cdca393c6eb17f8449d96dc9b442a64dda7a7",
+     "resultSha256": "2f2d8b074c441355c731bb5f533807ad719595599eb02fe52ef7b8fdc5d848f3",
+     "file": "E/0001.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "479d2a0cd0499c3b4ac3ac4512e3e1cb9cf2715c142bce0dc0dd73d6e52f7f31",
+     "resultSha256": "97702cd2b6b21f8ad0d58a731a980816d3179e246433d820531bfda72852c9ba",
+     "file": "E/0002.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "5e2141c15766cbbebf386f53cd8c2d545df75789150aea7d4d0743b682477528",
+     "resultSha256": "a0be82ddf5be373938f3b32a3878522f9552aad29531cea020d00609f9cdd4d2",
+     "file": "E/0003.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "93de1841539b3fc57d5fc2114599ae0e3c87589a87794f9046adfad90c3d0acf",
+     "resultSha256": "ebd888f272bcaf3a224de74d5b86e6e4c3c0a3ffadabd7e2e02cc5bb13a9c498",
+     "file": "E/0004.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "da03bd7075791f11eca87c954a778333400c24db804b21920c704cd3fe821c06",
+     "resultSha256": "c7d98a2512da0a9acfad54b3545419ee28854f8af6984cf80c8759b18fa12c64",
+     "file": "E/0005.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "cc677a03578e66f3706459aea7c2851f395841d136bb8725de39076db6ac3548",
+     "resultSha256": "1c13680f7dac8f83fbcec78f4880fa8c1bbad53af34a01812e8fdbc6d3888c2f",
+     "file": "E/0006.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "e142c7b0ed89db03fdba405d9b2aea1468a8397f079f342cf4f0229119125a5d",
+     "resultSha256": "e4c7779dfef1992cdd717cc5b03b54458734e97ce622842b08288b908be40598",
+     "file": "E/0007.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "c30229f77669922f0fba7710297cc7972221299064f01a4adac175983aa71a61",
+     "resultSha256": "51d8d7faf2dbc529e74d5a0b1cb4e43158ca839a9efab3f8310e01d9235dd4c1",
+     "file": "E/0008.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "4538f4ee29a7fe6838eae5d1b9790129abe09d0bd60fcc5597e4a345522853c1",
+     "resultSha256": "a09b440f505252e5176fd681714a54bb2a5af3b68aefd8ec37c9a39068c812e8",
+     "file": "E/0009.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "42c37ee1dba1eaa5923c6cfd34e3d90656799acaf37a07c7b6db6847c0701f6c",
+     "resultSha256": "eff1e2bbab79cdfc7a2e018f7fbef6af825295cdc6225875cceb9c06ae3a6d35",
+     "file": "E/0010.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "b4c336fd22bc2357ffdd307e9b5f85537cbb53786084d61e42e233e2b6a085d0",
+     "resultSha256": "0657f1ab2ac341eb8d6eff54ac8c1049e6444e02b62ab8e6eeb96f8dfa9504bf",
+     "file": "E/0011.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "b9d9f2d3fd692398315850fa0179ed665da3d439646fda9c2c039b89376a708e",
+     "resultSha256": "c0bb9ee487a05d8fdd1b7e7e0b531146be1d53a7555762009d0c42cafbafa4bf",
+     "file": "E/0012.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "fda264daf5d0df6396664a33fd2cbb048578584b48ea7200d33503b3e512542e",
+     "resultSha256": "1495267d620a73ea91c9a5363c9436331b3ca9e9a755ffcc1d945a42ebbe69fc",
+     "file": "E/0013.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+     "op": "replace",
+     "baseSha256": "69e91748cf55545b909a749ec982089f798af7ee21fc1a7d977f4a4e0348a924",
+     "resultSha256": "83178f283619b7bea4659e77ae96d212793ff8684baf35a9209f9bd64508502e",
+     "file": "E/0014.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "762a3641d73f04a33d38951c32ef44e81fd65e74d1564d2466675618f6540368",
+     "resultSha256": "9ae1809402d4049b826977de4140cba6880eb4869acee1821222b3dfdd130686",
+     "file": "E/0015.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "bc6d756bad552d0d094a28ecbf44678889a3e6c3d4c96b05806b16677fb40098",
+     "resultSha256": "cee2e5b5b58fb94d44112bbfee3c11a0faa0a9c4dc5395123148e28470c580df",
+     "file": "E/0016.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "97ea03c491df95d2d2d54ca0102f12b873a157eb889481fbeb6eae2e4bba2fdc",
+     "resultSha256": "5f4a123ba37403c4b5b49e3ccdb92187ba73aa68d52b590057063ee6fbabc666",
+     "file": "E/0017.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "1d64f4440774b062e4ad0a98e3da5ac4458a25089a49bf1b3fc2ca45c19d1bae",
+     "resultSha256": "d13872306b58b05dd0a0c2677f296c0a988a25480fe74cf1f66509afabf0139d",
+     "file": "E/0018.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2fdddda4fe5e6b0ab91310f65e57a8585d359c1a1f81849184b2b57c7081f230",
+     "resultSha256": "71ecee8ce3bca996bd650dbd3883a9514f66a242ec23c668eb830cc466d7e24f",
+     "file": "E/0019.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "ce558c816a5b7bd35ca0873c15f70bebadfea866cfc3dfe9bd33f68429130622",
+     "resultSha256": "420dbdd25507d973500dd0a5868a14be3a01b63458faff79cf4b30fbd7851039",
+     "file": "E/0020.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "44fb700bd75630aa9231c7220f31ef3d0e866dfb7061362a2246acf0ffabbaa3",
+     "resultSha256": "42e55d169f4a92ee43e8692fc8426611bfe44bf4f18999ec309f53d7f3ada555",
+     "file": "E/0021.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "5ca834febf454567cc55c3e4dba63b99608a9acd77f500fab447b2ebbbec5799",
+     "resultSha256": "6102218ab1f8dfa47a40536c7d4776ea34e3921ec46e5154354ac9bf9aee6ac8",
+     "file": "E/0022.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📋️project.json",
+     "op": "replace",
+     "baseSha256": "7939e2058525a78b8291421ee5364980968bdd5b387dc2c1921b2d6c447eb6f2",
+     "resultSha256": "bdeb520447084a3ce03a7003d2b08d37feea5bc84744bc100a0429cee11cc330",
+     "file": "E/0023.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0f1c7d9ee4f2d5e82d21c83fa1cbe587daed60b0fa7299d484950a2940c20ffb",
+     "resultSha256": "760dec9f419af13d0332e46acf0815446dbe49a8b2eeecb2518bc628829a30fd",
+     "file": "E/0024.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "e1b5a100a630454dcd242b09d8e8a36a25c68cbd92f12c934c91c26ea6a3e34f",
+     "resultSha256": "b83c95a9c98ecd59d5c26a1267a4c3f0bfe6d1a5ae48bf748953a5f61fcbcf7f",
+     "file": "E/0025.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2449a8044e707277a7dbdebce725cf6a5a1759facb1b4ab5aa466fecc3e14668",
+     "resultSha256": "f31d60852ce37e93d26268a3f6dad31fce9222ffd0ef693b43de3cadcd33943c",
+     "file": "E/0026.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2e7d4f49cfaf3a5a34c3d8d90381135445f65017b9acd23a003399923854956c",
+     "resultSha256": "7b8aa71ff107202fcbd00ca19043c742ac7b1a3abd48d600f6a741388cb4766b",
+     "file": "E/0027.json"
+    },
+    {
+     "rel": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "73e5d03df55a8e295f88b2592d38b4ec0a9a0b154749b4b45d0566b133c68498",
+     "resultSha256": "3cc9d2d8eb634d3ed0b9f2cc8286640393b32a5b1a10a485ca09cc72f5cd0e93",
+     "file": "E/0028.json"
+    },
+    {
+     "rel": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "bdf4764e4a11ab8ba7b2beee505d428e0adbd88d30b5248b1f5eb62cc626d892",
+     "resultSha256": "621493623ffe97e0b7bf831311c22142834ae45e7384a3f857ec708e3b006985",
+     "file": "E/0029.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "e82a5fd6bdec6521bc90383889f3d55a0c5304e860f59ba2e59b69ff900952b8",
+     "resultSha256": "464758493c7c297708fbf5ed62aed58596499524fedfa1b2b3d0f84824a934c8",
+     "file": "E/0030.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "ccbc902c304d8c1f4ae96cc11847374aa007eaa8b95e70bed5ac5fca083f1bf5",
+     "resultSha256": "6f62ebcbbcfd30a1e2a88eb5f605fc99d50388ffd59780a0fac197879bfab12c",
+     "file": "E/0031.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "efce2916ffd9dd93a7048d0890a80f33cd48745badb102360f7b1e4fe9548cd7",
+     "resultSha256": "ad926eb6705c72274cebcd34e29fc9f9b67ec136d550730d4707234e9a7a3497",
+     "file": "E/0032.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/📋️project.json",
+     "op": "replace",
+     "baseSha256": "abf3084e0a0a4a789a9b3ef8bc69e7e04150484d98630df8a052cfdf9f5fdff6",
+     "resultSha256": "85bdc012594c5c26d6e6442d78e906bfc8205d299ce1f62eb09aea3a76bcb1ed",
+     "file": "E/0033.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0d578911ff9882e93b38d2b3996dc6cd8bfdc7919327eca009dc6c263b39633e",
+     "resultSha256": "b0672e98b24f31746fb0e2c18f6b6fb60de5a1fcf70cc479db9b765ac725b89e",
+     "file": "E/0034.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "d7314eefc9c3d8927af5341639315b56deb8dd5311998f0f9a43436ab20054b2",
+     "resultSha256": "70546348413307d5a103588d26fa6abb954b79dca969ca8d0001f88f94f25443",
+     "file": "E/0035.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a0e29f28b4fe6df46466c3600f5944b2357065a9e2c1b7f201546fe5942960f6",
+     "resultSha256": "cd72d9def8a97f44a62b5a3cd9112bf5bcdc151368223a7583ffb7683c9b74dd",
+     "file": "E/0036.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "31c50c2eb8fe3e0b193b497d8935676a1cbbba6a543db2aeba7067a1175652f1",
+     "resultSha256": "afd1a9fd9bf33a3ae01b2a2354b8cc5b9999e960b2ac148a1c0a665d6e790213",
+     "file": "E/0037.json"
+    },
+    {
+     "rel": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "5960560fbbc7fc11c7247dcfe2f90350c0ed21098821ba1fecea6f89cc2100cc",
+     "resultSha256": "13793a284ecea53e38ec95f9b651768a2cbeed6c8ebf60f274027a61125d1825",
+     "file": "E/0038.json"
+    },
+    {
+     "rel": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a622eb03f9323f9be09aa0c78ffe994024816507aafe933b38c336a7141f2e0b",
+     "resultSha256": "79c337d5b1b1d2c04cb394ef1644486ae97f107bc2d0e0ae1ad52b427f923e5c",
+     "file": "E/0039.json"
+    },
+    {
+     "rel": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "90c4c05a5144c6aca29e9b7d49a3a49207671ab5bff8194e49fddda63e1243e0",
+     "resultSha256": "5b70df748ece514a9f2fea2a787443e9bf920702d740eab120c0a7ae500a58e7",
+     "file": "E/0040.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "877a05a880a6981f2ab43819d833bee0b098572dc8b5a98407a4de37a1e27699",
+     "resultSha256": "9772ab3bc29b7cca4f448de6b8f5a7c10a4370b6bd267ef0fc6cc5f20d67c074",
+     "file": "E/0041.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0ed340ca445bc84243eb7ea1e275c222a1278b81c47149d74f4f982aa000405b",
+     "resultSha256": "160e18715e4e829dcffcc2c4f4f6a4706a6b9cdbc6b32d66e522fa8bdccd6ed5",
+     "file": "E/0042.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📋️project.json",
+     "op": "replace",
+     "baseSha256": "bd0003afc4c53b2000918d62052278a1c95bdc5211791dfc3b559b615849dd16",
+     "resultSha256": "49eece53f24dbdd6b603869c47de3a617455679dc92bd388dbddeeee813065ed",
+     "file": "E/0043.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0b04870a9dc92af089b564775363e6ca5e27cb2d17ee0e21f446ff0befa744b4",
+     "resultSha256": "9dd0cafe59b0bee5b8a274405c640e6d7c7db01bc63e0ac1c3df22ba1757e7b0",
+     "file": "E/0044.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2a2666fa70e561efeb14c7adc2f83002ea9b944eca1e1f778836b49a135935ed",
+     "resultSha256": "f416a43365cc7f35d77ac9bfacdfc21ce19de76371bfc6aa1d4f76fbf307de39",
+     "file": "E/0045.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📋️project.json",
+     "op": "replace",
+     "baseSha256": "39a0c970d7627d92c0e4e90e753c531a0974605e34e324b545dbbd982025549d",
+     "resultSha256": "bd9b5852baa94061fc23a9d0051e019f127dd4f34a409601921972e18967d406",
+     "file": "E/0046.json"
+    },
+    {
+     "rel": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0571740e865149793180c061b1cb73df1a27ff6be150052dff94e2337f2ef020",
+     "resultSha256": "55a0d31d8ee1f83d44e5eefddb8fbdbd0162aac6c9b9bc5b9dc960cb219d5d38",
+     "file": "E/0047.json"
+    },
+    {
+     "rel": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a75bf12c148acb4cca97fcffe3b4dc8c02c9cb9f94ce3af51315bcebe896558f",
+     "resultSha256": "750a6f1d40090dd432b21a004b973f50fb11188c63b3b25af06eeae57e1e20b6",
+     "file": "E/0048.json"
+    },
+    {
+     "rel": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "c71bb794d3ebe9dc8c2669a642fc7a8a36ae57af3558b4205a1906a362593deb",
+     "resultSha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325",
+     "file": "E/0049.json"
+    },
+    {
+     "rel": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "76a0cbf76439d03a70f8151008818adda1b73aaf54018c627bd58c12ecd5d3e4",
+     "resultSha256": "efb9cbd2f7021861e83329bdb97c4a7d78cc0ab995b2703bdaa5d0e993303ec1",
+     "file": "E/0050.json"
+    },
+    {
+     "rel": "🏢️semio-tech/🎡️play/📋️project.json",
+     "op": "replace",
+     "baseSha256": "b8b6371775209c3bc2889d418f6b3f1ccc3bf3626ec4529a84dca5fc4fb8d5fe",
+     "resultSha256": "9fa82050bd5058b3d554928ac1ae5ec6d4dcf8699c10df31da96dc80e394a773",
+     "file": "E/0051.json"
+    },
+    {
+     "rel": "👴️leutwiler/💤️realparts-of-powers-z-n/📋️project.json",
+     "op": "replace",
+     "baseSha256": "985bedde2b68653f0c4d104c88dd41cec2e65514f15f8f83c1338169c2f5a343",
+     "resultSha256": "b76bd2d5919e6aebc2640157c34ea0d15de83ee07e43b47491863d228c03c32a",
+     "file": "E/0052.json"
+    },
+    {
+     "rel": "📋️project.json",
+     "op": "replace",
+     "baseSha256": "c470420ae342621912bce1325274bdc79be16bfdf849da3ee494c68dc76b690a",
+     "resultSha256": "fcb0c979144c18636c88165dd68a00e71f52453cc5012afd1d30c6010b01409f",
+     "file": "E/0053.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "480309a89b7f3b5dcfa914dc72e43324a16e7cb867ff76df75320c194da3d936",
+     "resultSha256": "f5f36fbdc6780194ed55d1820c153cb497fd4ab60ce1ab80a0b9882ed1a43675",
+     "file": "E/0054.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "c54bbe66ae614427a4539b76d1982f1a97697533b3fbf3114b744120ce213426",
+     "resultSha256": "fbe147007e6d79c117f8ac4c4806bd15db3f7c0863484280d930da06b0d9f0f1",
+     "file": "E/0055.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0e133195c2e65a2100b33f6d3291647ef6623892af66c87cb7d69413223e13dc",
+     "resultSha256": "b34ecb2223302454a1de1d9cc8a6cd550f83b1ec9a77dfc7537cf0c55846797c",
+     "file": "E/0056.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json",
+     "op": "replace",
+     "baseSha256": "7a71a1b05d94b573356df5fcd134e386ade9bf34268b938d5fe80578c10ccbfd",
+     "resultSha256": "271bcfcaad0fbc0021f3035135094ea8c44caa4d34d4fd50cae9c4c52070895a",
+     "file": "E/0057.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+     "op": "replace",
+     "baseSha256": "063335959e4c654c2ffbb096d43f84945d06614ab5a21b667b60908516a1761f",
+     "resultSha256": "d7802afda0eeb9f347410233fb63474ddc801bfb0bf762dd21d070fb6946adfb",
+     "file": "E/0058.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📋️project.json",
+     "op": "replace",
+     "baseSha256": "7fde75c363ae477758accaa9bbb3b3ef951201fca1ca5f3b9f570d9e2e0c2fc0",
+     "resultSha256": "8387eb3591fdb7d0192483ddccd8d4c8949f157e49adfd22497ff3496ce0237b",
+     "file": "E/0059.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "f2e94faaccdaa106d26d986b55cec0b503a43f5ab5ad5daf4494f2a9942ff824",
+     "resultSha256": "cc83a2aacf6e3e53b6306df411657e73b1c617492ed383d2c50e29fdb7939195",
+     "file": "E/0060.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "4b75d28f1baceae3bb3615f9d6abc8670d48e8e17d1a14c5c57eb452ccb2674a",
+     "resultSha256": "ba8d93e1c97f29d8430bec49921481b6f3ed7e84ee87e48d8c9bfe80092eaf6e",
+     "file": "E/0061.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "909dab43e8d0a90c0ddb2d042fe666e188f5bc23b52a9dae96443d4f5cfcaab1",
+     "resultSha256": "e1d929439c13c6fae61971701671cfdca5b2c4ca4a646ad0bb84722e44b49795",
+     "file": "E/0062.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "1bb5567cb85b652721795ef8d6d19d6a281c6d3448a6fb3c681d9b72bc44dd15",
+     "resultSha256": "47f4e755f9832676f09164dd37c1e2c5d27015c6107c84d62e9ce7c88f3a6a3b",
+     "file": "E/0063.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "1cab99bffec479fa140a8b1215488d94232fe3ddade1c6f3b69a0d2c8cc2a9f1",
+     "resultSha256": "7de51972edb9e0ea7f5c6ec63f71dca917004f963337e78dd0b4cb1f31f3d810",
+     "file": "E/0064.json"
+    },
+    {
+     "rel": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "b269364ff5cf99c501cb65b5b94c404b844ade5cc52420328da833d822477499",
+     "resultSha256": "da5b2f3ed81d27b0bbf8c67b5a0c18b40c0a5a420e87f87eccb7a7b31cf61f8f",
+     "file": "E/0065.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "08e2d20660d5da9e7b0b8d934c47b2c91c752d1f3b7582334eca07c466f277da",
+     "resultSha256": "81bd8c55b3239e0d8ac1d035f25fb6d2e91d39f0e4d8aa4b599ca43472187f45",
+     "file": "E/0066.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "1911153656fe64b07a492d8a083832fd024952ddd0e85daf06631bb233d73e46",
+     "resultSha256": "8ee0e4efb437da62e0371e42288608dfcd867f86240398e3c080c82eb2ce35d2",
+     "file": "E/0067.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "8c7e3dc46ac32d1cc9deaaa6e713355098cac4fa814e67701773f92f55e88cca",
+     "resultSha256": "18f8801949dad40b564392833410a1b3eab07fb4116262295fd6be8102da1e41",
+     "file": "E/0068.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a232f8c4c7964e40adc9f8ae0231fdac01131c6403f1e3eaafb3e8d090062733",
+     "resultSha256": "da4a6c2829eb20220d66ee7b7320281903b300975ab9acf9b4280e0a91c16949",
+     "file": "E/0069.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "68ebb874b8057e974968abbcb98b7888cf9ac9c7772e1d7d8f101fd8303e0c49",
+     "resultSha256": "3b1264a831d58b37235ddc05c4108b04048c92534e6d725a737e7202ad8a87d6",
+     "file": "E/0070.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "992bec99edbbe8dc8e9a3f9fcbfaecc8e319a90c8246a36c7fb531b57c691313",
+     "resultSha256": "6569d171a45e2ef84ab36eda74eaf9b4fdd0c5c3b83bb88d87372b84ac4ea297",
+     "file": "E/0071.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+     "op": "replace",
+     "baseSha256": "81653b0b6e0b1e6b0611939de565b8e10b0b02e515172e757bf94b15fbbebd56",
+     "resultSha256": "037e4308b25e2358e1834ee88b6f3b05401513f6d864e2bc800c61b37166bce5",
+     "file": "E/0072.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "335b223939c8d3404ea5551218fbd66b5fafbe3b575187cf576d680ce98b0703",
+     "resultSha256": "349fd0f765e02925a9bec7d177810b5bf04d5bd8b7c995e63df6377183478e12",
+     "file": "E/0073.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "19392dd4f7cd5f89bbbada3f1626d8d3686bfbe97bdaba1392cb30caf82699bc",
+     "resultSha256": "25102e996135396a04223d675d17e6903d088b4be9bc9aca9c07239f19c39a34",
+     "file": "E/0074.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "de3daac17f7634580020eeaec7cb6023e5290bf6de528c81c6555c490c438aaa",
+     "resultSha256": "aa89394a138407724f3df1f7f770ac8139f205b035198b80108e0e74830b1bd1",
+     "file": "E/0075.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "0e9c6fa885a07079eb56990b50df7d2c143daed05ab7f6bf3278397bc90cc7ec",
+     "resultSha256": "1122573b8269876f0bdb6ecb02dc4a75051d3ec6896974384351744e0301cfc6",
+     "file": "E/0076.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "fc0a7ef943021d46c3918c94a3b38bfa8b8bc22a946ec52c2282a51ac40e310b",
+     "resultSha256": "02d3af1a3f997d076a4472c6eceda171a10efbfb5e45f623650a6dcf5c9b8323",
+     "file": "E/0077.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2b87507f2cd32ea706c53beb86e40af8f4a189912a45196e3cfb2a1ed7541c61",
+     "resultSha256": "f89017f88f902cb0749b7b4be91ac20f8f58bad963f6563739f7dcae4ea0f847",
+     "file": "E/0078.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "5a0865b1e66016ead981c27f516ede78cb457c5aa3ab9715195bbd6f1de19b9f",
+     "resultSha256": "9b8008473fd893b5e578887bfa16b488f69d35d3539fe5242b221fad1f77fd4b",
+     "file": "E/0079.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "d7b556e6effd1bc9103418b87439db514ec79f8e4b12090d3f2d2117033e341a",
+     "resultSha256": "32ed4560db2d00343a5fe264fc11f0211b031edb6b06b3f9f2a218986061e879",
+     "file": "E/0080.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+     "op": "replace",
+     "baseSha256": "3914b32131ad5396559773b9f6af13b11ecf6acc694157858218e4596735518b",
+     "resultSha256": "a5edae17a14ba9cc9d8b7bd055a40f3d9edc8eda490c77097cf75705da5ad641",
+     "file": "E/0081.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+     "op": "replace",
+     "baseSha256": "49c8824bab1ebf08bc442c26f4619b2128a719e37e84f4913fcc2f3c7d5fdaa6",
+     "resultSha256": "b4c381f44bc41eabe062ea44ce8e5d0363011a1e823994fa2bfe55a90421308a",
+     "file": "E/0082.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "13555b80bab62d80966005c901e20dd20c4ce1800346ede25bcf90b2df803aa5",
+     "resultSha256": "a5a208de79bdef4360a540e79ad0e9a6ab722d6e21065def90e5be4865dba22a",
+     "file": "E/0083.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules/🔣️.json",
+     "op": "replace",
+     "baseSha256": "0fcf5236b1476cd7a9ab04b84443f9084938b0439bfe6b0b4fb7d402e264293b",
+     "resultSha256": "c65df28d143318bbd7f855f206a1d8014959a826526792fedfc35e9138fd21c5",
+     "file": "E/0084.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules/🧬️schema/🔣️.json",
+     "op": "replace",
+     "baseSha256": "8a687d06b634dbbcfd8a0be267c7a3aa6422e83c3ca66c680151a95925f145f3",
+     "resultSha256": "527bda18982a7af4ca53abb6fdad7036f6c0c6be814fb42ec1762399170c3648",
+     "file": "E/0085.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+     "op": "replace",
+     "baseSha256": "6eb04af5f9f444ef7eda591a32739246cb3e1a53860bf073d368269615bb3fd5",
+     "resultSha256": "f1f2f4e94ed9c749e4c16ed96b03a8c8fd084c4e5ff0960997adf901b4abd0d5",
+     "file": "E/0086.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/💾️cache.json",
+     "op": "replace",
+     "baseSha256": "dfb1c27d146f65059f34aebfda27bf236aba751a80fce4a40d4f1fc1e46baf85",
+     "resultSha256": "d4deab3fb359cec34d52b80a1e4be4bb0441ee4d6abd200d199cf0ffe0b356fd",
+     "file": "E/0087.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json",
+     "op": "replace",
+     "baseSha256": "c0cc70e443df4ecfba668a37808c1f57270d3781be1cc022c7cdf68a9e0f02c4",
+     "resultSha256": "a9b4bc0265603c40d044d94c5c1bc8eff49cf859f0f0b522641dfa5f8bf3ead9",
+     "file": "E/0088.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🔣️.json",
+     "op": "replace",
+     "baseSha256": "a0660c9ee098931b635b903eec28f3e072509c4ca89ab81519c7a6beff72f616",
+     "resultSha256": "a91bb33b8fb35c45c09ec9ba154d4b1d8578816eeaa674f00705aa98e428daef",
+     "file": "E/0089.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+     "op": "replace",
+     "baseSha256": "50a23422c857394821299a069197fd61382b78075abebf1f77747ce74adef857",
+     "resultSha256": "93cef639040325ace0cc11cd7a5cd6f1cb5af4f5a12384e377ebd78b9f581a08",
+     "file": "E/0090.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a48c953be0a334ac758998d3add2970cdc600e343165d74a2f3dc47f487c75a8",
+     "resultSha256": "19ce62a04973123ddcb7e0195ccd51c6399353c365435fcf12936edee10575dd",
+     "file": "E/0091.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "519780a91b2b3c04892ef94b7a2ec7e845a5400d066e33c3a419165551169429",
+     "resultSha256": "8f7884c5628fd6d1daf4e45ffe015c1d6f6be3c6b7aa662bc6e98f55d655a042",
+     "file": "E/0092.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/📋️project.json",
+     "op": "replace",
+     "baseSha256": "2512502b08da83a931ededde4179b6570844b374b9399973cffc050557fa50d6",
+     "resultSha256": "56bbac2fa3756ce9886316fa32ef42e3543f6c5277851e6b88b0e39be2176436",
+     "file": "E/0093.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📋️project.json",
+     "op": "replace",
+     "baseSha256": "f7cd8c9b1ea45463b8d592259f8dd6be8d91ddd33a0fed27653916f1076cbcde",
+     "resultSha256": "59700a7ee318d23b63037ccbdcd1f94920a36ab2560cc4bea92917be0ac2b249",
+     "file": "E/0094.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+     "op": "replace",
+     "baseSha256": "a470949f1f920dd78f2e648099cd9a460a5a18bf2c1673cd8b7620cc5bfe7129",
+     "resultSha256": "e1f0e54fa160da0bc4e5a38b919b2fb7e325c0920062ce3357f70ab8e1bb076f",
+     "file": "E/0095.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📋️project.json",
+     "op": "replace",
+     "baseSha256": "08f8217966a9ea9b33ed20bbe6bf3e7fd10b83143a4c9e9825d92bbac7efb949",
+     "resultSha256": "f7684ae5879f45e904a85fe68ff1729d36238c18891ba70e1c9529ad5dd8aacf",
+     "file": "E/0096.json"
+    }
+   ]
+  },
+  {
+   "id": "F",
+   "title": "lazy Bazel mapping: command plan, affected via rdeps, runfiles limit for tests (bzl-lazy) on the one repo_test",
+   "sets": [
+    "bzl-lazy"
+   ],
+   "verify": [],
+   "commands": [],
+   "files": [
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+     "op": "replace",
+     "baseSha256": "1b4b75fbefbca8d444521e21e740f68f2882218f6c22502d8785f5c97143fe82",
+     "resultSha256": "b4e57b3d7d9889014fb7f0b5e1270e88dfd1919456032d2ea7e57da975662158",
+     "file": "F/0000.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+     "op": "replace",
+     "baseSha256": "0282b3a6d071d0315e52cb14a5d6bb937a99cdd15324a076fa5d95210894ce9f",
+     "resultSha256": "8750b710dff735c8b056b2434e86ff4d724ebd2a16d82caeda990fbff3a1fcc1",
+     "file": "F/0001.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "838382e866f897201468c4735286b742b8dc7d8f09748fb33389279fccdfc1c7",
+     "file": "F/0002.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "37e8331fcb9ab68640a90fda40473f301e0d7cd7fe689e6f8cdd1d4802785237",
+     "file": "F/0003.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🧪️tests/🧫️fixtures/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "69178cdd905dd4475663295b8ef2fc52a8d7b81f0be28389bf1ef2eb7caa7aea",
+     "file": "F/0004.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "952f6ae61b8f1a8da478e2df093ff05fd730553c8d2d7df643d7a78ca76a60b2",
+     "file": "F/0005.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+     "op": "replace",
+     "baseSha256": "54348e9862c0727884dc17f0350551858db0b73eac0f3135223087e3e3487217",
+     "resultSha256": "98039af82e424cec73122478e99370a1e060b451038f8fe2875cdb68b26dcb6d",
+     "file": "F/0006.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "5e017538a085cff53985ab77e00b555a7220e0c0676289a761e266e3b61a810a",
+     "resultSha256": "d0c8f65a968c0503d532e30f9d25c477358a148e92abd52cd62abdbd8f62a166",
+     "file": "F/0007.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json",
+     "op": "replace",
+     "baseSha256": "a9b4bc0265603c40d044d94c5c1bc8eff49cf859f0f0b522641dfa5f8bf3ead9",
+     "resultSha256": "ddbd56889aad13ecda1dc590073051bcf47c1f510aa252b77114e3caeb5b0c12",
+     "file": "F/0008.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🧬️schema.json",
+     "op": "replace",
+     "baseSha256": "9e0d1ddb97b49ed0e1aaad41b872892a5d5b9d288cdd939596d7b1bd146c7f50",
+     "resultSha256": "2cd73883d880aa70ac3a9d932fae26dfe18cca95fa80f68956e5936d8f8c9f10",
+     "file": "F/0009.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "863126f82ce6fd27d5f1044b60e01d0b4737d78548123aa803b883e9e2c7e3dc",
+     "resultSha256": "b22e7ae1c0fa4f5206ddbb579fd65dbefe65cebcb36f4155b1cf4647960081cf",
+     "file": "F/0010.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+     "op": "replace",
+     "baseSha256": "3a3489b8c842d311384b0a1ea3835cf02fb92eb7d4b36924cae1a76ed286ca34",
+     "resultSha256": "01899ec4175a8e0397460c97d67a4ac3a3b110e7dd156b5de655c3c64fdbc723",
+     "file": "F/0011.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧭️commands/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "3b182e588b86c80af30f12ab34f04051997f97634c93a1c0f1362d3473a283ad",
+     "file": "F/0012.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧭️commands/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "b6e33503174e29d7e273fd8a3103056b4820b868f3e8164ffbae3328dd667525",
+     "file": "F/0013.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧭️commands/🧪️tests/🧫️fixtures/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "9133d91ca976e7700ffc704bb69f97d59f71d0d11c5624dcd87d6781f35ebf7d",
+     "file": "F/0014.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧭️commands/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "f1b0f34ecf1101dd253d54b265870b2f9ebf8f0b8f035ccb7ba15ed00a8f597b",
+     "file": "F/0015.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "349845be0330c34cc58945492227ec485bdecc9467ecf7c6a95d1678d7216ebc",
+     "resultSha256": "f96833229ee6ddf3b7301d918a2b26b1a7f8cd6a5b5f1400fe052ca5abd629d5",
+     "file": "F/0016.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🧪️tests/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "3a74afb5fd141dcd6bb49674a5dfb86fd1209f9b51594a45d89fe388618018e1",
+     "resultSha256": "d36d0f993d5bb1012c640181160db9e93b79785db0fc9458e25690035f15d573",
+     "file": "F/0017.ts"
+    }
+   ]
+  }
+ ]
+}

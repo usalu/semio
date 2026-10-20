@@ -1,0 +1,12 @@
+import {readFileSync, existsSync, statSync} from "node:fs";
+import {ROOT, PROJECT, inventory, expandInputs, select} from "./lib-inputs.ts";
+const [target, inferredPath, tracePath] = process.argv.slice(2);
+const manifest = JSON.parse(readFileSync(`${ROOT}/${PROJECT}/📋️project.json`, "utf8"));
+const {patterns} = expandInputs(manifest, ROOT, manifest.targets[target!].inputs ?? ["default"]);
+const files = inventory();
+const declared = select(patterns, files);
+const inferred = new Set<string>(JSON.parse(readFileSync(inferredPath!, "utf8")).closure.map((p: string) => p.replace("{workspaceRoot}/", "")));
+const reads = readFileSync(tracePath!, "utf8").split("\n").filter(Boolean);
+const gap = reads.filter(p => !declared.has(p) && !inferred.has(p));
+console.log({target, declared: declared.size, inferred: inferred.size, reads: reads.length, gap: gap.length});
+console.log(gap.join("\n"));

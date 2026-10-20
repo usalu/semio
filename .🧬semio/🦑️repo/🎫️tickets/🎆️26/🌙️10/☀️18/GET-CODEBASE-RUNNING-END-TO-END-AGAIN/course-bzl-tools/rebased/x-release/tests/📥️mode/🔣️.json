@@ -1,0 +1,848 @@
+{
+  "version": 1,
+  "graphs": {
+    "declared": {
+      "version": 1,
+      "projects": {
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts generate"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/gen"
+              ],
+              "inputs": [
+                "{projectRoot}/src/**/*"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "site": {
+          "name": "site",
+          "root": "site",
+          "targets": {
+            "publish": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts publish"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": [
+                "{projectRoot}/dist"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                },
+                "staging": {
+                  "execution": {
+                    "env": {
+                      "STAGE": "yes"
+                    }
+                  }
+                }
+              }
+            },
+            "build": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts build"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": [],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependencies": [
+        {
+          "source": "site",
+          "target": "lib",
+          "type": "static"
+        }
+      ]
+    },
+    "undeclared": {
+      "version": 1,
+      "projects": {
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts generate"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/gen"
+              ],
+              "inputs": [
+                "{projectRoot}/src/**/*"
+              ]
+            }
+          }
+        },
+        "site": {
+          "name": "site",
+          "root": "site",
+          "targets": {
+            "publish": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts publish"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": [
+                "{projectRoot}/dist"
+              ]
+            },
+            "build": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts build"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": []
+            }
+          }
+        }
+      },
+      "dependencies": [
+        {
+          "source": "site",
+          "target": "lib",
+          "type": "static"
+        }
+      ]
+    },
+    "pinned": {
+      "version": 1,
+      "projects": {
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts generate"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/gen"
+              ],
+              "inputs": [
+                "{projectRoot}/src/**/*"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                }
+              }
+            },
+            "dev": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts dev"
+              },
+              "cache": false,
+              "continuous": true,
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "semio": {
+                  "buildMode": {
+                    "fixed": "prototype",
+                    "modes": [
+                      "prototype",
+                      "release"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "site": {
+          "name": "site",
+          "root": "site",
+          "targets": {
+            "publish": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts publish"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate",
+                "lib:dev"
+              ],
+              "outputs": [],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                },
+                "release": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependencies": [
+        {
+          "source": "site",
+          "target": "lib",
+          "type": "static"
+        }
+      ]
+    },
+    "partial": {
+      "version": 1,
+      "projects": {
+        "lib": {
+          "name": "lib",
+          "root": "lib",
+          "targets": {
+            "generate": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts generate"
+              },
+              "cache": true,
+              "outputs": [
+                "{projectRoot}/gen"
+              ],
+              "inputs": [
+                "{projectRoot}/src/**/*"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "site": {
+          "name": "site",
+          "root": "site",
+          "targets": {
+            "publish": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts publish"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": [
+                "{projectRoot}/dist"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                }
+              }
+            },
+            "build": {
+              "execution": {
+                "kind": "command",
+                "command": "bun ./📜️script.ts build"
+              },
+              "cache": false,
+              "dependsOn": [
+                "lib:generate"
+              ],
+              "outputs": [],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "execution": {
+                    "env": {
+                      "SEMIO_BUILD_MODE": "prototype"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependencies": [
+        {
+          "source": "site",
+          "target": "lib",
+          "type": "static"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "declared-suffix-release",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish:release"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "declared-flag-release",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "configuration": "release"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "declared-default-prototype",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:publish:prototype"
+        ],
+        "tasks": {
+          "site:publish:prototype": "prototype",
+          "lib:generate:prototype": "prototype"
+        },
+        "inheritedMode": "prototype"
+      }
+    },
+    {
+      "id": "declared-custom-staging",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish:staging"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:publish:staging"
+        ],
+        "tasks": {
+          "site:publish:staging": null,
+          "lib:generate:prototype": "prototype"
+        }
+      }
+    },
+    {
+      "id": "declared-unknown-configuration",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish:nightly"
+        ]
+      },
+      "expected": {
+        "refused": "Unknown build configuration"
+      }
+    },
+    {
+      "id": "undeclared-suffix-release",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish:release"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "undeclared-flag-release",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "configuration": "release"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "undeclared-suffix-prototype",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:build:prototype"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:build:prototype"
+        ],
+        "tasks": {
+          "site:build:prototype": "prototype",
+          "lib:generate:prototype": "prototype"
+        },
+        "inheritedMode": "prototype"
+      }
+    },
+    {
+      "id": "undeclared-default",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ]
+      },
+      "expected": {
+        "selected": [
+          "site:publish"
+        ],
+        "tasks": {
+          "site:publish": null,
+          "lib:generate": null
+        }
+      }
+    },
+    {
+      "id": "undeclared-flag-custom-falls-back",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "configuration": "staging"
+      },
+      "expected": {
+        "selected": [
+          "site:publish"
+        ],
+        "tasks": {
+          "site:publish": null,
+          "lib:generate": null
+        }
+      }
+    },
+    {
+      "id": "undeclared-suffix-custom-refused",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish:staging"
+        ]
+      },
+      "expected": {
+        "refused": "Unknown build configuration"
+      }
+    },
+    {
+      "id": "undeclared-authority-release",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "release"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "undeclared-authority-prototype",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "prototype"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:prototype"
+        ],
+        "tasks": {
+          "site:publish:prototype": "prototype",
+          "lib:generate:prototype": "prototype"
+        },
+        "inheritedMode": "prototype"
+      }
+    },
+    {
+      "id": "declared-authority-release",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "release"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:release"
+        ],
+        "tasks": {
+          "site:publish:release": "release",
+          "lib:generate:release": "release"
+        },
+        "inheritedMode": "release"
+      }
+    },
+    {
+      "id": "undeclared-suffix-against-authority",
+      "graph": "undeclared",
+      "request": {
+        "tasks": [
+          "site:publish:prototype"
+        ],
+        "authority": "release"
+      },
+      "expected": {
+        "refused": "Conflicting build modes"
+      }
+    },
+    {
+      "id": "declared-flag-against-authority",
+      "graph": "declared",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "configuration": "prototype",
+        "authority": "release"
+      },
+      "expected": {
+        "refused": "Conflicting build modes"
+      }
+    },
+    {
+      "id": "pinned-dependency-under-prototype",
+      "graph": "pinned",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "prototype"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:prototype"
+        ],
+        "tasks": {
+          "site:publish:prototype": "prototype",
+          "lib:generate:prototype": "prototype",
+          "lib:dev:prototype": "prototype"
+        },
+        "inheritedMode": "prototype"
+      }
+    },
+    {
+      "id": "pinned-dependency-under-release-refused",
+      "graph": "pinned",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "release"
+      },
+      "expected": {
+        "refused": "is fixed to prototype"
+      }
+    },
+    {
+      "id": "pinned-explicit-release-refused",
+      "graph": "pinned",
+      "request": {
+        "tasks": [
+          "lib:dev:release"
+        ]
+      },
+      "expected": {
+        "refused": "is fixed to prototype"
+      }
+    },
+    {
+      "id": "partial-flag-release-falls-back-to-default",
+      "graph": "partial",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "configuration": "release"
+      },
+      "expected": {
+        "selected": [
+          "site:publish:prototype"
+        ],
+        "tasks": {
+          "site:publish:prototype": "prototype",
+          "lib:generate:prototype": "prototype"
+        },
+        "inheritedMode": "prototype"
+      }
+    },
+    {
+      "id": "partial-suffix-release-refused",
+      "graph": "partial",
+      "request": {
+        "tasks": [
+          "site:publish:release"
+        ]
+      },
+      "expected": {
+        "refused": "Unknown build configuration"
+      }
+    },
+    {
+      "id": "partial-authority-release-refused",
+      "graph": "partial",
+      "request": {
+        "tasks": [
+          "site:publish"
+        ],
+        "authority": "release"
+      },
+      "expected": {
+        "refused": "Conflicting build modes"
+      }
+    }
+  ],
+  "authority": [
+    {
+      "id": "release-task-prototype-caller",
+      "configuration": "release",
+      "caller": "prototype",
+      "refused": true
+    },
+    {
+      "id": "prototype-task-release-caller",
+      "configuration": "prototype",
+      "caller": "release",
+      "refused": true
+    },
+    {
+      "id": "release-task-release-caller",
+      "configuration": "release",
+      "caller": "release",
+      "refused": false
+    },
+    {
+      "id": "prototype-task-prototype-caller",
+      "configuration": "prototype",
+      "caller": "prototype",
+      "refused": false
+    },
+    {
+      "id": "bare-task-release-caller",
+      "configuration": null,
+      "caller": "release",
+      "refused": false
+    },
+    {
+      "id": "custom-task-release-caller",
+      "configuration": "staging",
+      "caller": "release",
+      "refused": false
+    }
+  ],
+  "refusals": {
+    "Unknown build configuration": "Unbekannte Build-Konfiguration",
+    "Conflicting build modes": "Widersprüchliche Build-Modi",
+    "is fixed to prototype": "ist fest auf prototype"
+  },
+  "authorized": [
+    {
+      "id": "undeclared-release-caller",
+      "graph": "undeclared",
+      "caller": "release",
+      "tasks": [
+        "site:publish"
+      ],
+      "selected": [
+        "site:publish:release"
+      ]
+    },
+    {
+      "id": "undeclared-prototype-caller",
+      "graph": "undeclared",
+      "caller": "prototype",
+      "tasks": [
+        "site:publish"
+      ],
+      "selected": [
+        "site:publish:prototype"
+      ]
+    },
+    {
+      "id": "declared-release-caller",
+      "graph": "declared",
+      "caller": "release",
+      "tasks": [
+        "site:build"
+      ],
+      "selected": [
+        "site:build:release"
+      ]
+    }
+  ]
+}

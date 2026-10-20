@@ -1,0 +1,7 @@
+export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {
+  const guard=orderGuard(options,true);
+  if(!guard)return acquireQueuedResourceLeaseBody(options);
+  let lease:ResourceLease;
+  try{lease=await acquireQueuedResourceLeaseBody(options,guard);}catch(error){guard.finish();throw error;}
+  guard.hold(lease);return lease;
+}

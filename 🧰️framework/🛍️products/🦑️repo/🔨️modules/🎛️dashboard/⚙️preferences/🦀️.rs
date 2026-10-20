@@ -19,7 +19,7 @@ const LOCK_PATIENCE: std::time::Duration = std::time::Duration::from_secs(2);
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Preferences {
-    pub language: String,
+    pub language: Option<String>,
     pub appearance: String,
     pub terminology: String,
     pub renderer: String,
@@ -29,7 +29,7 @@ pub struct Preferences {
 }
 
 impl Default for Preferences {
-    fn default() -> Self { Self { language: language::declared().fallback().as_str().into(), appearance: "dark".into(), terminology: "native".into(), renderer: "react".into(), layout: "tabs".into(), prefix: PREFIX.into(), bindings: BTreeMap::new() } }
+    fn default() -> Self { Self { language: None, appearance: "dark".into(), terminology: "native".into(), renderer: "react".into(), layout: "tabs".into(), prefix: PREFIX.into(), bindings: BTreeMap::new() } }
 }
 
 /// ✉️ One validated preference command, matching the language-neutral schema.
@@ -80,24 +80,25 @@ impl Change {
 impl Preferences {
     /// 🧮️ Projects one preference event over the current settings.
     pub fn apply(&mut self, change: &Change) {
-        for (target, value) in [(&mut self.language, &change.language), (&mut self.appearance, &change.appearance), (&mut self.terminology, &change.terminology), (&mut self.renderer, &change.renderer), (&mut self.layout, &change.layout), (&mut self.prefix, &change.prefix)] { if let Some(value) = value { target.clone_from(value); } }
+        if let Some(language)=&change.language { self.language=Some(language.clone()); }
+        for (target, value) in [ (&mut self.appearance, &change.appearance), (&mut self.terminology, &change.terminology), (&mut self.renderer, &change.renderer), (&mut self.layout, &change.layout), (&mut self.prefix, &change.prefix)] { if let Some(value) = value { target.clone_from(value); } }
         if let Some(bindings) = &change.bindings { for (id, keys) in bindings { self.bindings.insert(id.clone(), keys.clone()); } }
     }
 
     /// ⌨️ The effective keymap and the customizations it had to ignore, each named.
     pub fn keymap(&self) -> (keymap::Keymap, Vec<String>) { keymap::Keymap::build(&self.prefix, &self.bindings) }
 
-    /// 🌐️ The language the dashboard speaks; changes are validated, so an unknown language never occurs and the declared fallback only covers a hand-built value.
-    pub fn locale(&self) -> ui_locale::Locale { ui_locale::Locale::parse(&self.language).unwrap_or_else(|| language::declared().fallback()) }
+    /// 🌐️ Returns the resolved language or an explicit unresolved state.
+    pub fn locale(&self) -> Option<ui_locale::Locale> { self.language.as_deref().and_then(ui_locale::Locale::parse) }
 
-    /// 🏁️ The layer under every journal: the opinionated settings with the language the system names, or the declared fallback.
-    pub fn baseline(lookup: language::Lookup<'_>) -> Self { Self { language: language::declared().resolve(lookup).as_str().into(), ..Self::default() } }
+    /// 🏁️ Keeps language unresolved unless the system names a supported choice.
+    pub fn baseline(lookup: language::Lookup<'_>) -> Self { Self { language: language::declared().resolve(lookup).map(|locale| locale.as_str().into()), ..Self::default() } }
 
     /// 🚀️ The parameter values these preferences pre-select among the parameters a command offers.
     pub fn launch_defaults(&self, accepted: &[dashboard_registry::Parameter]) -> Vec<(String, String)> {
-        [("language", &self.language), ("terminology", &self.terminology), ("appearance", &self.appearance), ("renderer", &self.renderer)].into_iter()
-            .filter(|(id, value)| accepted.iter().any(|parameter| parameter.id == *id && parameter.values.iter().any(|(known, _)| known == *value)))
-            .map(|(id, value)| (id.to_string(), value.clone())).collect()
+        [("language", self.language.as_deref()), ("terminology", Some(self.terminology.as_str())), ("appearance", Some(self.appearance.as_str())), ("renderer", Some(self.renderer.as_str()))].into_iter().filter_map(|(id,value)| value.map(|value|(id,value)))
+            .filter(|(id, value)| accepted.iter().any(|parameter| parameter.id == *id && parameter.values.iter().any(|(known, _)| known.as_str() == *value)))
+            .map(|(id, value)| (id.to_string(), value.to_string())).collect()
     }
 }
 
@@ -128,9 +129,14 @@ fn project(file: &mut File, preferences: &mut Preferences) -> io::Result<(u64, u
 }
 
 /// ⏳️ Takes a journal lock, waiting a bounded time for another process to finish publishing.
-fn lock(file: &File, path: &Path, shared: bool) -> io::Result<()> {
+fn lock(file: &File, path: &Path, shared: bool) -> io::Result<()> { lock_cancellable(file,path,shared,&std::sync::atomic::AtomicBool::new(false)) }
+
+fn check_cancelled(cancel:&std::sync::atomic::AtomicBool)->io::Result<()>{if cancel.load(std::sync::atomic::Ordering::Acquire){Err(io::Error::new(io::ErrorKind::Interrupted,"language preference publication cancelled"))}else{Ok(())}}
+
+fn lock_cancellable(file:&File,path:&Path,shared:bool,cancel:&std::sync::atomic::AtomicBool)->io::Result<()> {
     let started = std::time::Instant::now();
     loop {
+        check_cancelled(cancel)?;
         let attempt = if shared { file.try_lock_shared() } else { file.try_lock() };
         match attempt {
             Ok(()) => return Ok(()),
@@ -149,7 +155,7 @@ pub fn replay(path: &Path, preferences: &mut Preferences) -> io::Result<u64> {
 
 /// 🗜️ The single event that states every setting the journal currently holds; a language the journal never chose stays with the system.
 fn snapshot(preferences: &Preferences, language_set: bool) -> Change {
-    Change { language: Some(preferences.language.clone()).filter(|_| language_set), appearance: Some(preferences.appearance.clone()), terminology: Some(preferences.terminology.clone()), renderer: Some(preferences.renderer.clone()), layout: Some(preferences.layout.clone()), prefix: Some(preferences.prefix.clone()), bindings: Some(preferences.bindings.clone()).filter(|bindings| !bindings.is_empty()) }
+    Change { language: preferences.language.clone().filter(|_| language_set), appearance: Some(preferences.appearance.clone()), terminology: Some(preferences.terminology.clone()), renderer: Some(preferences.renderer.clone()), layout: Some(preferences.layout.clone()), prefix: Some(preferences.prefix.clone()), bindings: Some(preferences.bindings.clone()).filter(|bindings| !bindings.is_empty()) }
 }
 
 fn line(revision: u64, change: &Change) -> io::Result<Vec<u8>> {
@@ -160,13 +166,18 @@ fn line(revision: u64, change: &Change) -> io::Result<Vec<u8>> {
 
 /// 💾️ Commits one durable event under an operating-system lock released on process death. A torn last
 /// line is cut off first, and a journal that would outgrow its limit is compacted into one event.
-pub fn append(path: &Path, change: &Change) -> io::Result<u64> {
+pub fn append(path: &Path, change: &Change) -> io::Result<u64> { append_cancellable(path,change,&std::sync::atomic::AtomicBool::new(false)) }
+
+/// ⏹️ Cancels before publication while keeping an accepted commit authoritative after its write barrier.
+pub fn append_cancellable(path:&Path,change:&Change,cancel:&std::sync::atomic::AtomicBool)->io::Result<u64>{
     change.validate()?;
+    check_cancelled(cancel)?;
     if let Some(parent) = path.parent() { fs::create_dir_all(parent)?; }
     let mut file = OpenOptions::new().create(true).read(true).write(true).truncate(false).open(path)?;
-    lock(&file, path, false)?;
+    lock_cancellable(&file,path,false,cancel)?;
     let mut current = Preferences::default();
     let (revision, complete, language_set) = project(&mut file, &mut current)?;
+    check_cancelled(cancel)?;
     if file.metadata()?.len() > complete { file.set_len(complete)?; }
     let mut bytes = line(revision + 1, change)?;
     let mut next = revision + 1;
@@ -193,8 +204,8 @@ pub fn local_path(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> Pat
 pub fn shared_path(root: &Path) -> PathBuf { root.join(".🧬semio/🦑️repo/🎛️dashboard/⚙️preferences.jsonl") }
 
 /// 🗨️ The language a command speaks to the developer: the stored and environment preferences, or the system language and
-/// then the declared fallback chain when they cannot be read; it never fails, because it only words a message.
-pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> ui_locale::Locale { load_lenient(root, parsed).map_or_else(|_| language::declared().resolve(&language::process_environment), |(preferences, _)| preferences.locale()) }
+/// unresolved when no supported choice exists; callers must not invent a language.
+pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> Option<ui_locale::Locale> { load_lenient(root, parsed).ok().and_then(|(preferences, _)| preferences.locale()) }
 
 /// 🥇️ Applies strict explicit flags last, with no startup questions.
 pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<()> {

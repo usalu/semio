@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "executed": false,
+  "preparedCases": 33,
+  "files": [
+    {
+      "file": "🌱️linux/git.schema.json",
+      "bytes": 11684,
+      "sha256": "7afc00cc84a49d1eb3ac6c8e80f0ec7f0ed53e134ce37b3e97683676c43743dd"
+    },
+    {
+      "file": "🌱️linux/git.cases.json",
+      "bytes": 2360,
+      "sha256": "e3e701d3d9bc247b208593e51400a44fecf8c674d921a507010f210b968c95aa"
+    },
+    {
+      "file": "🌱️linux/git.ts",
+      "bytes": 11001,
+      "sha256": "e5b888a348c90dd052268355f24d0bceb19100b953ee6ce2f60d81673ad7d515"
+    },
+    {
+      "file": "🌱️linux/git.tests.ts",
+      "bytes": 7361,
+      "sha256": "a1cb22a32aa3abdf3a473c350a171fbb17c5c5cf10958aa3802e0d2bef09e958"
+    },
+    {
+      "file": "🌱️linux/git-receiver.py",
+      "bytes": 9376,
+      "sha256": "e07952ee2995029db779f4128ef209fba26ecc628ef8f93c035b07b24a468efa"
+    }
+  ]
+}

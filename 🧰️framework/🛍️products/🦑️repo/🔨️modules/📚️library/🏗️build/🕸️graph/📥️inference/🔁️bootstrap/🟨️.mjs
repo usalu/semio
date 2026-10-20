@@ -9,6 +9,7 @@ import * as loadedCommandInputs from "../../../../⚡️caching/📥️inference
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import * as loadedBuildMode from "../../../../🏗️build/🎚️mode/🟨️.mjs";
 
+import bootstrapSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 export const component = "bootstrap";
 let LIBRARY_ROOT, LIBRARY_URL, RUNTIME_COMPONENT_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, INSTALLATION_IDENTITY_MODULE, INSTALLATION_IDENTITY_SCHEMA, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, SOURCE_INPUT_MODULE, COMMAND_INPUT_MODULE, PROJECT_INPUT_MODULE, BUILD_MODE_MODULE, readPhysicalSource;
 export let libraryBootstrap;
@@ -26,6 +27,9 @@ function currentCommandInputs(commandInputs) {
   if (commandInputs.sourceHash !== loaded.commandInputHash) throw Error("Stale command input parser implementation");
   return commandInputs;
 }
+
+/** 🧩️ Both cold and revision-pinned loads expose the same finite function projection. */
+export function captureProjectInputsV1(module){const result={};for(const name of bootstrapSchema.$defs.ProjectInputs.const){const descriptor=Object.getOwnPropertyDescriptor(module,name);if(!descriptor||!("value"in descriptor)||typeof descriptor.value!=="function")throw Error("Complete project input helper export required: "+name);result[name]=descriptor.value;}return Object.freeze(result);}
 
 /** 📦️ The helper modules and parsers this revision loaded, readable by every later component once `libraryBootstrap` settles. */
 export const loaded = {
@@ -46,10 +50,7 @@ export const loaded = {
   relativeSourceInputs: undefined,
   relativeSourceInputsAsyncV1: undefined,
   componentDeploymentDirectoryV1: undefined,
-  inferProjectInputs: loadedProjectInputs.inferProjectInputs,
-  compactSourceInputs: loadedProjectInputs.compactSourceInputs,
-  cargoLockInput: loadedProjectInputs.cargoLockInput,
-  deduplicateProjectInputs: loadedProjectInputs.deduplicateProjectInputs,
+  ...captureProjectInputsV1(loadedProjectInputs),
   targetBuildModes: loadedBuildMode.targetBuildModes,
 };
 
@@ -61,7 +62,7 @@ export function wire(registry) {
     const inputRevision = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, PROJECT_INPUT_MODULE))).digest("hex");
     const modeRevision = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, BUILD_MODE_MODULE))).digest("hex");
     return Promise.all([importRevision(new URL(`./${PROJECT_INPUT_MODULE}`, LIBRARY_URL), inputRevision), importRevision(new URL(`./${BUILD_MODE_MODULE}`, LIBRARY_URL), modeRevision)]).then(([inputs, mode]) => {
-      ({ inferProjectInputs: loaded.inferProjectInputs, compactSourceInputs: loaded.compactSourceInputs, cargoLockInput: loaded.cargoLockInput, deduplicateProjectInputs: loaded.deduplicateProjectInputs } = inputs); ({ targetBuildModes: loaded.targetBuildModes } = mode);
+      Object.assign(loaded,captureProjectInputsV1(inputs)); ({ targetBuildModes: loaded.targetBuildModes } = mode);
       return commandInputs;
     });
   }).then((commandInputs) => {

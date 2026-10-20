@@ -1,0 +1,548 @@
+{
+  "buildVerbs": [
+    "run",
+    "run-many",
+    "affected",
+    "exec",
+    "watch",
+    "dependencies",
+    "cargo",
+    "tools",
+    "reset",
+    "cache",
+    "preflight",
+    "show",
+    "graph",
+    "inputs",
+    "incremental",
+    "concurrency",
+    "capacity",
+    "leases",
+    "remote-execution"
+  ],
+  "dashboardArguments": [
+    "run",
+    "@semio-tech/repo-dashboard-rs:run",
+    "--output=stream",
+    "--"
+  ],
+  "vectors": [
+    {
+      "id": "run",
+      "argv": [
+        "run",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "run-many",
+      "argv": [
+        "run-many",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run-many",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "affected",
+      "argv": [
+        "affected",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "affected",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "exec",
+      "argv": [
+        "exec",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "exec",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "watch",
+      "argv": [
+        "watch",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "watch",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "dependencies",
+      "argv": [
+        "dependencies",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "dependencies",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "cargo",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "tools",
+      "argv": [
+        "tools",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "tools",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "reset",
+      "argv": [
+        "reset",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "reset",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "cache",
+      "argv": [
+        "cache",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "cache",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "preflight",
+      "argv": [
+        "preflight",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "preflight",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "show",
+      "argv": [
+        "show",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "show",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "graph",
+      "argv": [
+        "graph",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "graph",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "inputs",
+      "argv": [
+        "inputs",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "inputs",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "incremental",
+      "argv": [
+        "incremental",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "incremental",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "concurrency",
+      "argv": [
+        "concurrency",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "concurrency",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "capacity",
+      "argv": [
+        "capacity",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "capacity",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "leases",
+      "argv": [
+        "leases",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "leases",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "remote-execution",
+      "argv": [
+        "remote-execution",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "remote-execution",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "root",
+      "argv": [],
+      "kind": "domain",
+      "arguments": []
+    },
+    {
+      "id": "help",
+      "argv": [
+        "--help"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "--help"
+      ]
+    },
+    {
+      "id": "graphql",
+      "argv": [
+        "--json",
+        "graphql",
+        "--query",
+        "{}"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "--json",
+        "graphql",
+        "--query",
+        "{}"
+      ]
+    },
+    {
+      "id": "mcp",
+      "argv": [
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": []
+    },
+    {
+      "id": "mcp-extra",
+      "argv": [
+        "mcp",
+        "client"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "client"
+      ]
+    },
+    {
+      "id": "dashboard",
+      "argv": [
+        "dashboard",
+        "commands",
+        "--check"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--",
+        "commands",
+        "--check"
+      ]
+    },
+    {
+      "id": "dashboard-empty",
+      "argv": [
+        "dashboard"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--"
+      ]
+    },
+    {
+      "id": "tool-first",
+      "argv": [
+        "--tool=bazel",
+        "run",
+        "x:y",
+        "--",
+        "--tool=child"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=bazel",
+        "run",
+        "x:y",
+        "--",
+        "--tool=child"
+      ]
+    },
+    {
+      "id": "tool-separated",
+      "argv": [
+        "--tool",
+        "nx",
+        "cargo",
+        "--",
+        "check"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool",
+        "nx",
+        "cargo",
+        "--",
+        "check"
+      ]
+    },
+    {
+      "id": "unknown",
+      "argv": [
+        "wat"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "wat"
+      ]
+    },
+    {
+      "id": "opaque-tail",
+      "argv": [
+        "graphql",
+        "--",
+        "run"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "graphql",
+        "--",
+        "run"
+      ]
+    },
+    {
+      "id": "tool-help",
+      "argv": [
+        "--tool=bazel",
+        "--help"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=bazel",
+        "--help"
+      ]
+    },
+    {
+      "id": "tool-default-help",
+      "argv": [
+        "--tool",
+        "nx"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool",
+        "nx"
+      ]
+    },
+    {
+      "id": "tool-missing-value",
+      "argv": [
+        "--tool"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool"
+      ]
+    },
+    {
+      "id": "os-mcp",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os"
+      ]
+    },
+    {
+      "id": "os-mcp-options",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--folder",
+        "space with 🦑",
+        "--scopes",
+        "workspace.read,ui.observe"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--folder",
+        "space with 🦑",
+        "--scopes",
+        "workspace.read,ui.observe"
+      ]
+    },
+    {
+      "id": "os-mcp-opaque-tail",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--",
+        "--tool=literal"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--",
+        "--tool=literal"
+      ]
+    },
+    {
+      "id": "not-os-mcp",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "client"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "client"
+      ]
+    },
+    {
+      "id": "not-stdio",
+      "argv": [
+        "dev",
+        "mcp",
+        "http",
+        "os"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "http",
+        "os"
+      ]
+    },
+    {
+      "id": "incomplete-provider",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio"
+      ]
+    }
+  ],
+  "rootScriptPrefixes": [
+    [
+      "dev",
+      "mcp",
+      "stdio",
+      "os"
+    ]
+  ]
+}

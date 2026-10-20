@@ -19,25 +19,12 @@
   },
   "targets": {
     "generate": {
-      "executor": "repo:script",
-      "inputs": [
-        "default",
-        "^default",
-        "reads",
-        { "dependentTasksOutputFiles": "**/*" }
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate",
-        "forwardAllArgs": true
-      },
+      "executor": "repo:noop",
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
         }
       },
-      "cache": false,
-      "outputs": [],
       "dependsOn": [
         "@semio-tech/ui-styling-tokens:generate"
       ]

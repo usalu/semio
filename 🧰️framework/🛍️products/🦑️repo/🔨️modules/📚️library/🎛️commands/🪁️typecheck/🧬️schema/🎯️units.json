@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/repo/typecheck/units-selection",
+  "title": "Unit-wise TypeScript Check Selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project",
+    "only",
+    "jobs",
+    "replan"
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?![/~\\\\])(?![A-Za-z]:)(?!(.*/)?\\.\\.(/|$))[^\\u0000\\\\]+\\.json$"
+    },
+    "only": {
+      "description": "Unit labels (workspace-relative directories) or ids to check together with the units they depend on; empty checks every unit.",
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "jobs": {
+      "description": "Compiler processes at once; the host capacity gate may admit fewer.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "replan": {
+      "description": "Ignore remembered import resolutions and derive the unit graph from the sources.",
+      "type": "boolean"
+    }
+  }
+}

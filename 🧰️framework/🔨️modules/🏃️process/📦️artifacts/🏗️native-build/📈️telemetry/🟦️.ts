@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { UnitRecordV1 } from "../🎟️admission/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import {parseDarwinCountersV1,parseLinuxCountersV1} from "../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 
 /** 📈️ Sampling cadence, idle-window thresholds and report sizes. */
 export const TELEMETRY_POLICY_V1 = Object.freeze({...schema.definitions.Policy.const});
@@ -51,15 +52,11 @@ export function cpuPercentV1(previous: Readonly<{ idle: number; total: number }>
   return total <= 0 ? 0 : Math.min(100, Math.max(0, 100 * (1 - (next.idle - previous.idle) / total)));
 }
 
-/** 🧠️ Parses fixed platform memory counter DATA without executing platform commands. */
+/** 🧠️ Parses fixed platform memory counter DATA without executing platform commands; the host capacity sampler owns the parsing. */
 export function parseMemoryCountersV1(platform:"darwin"|"linux",first:string,second:string):Readonly<{availableBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null}>{
  if(Buffer.byteLength(first)>TELEMETRY_POLICY_V1.maximumOutputBytes||Buffer.byteLength(second)>TELEMETRY_POLICY_V1.maximumOutputBytes)throw Error("Bounded telemetry counter bytes required");
- if(platform==="darwin"){
-  const pageSize=Number(/page size of (\d+) bytes/u.exec(first)?.[1]??4096),pages=(name:string)=>Number(new RegExp(`^${name}:\\s+(\\d+)\\.`,"mu").exec(first)?.[1]??0),used=/used = ([\d.]+)([KMG])/u.exec(second),unit=used?.[2],scale=unit==="K"?1024:unit==="M"?1024**2:unit==="G"?1024**3:0;
-  return Object.freeze({availableBytes:(pages("Pages free")+pages("Pages inactive")+pages("Pages speculative"))*pageSize,swapUsedBytes:used?Math.round(Number(used[1])*scale):null,swappedOutBytes:pages("Swapouts")*pageSize});
- }
- const kib=(name:string):number|null=>{const match=new RegExp(`^${name}:\\s+(\\d+) kB`,"mu").exec(first);return match?Number(match[1])*1024:null;},total=kib("SwapTotal"),free=kib("SwapFree"),out=/^pswpout (\d+)$/mu.exec(second);
- return Object.freeze({availableBytes:kib("MemAvailable"),swapUsedBytes:total===null||free===null?null:total-free,swappedOutBytes:out?Number(out[1])*4096:null});
+ const counters=platform==="darwin"?parseDarwinCountersV1(first,second,""):parseLinuxCountersV1(first,second,null,null,null);
+ return Object.freeze({availableBytes:counters.availableBytes,swapUsedBytes:counters.swapUsedBytes,swappedOutBytes:counters.swappedOutBytes});
 }
 /** 🧠️ Reads finite platform counters beneath the actual carried sample phase. */
 export function memoryCountersV1(control:ResourceLeaseControl,platform:NodeJS.Platform=process.platform):Promise<Readonly<{availableBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null}>>{

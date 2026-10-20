@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "cohort",
+    "operation",
+    "engineId",
+    "workspaceRoot",
+    "evidence",
+    "inputs",
+    "milliseconds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "fresh-artifact-export"
+    },
+    "cohort": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "engineId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohortPlan",
+        "terminal",
+        "sourceManifest",
+        "sourceReceipt",
+        "gitPlan",
+        "gitTerminal",
+        "provision"
+      ],
+      "properties": {
+        "cohortPlan": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "terminal": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "sourceManifest": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "sourceReceipt": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "gitPlan": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "gitTerminal": {
+          "$ref": "#/definitions/fileReference"
+        },
+        "provision": {
+          "$ref": "#/definitions/fileReference"
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core",
+        "entry",
+        "schema",
+        "heldFinalCore",
+        "heldController",
+        "heldGit",
+        "helper",
+        "cases",
+        "promotion",
+        "tests",
+        "oracle",
+        "heldFinalIntegration",
+        "modes",
+        "heldFinalEntry",
+        "heldControllerSchema",
+        "heldGitSchema"
+      ],
+      "properties": {
+        "core": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldFinalCore": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldController": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldGit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "helper": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cases": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "promotion": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "tests": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "oracle": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldFinalIntegration": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modes": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldFinalEntry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldControllerSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "heldGitSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "milliseconds": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 600000
+    }
+  },
+  "definitions": {
+    "fileReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "capacity": {
+      "const": {
+        "totalBytes": 4294967296,
+        "fileBytes": 1073741824,
+        "files": 8192,
+        "nodes": 16384,
+        "headerBytes": 4194304,
+        "milliseconds": 600000
+      }
+    },
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "group",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "group": {
+                "enum": [
+                  "admission",
+                  "custody",
+                  "frame",
+                  "promotion",
+                  "settlement"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "hostModes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "physicalModeSemantics",
+        "logicalModesPreserved"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        },
+        "physicalModeSemantics": {
+          "enum": [
+            "windows-readonly",
+            "posix"
+          ]
+        },
+        "logicalModesPreserved": {
+          "const": true
+        }
+      }
+    }
+  }
+}

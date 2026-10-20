@@ -1,6 +1,7 @@
 import "../📋️contract/🧪️tests/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
 import {pathToFileURL} from "node:url";
+import {testPythonV1} from "../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
@@ -427,7 +428,7 @@ import { spawnSync } from "node:child_process";
 const signal = AbortSignal.timeout(${vector.deadlineMs - 1000});
 const lease = await acquireCargoBuildLeaseV1({ directory: ${JSON.stringify(artifacts)}, buildDirectory: process.env.CARGO_BUILD_BUILD_DIR, targetDirectory: process.env.CARGO_TARGET_DIR, args: ["--profile", ${JSON.stringify(vector.profile)}], signal, control: phaseCompilerAdmissionControlV1(signal, ${vector.deadlineMs - 1000}, () => undefined, () => new Promise(done => setImmediate(done))) });
 try {
- const oracle = spawnSync("python3", ["-c", "import sqlite3,sys;d=sqlite3.connect(sys.argv[1],timeout=0);\\ntry:d.execute('begin exclusive');print('unheld')\\nexcept sqlite3.OperationalError:print('held')", resourceLeasePathV1(${JSON.stringify(artifacts)}, lease.resource)], { encoding: "utf8" });
+ const oracle = spawnSync(testPythonV1()??"python3", ["-c", "import sqlite3,sys;d=sqlite3.connect(sys.argv[1],timeout=0);\\ntry:d.execute('begin exclusive');print('unheld')\\nexcept sqlite3.OperationalError:print('held')", resourceLeasePathV1(${JSON.stringify(artifacts)}, lease.resource)], { encoding: "utf8" });
  if (oracle.status !== 0 || oracle.stdout.trim() !== ${JSON.stringify(vector.oracle)}) throw Error("Independent state lease oracle disagrees: " + oracle.stderr);
  await Bun.write(${JSON.stringify(marker)}, JSON.stringify({ participant: "job", oracle: oracle.stdout.trim() }));
 } finally { lease.release(); }

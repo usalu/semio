@@ -21,15 +21,15 @@ import {
   type VideoRenderProgram,
   videoRenderFrameCount,
   videoRenderProgramProblem
-} from "@semio-tech/framework";
+} from "../../../../../../../📦️packages/🟦️typescript/🟦️.ts";
 import {
   type VideoRenderEncoderTier,
   type VideoRenderJobEvent,
   VideoRenderJobLedger,
   type VideoRenderJobOutcome,
   type VideoRenderJobRow
-} from "@semio-tech/framework";
-import { AvcPcmEncoder, avcConfigurationFromRecord, avcLevelIdc, type AvcDecoderConfiguration, type EncodedVideoSample, type VideoStreamParameters, writeAvcMp4 } from "@semio-tech/framework/raster/video";
+} from "../../../../../../../📦️packages/🟦️typescript/🟦️.ts";
+import { AvcPcmEncoder, avcConfigurationFromRecord, avcLevelIdc, type AvcDecoderConfiguration, type EncodedVideoSample, type VideoStreamParameters, writeAvcMp4 } from "../../../../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels

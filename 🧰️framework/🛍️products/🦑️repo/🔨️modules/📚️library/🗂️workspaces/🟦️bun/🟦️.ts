@@ -29,6 +29,8 @@ export interface BunWorkspacePhysicalV1 {
   readonly discoverBunWorkspaces: (root: string) => readonly BunWorkspaceScope[];
   readonly bunRepositoryPackages: (root: string) => readonly string[];
   readonly readListingProjection: (root: string, path: string) => readonly Readonly<{ name: string; kind: string }>[];
+  readonly exportOwnershipIndexV1: (root: string) => readonly Readonly<{ path: string; stamp: string; count: number; entries: readonly Readonly<{ name: string; kind: string }>[] }>[];
+  readonly seedOwnershipIndexV1: (root: string, records: readonly Readonly<{ path: string; stamp: string; count: number; entries: readonly Readonly<{ name: string; kind: string }>[] }>[]) => void;
 }
 /** 📜️ Captured physical policy DATA is bound privately by the owned facade. */
 export interface BunWorkspacePhysicalPolicyV1 {readonly ownershipPath:string;readonly ownershipSource:string;}
@@ -62,6 +64,12 @@ export const withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunW
 
 /** 👓️ Retains original current membership through a read-only callback without publishing Source. */
 export const withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>=physical.withCurrentBunWorkspaceOwnershipV1;
+
+/** 📤️ Exports the settled directory listings retained under one workspace for reuse by a later process. */
+export const exportBunWorkspaceOwnershipIndexV1: (root: string) => ReturnType<BunWorkspacePhysicalV1["exportOwnershipIndexV1"]> = physical.exportOwnershipIndexV1;
+
+/** 📥️ Seeds persisted settled directory listings that stay trusted only under their exact live stamps. */
+export const seedBunWorkspaceOwnershipIndexV1: BunWorkspacePhysicalV1["seedOwnershipIndexV1"] = physical.seedOwnershipIndexV1;
 
 /** 🔬️ Lists one directory exactly as the ownership walk does and returns the entries that can change ownership. */
 export const readBunWorkspaceListingProjectionV1: (root: string, path: string) => readonly Readonly<{ name: string; kind: string }>[] = physical.readListingProjection;

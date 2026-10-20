@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { CrateMeasure } from "../🧾️model/🟦️.ts";
-import { readRustSourceClosureV1, type RustSourceInputV1 } from "@semio-tech/process/artifacts/native-build/source";
+import { readRustSourceClosureV1, type RustSourceInputV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 import type { CrateBudget } from "../💰️budget/🟦️.ts";
 
 const HOST_CFG: { value: string[] | null } = { value: null };

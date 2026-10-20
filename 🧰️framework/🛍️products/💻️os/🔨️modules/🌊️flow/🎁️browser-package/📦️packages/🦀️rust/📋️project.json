@@ -391,8 +391,7 @@
     "flowBrowserProduction": [
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/bun.lock",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/Cargo.toml",
+      "cargoToolchain",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
@@ -408,8 +407,7 @@
     "flowBrowserDeclarationOracle": [
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/bun.lock",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/Cargo.toml",
+      "cargoToolchain",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
@@ -432,8 +430,7 @@
     "flowBrowserRuntimeOracle": [
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/bun.lock",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/Cargo.toml",
+      "cargoToolchain",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",

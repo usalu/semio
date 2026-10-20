@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import {testRipgrepV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -54,7 +55,7 @@ describe("package boundary guards", () => {
 
   test("vite and vitest configs avoid cross-package @semio-tech aliases", () => {
     const offenders: string[] = [];
-    const listed = spawnSync("rg", ["--files", "--glob", "**/*vite*.config.ts", "--glob", "**/🧪️tests/🟦️.ts", "--glob", "!**/.🧬semio/**", "--glob", "!**/.claude/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    const listed = spawnSync(testRipgrepV1()??"rg", ["--files", "--glob", "**/*vite*.config.ts", "--glob", "**/🧪️tests/🟦️.ts", "--glob", "!**/.🧬semio/**", "--glob", "!**/.claude/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
     for (const relativePath of (listed.stdout ?? "").split("\n").map((line) => line.trim()).filter(Boolean)) {
       const full = join(repoRoot, relativePath);
       const pkgDir = findNearestPackageDir(full, repoRoot);
@@ -72,7 +73,7 @@ describe("package boundary guards", () => {
   });
 
   test("legacy package aliases are absent from source imports", () => {
-    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️workspace-contract/**"], {
+    const result = spawnSync(testRipgrepV1()??"rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️workspace-contract/**"], {
       cwd: repoRoot,
       encoding: "utf8",
     });

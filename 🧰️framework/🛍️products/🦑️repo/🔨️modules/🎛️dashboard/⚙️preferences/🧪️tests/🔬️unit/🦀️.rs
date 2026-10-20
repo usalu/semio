@@ -23,7 +23,7 @@ fn preference_events_replay_and_serialize_concurrent_commands() {
     for writer in writers { writer.join().unwrap(); }
     let mut preferences = Preferences::default();
     assert_eq!(replay(&path, &mut preferences).unwrap(), 8);
-    assert_eq!(preferences.language, "de");
+    assert_eq!(preferences.language.as_deref(), Some("de"));
     assert_eq!(preferences.terminology, "reuse");
     fs::write(&path, "{\"version\":1,\"revision\":2,\"change\":{\"language\":\"de\"}}\n").unwrap();
     assert!(replay(&path, &mut preferences).is_err());
@@ -38,7 +38,7 @@ fn explicit_arguments_override_environment_and_reject_mistakes() {
     preferences.apply(&Change::parse(r#"{"language":"de","renderer":"wgpu-native"}"#).unwrap());
     let parsed = dashboard_core::args::parse(&["dashboard".into(), "--language".into(), "en".into(), "--layout".into(), "rows".into()]);
     apply_arguments(&mut preferences, &parsed).unwrap();
-    assert_eq!(preferences.language, "en");
+    assert_eq!(preferences.language.as_deref(), Some("en"));
     assert_eq!(preferences.layout, "rows");
     for argv in [vec!["dashboard", "--language", "xx"], vec!["dashboard", "--unknown", "yes"], vec!["dashboard", "--root"], vec!["dashboard", "--config", ""], vec!["dashboard", "--workspace", "yes"]] {
         assert!(apply_arguments(&mut preferences, &dashboard_core::args::parse(&argv.into_iter().map(String::from).collect::<Vec<_>>())).is_err());
@@ -95,7 +95,7 @@ fn preferences_pre_select_only_the_launch_parameters_a_command_offers() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap();
     let facts: dashboard_registry::Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
     let registry = dashboard_registry::Registry::build(Path::new("workspace"), &facts);
-    let preferences = Preferences { language: "de".into(), renderer: "wgpu-wasm".into(), ..Default::default() };
+    let preferences = Preferences { language: Some("de".into()), renderer: "wgpu-wasm".into(), ..Default::default() };
     let playground = registry.find("playground:puzzle3d").unwrap();
     let defaults = preferences.launch_defaults(&registry.parameters(playground));
     assert!(defaults.contains(&("renderer".to_string(), "wgpu-wasm".to_string())) && defaults.contains(&("language".to_string(), "de".to_string())), "{defaults:?}");
@@ -118,11 +118,11 @@ fn p2_1_a_torn_last_line_is_ignored_and_cut_off_by_the_next_writer() {
     drop(file);
     let mut preferences = Preferences::default();
     assert_eq!(replay(&path, &mut preferences).unwrap(), 1, "the unfinished event is not part of the journal");
-    assert_eq!(preferences.language, "de");
+    assert_eq!(preferences.language.as_deref(), Some("de"));
     assert_eq!(append(&path, &Change::parse(r#"{"appearance":"light"}"#).unwrap()).unwrap(), 2);
     let mut again = Preferences::default();
     assert_eq!(replay(&path, &mut again).unwrap(), 2);
-    assert_eq!((again.language.as_str(), again.appearance.as_str()), ("de", "light"));
+    assert_eq!((again.language.as_deref(), again.appearance.as_str()), (Some("de"), "light"));
     fs::remove_dir_all(root).unwrap();
 }
 
@@ -164,7 +164,7 @@ fn p2_1_a_full_journal_is_compacted_instead_of_refusing_changes() {
     assert_eq!(after, 2, "the journal starts over with a snapshot and the new event");
     let mut preferences = Preferences::default();
     assert_eq!(replay(&path, &mut preferences).unwrap(), 2);
-    assert_eq!((preferences.language.as_str(), preferences.appearance.as_str(), preferences.layout.as_str(), preferences.prefix.as_str()), ("de", "light", "rows", "ctrl+a"));
+    assert_eq!((preferences.language.as_deref(), preferences.appearance.as_str(), preferences.layout.as_str(), preferences.prefix.as_str()), (Some("de"), "light", "rows", "ctrl+a"));
     assert_eq!(preferences.bindings["prefix.detach"], ["q"]);
     assert!(fs::metadata(&path).unwrap().len() < 2000);
     fs::remove_dir_all(root).unwrap();
@@ -185,27 +185,27 @@ fn p2_1_a_broken_journal_never_stops_the_dashboard_from_starting() {
 }
 
 #[test]
-fn the_language_comes_from_the_system_and_then_the_declared_fallback_below_every_preference_layer() {
+fn the_language_resolves_explicit_layers_and_system_without_a_default() {
     let root = scratch("language");
     fs::create_dir_all(&root).unwrap();
     let parsed = dashboard_core::args::parse(&["dashboard".into(), "--config".into(), root.join("local.jsonl").display().to_string()]);
     let system = |name: &str| (name == "LANG").then(|| "de_DE.UTF-8".to_string());
-    assert_eq!(load_in(&root, &parsed, &system).unwrap().language, "de", "the system names German");
-    assert_eq!(load_in(&root, &parsed, &|_| None).unwrap().language, language::declared().fallback().as_str(), "the system names none, so the declared fallback speaks");
-    assert_eq!(Preferences::default().language, language::declared().fallback().as_str());
+    assert_eq!(load_in(&root, &parsed, &system).unwrap().language.as_deref(), Some("de"), "the system names German");
+    assert_eq!(load_in(&root, &parsed, &|_| None).unwrap().language, None, "unresolved startup must choose explicitly");
+    assert_eq!(Preferences::default().language, None);
     append(&local_path(&root, &parsed), &Change::parse(r#"{"language":"en"}"#).unwrap()).unwrap();
-    assert_eq!(load_in(&root, &parsed, &system).unwrap().language, "en", "a stored choice beats the system");
+    assert_eq!(load_in(&root, &parsed, &system).unwrap().language.as_deref(), Some("en"), "a stored choice beats the system");
     let override_de = |name: &str| (name == "SEMIO_LOCALE").then(|| "de".to_string());
-    assert_eq!(load_in(&root, &parsed, &override_de).unwrap().language, "de", "the environment override beats the stored choice");
+    assert_eq!(load_in(&root, &parsed, &override_de).unwrap().language.as_deref(), Some("de"), "the environment override beats the stored choice");
     assert!(load_in(&root, &parsed, &|name: &str| (name == "SEMIO_LOCALE").then(|| "xx".to_string())).is_err(), "the override stays strict");
     fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
 fn compaction_keeps_the_system_language_free_unless_the_journal_chose_one() {
-    let preferences = Preferences::default();
+    let preferences = Preferences {language:Some("de".into()),..Default::default()};
     assert_eq!(snapshot(&preferences, false).language, None);
-    assert_eq!(snapshot(&preferences, true).language.as_deref(), Some(preferences.language.as_str()));
+    assert_eq!(snapshot(&preferences, true).language.as_deref(), preferences.language.as_deref());
 }
 
 #[test]
@@ -221,10 +221,29 @@ fn every_scenario_of_the_preferences_feature_is_proved_by_a_test() {
         ("Resolving layered preferences", &["preferences_match_independent_language_neutral_vectors", "explicit_arguments_override_environment_and_reject_mistakes"]),
         ("Customization survives reopening", &["preference_events_replay_and_serialize_concurrent_commands"]),
         ("The prefix key and single bindings are customized by events", &["keymap_customizations_travel_as_preference_events_and_layers_merge_per_binding", "invalid_keymap_changes_are_rejected_before_they_can_be_published"]),
-        ("The language falls back from the stored choice to the system and then to the declared chain", &["the_language_comes_from_the_system_and_then_the_declared_fallback_below_every_preference_layer", "compaction_keeps_the_system_language_free_unless_the_journal_chose_one"]),
+        ("The language resolves from explicit choices or system settings and otherwise requires a choice", &["the_language_resolves_explicit_layers_and_system_without_a_default", "compaction_keeps_the_system_language_free_unless_the_journal_chose_one"]),
         ("The language follows the preference everywhere", &["the_catalogue_follows_the_chosen_language", "p1_11_no_user_visible_text_is_hard_coded_outside_the_catalogue"]),
         ("Discovery does not block interaction", &["the_job_publishes_the_known_commands_first_then_the_result_of_the_walk_and_finishes", "a_cancelled_discovery_returns_nothing_and_leaves_no_snapshot"]),
         ("Keyboard and mouse use the same command selection", &["journeys_match_the_shared_vectors"]),
         ("Preferences pre-select what a command offers", &["preferences_pre_select_only_the_launch_parameters_a_command_offers"]),
     ]);
+}
+
+#[test]
+fn explicit_language_event_reopens_unresolved_preferences_without_publishing_a_default() {
+    let root=scratch("language-choice"); let parsed=dashboard_core::args::ParsedArgs::default();
+    let path=local_path(&root,&parsed);
+    assert_eq!(load_in(&root,&parsed,&|_|None).unwrap().language,None);
+    assert!(!path.exists(),"query and cancellation do not create a journal");
+    append(&path,&Change{language:Some("de".into()),..Default::default()}).unwrap();
+    assert_eq!(load_in(&root,&parsed,&|_|None).unwrap().language.as_deref(),Some("de"));
+    assert_eq!(serde_json::to_value(Preferences::default()).unwrap()["language"],serde_json::Value::Null);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn language_publication_cancels_a_lock_wait_without_publishing_and_retains_a_committed_event(){
+ let root=scratch("language-cancel");let path=root.join("preferences.jsonl");fs::create_dir_all(&root).unwrap();let change=Change{language:Some("de".into()),..Default::default()};let stopped=std::sync::atomic::AtomicBool::new(true);assert_eq!(append_cancellable(&path,&change,&stopped).unwrap_err().kind(),io::ErrorKind::Interrupted);assert!(!path.exists());
+ let held=OpenOptions::new().create(true).read(true).write(true).truncate(false).open(&path).unwrap();held.try_lock().unwrap();let cancel=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));let worker_cancel=cancel.clone();let worker_path=path.clone();let worker_change=change.clone();let worker=std::thread::spawn(move||append_cancellable(&worker_path,&worker_change,&worker_cancel));std::thread::sleep(std::time::Duration::from_millis(25));cancel.store(true,std::sync::atomic::Ordering::Release);assert_eq!(worker.join().unwrap().unwrap_err().kind(),io::ErrorKind::Interrupted);assert_eq!(fs::metadata(&path).unwrap().len(),0);drop(held);
+ cancel.store(false,std::sync::atomic::Ordering::Release);assert_eq!(append_cancellable(&path,&change,&cancel).unwrap(),1);cancel.store(true,std::sync::atomic::Ordering::Release);let mut projected=Preferences::default();assert_eq!(replay(&path,&mut projected).unwrap(),1);assert_eq!(projected.language.as_deref(),Some("de"));fs::remove_dir_all(root).unwrap();
 }

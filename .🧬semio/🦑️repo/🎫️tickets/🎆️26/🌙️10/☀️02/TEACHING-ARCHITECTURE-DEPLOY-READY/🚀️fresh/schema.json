@@ -1,0 +1,279 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rows",
+    "streams",
+    "settlements",
+    "publications"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "stage",
+          "completed",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "exit",
+              "signal",
+              "unknown",
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "receipt",
+              "plan",
+              "pins",
+              "final",
+              "error"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "create",
+              "source",
+              "gitCapture",
+              "gitArchive",
+              "gitTransfer",
+              "provision",
+              "controller",
+              "facts",
+              "export",
+              "final"
+            ]
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "streams": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "chunks",
+          "limit",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "chunks": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "maxLength": 16
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "settlements": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "accepted"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "error"
+            ]
+          },
+          "accepted": {
+            "const": false
+          }
+        }
+      }
+    },
+    "publications": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "accepted"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "error"
+            ]
+          },
+          "accepted": {
+            "const": false
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "stages": {
+      "const": [
+        {
+          "id": "create",
+          "entry": "🌱️linux/entry.ts"
+        },
+        {
+          "id": "source",
+          "entry": "📦️fresh/script.ts"
+        },
+        {
+          "id": "gitCapture",
+          "entry": "📦️fresh/capture-git.ts"
+        },
+        {
+          "id": "gitArchive",
+          "entry": "📦️fresh/git-transfer.ts"
+        },
+        {
+          "id": "gitTransfer",
+          "entry": "📦️fresh/git-transfer.ts"
+        },
+        {
+          "id": "provision",
+          "entry": "🌱️linux/entry.ts"
+        },
+        {
+          "id": "controller",
+          "entry": "🌱️linux/script.ts"
+        },
+        {
+          "id": "facts",
+          "entry": "👁️facts/entry.ts"
+        },
+        {
+          "id": "export",
+          "entry": "📤️fresh/entry.ts"
+        },
+        {
+          "id": "final",
+          "entry": "🔬️final/entry.ts"
+        }
+      ]
+    },
+    "limits": {
+      "const": {
+        "policyBytes": 262144,
+        "planBytes": 1048576,
+        "receiptBytes": 134217728,
+        "logBytes": 268435456,
+        "logLines": 2097152,
+        "writeChunk": 65536,
+        "maximumPath": 256,
+        "cleanupMilliseconds": 60000,
+        "framedLogBytes": 402653184,
+        "framedLogRecords": 2097152
+      }
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "launched",
+        "joined",
+        "known",
+        "status",
+        "signal",
+        "failed"
+      ],
+      "properties": {
+        "launched": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "joined": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "known": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "error": {}
+      }
+    }
+  }
+}

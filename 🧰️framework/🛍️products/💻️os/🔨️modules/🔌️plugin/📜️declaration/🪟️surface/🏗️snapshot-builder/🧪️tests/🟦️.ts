@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 test("cold reference builder wire values and disposal agree with independent SQL", () => {
@@ -16,6 +16,5 @@ test("cold reference builder wire values and disposal agree with independent SQL
       expect({ ...oracle, error: Boolean(oracle.error) }).toEqual({ result: row.result, error: row.error, mutationsRetired: row.mutationsRetired, diffsRetired: row.diffsRetired, projectionsRetired: row.projectionsRetired });
     }
   } finally { database.close(); }
-  console.log(`[DEBUG] SnapshotBuilder: ${corpus.cases.length} neutral terminal projections and retirement receipts agree with Ajv and SQLite`);
 });
 

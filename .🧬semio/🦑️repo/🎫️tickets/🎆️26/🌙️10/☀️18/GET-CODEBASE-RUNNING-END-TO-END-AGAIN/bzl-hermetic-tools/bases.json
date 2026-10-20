@@ -1,0 +1,18 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔒️hermetic-classes.json": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔣️.json": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🚪️entry/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/📦️dependencies/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🧫️fixtures/🔣️.json": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🔒️classes/🟦️.ts": null,
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts": "1a82ff8b2bac5ec64c69b06cc5850608a6d31d5d83bc3b917588a1696f5750d5",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧬️schema/🔣️.json": "5a1e0f11d2b054f0458c52be2171978d04b50051b1fa2815cf23e44ac357f45c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": "96ebe8a0eff15396d12467d95806d54c265a0f3515d38949d8653b54452ba2fd",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json": "b587277bcce76fee1271e862aa8766fd11dd55cd9682803d850ee9d1b025b979",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🔒️hermetic/🟦️.ts": "a257cdf15d5b8bfd4c9826858c25f50cb26d432519dc1e8f75db39ccf97f531e",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🟦️.ts": "4361707c9afbde1810d986ffd570b2f9ffceb068438975ac25a18a99157b2498",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🏭️runner/🟦️.ts": "2d1b5841f92ea01287f8131dde2b8b83dd0837bf19396a191d8862f1205b5081"
+}

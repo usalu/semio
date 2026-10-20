@@ -532,13 +532,6 @@
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
       { "env": "SEMIO_BUILD_BUDGET_MS" }
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
@@ -649,11 +642,24 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
     },
     "test-media-slots": {
       "executor": "repo:script",
@@ -860,7 +866,8 @@
               "en": "Choose docking tests or a renderer session.",
               "de": "Andocktests oder eine Renderer-Sitzung auswählen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       }
     },
@@ -944,7 +951,8 @@
               "en": "Run media checks with an explicit server and language.",
               "de": "Medienprüfungen mit explizitem Server und Sprache ausführen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       }
     },
@@ -1318,7 +1326,12 @@
           }
         }
       },
-      "defaultConfiguration": "prototype"
+      "defaultConfiguration": "prototype",
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
     },
     "generate-renderer-boot": {
       "executor": "repo:script",
@@ -1416,7 +1429,8 @@
               "en": "Run embedded browser checks with a selected configuration.",
               "de": "Prüfungen des eingebetteten Browsers mit ausgewählter Konfiguration ausführen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       }
     },

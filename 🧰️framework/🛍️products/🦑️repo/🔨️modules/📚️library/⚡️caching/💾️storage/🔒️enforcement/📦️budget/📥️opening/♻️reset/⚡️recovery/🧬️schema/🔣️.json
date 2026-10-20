@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Canonical Inactive Nx Preflight Recovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "partition",
+    "attempts",
+    "reasons",
+    "control",
+    "ordinaryFailure",
+    "openAttempts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "partition": {
+      "const": "nx"
+    },
+    "attempts": {
+      "const": 1
+    },
+    "reasons": {
+      "const": [
+        "current-reset-intent",
+        "unsupported-receipt-shape"
+      ]
+    },
+    "control": {
+      "const": "same-issued-original"
+    },
+    "ordinaryFailure": {
+      "const": "preserve-exact"
+    },
+    "openAttempts": {
+      "const": 1
+    }
+  },
+  "$defs": {
+    "PublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "publication",
+        "reset"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "publication": {
+          "type": "object"
+        },
+        "reset": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

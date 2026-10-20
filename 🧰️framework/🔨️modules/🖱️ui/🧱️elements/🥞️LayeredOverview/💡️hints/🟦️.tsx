@@ -1,3 +1,4 @@
+/** 💡️ The swipe hints of LayeredOverview: the neighbouring page and its direction at each edge of the view. */
 import type { LayeredDirection, LayeredLanding } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";
 import * as React from "react";
@@ -38,7 +39,7 @@ export interface LayeredNeighbour extends LayeredLanding {
   readonly pane: LayeredPane;
 }
 
-/** 🧭️ The hints of the swiped overview: at each edge of the view behind which a page lies, that page's label with an arrow — the page a swipe
+/** 🧩️ The hints of the swiped overview: at each edge of the view behind which a page lies, that page's label with an arrow — the page a swipe
  * the other way brings in — at the top and bottom edges across, at the sides along them. Each hint is a button that goes there. While the strip
  * moves the hints fade out (and leave the focus order), so they always name the neighbours of the page at rest.
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — every swipe also has a single-pointer way */

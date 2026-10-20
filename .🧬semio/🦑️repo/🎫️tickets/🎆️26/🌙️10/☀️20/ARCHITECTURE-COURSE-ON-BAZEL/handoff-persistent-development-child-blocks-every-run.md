@@ -1,0 +1,10 @@
+# Handoff: every `bun repo --tool=bazel run` (also `--dry-run`) dies on the mounted persistent/development child
+
+Found by x-keys, 2026-10-20 15:35. Same error as `handoff-setup-bazel-child-allocation.md`, now with the cause.
+
+- Symptom: after the (minutes long) dependency walks, `error: Exact original parent child allocation required` at `readNativeStorageMountedChildV1` (`F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts:210`). Logs with it: `🗑️generated/dry-test.log`, `setup-bazel.log`, `x-keys/run1-test.log`, `x-release/dry-publish_release.log`, `x-site/bazel-build-1.log`.
+- Caller: `verifyPersistentManagedChildrenV1` (`…/💾️storage/🧹️cleanup/🎛️command/🟦️.ts`): for every kernel-roster mount below the persistent parent it requires exactly one parent-journal row with `child.directory === dirname(mount)` and `kind === "compiler-state"`.
+- Offender: `.cache/b/p/m/persistent/development/m` (disk21s1, 1 GiB, created 2026-10-19 23:06). Its journal row (`.cache/b/p/m/storage-events.jsonl`, last line) is `owner development:local-state:dc9d73b6…`, `kind persistent-state`, phase `reserved`, never `committed`; `.cache/b/p/m/persistent-development.pending.json` still exists. A `persistent-state` allocation has no `child` request, so the lookup finds 0 candidates.
+- Consequence: the products partition cannot be opened by any run since that child exists. No Bazel workspace has ever been generated here (`.cache/b/p/m/bazel/workspaces/234823c9f31c8317` holds only the planner stub from 10/19 19:26).
+- Fix options (peer storage layer, FROZEN for us, not applied): (1) code: skip roster rows whose journal row is `persistent-state` (or whose directory is a sibling persistent store) in `verifyPersistentManagedChildrenV1`; (2) state: after confirming no process uses it, `hdiutil detach` the child, remove `persistent/development`, `persistent-development.pending.json` and retire the journal row (memory note: unfunded mounted descendants poison every parent `recheck()`).
+- x-keys did NOT touch the mount or the journal.

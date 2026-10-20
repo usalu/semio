@@ -1,0 +1,20 @@
+[
+  {
+    "id": "root-registry",
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🟦️.ts",
+    "mode": "full",
+    "reason": "the root router reads the command registry and renders every command's help before any dependency exists"
+  },
+  {
+    "id": "root-provision",
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🥾️provision/🟦️.ts",
+    "mode": "full",
+    "reason": "the gate that installs the locked dependencies before a dependent root command is loaded runs on a fresh clone"
+  },
+  {
+    "id": "root-policy",
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts",
+    "mode": "full",
+    "reason": "bun ./📜️script.ts policy loads this lint from a checkout whose dependencies may not be installed"
+  }
+]

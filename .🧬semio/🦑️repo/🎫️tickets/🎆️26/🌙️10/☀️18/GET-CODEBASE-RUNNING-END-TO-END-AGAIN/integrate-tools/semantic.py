@@ -233,3 +233,24 @@ PATCHES += [
     patch("catalogue examples follow the neutral `repo` spelling the catalogue schema requires (`^repo `); the endpoint variable is described in the notes",
           'SEMIO_REMOTE_CACHE_ENDPOINT=http://127.0.0.1:6090 bun repo cache remote status --tool=bazel', 'repo cache remote status --tool=bazel', rel="L/🏗️build/⚙️operations/🔣️catalog.json", after="rcache"),
 ]
+
+
+PATCHES += [
+    patch("two sets added the test kind to the action-fixture schema enum: it lists each kind once",
+          '              "launch",\n              "test"\n            ]', '              "launch"\n            ]',
+          rel=BZ + "/🧪️tests/📥️actions/🧬️schema.json", after="bzl-lazy"),
+    patch("the one repo_test carries its timeout once, at the end of the rendered attributes",
+          '    "    name = \\"t_71eb00441669d8d8\\",",\n    "    timeout = \\"eternal\\",",\n', '    "    name = \\"t_71eb00441669d8d8\\",",\n',
+          rel=BZ + "/🧪️tests/📥️actions/🔣️.json", after="bzl-lazy"),
+]
+
+
+def _drop_lazy_test_rule(text):
+    a = text.index("def _quote(value):\n    if \"'\" in value:")
+    b = text.index("def _noop_impl(", a)
+    if text.count("repo_test = rule(") != 2 or "#!/bin/sh" not in text[a:b]:
+        raise SystemExit("semantic edit: the shell-launcher repo_test of bzl-lazy was expected exactly once next to bzl-coverage's")
+    return text[:a] + text[b:]
+
+
+PATCHES.insert(0, {"why": "one repo_test: bzl-lazy's shell-launcher rule is dropped, bzl-coverage's cross-platform launcher (birth protocol, no /bin/sh) stays", "rel": SCRIPT, "fn": _drop_lazy_test_rule, "after": "bzl-lazy"})

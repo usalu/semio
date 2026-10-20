@@ -1,0 +1,93 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "policy",
+  "language",
+  "shape"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "policy": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "args",
+     "env",
+     "expected"
+    ],
+    "properties": {
+     "args": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "env": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "object"
+     }
+    }
+   }
+  },
+  "language": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "env",
+     "expected"
+    ],
+    "properties": {
+     "env": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "enum": [
+       "en",
+       "de"
+      ]
+     }
+    }
+   }
+  },
+  "shape": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "workspaceRoot",
+    "part",
+    "stubs",
+    "expected"
+   ],
+   "properties": {
+    "workspaceRoot": {
+     "type": "string"
+    },
+    "part": {
+     "type": "object"
+    },
+    "stubs": {
+     "type": "object"
+    },
+    "expected": {
+     "type": "object"
+    }
+   }
+  }
+ }
+}

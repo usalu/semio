@@ -88,7 +88,8 @@ export async function createTypedWireSupport(vitest: TypedWireVitest, dependenci
   const { DEFAULT_UI_DOCUMENT_LIMITS } = dependencies;
   const { default: Ajv } = await import("ajv");
 
-  const { produce } = await import("immer");
+  const { produce: immerProduce } = await import("immer");
+  const produce = <Base,>(base: Base, recipe: (draft: import("immer").Draft<Base>) => void | Base): Base => immerProduce(base, recipe as never) as Base;
 
   const { Buffer } = await import("node:buffer");
 

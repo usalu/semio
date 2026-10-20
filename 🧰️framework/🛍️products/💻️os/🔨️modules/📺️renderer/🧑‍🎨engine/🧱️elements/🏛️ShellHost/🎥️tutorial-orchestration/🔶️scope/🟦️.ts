@@ -83,7 +83,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterShellActi
     publishInteractionSelection: publishTutorialInteractionSelection,
   };
 
-  /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
+  /** ⏯️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
   const tutorialLastAppliedMsRef = useRef(0);
   useEffect(() => {

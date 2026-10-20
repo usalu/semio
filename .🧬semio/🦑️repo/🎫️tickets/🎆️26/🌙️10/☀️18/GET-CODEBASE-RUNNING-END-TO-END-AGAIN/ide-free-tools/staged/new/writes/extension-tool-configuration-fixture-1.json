@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "id": "presentation-vite",
+      "tool": "vite",
+      "previousPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "demonstrator-vite",
+      "tool": "vite",
+      "previousPath": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+      "ownerPath": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🧺️demonstrator",
+      "loader": "vite-native",
+      "mode": "build"
+    },
+    {
+      "id": "hub-admin-vite",
+      "tool": "vite",
+      "previousPath": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "os-dev-vite",
+      "tool": "vite",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+      "loader": "vite-native",
+      "mode": "build"
+    },
+    {
+      "id": "wgpu-server-vite",
+      "tool": "vite",
+      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/⚙️vite.config.ts",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
+      "loader": "vite-native",
+      "mode": "serve"
+    },
+    {
+      "id": "demonstrator-playwright",
+      "tool": "playwright",
+      "previousPath": "♻️mit-bestand/🧺️demonstrator/🎭️playwright.config.ts",
+      "ownerPath": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+      "effectiveRoot": "♻️mit-bestand/🧺️demonstrator",
+      "loader": "module",
+      "mode": "test"
+    },
+    {
+      "id": "styling-tailwind",
+      "tool": "tailwind",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🎨️tailwind.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎨️styling",
+      "loader": "module",
+      "mode": "build"
+    },
+    {
+      "id": "root-eslint",
+      "tool": "eslint",
+      "previousPath": "eslint.config.mjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+      "effectiveRoot": ".",
+      "loader": "eslint",
+      "mode": "lint"
+    },
+    {
+      "id": "ui-react-eslint",
+      "tool": "eslint",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/eslint.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧹️lint/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "loader": "eslint",
+      "mode": "lint"
+    },
+    {
+      "id": "dependency-boundaries",
+      "tool": "dependency-cruiser",
+      "previousPath": ".dependency-cruiser.cjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+      "effectiveRoot": ".",
+      "loader": "dependency-cruiser",
+      "mode": "verify"
+    },
+    {
+      "id": "ui-react-postcss",
+      "tool": "postcss",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "loader": "postcss-load-config",
+      "mode": "build"
+    }
+  ],
+  "removedShims": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/tailwind.config.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tailwind.config.ts"
+  ],
+  "fixedContractIds": [
+    "dependency-cruiser-config",
+    "eslint-config",
+    "postcss-config",
+    "root-eslint-config",
+    "tailwind-config"
+  ],
+  "registration": {
+    "target": "test-tool-configuration-ownership"
+  },
+  "consumers": [
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+      "tokens": [
+        "🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+      "tokens": [
+        "🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts",
+      "tokens": [
+        "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/📄️browser-document-open/🟦️.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🛡️admin-relay-checks/🟦️.ts",
+      "tokens": [
+        "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+      "tokens": [
+        "import {frameworkOsViteArtifactInputsV1} from \"../../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts\""
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+      "tokens": [
+        "🎚️config/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+      "tokens": [
+        "../💨️tailwind/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "tokens": [
+        "../../🧹️lint/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "tokens": [
+        "bun ./📜️script.ts lint",
+        "\"./postcss.config\": \"./🟦️.mts\"",
+        "\"@tailwindcss/postcss\"",
+        "\"postcss\""
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+      "tokens": [
+        "config: string;"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧷️typescript-reference-authority/🟦️.ts",
+      "tokens": [
+        "/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+      "tokens": [
+        "export { default } from \"../../🛠️build-tooling/🎨️styling/🟦️.ts\";"
+      ]
+    }
+  ],
+  "projectInputs": [
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "presentation-vite"
+      ]
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+      "owners": [
+        "demonstrator-vite",
+        "demonstrator-playwright"
+      ]
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "hub-admin-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "os-dev-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "wgpu-server-vite"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "styling-tailwind"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+      "owners": [
+        "ui-react-eslint",
+        "ui-react-postcss"
+      ]
+    }
+  ],
+  "postcss": {
+    "ownerId": "ui-react-postcss",
+    "packageManifestPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+    "packageEntryPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+    "packageExport": "./postcss.config",
+    "packageExportTarget": "./🟦️.mts",
+    "standaloneLoader": {
+      "kind": "explicit-search-place",
+      "searchPlace": "🟦️.mts"
+    },
+    "viteLoader": {
+      "kind": "inline-plugin-array",
+      "exportName": "uiPostcssInlinePlugins"
+    },
+    "historicalFixturePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "historicalOwnerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
+    "cases": [
+      {
+        "id": "utility-application",
+        "source": ".probe { @apply underline; }\n",
+        "expectedDeclarations": [
+          {
+            "selector": ".probe",
+            "property": "text-decoration-line",
+            "value": "underline"
+          }
+        ]
+      },
+      {
+        "id": "inline-theme-application",
+        "source": "@theme inline { --color-taxonomy: #123456; }\n.probe { @apply text-taxonomy; }\n",
+        "expectedDeclarations": [
+          {
+            "selector": ".probe",
+            "property": "color",
+            "value": "#123456"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "stable-observed-interval",
+      "accepted": true
+    },
+    {
+      "id": "provider-change",
+      "accepted": false
+    },
+    {
+      "id": "membership-change",
+      "accepted": false
+    },
+    {
+      "id": "roster-change",
+      "accepted": false
+    },
+    {
+      "id": "cancelled",
+      "accepted": false
+    },
+    {
+      "id": "deadline",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-path",
+      "accepted": false
+    },
+    {
+      "id": "file-bound",
+      "accepted": false
+    },
+    {
+      "id": "actual-empty-owner-receipts",
+      "accepted": true
+    }
+  ]
+}

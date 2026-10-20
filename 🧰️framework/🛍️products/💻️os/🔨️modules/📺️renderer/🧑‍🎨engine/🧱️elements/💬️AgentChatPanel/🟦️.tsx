@@ -18,7 +18,8 @@
 import { type ReactElement, useEffect, useRef, useState } from "react";
 import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
-import { agentUiLabel, type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
+import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";
+import { type AgentConversationEntry } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 import { AgentApprovalAffordance } from "../🤖️AgentApprovals/🟦️.tsx";
 import { type ApprovalDecision } from "@semio-tech/framework/mcp/bridge";
 // #endregion 🔌️Adapters

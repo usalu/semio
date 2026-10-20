@@ -18,7 +18,25 @@
     { "name": "test-root", "exports": { ".": "./index.ts", "import": "./other.ts" } }
   ],
   "workspace": ["@semio-tech/repo-lib/cargo", "@semio-tech/schema-validator-ts", "@semio-tech/ui-styling/builder/vite/status-serve", "@semio-tech/framework/async", "@semio-tech/course", "@semio-tech/pets"],
-  "sourceExports": [{ "manifest": "🧰️framework/🔨️modules/🛂️manifest/package.json", "specifier": "@semio-tech/framework-manifest/generated/ui-axes", "target": "./🤖️generated/🎚️ui-axes/🟦️.ts", "source": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts", "values": ["SHELL_LOCALES", "SHELL_TERMINOLOGIES", "isShellLocale", "isShellTerminology"], "types": ["LocalizedLabel", "ShellLocale", "ShellTerminology"] }],
+  "generatedExports": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🛂️manifest/package.json",
+      "specifier": "@semio-tech/framework-manifest/generated/ui-axes",
+      "target": "./🤖️generated/🎚️ui-axes/🟦️.ts",
+      "origin": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+      "values": [
+        "SHELL_LOCALES",
+        "SHELL_TERMINOLOGIES",
+        "isShellLocale",
+        "isShellTerminology"
+      ],
+      "types": [
+        "LocalizedLabel",
+        "ShellLocale",
+        "ShellTerminology"
+      ]
+    }
+  ],
   "cancellation": { "afterAdvances": 3, "maximumElapsedMilliseconds": 5000 },
   "testing": { "minimum": "quick", "budgetMilliseconds": 300000 },
   "sourceLock": { "owner": "🎓️teaching", "path": "🎓️teaching/bun.lock", "workspace": "🏛️architecture/📚️course/📦️packages/🟦️typescript", "name": "@teaching/architecture-course", "dependencySections": ["dependencies", "devDependencies"] }

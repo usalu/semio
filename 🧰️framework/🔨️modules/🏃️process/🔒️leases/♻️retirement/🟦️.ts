@@ -1,7 +1,8 @@
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{withArtifactReadDirectoryV1}from"../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import type{ResourceLeaseControl}from"../🎛️control/🟦️.ts";
-import {lstatSync,type Stats} from "node:fs";
+import {lstatSync,statSync,type Stats} from "node:fs";
+import {isSystemLeaseLinkV1} from "../🎛️control/🟦️.ts";
 import {createHash} from "node:crypto";
 import {dirname,join,resolve} from "node:path";
 import authoritySchema from "../🧬️schema/📜️ticket.json" with {type:"json"};
@@ -29,7 +30,7 @@ export class ResourceLeaseAdmissionFinalizerV1<T extends{release():void}>{
 export function resourceLeaseRetirementNamesV1(directory:string,control:ResourceLeaseControl):Promise<readonly string[]>{requireIssuedResourceControlV1(control);if(typeof directory!=="string"||!directory||directory.length>256||directory.includes("\0"))throw Error("Bounded resource inventory directory required");return withRequestedIssuedResourceControlV1(control,0,async actual=>{const started=Date.now(),names=await withArtifactReadDirectoryV1(directory,()=>requireIssuedResourceControlV1(actual),async handle=>{const names:string[]=[];for(;;){requireIssuedResourceControlV1(actual);const row=handle.read();requireIssuedResourceControlV1(actual);if(!row)break;if(names.length>=schema.properties.maximumDirectoryEntries.const)throw Error("Bounded resource directory inventory required");names.push(row.name);if(names.length%resourceLeaseRetirementScanLimitsV1.entriesPerYield===0){if(names.length===resourceLeaseRetirementScanLimitsV1.entriesPerYield||names.length%resourceLeaseRetirementScanLimitsV1.entriesPerProgress===0)await actual.publish({resource:"resource-retirement-inventory:"+names.length,mode:"shared",elapsedMs:Math.max(0,Date.now()-started)});await actual.yieldContinuation();requireIssuedResourceControlV1(actual);}}requireIssuedResourceControlV1(actual);return Object.freeze(names.sort());});requireIssuedResourceControlV1(actual);return names;});}
 function sidecars(path:string):boolean{return ["-journal","-wal","-shm"].some(suffix=>lstatSync(path+suffix,{throwIfNoEntry:false})!==undefined);}
 /** 🛣️ Requires physical directory ancestry without following symlinks. */
-function parent(directory:string):Stats{let held:Stats|undefined;for(let path=resolve(directory);;path=dirname(path)){const row=lstatSync(path);if(!row.isDirectory()||row.isSymbolicLink())throw Error("Original retirement directory required");held??=row;if(dirname(path)===path)break;}return held!;}
+function parent(directory:string):Stats{let held:Stats|undefined;for(let path=resolve(directory);;path=dirname(path)){const row=lstatSync(path),system=row.isSymbolicLink()&&isSystemLeaseLinkV1(path,row)&&statSync(path).isDirectory();if(!system&&(!row.isDirectory()||row.isSymbolicLink()))throw Error("Original retirement directory required");held??=row;if(dirname(path)===path)break;}return held!;}
 /** 📌️ Admits only one nonempty regular single-link same-device SQLite file without sidecars. */
 export function captureResourceLeaseCandidateV1(directory:string,name:string):ResourceLeaseCandidateV1|undefined{if(!/^[a-f0-9]{64}\.sqlite$/u.test(name))return;const path=join(directory,name),file=lstatSync(path,{throwIfNoEntry:false});if(!file||!file.isFile()||file.isSymbolicLink()||file.nlink!==1||file.size<1||file.size>schema.properties.maximumDatabaseBytes.const)return;const owner=parent(directory);if(file.dev!==owner.dev||sidecars(path))return;return Object.freeze({path,directory,file,parent:owner,allocatedBytes:file.blocks*512});}
 /** 🧷️ Rechecks physical identity after the actual connection closes and immediately before unlink. */

@@ -22,7 +22,7 @@ const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document
 #[semio_framework_async_macros::async_test]
 async fn export_media_emits_download_effect_and_import_requests_file_open() {
     semio_hub_space_app::unit_tests::context::seed_draw_plugin().await;
-    directory::io::register_format_descriptors([directory::io::FormatDescriptor {
+    semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
         kind_id: DWG_FORMAT_ID.into(),
         short_id: DWG_FORMAT_ID.into(),
         aliases: Vec::new(),

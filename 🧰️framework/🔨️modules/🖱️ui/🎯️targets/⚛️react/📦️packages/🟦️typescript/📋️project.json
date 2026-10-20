@@ -73,11 +73,18 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts canonical-architecture"
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
     }
   }
 }

@@ -1,12 +1,13 @@
 //! 📝️ Bounded source commands with optimistic revisions and retained publication predecessors.
 
 use std::fs::{self, File, Metadata, OpenOptions};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, atomic::{AtomicBool, AtomicU64, Ordering}};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const MAXIMUM_FILE_BYTES: usize = 1_048_576;
+pub const MAXIMUM_MANAGED_FILE_BYTES: u64 = 67_108_864;
 pub const MAXIMUM_DIRECTORY_ENTRIES: usize = 4096;
 pub const MAXIMUM_PATH_UNITS: usize = 256;
 const MAXIMUM_JOURNAL_BYTES: u64 = 67_108_864;
@@ -38,9 +39,19 @@ pub struct Revision { root: PathBuf, path: String, stamp: Stamp, bytes: Arc<[u8]
 /// 📄️ A loaded UTF-8 document and the authority needed to save it.
 #[derive(Clone, Debug)]
 pub struct Document { pub path: String, pub text: String, pub revision: Revision }
+/// 🗝️ An opaque observed physical entry bound to one workspace and spelling.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EntryRevision { root: PathBuf, path: String, stamp: Stamp, directory: bool, nodes: Arc<[TreeNode]> }
+/// 🧺️ A retained entry with its durable command identity and actual recovery path.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RetainedEntry { pub command_id: String, pub path: String, pub recovery_path: String, pub directory: bool }
 /// 🗂️ A physical root whose source commands own their local event directory.
 #[derive(Clone, Debug)]
 pub struct Workspace { root: PathBuf, anchor: Arc<File> }
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct TreeNode { suffix:String, stamp:Stamp, directory:bool }
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RetainedProof { identity:(u64,u64), fingerprint:Option<String>, directory:bool, source:String }
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Stamp { identity: (u64, u64), length: u64, modified: Option<SystemTime>, change: (i64, i64) }
 
@@ -128,29 +139,8 @@ impl Workspace {
         Ok(Document { path: path.into(), text, revision: Revision { root: self.root.clone(), path: path.into(), stamp, bytes } })
     }
 
-    /// 🛟️ Inspects an authenticated immutable predecessor without granting save authority to event history.
-    pub fn load_recovery(&self, path:&str, cancel:&AtomicBool, progress:&mut dyn FnMut(Progress))->Result<Document,Error>{
-        checkpoint(cancel,path)?;
-        let candidate=Path::new(path);let relative=if candidate.is_absolute(){candidate.strip_prefix(&self.root).map_err(|_|error(ErrorKind::Boundary,path,"Recovery belongs to another workspace"))?.to_path_buf()}else{candidate.to_path_buf()};
-        let pieces=relative.components().collect::<Vec<_>>();
-        if pieces.len()!=2||pieces[0].as_os_str()!=STATE{return Err(error(ErrorKind::Boundary,path,"Authenticated source predecessor required"));}
-        let name=pieces[1].as_os_str().to_str().ok_or_else(||error(ErrorKind::InvalidPath,path,"Unicode predecessor name required"))?;
-        let stem=name.strip_suffix(".before").or_else(||name.strip_suffix(".new")).ok_or_else(||error(ErrorKind::Boundary,path,"Retained publication file required"))?;
-        if stem.is_empty()||!stem.bytes().all(|b|b.is_ascii_hexdigit()||b==b'-'){return Err(error(ErrorKind::Boundary,path,"Owned predecessor identity required"));}
-        let physical=self.root.join(&relative);bounded(&physical)?;
-        let receipt=self.root.join(STATE).join(format!("{stem}.outcome"));
-        let receipt_data=self.read_physical(&receipt,path,cancel,progress);
-        let (receipt_bytes,_)=match receipt_data{Ok(value)=>value,Err(_)=>{
-            let intent=self.root.join(STATE).join(format!("{stem}.intent"));let (bytes,_)=self.read_physical(&intent,path,cancel,progress)?;let intent_text=std::str::from_utf8(&bytes).map_err(|_|error(ErrorKind::NotText,path,"Source intent encoding required"))?;let rows=intent_text.lines().collect::<Vec<_>>();
-            if rows.len()!=4||rows[0]!="source-save-intent-v1"||rows[2].parse::<usize>().is_err()||rows[3].parse::<usize>().is_err(){return Err(error(ErrorKind::Boundary,path,"Authenticated retained source intent required"));}validate_relative(rows[1])?;
-            let (bytes,stamp)=self.read_physical(&physical,path,cancel,progress)?;let text=String::from_utf8(bytes.to_vec()).map_err(|_|error(ErrorKind::NotText,path,"Strict UTF-8 retained source required"))?;validate_text(&text)?;let path=physical.to_string_lossy().into_owned();return Ok(Document{path:path.clone(),text,revision:Revision{root:self.root.clone(),path,stamp,bytes}});
-        }};
-        let receipt_text=std::str::from_utf8(&receipt_bytes).map_err(|_|error(ErrorKind::NotText,path,"Source event encoding required"))?;let rows=receipt_text.lines().collect::<Vec<_>>();
-        let rows=rows.chunks_exact(3).last().ok_or_else(||error(ErrorKind::Boundary,path,"Source outcome required"))?;
-        if !matches!(rows[0],"source-save-committed-v1"|"source-save-conflict-v1"|"source-save-retained-v1")||rows[2]!=physical.to_string_lossy(){return Err(error(ErrorKind::Boundary,path,"Predecessor is not authenticated by its outcome"));}validate_relative(rows[1])?;
-        let (bytes,stamp)=self.read_physical(&physical,path,cancel,progress)?;let text=String::from_utf8(bytes.to_vec()).map_err(|_|error(ErrorKind::NotText,path,"Strict UTF-8 predecessor required"))?;validate_text(&text)?;
-        let path=physical.to_string_lossy().into_owned();Ok(Document{path:path.clone(),text,revision:Revision{root:self.root.clone(),path,stamp,bytes}})
-    }
+    /// 🛟️ Loads an authenticated segment predecessor without granting source save authority.
+    pub fn load_recovery(&self,path:&str,cancel:&AtomicBool,progress:&mut dyn FnMut(Progress))->Result<Document,Error>{checkpoint(cancel,path)?;self.load_retained(Path::new(path),cancel,progress)}
 
     fn read_physical(&self, physical: &Path, path: &str, cancel: &AtomicBool, progress: &mut dyn FnMut(Progress)) -> Result<(Arc<[u8]>, Stamp), Error> {
         let relative=physical.strip_prefix(&self.root).map_err(|_|error(ErrorKind::Boundary,path,"Source is outside its root"))?.to_string_lossy().replace('\\',"/");
@@ -173,84 +163,28 @@ impl Workspace {
         Ok((bytes.into(), before))
     }
 
-    fn store(&self, cancel: &AtomicBool, progress:&mut dyn FnMut(Progress)) -> Result<(PathBuf, File, File), Error> {
-        checkpoint(cancel, "")?;
-        let state = self.root.join(STATE); bounded(&state)?;
-        let directory=native::state_directory(&self.root,&self.anchor,STATE).map_err(|e|error(ErrorKind::Boundary,"",e))?;
-        let lock_path = state.join("writer.lock"); bounded(&lock_path)?;
-        let lock = native::create_in(&state,&directory,"writer.lock",false).map_err(|e| io("", e))?;
-        let facts=lock.metadata().map_err(|e|io("",e))?;
-        if !facts.is_file()||native::reparse(&facts){return Err(error(ErrorKind::Boundary,"","Physical source writer lock required"));}
-        lock.try_lock().map_err(|e| error(ErrorKind::Busy, "", e))?;
-        let mut total = 0u64;
-        let names=native::names(&state,&directory,"",cancel).map_err(|e|io("",e))?;
-        if names.len()>MAXIMUM_DIRECTORY_ENTRIES{return Err(error(ErrorKind::TooManyEntries,"","Source history requires archival"));}
-        let count=names.len();tick(progress,Stage::Checking,0,Some(count as u64));
-        for (index,name) in names.into_iter().enumerate() {
-            checkpoint(cancel, "")?;
-            let facts = native::open_in(&state,&directory,&name).and_then(|f|f.metadata()).map_err(|e|error(ErrorKind::Boundary,"",e))?;
-            if !facts.is_file()||facts.file_type().is_symlink()||native::reparse(&facts){return Err(error(ErrorKind::Boundary,"","Physical source event files required"));}
-            total = total.saturating_add(facts.len());
-            if index%64==0{tick(progress,Stage::Checking,(index+1)as u64,Some(count as u64));}
-            if total > MAXIMUM_JOURNAL_BYTES - (MAXIMUM_FILE_BYTES as u64 * 2 + 4096) { return Err(error(ErrorKind::TooLarge, "", "Source event history reached its 64 MiB bound")); }
-        }
-        tick(progress,Stage::Checking,count as u64,Some(count as u64));Ok((state, directory, lock))
+    fn store(&self,cancel:&AtomicBool,progress:&mut dyn FnMut(Progress))->Result<Journal,Error>{self.history_store(cancel,progress)}
+
+    /// 💾️ Publishes exact source bytes while retaining the actual exchanged predecessor.
+    pub fn save(&self,path:&str,expected:&Revision,text:&str,cancel:&AtomicBool,progress:&mut dyn FnMut(Progress))->Result<Document,Error>{
+        checkpoint(cancel,path)?;validate_text(text)?;if expected.root!=self.root||expected.path!=path{return Err(error(ErrorKind::Conflict,path,"Revision belongs to another document"));}self.physical(path,false)?;let journal=self.store(cancel,progress)?;let store=&journal.path;let anchor=&journal.anchor;if self.load(path,cancel,progress)?.revision!=*expected{return Err(error(ErrorKind::Conflict,path,"Source changed since load; preserve the draft or reload"));}
+        let id=format!("{:x}-{:x}-{:x}",std::process::id(),SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos(),SERIAL.fetch_add(1,Ordering::Relaxed));let stage_name=format!("{id}.new");let prior_name=format!("{id}.before");for name in [&stage_name,&prior_name,&format!("{id}.intent"),&format!("{id}.outcome")]{bounded(&store.join(name))?;}let relative=store.strip_prefix(&self.root).map_err(|_|error(ErrorKind::Boundary,path,"Rooted event segment required"))?.to_string_lossy().replace('\\',"/");let expected_retained=native::recovery_order(&stage_name,&prior_name)[0];let retained_relative=format!("{relative}/{expected_retained}");let mut staged=native::create_in(&store,&anchor,&stage_name,true).map_err(|e|io(path,e))?;let mut attempted=false;
+        let result=(||{staged.set_permissions(native::open_in(&self.root,&self.anchor,path).and_then(|file|file.metadata()).map_err(|e|io(path,e))?.permissions()).map_err(|e|io(path,e))?;for chunk in text.as_bytes().chunks(16384){checkpoint(cancel,path)?;staged.write_all(chunk).map_err(|e|io(path,e))?;tick(progress,Stage::Staging,staged.metadata().map_err(|e|io(path,e))?.len(),Some(text.len()as u64));}staged.sync_all().map_err(|e|io(path,e))?;self.entry_event(&journal,&id,"intent","save",path,&retained_relative,false,Some(&expected.stamp),Some(&management::bytes_fingerprint(&expected.bytes)),"prepared")?;
+            tick(progress,Stage::Checking,0,Some(1));checkpoint(cancel,path)?;if self.load(path,cancel,progress)?.revision!=*expected{return Err(error(ErrorKind::Conflict,path,"Source changed at final save checkpoint"));}tick(progress,Stage::Publishing,0,Some(1));checkpoint(cancel,path)?;if self.load(path,cancel,progress)?.revision!=*expected{return Err(error(ErrorKind::Conflict,path,"Source changed before publication"));}self.physical(path,false)?;checkpoint(cancel,path)?;attempted=true;
+            let retained=native::publish(&self.root,&self.anchor,path,&store,&anchor,&stage_name,&prior_name).map_err(|e|io(path,e))?;let settled=AtomicBool::new(false);let prior=store.join(&retained);let(bytes,stamp)=self.read_physical(&prior,path,&settled,progress)?;let matches=bytes.as_ref()==expected.bytes.as_ref()&&stamp.identity==expected.stamp.identity&&stamp.modified==expected.stamp.modified;let destination=format!("{relative}/{retained}");self.entry_event(&journal,&id,"outcome","save",path,&destination,false,Some(&stamp),Some(&management::bytes_fingerprint(&bytes)),if matches{"committed"}else{"conflict"})?;if !matches{return Err(error(ErrorKind::Conflict,path,"Publication raced; inspect the actual retained predecessor"));}let document=self.load(path,&settled,progress)?;if document.text!=text{return Err(error(ErrorKind::Conflict,path,"A subsequent source edit is present; the predecessor remains retained"));}tick(progress,Stage::Complete,1,Some(1));Ok(document)})();
+        if !attempted{drop(staged);let _=native::remove_in(&store,&anchor,&stage_name);}result.map_err(|mut failure|{if attempted&&failure.recovery_path.is_none(){for name in native::recovery_order(&stage_name,&prior_name){if native::open_in(&store,&anchor,name).and_then(|file|file.metadata()).is_ok_and(|facts|facts.is_file()){failure.recovery_path=Some(store.join(name).to_string_lossy().into_owned());break;}}}failure})
     }
 
-    /// 💾️ Publishes an existing document, retaining the kernel-exchanged predecessor and command outcomes.
-    pub fn save(&self, path: &str, expected: &Revision, text: &str, cancel: &AtomicBool, progress: &mut dyn FnMut(Progress)) -> Result<Document, Error> {
-        checkpoint(cancel, path)?; validate_text(text)?;
-        if expected.root != self.root || expected.path != path { return Err(error(ErrorKind::Conflict, path, "Revision belongs to another document")); }
-        self.physical(path, false)?;
-        let (store, store_anchor, _lock) = self.store(cancel,progress)?;
-        let current = self.load(path, cancel, progress)?;
-        if current.revision != *expected { return Err(error(ErrorKind::Conflict, path, "Source changed since load; reload or preserve the draft")); }
-        let id = format!("{:x}-{:x}-{:x}", std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos(), SERIAL.fetch_add(1, Ordering::Relaxed));
-        let stage = store.join(format!("{id}.new")); let prior = store.join(format!("{id}.before")); let intent = store.join(format!("{id}.intent")); let outcome = store.join(format!("{id}.outcome"));
-        for file in [&stage, &prior, &intent, &outcome] { bounded(file)?; }
-        let stage_name=format!("{id}.new");let prior_name=format!("{id}.before");
-        let mut staged = native::create_in(&store,&store_anchor,&stage_name,true).map_err(|e| io(path, e))?;
-        let mut publication_attempted = false;
-        let result = (|| {
-            staged.set_permissions(native::open_in(&self.root,&self.anchor,path).and_then(|f|f.metadata()).map_err(|e| io(path, e))?.permissions()).map_err(|e| io(path, e))?;
-            for chunk in text.as_bytes().chunks(16384) { checkpoint(cancel, path)?; staged.write_all(chunk).map_err(|e| io(path, e))?; tick(progress, Stage::Staging, staged.metadata().map_err(|e| io(path, e))?.len(), Some(text.len() as u64)); }
-            staged.sync_all().map_err(|e| io(path, e))?;
-            let mut event = native::create_in(&store,&store_anchor,&format!("{id}.intent"),true).map_err(|e| io(path, e))?;
-            event.write_all(format!("source-save-intent-v1\n{}\n{}\n{}\n", path, expected.bytes.len(), text.len()).as_bytes()).map_err(|e| io(path, e))?; event.sync_all().map_err(|e| io(path, e))?;
-            tick(progress, Stage::Checking, 0, Some(1)); checkpoint(cancel, path)?;
-            if self.load(path, cancel, progress)?.revision != *expected { return Err(error(ErrorKind::Conflict, path, "Source changed at final save checkpoint")); }
-            tick(progress, Stage::Publishing, 0, Some(1)); checkpoint(cancel, path)?;
-            if self.load(path, cancel, progress)?.revision != *expected { return Err(error(ErrorKind::Conflict, path, "Source changed before publication")); }
-            self.physical(path, false)?; checkpoint(cancel, path)?;
-            publication_attempted = true;
-            let retained_name=native::publish(&self.root,&self.anchor,path,&store,&store_anchor,&stage_name,&prior_name).map_err(|e| error(ErrorKind::Io, path, format!("{}; retained publication paths: {}, {}",e,stage.display(),prior.display())))?;
-            let prior=store.join(retained_name);
-            let settled = AtomicBool::new(false);
-            let retired = self.read_physical(&prior,path,&settled,progress);
-            let matches = retired.as_ref().is_ok_and(|(bytes,stamp)|bytes.as_ref()==expected.bytes.as_ref()&&stamp.identity==expected.stamp.identity&&stamp.modified==expected.stamp.modified);
-            let status = if matches { "source-save-committed-v1" } else { "source-save-conflict-v1" };
-            let mut receipt = native::create_in(&store,&store_anchor,&format!("{id}.outcome"),true).map_err(|e| io(path, e))?;
-            receipt.write_all(format!("{status}\n{path}\n{}\n", prior.display()).as_bytes()).map_err(|e| io(path, e))?; receipt.sync_all().map_err(|e| io(path, e))?;
-            if !matches { let mut failure=error(ErrorKind::Conflict,path,"Publication raced; foreign predecessor retained and the local version was published");failure.recovery_path=Some(prior.to_string_lossy().into_owned());return Err(failure); }
-            let document = self.load(path, &settled, progress)?;
-            if document.text != text { return Err(error(ErrorKind::Conflict, path, "A subsequent source edit is present; the saved predecessor remains in event history")); }
-            tick(progress, Stage::Complete, 1, Some(1));
-            Ok(document)
-        })();
-        if !publication_attempted { let _ = native::remove_in(&store,&store_anchor,&stage_name); }
-        match result{
-            Ok(document)=>Ok(document),
-            Err(mut failure)=>{
-                if publication_attempted&&failure.recovery_path.is_none(){
-                    for name in native::recovery_order(&stage_name,&prior_name){if native::open_in(&store,&store_anchor,name).and_then(|f|f.metadata()).is_ok_and(|m|m.is_file()){
-                        let retained=store.join(name);failure.recovery_path=Some(retained.to_string_lossy().into_owned());
-                        if let Ok(mut receipt)=native::create_in(&store,&store_anchor,&format!("{id}.outcome"),false){let _=receipt.seek(SeekFrom::End(0));let _=receipt.write_all(format!("source-save-retained-v1\n{path}\n{}\n",retained.display()).as_bytes());let _=receipt.sync_all();}break;
-                    }}
-                }Err(failure)
-            }
-        }
-    }
 }
+
+#[path="📬️commands/🦀️.rs"]
+pub mod commands;
+
+#[path="🎮️management/🦀️.rs"]
+mod management;
+
+pub use management::history::{HistoryInspection,HistoryCursor,HistoryPage};
+use management::history::Journal;
 
 #[cfg(unix)]
 mod native {
@@ -323,6 +257,17 @@ mod native {
         #[cfg(not(any(target_os="macos",target_os="linux")))] let swapped=-1;
         if swapped!=0{return Err(std::io::Error::last_os_error());}store.sync_all()?;parent.sync_all()?;Ok(stage.into())
     }
+
+    pub fn create_directory_in(_root:&Path,anchor:&File,path:&str)->std::io::Result<()>{let(parent,name)=parent(anchor,path)?;let c=CString::new(name)?;if unsafe{mkdirat(parent.as_raw_fd(),c.as_ptr(),0o700)}!=0{Err(std::io::Error::last_os_error())}else{Ok(())}}
+    pub fn remove_empty_in(_root:&Path,anchor:&File,path:&str)->std::io::Result<()>{let(parent,name)=parent(anchor,path)?;let c=CString::new(name)?;#[cfg(target_os="macos")]let flags=0x80;#[cfg(not(target_os="macos"))]let flags=0x200;if unsafe{unlinkat(parent.as_raw_fd(),c.as_ptr(),flags)}==0{Ok(())}else{Err(std::io::Error::last_os_error())}}
+    pub fn move_no_replace(_root:&Path,anchor:&File,path:&str,_target:&Path,target:&File,destination:&str)->std::io::Result<()>{
+        let(source,name)=parent(anchor,path)?;let(target,to)=parent(target,destination)?;let(a,b)=(CString::new(name)?,CString::new(to)?);
+        #[cfg(target_os="macos")]let result=unsafe{renameatx_np(source.as_raw_fd(),a.as_ptr(),target.as_raw_fd(),b.as_ptr(),4)};
+        #[cfg(target_os="linux")]let result=unsafe{renameat2(source.as_raw_fd(),a.as_ptr(),target.as_raw_fd(),b.as_ptr(),1)};
+        #[cfg(not(any(target_os="macos",target_os="linux")))]return Err(std::io::Error::new(std::io::ErrorKind::Unsupported,"Qualified exclusive rename required"));
+        #[cfg(any(target_os="macos",target_os="linux"))]if result==0{Ok(())}else{Err(std::io::Error::last_os_error())}
+    }
+    pub fn sync_parents(_root:&Path,anchor:&File,path:&str,_target:&Path,target:&File,destination:&str)->std::io::Result<()>{let(source,_)=parent(anchor,path)?;let(target,_)=parent(target,destination)?;source.sync_all()?;target.sync_all()}
 }
 
 #[cfg(windows)]
@@ -331,6 +276,7 @@ mod native {
     use std::os::windows::{ffi::OsStrExt,fs::{MetadataExt,OpenOptionsExt},io::AsRawHandle};
     #[repr(C)] struct Info{attributes:u32,creation:[u32;2],access:[u32;2],write:[u32;2],volume:u32,size_high:u32,size_low:u32,links:u32,index_high:u32,index_low:u32}
     #[link(name="Kernel32")] unsafe extern "system"{
+        fn SetFileInformationByHandle(file:*mut std::ffi::c_void,kind:u32,information:*const std::ffi::c_void,length:u32)->i32;
         fn GetFileInformationByHandle(file:*mut std::ffi::c_void,info:*mut Info)->i32;
         fn GetFinalPathNameByHandleW(file:*mut std::ffi::c_void,path:*mut u16,capacity:u32,flags:u32)->u32;
         fn ReplaceFileW(target:*const u16,stage:*const u16,prior:*const u16,flags:u32,exclude:*mut std::ffi::c_void,reserved:*mut std::ffi::c_void)->i32;
@@ -352,6 +298,20 @@ mod native {
     pub fn stamp(file:&File)->std::io::Result<Stamp>{let mut info=std::mem::MaybeUninit::<Info>::uninit();if unsafe{GetFileInformationByHandle(file.as_raw_handle(),info.as_mut_ptr())}==0{return Err(std::io::Error::last_os_error());}let info=unsafe{info.assume_init()};let m=file.metadata()?;if reparse(&m){return Err(std::io::Error::other("Physical file required"));}Ok(Stamp{identity:(info.volume as u64,((info.index_high as u64)<<32)|info.index_low as u64),length:m.len(),modified:m.modified().ok(),change:(0,0)})}
     pub fn recovery_order<'a>(stage:&'a str,prior:&'a str)->[&'a str;2]{[prior,stage]}
     pub fn publish(_root:&Path,anchor:&File,path:&str,_store:&Path,store:&File,stage:&str,prior:&str)->std::io::Result<String>{let target=pin(anchor,path)?;let staged=pin(store,stage)?;let backup=pin(store,prior)?;if fs::symlink_metadata(&backup.path).is_ok(){return Err(std::io::Error::other("New predecessor path required"));}let wide=|p:&Path|p.as_os_str().encode_wide().chain(Some(0)).collect::<Vec<u16>>();let(a,b,c)=(wide(&target.path),wide(&staged.path),wide(&backup.path));if unsafe{ReplaceFileW(a.as_ptr(),b.as_ptr(),c.as_ptr(),0,std::ptr::null_mut(),std::ptr::null_mut())}==0{Err(std::io::Error::last_os_error())}else{Ok(prior.into())}}
+
+    pub fn create_directory_in(_root:&Path,anchor:&File,path:&str)->std::io::Result<()>{let pinned=pin(anchor,path)?;fs::create_dir(&pinned.path)}
+    pub fn remove_empty_in(_root:&Path,anchor:&File,path:&str)->std::io::Result<()>{let pinned=pin(anchor,path)?;fs::remove_dir(&pinned.path)}
+    pub fn move_no_replace(_root:&Path,anchor:&File,path:&str,_target:&Path,target:&File,destination:&str)->std::io::Result<()>{
+        #[repr(C)]struct Rename{replace:u32,root:*mut std::ffi::c_void,length:u32,name:[u16;1]}
+        let source=pin(anchor,path)?;let destination=pin(target,destination)?;
+        let file=OpenOptions::new().access_mode(0x10000|0x80).share_mode(3).custom_flags(0x82200000).open(&source.path)?;
+        if reparse(&file.metadata()?){return Err(std::io::Error::other("Physical rename source required"));}
+        let name=destination.path.as_os_str().encode_wide().collect::<Vec<_>>();let offset=std::mem::offset_of!(Rename,name);let length=offset+name.len()*2;
+        let mut storage=vec![0usize;length.div_ceil(std::mem::size_of::<usize>())];let pointer=storage.as_mut_ptr().cast::<u8>();
+        unsafe{std::ptr::write(pointer.cast::<Rename>(),Rename{replace:0,root:std::ptr::null_mut(),length:(name.len()*2)as u32,name:[0]});std::ptr::copy_nonoverlapping(name.as_ptr(),pointer.add(offset).cast::<u16>(),name.len());}
+        if unsafe{SetFileInformationByHandle(file.as_raw_handle(),3,pointer.cast(),length as u32)}==0{Err(std::io::Error::last_os_error())}else{Ok(())}
+    }
+    pub fn sync_parents(_root:&Path,_anchor:&File,_path:&str,_target:&Path,_target_anchor:&File,_destination:&str)->std::io::Result<()>{Ok(())}
 }
 
 #[cfg(test)]
@@ -372,4 +332,16 @@ mod native {
     pub fn stamp(_:&File)->std::io::Result<Stamp>{unavailable()}
     pub fn recovery_order<'a>(stage:&'a str,prior:&'a str)->[&'a str;2]{[stage,prior]}
     pub fn publish(_:&Path,_:&File,_:&str,_:&Path,_:&File,_:&str,_:&str)->std::io::Result<String>{unavailable()}
+    pub fn create_directory_in(_:&Path,_:&File,_:&str)->std::io::Result<()>{unavailable()}
+    pub fn remove_empty_in(_:&Path,_:&File,_:&str)->std::io::Result<()>{unavailable()}
+    pub fn move_no_replace(_:&Path,_:&File,_:&str,_:&Path,_:&File,_:&str)->std::io::Result<()>{unavailable()}
+    pub fn sync_parents(_:&Path,_:&File,_:&str,_:&Path,_:&File,_:&str)->std::io::Result<()>{unavailable()}
 }
+
+#[cfg(test)]
+#[path="🎮️management/🧪️tests/🦀️.rs"]
+mod management_tests;
+
+#[cfg(test)]
+#[path="🎮️management/🕰️history/🧪️tests/🦀️.rs"]
+mod history_tests;

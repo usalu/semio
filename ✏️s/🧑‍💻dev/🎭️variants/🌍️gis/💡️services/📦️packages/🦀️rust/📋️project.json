@@ -171,7 +171,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -205,7 +206,12 @@
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-agent-participant-check"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "plugin-coverage-check": {
       "executor": "repo:script",
@@ -222,7 +228,12 @@
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts plugin-coverage-check"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "user-path-check": {
       "metadata": {
@@ -264,7 +275,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -298,7 +310,8 @@
                 "valueEnv": "OS_MCP_HUB_ORIGIN"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -338,7 +351,8 @@
                 "valueEnv": "OS_HUB_ADMIN_CAPABILITY_FILE"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -372,7 +386,12 @@
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts agent-reply-check"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "untrusted-content-check": {
       "executor": "repo:script",
@@ -419,6 +438,11 @@
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fixture-ownership-check",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
       }
     },
     "canonical-pair-composition-check": {
@@ -428,6 +452,11 @@
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-composition-check",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
       }
     }
   }

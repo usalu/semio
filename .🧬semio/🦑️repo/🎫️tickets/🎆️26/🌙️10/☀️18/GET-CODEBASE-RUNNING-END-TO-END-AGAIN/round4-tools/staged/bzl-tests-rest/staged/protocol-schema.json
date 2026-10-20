@@ -1,0 +1,303 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Test Protocol",
+  "description": "The tool-neutral contract between a build tool and the code that spawns test commands: which environment names carry a shard and a result file, how a shard is assigned, where results land when a tool names no file, and how each known test tool takes a shard and writes JUnit XML. Bazel and Nx both feed the same names; no tool is named here except as a source of task identity.",
+  "definitions": {
+    "Name": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "Flag": {
+      "type": "string",
+      "pattern": "^--[a-zA-Z][a-zA-Z0-9.-]*(?:=.*)?$"
+    },
+    "Protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "environment",
+        "shard",
+        "report",
+        "tools",
+        "messages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shard",
+            "shardStatusFile",
+            "xmlOutputFile",
+            "reportOwner",
+            "report"
+          ],
+          "properties": {
+            "shard": {
+              "$ref": "#/definitions/Name"
+            },
+            "shardStatusFile": {
+              "$ref": "#/definitions/Name"
+            },
+            "xmlOutputFile": {
+              "$ref": "#/definitions/Name"
+            },
+            "reportOwner": {
+              "$ref": "#/definitions/Name"
+            },
+            "report": {
+              "$ref": "#/definitions/Name"
+            }
+          }
+        },
+        "shard": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumTotal",
+            "assignment"
+          ],
+          "properties": {
+            "maximumTotal": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 1024
+            },
+            "assignment": {
+              "const": "sorted-round-robin"
+            }
+          }
+        },
+        "report": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resultsRoot",
+            "fileName",
+            "maximumSlugCodeUnits",
+            "maximumNameCodeUnits",
+            "maximumMessageCodeUnits",
+            "lockStaleMilliseconds",
+            "lockWaitMilliseconds",
+            "identity",
+            "root",
+            "defaultTargets"
+          ],
+          "properties": {
+            "resultsRoot": {
+              "type": "string",
+              "pattern": "^[^/\\\\:*?\"<>|][^\\\\:*?\"<>|]*$"
+            },
+            "fileName": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]*\\.xml$"
+            },
+            "maximumSlugCodeUnits": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 80
+            },
+            "maximumNameCodeUnits": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 400
+            },
+            "maximumMessageCodeUnits": {
+              "type": "integer",
+              "minimum": 64,
+              "maximum": 20000
+            },
+            "lockStaleMilliseconds": {
+              "type": "integer",
+              "minimum": 1000
+            },
+            "lockWaitMilliseconds": {
+              "type": "integer",
+              "minimum": 1000
+            },
+            "identity": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "project",
+                  "target"
+                ],
+                "properties": {
+                  "project": {
+                    "$ref": "#/definitions/Name"
+                  },
+                  "target": {
+                    "$ref": "#/definitions/Name"
+                  }
+                }
+              }
+            },
+            "root": {
+              "$ref": "#/definitions/Name"
+            },
+            "defaultTargets": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "match"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "match": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "commandBasenames": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "firstArgument": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "argumentBasenames": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "alsoContains": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "skipToolchain": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "shardFlag": {
+                "type": "string",
+                "pattern": "\\$\\{index\\}.*\\$\\{total\\}"
+              },
+              "junitFlags": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^--"
+                }
+              },
+              "junitRefusedBy": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Flag"
+                }
+              },
+              "shardRefusedBy": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Flag"
+                }
+              }
+            },
+            "description": "A tool with neither shardFlag nor junitFlags is only recognised: its commands are reported as one synthetic case."
+          }
+        },
+        "messages": {
+          "description": "Operator-facing texts in every supported language; none is a default, both are printed.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reportFailed"
+          ],
+          "properties": {
+            "reportFailed": {
+              "$ref": "#/definitions/Text"
+            }
+          }
+        }
+      }
+    },
+    "Shard": {
+      "description": "One shard: a 1-based index of a total, as `index/total`.",
+      "type": "string",
+      "pattern": "^[1-9][0-9]*/[2-9][0-9]*$"
+    },
+    "Suite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "tests",
+        "failures",
+        "errors",
+        "skipped",
+        "time"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "time": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

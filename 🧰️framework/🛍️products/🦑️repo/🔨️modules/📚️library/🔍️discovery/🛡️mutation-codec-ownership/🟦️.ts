@@ -1,4 +1,4 @@
-import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { inspectRustStructure, rustPatternVariantPath } from "../🏛️rust-structure/🟦️.ts";
 import { rustTypeAliasEdges, rustTypeNames } from "../🔎️rust-source-identities/🟦️.ts";
 

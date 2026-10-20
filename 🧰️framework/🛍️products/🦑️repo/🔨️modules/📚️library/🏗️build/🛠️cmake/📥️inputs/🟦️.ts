@@ -1,6 +1,6 @@
 /** 📥️ Inputs: module exporting `CmakeInputsV1`, `withCmakeInputsV1`, `cmakeInputBytesV1`, `cmakeInputFactsV1` and more. */
-import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,recheckArtifactSourceSetV1,type ArtifactSourceSetV1}from"@semio-tech/process/artifacts/publication/sources";
-import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"@semio-tech/process/routing";
+import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,recheckArtifactSourceSetV1,type ArtifactSourceSetV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
+import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 declare const inputBrand:unique symbol;

@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobOwnerSourceEvidence, toolJobOwnerSourceText } from "@semio-tech/repo-lib/laws";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobOwnerSourceEvidence, toolJobOwnerSourceText } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 🧪️ Checks scalar Config publication laws against Immer and exact live source policy witnesses. */
 export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {

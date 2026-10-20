@@ -1,0 +1,448 @@
+{
+  "version": 1,
+  "policy": {
+    "commands": [
+      "create-file",
+      "create-directory",
+      "rename-entry",
+      "retain-entry"
+    ],
+    "maximumPathUnits": 256,
+    "maximumFileBytes": 1048576,
+    "directoryMutation": "bounded-tree",
+    "destination": "absent-only",
+    "removal": "retained-event-history",
+    "cancellation": "before-publication",
+    "lateCancellation": "settle-committed-outcome",
+    "maximumTreeNodes": 4096,
+    "treeOrder": "utf8",
+    "maximumManagedFileBytes": 67108864
+  },
+  "cases": [
+    {
+      "name": "create-unicode-file",
+      "command": "create-file",
+      "path": "Grüße 🦑.txt",
+      "initial": "missing",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "create-folder",
+      "command": "create-directory",
+      "path": "Neuer Ordner",
+      "initial": "missing",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "create-occupied-file",
+      "command": "create-file",
+      "path": "a.txt",
+      "initial": "file",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "conflict"
+    },
+    {
+      "name": "rename-file",
+      "command": "rename-entry",
+      "path": "a.txt",
+      "destination": "b 🧪.txt",
+      "initial": "file",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "rename-empty-folder",
+      "command": "rename-entry",
+      "path": "folder",
+      "destination": "renamed",
+      "initial": "empty-directory",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "rename-occupied",
+      "command": "rename-entry",
+      "path": "a.txt",
+      "destination": "b.txt",
+      "initial": "file",
+      "destinationExists": true,
+      "stale": false,
+      "cancel": "none",
+      "expected": "conflict"
+    },
+    {
+      "name": "rename-stale",
+      "command": "rename-entry",
+      "path": "a.txt",
+      "destination": "b.txt",
+      "initial": "file",
+      "destinationExists": false,
+      "stale": true,
+      "cancel": "none",
+      "expected": "conflict"
+    },
+    {
+      "name": "retain-file",
+      "command": "retain-entry",
+      "path": "a.txt",
+      "initial": "file",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "retain-empty-folder",
+      "command": "retain-entry",
+      "path": "folder",
+      "initial": "empty-directory",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "retain-nonempty-folder",
+      "command": "retain-entry",
+      "path": "folder",
+      "initial": "nonempty-directory",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "rename-nonempty-folder",
+      "command": "rename-entry",
+      "path": "folder",
+      "destination": "renamed",
+      "initial": "nonempty-directory",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "none",
+      "expected": "committed"
+    },
+    {
+      "name": "cancel-before-publication",
+      "command": "create-file",
+      "path": "a.txt",
+      "initial": "missing",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "before-publication",
+      "expected": "cancelled"
+    },
+    {
+      "name": "settle-after-publication",
+      "command": "retain-entry",
+      "path": "a.txt",
+      "initial": "file",
+      "destinationExists": false,
+      "stale": false,
+      "cancel": "after-publication",
+      "expected": "committed"
+    }
+  ],
+  "trees": [
+    {
+      "name": "root-and-child",
+      "destination": "renamed",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "a.txt",
+          "identity": "a",
+          "directory": false
+        }
+      ],
+      "expected": "accepted",
+      "nodeCount": 2
+    },
+    {
+      "name": "segment-parent-required",
+      "destination": "renamed",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "folder/a",
+          "identity": "a",
+          "directory": false
+        }
+      ],
+      "expected": "conflict",
+      "nodeCount": 2
+    },
+    {
+      "name": "projected-absolute-path-limit",
+      "destination": "renamed",
+      "physicalRootUnits": 250,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        }
+      ],
+      "expected": "invalid-path",
+      "nodeCount": 1
+    },
+    {
+      "name": "traversal-refused",
+      "destination": "renamed",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "../a",
+          "identity": "a",
+          "directory": false
+        }
+      ],
+      "expected": "invalid-path",
+      "nodeCount": 2
+    },
+    {
+      "name": "duplicate-node",
+      "destination": "renamed",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "a",
+          "identity": "a",
+          "directory": false
+        },
+        {
+          "suffix": "a",
+          "identity": "b",
+          "directory": false
+        }
+      ],
+      "expected": "conflict",
+      "nodeCount": 3
+    },
+    {
+      "name": "exact-node-limit",
+      "destination": "r",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "0",
+          "directory": true
+        }
+      ],
+      "expected": "accepted",
+      "nodeCount": 4096
+    },
+    {
+      "name": "node-overflow",
+      "destination": "r",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "0",
+          "directory": true
+        }
+      ],
+      "expected": "too-many-entries",
+      "nodeCount": 4097
+    },
+    {
+      "name": "unicode-scalar-order",
+      "destination": "r",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "",
+          "identity": "private",
+          "directory": false
+        },
+        {
+          "suffix": "🧪",
+          "identity": "emoji",
+          "directory": false
+        }
+      ],
+      "nodeCount": 3,
+      "expected": "accepted"
+    },
+    {
+      "name": "unsorted-roster",
+      "destination": "r",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "z",
+          "identity": "z",
+          "directory": false
+        },
+        {
+          "suffix": "a",
+          "identity": "a",
+          "directory": false
+        }
+      ],
+      "nodeCount": 3,
+      "expected": "conflict"
+    },
+    {
+      "name": "segmented-retain-exact256",
+      "destination": ".workspace-events/segments/00000000/command.retained",
+      "physicalRootUnits": 203,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        }
+      ],
+      "nodeCount": 1,
+      "expected": "accepted"
+    },
+    {
+      "name": "segmented-retain-over257",
+      "destination": ".workspace-events/segments/00000000/command.retained",
+      "physicalRootUnits": 204,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        }
+      ],
+      "nodeCount": 1,
+      "expected": "invalid-path"
+    },
+    {
+      "name": "segmented-descendant-exact256",
+      "destination": ".workspace-events/segments/00000000/command.retained",
+      "physicalRootUnits": 200,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "🦑",
+          "identity": "child",
+          "directory": false
+        }
+      ],
+      "nodeCount": 2,
+      "expected": "accepted"
+    },
+    {
+      "name": "segmented-descendant-over257",
+      "destination": ".workspace-events/segments/00000000/command.retained",
+      "physicalRootUnits": 201,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        },
+        {
+          "suffix": "🦑",
+          "identity": "child",
+          "directory": false
+        }
+      ],
+      "nodeCount": 2,
+      "expected": "invalid-path"
+    },
+    {
+      "name": "flat-retain-namespace-refused",
+      "destination": ".workspace-events/command.retained",
+      "physicalRootUnits": 20,
+      "nodes": [
+        {
+          "suffix": "",
+          "identity": "root",
+          "directory": true
+        }
+      ],
+      "nodeCount": 1,
+      "expected": "invalid-path"
+    }
+  ],
+  "hierarchy": [
+    {
+      "root": "folder",
+      "path": "folder",
+      "contains": true
+    },
+    {
+      "root": "folder",
+      "path": "folder/a.txt",
+      "contains": true
+    },
+    {
+      "root": "folder",
+      "path": "folderish/a.txt",
+      "contains": false
+    },
+    {
+      "root": "folder/a",
+      "path": "folder/a/b/c",
+      "contains": true
+    },
+    {
+      "root": "folder/a",
+      "path": "folder/ab",
+      "contains": false
+    },
+    {
+      "root": "🧪",
+      "path": "🧪/α.txt",
+      "contains": true
+    },
+    {
+      "root": "a",
+      "path": "b/a",
+      "contains": false
+    }
+  ]
+}

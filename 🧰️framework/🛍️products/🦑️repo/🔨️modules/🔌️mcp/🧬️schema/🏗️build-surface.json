@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/mcp/build-surface.json",
+  "title": "semio repo MCP build surface",
+  "description": "🏗️ How the repo MCP server exposes the tool-neutral `repo` operations catalogue as tools: the authored exposure policy (`Policy`), the structured result every build tool returns (`Result`) and the progress record a child process publishes (`ScriptProgress`). The tool list itself is DERIVED from the catalogue at start; nothing in it is hand-written. Both the Go and the Rust implementation are bound by this document.",
+  "type": "object",
+  "$defs": {
+    "Language": { "enum": ["en", "de"] },
+    "Text": {
+      "description": "🗣️ A text in both languages; no language is the default.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+    },
+    "FlagName": { "type": "string", "pattern": "^--[a-z][a-z0-9-]*$" },
+    "Kind": { "enum": ["query", "execute", "maintain"] },
+    "FlagType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["integer", "list"] },
+        "minimum": { "type": "integer" },
+        "maximum": { "type": "integer" },
+        "items": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "Positional": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "description": { "$ref": "#/$defs/Text" },
+        "pattern": { "type": "string", "minLength": 1 },
+        "suffix": { "type": "string", "minLength": 1 },
+        "enum": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "optional": { "type": "boolean" },
+        "argv": { "description": "The value is an array of arguments placed after `--`.", "type": "boolean" }
+      }
+    },
+    "Annotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "readOnlyHint": { "type": "boolean" },
+        "destructiveHint": { "type": "boolean" },
+        "idempotentHint": { "type": "boolean" },
+        "openWorldHint": { "type": "boolean" }
+      }
+    },
+    "Tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "kind"],
+      "properties": {
+        "name": { "description": "Tool name when it is not `<operation>[_<subcommand>]` with `-` as `_`.", "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "operation": { "type": "string", "minLength": 1 },
+        "subcommand": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/Kind" },
+        "summary": { "description": "Authored summary for a tool that is a fixed projection of an operation (not a catalogue row of its own).", "$ref": "#/$defs/Text" },
+        "flags": { "description": "The flags the tool accepts when the catalogue names none for the subcommand.", "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/FlagName" } },
+        "required": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/FlagName" } },
+        "anyOf": { "description": "Groups of flags of which at least one group must be present.", "type": "array", "minItems": 1, "items": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/FlagName" } } },
+        "bind": { "description": "Flags fixed by the server; they are not inputs.", "type": "object", "additionalProperties": { "type": ["boolean", "string"] } },
+        "defaults": { "description": "Default values of inputs; the input stays available.", "type": "object", "additionalProperties": { "type": ["boolean", "string", "integer"] } },
+        "positional": { "type": "array", "items": { "$ref": "#/$defs/Positional" } },
+        "environment": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } },
+        "annotations": { "$ref": "#/$defs/Annotations" }
+      }
+    },
+    "Excluded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "reason"],
+      "properties": { "operation": { "type": "string", "minLength": 1 }, "subcommand": { "type": "string", "minLength": 1 }, "reason": { "$ref": "#/$defs/Text" } }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "catalogue", "buildPolicy", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "version": { "const": 1 },
+        "catalogue": { "description": "Repository-relative path of the neutral operations catalogue.", "type": "string", "minLength": 1 },
+        "buildPolicy": { "description": "Repository-relative path of the build policy that names the default tool.", "type": "string", "minLength": 1 },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["argument", "pattern", "description", "environment", "connectionSources"],
+          "properties": {
+            "argument": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+            "pattern": { "type": "string", "minLength": 1 },
+            "description": { "$ref": "#/$defs/Text" },
+            "environment": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["agent", "session", "lane"],
+              "properties": { "agent": { "type": "string" }, "session": { "type": "string" }, "lane": { "type": "string" } }
+            },
+            "connectionSources": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+          }
+        },
+        "globals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["flag", "input", "environment", "description"],
+            "properties": { "flag": { "$ref": "#/$defs/FlagName" }, "input": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }, "environment": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "description": { "$ref": "#/$defs/Text" } }
+          }
+        },
+        "omittedFlags": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["flag", "reason"], "properties": { "flag": { "$ref": "#/$defs/FlagName" }, "reason": { "$ref": "#/$defs/Text" } } } },
+        "strip": { "description": "Environment variables removed from every child so each call is its own original invocation.", "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } },
+        "set": { "type": "object", "additionalProperties": { "type": "string" } },
+        "flagTypes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/FlagType" } },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["variable", "enum", "description"],
+            "properties": { "variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "enum": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "description": { "$ref": "#/$defs/Text" } }
+          }
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["query", "execute", "maintain"],
+          "patternProperties": {
+            "^(query|execute|maintain)$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["annotations", "taskSupport", "note"],
+              "properties": { "annotations": { "$ref": "#/$defs/Annotations" }, "taskSupport": { "enum": ["forbidden", "optional", "required"] }, "note": { "$ref": "#/$defs/Text" } }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["concurrent", "cancelGraceMs", "progressIntervalMs", "heartbeatMs", "captureBytes", "stdoutBytes", "stderrBytes", "dataBytes", "textBytes", "maxArguments", "maxArgumentBytes"],
+          "patternProperties": { "^(concurrent|cancelGraceMs|progressIntervalMs|heartbeatMs|captureBytes|stdoutBytes|stderrBytes|dataBytes|textBytes|maxArguments|maxArgumentBytes)$": { "type": "integer", "minimum": 1 } }
+        },
+        "tools": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Tool" } },
+        "excluded": { "type": "array", "items": { "$ref": "#/$defs/Excluded" } }
+      }
+    },
+    "ScriptProgress": {
+      "description": "📈️ One typed line a child prints on stderr as `[script] <json>`; a human line `[script] <text>` may follow it.",
+      "type": "object",
+      "required": ["owner", "command", "stage"],
+      "properties": {
+        "owner": { "type": "string" },
+        "command": { "type": "string" },
+        "stage": { "enum": ["contribution", "loading", "running", "complete"] },
+        "activity": {
+          "type": "object",
+          "required": ["resource", "mode", "elapsedMs"],
+          "properties": { "resource": { "type": "string" }, "mode": { "enum": ["shared", "exclusive"] }, "elapsedMs": { "type": "number", "minimum": 0 } }
+        }
+      }
+    },
+    "Result": {
+      "description": "🧱️ The structured result of every build tool.",
+      "type": "object",
+      "required": ["version", "tool", "operation", "ok", "exitCode", "cancelled", "durationMs", "command", "agent", "stdout", "stderr", "truncated", "progressEvents"],
+      "properties": {
+        "version": { "const": 1 },
+        "tool": { "description": "Name of the MCP tool.", "type": "string" },
+        "operation": { "type": "string" },
+        "subcommand": { "type": "string" },
+        "buildTool": { "description": "The build tool the call selected; absent when the policy default ran.", "enum": ["nx", "bazel"] },
+        "ok": { "type": "boolean" },
+        "exitCode": { "type": "integer" },
+        "cancelled": { "type": "boolean" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "command": { "description": "The exact argument vector after `repo`.", "type": "array", "items": { "type": "string" } },
+        "agent": {
+          "type": "object",
+          "required": ["id", "session", "lane"],
+          "properties": { "id": { "type": "string" }, "session": { "type": "string" }, "lane": { "type": "string" } }
+        },
+        "data": { "description": "The JSON the operation printed when stdout is one JSON value within the data limit." },
+        "dataOmitted": { "description": "Size in bytes of a JSON value that exceeded the data limit; use the `file` input to write it to a report file.", "type": "integer", "minimum": 0 },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" },
+        "truncated": { "type": "object", "required": ["stdout", "stderr"], "properties": { "stdout": { "type": "boolean" }, "stderr": { "type": "boolean" } } },
+        "progressEvents": { "type": "integer", "minimum": 0 },
+        "hint": { "description": "What to do next when the call failed in a known way.", "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "maximumRows": 65537,
+  "fixedTurns": 1024,
+  "turnsPerRow": 256,
+  "maximumIdleTurns": 16,
+  "cases": [
+    {
+      "rows": 0,
+      "turns": 1023,
+      "idle": 0,
+      "accepted": true
+    },
+    {
+      "rows": 0,
+      "turns": 1024,
+      "idle": 0,
+      "accepted": false
+    },
+    {
+      "rows": 1,
+      "turns": 1279,
+      "idle": 15,
+      "accepted": true
+    },
+    {
+      "rows": 1,
+      "turns": 1280,
+      "idle": 0,
+      "accepted": false
+    },
+    {
+      "rows": 257,
+      "turns": 66815,
+      "idle": 16,
+      "accepted": false
+    },
+    {
+      "rows": 65537,
+      "turns": 16778495,
+      "idle": 0,
+      "accepted": true
+    },
+    {
+      "rows": 65537,
+      "turns": 16778496,
+      "idle": 0,
+      "accepted": false
+    },
+    {
+      "rows": 17,
+      "turns": 5375,
+      "idle": 0,
+      "accepted": true
+    },
+    {
+      "rows": 17,
+      "turns": 5376,
+      "idle": 0,
+      "accepted": false
+    }
+  ],
+  "rowLimits": [
+    {
+      "rows": 0,
+      "maximum": 1024
+    },
+    {
+      "rows": 257,
+      "maximum": 66816
+    },
+    {
+      "rows": 65537,
+      "maximum": 16778496
+    },
+    {
+      "rows": 65538,
+      "maximum": null
+    },
+    {
+      "rows": 17,
+      "maximum": 5376
+    }
+  ],
+  "selectedClose": [
+    {
+      "copyBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 40,
+      "depth": 3
+    },
+    {
+      "copyBytes": 8,
+      "capacityBytes": 16,
+      "releaseBytes": 0,
+      "depth": 2
+    },
+    {
+      "copyBytes": 4120,
+      "capacityBytes": 0,
+      "releaseBytes": 112,
+      "depth": 10
+    },
+    {
+      "copyBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 0,
+      "depth": 0
+    },
+    {
+      "copyBytes": 56,
+      "capacityBytes": 0,
+      "releaseBytes": 40,
+      "depth": 2
+    }
+  ]
+}

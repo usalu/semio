@@ -51,7 +51,7 @@ import { DEFAULT_SHARD_BUDGET, getShardClient } from "../🛰️runtime-singleto
  * makes per-caller correlation (via `PluginTurnPayload.waiters`, see below) possible at all. */
 
 //#region 🔖️GenericThunkQueue
-interface ThunkTurnPayload {
+export interface ThunkTurnPayload {
   readonly run: () => Promise<unknown>;
   readonly resolve: (value: unknown) => void;
   readonly reject: (error: unknown) => void;
@@ -127,7 +127,7 @@ export const commandStallWatch: CommandStallWatchV1 = createCommandStallWatchV1(
 //#endregion 🔖️GenericThunkQueue
 
 //#region 🔖️PluginTurnScheduler
-interface PluginTurnWaiter {
+export interface PluginTurnWaiter {
   readonly resolve: (result: WireTurnResult) => void;
   readonly reject: (error: unknown) => void;
 }
@@ -138,7 +138,7 @@ interface PluginTurnWaiter {
  * {@link pendingCoalescedTurns} the instant this payload's turn actually dispatches (in `runTurn`,
  * before the `await`) — a call arriving AFTER that point must start a fresh coalescing cycle, not
  * append to one that's already running or already finished. */
-interface PluginTurnPayload {
+export interface PluginTurnPayload {
   readonly kind: "operation";
   events: readonly ShardEventEnvelope[];
   readonly commandPage?: ShardCommandIngressPage;
@@ -147,15 +147,15 @@ interface PluginTurnPayload {
   readonly coalesceMapKey?: string;
 }
 
-type PluginLifecycleWork =
+export type PluginLifecycleWork =
   | { readonly kind: "open"; readonly input: ShardInstanceOpenInput }
   | { readonly kind: "poll" }
   | { readonly kind: "close" }
   | { readonly kind: "receipt-ack"; readonly receipt: ActorInstanceLifecycleReceipt; readonly retirement?: OwnedUiInstanceRetirement }
   | { readonly kind: "issued-ui-acks"; readonly entries: readonly OwnedUiPatchAcknowledgementEntry[] };
-type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null };
-type PluginLifecycleTurnPayload = { readonly kind: "lifecycle"; readonly owner: ShardInstanceLifecycleLease; readonly work: PluginLifecycleWork; readonly resolve: (result: PluginLifecycleTurnResult) => void; readonly reject: (error: unknown) => void };
-type PendingPluginTurn = PluginTurnPayload | PluginLifecycleTurnPayload;
+export type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null };
+export type PluginLifecycleTurnPayload = { readonly kind: "lifecycle"; readonly owner: ShardInstanceLifecycleLease; readonly work: PluginLifecycleWork; readonly resolve: (result: PluginLifecycleTurnResult) => void; readonly reject: (error: unknown) => void };
+export type PendingPluginTurn = PluginTurnPayload | PluginLifecycleTurnPayload;
 
 /** 🚪️ Only the captured lifecycle owner can dispatch retirement-authorized work. */
 export async function runPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: PluginLifecycleWork, budget: ShardBudget): Promise<PluginLifecycleTurnResult> {
@@ -183,7 +183,7 @@ export const tearingDownPluginActors = new Set<string>();
 /** 🧾️ [TRACE] Crossing census — every worker round trip this host posts, classified by the events it
  * carried and by what came back, so "172 `message` crossings carrying nothing" becomes a taxonomy
  * instead of one bucket. Read off `globalThis.__semioCrossingCensus` by `🐍️react-hop-cost-probe.mjs`. */
-type CrossingCensusRowV1 = { crossings: number; events: number; patches: number; effects: number; width: Record<number, number> };
+export type CrossingCensusRowV1 = { crossings: number; events: number; patches: number; effects: number; width: Record<number, number> };
 const crossingCensusV1 = new Map<string, CrossingCensusRowV1>();
 
 const typedOpAckCensusV1 = new Map<string, { acks: number; minSequence: number; maxSequence: number }>();

@@ -29,7 +29,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync 
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { createServer as createListener, type AddressInfo } from "node:net";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, posix, resolve } from "node:path";
 import { repoToolCacheEnv, runRepositoryCommand as runOwnedCommand } from "@semio-tech/process/execution";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type { ScriptInvocation } from "@semio-tech/process/routing";
@@ -39,7 +39,8 @@ import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/
 import { withViteArtifactV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
 import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { LAUNCHER_SIGNALS, PROCTOR_DEV_COURSE, buildProctor, launchProctor, proctorReady, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { LAUNCHER_SIGNALS, PROCTOR_DEV_COURSE, launchProctor, proctorReady, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
@@ -105,6 +106,10 @@ export function endToEndPlan(segments: readonly string[]): { readonly topologies
     }
   }
   return plan;
+}
+/** 🛤️ Where a `--proctor` executable is: absolute values stay, relative ones resolve against the repository root, never against the package directory the build tool runs the script in. */
+export function endToEndProctorPath(repoRoot: string, value: string, paths: Pick<typeof posix, "isAbsolute" | "resolve"> = { isAbsolute, resolve }): string {
+  return paths.isAbsolute(value) ? value : paths.resolve(repoRoot, value);
 }
 /** 🧭️ The order the topologies boot in: the rehearsal first, because its release build needs the whole host and the dev
  * site, once up, holds the whole host for as long as it runs. */
@@ -350,9 +355,10 @@ export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: 
     mkdirSync(work, { recursive: true });
     say(`topologies ${plan.topologies.join(", ")}${plan.serial ? " (one after the other)" : ""}; run directory ${work}`);
     await ensureBrowser(invocation, repoRoot, browsers, signal);
-    say(plan.proctor === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${plan.proctor} as it is`);
-    if (plan.proctor === undefined) artifact = await buildProctor(repoRoot, invocation, process.env, signal);
-    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: plan.proctor ?? artifact!, signal };
+    const given = plan.proctor === undefined ? undefined : endToEndProctorPath(repoRoot, plan.proctor);
+    say(given === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${given} as it is`);
+    if (given === undefined) artifact = await acquireProctor(repoRoot, invocation, process.env, signal);
+    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal };
     const statuses: number[] = [];
     const sharing = !plan.serial && plan.topologies.length > 1 && !plan.playwright.some((argument) => /^(?:--workers|-j)(?:=|$)/u.test(argument));
     const forwarded = sharing ? [...plan.playwright, "--workers", String(SHARED_WORKERS)] : plan.playwright;

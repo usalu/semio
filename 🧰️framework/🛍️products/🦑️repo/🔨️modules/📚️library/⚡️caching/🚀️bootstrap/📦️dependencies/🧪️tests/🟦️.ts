@@ -22,7 +22,7 @@ import { EventEmitter } from "node:events";
 import { ChildProcess } from "node:child_process";
 
 const owner = resolve(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { backends: Record<string, string>; operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
 
 /** 🧭️ Executes neutral output churn while retaining authored topology, manifest and cancellation fences. */
 async function outputCensus(root:string,input:any,mutation:string,api:typeof bunOwnership):Promise<any>{
@@ -59,7 +59,6 @@ test("Bun ownership excludes mutable outputs and preserves authored custody agai
   const oracleRoot=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),entry='import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";import {join,dirname} from "node:path";import {createRequire} from "node:module";const api=createRequire(import.meta.url)('+JSON.stringify(join(censusOwner,"🟨️.cjs"))+').createBunWorkspaceOwnershipV1({ownershipPath:'+JSON.stringify(join(censusOwner,"../🔣️policy.json"))+',ownershipSource:'+JSON.stringify(readFileSync(join(censusOwner,"../🔣️policy.json"),"utf8"))+'});'+compiled.code+'console.log(JSON.stringify(await outputCensus('+JSON.stringify(oracleRoot)+','+JSON.stringify(input)+','+JSON.stringify(row.mutation)+',api)));';
   const child=Bun.spawn(["node","--input-type=module","-e",entry.replace('import {join,dirname}', 'import {join,dirname,resolve,isAbsolute}')],{stdout:"pipe",stderr:"pipe",signal:new AbortController().signal}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);const reference=JSON.parse(stdout);expect(reference.outcome).toBe(row.outcome);if(row.outcome==="admitted")expect(reference).toEqual(actual);else expect(reference.changed).toBe(true);
  }
- console.log("[DEBUG] Bun output census and independent esbuild/Node/fast-glob agree: generated birth/churn/removal admitted; authored manifest/directory/root drift and original cancellation refused");
 });
 
 test("source watchers have stable independent graph stores and sockets for each activation binding", () => {
@@ -137,7 +136,7 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
 
 
 
-test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyProducerArgumentsV1(operation.mode,"/cache")).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,{} as never,{kind:"all"})).rejects.toThrow("Actual current dependency Store writer required");});
+test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyProducerArgumentsV1(operation.mode,"/cache")).toEqual(operation.arguments.map(item => item.replace("{backend}", fixture.backends[process.platform]!)));await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,{} as never,{kind:"all"})).rejects.toThrow("Actual current dependency Store writer required");});
 
 test("an independent Node bundle executes the same authored command corpus", async () => {
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -153,7 +152,7 @@ test("an independent Node bundle executes the same authored command corpus", asy
   const child = Bun.spawn(["node", entry], { stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   expect({ code, stderr }).toEqual({ code: 0, stderr: "" });
-  expect(JSON.parse(stdout)).toEqual(fixture.operations.map(operation => ({ args: operation.arguments, cwd: "workspace" })));
+  expect(JSON.parse(stdout)).toEqual(fixture.operations.map(operation => ({ args: operation.arguments.map(item => item.replace("{backend}", fixture.backends[process.platform]!)), cwd: "workspace" })));
 });
 
 

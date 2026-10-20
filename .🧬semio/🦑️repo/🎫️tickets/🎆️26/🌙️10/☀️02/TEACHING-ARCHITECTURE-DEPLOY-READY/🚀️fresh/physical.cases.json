@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "publication": [
+    {
+      "id": "fresh",
+      "kind": "new",
+      "accepted": true
+    },
+    {
+      "id": "foreign-file",
+      "kind": "foreign-file",
+      "accepted": false
+    },
+    {
+      "id": "foreign-directory",
+      "kind": "foreign-directory",
+      "accepted": false
+    },
+    {
+      "id": "nested-plan",
+      "kind": "nested",
+      "accepted": false
+    },
+    {
+      "id": "traversal-plan",
+      "kind": "traversal",
+      "accepted": false
+    },
+    {
+      "id": "already-cancelled",
+      "kind": "pre-cancel",
+      "accepted": false
+    },
+    {
+      "id": "cancel-during-publication",
+      "kind": "mid-cancel",
+      "accepted": false
+    },
+    {
+      "id": "owned-root-replaced",
+      "kind": "root-replaced",
+      "accepted": false
+    }
+  ],
+  "streams": [
+    {
+      "id": "channels",
+      "kind": "channels",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": true,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "byte-limit",
+      "kind": "byte-bound",
+      "maximumBytes": 4,
+      "maximumLines": 8,
+      "accepted": false,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "line-limit",
+      "kind": "line-bound",
+      "maximumBytes": 128,
+      "maximumLines": 1,
+      "accepted": false,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "large-framing",
+      "kind": "large",
+      "maximumBytes": 131072,
+      "maximumLines": 8,
+      "accepted": true,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "physical-partial-write",
+      "kind": "partial",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": true,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "physical-cancel",
+      "kind": "cancel",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": false,
+      "maximumFramedBytes": 402653184,
+      "maximumRecords": 2097152
+    },
+    {
+      "id": "framed-exact",
+      "kind": "fragmented",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": true,
+      "maximumFramedBytes": 108,
+      "maximumRecords": 3
+    },
+    {
+      "id": "framed-byte-limit",
+      "kind": "framed-byte",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": false,
+      "maximumFramedBytes": 72,
+      "maximumRecords": 3
+    },
+    {
+      "id": "framed-record-limit",
+      "kind": "framed-record",
+      "maximumBytes": 128,
+      "maximumLines": 8,
+      "accepted": false,
+      "maximumFramedBytes": 108,
+      "maximumRecords": 2
+    }
+  ],
+  "absence": [
+    {
+      "id": "actual-absent",
+      "kind": "absent",
+      "absent": true,
+      "refused": false
+    },
+    {
+      "id": "actual-present",
+      "kind": "present",
+      "absent": false,
+      "refused": false
+    },
+    {
+      "id": "actual-junction-endpoint",
+      "kind": "symlink",
+      "absent": false,
+      "refused": false
+    },
+    {
+      "id": "actual-junction-ancestor",
+      "kind": "ancestor-symlink",
+      "absent": false,
+      "refused": true
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 const policy=structuredClone(schema);
 /** 🗺️ Orders finite job-only prerequisites in declaration-stable dependency waves before retained pass planning. */

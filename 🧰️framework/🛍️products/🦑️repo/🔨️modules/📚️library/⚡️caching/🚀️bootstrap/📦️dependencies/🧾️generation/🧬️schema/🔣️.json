@@ -13,7 +13,7 @@
     "frontierSuffix": ".frontier.ndjson",
     "executionSuffix": ".execution.ndjson",
     "maximumReceiptBytes": 4194304,
-    "maximumEvidenceBytes": 134217728,
+    "maximumEvidenceBytes": 67108864,
     "maximumRows": 524288,
     "maximumSourceFileBytes": 8388608,
     "maximumRelist": 4096,

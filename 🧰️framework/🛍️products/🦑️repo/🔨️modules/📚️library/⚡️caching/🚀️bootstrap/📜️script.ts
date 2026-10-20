@@ -12,6 +12,8 @@ import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️
 import {nativeNxChildEnvironmentV1,issueSelectedNxCallerEnvelopeV1} from "../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts";
 import {resolveBuildSelectionV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
 import buildPolicy from "../../🏗️build/🔣️policy.json" with { type: "json" };
+import {readHostCapacityPlanV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {nxHostResourceSettingsV1} from "./🛠️tools/🌡️host-capacity/🟦️.ts";
 import nxExecutors from "../../📦️packages/🟦️typescript/📋️executors.json" with { type: "json" };
 import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,readWorkerSwitchV1} from "../../🏗️build/👷️workers/🟦️.ts";
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers/🟦️.ts";
@@ -239,7 +241,8 @@ export function nxBuildEnvironmentV1(root:string,environment:NodeJS.ProcessEnv):
  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT=environment.SEMIO_BUILD_DYNAMIC_OUTPUT??environment.NX_TASKS_RUNNER_DYNAMIC_OUTPUT??"false";
  env.NX_VERBOSE_LOGGING=environment.SEMIO_BUILD_VERBOSE??environment.NX_VERBOSE_LOGGING??"false";
  const explicit=Number(environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL),workers=nxWorkerSettingsV1(planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),currentWorkerHostV1(),{...(Number.isSafeInteger(explicit)&&explicit>0?{jobs:explicit}:{}),...(readWorkerSwitchV1(environment.SEMIO_BUILD_WORKERS)===undefined?{}:{workers:readWorkerSwitchV1(environment.SEMIO_BUILD_WORKERS)!})}),{batchCapable:nxBatchCapableV1(nxExecutors)});
- env.NX_PARALLEL=environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL??workers.environment.NX_PARALLEL;
+ const hostPlan=readHostCapacityPlanV1(environment);
+ env.NX_PARALLEL=hostPlan?nxHostResourceSettingsV1(hostPlan).environment.NX_PARALLEL:environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL??workers.environment.NX_PARALLEL;
  if(workers.environment.NX_BATCH_MODE!==undefined)env.NX_BATCH_MODE??=workers.environment.NX_BATCH_MODE;
  if(environment.SEMIO_BUILD_GRAPH_DIGEST){env.NX_FORCE_REUSE_CACHED_GRAPH="false";delete env.SEMIO_NX_GRAPH_SEAL_REUSE;}
  Object.assign(env,nxRemoteCacheV1(resolveRemoteCacheContractV1(environment),environment).environment);
@@ -443,9 +446,11 @@ export class NxScript extends Script {
     const implementationIdentity=createRequire(import.meta.url)("../../🟨️.mjs").nxBuildDependencyImplementationV1();
     const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxToolingEnvironmentV1(nxBuildEnvironmentV1(this.root,devToolingEnv({ ...invocation.env, SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,CARGO_NET_OFFLINE:String(readNativeCallerAuthorityV1(this.invocation.capabilities).network.offline), NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, SEMIO_NX_TOOLING_ROOT: dirname(tooling.modulePath), SEMIO_NX_IMPLEMENTATION_IDENTITY: implementationIdentity, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined })),toolingIdentity), tooling.bun));
     if(bind)Object.assign(env,(await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity)).environment);
+    if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch"){const admission=await import("../🕸️graph/🏁️startup/🚏️admission/🟦️.ts").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:"refused"}));env.NX_DAEMON=admission.enabled?"true":"false";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?"enabled":"off"} (${admission.reason})`);}
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/📥️caller/🟦️.ts"),carried=projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,invocation.args);env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(carried,env)[SCRIPT_PROCESS_INVOCATION_ENV];
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let sourceHandoff:Readonly<{environment:string;close():Promise<void>}>|undefined;
+    let pendingGeneration:import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts").NxGenerationClaimV1|undefined;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
     const captureDescendants = (): void => {
@@ -522,7 +527,7 @@ export class NxScript extends Script {
       }
       if (!cancelled) {
         if(graphConsumer){
-        const graphSeal = await import("../🕸️graph/🔏️seal/🟦️.ts"), workspaceData = env.NX_WORKSPACE_DATA_DIRECTORY!, inheritedReuse = env.NX_FORCE_REUSE_CACHED_GRAPH === "true" && env.SEMIO_NX_GRAPH_SEAL_REUSE === undefined;
+        const generationOwner = await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"), graphSeal = await import("../🕸️graph/🔏️seal/🟦️.ts"), workspaceData = env.NX_WORKSPACE_DATA_DIRECTORY!, inheritedReuse = env.NX_FORCE_REUSE_CACHED_GRAPH === "true" && env.SEMIO_NX_GRAPH_SEAL_REUSE === undefined;
         const sealStarted=performance.now();
         delete env.SEMIO_NX_SELECTED_GRAPH_RECEIPT;
         let selected=false;
@@ -536,7 +541,9 @@ export class NxScript extends Script {
           }
         }
         const sourceMembership=selected||env.SEMIO_BUILD_GRAPH_DIGEST?undefined:await graphSeal.nxGraphSourceMembershipV2(this.root,actualPhase.signal).catch(error=>{if(profileBootstrap)console.log(`[nx] Graph membership fallback: ${error instanceof Error?error.message:String(error)}`);return undefined;});
-        const sealed=selected||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
+        const generationClaim=!selected&&env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch?await generationOwner.nxGenerationClaimV1(this.root,env).catch(()=>undefined):undefined,generation=generationClaim!==undefined&&await generationOwner.nxGenerationHoldsV1(this.root,workspaceData,generationClaim,actualPhase.signal).catch(()=>false);
+        pendingGeneration=generationClaim!==undefined&&!generation?generationClaim:undefined;
+        const sealed=selected||generation||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
         if(profileBootstrap)console.log(`[nx] Graph observation selected=${selected} sealed=${sealed} elapsedMs=${Math.round(performance.now()-sealStarted)}`);
         if(!inheritedReuse){env.NX_FORCE_REUSE_CACHED_GRAPH=sealed?"true":"false";env.SEMIO_NX_GRAPH_SEAL_REUSE=sealed?"true":"false";}
         check();
@@ -575,6 +582,11 @@ export class NxScript extends Script {
           env.SEMIO_NX_GRAPH_SEAL_REUSE = "false";
           attemptStart = Date.now(); completed = launch(invocation.args);
           code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+        }
+        if(pendingGeneration!==undefined&&code===0&&!cancelled&&!invocation.watch){
+          const{withNxGraphAuxiliaryCapacityV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),generationOwner=await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"),claim=pendingGeneration;
+          const written=await withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes:8192},()=>generationOwner.writeNxGenerationReceiptV1(this.root,env.NX_WORKSPACE_DATA_DIRECTORY!,claim,actualPhase.signal)).catch(error=>{if(profileBootstrap)console.log(`[nx] Generation receipt refused: ${error instanceof Error?error.message:String(error)}`);return false;});
+          if(profileBootstrap)console.log(`[nx] Generation receipt written=${written}`);
         }
         await Promise.all(spooling);
         process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);

@@ -1,0 +1,231 @@
+{
+  "name": "@semio-tech/gis-gismap-js",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🧵️gis-inference-bridge/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧵️gis-inference-bridge/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/**/*"
+    ]
+  },
+  "targets": {
+    "inference-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
+        {"externalDependencies":["vitest"]}
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "cold-document-pair-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
+        {"externalDependencies":["vitest"]}
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts cold-document-pair-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "inference-bridge-source-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
+        {"externalDependencies":["vitest"]}
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --source"
+      },
+      "outputs": [],
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "gis-mcp-inference-source"
+        ]
+      }
+    },
+    "inference-bridge-process-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
+        {"externalDependencies":["vitest"]}
+      ],
+      "cache": true,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/s-gis-services-native"
+          ],
+          "target": "mcp-build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --process"
+      },
+      "outputs": [],
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "gis-mcp-inference-process"
+        ]
+      }
+    },
+    "tiles-check": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts tiles-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-check"
+        ]
+      }
+    },
+    "tiles-check-native": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts tiles-check --native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-check",
+          "--native"
+        ]
+      }
+    },
+    "tiles-prefetch": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts tiles-prefetch",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-prefetch"
+        ],
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": []
+    },
+    "inference-service-receiving-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
+        {"externalDependencies":["vitest"]}
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-service-receiving-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "verify-physical-codecs": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify physical-codecs"
+      }
+    }
+  }
+}

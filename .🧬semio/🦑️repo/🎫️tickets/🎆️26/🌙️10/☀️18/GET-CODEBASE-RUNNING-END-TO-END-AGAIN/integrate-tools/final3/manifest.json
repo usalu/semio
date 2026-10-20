@@ -1,0 +1,254 @@
+{
+ "version": 1,
+ "groups": [
+  {
+   "id": "G",
+   "title": "graph construction speed, seal fact table, no exclusive walk in a task run (graph-perf, includes the show-perf set)",
+   "sets": [
+    "graph-perf"
+   ],
+   "verify": [],
+   "commands": [],
+   "files": [
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "c31f6bc1f18ed4248fdc48ae9f3e314bc37d92726dcf6eb276793ddbc929f121",
+     "resultSha256": "7438dcc4be131e43ce7c685a2182b67a92ec6a93da416244ec4f4294e6f02487",
+     "file": "G/0000.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "bcccdb39f9d5c3e78277d8180a1f040f84ac07929aecca190016a91cc90ca4c1",
+     "file": "G/0001.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📦️facts/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "68c2a0797a2a14c8c41ca551a73f1bca210d1421e4341c8369a7860d470b4b37",
+     "file": "G/0002.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📦️facts/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "cc8babdc563d0c4b5abdb628f42159964fcf2845cb1b099954402bc1ba68a28d",
+     "file": "G/0003.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "5eef426c6047109443212cf119709d0d886a571148676c29d124239ff7692ce0",
+     "file": "G/0004.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📦️facts/🧪️tests/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "6e73f0ecd231fdeaf9d5ded6734b36918aa0421305c39e37b2f1399ad7483769",
+     "file": "G/0005.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "928b983d575d79f942e1126ee165ea4a682c1f5aabd292540e18605d674f9fda",
+     "resultSha256": "ffcc8cd705bfffcf7645076fc37ef11bc02823f2e22f1a8a402d928eae7dc263",
+     "file": "G/0006.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "cd63527a46aa2c542fb2403a2bc360abdd10e718de7819fa5c8ce75bc1494a3d",
+     "resultSha256": "51b0a694e757a1cc3d27856c40cf04c9833973af62254e9ec206c69c898fd94d",
+     "file": "G/0007.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🧫️fixtures/🔣️.json",
+     "op": "replace",
+     "baseSha256": "c167e5a070183c2c3143a2a063212953410a239c8e27ed9590429fd91d1f832e",
+     "resultSha256": "ae45474c731f5645691355a1526842f6dcc53114bd94d0cefa60f4037ec32e16",
+     "file": "G/0008.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧬️schema/🔣️.json",
+     "op": "replace",
+     "baseSha256": "72a241df20c48d1fe1d7c1bb1eecfcfb34fe2fdc68278224187efba9a8b1c407",
+     "resultSha256": "db5aad2619224c0152bf46e45d23077b7e0770241beb449f750b7298cc1e96d8",
+     "file": "G/0009.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.d.mts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "a644f049e1c6f51474383f0df5e047d476797f799e8a4ca5943b74d0eaea8daf",
+     "file": "G/0010.mts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "eca8345146389a8ff1df4541f3adc45fdb9eca3da90aff46350a383453a947c9",
+     "file": "G/0011.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+     "op": "replace",
+     "baseSha256": "68540dd882b566e307de7d71fa3f65805c428e054a19a0ff259124fd0dc5d035",
+     "resultSha256": "3726ceedc9bacf3f0e4a46c2f35acf9b1c7e8c15ec9ddfc40be263ef8359d693",
+     "file": "G/0012.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "67440db9eea0276eed9e13bd8c2a6997d7910ad34bd408ed57e42439a749ab2d",
+     "file": "G/0013.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "a10a452e3f32ccdbc050b401159f8d0a9c567e4b6f2512044ba53a14834d336e",
+     "file": "G/0014.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "be7537d5d6f2232fb93747a96ebaeb039ee02d7bef419b244c6192847481645d",
+     "file": "G/0015.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+     "op": "replace",
+     "baseSha256": "e0bef105e26c6b88693c5988c6e0e4705b84d073404a7f274f722d5082993cce",
+     "resultSha256": "de696db0e637414d839ec7c455895ccc6d365b20ec24717e91353b129381d4c5",
+     "file": "G/0016.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧮️covered-inputs/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "fb20fc2ba725bc85c8e5758c2bcc24897d2f337e292e58a0a21b16d87ec13f42",
+     "file": "G/0017.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧮️covered-inputs/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "17f927883e0ac043d75f6fdab87361700cd83aa2742b40eef97de3dee973872a",
+     "file": "G/0018.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧮️covered-inputs/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "d890711adbe600e8d28a607a868f33a858823dfbfb6308508582e112f3ced29e",
+     "file": "G/0019.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+     "op": "replace",
+     "baseSha256": "52b3c6373d13c42b9162ba72cb8bf5208e11876c303940a30bc616e331ab1d65",
+     "resultSha256": "e414d587d81013f079efc22f2111a8da6b9948dc5f92f1486261193466e31dfc",
+     "file": "G/0020.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "fee3ed59943c0970a9207c7a89591ebe3c74393444029a381f1b8a1262cae2e1",
+     "resultSha256": "097df6983065eca3378cb2b9c14003b5b40f7ba2414212bc211a1324b0f75e9b",
+     "file": "G/0021.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+     "op": "replace",
+     "baseSha256": "399e7ce02647b3843c0afb6f0ddfcce6609654037591244e45da4dba3d11469b",
+     "resultSha256": "c6c92e29f639a7ebdf335db0df9215b2a3efccb059b9e4492541063037685412",
+     "file": "G/0022.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "bc5b323b564f560736faa8ca473334e1eaa52d241e9784bd6f124c198b0d6138",
+     "file": "G/0023.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "cf135d6f7f984003ca69d6b7760b279d7e4efd43afde5cfc7818ce7f0429b34f",
+     "file": "G/0024.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "1d23586e6200a2fe87e9ec17fabe09b5f477373dfd8d6c826d1a5bae1bb4b68c",
+     "file": "G/0025.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/👷️worker/🟨️.mjs",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "343d67fad27777aa4af1b39d11fc0074cff2dd07ab09140149f73cd76f676a9f",
+     "file": "G/0026.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🟨️.d.mts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "7f2649280066a5a5273ceab2185a76fe80df9c417502fc7251392fa03339ea25",
+     "file": "G/0027.mts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🟨️.mjs",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "163af5bc62d7187ba5bb986761bb45d069b18d4da4bf5a822f2888b662c94280",
+     "file": "G/0028.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🧪️tests/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "dc30b184280017472df11565352bc74fced8ff7fd9301e556fd85114b0d9b3e7",
+     "file": "G/0029.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🧪️tests/🟦️.ts",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "5eff18a722fc7b04b6ca324d1c68efe304cb32c3b8655558d60529cdf4a10178",
+     "file": "G/0030.ts"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🧪️tests/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "db77b08d2d3a8937f84a8fe6567ddf7b2cd76b870ff5b9499f34e12f534c1f22",
+     "file": "G/0031.json"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🧪️tests/🧰️tasks/🟨️.mjs",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "9f3930e67eacc0449f55f4df770b9c5b0030bdb2942c504cef08436a955fde32",
+     "file": "G/0032.mjs"
+    },
+    {
+     "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🧬️schema/🔣️.json",
+     "op": "create",
+     "baseSha256": null,
+     "resultSha256": "d0773302729433950ff612e7c906e69a346e1f99fd59d640fa72a38bd14cbdf3",
+     "file": "G/0033.json"
+    }
+   ]
+  }
+ ]
+}

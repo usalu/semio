@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bazel session slots",
+  "description": "Schema-first contract of the concurrent Bazel sessions: a bounded set of numbered slots, each slot one persistent Bazel server with its own short output base and its own generated packages, all sharing one content-addressed cache (disk cache, repository cache, repository contents cache, optional remote cache). A session claims exactly one slot for the duration of one invocation, so concurrent invocations never meet in one Bazel server lock.",
+  "definitions": {
+    "Policy": {
+      "description": "Authored numbers. `servers`: the bound on concurrently existing Bazel servers is derived from the host (memory above the host capacity floor times `memoryShareBasisPoints`, divided by `residentMegabytes`; cores divided by `coresPerServer`), never below `minimum` and never above `maximum`; `nestedExtra` slots are added for a session that starts inside a Bazel action (a nested invocation must never wait for the slot its own parent holds); `heapMegabytes` is the JVM heap of one server and `residentMegabytes` its estimated resident size (heap plus metaspace, threads and the client). `waiting`: a session that finds every slot claimed polls every `pollMilliseconds` behind the fair picker and reports every `progressMilliseconds`. `retention`: how many generated packages one slot keeps, how old they may get, and how long an unused output base may sit idle before it is garbage. `stop`: a server exits a few seconds after its pid file is removed, the collector waits at most `timeoutMilliseconds` for it. `leases`: names of the resources inside the repository lease directory; `restoreMaximumResources` bounds the hierarchical restore locks of one snapshot before it falls back to the exclusive root lock.",
+      "const": {
+        "version": 1,
+        "servers": {
+          "minimum": 1,
+          "maximum": 6,
+          "memoryShareBasisPoints": 3000,
+          "heapMegabytes": 2048,
+          "minimumHeapMegabytes": 768,
+          "residentMegabytes": 2560,
+          "coresPerServer": 2,
+          "nestedExtra": 4
+        },
+        "waiting": {
+          "pollMilliseconds": 250,
+          "progressMilliseconds": 5000
+        },
+        "retention": {
+          "packagesPerSlot": 6,
+          "packageMaximumAgeDays": 7,
+          "outputBaseMaximumIdleDays": 14
+        },
+        "stop": {
+          "pidFile": "server/server.pid.txt",
+          "timeoutMilliseconds": 10000,
+          "pollMilliseconds": 100
+        },
+        "names": {
+          "slotPattern": "^s[0-9]{1,2}$",
+          "keyPattern": "^[0-9a-f]{16}$",
+          "stateSuffix": ".session.json"
+        },
+        "leases": {
+          "slotPrefix": "bazel-slot-",
+          "pickerResource": "bazel-slot-picker",
+          "restorePrefix": "bazel-restore:",
+          "restoreMaximumResources": 64
+        }
+      }
+    },
+    "MemoryPolicy": {
+      "description": "The host capacity memory floor rule (`hostCapacity.memory` of the build policy): the floor is `floorBasisPoints` of host memory clamped to the two bounds; only memory above it may be committed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["floorBasisPoints", "floorMinimumMegabytes", "floorMaximumMegabytes"],
+      "properties": {
+        "floorBasisPoints": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "floorMinimumMegabytes": {"type": "integer", "minimum": 0},
+        "floorMaximumMegabytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cores", "memoryMegabytes"],
+      "properties": {
+        "cores": {"type": "integer", "minimum": 1},
+        "memoryMegabytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ServerPlan": {
+      "description": "What the host affords: `slots` Bazel servers of `heapMegabytes` each; `cpuPerServer` and `memoryPerServerMegabytes` are the local resources one server may hand its actions when no capacity grant bounds the invocation; `limit` names the binding constraint.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slots", "heapMegabytes", "residentMegabytes", "budgetMegabytes", "cpuPerServer", "memoryPerServerMegabytes", "limit"],
+      "properties": {
+        "slots": {"type": "integer", "minimum": 1, "maximum": 99},
+        "heapMegabytes": {"type": "integer", "minimum": 1},
+        "residentMegabytes": {"type": "integer", "minimum": 1},
+        "budgetMegabytes": {"type": "integer", "minimum": 0},
+        "cpuPerServer": {"type": "integer", "minimum": 1},
+        "memoryPerServerMegabytes": {"type": "integer", "minimum": 1},
+        "limit": {"enum": ["memory", "cores", "policy", "floor"]}
+      }
+    },
+    "Slot": {"type": "string", "pattern": "^s[0-9]{1,2}$"},
+    "Key": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "SlotState": {
+      "description": "What a slot remembers between sessions, written beside its output base while the session holds the claim: the key of the last selection (a warm server and package are reused for it), the keys of the packages it still keeps, newest first, and the time of the last use in epoch milliseconds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "slot", "key", "keys", "usedAt"],
+      "properties": {
+        "version": {"const": 1},
+        "slot": {"$ref": "#/definitions/Slot"},
+        "key": {"$ref": "#/definitions/Key"},
+        "keys": {"type": "array", "maxItems": 64, "items": {"$ref": "#/definitions/Key"}},
+        "usedAt": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Inventory": {
+      "description": "What exists on disk: per slot directory its remembered state (when any), the modification times of its generated packages and whether an output base exists; `foreign` lists entries below the server or workspace directory that are not slots.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slots", "foreign"],
+      "properties": {
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot", "outputBase", "packages"],
+            "properties": {
+              "slot": {"$ref": "#/definitions/Slot"},
+              "outputBase": {"type": "boolean"},
+              "state": {"$ref": "#/definitions/SlotState"},
+              "packages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["key", "modifiedAt"],
+                  "properties": {"key": {"$ref": "#/definitions/Key"}, "modifiedAt": {"type": "integer", "minimum": 0}}
+                }
+              }
+            }
+          }
+        },
+        "foreign": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 128}}
+      }
+    },
+    "Garbage": {
+      "description": "What the collector would remove: packages (slot and key), output bases (slot, each stopped before removal), foreign entries of the server directory (stopped, removed) and foreign package directories.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packages", "outputBases", "foreign"],
+      "properties": {
+        "packages": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["slot", "key", "reason"], "properties": {"slot": {"$ref": "#/definitions/Slot"}, "key": {"$ref": "#/definitions/Key"}, "reason": {"enum": ["capacity", "count", "age"]}}}},
+        "outputBases": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["slot", "reason"], "properties": {"slot": {"$ref": "#/definitions/Slot"}, "reason": {"enum": ["capacity", "idle"]}}}},
+        "foreign": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Messages": {
+      "description": "Progress and status lines in English and German; `{name}` placeholders are replaced by the reported values.",
+      "const": {
+        "en": {
+          "waiting": "[bazel] all {slots} Bazel server slots are in use; waiting for one ({seconds} s)",
+          "claimed": "[bazel] session slot {slot}: {mode}",
+          "warm": "warm server and package for this selection",
+          "switch": "the server restarts for a different selection",
+          "fresh": "fresh server",
+          "status-held": "in use",
+          "status-free": "free",
+          "status-header": "slot  state   last selection    last used",
+          "stopped": "[bazel] stopped the server of slot {slot}"
+        },
+        "de": {
+          "waiting": "[bazel] alle {slots} Bazel-Server-Slots sind belegt; warte auf einen freien Slot ({seconds} s)",
+          "claimed": "[bazel] Sitzungs-Slot {slot}: {mode}",
+          "warm": "warmer Server und warmes Paket für diese Auswahl",
+          "switch": "der Server startet für eine andere Auswahl neu",
+          "fresh": "frischer Server",
+          "status-held": "belegt",
+          "status-free": "frei",
+          "status-header": "Slot  Status  letzte Auswahl    zuletzt benutzt",
+          "stopped": "[bazel] Server von Slot {slot} gestoppt"
+        }
+      }
+    }
+  }
+}

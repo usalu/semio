@@ -62,7 +62,7 @@ export {
   videoRenderPathIsWellFormed,
   videoRenderProgramFromWire,
   videoRenderProgramProblem
-} from "@semio-tech/framework-effect/video-render-program";
+} from "../../⚡️effect/🎥️video-render-program/🟦️.ts";
 export type {
   VideoRenderColor,
   VideoRenderImage,
@@ -73,7 +73,7 @@ export type {
   VideoRenderRun,
   VideoRenderScene,
   VideoRenderTransform
-} from "@semio-tech/framework-effect/video-render-program";
+} from "../../⚡️effect/🎥️video-render-program/🟦️.ts";
 export { VideoRenderJobLedger } from "../../🧵️video-render-job/🟦️.ts";
 export type {
   VideoRenderEncoderTier,
@@ -103,8 +103,8 @@ export {
   SPAWNED_JOB_STEP_CEILING,
   spawnedJobCompletion,
   SpawnedJobDriveError
-} from "@semio-tech/framework-effect/spawned-job";
-export type { JobPlacement, SpawnedJobCompletion, SpawnedJobStep } from "@semio-tech/framework-effect/spawned-job";
+} from "../../⚡️effect/🛠️spawned-job/🟦️.ts";
+export type { JobPlacement, SpawnedJobCompletion, SpawnedJobStep } from "../../⚡️effect/🛠️spawned-job/🟦️.ts";
 export {
   mergeUiDirtyScopes,
   partitionRefreshWindowInstancesV1,

@@ -402,3 +402,30 @@ Created retained `🔀️proof/📜️script.ts`, language-neutral `🔀️proof
 
 
 - Inner-loader diagnostic preparation only: created2026-10-20-inner-loader-diagnostic.md and inert 🪝️loader/🧫️read.json; read retained frozen metadata and helper232ad, with no private read/Source/helper/runner edit, install or command. Exact frozen anchor read remains held for Root/Low review+GO.
+
+- Inner-loader read-profile proof: retained 🪝️loader/📜️script.ts and 🪝️loader/🧫️cases.json alongside inert 🧫️read.json; added settled9case host-neutral RED/GREEN/fences to inner-loader-diagnostic.md. No private read action is exposed, helper232ad/runner4fd/namespace3ded unchanged. Generated proof metadata/logs remain until final cleanup.
+
+- Inner-loader wrapper preparation: updated 🪝️loader/📜️script.ts/profile/casefixture and inner-loader-diagnostic.md; final3input observe-handoff and GREEN4 emitted under generated. --observe remains unexecuted/held. Root-created 2026-10-20-diagnostic-continuation.md and2026-10-20-strace-parent.md are retained ledger reports; no release edit to those Root reports.
+
+- Inner-loader transform/candidate preparation: updated same 🪝️loader/📜️script.ts +casefixture and report; retained frozen observation866B and generated semantic RED4/GREEN4, wrapperGREEN8/function-hash handoff. Root owns the candidate read; no release private read/helper/Source/runner/namespace change.
+
+- Root candidate metadata904B retained; release updated own continuation/status/inner-loader report and held22 operator/append-watch preparation only. Runtime owns host-only Root-helper integration. No release change to frozen2c3b/232ad/4fd/3ded or privateSource.
+
+- Course22 append monitor: created 🔭️monitor/📜️script.ts +schema/neutralfixture 🧫️.json and2026-10-20-course22-monitor.md. Generated raw-prefixRED/currentGREEN3/18cases/partialappend/Ajv+SQLite/fences retained. Host-only; no guest/Source/managed action or frozenloader/runner/namespace edits.
+
+
+## Current Retained Diagnostic22 Inputs
+
+This consolidates the final paths after the historical preparation entries above. Generated logs/metadata are evidence pending final cleanup, not permanent deliverables.
+
+- `🔭️monitor/📜️script.ts` — release-created host append monitor, final e1e34/19case proof; retained.
+- `🔭️monitor/🧫️.json` — release-created owned protocol/schema and language-neutral monitor fixture; retained.
+- `2026-10-20-course22-monitor.md` — release-created report, including explicit exhausted-partial refusal and module-local attribution limits; retained.
+- `🪝️loader/📜️script.ts` — release-created frozen2c3b observer/transform/candidate proof input; retained.
+- `🪝️loader/🧫️read.json` — release-created fixed oneleaf/identity/extent/transport profile; retained.
+- `🪝️loader/🧫️cases.json` — release-created language-neutral observer/semantic/shape fixture; retained.
+- `2026-10-20-inner-loader-diagnostic.md` — release-created plan/proof/Root-read and temporary-gate report; retained.
+- `🧾️cycle/🧫️coexistence.json` — runtime-created host-neutral exact three-kind coexistence input used for Root integration; retained alongside existing cycle script/fixture. Release did not edit it.
+- `📥️patches/📜️script.ts` — existing Root-owned helper, later host integration explicitly delegated to runtime. Release did not edit it.
+- `2026-10-20-diagnostic-continuation.md` — existing Root-owned continuation report updated by Root; no release creation/edit attributed.
+- `2026-10-20-strace-parent.md` — retained Root-owned observation report; no release edit attributed.

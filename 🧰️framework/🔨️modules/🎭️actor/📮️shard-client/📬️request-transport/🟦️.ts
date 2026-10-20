@@ -1,6 +1,6 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
 import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
-import { hopTraceEpochNowMs } from "@semio-tech/framework-trace";
+import { hopTraceEpochNowMs } from "../../../⏱️trace/🟦️.ts";
 import type { OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { type ShardSlot, graftWorkerStack } from "../🔐️activation/🟦️.ts";
 import { describeShardMessageError, describeShardWorkerError, formatShardWorkerFault, freshHeartbeatState } from "../💓️heartbeat/🟦️.ts";

@@ -1,0 +1,14 @@
+            "parameters": [
+              {
+                "id": "stack",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "beside",
+                    "env": {
+ENV_LINES
+                    }
+                  }
+                ]
+              }
+            ]

@@ -1,5 +1,5 @@
 //#region 🧬️OwnedValidation
-import { NumericIndex, type NumericIndexGrant } from "@semio-tech/value-ts/ordered/numeric";
+import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { UiContractViolation, UiDocumentLimits } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";

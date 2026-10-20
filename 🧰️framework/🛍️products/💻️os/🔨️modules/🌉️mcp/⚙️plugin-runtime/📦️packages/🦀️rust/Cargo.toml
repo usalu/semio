@@ -42,6 +42,8 @@ semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦�
 semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
 semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
 semio-framework-os-mcp-probe-document = { path = "../../../🔬️probe-document/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }

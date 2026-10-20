@@ -1,4 +1,5 @@
 import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 //#region 🔌️Adapters
 import Ajv from "ajv/dist/2020";
 import { describe, expect, test } from "bun:test";
@@ -552,7 +553,7 @@ function nativeOracle(row: (typeof vectors.glueRoleCases)[number], root: string)
     : row.oracle === "go-parser"
       ? Bun.spawnSync(["go", "run", join(oracleRoot, "🐹️.go"), "--", source, String(row.maxDelegationStatements)], { cwd: root, stdout: "pipe", stderr: "pipe" })
       : row.oracle === "python-parser"
-        ? Bun.spawnSync(["python3", join(oracleRoot, "🐍️.py"), source], { cwd: root, stdout: "pipe", stderr: "pipe" })
+        ? Bun.spawnSync([testPythonV1()??"python3", join(oracleRoot, "🐍️.py"), source], { cwd: root, stdout: "pipe", stderr: "pipe" })
         : Bun.spawnSync(["cc", "-dM", "-E", "-x", "c", source], { cwd: root, stdout: "pipe", stderr: "pipe" });
   expect(run.exitCode, run.stderr.toString()).toBe(0);
   if (row.oracle === "c-compiler") {

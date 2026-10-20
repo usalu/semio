@@ -1,5 +1,6 @@
 /** 🗺️ Contract: the generated Bazel workspace links the checkout without an ignore file (so the link stays in the execroot and actions are cached), and a task's own Cargo directories are task data resolved against the workspace. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
@@ -11,7 +12,7 @@ import component from "../../🧬️schema/🔣️.json";
 import {createNativeBuildCallerCapabilitiesV1,issueBuildTaskEnvironmentV1} from "../../../../📥️caller/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-const api=await import("../../📜️script.ts"),python=Bun.which("python3"),workspace=join(tmpdir(),"bazel-workspace-fixture"),task=(env:Record<string,unknown>|null)=>({id:"fixture:build",project:"fixture",target:"build",root:"fixture",args:[],definition:{execution:{kind:"command",command:"bun ./📜️script.ts",...(env?{env}:{})}}}) as any;
+const api=await import("../../📜️script.ts"),python=testPythonV1(),workspace=join(tmpdir(),"bazel-workspace-fixture"),task=(env:Record<string,unknown>|null)=>({id:"fixture:build",project:"fixture",target:"build",root:"fixture",args:[],definition:{execution:{kind:"command",command:"bun ./📜️script.ts",...(env?{env}:{})}}}) as any;
 
 test("Bazel workspace fixtures are closed and name the link the action policy declares",()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);

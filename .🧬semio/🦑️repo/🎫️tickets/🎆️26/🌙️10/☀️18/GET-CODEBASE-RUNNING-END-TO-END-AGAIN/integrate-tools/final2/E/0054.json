@@ -1,0 +1,124 @@
+{
+  "name": "@semio-tech/framework-async",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/**/*",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "info": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts info"
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-publication-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-publication-contract",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": []
+    },
+    "twin": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts twin",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [],
+      "description": "Checks live event-loop deadlines and measures chained scheduling on the current host.",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
+    },
+    "test-api-contract": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📏️api/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🤖️generated/⏳️async/🟦️.ts"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-api-contract",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "single-poll-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts single-poll-check",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

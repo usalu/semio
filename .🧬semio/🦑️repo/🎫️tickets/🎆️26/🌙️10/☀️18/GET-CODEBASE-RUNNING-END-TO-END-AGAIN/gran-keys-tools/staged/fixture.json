@@ -1,0 +1,743 @@
+{
+ "version": 1,
+ "files": {
+  "Cargo.toml": "cargo-features = [\"edition2024\"]\n\n[workspace]\nresolver = \"2\"\nmembers = [\"a\", \"b\", \"c\", \"devonly\"]\nexclude = [\"nested\"]\n\n[workspace.package]\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version = \"1.95\"\n\n[workspace.dependencies]\nserde = { version = \"1\", features = [\"derive\"] }\ntracing = \"0.1\"\nlocal-b = { path = \"b\" }\nnested-d = { path = \"nested/d\" }\n\n[workspace.lints.rust]\nunused_lifetimes = \"warn\"\n",
+  "a/Cargo.toml": "[package]\nname = \"a\"\nversion.workspace = true\nedition.workspace = true\n\n[lints]\nworkspace = true\n\n[dependencies]\nlocal-b = { workspace = true }\nserde = { workspace = true }\n",
+  "b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.2.0\"\nedition = \"2021\"\n\n[dependencies]\nc = { path = \"../c\" }\n\n[target.'cfg(unix)'.dependencies]\nnested-d = { workspace = true }\n",
+  "c/Cargo.toml": "[package]\nname = \"c\"\nversion = \"0.3.0\"\nedition = \"2021\"\n\n[dependencies]\nserde = { workspace = true }\n\n[dev-dependencies]\ndevonly = { path = \"../devonly\" }\n",
+  "devonly/Cargo.toml": "[package]\nname = \"devonly\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\ntracing = { workspace = true }\n",
+  "nested/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"d\"]\n\n[workspace.package]\nedition = \"2024\"\n\n[workspace.lints.rust]\nunsafe_code = \"deny\"\n\n[profile.dev]\nopt-level = 1\n",
+  "nested/d/Cargo.toml": "[package]\nname = \"d\"\nversion = \"0.1.0\"\nedition.workspace = true\n\n[lints]\nworkspace = true\n",
+  "rust-toolchain.toml": "# pinned\n[toolchain]\nchannel = \"nightly-2026-07-20\"\ncomponents = [\"rust-src\", \"llvm-tools-preview\"]\ntargets = [\"wasm32-unknown-unknown\", \"wasm32-wasip2\"]\nprofile = \"minimal\"\n",
+  ".cargo/config.toml": "# configuration\n[build]\ntarget-dir = \"target-a\"\nbuild-dir = \"build-a\"\nrustflags = [\"-Z\", \"threads=0\"]\n\n[env]\nRUST_MIN_STACK = \"67108864\"\n"
+ },
+ "trees": {
+  "Cargo.toml": {
+   "cargo-features": [
+    "edition2024"
+   ],
+   "workspace": {
+    "resolver": "2",
+    "members": [
+     "a",
+     "b",
+     "c",
+     "devonly"
+    ],
+    "exclude": [
+     "nested"
+    ],
+    "package": {
+     "version": "0.1.0",
+     "edition": "2021",
+     "rust-version": "1.95"
+    },
+    "dependencies": {
+     "serde": {
+      "version": "1",
+      "features": [
+       "derive"
+      ]
+     },
+     "tracing": "0.1",
+     "local-b": {
+      "path": "b"
+     },
+     "nested-d": {
+      "path": "nested/d"
+     }
+    },
+    "lints": {
+     "rust": {
+      "unused_lifetimes": "warn"
+     }
+    }
+   }
+  },
+  "a/Cargo.toml": {
+   "package": {
+    "name": "a",
+    "version": {
+     "workspace": true
+    },
+    "edition": {
+     "workspace": true
+    }
+   },
+   "lints": {
+    "workspace": true
+   },
+   "dependencies": {
+    "local-b": {
+     "workspace": true
+    },
+    "serde": {
+     "workspace": true
+    }
+   }
+  },
+  "b/Cargo.toml": {
+   "package": {
+    "name": "b",
+    "version": "0.2.0",
+    "edition": "2021"
+   },
+   "dependencies": {
+    "c": {
+     "path": "../c"
+    }
+   },
+   "target": {
+    "cfg(unix)": {
+     "dependencies": {
+      "nested-d": {
+       "workspace": true
+      }
+     }
+    }
+   }
+  },
+  "c/Cargo.toml": {
+   "package": {
+    "name": "c",
+    "version": "0.3.0",
+    "edition": "2021"
+   },
+   "dependencies": {
+    "serde": {
+     "workspace": true
+    }
+   },
+   "dev-dependencies": {
+    "devonly": {
+     "path": "../devonly"
+    }
+   }
+  },
+  "devonly/Cargo.toml": {
+   "package": {
+    "name": "devonly",
+    "version": "0.1.0",
+    "edition": "2021"
+   },
+   "dependencies": {
+    "tracing": {
+     "workspace": true
+    }
+   }
+  },
+  "nested/Cargo.toml": {
+   "workspace": {
+    "resolver": "2",
+    "members": [
+     "d"
+    ],
+    "package": {
+     "edition": "2024"
+    },
+    "lints": {
+     "rust": {
+      "unsafe_code": "deny"
+     }
+    }
+   },
+   "profile": {
+    "dev": {
+     "opt-level": 1
+    }
+   }
+  },
+  "nested/d/Cargo.toml": {
+   "package": {
+    "name": "d",
+    "version": "0.1.0",
+    "edition": {
+     "workspace": true
+    }
+   },
+   "lints": {
+    "workspace": true
+   }
+  },
+  "rust-toolchain.toml": {
+   "toolchain": {
+    "channel": "nightly-2026-07-20",
+    "components": [
+     "rust-src",
+     "llvm-tools-preview"
+    ],
+    "targets": [
+     "wasm32-unknown-unknown",
+     "wasm32-wasip2"
+    ],
+    "profile": "minimal"
+   }
+  },
+  ".cargo/config.toml": {
+   "build": {
+    "target-dir": "target-a",
+    "build-dir": "build-a",
+    "rustflags": [
+     "-Z",
+     "threads=0"
+    ]
+   },
+   "env": {
+    "RUST_MIN_STACK": "67108864"
+   }
+  }
+ },
+ "canonical": [
+  {
+   "value": {
+    "b": 1,
+    "a": [
+     2,
+     {
+      "d": 1,
+      "c": null
+     }
+    ],
+    "é": "x",
+    "z": {
+     "": 0
+    }
+   },
+   "text": "{\"a\":[2,{\"c\":null,\"d\":1}],\"b\":1,\"z\":{\"\":0},\"é\":\"x\"}"
+  },
+  {
+   "value": {
+    "🦀": 1,
+    "a": 2,
+    "￿": 3
+   },
+   "text": "{\"a\":2,\"￿\":3,\"🦀\":1}"
+  },
+  {
+   "value": [],
+   "text": "[]"
+  },
+  {
+   "value": "tab\t\"quote\"",
+   "text": "\"tab\\t\\\"quote\\\"\""
+  }
+ ],
+ "crates": [
+  "a",
+  "b",
+  "c",
+  "devonly",
+  "nested/d"
+ ],
+ "queries": [
+  "a:b",
+  "a:t",
+  "b:b",
+  "b:t",
+  "c:b",
+  "c:t",
+  "devonly:b",
+  "devonly:t",
+  "nested/d:b",
+  "nested/d:t"
+ ],
+ "edits": [
+  {
+   "id": "members-append",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "members"
+     ],
+     [
+      "$push",
+      "e"
+     ]
+    ]
+   ],
+   "note": "membership is not part of any key",
+   "changed": [],
+   "toolChanged": false
+  },
+  {
+   "id": "exclude-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "exclude"
+     ],
+     [
+      "other"
+     ]
+    ]
+   ],
+   "note": "exclusion is not part of any key",
+   "changed": [],
+   "toolChanged": false
+  },
+  {
+   "id": "lints-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "lints",
+      "rust",
+      "unused_lifetimes"
+     ],
+     "deny"
+    ]
+   ],
+   "note": "only crates with [lints] workspace = true",
+   "changed": [
+    "a:b",
+    "a:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "package-edition-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "package",
+      "edition"
+     ],
+     "2024"
+    ]
+   ],
+   "note": "only crates that inherit edition",
+   "changed": [
+    "a:b",
+    "a:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "package-rust-version-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "package",
+      "rust-version"
+     ],
+     "1.96"
+    ]
+   ],
+   "note": "no crate inherits rust-version",
+   "changed": [],
+   "toolChanged": false
+  },
+  {
+   "id": "dependency-serde-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "dependencies",
+      "serde",
+      "version"
+     ],
+     "2"
+    ]
+   ],
+   "note": "crates that inherit serde and everything compiling with them",
+   "changed": [
+    "a:b",
+    "a:t",
+    "b:b",
+    "b:t",
+    "c:b",
+    "c:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "dependency-tracing-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "dependencies",
+      "tracing"
+     ],
+     "0.2"
+    ]
+   ],
+   "note": "only devonly and crates compiling with it, c only as a test root",
+   "changed": [
+    "c:t",
+    "devonly:b",
+    "devonly:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "profile-add",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "profile"
+     ],
+     {
+      "dev": {
+       "opt-level": 1
+      }
+     }
+    ]
+   ],
+   "note": "every crate of the workspace and every crate compiling with them",
+   "changed": [
+    "a:b",
+    "a:t",
+    "b:b",
+    "b:t",
+    "c:b",
+    "c:t",
+    "devonly:b",
+    "devonly:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "features-edit",
+   "path": "Cargo.toml",
+   "set": [
+    [
+     [
+      "cargo-features"
+     ],
+     [
+      "edition2024",
+      "x"
+     ]
+    ]
+   ],
+   "note": "gates apply to the whole workspace",
+   "changed": [
+    "a:b",
+    "a:t",
+    "b:b",
+    "b:t",
+    "c:b",
+    "c:t",
+    "devonly:b",
+    "devonly:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "nested-edition-edit",
+   "path": "nested/Cargo.toml",
+   "set": [
+    [
+     [
+      "workspace",
+      "package",
+      "edition"
+     ],
+     "2027"
+    ]
+   ],
+   "note": "crates of the nested workspace and crates compiling with them",
+   "changed": [
+    "a:b",
+    "a:t",
+    "b:b",
+    "b:t",
+    "nested/d:b",
+    "nested/d:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "nested-profile-edit",
+   "path": "nested/Cargo.toml",
+   "set": [
+    [
+     [
+      "profile",
+      "dev",
+      "opt-level"
+     ],
+     3
+    ]
+   ],
+   "note": "the nested workspace's profile reaches d and b",
+   "changed": [
+    "a:b",
+    "a:t",
+    "b:b",
+    "b:t",
+    "nested/d:b",
+    "nested/d:t"
+   ],
+   "toolChanged": false
+  },
+  {
+   "id": "member-dependency-added",
+   "path": "a/Cargo.toml",
+   "set": [
+    [
+     [
+      "dependencies",
+      "extra"
+     ],
+     {
+      "path": "../c"
+     }
+    ]
+   ],
+   "note": "a's own manifest is a file input; its closure keeps c",
+   "changed": [
+    "a:b",
+    "a:t"
+   ],
+   "toolChanged": false
+  }
+ ],
+ "toolEdits": [
+  {
+   "id": "pin-comment",
+   "path": "rust-toolchain.toml",
+   "text": "# pinned twice, reordered below\n[toolchain]\nchannel = \"nightly-2026-07-20\"\ncomponents = [\"llvm-tools-preview\", \"rust-src\"]\ntargets = [\"wasm32-unknown-unknown\", \"wasm32-wasip2\"]\nprofile = \"minimal\"\n",
+   "changed": false
+  },
+  {
+   "id": "pin-channel",
+   "path": "rust-toolchain.toml",
+   "text": "# pinned\n[toolchain]\nchannel = \"nightly-2026-08-01\"\ncomponents = [\"rust-src\", \"llvm-tools-preview\"]\ntargets = [\"wasm32-unknown-unknown\", \"wasm32-wasip2\"]\nprofile = \"minimal\"\n",
+   "changed": true
+  },
+  {
+   "id": "config-comment",
+   "path": ".cargo/config.toml",
+   "text": "# a different comment\n[build]\ntarget-dir = \"target-a\"\nbuild-dir = \"build-a\"\nrustflags = [\"-Z\", \"threads=0\"]\n\n[env]\nRUST_MIN_STACK = \"67108864\"\n",
+   "changed": false
+  },
+  {
+   "id": "config-target-dir",
+   "path": ".cargo/config.toml",
+   "text": "# configuration\n[build]\ntarget-dir = \"target-b\"\nbuild-dir = \"build-b\"\nrustflags = [\"-Z\", \"threads=0\"]\n\n[env]\nRUST_MIN_STACK = \"67108864\"\n",
+   "changed": false
+  },
+  {
+   "id": "config-flags",
+   "path": ".cargo/config.toml",
+   "text": "# configuration\n[build]\ntarget-dir = \"target-a\"\nbuild-dir = \"build-a\"\nrustflags = [\"-Z\", \"threads=4\"]\n\n[env]\nRUST_MIN_STACK = \"67108864\"\n",
+   "changed": true
+  }
+ ],
+ "refusals": [
+  {
+   "id": "path-cycle",
+   "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"x\", \"y\"]\n",
+    "x/Cargo.toml": "[package]\nname = \"x\"\n[dependencies]\ny = { path = \"../y\" }\n",
+    "y/Cargo.toml": "[package]\nname = \"y\"\n[dependencies]\nx = { path = \"../x\" }\n"
+   },
+   "crate": "x",
+   "tests": false,
+   "error": "cycle",
+   "trees": {
+    "Cargo.toml": {
+     "workspace": {
+      "members": [
+       "x",
+       "y"
+      ]
+     }
+    },
+    "x/Cargo.toml": {
+     "package": {
+      "name": "x"
+     },
+     "dependencies": {
+      "y": {
+       "path": "../y"
+      }
+     }
+    },
+    "y/Cargo.toml": {
+     "package": {
+      "name": "y"
+     },
+     "dependencies": {
+      "x": {
+       "path": "../x"
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "path-escape",
+   "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"x\"]\n",
+    "x/Cargo.toml": "[package]\nname = \"x\"\n[dependencies]\nz = { path = \"../../../outside\" }\n"
+   },
+   "crate": "x",
+   "tests": false,
+   "error": "escape",
+   "trees": {
+    "Cargo.toml": {
+     "workspace": {
+      "members": [
+       "x"
+      ]
+     }
+    },
+    "x/Cargo.toml": {
+     "package": {
+      "name": "x"
+     },
+     "dependencies": {
+      "z": {
+       "path": "../../../outside"
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "explicit-workspace-without-table",
+   "files": {
+    "x/Cargo.toml": "[package]\nname = \"x\"\nworkspace = \"..\"\n"
+   },
+   "crate": "x",
+   "tests": false,
+   "error": "workspace",
+   "trees": {
+    "x/Cargo.toml": {
+     "package": {
+      "name": "x",
+      "workspace": ".."
+     }
+    }
+   }
+  }
+ ],
+ "keys": [
+  {
+   "input": "{workspaceRoot}/Cargo.toml",
+   "violation": "Cargo.toml"
+  },
+  {
+   "input": "{workspaceRoot}/Cargo.lock",
+   "violation": "Cargo.lock"
+  },
+  {
+   "input": "{workspaceRoot}/rust-toolchain.toml",
+   "violation": "rust-toolchain.toml"
+  },
+  {
+   "input": "{workspaceRoot}/.cargo/config.toml",
+   "violation": ".cargo/config.toml"
+  },
+  {
+   "input": "{workspaceRoot}/./Cargo.lock",
+   "violation": "Cargo.lock"
+  },
+  {
+   "input": "{workspaceRoot}/**/Cargo.toml",
+   "violation": "**/Cargo.toml"
+  },
+  {
+   "input": "{workspaceRoot}/**/Cargo.lock",
+   "violation": "**/Cargo.lock"
+  },
+  {
+   "input": "{workspaceRoot}/**/*.rs",
+   "violation": "**/*.rs"
+  },
+  {
+   "input": "{workspaceRoot}/**/🧬️schema/**/*",
+   "violation": "**/🧬️schema/**/*"
+  },
+  {
+   "input": "{workspaceRoot}/**/{Cargo.toml,📋️project.json}",
+   "violation": "**/Cargo.toml"
+  },
+  {
+   "input": "{workspaceRoot}/crates/a/Cargo.toml",
+   "violation": null
+  },
+  {
+   "input": "{workspaceRoot}/🌎️hub/**/*.rs",
+   "violation": null
+  },
+  {
+   "input": "{workspaceRoot}/🧰️framework/Cargo.toml",
+   "violation": null
+  },
+  {
+   "input": "{projectRoot}/Cargo.toml",
+   "violation": null
+  },
+  {
+   "input": "!{workspaceRoot}/**/Cargo.toml",
+   "violation": null
+  },
+  {
+   "input": "{workspaceRoot}/rustfmt.toml",
+   "violation": null
+  },
+  {
+   "input": "{workspaceRoot}/**/🧬️schema/mutations/🔣️.json",
+   "violation": null
+  }
+ ],
+ "exemptCases": [
+  {
+   "command": "bun x native cargo metadata --manifest a/Cargo.toml",
+   "inputs": [
+    "{workspaceRoot}/**/Cargo.lock",
+    "{workspaceRoot}/Cargo.toml"
+   ],
+   "violations": []
+  },
+  {
+   "command": "bun x native cargo check --manifest a/Cargo.toml",
+   "inputs": [
+    "{workspaceRoot}/**/Cargo.lock",
+    "{workspaceRoot}/Cargo.toml",
+    "{projectRoot}/**/*"
+   ],
+   "violations": [
+    "**/Cargo.lock",
+    "Cargo.toml"
+   ]
+  }
+ ],
+ "expect": {
+  "base": {
+   "a:b": "94b8a4e7fb383e2086d0219d406637bc9afa293deb506df4caf251912ab5df2b",
+   "a:t": "94b8a4e7fb383e2086d0219d406637bc9afa293deb506df4caf251912ab5df2b",
+   "b:b": "d4b818c2949dc8b34908d0200b299814eb9cf62243761e5134794837e5595779",
+   "b:t": "d4b818c2949dc8b34908d0200b299814eb9cf62243761e5134794837e5595779",
+   "c:b": "8551109d78b8caed1af959bed0995bd809953dcff23183bb906898700cfa61b9",
+   "c:t": "b8e8dcd21ec23a806797c5eade6b8885366fb43a3cd5e578addce5378e31be02",
+   "devonly:b": "499c1c51814c9647f8870a5239c25cf8a84418b1466b9db1724bad84227eac5e",
+   "devonly:t": "499c1c51814c9647f8870a5239c25cf8a84418b1466b9db1724bad84227eac5e",
+   "nested/d:b": "1e2577260679c91b0136bdda99f41157bb556fb8218b271845ddcf2590c73723",
+   "nested/d:t": "1e2577260679c91b0136bdda99f41157bb556fb8218b271845ddcf2590c73723"
+  },
+  "tool": {
+   "toolchain": "6541006fc118f3212c4b19c2e15a5cf1cf4cbfd15af4c936347e4811fb80dcb9",
+   "config": "5093b34193313b95488f44fe6705ce24433178d47104eb86bedd486007ab42c7"
+  },
+  "composed": "58e42b042146f26fe0ed27644724f98a5bd79b5eebc5273e41975c7ea64ad781"
+ }
+}

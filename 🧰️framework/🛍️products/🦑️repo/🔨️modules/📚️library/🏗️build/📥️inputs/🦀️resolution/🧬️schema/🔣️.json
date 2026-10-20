@@ -1,0 +1,492 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cargo Resolution Identity",
+  "description": "🦀️ Declares what a Rust task key hashes instead of the workspace-wide Cargo files: the resolution identity of one crate (its locked dependency slice, what it and every crate it compiles with inherit from their own workspace, the pinned toolchain and the Cargo configuration without comments) and the whole-workspace Rust or schema keys no cached task may declare again.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "toolchain",
+    "workspaceKeys",
+    "messages"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "toolchain": {
+      "$ref": "#/definitions/Toolchain"
+    },
+    "workspaceKeys": {
+      "$ref": "#/definitions/WorkspaceKeys"
+    },
+    "messages": {
+      "$ref": "#/definitions/Messages"
+    }
+  },
+  "definitions": {
+    "RepositoryFile": {
+      "description": "A repository-relative file: no absolute path, no parent segment.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+    },
+    "Toolchain": {
+      "description": "The two files whose meaning, not their bytes, enters a crate's identity: the toolchain pin and the Cargo configuration; the keys of the configuration that only choose where artifacts are stored never do.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pin",
+        "config",
+        "configExcluded"
+      ],
+      "properties": {
+        "pin": {
+          "$ref": "#/definitions/RepositoryFile"
+        },
+        "config": {
+          "$ref": "#/definitions/RepositoryFile"
+        },
+        "configExcluded": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+          }
+        }
+      }
+    },
+    "Exempt": {
+      "description": "A command whose result is a function of every workspace manifest by design, with the reason.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "reason"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "WorkspaceKeys": {
+      "description": "Declared inputs no cached task may carry: the root Cargo, lock and toolchain files named literally (a crate's identity replaces them) and the patterns `{workspaceRoot}/**/<tail>` that select every manifest, lock, Rust source or schema tree of the workspace.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "literals",
+        "tails",
+        "exempt",
+        "exemptTargets"
+      ],
+      "properties": {
+        "literals": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/RepositoryFile"
+          }
+        },
+        "tails": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "exempt": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Exempt"
+          }
+        },
+        "exemptTargets": {
+          "description": "Targets whose result is a function of the root Cargo files or of every manifest, lock, source or schema by design or while their owner derives a narrower key: the exact `project:target` ids with the reason. The list is a ratchet: the law refuses an id that no longer needs it.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "targets",
+              "reason"
+            ],
+            "properties": {
+              "targets": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 256
+                }
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            }
+          }
+        }
+      }
+    },
+    "Messages": {
+      "description": "Texts in every language, with `{subject}`, `{keys}` and `{crate}` placeholders; the language is chosen like the CLI help: SEMIO_LANGUAGE, then the locale, then the first language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "languages",
+        "texts"
+      ],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          }
+        },
+        "texts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "workspaceKey",
+            "cycle",
+            "escape",
+            "workspace"
+          ],
+          "properties": {
+            "workspaceKey": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              }
+            },
+            "cycle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              }
+            },
+            "escape": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              }
+            },
+            "workspace": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Leaf": {
+      "description": "The persisted receipt of one crate (`rr/<24 hex>.json`, brotli, an optional recomputable graph cache leaf); `check` is the digest of the canonical receipt without it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "crate",
+        "check"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "crate": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "check": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "b": {
+          "description": "What one crate resolved to for one run kind: the files it read with their digests, what it inherits and what its workspace fixes (null for a missing crate), the path dependencies with the identities they had, and the folded identity. A receipt answers while every recorded file has its recorded digest.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "root",
+            "reads",
+            "own",
+            "fixed",
+            "children"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "root": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "reads": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "sha": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            },
+            "own": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "fixed": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "id"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "maxLength": 512
+                  },
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "t": {
+          "description": "What one crate resolved to for one run kind: the files it read with their digests, what it inherits and what its workspace fixes (null for a missing crate), the path dependencies with the identities they had, and the folded identity. A receipt answers while every recorded file has its recorded digest.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "root",
+            "reads",
+            "own",
+            "fixed",
+            "children"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "root": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "reads": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "sha": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            },
+            "own": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "fixed": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "id"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "maxLength": 512
+                  },
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "lock": {
+          "description": "The locked slice of a crate and what it was derived from: the lock file's digest (null when absent) and the digest of the files the crate's unit read.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha",
+            "basis",
+            "digest"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "sha": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "basis": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

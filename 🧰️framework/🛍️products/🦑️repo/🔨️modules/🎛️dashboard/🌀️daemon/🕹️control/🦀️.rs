@@ -1,4 +1,4 @@
-//! 🕹️ The daemon without a terminal: what `semio run`, `tasks`, `logs`, `stop`, `restart` and `kill` do.
+//! 🕹️ The daemon without a terminal: what `repo dashboard run`, `tasks`, `logs`, `stop`, `restart` and `kill` do.
 //! Every function takes a [`Connection`] and speaks the same protocol as the dashboard view, so a task
 //! started here is the task the view shows, and the other way round. Waiting functions poll a
 //! cancellation flag, report progress through a callback and end within a bound.

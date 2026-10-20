@@ -81,7 +81,10 @@
   "definitions": {
     "SourceInputProtocol": {
       "const": {
-        "rootFiles": ["rust-toolchain.toml", ".cargo/config.toml"],
+        "rootFiles": [
+          "rust-toolchain.toml",
+          ".cargo/config.toml"
+        ],
         "selectedWorkspaceLock": "Cargo.lock",
         "dependencyWorkspaceLocks": false
       }
@@ -96,6 +99,13 @@
           "ctimeNs"
         ],
         "contentReads": 0
+      }
+    },
+    "PackageOwner": {
+      "const": {
+        "project": "@semio-tech/repo-dashboard-rs",
+        "workspaceRelative": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "installationRelative": "../../../../../🎛️dashboard/📦️packages/🦀️rust"
       }
     }
   }

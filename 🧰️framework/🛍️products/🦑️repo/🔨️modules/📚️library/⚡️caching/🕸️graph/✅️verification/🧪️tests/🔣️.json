@@ -48,7 +48,7 @@
     },
     {
       "name": "projectInputs",
-      "parameters": 7,
+      "parameters": 9,
       "asynchronous": true
     },
     {

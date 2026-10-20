@@ -1,0 +1,81 @@
+{
+  "name": "@semio-tech/s-cad-composition-rs",
+  "root": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:tool"
+  ],
+  "targets": {
+    "source-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts check",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "wasm": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+          },
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
+      },
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"]
+    },
+    "browser-test": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "wasm"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts browser-test",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    }
+  }
+}

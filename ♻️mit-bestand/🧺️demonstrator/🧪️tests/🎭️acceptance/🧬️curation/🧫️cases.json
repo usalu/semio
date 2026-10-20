@@ -1,0 +1,45 @@
+{
+  "objectId": "beam-glulam-gl24h",
+  "name": "Glulam GL24h 200×400",
+  "availability": 24,
+  "steps": [
+    {
+      "action": "increment",
+      "count": 1
+    },
+    {
+      "action": "undo",
+      "count": 0
+    },
+    {
+      "action": "redo",
+      "count": 1
+    },
+    {
+      "action": "keyboardIncrement",
+      "count": 2
+    },
+    {
+      "action": "undo",
+      "count": 1
+    },
+    {
+      "action": "redo",
+      "count": 2
+    },
+    {
+      "action": "remove",
+      "count": 0
+    },
+    {
+      "action": "undo",
+      "count": 2
+    }
+  ],
+  "revisit": {
+    "viaPane": "bearbeiten",
+    "offscreenMs": 31000,
+    "afterRedoCount": 0,
+    "afterUndoCount": 2
+  }
+}

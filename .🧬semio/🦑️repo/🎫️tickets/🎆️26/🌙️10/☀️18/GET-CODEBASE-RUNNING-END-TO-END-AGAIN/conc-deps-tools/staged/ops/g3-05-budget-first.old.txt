@@ -1,0 +1,2 @@
+async function admitJavascriptDependencyGenerationV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,scope:string):Promise<void>{
+ const report=

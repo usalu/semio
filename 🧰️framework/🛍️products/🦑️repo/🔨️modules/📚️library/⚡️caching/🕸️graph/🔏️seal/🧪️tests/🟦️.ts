@@ -7,6 +7,7 @@ import {withNxGraphFixtureV1} from "../../../💾️storage/🔒️enforcement/�
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { brotliCompressSync } from "node:zlib";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -35,7 +36,7 @@ function workspace(): { root: string; data: string; pid: number; startedAt: numb
   const inference: [string, string][] = [];
   for (const name of ["emoji-project-json.json", "test-cases.json"]) {
     const header = JSON.stringify({ digest: "0".repeat(64), observations: [fact] }), path = join(data, "inference", name);
-    writeFileSync(path, `${header}\n{}`);
+    writeFileSync(path, brotliCompressSync(Buffer.from(`${header}\n{}`)));
     inference.push([path, createHash("sha256").update(header).digest("hex")]);
   }
   for (const name of ["emoji-project-json.receipt.json", "test-cases.receipt.json"]) writeFileSync(join(data, "inference", name), JSON.stringify({ format: 1, revision: "test", pid, completedAt: Date.now(), inference, observations: [] }));

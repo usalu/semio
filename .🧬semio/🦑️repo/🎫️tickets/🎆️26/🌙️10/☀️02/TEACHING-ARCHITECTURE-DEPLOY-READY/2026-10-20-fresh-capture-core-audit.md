@@ -1,0 +1,17 @@
+# Fresh Capture Core Audit
+
+Reviewed current 📦️fresh/core.ts,host.ts,script.ts,tests.ts and receiver joint boundary without commands, capture, Source edits or private effects.
+
+The main concrete issue is host.ts:25 absence observation: ordinary(path) accepts final lstat ENOENT without authenticating ancestry before/after. This is weaker than present-file capture and can follow a symlink or replaced ancestor while claiming a critical path absent. Require a stable nofollow ancestor observation for absence, including ENOTDIR semantics, and neutral tests for missing final path, symlink ancestor and ancestor replacement. Sent Runtime this issue.
+
+The current Source inventory explicitly refreshes tracked/untracked roster, registry, workspace membership reads and transitive defining source closure (host:26–33). Required manifests/controls and actual defining files are promoted to critical paths; provider/membership/registry/tracked/untracked digests compare before, after critical capture and final capture (core:65,68). Critical content, identity and executable bits recheck before sealing. Noncritical changed/missing/added Source is honestly recorded as divergence; the manifest explicitly declares atomicHostSnapshot:false. These checks do not create an atomic filesystem snapshot.
+
+Present-file reading retains one descriptor with regular single-link, named identity and ancestor anchor checks; EOF and descriptor/name fences surround capture (core:27–31). Capture reads and awaits PAX emission for one file before moving on (:63,67), with serial sink.write backpressure. It retains manifest rows and one file, not a full archive. Metadata arrays/JSON can additionally consume their declared134MiB bound and serialization copies. The4GiB ceiling applies to the whole tar stream including metadata/padding, so a Source payload close to4GiB can legitimately refuse before sealing.
+
+Host PAX emits one sole-path x record followed by one ordinary file (core:39–40). Path bounds imply metadata far below receiver2048B cap. Release's proposed bounded physical-header parser must reject oversized/chained/foreign metadata before reads; earlier tarfile implementation did not provide that bound. Verify actual producer archives against actual receiver parser with Unicode and malformed metadata cases before use.
+
+Core invokes abortAndJoin after a started stream on failure (:69), preserving capture+join failures with AggregateError. If failure happens before first write, withFreshReceiver wrapper still owns the already-started child and performs its abort/join path. Neutral sink tests prove awaited callback sequencing, not real Docker guest terminality; real receiver success/custody and dedicated cleanup remain entry adapter obligations. No Source files are copied to ticket; only newly authored helper inputs and metadata are stored there.
+
+The current contract.ts still exposes obsolete SourceReceiverPort/ReceiverAdmission DTOs unused by the actual CaptureSink boundary. Runtime already identified and plans alignment; no need retain a second apparent admission protocol.
+
+Tests read include actual descriptor/sentinel cases, controlled file/ancestor races, provider/membership/control changes, critical hash/identity changes, serial backpressure and cancelled/deadline stream abort sequencing, plus Ajv and Python archive/hash oracles. These inputs were not executed by this audit. They do not directly exercise real host inventory's imported membership/defining-closure behavior or actual Docker transport. No broader claims are made.

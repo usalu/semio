@@ -1,12 +1,14 @@
-# ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Static paths select its
-# shared namespace; managed prototype and release facades retain their explicitly issued store paths.
-# `fine-grain-locking` serializes compilation units; `checksum-freshness` compares actual source contents.
+# ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Every agent compiles in its own lane
+# (`m/u/l/<lane>/{t,b}`) and shares results only through the content-addressed unit cache (`m/u`); the static paths below name the
+# default lane `d`, which an unattributed command uses. No two Cargo processes share a build directory, so Cargo's unit locks
+# cannot form a cycle between processes; `fine-grain-locking` stays for the passes of one driver generation.
+# `checksum-freshness` compares actual source contents.
 # https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#fine-grain-locking
 [build]
 rustc = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📜️script.ts"
 rustc-wrapper = "bun"
-target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
-build-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/build"
+target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t"
+build-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/b"
 rustflags = ["-Z", "threads=0"]
 
 [unstable]

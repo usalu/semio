@@ -23,6 +23,16 @@
     { "name": "status needs no Nx process", "args": ["cache", "status"], "nx": null },
     { "name": "clear resets only the cache", "args": ["cache", "clear"], "nx": ["reset", "--onlyCache"] }
   ],
+  "inputs": [
+    { "name": "one task", "args": ["inputs", "@teaching/architecture-course:test"], "nx": ["show", "target", "inputs", "@teaching/architecture-course:test", "--json"] },
+    { "name": "one task with a configuration", "args": ["inputs", "p:build:release"], "nx": ["show", "target", "inputs", "p:build:release", "--json"] }
+  ],
+  "inputsRefused": [
+    ["inputs"],
+    ["inputs", "plain"],
+    ["inputs", "p:t", "extra"],
+    ["inputs", "p:t:c:d"]
+  ],
   "planning": [
     { "name": "dry-run is the Nx graph on stdout", "args": ["run", "app:build", "--dry-run"], "nx": ["run", "app:build", "--graph=stdout"] },
     { "name": "dry-run false plans nothing", "args": ["run", "app:build", "--dry-run=false"], "nx": ["run", "app:build"] },

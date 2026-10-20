@@ -1,6 +1,8 @@
 import {lstatSync,opendirSync,statfsSync} from "node:fs";
 import {dirname,join,resolve,relative,isAbsolute,sep} from "node:path";
-import {nativeDirectoryProtocolV1,observeNativeDirectoryStateV1,measureNativeDirectoryUsageV1} from "../../📁️directory/🟦️.ts";
+import {nativeDirectoryProtocolV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1} from "../../📁️directory/🟦️.ts";
+import {nativeDirectoryUsedBytesSyncV1} from "./📐️statfs/🟦️.ts";
+export {nativeDirectoryUsedBytesSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";
 import {requireMaterializedPathV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import type {NativeStoragePortV1} from "../../🔌️port/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
@@ -54,10 +56,10 @@ export function nativeImageAttachedV1(image:string,root:string):boolean{if(nativ
 /** 📐️ Reports the whole-volume capacity: the declared envelope for directory partitions, the mounted filesystem otherwise. */
 export function nativeImageFilesystemBytesV1(root:string,declared:number):number{if(nativeImageDirectoryHostV1())return declared;const filesystem=statfsSync(root);return filesystem.blocks*filesystem.bsize;}
 /** 🧮️ Reports the physical bytes in use below the root: a bounded tree measurement for directory partitions, the mounted filesystem otherwise. */
-export function nativeImageUsedBytesV1(root:string):number{if(nativeImageDirectoryHostV1())return measureNativeDirectoryUsageV1(root).allocatedBytes;const filesystem=statfsSync(root,{bigint:true});if(filesystem.bsize<1n||filesystem.blocks<filesystem.bfree||filesystem.bfree<filesystem.bavail||filesystem.bavail<0n)throw Error("Coherent filesystem statistics required");return Number((filesystem.blocks-filesystem.bfree)*filesystem.bsize);}
+export function nativeImageUsedBytesV1(root:string):number{if(nativeImageDirectoryHostV1())return nativeDirectoryUsedBytesSyncV1(root,readNativeDirectoryAnchorFileV1(dirname(root)).maximumPhysicalBytes);const filesystem=statfsSync(root,{bigint:true});if(filesystem.bsize<1n||filesystem.blocks<filesystem.bfree||filesystem.bfree<filesystem.bavail||filesystem.bavail<0n)throw Error("Coherent filesystem statistics required");return Number((filesystem.blocks-filesystem.bfree)*filesystem.bsize);}
 
 /** 🪣️ Reports the allocation unit and the unused units of the enforcing volume, bounded by the declared envelope for directory partitions. */
-export function nativeImageSpaceV1(root:string,declared:number):Readonly<{bsize:number;bavail:number}>{const bsize=process.platform==="win32"?nativeDirectoryProtocolV1().exchange.windows.blockBytes:statfsSync(root).bsize;if(nativeImageDirectoryHostV1())return Object.freeze({bsize,bavail:Math.max(0,Math.floor((declared-measureNativeDirectoryUsageV1(root).allocatedBytes)/bsize))});return Object.freeze({bsize,bavail:statfsSync(root).bavail});}
+export function nativeImageSpaceV1(root:string,declared:number):Readonly<{bsize:number;bavail:number}>{const bsize=process.platform==="win32"?nativeDirectoryProtocolV1().exchange.windows.blockBytes:statfsSync(root).bsize;if(nativeImageDirectoryHostV1())return Object.freeze({bsize,bavail:Math.max(0,Math.floor((declared-nativeDirectoryUsedBytesSyncV1(root,declared))/bsize))});return Object.freeze({bsize,bavail:statfsSync(root).bavail});}
 /** 📂️ Rejects symlinks and paths escaping the enforced filesystem before materialization. */
 export function requireNativeStoragePathV1(root:string,path:string):string{
  root=resolve(root);path=requireMaterializedPathV1(path);const suffix=relative(root,path);if(suffix===".."||suffix.startsWith(".."+sep)||isAbsolute(suffix))throw Error("Native storage path escapes enforcing boundary");

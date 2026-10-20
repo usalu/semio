@@ -5,6 +5,7 @@
 //! @see 🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧩️labels/🦀️.rs
 
 use dashboard_launch::TaskLabel;
+use semio_framework_filesystem_workspace::{Error,ErrorKind,Progress,Stage,commands::EntryAction};
 use ui_locale::{AppLabels, Locale, Terminology};
 use semio_framework_ui_tui_core::text::{elide_end, elide_middle};
 
@@ -21,8 +22,31 @@ macro_rules! dashboard_labels {
 dashboard_labels! {
     nav_brand: "semio", "semio";
     nav_mode: "dashboard", "Übersicht";
+    source_history: "retained history", "aufbewahrter Verlauf";
+    action_inspect_history: "Inspect history", "Verlauf prüfen";
+    action_reconcile_history: "Reconcile history", "Verlauf abgleichen";
+    action_archive_history: "Archive history segment", "Verlaufsabschnitt archivieren";
+    action_next_history_page: "Next history page", "Nächste Verlaufsseite";
+    source_history_empty: "No history segment is active.", "Kein Verlaufsabschnitt ist aktiv.";
+    source_history_end: "No further history page.", "Keine weitere Verlaufsseite.";
+    source_history_confirm_error: "Enter the exact inspected selection identifier.", "Die genaue Kennung der geprüften Auswahl eingeben.";
+    source_history_pending: "Reconcile the pending transition before archiving.", "Vor dem Archivieren den ausstehenden Übergang abgleichen.";
+    source_history_confirmation: "{action} · selection {selection} · type {selection} and press Enter; Esc cancels", "{action} · Auswahl {selection} · {selection} eingeben und Eingabetaste drücken; Esc bricht ab";
+    source_history_summary: "History {active} · {segments} segments · {names} names · {bytes} journal/save bytes (excluding retained removals) · {unresolved} unresolved · {quarantined} quarantined · rollover {rollover} · pending {pending}", "Verlauf {active} · {segments} Abschnitte · {names} Namen · {bytes} Journal-/Sicherungsbytes (ohne aufbewahrte entfernte Nutzdaten) · {unresolved} ungeklärt · {quarantined} gesondert aufbewahrt · Wechsel {rollover} · ausstehend {pending}";
+    source_history_keys: "Next {next} · inspect {inspect} · reconcile {reconcile} · archive {archive}", "Weiter {next} · prüfen {inspect} · abgleichen {reconcile} · archivieren {archive}";
+    source_reload_read_only: "read only · reload before editing", "schreibgeschützt · vor Bearbeitung neu laden";
     source_read_only: "read only", "schreibgeschützt";
     action_inspect_recovery: "inspect retained version", "aufbewahrte Version prüfen";
+    action_create_file: "new file", "neue Datei";
+    action_create_directory: "new folder", "neuer Ordner";
+    action_rename_entry: "rename entry", "Eintrag umbenennen";
+    action_retain_entry: "remove and retain entry", "Eintrag entfernen und aufbewahren";
+    source_choose_entry: "Browse workspace files and select an entry first", "Zuerst Arbeitsbereich-Dateien öffnen und einen Eintrag wählen";
+    source_name: "Name", "Name";
+    source_management_form: "{action} {path} · Enter applies · Esc cancels", "{action} {path} · Enter führt aus · Esc bricht ab";
+    source_confirm_retain: "Remove {path} and retain it in local history? Type {name} exactly and press Enter; Esc cancels.", "{path} entfernen und im lokalen Verlauf aufbewahren? Genau {name} eingeben und Enter drücken; Esc bricht ab.";
+    source_management_partial: "Command did not settle; an actual retained item is available at {path}. Inspect it before continuing.", "Befehl wurde nicht abgeschlossen; ein tatsächlich aufbewahrter Eintrag liegt unter {path}. Vor dem Fortfahren prüfen.";
+    source_retained: "Entry retained at {path}; inspect with {inspect}", "Eintrag unter {path} aufbewahrt; mit {inspect} prüfen";
     title_files: "Workspace Files", "Arbeitsbereich-Dateien";
     source_listing: "listing", "auflisten";
     source_reading: "reading", "lesen";
@@ -35,8 +59,9 @@ dashboard_labels! {
     source_path_error: "An owned relative file path is required", "Ein zugehöriger relativer Dateipfad ist erforderlich";
     source_boundary_error: "The path crosses the workspace or a symbolic link", "Der Pfad überschreitet den Arbeitsbereich oder einen symbolischen Link";
     source_not_file: "The selected path is not a regular file", "Der gewählte Pfad ist keine reguläre Datei";
+    source_management_too_large: "A managed file exceeds the 64 MiB command limit", "Eine verwaltete Datei überschreitet das Befehlslimit von 64 MiB";
     source_too_large: "The file exceeds the editable byte limit", "Die Datei überschreitet das bearbeitbare Bytelimit";
-    source_too_many: "The directory exceeds the entry limit", "Das Verzeichnis überschreitet das Eintragslimit";
+    source_too_many: "The directory or tree exceeds the 4096-entry limit", "Das Verzeichnis oder der Baum überschreitet das Limit von 4096 Einträgen";
     source_not_text: "The file is not supported UTF8 text", "Die Datei ist kein unterstützter UTF8-Text";
     source_partial_publication: "Save could not settle. Retained bytes are available at {path}; local buffer is retained. Inspect the retained version before continuing.", "Speichern konnte nicht abgeschlossen werden. Aufbewahrte Bytes liegen unter {path}; der lokale Puffer bleibt erhalten. Vor dem Fortfahren die aufbewahrte Version prüfen.";
     source_publication_race: "Save raced with another writer; your version was published and the predecessor is retained at {path}. Buffer retained.", "Speichern kollidierte mit anderem Schreiber; Ihre Version wurde veröffentlicht und die Vorgängerversion liegt unter {path}. Puffer bleibt erhalten.";
@@ -50,7 +75,7 @@ dashboard_labels! {
     source_failed: "File operation failed: {problem}", "Dateivorgang fehlgeschlagen: {problem}";
     source_dirty: "unsaved", "ungespeichert";
     source_saved: "saved", "gespeichert";
-    source_cancelled: "File cancellation requested; buffer retained", "Dateiabbruch angefordert; Puffer bleibt erhalten";
+    source_document_cancelled: "File cancellation requested; buffer retained", "Dateiabbruch angefordert; Puffer bleibt erhalten";
     source_confirm_discard: "Unsaved changes retained. Save with {save}, or press {discard} again to discard.", "Ungespeicherte Änderungen bleiben erhalten. Mit {save} speichern oder zum Verwerfen erneut {discard} drücken.";
     source_reloaded: "File loaded", "Datei geladen";
     source_empty: "No matching files", "Keine passenden Dateien";
@@ -153,7 +178,7 @@ dashboard_labels! {
     help_window: "Windows and tabs", "Fenster und Tabs";
     help_view: "Lists, launcher and forms", "Listen, Starter und Formulare";
     help_terminal: "While a terminal has the keyboard only the prefix key is reserved; every other key reaches the program.", "Hat ein Terminal die Tastatur, ist nur die Präfixtaste reserviert; jede andere Taste erreicht das Programm.";
-    help_customize: "Customize with: semio preferences set --prefix KEY --bindings JSON", "Anpassen mit: semio preferences set --prefix TASTE --bindings JSON";
+    help_customize: "Customize with: repo dashboard preferences set --prefix KEY --bindings JSON", "Anpassen mit: repo dashboard preferences set --prefix TASTE --bindings JSON";
     chrome_close: "Close tab", "Tab schließen";
     chrome_drag: "Drag window", "Fenster ziehen";
     chrome_maximize: "Maximize window", "Fenster maximieren";
@@ -161,7 +186,7 @@ dashboard_labels! {
     chrome_new_tab: "New task in this stack", "Neue Aufgabe in diesem Stapel";
     chrome_previous_tabs: "Earlier tabs", "Frühere Tabs";
     chrome_next_tabs: "Later tabs", "Spätere Tabs";
-    skew_incompatible: "daemon speaks protocol {daemon} but this client speaks {client}; stop the daemon once its tasks finish (semio daemon stop) and start it again", "Der Dienst spricht Protokoll {daemon}, dieser Client {client}; Dienst beenden, sobald seine Aufgaben fertig sind (semio daemon stop), und neu starten";
+    skew_incompatible: "daemon speaks protocol {daemon} but this client speaks {client}; stop the daemon once its tasks finish (repo dashboard daemon stop) and start it again", "Der Dienst spricht Protokoll {daemon}, dieser Client {client}; Dienst beenden, sobald seine Aufgaben fertig sind (repo dashboard daemon stop), und neu starten";
     skew_build: "daemon build {daemon} differs from this client's build {client}; its tasks keep running", "Dienst-Build {daemon} weicht vom Build dieses Clients {client} ab; seine Aufgaben laufen weiter";
     replay_truncated: "earlier output of a task was no longer kept", "Frühere Ausgabe einer Aufgabe wurde nicht mehr aufbewahrt";
     error_protocol: "the daemon refused this protocol", "Der Dienst lehnt dieses Protokoll ab";
@@ -180,7 +205,7 @@ dashboard_labels! {
     start_pending_full: "too many starts are waiting for the daemon", "Zu viele Starts warten auf den Dienst";
     start_unavailable: "commands are still being discovered", "Befehle werden noch gesucht";
     start_requeued: "the daemon connection dropped; the start is kept and sent again on reconnect", "Die Verbindung zum Dienst brach ab; der Start bleibt erhalten und wird nach dem Verbinden gesendet";
-    cli_daemon_usage: "usage: semio daemon start|stop|status|attach|serve", "Verwendung: semio daemon start|stop|status|attach|serve";
+    cli_daemon_usage: "usage: repo dashboard daemon start|stop|status|attach|serve", "Verwendung: repo dashboard daemon start|stop|status|attach|serve";
     cli_daemon_serve_failed: "daemon serve failed: {error}", "Der Dienst konnte nicht laufen: {error}";
     cli_daemon_ready: "workspace dashboard daemon ready at pid {pid}", "Dashboard-Dienst des Arbeitsbereichs bereit unter pid {pid}";
     cli_daemon_start_failed: "failed to start daemon: {error}", "Der Dienst konnte nicht gestartet werden: {error}";
@@ -290,6 +315,8 @@ impl DashboardLabels {
     pub fn try_action(&self, id: &str) -> Option<&'static str> {
         let text = match id {
             "inspect-recovery" => self.action_inspect_recovery,
+            "inspect-history"=>self.action_inspect_history,"reconcile-history"=>self.action_reconcile_history,"archive-history"=>self.action_archive_history,"next-history-page"=>self.action_next_history_page,
+            "create-file"=>self.action_create_file,"create-directory"=>self.action_create_directory,"rename-entry"=>self.action_rename_entry,"retain-entry"=>self.action_retain_entry,
             "show-files" => self.action_show_files, "save-document" => self.action_save_document, "reload-document" => self.action_reload_document, "discard-document" => self.action_discard_document, "cancel-source" => self.action_cancel_source,
             "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
             "show-hidden-tasks" => self.action_show_hidden_tasks, "refresh-commands" => self.action_refresh_commands, "cancel-discovery" => self.action_cancel_discovery,
@@ -370,3 +397,38 @@ pub fn window_title(label: &TaskLabel, locale: Locale) -> String {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl DashboardLabels {
+    pub fn source_stage(&self, stage: &Stage) -> String {
+        let text = self;
+        match stage { Stage::Listing => text.source_listing, Stage::Reading => text.source_reading, Stage::Staging => text.source_staging, Stage::Checking => text.source_checking, Stage::Publishing => text.source_publishing, Stage::Complete => text.source_complete }.as_str().into()
+    }
+
+    pub fn source_error(&self, error: &Error, management:bool) -> String {
+        let text = self;
+        if let Some(path) = &error.recovery_path { return (if error.kind == ErrorKind::Conflict { text.source_publication_race } else { text.source_partial_publication }).fill(&[("path", path)]).into_string(); }
+        if error.kind == ErrorKind::TooLarge && error.path.is_empty() { return text.source_history_full.as_str().into(); }
+        if management&&error.kind==ErrorKind::TooLarge{return self.source_management_too_large.as_str().into();}
+        let label = match &error.kind { ErrorKind::InvalidPath => text.source_path_error, ErrorKind::Boundary => text.source_boundary_error, ErrorKind::NotFile => text.source_not_file, ErrorKind::TooLarge => text.source_too_large, ErrorKind::TooManyEntries => text.source_too_many, ErrorKind::NotText => text.source_not_text, ErrorKind::Conflict => text.source_conflict, ErrorKind::Cancelled => text.source_document_cancelled, ErrorKind::Busy => text.source_locked, ErrorKind::Io => text.source_io_error, ErrorKind::Unsupported => text.source_unsupported };
+        format!("{}: {}", label.as_str(), error.path)
+    }
+
+
+    /// 🎮️ Guided entry command wording belongs to the same localized catalogue as its actions.
+    pub fn source_management_caption(&self,kind:EntryAction,path:&str)->String{let label=match kind{EntryAction::CreateFile=>self.action_create_file,EntryAction::CreateDirectory=>self.action_create_directory,EntryAction::Rename=>self.action_rename_entry,EntryAction::Retain=>self.action_retain_entry};if kind==EntryAction::Retain{self.source_confirm_retain.fill(&[("path",path),("name",path.rsplit('/').next().unwrap_or(path))]).into_string()}else{self.source_management_form.fill(&[("action",label.as_str()),("path",path)]).into_string()}}
+    /// 📈️ One bounded progress record renders without exposing a host implementation type.
+    pub fn source_progress(&self,progress:&Progress,cancel:&str)->String{self.source_loading.fill(&[("stage",&self.source_stage(&progress.stage)),("completed",&progress.completed.to_string()),("total",&progress.total.map_or_else(||"?".into(),|total|total.to_string())),("cancel",cancel)]).into_string()}
+    /// 📄️ Document captions distinguish saved drafts, pending reload and authenticated readonly content.
+    pub fn source_document_caption(&self,current:&semio_framework_filesystem_workspace::commands::DocumentBuffer,position:&str)->String{let state=if current.read_only{if std::path::Path::new(&current.document.path).is_absolute(){self.source_read_only}else{self.source_reload_read_only}}else if current.dirty{self.source_dirty}else{self.source_saved};format!("{} · {} · {position}",current.document.path,state.as_str())}
+    /// ⚠️ Management failures expose actual uncertain locations without claiming successful publication.
+    pub fn source_failure(&self,error:&Error,management:bool)->String{let problem=if management{error.recovery_path.as_ref().map_or_else(||self.source_error(error,management),|path|self.source_management_partial.fill(&[("path",path)]).into_string())}else{self.source_error(error,management)};self.source_failed.fill(&[("problem",&problem)]).into_string()}
+
+    /// 🚦️ Browser refusals render from closed domain categories in the chosen language.
+    pub fn source_browser_error(&self,error:semio_framework_filesystem_workspace::commands::BrowserError,path:Option<&str>)->String{use semio_framework_filesystem_workspace::commands::BrowserError as E;match error{E::ConfirmRetain=>{let path=path.unwrap_or("");self.source_confirm_retain.fill(&[("path",path),("name",path.rsplit('/').next().unwrap_or(path))]).into_string()},_=>match error{E::ReadOnly=>self.source_read_only,E::Busy=>self.source_busy,E::InvalidPath=>self.source_path_error,E::MissingObservation=>self.source_conflict,E::EmptyHistory=>self.source_history_empty,E::PendingHistory=>self.source_history_pending,E::ConfirmHistory=>self.source_history_confirm_error,E::NoPage=>self.source_history_end,E::ConfirmRetain=>unreachable!()}.as_str().into()}}
+    /// 🧮️ History summaries expose observed counts without inventing work or reclamation totals.
+    pub fn source_history_notice(&self,inspection:Option<&semio_framework_filesystem_workspace::HistoryInspection>,keys:&[(&str,&str)])->String{let summary=inspection.map(|value|self.source_history_inspection(value)).unwrap_or_default();format!("{summary} {}",self.source_history_keys.fill(keys).as_str())}
+    pub fn source_history_inspection(&self,value:&semio_framework_filesystem_workspace::HistoryInspection)->String{self.source_history_summary.fill(&[("active",&value.active),("segments",&value.segments.to_string()),("names",&value.names.to_string()),("bytes",&value.bytes.to_string()),("unresolved",&value.unresolved.to_string()),("quarantined",&value.quarantined.to_string()),("rollover",if value.rollover{self.form_on.as_str()}else{self.form_off.as_str()}),("pending",value.pending.as_deref().unwrap_or("—"))]).into_string()}
+    /// 🗃️ Browser captions keep confirmation and readonly navigation wording together.
+    pub fn source_browser_caption(&self,state:&semio_framework_filesystem_workspace::commands::BrowserState)->String{if let Some(form)=&state.history_form{let action=match form.action{semio_framework_filesystem_workspace::commands::HistoryAction::Reconcile=>self.action_reconcile_history,semio_framework_filesystem_workspace::commands::HistoryAction::Archive=>self.action_archive_history};return self.source_history_confirmation.fill(&[("action",action.as_str()),("selection",form.confirmation().unwrap_or("—"))]).into_string();}state.form.as_ref().map_or_else(||format!("{} · {}: {}",if state.history&&state.directory.is_empty(){self.source_history.as_str()}else if state.directory.is_empty(){"."}else{&state.directory},self.source_filter.as_str(),state.query),|form|self.source_management_caption(form.kind,&form.path))}
+
+}

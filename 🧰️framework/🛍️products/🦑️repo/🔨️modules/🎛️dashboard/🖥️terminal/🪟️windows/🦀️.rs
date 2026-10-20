@@ -34,8 +34,8 @@ const SCROLLBACK: usize = 8000;
 /// 🧩️ What a window shows.
 pub(super) enum Body {
     Overview,
-    Files(super::sources::Files),
-    Document(Option<Box<super::sources::OpenDocument>>),
+    Files(semio_framework_filesystem_workspace::commands::BrowserState),
+    Document(Option<Box<semio_framework_filesystem_workspace::commands::DocumentBuffer>>),
     Settings,
     Help,
     Launcher(Box<LauncherState>),
@@ -137,7 +137,7 @@ pub(super) fn node_constraint() -> Constraint { Constraint { width: Dimension::W
 impl Dashboard {
     /// 🌱️ A dashboard with its shell and one task overview, ready to be painted.
     pub fn new(tui: &mut Tui, root: PathBuf, preferences: Preferences, preference_path: PathBuf, shared_preferences: bool) -> Self {
-        let locale = preferences.locale();
+        let locale = preferences.locale().expect("dashboard requires an explicit or system language");
         let text = labels(locale);
         let navbar = NavbarState { left: vec![NavItem { id: "logo".into(), label: text.nav_brand.as_str().into(), active: true }], center: vec![NavItem { id: "mode".into(), label: text.nav_mode.as_str().into(), active: false }], right: vec![] };
         let footer = FooterState { hints: vec![], status: String::new() };
@@ -218,7 +218,7 @@ impl Dashboard {
                 let caption = add_widget(tui, root, WidgetState::Label(LabelState { text: String::new(), align: Align::Left, role: semio_framework_ui_tui_core::theme::Role::MutedForeground }), Dimension::Cells(1));
                 let widget = if kind == Kind::Files { list_state() } else { let mut editor = semio_framework_ui_tui_widgets::widget::EditorState::new("", 1_048_576); editor.read_only = true; WidgetState::Editor(editor) };
                 let list = add_widget(tui, root, widget, Dimension::Weight(1));
-                (list, None, Some(caption), if kind == Kind::Files { Body::Files(super::sources::Files::default()) } else { Body::Document(None) })
+                (list, None, Some(caption), if kind == Kind::Files { Body::Files(semio_framework_filesystem_workspace::commands::BrowserState::default()) } else { Body::Document(None) })
             }
             Kind::Output => {
                 let mut state = TerminalState::new(size.unwrap_or(Size { width: 80, height: 24 }), SCROLLBACK);

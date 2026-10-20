@@ -328,9 +328,28 @@
     },
     {
       "version": 1,
+      "kind": "sdk-reader-stage",
+      "action": "sdk-reader-instrument",
+      "appliedAt": "2026-10-20T13:48:03.664Z",
+      "guardsUnchanged": true,
+      "sourceBytesLogged": false,
+      "maximumConsoleBytesPerModuleInstance": 16384,
+      "maximumCallsPerModuleInstance": 8,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "beforeSha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+          "afterSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "bytes": 12889
+        }
+      ],
+      "active": true
+    },
+    {
+      "version": 1,
       "kind": "sdk-reader-failure",
-      "action": "sdk-reader-failure-remove",
-      "appliedAt": "2026-10-20T07:27:58.161Z",
+      "action": "sdk-reader-failure-instrument",
+      "appliedAt": "2026-10-20T13:48:07.787Z",
       "guardsUnchanged": true,
       "noSourceFileCopies": true,
       "fullErrorObjectLogged": false,
@@ -341,31 +360,32 @@
       "rows": [
         {
           "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
-          "beforeSha256": "2b68f2d91aa967280af049bfe63ba0604fb0dad725e3ab7734a3cc580d96ab64",
-          "afterSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
-          "bytes": 12889
+          "beforeSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "afterSha256": "2b68f2d91aa967280af049bfe63ba0604fb0dad725e3ab7734a3cc580d96ab64",
+          "bytes": 14810
         }
       ],
-      "active": false
+      "active": true
     },
     {
       "version": 1,
-      "kind": "sdk-reader-stage",
-      "action": "sdk-reader-remove",
-      "appliedAt": "2026-10-20T07:28:03.347Z",
+      "kind": "inner-authorizer-loader",
+      "action": "inner-loader-instrument",
+      "appliedAt": "2026-10-20T13:48:15.302Z",
       "guardsUnchanged": true,
-      "sourceBytesLogged": false,
-      "maximumConsoleBytesPerModuleInstance": 16384,
+      "noSourceFileCopies": true,
       "maximumCallsPerModuleInstance": 8,
+      "maximumRecordBytesIncludingLF": 256,
+      "maximumConsoleBytesPerModuleInstance": 4096,
       "rows": [
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
-          "beforeSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
-          "afterSha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
-          "bytes": 11828
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+          "beforeSha256": "d272b0e95b7f838aff8a35acad8b3f99b129d2b76f35d56114441b5b5fa2c33c",
+          "afterSha256": "07da11ff3dca6b229ba6bda552eede26b60b3be31a2a74a2d4ae3a92bc9ecedb",
+          "bytes": 58393
         }
       ],
-      "active": false
+      "active": true
     }
   ]
 }

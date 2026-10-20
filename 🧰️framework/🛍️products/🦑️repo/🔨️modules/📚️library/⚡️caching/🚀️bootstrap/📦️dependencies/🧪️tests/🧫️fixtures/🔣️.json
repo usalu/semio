@@ -1,5 +1,10 @@
 {
   "version": 1,
+  "backends": {
+    "darwin": "clonefile",
+    "linux": "copyfile",
+    "win32": "copyfile"
+  },
   "operations": [
   {
     "mode": "sync",
@@ -8,7 +13,7 @@
       "--frozen-lockfile",
       "--ignore-scripts",
       "--linker=isolated",
-      "--backend=hardlink",
+      "--backend={backend}",
       "--cache-dir",
       "/cache"
     ]
@@ -20,7 +25,7 @@
       "--lockfile-only",
       "--ignore-scripts",
       "--linker=isolated",
-      "--backend=hardlink",
+      "--backend={backend}",
       "--cache-dir",
       "/cache"
     ]

@@ -1,4 +1,5 @@
 import{AsyncLocalStorage}from"node:async_hooks";
+import{withLeaseTaskV1}from"../../../🔒️leases/🧭️order/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../🔒️leases/🎛️control/🟦️.ts";
 import requestSchema from"./📥️issuance/🧬️schema/📥️request.json" with{type:"json"};
 import cleanupSchema from"./🧬️schema/🧹️cleanup.json" with{type:"json"};
@@ -28,25 +29,71 @@ function sourceProviderCounterV1(progress:ScriptProgress):number|null{
  return new RegExp(policy.counterPattern,"u").test(text)&&Number.isSafeInteger(count)&&count<=policy.maximumCompleted?count:null;
 }
 
-/** 📉️ Coalesces only provider progress presentation while retaining every original publication and final counter. */
+function cacheScanActivityV1(progress:ScriptProgress,policy=progressSchema.const.cacheScan,mode:"shared"|"exclusive"="shared"):boolean{
+ const activity=progress.activity;if(progress.stage!=="running"||!activity||activity.mode!==mode||!Number.isFinite(activity.elapsedMs)||activity.elapsedMs<0||activity.elapsedMs>policy.maximumElapsedMilliseconds||activity.resource.length>policy.maximumResourceCharacters||!activity.resource.startsWith(policy.resourcePrefix)||progress.command.length>policy.maximumCommandCharacters||!new RegExp(policy.commandPattern,"u").test(progress.command)||typeof progress.owner!=="string"||progress.owner.length>policy.maximumCommandCharacters||Object.keys(progress).sort().join(",")!=="activity,command,owner,stage"||Object.keys(activity).sort().join(",")!=="elapsedMs,mode,resource")return false;
+ const path=activity.resource.slice(policy.resourcePrefix.length);return path.length<=policy.maximumPathCharacters&&new RegExp(policy.pathPattern,"u").test(path);
+}
+
+function toolingActivityV1(progress:ScriptProgress):keyof typeof progressSchema.const.tooling.labels.en|null{
+ const policy=progressSchema.const.tooling,activity=progress.activity;if(progress.stage!=="running"||!activity||activity.mode!=="shared"||!Number.isFinite(activity.elapsedMs)||activity.elapsedMs<0||activity.elapsedMs>policy.maximumElapsedMilliseconds||activity.resource.length>policy.maximumResourceCharacters||progress.command.length>policy.maximumCommandCharacters||!new RegExp(policy.commandPattern,"u").test(progress.command)||typeof progress.owner!=="string"||progress.owner.length>policy.maximumCommandCharacters||Object.keys(progress).sort().join(",")!=="activity,command,owner,stage"||Object.keys(activity).sort().join(",")!=="elapsedMs,mode,resource")return null;
+ if(policy.resources.includes(activity.resource))return activity.resource as keyof typeof policy.labels.en;if(!activity.resource.startsWith(policy.namespacePrefix))return null;const path=activity.resource.slice(policy.namespacePrefix.length);return path.length<=policy.maximumPathCharacters&&new RegExp(policy.pathPattern,"u").test(path)&&new RegExp(policy.namespaceDigestPattern,"u").test(path)?"namespace":null;
+}
+
+function dependencyWorkActivityV1(progress:ScriptProgress):{slot:number;family:number;count:number|undefined;elapsed:number}|null{
+ const policy=progressSchema.const.dependencyWork,activity=progress.activity;
+ if(progress.stage!=="running"||!activity||typeof activity.resource!=="string"||!Number.isFinite(activity.elapsedMs)||activity.elapsedMs<0||activity.elapsedMs>policy.maximumElapsedMilliseconds||activity.resource.length>policy.maximumResourceCharacters||typeof progress.owner!=="string"||progress.owner.length>policy.maximumOwnerCharacters||!new RegExp(policy.ownerPattern,"u").test(progress.owner)||typeof progress.command!=="string"||progress.command.length>policy.maximumCommandCharacters||!new RegExp(policy.commandPattern,"u").test(progress.command)||Object.keys(progress).sort().join(",")!=="activity,command,owner,stage"||Object.keys(activity).sort().join(",")!=="elapsedMs,mode,resource")return null;
+ for(const[index,slot]of policy.slots.entries()){
+  if(activity.mode!==slot.mode)continue;
+  if(!slot.counter){if(activity.resource===slot.resourcePrefix&&activity.elapsedMs===policy.replayElapsedMilliseconds)return{slot:index,family:policy.families.indexOf(slot.family),count:undefined,elapsed:activity.elapsedMs};continue;}
+  if(!activity.resource.startsWith(slot.resourcePrefix))continue;
+  const text=activity.resource.slice(slot.resourcePrefix.length),count=Number(text);
+  if(new RegExp(policy.counterPattern,"u").test(text)&&Number.isSafeInteger(count)&&count<=policy.maximumCompleted)return{slot:index,family:policy.families.indexOf(slot.family),count,elapsed:activity.elapsedMs};
+ }
+ return null;
+}
+
+/** 📉️ Coalesces typed presentation while retaining Original callbacks and bounded final observations. */
 function createScriptProcessProgressWriterV1(write:(line:string)=>void,environment:Readonly<Record<string,string|undefined>>,now:()=>number=()=>performance.now()){
- type Row={raw:string;message:string|null};let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined;
- const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write(`[script] ${row.message}\n`);},flush=()=>{if(pending){const row=pending;pending=undefined;emit(row);}};
+ type Row={raw:string;message:string|null};type Pending=Row&{rank:number};
+ const policy=progressSchema.const.dependencyWork,workPending:(Pending|undefined)[]=policy.slots.map(()=>undefined),counts:(number|undefined)[]=policy.families.map(()=>undefined),elapsed:(number|undefined)[]=policy.families.map(()=>undefined);
+ let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined,frame:string|undefined,workAt:number|undefined,workClock:number|undefined,workState:"unopened"|"paced"|"unclocked"="unopened";
+ const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write("[script] "+row.message+"\n");};
+ const ordered=(family?:number)=>workPending.flatMap((row,slot)=>row&&(family===undefined||policy.families.indexOf(policy.slots[slot]!.family)===family)?[{row,slot}]:[]).sort((a,b)=>a.row.rank-b.row.rank||a.slot-b.slot);
+ const drainWork=(family?:number)=>{for(const{row,slot}of ordered(family)){workPending[slot]=undefined;emit(row);}};
+ const remember=(slot:number,row:Row)=>{workPending[slot]=undefined;const rows=ordered();rows.forEach(({row},rank)=>{row.rank=rank;});workPending[slot]={...row,rank:rows.length};};
+ const flushOld=()=>{if(pending){drainWork();const row=pending;pending=undefined;emit(row);}},emitOld=(row:Row)=>{drainWork();emit(row);},flush=()=>{drainWork();flushOld();};
  return Object.freeze({flush,publish:(progress:ScriptProgress)=>{
-  const row={raw:`[script] ${JSON.stringify(progress)}\n`,message:formatScriptProcessActivityV1(progress,environment)},count=sourceProviderCounterV1(progress);
-  if(count===null){flush();key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;emit(row);return;}
-  const current=now(),identity=progress.owner+"\0"+progress.command,elapsed=progress.activity!.elapsedMs,reset=identity!==key||lastCount!==undefined&&count<lastCount||lastElapsed!==undefined&&elapsed<lastElapsed||!Number.isFinite(current)||lastClock!==undefined&&current<lastClock;
-  if(reset){flush();lastAt=undefined;}
-  key=identity;lastClock=Number.isFinite(current)?current:undefined;lastCount=count;lastElapsed=elapsed;
-  if(lastAt===undefined||current-lastAt>=progressSchema.const.sourceProvider.minimumPublicationMilliseconds){pending=undefined;emit(row);lastAt=Number.isFinite(current)?current:undefined;}else pending=row;
+  const row={raw:"[script] "+JSON.stringify(progress)+"\n",message:formatScriptProcessActivityV1(progress,environment)},identity=typeof progress.owner==="string"&&progress.owner.length<=policy.maximumOwnerCharacters&&new RegExp(policy.ownerPattern,"u").test(progress.owner)&&typeof progress.command==="string"&&progress.command.length<=policy.maximumCommandCharacters&&new RegExp(policy.commandPattern,"u").test(progress.command)&&policy.frameStages.includes(progress.stage)?JSON.stringify([progress.owner,progress.command,progress.stage]):undefined;
+  if(identity!==undefined&&identity!==frame){flush();frame=identity;workAt=undefined;workClock=undefined;workState="unopened";counts.fill(undefined);elapsed.fill(undefined);}
+  const work=dependencyWorkActivityV1(progress);
+  if(work!==null){
+   const current=now(),bad=!Number.isFinite(current)||workClock!==undefined&&current<workClock,reset=work.count!==undefined&&(counts[work.family]!==undefined&&work.count<counts[work.family]!||elapsed[work.family]!==undefined&&work.elapsed<elapsed[work.family]!);
+   counts[work.family]=work.count;elapsed[work.family]=work.elapsed;
+   if(bad){drainWork();workClock=Number.isFinite(current)?current:undefined;workAt=workClock;workState=workClock===undefined?"unclocked":"paced";emit(row);return;}
+   workClock=current;
+   if(reset){drainWork(work.family);workAt=current;workState="paced";emit(row);return;}
+   if(workState!=="paced"){workAt=current;workState="paced";emit(row);return;}
+   remember(work.slot,row);
+   if(current-workAt!>=policy.minimumPublicationMilliseconds){workAt=current;drainWork();}
+   return;
+  }
+  const providerCount=sourceProviderCounterV1(progress),cache=cacheScanActivityV1(progress),deleting=cacheScanActivityV1(progress,progressSchema.const.cacheDelete,"exclusive"),tooling=toolingActivityV1(progress),count=providerCount??(deleting||tooling!==null?0:cache?progress.activity!.elapsedMs:null);
+  if(count===null){flushOld();key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;emitOld(row);return;}
+  const current=now(),oldIdentity=progress.owner+"\0"+progress.command+"\0"+(cache||deleting||tooling!==null?progress.activity!.resource:"provider"),oldElapsed=progress.activity!.elapsedMs,reset=oldIdentity!==key||!deleting&&tooling===null&&(lastCount!==undefined&&count<lastCount||lastElapsed!==undefined&&oldElapsed<lastElapsed)||!Number.isFinite(current)||lastClock!==undefined&&current<lastClock;
+  if(reset){flushOld();lastAt=undefined;}
+  key=oldIdentity;lastClock=Number.isFinite(current)?current:undefined;lastCount=count;lastElapsed=oldElapsed;
+  if(lastAt===undefined||current-lastAt>=(tooling!==null?progressSchema.const.tooling:deleting?progressSchema.const.cacheDelete:cache?progressSchema.const.cacheScan:progressSchema.const.sourceProvider).minimumPublicationMilliseconds){pending=undefined;emitOld(row);lastAt=Number.isFinite(current)?current:undefined;}else pending=row;
  }});
 }
 
 /** 📈️ Describes long resource activity without inferring whether work or contention caused it. */
 export function formatScriptProcessActivityV1(progress:ScriptProgress,environment:Readonly<Record<string,string|undefined>>=process.env):string|null{
  const activity=progress.activity;if(!activity)return null;const declaration=progressSchema.const.sourceAdmission;
+ const tooling=progressSchema.const.tooling;if(tooling.resources.includes(activity.resource)||activity.resource.startsWith(tooling.namespacePrefix)){const key=toolingActivityV1(progress);return key===null?null:tooling.labels[progressLanguage(environment)][key].replace("{command}",progress.command);}
  const provider=progressSchema.const.sourceProvider;
  if(activity.resource.startsWith(provider.resourcePrefix)){const count=sourceProviderCounterV1(progress);return count===null?null:provider.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{completed}",String(count));}
+ const deletion=progressSchema.const.cacheDelete;if(activity.resource.startsWith(deletion.resourcePrefix))return cacheScanActivityV1(progress,deletion,"exclusive")?deletion.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{path}",activity.resource.slice(deletion.resourcePrefix.length)):null;
+ const cache=progressSchema.const.cacheScan;if(activity.resource.startsWith(cache.resourcePrefix))return cacheScanActivityV1(progress)?cache.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{path}",activity.resource.slice(cache.resourcePrefix.length)).replace("{seconds}",String(Math.round(activity.elapsedMs/1000))):null;
  const parser=progressSchema.const.parserSource;
  if(activity.resource.startsWith(parser.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>parser.maximumResourceCharacters||progress.command.length>parser.maximumCommandCharacters||!new RegExp(parser.commandPattern,"u").test(progress.command))return null;
@@ -56,6 +103,14 @@ export function formatScriptProcessActivityV1(progress:ScriptProgress,environmen
   return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
  }
 
+ const phase=progressSchema.const.graphPhase;
+ if(activity.resource.startsWith(phase.resourcePrefix)){
+  if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>phase.maximumResourceCharacters||progress.command.length>phase.maximumCommandCharacters||!new RegExp(phase.commandPattern,"u").test(progress.command))return null;
+  const parts=activity.resource.slice(phase.resourcePrefix.length).split(":"),name=parts[0]??"";if(parts.length!==3||!Object.hasOwn(phase.labels.en.phases,name)||!parts.slice(1).every(part=>new RegExp(phase.countPattern,"u").test(part)))return null;
+  const done=Number(parts[1]),total=Number(parts[2]);if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return null;
+  const labels=phase.labels[progressLanguage(environment)],row=labels.phases[name as keyof typeof labels.phases],fields:Record<string,string>={command:progress.command,phase:row.label,units:row.units,done:String(done),total:String(total)};
+  return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
+ }
  const queue=progressSchema.const.queueWait;
  if(activity.resource.startsWith(queue.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.resource.length>queue.maximumResourceCharacters||progress.command.length>queue.maximumCommandCharacters||!new RegExp(queue.commandPattern,"u").test(progress.command))return null;
@@ -168,9 +223,9 @@ export function createIssuedResourceControlV1(invocation:ScriptInvocation,comman
 /** 🧷️ Creates a synchronous narrowed control beneath its exact privately issued parent. */
 export function createRequestedIssuedResourceControlV1(control:ResourceLeaseControl,requestedMilliseconds:number,additionalSignal?:AbortSignal):ResourceLeaseControl{requireIssuedResourceControlV1(control);const original=controls.get(control)!;return controlFor(original.invocation,original.command,requestedMilliseconds,original,additionalSignal);}
 /** 🎛️ Retains one issued resource loan until its callback and accepted children settle. */
-export function withIssuedResourceControlV1<T>(invocation:ScriptInvocation,command:string,requestedMilliseconds:number,run:(control:ResourceLeaseControl)=>Promise<T>,additionalSignal?:AbortSignal):Promise<T>{const control=controlFor(invocation,command,requestedMilliseconds,undefined,additionalSignal),child=controls.get(control)!;return track(child.parent!,()=>settle(child,async()=>{remaining(child);const result=await run(control);remaining(child);return result;},()=>{remaining(child);}));}
+export function withIssuedResourceControlV1<T>(invocation:ScriptInvocation,command:string,requestedMilliseconds:number,run:(control:ResourceLeaseControl)=>Promise<T>,additionalSignal?:AbortSignal):Promise<T>{const control=controlFor(invocation,command,requestedMilliseconds,undefined,additionalSignal),child=controls.get(control)!;return track(child.parent!,()=>settle(child,async()=>{remaining(child);const result=await withLeaseTaskV1(()=>run(control));remaining(child);return result;},()=>{remaining(child);}));}
 /** 🧷️ Retains one narrowed resource loan without renewing parent time or cancellation. */
-export function withRequestedIssuedResourceControlV1<T>(control:ResourceLeaseControl,requestedMilliseconds:number,run:(control:ResourceLeaseControl)=>Promise<T>,additionalSignal?:AbortSignal):Promise<T>{const childControl=createRequestedIssuedResourceControlV1(control,requestedMilliseconds,additionalSignal),child=controls.get(childControl)!;return track(child.parent!,()=>settle(child,async()=>{remaining(child);const result=await run(childControl);remaining(child);return result;},()=>{remaining(child);}));}
+export function withRequestedIssuedResourceControlV1<T>(control:ResourceLeaseControl,requestedMilliseconds:number,run:(control:ResourceLeaseControl)=>Promise<T>,additionalSignal?:AbortSignal):Promise<T>{const childControl=createRequestedIssuedResourceControlV1(control,requestedMilliseconds,additionalSignal),child=controls.get(childControl)!;return track(child.parent!,()=>settle(child,async()=>{remaining(child);const result=await withLeaseTaskV1(()=>run(childControl));remaining(child);return result;},()=>{remaining(child);}));}
 /** 🛟️ Registers accepted asynchronous custody before its first physical effect and through close. */
 export function withIssuedResourceOperationV1<T>(control:ResourceLeaseControl,run:()=>Promise<T>):Promise<T>{requireIssuedResourceControlV1(control);const original=controls.get(control)!;admit(original.invocation,original);return track(original,run);}
 type SignalScope={parent:ScriptInvocation;additionalSignal:AbortSignal;stopped:boolean};

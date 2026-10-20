@@ -5,7 +5,7 @@ pub use semio_framework_value_retained_clone::retained_clone;
 pub use semio_framework_value_shared_issuance as shared_issuance;
 #[path = "../../🦀️.rs"]
 pub mod snapshot_projection;
-pub use snapshot_projection::{ImmutableRootProjection, SnapshotProjection, SnapshotProjectionCursor};
+pub use snapshot_projection::{ImmutableRootProjection, MaybeUninit, ProjectionOutput, SnapshotProjection, SnapshotProjectionCursor};
 #[cfg(test)]
 pub use semio_framework_value_derive::{RetireOwned, SnapshotProjection};
 #[cfg(test)]

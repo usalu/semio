@@ -49,6 +49,6 @@ export function emitTypeScriptDeclarations(entry: string, workspace: string): Re
 
 
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 /** 📥️ Admits bounded declaration data without accepting output paths from its child compiler. */
 export function readTypeScriptDeclarationResponseV1(text:string):ReadonlyMap<string,string>{if(Buffer.byteLength(text)>16777216)throw Error("Declaration response capacity exceeded");const value=JSON.parse(text);if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed declaration response required");const files=new Map<string,string>();let bytes=0;for(const row of value.files as{name:string;contents:string}[]){if(files.has(row.name)||Buffer.byteLength(row.contents)>16777216-bytes)throw Error("Unique bounded declaration files required");bytes+=Buffer.byteLength(row.contents);files.set(row.name,row.contents);}if(!files.has("🟦️.d.ts"))throw Error("Complete declaration entry required");return files;}

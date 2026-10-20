@@ -1,0 +1,119 @@
+{
+  "name": "@semio-tech/hub-renderer-wgpu",
+  "projectType": "library",
+  "root": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+  "sourceRoot": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+  "targets": {
+    "journey-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts journey-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "creation-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts creation-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "collaboration-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts collaboration-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "collaboration-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
+        "command": "bun ./📜️script.ts collaboration-acceptance",
+        "forwardAllArgs": true
+      },
+      "configurations": {
+        "wasm32": {
+          "args": ["--journey", "wasm32"]
+        },
+        "wasm32-react": {
+          "args": ["--journey", "wasm32-react"]
+        },
+        "wasm32-native": {
+          "args": ["--journey", "wasm32-native"]
+        },
+        "native-react": {
+          "args": ["--journey", "native-react"]
+        },
+        "native-react-cursors": {
+          "args": ["--journey", "native-react-cursors"]
+        },
+        "cursors": {
+          "args": ["--journey", "cursors"]
+        },
+        "agent-pixels": {
+          "args": ["--journey", "agent-pixels"]
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "native-guest-journey-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts native-guest-journey-check",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/**/*"
+      ]
+    }
+  },
+  "tags": [
+    "scope:hub",
+    "type:test"
+  ]
+}

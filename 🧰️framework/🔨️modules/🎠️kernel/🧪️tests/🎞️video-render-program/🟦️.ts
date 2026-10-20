@@ -9,8 +9,8 @@ import {
   videoRenderFrameCount,
   videoRenderProgramFromWire,
   videoRenderProgramProblem
-} from "@semio-tech/framework-effect/video-render-program";
-import { wireEffectToFriendly } from "@semio-tech/framework-actor/wire-turn";
+} from "../../⚡️effect/🎥️video-render-program/🟦️.ts";
+import { wireEffectToFriendly } from "../../../🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts";
 
 /** 🎞️ TypeScript twin of `🧪️tests/🎞️video-render-program/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/🎞️video-render-program/🔣️.json`): every host admits exactly the programs the Rust kernel admits, refuses

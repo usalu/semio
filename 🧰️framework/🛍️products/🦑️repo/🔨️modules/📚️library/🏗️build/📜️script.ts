@@ -83,12 +83,20 @@ export class RepoScript extends Script {
 }
 
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
-export async function runOwnedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
+export async function runOwnedBuildInvocationV1(root:string,typed:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
+ const{normalizeBuildOptionsV1}=await import("./⚙️operations/🔤️options/🟦️.ts"),args=normalizeBuildOptionsV1(typed),{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
+ await withBuildCapacityV1(args,process.env,granted=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl),{control:phaseControl});
+}
+
+/** 🌡️ Runs an invocation whose machine capacity is already granted, inherited from the CLI door or taken here for scripts routed around it. */
+async function runAdmittedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,parent,args);
  const{parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts"),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
  const dashboard=selected.args[0]==="run"&&selected.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")?(await import("../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(selected.args):undefined;
  if(buildInvocationRequestsHelpV1(selected.args)&&dashboard===undefined){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(selected.args,process.env));return;}
  if(selected.args[0]==="preflight"){const{runBuildPreflightV1}=await import("./🩺️preflight/🟦️.ts");await runBuildPreflightV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="incremental"){const{runIncrementalV1}=await import("./📏️incremental/⌨️command/🟦️.ts");await runIncrementalV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="concurrency"){const{runConcurrencyV1}=await import("./📏️incremental/🤝️concurrent/⌨️command/🟦️.ts");await runConcurrencyV1(root,selected.args,parent);return;}
  const{readNativeRepoRecoveryPlanV1}=await import("./🚀️bootstrap/⌨️cli/🟦️.ts");
  if(readNativeRepoRecoveryPlanV1(root,resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:(parent.capabilities as {buildMode:string}).buildMode}).args)){await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);return;}
  const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,async(diagnostics,diagnosticPhase)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}});}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
@@ -122,14 +130,28 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       validateBuildTaskArgumentsV1(resolved.args);
     }
     if(command==="dependencies"){
-      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts");
+      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args);
+      if(mode==="ensure"){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);return;}
+      const {SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts");
       await new (mode==="lock"?RefreshLockScript:SyncScript)(root,root,invocation).run(selection.kind==="all"?["--all"]:["--scope",selection.owner]);return;
     }
     if(command==="cargo"){
       const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
       process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
-    if(!["tools","reset","cache"].includes(command)){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
+    const {buildOperationRequiresV1}=await import("./⚙️operations/🟦️.ts");
+    if(buildOperationRequiresV1(command)==="dependencies"){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
+    if(command==="remote-execution"){
+      const {runRemoteExecutionCommandV1}=await import("./🏃️execution/🐳️service/🟦️.ts");
+      const result=await runRemoteExecutionCommandV1(resolved.args.slice(1),{root,environment:process.env,host:{platform:process.platform,arch:process.arch},signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:"+stage,"running");},write:line=>console.log(line)});
+      if(result!==undefined)console.log(JSON.stringify(result,null,2));
+      return;
+    }
+    if(command==="cache"&&["status","gc"].includes(resolved.args[1]??"")&&!resolved.args.includes("--tasks")){
+      const {runCacheLedgerV1}=await import("./🧹️cache-gc/⌨️command/🟦️.ts");
+      await runCacheLedgerV1(root,resolved.args.slice(1),invocation,phaseControl);
+      return;
+    }
     if(command==="cache"&&["serve","remote"].includes(resolved.args[1]??"")){
       const {runRemoteCacheCommandV1}=await import("./🌐️remote-cache/⌨️command/🟦️.ts");
       const tool=async()=>selected.tool==="nx"?(await import("../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1():(await import("./🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts")).bazelRemoteCacheToolV1();
@@ -144,9 +166,9 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const tools=resolved.args[2]??selected.tool;
       if(!["nx","bazel","all"].includes(tools))throw new Error(`Unknown build tool: ${tools}`);
       if(tools!=="nx"){
-        const bootstrap=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"),{requireBazelPlatformV1,bazelProgressLineV1,describeBazelReadinessV1}=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts"),{prepareBazelModulesV1}=await import("./🔧️tools/🏗️bazel/📜️script.ts"),{withBazelStorageV1}=await import("./🔧️tools/🏗️bazel/💾️storage/🟦️.ts"),{issueBuildTaskEnvironmentV1}=await import("./📥️caller/🟦️.ts"),publish=(stage:string)=>invocation.control.publish({owner:invocation.policy.owner,command:`build:tools:${stage}`,stage:"running"}),offline=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true";
+        const bootstrap=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"),{requireBazelPlatformV1,bazelProgressLineV1,describeBazelReadinessV1}=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts"),{prepareBazelModulesV1}=await import("./🔧️tools/🏗️bazel/📜️script.ts"),{withBazelSetupStorageV1}=await import("./🔧️tools/🏗️bazel/💾️storage/🟦️.ts"),{issueBuildTaskEnvironmentV1}=await import("./📥️caller/🟦️.ts"),publish=(stage:string)=>invocation.control.publish({owner:invocation.policy.owner,command:`build:tools:${stage}`,stage:"running"}),offline=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true";
         await requireBazelPlatformV1(root,phaseControl.signal);
-        await withBazelStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{
+        await withBazelSetupStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{
           let last=0;const bazel=await bootstrap.prepareBazel(root,storage.tools,actualPhase,event=>{publish(event.phase);const step=bazelProgressLineV1(event,last);last=step.lastPercent;if(step.line)console.log(step.line);},offline);
           publish("modules");const modules=await prepareBazelModulesV1(root,bazel,invocation,storage,actualPhase),row=bootstrap.bazelDistribution(process.platform,process.arch),report=await describeBazelReadinessV1({executable:bazel,platform:process.platform,arch:process.arch,sha256:row.sha256,lock:modules.lock,repository:modules.repository});
           publish("ready");console.log(report.line);console.log(`[bazel] readiness ${JSON.stringify(report.readiness)}`);
@@ -168,7 +190,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     if(["graph","show"].includes(command)){
-      const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true"});
+      const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??"fresh",...(command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{})}});
       const {buildOptionV1}=await import("./🧭️selection/🟦️.ts");
       let result:unknown=graph;
       for(const row of graph.unavailable??[])console.error(`[build] unavailable project ${row.project??row.root}: ${row.source} does not parse (${row.sha256.slice(0,12)})`);
@@ -203,13 +225,15 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:()=>nx(nxOperationArgumentsV1(resolved.args)!),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
       return;
     }
+    if(command==="inputs")throw new Error("repo inputs is implemented for Nx; Bazel records the inputs of its spawns for repo verify build-parity");
     const selection=await import("./🧭️selection/🟦️.ts");
-    const request=await selection.selectBuildTasksV1(root,graph,resolved.args,invocation);
     process.env.SEMIO_BUILD_REUSE_GRAPH="true";
     const adapter=await import("./🔧️tools/🏗️bazel/📜️script.ts");
+    const head=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")),dryRun=head.some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="));
+    const request=await selection.selectBuildTasksV1(root,graph,resolved.args,invocation,files=>dryRun?selection.affectedBuildProjectsV1(graph,files):adapter.bazelAffectedProjectsV1(root,graph,selection.affectedTouchesV1(graph,files),invocation,artifactPhase));
     const planning=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph=")),operations=await import("./🔧️tools/🏗️bazel/⚙️operations/🟦️.ts"),untouched=command==="affected"&&!request.tasks.length;
     if(planning){
-      const plan=operations.bazelDryRunPlanV1(untouched?operations.bazelEmptyPlanV1:adapter.planBazelTasksV1(graph,request)),output=selection.buildOptionV1(resolved.args,"graph");
+      const plan=operations.bazelDryRunPlanV1(untouched?operations.bazelEmptyPlanV1:adapter.planBazelTasksV1(graph,adapter.bazelAuthorizedRequestV1(request,invocation))),output=selection.buildOptionV1(resolved.args,"graph");
       if(output&&output!=="stdout"&&output!=="true"){
         const {withRepositoryBuildReportV1}=await import("./📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,plan,invocation,async artifact=>{console.log(artifact.path);});
       }else console.log(JSON.stringify(plan,null,2));
@@ -236,7 +260,19 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
 export function readDefaultBuildCliPolicyV1(environment:Readonly<Record<string,string|undefined>>={}){return readScriptPolicy(Object.freeze({version:1,owner:"repository:build",maximumElapsedMilliseconds:buildBudgetMs(environment)}));}
 
 /** 🚪️ Admits the original authored CLI policy and resources before any backend or installed application launch. */
-export async function runBuildCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+export async function runBuildCliV1(root:string,typed:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+  const{normalizeBuildOptionsV1}=await import("./⚙️operations/🔤️options/🟦️.ts"),{resolveBuildCliLanguageV1}=await import("./⚙️operations/📖️help/🟦️.ts"),args=normalizeBuildOptionsV1(typed);
+  const chosen=resolveBuildCliLanguageV1(args,environment);
+  if(environment===process.env)process.env.SEMIO_LANGUAGE=chosen;
+  const prefix=args[0]==="repo"||args[0]==="build"?1:0;
+  if(args[prefix]==="leases"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runLeasesCliV1}=await import("./🔒️leases/⌨️command/🟦️.ts");process.exitCode=await runLeasesCliV1(root,args.slice(prefix+1),environment);return;}
+  if(args[prefix]==="capacity"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runCapacityCommandV1}=await import("./🌡️host-capacity/⌨️command/🟦️.ts");process.exitCode=await runCapacityCommandV1(args.slice(prefix+1),{environment,write:line=>console.log(line)});return;}
+  const{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
+  await withBuildCapacityV1(args.slice(prefix),environment,granted=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment));
+}
+
+/** 🌡️ Creates the original script envelope and runs the CLI once the machine has admitted the invocation, so its budget starts with the grant and not with the queue. */
+async function runAdmittedBuildCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv):Promise<void> {
   issueRepositoryScriptProvidersV1(environment);
   const {createScriptProcessEnvelope,readScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope,SCRIPT_PROCESS_INVOCATION_ENV}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
   const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];

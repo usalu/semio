@@ -1,0 +1,82 @@
+{
+ "entries": [
+  {
+   "target": "🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json",
+   "before": null,
+   "staged": "001.json",
+   "note": "lanes closed schema (missing since creation)"
+  },
+  {
+   "target": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts",
+   "before": "f61cd1a1bb0bd4d9ee4993e4055d18c8a86d5fe9f34df864c19bd93e922202ba",
+   "staged": "002.ts",
+   "note": "absence: link workspace packages in the isolated workspace"
+  },
+  {
+   "target": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🚮️absence/🔣️.json",
+   "before": "5a6aa6b6b597a32b1f1e3ebda8a842ba43a8a1c10ee36db8bb0f98f494ff9cb4",
+   "staged": "003.json",
+   "note": "absence: neutral roots += filesystem, compiler"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🔣️.json",
+   "before": null,
+   "staged": "004.json",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧬️schema/🔣️.json",
+   "before": null,
+   "staged": "005.json",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts",
+   "before": null,
+   "staged": "006.ts",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/📜️script.ts",
+   "before": null,
+   "staged": "007.ts",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🟦️.ts",
+   "before": null,
+   "staged": "008.ts",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️probe/🟦️.ts",
+   "before": null,
+   "staged": "009.ts",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️fixtures/🔣️.json",
+   "before": null,
+   "staged": "010.json",
+   "note": "genuine birth harness"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/📋️callers.json",
+   "before": "b2350addda7ea0f4ad6d16585cc1de676e2a0ac0df0b6d6728e0655e934a173b",
+   "staged": "011.json",
+   "note": "phase roster: dashboard installation moved into caching bootstrap"
+  },
+  {
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🧫️fixtures/🔣️.json",
+   "before": "84cbf52255499f870431f8aac9ec510a7245f82ada33c092e97d364cc2535560",
+   "staged": "012.json",
+   "note": "ui-axes row is a generated projection"
+  },
+  {
+   "target": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📦️resolution/🟦️.ts",
+   "before": "9560dae4a74138f03cb73ac6282546f91e9ad9b8182f30fbfccce8df8e8b1008",
+   "staged": "013.ts",
+   "note": "generated projection test"
+  }
+ ]
+}

@@ -1,0 +1,290 @@
+{
+ "version": 1,
+ "ops": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "import {requireNativeStoragePathV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts\";",
+   "replacement": "import {requireNativeStoragePathV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts\";\nimport{createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,canonicalJsonV1 as canonicalGenerationJsonV1}from\"./🕰️generations/🟨️.mjs\";\nimport{loadGenerationGraphV1,renderGenerationMessageV1}from\"./🕰️generations/🔌️load/🟨️.mjs\";\nimport{deriveEnvironmentV1,environmentRowHoldsV1}from\"./🕰️generations/🌍️environment/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "import { join, dirname, relative, isAbsolute } from \"node:path\";",
+   "replacement": "import { join, dirname, relative, isAbsolute, resolve, sep } from \"node:path\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": ",graphSnapshotPolicyURLV1])implementation.update(",
+   "replacement": ",new URL(\"./🕰️generations/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL(\"./🕰️generations/🧬️schema/🔣️.json\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL(\"./🕰️generations/🔌️load/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL(\"./🕰️generations/🌍️environment/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL(\"./🧭️file-owner/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1])implementation.update("
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "/** 🧺️ Keeps exactly the discovered files whose presence the portable graph consumes",
+   "replacement": "/** 🔌️ The identity of the one builder custody of the generation store: every builder of the all-workspace graph queues on it, shared readers never do. */\nconst generationScopeV1=createHash(\"sha256\").update(\"semio-graph-generations-v1\").digest(\"hex\");\n\n/** 🗂️ Opens the generation documents of the graph partition: every path stays inside the original store and the store is rechecked while documents move. */\nfunction generationFilesV1(store:RepositoryCacheStoreV1){\n  const base=createNodeFilePortV1();let operations=0;\n  const admit=async(path:string)=>{if(++operations%64===0)await store.recheck();return requireNativeStoragePathV1(store.root,path);};\n  return {read:async(path:string)=>base.read(await admit(path)),write:async(path:string,bytes:Uint8Array,options?:{ifAbsent?:boolean})=>base.write(await admit(path),bytes,options),names:async(directory:string)=>base.names(await admit(directory)),list:async(directory:string)=>base.list(await admit(directory)),remove:async(path:string)=>base.remove(await admit(path))};\n}\n\n/** 🕰️ Binds the repository to the graph generation load: shared reader custody, the builder custody, the bounded facts lease, fact checks that understand environment rows, the membership frontier and the partial inference. */\nfunction generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1){\n  const registryDigest=createHash(\"sha256\").update(JSON.stringify(registry)).digest(\"hex\"),state={files:[] as string[]},leaseDirectory=join(root,\".cache/b/l/m/data\");\n  const read=async(path:string)=>{try{return await readFile(join(root,path),\"utf8\");}catch(error){if([\"ENOENT\",\"ENOTDIR\"].includes((error as NodeJS.ErrnoException).code??\"\"))return undefined;throw error;}};\n  const statFile=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if([\"ENOENT\",\"ENOTDIR\"].includes((error as NodeJS.ErrnoException).code??\"\"))return undefined;throw error;}};\n  const statEntry=async(path:string)=>{try{const status=await lstat(join(root,path));return {directory:status.isDirectory(),file:status.isFile(),mtimeMs:status.mtimeMs,ino:status.ino,mode:status.mode};}catch(error){if([\"ENOENT\",\"ENOTDIR\"].includes((error as NodeJS.ErrnoException).code??\"\"))return undefined;throw error;}};\n  const holds=async(rows:readonly {kind:string;path:string;fact:any}[],signal?:AbortSignal):Promise<boolean>=>{\n    const plain:typeof rows[number][]=[],own:typeof rows[number][]=[];for(const row of rows)(row.kind===\"field\"||row.kind===\"digest\"?own:plain).push(row);\n    for(let at=0;at<own.length;at+=64){signal?.throwIfAborted();if(!(await Promise.all(own.slice(at,at+64).map(row=>environmentRowHoldsV1(row as never,{read,stat:statFile})))).every(Boolean))return false;}\n    return plain.length===0||observationV1.observationsHold(plain,64,new Set(),new Set(),signal);\n  };\n  const lease=(control:ResourceLeaseControl)=>({async exclusive<T>(resource:string,body:()=>Promise<T>,options:{signal?:AbortSignal;timeoutMs?:number}={}):Promise<T>{\n    const held=await acquireQueuedResourceLease({directory:leaseDirectory,resource,mode:\"exclusive\",owner:randomBytes(16).toString(\"base64url\"),control,signal:options.signal??control.signal,...(options.timeoutMs!==undefined?{timeoutMs:options.timeoutMs}:{})});\n    try{return await body();}finally{held.release();}\n  }});\n  const membership=async(previous:{manifest:{membership:string};frontier:any}|undefined,signal?:AbortSignal)=>{\n    if(previous&&await frontierHoldsV1(previous.frontier,statEntry,{signal})){state.files=previous.frontier.members.map((row:[string,number])=>row[0]);return {digest:previous.manifest.membership,frontier:previous.frontier,changes:[]};}\n    const capturedAt=Date.now(),all=await workspaceBuildFilesV1(root,invocation),members=buildGraphMembersV1(all),directoryPaths=inventoryDirectoriesV1.get(all)??[];\n    const stamp=async<T>(paths:readonly string[],row:(path:string,status:NonNullable<Awaited<ReturnType<typeof statEntry>>>)=>T):Promise<T[]>=>{\n      const out:T[]=new Array(paths.length);let next=0;\n      await Promise.all(Array.from({length:Math.min(64,paths.length)},async()=>{while(next<paths.length){const at=next++;checkScriptInvocation(invocation);const status=await statEntry(paths[at]!);if(!status)throw Object.assign(Error(`Build member removed during discovery: ${paths[at]}`),{code:\"BUILD_MEMBERSHIP_CHANGED\"});out[at]=row(paths[at]!,status);}}));\n      return out;\n    };\n    const directories=await stamp(directoryPaths,(path,status)=>[path,status.mtimeMs,status.ino] as [string,number,number]),stamped=await stamp(members,(path,status)=>[path,status.mode] as [string,number]);\n    const frontier=createFrontierV1({directories,members:stamped,capturedAt}),digest=createHash(\"sha256\").update(canonicalGenerationJsonV1(frontier.members)).digest(\"hex\");\n    state.files=members;\n    const config=(path:string)=>[\"📋️project.json\",\"Cargo.toml\"].includes(path.slice(path.lastIndexOf(\"/\")+1));\n    return {digest,frontier,changes:previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})})):[]};\n  };\n  return {\n    workspaceRoot:root,separator:sep,namedInputs:graphDeclarationV1(\"../🔣️policy.json\").namedInputs,registryDigest,signal:invocation.control.signal,verbose:process.env.SEMIO_GRAPH_PHASES===\"1\"||process.env.SEMIO_BUILD_PROFILE_INPUTS===\"1\",\n    async identity(){const producer=await import(\"./📥️inference/🟨️.mjs\");await producer.libraryBootstrap;requireCurrentGraphModuleV1();return createHash(\"sha256\").update(JSON.stringify([\"graph-generations-v1\",loadedGraphModuleAuthorityV1,producer.currentImplementationRevisionV1(),observationV1.inferenceAuthorityDigestV1(),registryDigest])).digest(\"hex\");},\n    withShared:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return body(store,control);}),\n    withBuilder:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withBuildGraphStateV1(root,invocation,phaseControl,body,generationScopeV1),\n    storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,\"generations\"),fs:generationFilesV1(store),lease:lease(control),holds,resources:{facts:\"repository-graph-facts:\"+resolve(root)}}),\n    membership,\n    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:spec.stubs,previousEnv:spec.previousEnv});},\n    expand:async(projects:Record<string,unknown>,control:ResourceLeaseControl)=>(await portableInputs(root,projects,invocation,control)) as Record<string,unknown>,\n    readGraph:(value:unknown)=>readBuildGraphV1(value),\n    clock:(control:ResourceLeaseControl)=>createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:\"shared\",elapsedMs:0}),write:writeGraphPhaseRowV1}),\n    say:(key:string,fields:Record<string,string|number>)=>{process.stderr.write(renderGenerationMessageV1(key as never,fields,process.env)+\"\\n\");},\n  };\n}\n\n/** 🔍️ Names the first difference between a generation graph and the graph a full inference produced; the diagnostic oracle of `SEMIO_BUILD_GRAPH_VERIFY=1`. */\nfunction requireEqualBuildGraphsV1(actual:BuildGraphV1,expected:BuildGraphV1):void{\n  const same=(left:unknown,right:unknown)=>canonicalGenerationJsonV1(left)===canonicalGenerationJsonV1(right);\n  for(const name of new Set([...Object.keys(actual.projects),...Object.keys(expected.projects)]))if(!same(actual.projects[name],expected.projects[name]))throw Error(`Graph generation differs from full inference at project ${name}`);\n  const edges=(graph:BuildGraphV1)=>graph.dependencies.map(edge=>canonicalGenerationJsonV1(edge)).sort();\n  if(!same(edges(actual),edges(expected)))throw Error(\"Graph generation differs from full inference at dependencies\");\n  for(const key of[\"externalNodes\",\"unavailable\",\"namedInputs\"] as const)if(!same(actual[key]??null,expected[key]??null))throw Error(`Graph generation differs from full inference at ${key}`);\n}\n\n/** 🧩️ What one partial inference produced, in repository terms: fully inferred owners with their own facts, owners whose edges alone were recomputed, every edge of the processed owners, the environment and every fact the inference consumed. */\nexport interface BuildGraphPartV1 {owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:any;unavailable?:BuildUnavailableProjectV1;nodeRows?:BuildGraphRowV1[]}[];edgeOnly:{name:string}[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes:Record<string,unknown>;parseUnavailable:BuildUnavailableProjectV1[];rows:BuildGraphRowV1[];env:{digest:string;rows:BuildGraphRowV1[]};replaceTags:string[]}\n\n/** 🧾️ One consumed fact of an inference. */\nexport interface BuildGraphRowV1 {kind:string;path:string;fact:unknown}\n\n/** 🧭️ The stored summary of one published owner: enough for edges, ownership and generator validation without its node. */\nexport interface BuildGraphPartStubV1 {root:string;kind:string;targets:readonly string[];nativeRoot?:string;config?:string;tag?:string}\n\n/** 🧩️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */\nexport async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null}):Promise<BuildGraphPartV1> {\n  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);\n  requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(observationV1.observedFs.readFileSync(join(root,\"📋️build-owners.json\"),\"utf8\")));\n  const [owner,tests,policies]=await Promise.all([import(\"./📥️inference/🟨️.mjs\"),import(\"../../../🧪️test/🟨️.mjs\"),import(\"./📥️inference/🛡️policy/🟨️.mjs\")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();\n  const nodeRows:Record<string,BuildGraphRowV1[]>={},context={workspaceRoot:root,invocation,phaseControl,registry},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));\n  const read=async(path:string)=>{try{return await readFile(join(root,path),\"utf8\");}catch(error){if([\"ENOENT\",\"ENOTDIR\"].includes((error as NodeJS.ErrnoException).code??\"\"))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if([\"ENOENT\",\"ENOTDIR\"].includes((error as NodeJS.ErrnoException).code??\"\"))return undefined;throw error;}};\n  const captured=await observationV1.captureObservedSourceInputsV1(async()=>{\n    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),...(part.cold?{}:{ownerRoots:part.roots}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[])=>{nodeRows[name]=rows;}};\n    const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith(\"📋️project.json\")||file.endsWith(\"Cargo.toml\")||file===\"bun.lock\"||file.endsWith(\".patch\")),options,context);\n    if(invocation)await advanceScriptInvocation(invocation,\"build:infer\",\"running\");\n    const testContributions=await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(\".feature\")),{},context),contributions=[...primary,...testContributions];\n    const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));\n    contributions.push(...await policies.default.createNodesV2[1](files.filter(file=>file.endsWith(\"📜️script.ts\")&&(part.cold||part.roots.has(dirname(file))||!realRoots.has(dirname(file)))),{}, {workspaceRoot:root,projects:policyOwners}));\n    const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set(testContributions.flatMap(([,contribution])=>Object.keys(contribution.projects??{})));\n    contributions.forEach(([file,contribution],index)=>{\n      Object.assign(externalNodes,contribution.externalNodes);\n      for(const row of (contribution.unavailable??[]) as BuildUnavailableProjectV1[])unavailable.set(row.root,row);\n      for(const[name,project]of Object.entries(contribution.projects??{}) as [string,any][]){\n        if(projects[name]&&projects[name].root!==project.root)throw Error(`Duplicate build project ${name}`);\n        projects[name]={...projects[name],...project,name,targets:{...projects[name]?.targets,...project.targets}};\n        if(index<primary.length)primaryNames.add(name);\n        configs[name]??=file;\n      }\n    });\n    for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?\"tests\":\"policy\";\n    const kept=stubs.filter(([name,stub])=>!stub.tag&&stub.kind===\"project\"&&!projects[name]&&!part.roots.has(stub.root));\n    const listed=[...kept.map(([name,stub])=>({name,root:stub.root,nativeRoot:stub.nativeRoot,config:stub.config})),...Object.entries(projects).filter(([name])=>!tags[name]).map(([name,project])=>({name,root:project.root,nativeRoot:project.metadata?.nativeRoot as string|undefined,config:configs[name]}))];\n    const env=await deriveEnvironmentV1({projects:listed,workspaceManifests:files.filter(file=>file===\"Cargo.toml\"||file.endsWith(\"/Cargo.toml\")),lock:\"bun.lock\",taxonomy:\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json\",read,stat});\n    const edgeNames=!part.cold&&env.digest!==part.previousEnv?kept.map(([name])=>name):[],processed=new Set([...Object.keys(projects),...edgeNames]);\n    const contextProjects:Record<string,any>={...Object.fromEntries(kept.map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};\n    const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([,stub])=>stub.kind===\"unavailable\"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));\n    for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&!withheld.some(withheldRoot=>file.startsWith(withheldRoot+\"/\")&&withheldRoot.length>contextProjects[found].root.length))projectFileMap[found]!.push({file});}\n    const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap},invocation,phaseControl,selection:{kind:\"all\"},registry,completeSourceImports:false};\n    const testEdges:unknown=await tests.discoverTestBuildDependenciesV1({},graphContext);if(!Array.isArray(testEdges))throw Error(\"Test dependency DATA array required\");\n    const edges=[...await owner.discoverBuildDependenciesV1(options,graphContext),...testEdges];\n    const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(contextProjects).map(([name,data])=>[name,{name,type:\"lib\",data}]))},options,graphContext);\n    if(!metadata||typeof metadata!==\"object\"||Array.isArray(metadata))throw Error(\"Graph metadata DATA object required\");\n    for(const[name,value]of Object.entries(metadata)){if(!projects[name])continue;if(!value||typeof value!==\"object\"||!(\"metadata\"in value)||!value.metadata||typeof value.metadata!==\"object\"||Array.isArray(value.metadata))throw Error(\"Project metadata DATA object required\");projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...(\"semio\"in value.metadata&&value.metadata.semio&&typeof value.metadata.semio===\"object\"?value.metadata.semio:{})}};}\n    const neutral=Object.fromEntries(Object.entries(projects).map(([name,project])=>[name,{...project,targets:Object.fromEntries(Object.entries(project.targets??{}).map(([target,value])=>[target,neutralBuildTargetV1(value as Record<string,any>,`${name}:${target}`)]))}]));\n    if(invocation)await advanceScriptInvocation(invocation,\"build:graph\",\"complete\");\n    const rows=[...unavailable.values()];\n    return {\n      owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),node,nodeRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,unavailable:row,nodeRows:nodeRows[row.project!]}))],\n      edgeOnly:edgeNames.map(name=>({name})),edges:edges as BuildGraphPartV1[\"edges\"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:[\"tests\",\"policy\"],\n    };\n  },undefined,false);\n  return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[]};\n}\n\n/** 🧺️ Keeps exactly the discovered files whose presence the portable graph consumes"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean}):Promise<BuildGraphV1> {",
+   "replacement": "export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;graph?:{policy?:\"fresh\"|\"current\";closure?:readonly string[]}}):Promise<BuildGraphV1> {"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  if(!invocation)throw Error(\"Original build graph producer invocation required\");\n",
+   "replacement": "  if(!invocation)throw Error(\"Original build graph producer invocation required\");\n  if(options.selection.kind===\"all\"&&!options.baseline){\n    const producer=await import(\"./📥️inference/🟨️.mjs\"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));\n    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??\"fresh\",closure:options.graph?.closure}) as BuildGraphV1;\n    if(process.env.SEMIO_BUILD_GRAPH_VERIFY===\"1\"&&!options.graph?.closure)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));\n    checkScriptInvocation(invocation);return graph;\n  }\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "await rm(path);await advanceScriptInvocation(invocation,\"build:reset-publication\",\"running\");\n    }\n  });",
+   "replacement": "await rm(path);await advanceScriptInvocation(invocation,\"build:reset-publication\",\"running\");\n    }\n    await createGenerationStoreV1({root:join(store.root,\"generations\"),fs:generationFilesV1(store),holds:async()=>true,resources:{facts:\"repository-graph-facts:\"+resolve(root)}}).invalidate({reason:\"reset\",signal:invocation.control.signal});\n  });"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "import { observeProjectInferenceV1, observedFs } from \"../../../../🏗️build/👁️observation/🟨️.mjs\";",
+   "replacement": "import { observeProjectInferenceV1, observedFs, projectInferenceObservationsV1 } from \"../../../../🏗️build/👁️observation/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  const { workspaceRoot } = context, unavailable = new Map();\n",
+   "replacement": "  const { workspaceRoot } = context, unavailable = new Map(), wantedRoots = options?.ownerRoots, wanted = root => !wantedRoots || wantedRoots.has(root);\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "    rootsByName.set(name, root);\n    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);",
+   "replacement": "    rootsByName.set(name, root);\n    if (!wanted(root)) { results.push([configFile, { projects: { [name]: { name, root, projectType: \"library\", targets: {} } } }]); continue; }\n    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "const jobs=results.flatMap(([,result])=>Object.entries(result.projects).map(([name,json])=>({result,name,json})));let projectIndex=0,cursor=0,stopped=false;",
+   "replacement": "const jobs=results.flatMap(([,result])=>Object.entries(result.projects).map(([name,json])=>({result,name,json}))).filter(job=>wanted(job.json.root));let projectIndex=0,cursor=0,stopped=false;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "    if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}",
+   "replacement": "    options?.onOwnerObservations?.(name,projectInferenceObservationsV1(cachePath)??[]);\n    if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  for(const row of [...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0))results.push([row.source,{projects:{},unavailable:[row]}]);",
+   "replacement": "  if(wantedRoots)for(const entry of results)entry[1].projects=Object.fromEntries(Object.entries(entry[1].projects??{}).filter(([,project])=>wanted(project.root)));\n  for(const row of [...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0))results.push([row.source,{projects:{},unavailable:[row]}]);"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}",
+   "replacement": "export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}\n\n/** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */\nexport function projectInferenceObservationsV1(cachePath){return originalInferencePublications.get(cachePath)?.observations;}\n\n/** 🪨️ Runs a partial inference in project scope without an all-or-nothing round: every project is consistent with the facts of its own record, contradictory facts between projects are legitimate and a project that raced an edit is stale in the next verification instead of restarting the pass. */\nexport async function observeInferenceSnapshotV1(compute){\n requireCurrentObservationV1();loadSealed=true;\n const nested=new Map();\n return inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute));\n}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts",
+   "anchor": "export function projectInferenceCountsV1():Record<string,number>;",
+   "replacement": "export function projectInferenceCountsV1():Record<string,number>;\n/** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */\nexport function projectInferenceObservationsV1(cachePath:string):readonly SourceObservationV1[]|undefined;\n/** 🪨️ Runs a partial inference in project scope without an all-or-nothing round. */\nexport function observeInferenceSnapshotV1<T>(compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🚦️invocation/🟨️.mjs",
+   "anchor": "import { requireCurrentObservationV1, observeDependencies, observeInference, settleObservedComputationV1 }",
+   "replacement": "import { requireCurrentObservationV1, observeDependencies, observeInference, observeInferenceSnapshotV1, settleObservedComputationV1 }"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🚦️invocation/🟨️.mjs",
+   "anchor": "return kind === \"nodes\" ? observeInference({ cachePath:",
+   "replacement": "return kind === \"nodes\" ? args[1]?.ownerRoots ? observeInferenceSnapshotV1(() => emojiProjectJsonNodes(...args)) : observeInference({ cachePath:"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "anchor": "let buildPath, readPhysicalSource, prepareSourceAnalysesV1,",
+   "replacement": "let buildPath, readPhysicalSource, requirePhysicalSourceV1, prepareSourceAnalysesV1,"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "anchor": "({ buildPath, readPhysicalSource, LIBRARY_ROOT, POLICY,",
+   "replacement": "({ buildPath, readPhysicalSource, requirePhysicalSourceV1, LIBRARY_ROOT, POLICY,"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "anchor": "if(requiredSources){const admitted=cache.physical??=new Set();if(!admitted.has(path)){readPhysicalSource(path);admitted.add(path);}}",
+   "replacement": "if(requiredSources){const admitted=cache.physical??=new Set();if(!admitted.has(path)){requirePhysicalSourceV1(path);admitted.add(path);}}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "anchor": "cache.resources.add(path);if(!seen)readPhysicalSource(path);return;",
+   "replacement": "cache.resources.add(path);if(!seen)requirePhysicalSourceV1(path);return;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "anchor": "if(bound.script){readPhysicalSource(bound.script);entries.add(bound.script);}",
+   "replacement": "if(bound.script){requirePhysicalSourceV1(bound.script);entries.add(bound.script);}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);",
+   "replacement": "if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);if(Array.isArray(header.blocks))header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks),...header.observations];"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "header = `{\"digest\":${JSON.stringify(digest)},\"resultSha256\":\"${createHash(\"sha256\").update(image).digest(\"hex\")}\",\"authorityObservations\":${observationRowsJsonV1(authority)},\"observations\":${observationRowsJsonV1(rows)}}`;",
+   "replacement": "header = inferenceHeaderTextV1(digest,createHash(\"sha256\").update(image).digest(\"hex\"),authority,rows,dirname(cachePath));"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "  return newline < 0 ? null : text.slice(0, newline);\n}",
+   "replacement": "  return newline < 0 ? null : text.slice(0, newline);\n}\n\n/** 🧱️ The shared fact table of persisted records: the rows of one record are cut into content-defined blocks (a cut follows every row whose key hash hits the mask once a block has its minimum rows), so the long runs of rows that thousands of projects share, such as one command closure, become the same block files and a record header lists block digests instead of repeating the rows. */\nconst BLOCK_MINIMUM_ROWS=32,BLOCK_MAXIMUM_ROWS=4096,BLOCK_CUT_MASK=0x7f;\nconst blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=new Map(),blocksByDigest=new Map(),blocksWritten=new Set();\nlet blockRowCounter=0;\nconst blockRowIdV1=row=>{let id=blockRowIdentities.get(row);if(id===undefined){id=++blockRowCounter;blockRowIdentities.set(row,id);}return id;};\nconst blockRowCutV1=row=>{let cut=blockRowCuts.get(row);if(cut===undefined){const key=observationKeyV1(row);let hash=0x811c9dc5;for(let at=0;at<key.length;at++){hash^=key.charCodeAt(at);hash=Math.imul(hash,16777619);}cut=(hash>>>0)&BLOCK_CUT_MASK;blockRowCuts.set(row,cut);}return cut;};\nfunction partitionObservationsV1(rows){\n const blocks=[];let current=[],ids=[];\n for(const row of rows){\n  current.push(row);ids.push(blockRowIdV1(row));\n  if(current.length>=BLOCK_MAXIMUM_ROWS||current.length>=BLOCK_MINIMUM_ROWS&&blockRowCutV1(row)===0){blocks.push({rows:current,key:ids.join(\",\")});current=[];ids=[];}\n }\n if(current.length)blocks.push({rows:current,key:ids.join(\",\")});\n return blocks;\n}\n\n/** 💾️ Writes one block file once per process and directory; a block the quota refuses stays inline in its record. */\nfunction persistInferenceBlockV1(directory,block){\n let known=blocksByIdentity.get(block.key);\n if(known===undefined){known={digest:createHash(\"sha256\").update(observationRowsJsonV1(block.rows)).digest(\"hex\"),rows:block.rows};blocksByIdentity.set(block.key,known);if(!blocksByDigest.has(known.digest))blocksByDigest.set(known.digest,block.rows);}\n block.digest=known.digest;\n const stamp=directory+\"\\0\"+known.digest;if(blocksWritten.has(stamp))return true;\n const path=join(directory,known.digest.slice(0,24)+\".json\");\n if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}\n fs.mkdirSync(directory,{recursive:true});\n const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows))),temporary=`${path}.${process.pid}.${Date.now()}.tmp`;\n if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{fs.writeFileSync(temporary,packed,{flag:\"wx\"});fs.renameSync(temporary,path);}))return false;\n blocksWritten.add(stamp);return true;\n}\n\n/** 🧾️ The header text of a record: blocks first (written before the record that names them), rows no block could hold inline. */\nfunction inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){\n const blocks=[],inline=[];\n for(const block of partitionObservationsV1(rows)){if(persistInferenceBlockV1(directory,block))blocks.push(block.digest);else for(const row of block.rows)inline.push(row);}\n return `{\"digest\":${JSON.stringify(digest)},\"resultSha256\":\"${resultSha256}\",\"authorityObservations\":${observationRowsJsonV1(authority)},\"blocks\":${JSON.stringify(blocks)},\"observations\":${observationRowsJsonV1(inline)}}`;\n}\n\n/** 📖️ The rows of the named blocks, each block read, verified against its name and interned once per process; a bad block is removed so the record that named it is recomputed. */\nfunction expandInferenceBlocksV1(directory,digests){\n const rows=[];\n for(const digest of digests){\n  let block=blocksByDigest.get(digest);\n  if(block===undefined){\n   const path=join(directory,digest.slice(0,24)+\".json\");\n   try{\n    const text=brotliDecompressSync(fs.readFileSync(path)).toString(\"utf8\");\n    if(createHash(\"sha256\").update(text).digest(\"hex\")!==digest)throw Error(\"Inference block content differs from its name\");\n    block=internObservationsV1(JSON.parse(text));blocksByDigest.set(digest,block);\n   }catch(error){try{fs.rmSync(path,{force:true});}catch{}throw error;}\n  }\n  for(const row of block)rows.push(row);\n }\n return rows;\n}\n\n/** 🧾️ A persisted record header with its blocks expanded: every row the record observed, in block order followed by the inline rows. */\nexport function readInferenceHeaderV1(cachePath){\n const text=brotliDecompressSync(fs.readFileSync(cachePath)).toString(\"utf8\"),newline=text.indexOf(\"\\n\"),header=JSON.parse(text.slice(0,newline));\n header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks??[]),...header.observations];\n return header;\n}",
+   "marker": "function inferenceHeaderTextV1("
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts",
+   "anchor": "export function inferenceHeaderLine(path:string):string|null;",
+   "replacement": "export function inferenceHeaderLine(path:string):string|null;\n/** 🧾️ A persisted record header with its fact blocks expanded. */\nexport function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json",
+   "anchor": "      \"observeInference\",\n      \"observeProjectInferenceV1\",",
+   "replacement": "      \"observeInference\",\n      \"observeInferenceSnapshotV1\",\n      \"observeProjectInferenceV1\","
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json",
+   "anchor": "      \"projectInferenceCountsV1\",\n      \"receiveSourcePreparationV1\",",
+   "replacement": "      \"projectInferenceCountsV1\",\n      \"projectInferenceObservationsV1\",\n      \"readInferenceHeaderV1\",\n      \"receiveSourcePreparationV1\","
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json",
+   "anchor": "    },\n    \"resultSha256\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[0-9a-f]{64}$\"",
+   "replacement": "    },\n    \"blocks\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"pattern\": \"^[0-9a-f]{64}$\"\n      }\n    },\n    \"resultSha256\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[0-9a-f]{64}$\""
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs",
+   "anchor": "import { createHash } from \"node:crypto\";",
+   "replacement": "import { createHash } from \"node:crypto\";\nimport { dirname, join } from \"node:path\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs",
+   "anchor": "const header = text.slice(0, split), observations = JSON.parse(header).observations;",
+   "replacement": "const header = text.slice(0, split), parsed = JSON.parse(header), observations = Array.isArray(parsed.observations) ? [...(parsed.blocks ?? []).flatMap((digest) => blockRows(dirname(paths[index]), digest)), ...parsed.observations] : undefined;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs",
+   "anchor": "/** 📊️ Reads the records in order;",
+   "replacement": "const blocks = new Map();\n\n/** 🧱️ The rows of one fact block, verified against its name and read once per worker. */\nfunction blockRows(directory, digest) {\n  let rows = blocks.get(digest);\n  if (!rows) {\n    const text = brotliDecompressSync(readFileSync(join(directory, digest.slice(0, 24) + \".json\"))).toString(\"utf8\");\n    if (createHash(\"sha256\").update(text).digest(\"hex\") !== digest) throw new Error(\"Inference block content differs from its name\");\n    blocks.set(digest, rows = JSON.parse(text));\n  }\n  return rows;\n}\n\n/** 📊️ Reads the records in order;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🟦️.ts",
+   "anchor": "expect(parsed.observations.some((row:any)=>",
+   "replacement": "expect(observation.readInferenceHeaderV1(cachePath).observations.some((row:any)=>"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🔣️.json",
+   "anchor": "\"headerKeys\": [\"digest\", \"resultSha256\", \"authorityObservations\", \"observations\"]",
+   "replacement": "\"headerKeys\": [\"digest\", \"resultSha256\", \"authorityObservations\", \"blocks\", \"observations\"]"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+   "anchor": "export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:\"nx\"|\"bazel\";args:string[];workers?:\"on\"|\"off\"} {\n  let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool,workers=environment.SEMIO_BUILD_WORKERS;\n  const selected:string[]=[];\n  for(let index=0;index<args.length;index++){\n    const argument=args[index]!;",
+   "replacement": "export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:\"nx\"|\"bazel\";args:string[];workers?:\"on\"|\"off\";graphPolicy?:\"fresh\"|\"current\"} {\n  let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool,workers=environment.SEMIO_BUILD_WORKERS;\n  const graph=extractGraphPolicyV1(args,environment),selected:string[]=[];\n  args=graph.args;\n  for(let index=0;index<args.length;index++){\n    const argument=args[index]!;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+   "anchor": "  return {tool,args:selected,...(workers?{workers:workers as \"on\"|\"off\"}:{})};",
+   "replacement": "  return {tool,args:selected,...(graph.explicit?{graphPolicy:graph.policy}:{}),...(workers?{workers:workers as \"on\"|\"off\"}:{})};"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+   "anchor": "import {checkResourceLeaseControl,type ResourceLeaseControl} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\";",
+   "replacement": "import {checkResourceLeaseControl,type ResourceLeaseControl} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\";\nimport{extractGraphPolicyV1}from\"../🕸️graph/🕰️generations/🔌️load/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "anchor": "graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:\"all\"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH===\"true\"});",
+   "replacement": "graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:\"all\"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH===\"true\",graph:{policy:selected.graphPolicy??\"fresh\",...(command===\"show\"&&resolved.args[1]===\"project\"&&resolved.args[2]?{closure:[resolved.args[2]]}:{})}});"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "anchor": "    {\n      \"name\": \"--scenario\",\n",
+   "replacement": "    {\n      \"name\": \"--graph-policy\",\n      \"value\": \"required\",\n      \"valueName\": \"fresh|current\",\n      \"operations\": [\"graph\", \"show\"],\n      \"description\": {\n        \"en\": \"fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY.\",\n        \"de\": \"fresh (Standard) prüft den Graphen und wartet bei geänderten Projekten auf den Neuaufbau; current liefert sofort den neuesten versiegelten Graphen und wartet nie; sonst SEMIO_BUILD_GRAPH_POLICY.\"\n      }\n    },\n    {\n      \"name\": \"--scenario\",\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "anchor": "      \"flags\": [\"--file\", \"--json\"],\n      \"examples\": [{ \"command\": \"repo graph --file=graph.json\"",
+   "replacement": "      \"flags\": [\"--file\", \"--json\", \"--graph-policy\"],\n      \"examples\": [{ \"command\": \"repo graph --file=graph.json\""
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "anchor": "      \"flags\": [\"--file\", \"--json\"],\n      \"examples\": [\n        { \"command\": \"repo show projects\"",
+   "replacement": "      \"flags\": [\"--file\", \"--json\", \"--graph-policy\"],\n      \"examples\": [\n        { \"command\": \"repo show projects\""
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+   "anchor": "              \"label\": \"Expanding input closures\",\n              \"units\": \"closures\"\n            }",
+   "replacement": "              \"label\": \"Expanding input closures\",\n              \"units\": \"closures\"\n            },\n            \"facts\": {\n              \"label\": \"Verifying graph facts\",\n              \"units\": \"facts\"\n            },\n            \"assembly\": {\n              \"label\": \"Assembling the graph\",\n              \"units\": \"projects\"\n            }"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+   "anchor": "              \"label\": \"Eingabehüllen auflösen\",\n              \"units\": \"Hüllen\"\n            }",
+   "replacement": "              \"label\": \"Eingabehüllen auflösen\",\n              \"units\": \"Hüllen\"\n            },\n            \"facts\": {\n              \"label\": \"Graph-Fakten prüfen\",\n              \"units\": \"Fakten\"\n            },\n            \"assembly\": {\n              \"label\": \"Graph zusammensetzen\",\n              \"units\": \"Projekte\"\n            }"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json",
+   "anchor": "          \"label\": \"Expanding input closures\",\n          \"units\": \"closures\"\n        }",
+   "replacement": "          \"label\": \"Expanding input closures\",\n          \"units\": \"closures\"\n        },\n        \"facts\": {\n          \"label\": \"Verifying graph facts\",\n          \"units\": \"facts\"\n        },\n        \"assembly\": {\n          \"label\": \"Assembling the graph\",\n          \"units\": \"projects\"\n        }"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json",
+   "anchor": "          \"label\": \"Eingabehüllen auflösen\",\n          \"units\": \"Hüllen\"\n        }",
+   "replacement": "          \"label\": \"Eingabehüllen auflösen\",\n          \"units\": \"Hüllen\"\n        },\n        \"facts\": {\n          \"label\": \"Graph-Fakten prüfen\",\n          \"units\": \"Fakten\"\n        },\n        \"assembly\": {\n          \"label\": \"Graph zusammensetzen\",\n          \"units\": \"Projekte\"\n        }"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json",
+   "anchor": "    }\n  ],\n  \"rejected\": [",
+   "replacement": "    },\n    {\n      \"name\": \"en-facts-2048-of-182951\",\n      \"environment\": {\n        \"LANG\": \"en_US.UTF-8\"\n      },\n      \"command\": \"build:projects\",\n      \"resource\": \"build:graph-phase:facts:2048:182951\",\n      \"mode\": \"shared\",\n      \"elapsedMs\": 0,\n      \"expected\": \"build:projects · Verifying graph facts: 2048 of 182951 facts\"\n    },\n    {\n      \"name\": \"de-assembly-3656-of-3656\",\n      \"environment\": {\n        \"LANG\": \"de_DE.UTF-8\"\n      },\n      \"command\": \"build:projects\",\n      \"resource\": \"build:graph-phase:assembly:3656:3656\",\n      \"mode\": \"shared\",\n      \"elapsedMs\": 0,\n      \"expected\": \"build:projects · Graph zusammensetzen: 3656 von 3656 Projekte\"\n    }\n  ],\n  \"rejected\": ["
+  }
+ ],
+ "bases": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": "2c517630732bcc0fa218bff51a868e854182481bd0292d63571ebdb82ce421ff",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": "b4734d60ec6673012f70c661a08ab4f32c719bcf5bdff6d3585c17b173e22c36",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": "4379ca87d54f96a85cb612ba4a70ad9b1633d6d76f850853b377b6a5ade990ee",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts": "8462c7bd8de61c3fd72f62f76f19b91024418612add34ace74074b8012ce0e76",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🚦️invocation/🟨️.mjs": "7bd5da63c25d19ad6741fb67e7ee6d1cc78246fafb9efbea2dd2cea78e0499c6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": "8b8db127d6afe9a3a6667a4f8fbf0223ed6ac7096124fc315eba9158a3d0b67e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json": "cfb488a2312a72253407a5ee0f3279110a28eef7c33788ba7cee4f0c6a134d29",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json": "417343cbe77233c1d854e964eafad2c1a845f0d0bfd3f1399df503b1fc7fa6d3",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs": "eca8345146389a8ff1df4541f3adc45fdb9eca3da90aff46350a383453a947c9",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🟦️.ts": "a10a452e3f32ccdbc050b401159f8d0a9c567e4b6f2512044ba53a14834d336e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️record-header/🔣️.json": "67440db9eea0276eed9e13bd8c2a6997d7910ad34bd408ed57e42439a749ab2d",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts": "b60b3c217604df91c16d98a3394ced6a3c21571c5cdb1acfe55e40ae0ce5975c",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": "e22f42a9ac1cefad1e56ad37bc2301bcc46400e0142c838676a94a93517f1bfc",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json": "97c289555de0c39f0bdd88bc9c867d3c524cda2525aabc94c4d4278d0f624e6c",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json": "fab21f87eaa2835fd254bfa291244543c7b5a8473f815c39322a409278b18af0",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json": "84059bb374d0271497bab0da3969d59b94215ab2387e5bccbfca549f30b32afc",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json": "cc00a6dac10b3baca231e9d448779e852487e6ebf089961fb5c609cb360e4ec6"
+ },
+ "new": {
+  "gen/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+  "gen/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+  "gen/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+  "gen/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🟦️.ts",
+  "gen/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🔣️.json",
+  "gen/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧬️schema/🔣️.json",
+  "gen/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🐍️oracle.py",
+  "gen/world.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏃️world/🟦️.ts",
+  "env/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🟨️.mjs",
+  "env/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🟨️.d.mts",
+  "env/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🧪️tests/🟦️.ts",
+  "env/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🧪️tests/🔣️.json",
+  "env/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🧪️tests/🧬️schema/🔣️.json",
+  "load/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
+  "load/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.d.mts",
+  "load/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🟦️.ts",
+  "load/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🔣️.json",
+  "load/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🧬️schema/🔣️.json",
+  "facts/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🟦️.ts",
+  "facts/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🔣️.json",
+  "facts/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🧬️schema/🔣️.json",
+  "facts/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🐍️oracle.py",
+  "protocol/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🟦️.ts",
+  "protocol/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🔣️.json",
+  "protocol/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🧬️schema/🔣️.json",
+  "protocol/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🐍️oracle.py"
+ },
+ "replace": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json",
+   "base": "cc00a6dac10b3baca231e9d448779e852487e6ebf089961fb5c609cb360e4ec6",
+   "source": "help/fixture.json"
+  }
+ ]
+}

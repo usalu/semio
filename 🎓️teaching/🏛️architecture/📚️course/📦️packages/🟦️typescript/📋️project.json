@@ -63,7 +63,6 @@
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
       "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/README.md",
       "{workspaceRoot}/🎓️teaching/🛂️proctor/README.md",
@@ -75,6 +74,48 @@
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"
+    ],
+    "workspaceManifests": [
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/🎓️teaching/bun.lock",
+      "{workspaceRoot}/🎓️teaching/package.json",
+      "{workspaceRoot}/🧰️framework/**/package.json",
+      "{workspaceRoot}/🧰️framework/**/tsconfig.json"
+    ],
+    "proctorTestReads": [
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🧪️tests/🧫️fixtures/**/*",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🔨️modules/📚️course/🧰️fixtures/**/*",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🧪️tests/🌐️end-to-end/🧰️harness/**/*",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🔨️modules/🗄️storage/🦀️.rs"
+    ],
+    "proctorCargoManifests": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🎓️teaching/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/Cargo.lock",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔀️dispatch/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️control/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/Cargo.toml"
     ]
   },
   "targets": {
@@ -85,7 +126,12 @@
         "command": "bun ./📜️script.ts preflight"
       },
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
     },
     "ci-browser-prepare": {
       "executor": "repo:script",
@@ -94,7 +140,12 @@
         "command": "bun ./📜️script.ts ci-browser-prepare"
       },
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "dev": {
       "metadata": {
@@ -133,7 +184,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/proctor:build"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -156,7 +208,23 @@
             "ready": {
               "port": 6061,
               "portEnv": "TEACHING_ARCHITECTURE_COURSE_PORT"
-            }
+            },
+            "parameters": [
+              {
+                "id": "stack",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "beside",
+                    "env": {
+                      "TEACHING_ARCHITECTURE_COURSE_PORT": "6063",
+                      "PROCTOR_PORT": "8793",
+                      "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside"
+                    }
+                  }
+                ]
+              }
+            ]
           }
         }
       },
@@ -190,41 +258,66 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "metadata": { "semio": { "closure": { "typescript": ["{projectRoot}/tsconfig.site.json"] } } },
+      "cache": true,
       "inputs": [
         "default",
-        {
-          "env": "PROCTOR_URL"
-        }
+        { "env": "PROCTOR_URL" },
+        { "externalDependencies": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities", "@tailwindcss/vite", "@vitejs/plugin-react", "ajv", "i18next", "immer", "react", "react-dom", "react-i18next", "tailwindcss", "vite"] },
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/⚡️energy/**/❓️quiz/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
       ],
-      "outputs": []
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
     },
     "publish": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] } } },
+      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" } } },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/architecture-course:build"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publish"
       },
       "cache": false,
+      "inputs": [
+        "default",
+        { "env": "PROCTOR_URL" }
+      ],
       "outputs": [
         "{projectRoot}/dist/release/pages/course"
       ]
     },
     "test": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/framework-rs:generate",
+        "@semio-tech/ui-contract-rs:generate",
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-actor-rs:typegen",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
+      "metadata": { "semio": { "closure": { "modules": ["{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🧪️tests/**/🟦️.ts"] } } },
       "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "workspaceManifests",
+        "proctorTestReads",
+        "proctorCargoManifests",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "runtime": "node --version" },
+        { "dependentTasksOutputFiles": "**/*", "transitive": false }
       ],
       "outputs": []
     },
@@ -239,11 +332,13 @@
         { "id": "project", "title": { "en": "Playwright project", "de": "Playwright-Projekt" }, "description": { "en": "Optional project name such as desktop, phone or layout; leave empty for all projects.", "de": "Optionaler Projektname wie desktop, phone oder layout; leer lassen für alle Projekte." }, "kind": "text", "valueFlag": "--project" },
         { "id": "headed", "title": { "en": "Show browser window", "de": "Browserfenster anzeigen" }, "kind": "flag", "default": false, "args": ["--headed"] },
         { "id": "workers", "title": { "en": "Playwright workers", "de": "Playwright-Worker" }, "description": { "en": "Optional Playwright worker count or percentage; leave empty for one worker per topology.", "de": "Optionale Playwright-Workerzahl oder Prozentangabe; leer lassen für einen Worker je Topologie." }, "kind": "text", "valueFlag": "--workers" }
-      ] } } },
+      ] },
+      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/proctor:build"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -268,6 +363,7 @@
         "command": "bun ./📜️script.ts typecheck",
         "forwardAllArgs": true
       },
+      "metadata": { "semio": { "closure": { "typescript": ["{projectRoot}/tsconfig.json"] } } },
       "cache": true,
       "inputs": [
         "default",
@@ -280,15 +376,26 @@
     },
     "check": {
       "executor": "repo:script",
+      "dependsOn": ["@teaching/proctor:build"],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check"
       },
-      "cache": false
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        { "dependentTasksOutputFiles": "**/receipt.json", "transitive": false },
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" },
+        { "env": "PROCTOR_COURSE" }
+      ]
     },
     "docker-image-build": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] } } },
+      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" } } },
       "executor": "repo:script",
+      "dependsOn": ["@teaching/proctor:build"],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-build",
@@ -303,10 +410,15 @@
         "command": "bun ./📜️script.ts docker-image-check",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "docker-image-publish": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] } } },
+      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" } } },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -321,7 +433,8 @@
         { "id": "http-port", "title": { "en": "HTTP host port", "de": "HTTP-Hostport" }, "description": { "en": "Host port for the temporary stack's HTTP redirect listener.", "de": "Hostport für die HTTP-Weiterleitung des temporären Stacks." }, "kind": "text", "default": "18080", "valueFlag": "--http-port" },
         { "id": "https-port", "title": { "en": "HTTPS host port", "de": "HTTPS-Hostport" }, "description": { "en": "Host port for the temporary stack's HTTPS listener.", "de": "Hostport für den HTTPS-Dienst des temporären Stacks." }, "kind": "text", "default": "18443", "valueFlag": "--https-port" },
         { "id": "keep", "title": { "en": "Retain temporary stack", "de": "Temporären Stack behalten" }, "description": { "en": "Keep the probe stack and volumes for inspection instead of removing them.", "de": "Prüfstack und Volumes zur Untersuchung behalten statt sie zu entfernen." }, "kind": "flag", "default": false, "args": ["--keep"] }
-      ] } } },
+      ] },
+      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -334,7 +447,8 @@
       "metadata": { "semio": { "dashboard": { "parameters": [
         { "id": "tag", "title": { "en": "Image tag", "de": "Image-Tag" }, "kind": "text", "default": "latest", "valueFlag": "--tag" },
         { "id": "out", "title": { "en": "Bundle output directory", "de": "Ausgabeverzeichnis des Bundles" }, "description": { "en": "Relative paths resolve from the course TypeScript package; the default is dist/proctor.", "de": "Relative Pfade gelten ab dem TypeScript-Paket des Kurses; Standard ist dist/proctor." }, "kind": "text", "default": "dist/proctor", "valueFlag": "--out" }
-      ] } } },
+      ] },
+      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -347,12 +461,14 @@
       ]
     },
     "deploy-check": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] } } },
+      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate",
-        "@teaching/architecture-course:typecheck"
+        "@teaching/architecture-course:typecheck",
+        "@teaching/architecture-course:publish",
+        "@teaching/proctor:build"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",

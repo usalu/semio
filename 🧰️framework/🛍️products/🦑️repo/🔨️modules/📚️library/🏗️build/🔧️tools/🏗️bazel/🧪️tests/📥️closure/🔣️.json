@@ -117,7 +117,6 @@
         "tools/dep.ts",
         "tools/entry.ts",
         "tools/unrelated.ts",
-        "Cargo.lock",
         "crate/Cargo.toml"
       ],
       "passthrough": [

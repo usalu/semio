@@ -164,5 +164,71 @@
       "name": "post-rewrite",
       "verb": "reset"
     }
+  ],
+  "buildPublicationCases": [
+    {
+      "id": "linux-fresh-nested",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/missing/nested/repo",
+      "destination": "fresh-nested",
+      "rejected": false
+    },
+    {
+      "id": "macos-default",
+      "platform": "darwin",
+      "mode": "prototype",
+      "binary": "/workspace/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/repo",
+      "destination": "default",
+      "rejected": false
+    },
+    {
+      "id": "windows-default",
+      "platform": "win32",
+      "mode": "release",
+      "binary": "C:\\workspace\\.🧬semio\\🦑️repo\\⚡️cache\\🗃️bin\\release\\repo\\repo.exe",
+      "destination": "default",
+      "rejected": false
+    },
+    {
+      "id": "linux-same-owner",
+      "platform": "linux",
+      "mode": "prototype",
+      "binary": "/workspace/owned/repo",
+      "destination": "same-owner",
+      "rejected": false
+    },
+    {
+      "id": "linux-unowned-empty",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/unowned/repo",
+      "destination": "unowned-empty",
+      "rejected": true
+    },
+    {
+      "id": "macos-foreign-owner",
+      "platform": "darwin",
+      "mode": "release",
+      "binary": "/workspace/foreign/repo",
+      "destination": "foreign-owner",
+      "rejected": true
+    },
+    {
+      "id": "windows-unowned-empty",
+      "platform": "win32",
+      "mode": "prototype",
+      "binary": "C:\\workspace\\unowned\\repo.exe",
+      "destination": "unowned-empty",
+      "rejected": true
+    },
+    {
+      "id": "linux-symlink",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/link/repo",
+      "destination": "symlink",
+      "rejected": true
+    }
   ]
 }

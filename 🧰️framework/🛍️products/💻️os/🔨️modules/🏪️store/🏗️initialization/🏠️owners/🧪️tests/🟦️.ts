@@ -2,7 +2,7 @@ import {expect,test} from 'bun:test';
 import {Database} from 'bun:sqlite';
 import Ajv from 'ajv';
 import {readFileSync} from 'node:fs';
-import fixture from '../🧫️fixtures/🔣️.json' with {type:'json'};
+import fixture from './🧫️fixtures/🔣️.json' with {type:'json'};
 import schema from '../🧬️schema/🔣️.json' with {type:'json'};
 test('one original semantic source feeds publication and replay in all persistent lanes',()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);
@@ -21,5 +21,4 @@ test('one original semantic source feeds publication and replay in all persisten
  const code=readFileSync(new URL('../🦀️.rs',import.meta.url),'utf8');
  expect(code).toContain('pub fn shared_semantic_source_demands<');expect(code).toContain('pub fn admit_source_constructor_with_shared_semantic_preparation<');
  expect(code).toContain('let shared = Arc::new(preparation);');expect(code).toContain('Arc::clone(&shared)');
- console.log('[DEBUG] Original semantic catalog Ajv/SQLite: three lanes, one source per paired port, aliases close before source deletion');
 });

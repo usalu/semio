@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dashboard Static Source Proof Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceRoot",
+    "testRoot",
+    "features",
+    "silentSources",
+    "forbidden"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "testRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "features": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "cases"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "cases": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "scenario",
+                "tests"
+              ],
+              "properties": {
+                "scenario": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "tests": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "silentSources": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "forbidden": {
+      "const": [
+        "println!",
+        "eprintln!",
+        "print!(",
+        "start_detached"
+      ]
+    }
+  }
+}

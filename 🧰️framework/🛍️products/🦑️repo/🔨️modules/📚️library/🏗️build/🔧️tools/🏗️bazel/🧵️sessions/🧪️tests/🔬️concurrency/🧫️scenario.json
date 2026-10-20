@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "description": "Concurrency conformance scenario of the Bazel session slots, independent of any implementation language: `pinnedServices` long-running service sessions (dev servers) hold service slots for the whole scenario and `servers` build slots serve `sessions` (one genrule each, `sleepSeconds` long, executed through a marker file) at the same time and neither a lock wait nor a slot wait may occur, the pinned services notwithstanding; a session in a fresh slot and a different package path then rebuilds the first target entirely from the shared cache (no spawn besides `allowedSpawnRunners`); the same selection comes back to the slot of its warm package; two commands in one output base (`controlTargets`) must show a lock wait, proving that the check can fail.",
+  "servers": 3,
+  "pinnedServices": 3,
+  "sleepSeconds": 4,
+  "sessions": ["t1", "t2", "t3"],
+  "warmIndex": 0,
+  "controlTargets": ["u", "v"],
+  "lockWaitMarkers": ["Another command", "Waiting for it to complete"],
+  "allowedSpawnRunners": ["internal", "disk cache hit", "action cache hit"]
+}

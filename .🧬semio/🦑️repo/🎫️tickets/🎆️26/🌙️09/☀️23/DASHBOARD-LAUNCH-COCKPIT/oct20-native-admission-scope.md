@@ -1,0 +1,35 @@
+# Native Admission Scope
+
+Actual selected Source18482 reached inference/assembly but settled1 on concurrently changed loaded owner-discovery authority, with no testbody. Read-only independent review identified an unconditional nativeDependencyRoots(includeDev:true) call for every base owner declaration, including workspace Root Cargo ownership admitted through shared freshness files. This expanded unrelated native owners while no task or input group requested them.
+
+Schema and10 neutral demand cases/4 invalid inputs are authored before production change. Six actual discovery-port scenarios cover base Root Cargo, Source owninputs, explicit Source caret dependency facts, selected native test/dev closure, input-only named facts and mixed selected targets. Independent SQLite oracles reproduce scope decisions. Native preparation must apply only to genuinely selected non-Source targets, preserve new preparation helpers/metadata, and leave Source targets unchanged. No Source/Native test pass is claimed.
+
+Production now observes Native structural roots only for selected non-Source tasks or explicit requested/caret input demand. The dependency/dev closure remains includeDev:true when requested. Native preparation sees selected non-Source targets on the full original project metadata, and its newly produced helpers/metadata merge back; Source targets and all file/command/compile observations remain intact. Base owner declarations no longer expand workspace Cargo merely because it exists. Authored actual-discovery law and whole Source rerun remain pending.
+
+Independent final Source review accepted scope policy, actual-discovery test ports, helper/metadata merge and preserved native/test includeDev closure. Prior18482 failed on stale loaded concurrent code, not a testbody. A fresh native-image-observation single-owner retry now uses the repaired scope; actual performance and bodies remain to be observed.
+
+## Closed Project Assembly
+
+The actual selected Source12759 advanced beyond admission, then project-nodes unconditionally called global discoverNativeBuildOwnersV1 again. Admitted root Cargo freshness therefore expanded native owners anew. Each project also inferred native authority solely from Cargo presence and prepared all normalized operations. Root canceled only its exact owned12759 TTY, observed terminal1, and retained its no-body evidence.
+
+Selected project nodes now retain freshly physically admitted closed files and new per-attempt caches, skipping global native owner expansion. The existing complete declaration is still normalized with exact selected target/input names, preserving generator ownership validation. Compiler authority/native preparation use selected non-Source demand; release preparation uses selected release operations. Inactive declarations remain available for display, and new helpers/metadata are merged. All-owner selection retains native discovery and full preparation semantics.
+
+Seven neutral assembly cases and the actual project-nodes function are tested with existing TypeScript AST extraction, Ajv validation and an independent SQLite selection oracle. Cases cover base, Source-only, named-input-only, native, mixed, release and all-owner selection, physical-candidate admission, exact normalization inputs, inactive declarations, helper and metadata retention. These cases were authored before production changes; runtime remains pending.
+
+## Exact Image Observation Source Role
+
+The actual image-observation target invokes only Bun tests. The process dispatcher TypeScript noEmit allowlist excludes this suite. Its named own script/test files previously inherited compile demand, including type-only edges for unrelated owners. The target now explicitly declares sourceInputObservation freshness. Its own files remain freshness inputs; runtime command modules and explicit declared compilation entries retain their previous complete tracing. This is one authored route change, not a blanket Source fast path.
+
+A neutral closed route and actual manifest/process AST regression verify target spelling, Source execution kind, exact Bun command, owned script freshness, TypeScript allowlist exclusion via independent SQLite, and preservation of explicit compilation demand. Source91630 was canceled only through its own TTY, whole1 with no selected body, before these changes. The new route law and runtime retry remain pending.
+
+The specific route also explicitly lists its real test main as a literal TS input, while retaining the glob. Existing declaredModuleInputV1 then includes that main and all runtime imports in the command closure; freshness cannot hide imported tests outside the silence directory. The actual dispatcher suites AST source field is asserted to equal this exact entry. Initial route retry78293 was canceled through its own TTY before this necessary input-completeness correction; no body or performance result is claimed.
+
+## Explicit Runtime Entry Contract Supersedes Literal Inference
+
+The styling generator exposed that literal TS freshness data was also implicitly treated as an execution root. High introduced the schema-owned runtimeSourceEntries distinction. The image test main now lives in this explicit metadata array, and its temporary duplicate literal input is removed while its freshness glob and script remain. The actual route AST regression compares that explicit field and validated entries against the real suite source. Ordinary freshness data is never inferred to execute; command scripts and explicit runtime entries retain complete runtime closure.
+
+28795 actually settled naturally with whole1 before the attempted interruption, rather than through cancellation. Its failure was current receipt validation at .cache/b/n: bootSession and ancestry missing, unchanged1609564160-byte backing/inode426288826, old/current device16777232/16777229. No selected Source test body ran. The control reason is corrected; the inspector refusal is preserved and genuine current-owner disposal is being investigated.
+
+## Required Freshness Provenance After Actual1038 Expansion
+
+Actual53440 expanded1038projects and ended whole1 on changed loaded graph implementation before any test body. Generic named/caret DATA scans were compile:false but triggered Native closure and unconditional package dependencies. The closed native observation now requires inputRole, derived through the existing source-role classifier. Freshness-only/base/input-only observations preserve all matched DATA and package declaration bytes while omitting Native source and declaration dependency-table expansion; actual runtime imports/generated producer guards stay intact. Selected Native wins and reobserves full closure; nonfresh compilation and all-mode remain.14neutral role cases/6invalid and15actual discovery scenarios are authored with independent SQL/Ajv; runtime stillunrun. Rootrefs fixed for both firstpartyvalidator and Ajv. Source0 normal retry follows independent review; no guard/floor/census bypass.

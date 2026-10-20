@@ -1,0 +1,85 @@
+{
+  "name": "@semio-tech/puzzle-plugin",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/**/*.rs",
+      "{projectRoot}/**/*",
+      "nativeAssets"
+    ],
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg"
+    ],
+    "nativeSources": [
+      "nativeAssets",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/**/*"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ]
+  },
+  "targets": {
+    "wasm": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts wasm"
+      },
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "fixtures-lint": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts fixtures lint",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+          }
+        }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
+    }
+  }
+}

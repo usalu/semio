@@ -4,7 +4,7 @@
 ov="$1"; merged="${2:-/private/tmp/ig/merged}"; here="$(cd "$(dirname "$0")" && pwd)"
 L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 rm -rf "$ov"; mkdir -p "$ov"
-rsync -a /private/tmp/ig/base0/ "$ov/"
+rsync -a "${BASEDIR:-/private/tmp/ig/base0}/" "$ov/"
 rsync -a --exclude _conflicts --exclude _report.json "$merged/" "$ov/"
 entries=$(cd "$merged" && find . -type f \( -name '*.ts' -o -name '*.tsx' \) ! -path './_conflicts/*' | sed 's#^\./##')
 python3 "$here/mkverify.py" "$ov" "📜️script.ts" $entries --merged "$merged" | head -3

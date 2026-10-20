@@ -120,6 +120,7 @@ const DONE: u8 = 7;
 
 impl<M:RetainedCloneEntries> RetainedCloneEntriesCursor<M>{
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        #[cfg(test)] selected_close_tests::record(self as*const Self as usize,body);
         if !self.closing{return Ok(Default::default());}
         if !self.key_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<M::Key>(&self.key_cursor,body);}
         if !self.value_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<M::Value>(&self.value_cursor,body);}
@@ -129,6 +130,7 @@ impl<M:RetainedCloneEntries> RetainedCloneEntriesCursor<M>{
     }
 }
 impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCursor<M> {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{RetainedCloneEntriesCursor::<M>::close_demands(self,body)}
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self, source: RetainedCloneRef<'_, M>, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         if self.closing || self.spent { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection clone cannot quote a closing or spent owner")); }
@@ -318,3 +320,7 @@ impl<T: RetainedClone + Ord> RetainedClone for BTreeSet<T> {
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️dispatch/🦀️.rs"]
+mod selected_close_tests;

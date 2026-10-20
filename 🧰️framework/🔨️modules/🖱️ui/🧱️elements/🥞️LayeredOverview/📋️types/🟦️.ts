@@ -1,3 +1,4 @@
+/** 📋️ The types of LayeredOverview: modes, panes, cards, chrome, labels, insets and props. */
 import type { IconName } from "../../🔣️Icons/🟦️.tsx";
 import * as React from "react";
 import type { LayeredDirection, LayeredCell, LayeredLifecycle, LayeredRevealSource } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
@@ -8,7 +9,7 @@ import type { LayeredDirection, LayeredCell, LayeredLifecycle, LayeredRevealSour
  * small for the card grid). */
 export type LayeredMode = "strip" | "swipe";
 
-/** 🥞️ One backdrop page, the real page its card opens: `id` is its hash route, `data-layered-pane` and key, `label` names the opened page and its
+/** 🎴️ One backdrop page, the real page its card opens: `id` is its hash route, `data-layered-pane` and key, `label` names the opened page and its
  * placeholder, `render` is called only while the pane is mounted, `poster` is shown while it is not, and `capturePoster` (for example
  * {@link capturePosterFromCanvases}) turns the mounted page into a poster right before it is released. */
 export interface LayeredPane {
@@ -22,7 +23,7 @@ export interface LayeredPane {
   readonly capturePoster?: (container: HTMLElement) => string | null;
 }
 
-/** 🥞️ What a mounted page knows: `opened` (full size and interactive, otherwise inert backdrop), `revealed` (its card is hovered or focused, so it
+/** 📄️ What a mounted page knows: `opened` (full size and interactive, otherwise inert backdrop), `revealed` (its card is hovered or focused, so it
  * shows clear) and `dirty` (the page reports user work, so it is never released). */
 export interface LayeredPaneState {
   readonly opened: boolean;
@@ -77,7 +78,7 @@ export interface LayeredOverviewProps {
   readonly camera?: { readonly x: number; readonly y: number };
   /** 📤️ Reports normalized pointer input before the local camera follows it. */
   readonly onCameraChange?: (camera: { readonly x: number; readonly y: number }) => void;
-  /** 📱️ The settled page controlling an observed swipe overview. */
+  /** 📍️ The settled page controlling an observed swipe overview. */
   readonly swipeId?: string;
   /** 📡️ Reports settled swipe pages without publishing gesture frames. */
   readonly onSwipeIdChange?: (id: string) => void;

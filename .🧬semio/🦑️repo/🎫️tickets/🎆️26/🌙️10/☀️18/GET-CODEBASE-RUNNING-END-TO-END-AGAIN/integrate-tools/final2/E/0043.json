@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/hub-stdio-publication",
+  "root": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication",
+  "projectType": "library",
+  "tags": ["lang:typescript", "role:hub"],
+  "targets": {
+    "publish": {
+      "executor": "repo:script",
+      "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "outputs": [],
+      "cache": true
+    }
+  }
+}

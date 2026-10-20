@@ -52,5 +52,5 @@ export { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, hostArmed
 export type { PluginViewState, ResolvedPluginViewState } from "./👁️view-state-and-public-invocation/🟦️.ts";
 export { UI_REFRESH_SECTIONS, panelTabKindId, sectionViewContext } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
 export type { PanelTabKind, PluginUiRefreshRequest, PluginUiRefreshResponse } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
-export { dialectFromLegacyExampleAppId, exampleBodyAssetPrefix, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples } from "./🗣️contributions-and-examples/🟦️.ts";
+export { exampleBodyAssetPrefix, examplesForApp } from "./🗣️contributions-and-examples/🟦️.ts";
 export type { PluginManifest, ProgramContributionEntry } from "./🗣️contributions-and-examples/🟦️.ts";

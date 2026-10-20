@@ -5,11 +5,11 @@
     "maximumDirectoryEntries": 4096,
     "maximumPathUnits": 256,
     "maximumJournalBytes": 67108864,
-    "existingFilesOnly": true,
     "encoding": "utf-8",
     "stateDirectory": ".workspace-events",
     "publication": "preserved-predecessor",
-    "cancellation": "before-publication"
+    "cancellation": "before-publication",
+    "saveExistingFilesOnly": true
   },
   "cases": [
     {

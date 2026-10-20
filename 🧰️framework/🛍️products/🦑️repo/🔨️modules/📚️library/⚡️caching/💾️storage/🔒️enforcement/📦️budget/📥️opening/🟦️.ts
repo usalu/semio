@@ -8,7 +8,7 @@ import{withNativeArtifactCacheV1,type NativeArtifactCacheRequestV1,type NativeAr
 import{withRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../📂️paths/🟦️.ts";
 import {dirname,join} from "node:path";
-import {lstatSync,mkdirSync} from "node:fs";
+import {lstatSync,mkdirSync,writeFileSync} from "node:fs";
 import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../🟦️.ts";
 import {openNativePlatformStorageV1,requireNativePlatformImageCloseV1,withNativePlatformChildStorageV1,withNativePlatformFundedChildStorageV1,retireNativePlatformFundedChildStorageV1,withNativePlatformMaintenanceChildStorageV1,withNativePlatformDisposableChildStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1,type NativeDisposableImageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,retireResourceLeasesV1,retireResourceQueueClaimsV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
@@ -38,18 +38,27 @@ function prepareRepositoryCacheParentsV1(workspace:string,control:ResourceLeaseC
  requireIssuedResourceControlRefinementV1(control,control);
 }
 
+/** 🧽️ A retirement stamp younger than the declared interval means idle leases were swept recently; a missing, linked or future stamp never is. */
+export function leaseRetirementFreshV1(stamp:string,now:number=Date.now()):boolean{try{const row=lstatSync(stamp);const age=now-Math.floor(row.mtimeMs);return row.isFile()&&!row.isSymbolicLink()&&age>=0&&age<=parentSchema.definitions.Protocol.const.leaseRetirementIntervalMilliseconds;}catch{return false;}}
+/** 🧽️ Records that idle leases were swept now; a failed write only costs the next opener another sweep. */
+export function touchLeaseRetirementV1(stamp:string):void{try{writeFileSync(stamp,"");}catch{}}
 /** 🧽️ Opens the lease image and opportunistically retires idle leases only when no other invocation holds it, because skipped retirement loses nothing. */
 async function openRepositoryLeasePartitionV1(workspace:string,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
  prepareRepositoryCacheParentsV1(workspace,control);
  const budget=repositoryCacheBudgetV1(workspace),partition=budget.partitions.leases,open=()=>openNativePlatformStorageV1({directory:partition.directory,leaseDirectory:budget.controlDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes,control,maximumLeaseDatabaseBytes:16384});let image=await open();
- try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();requireNativeStoragePathV1(image.root,directory);await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>{
+ try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();requireNativeStoragePathV1(image.root,directory);const stamp=requireNativeStoragePathV1(image.root,join(directory,parentSchema.definitions.Protocol.const.leaseRetirementStamp));if(leaseRetirementFreshV1(stamp))return image;await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>{
   if(custody.kind!=="kernel-ex")throw Error("Actual exclusive lease image maintenance required");const resource="native-fixed-image:"+partition.directory;requireResourceLeaseWriterProofV1(custody.proof,{directory:budget.controlDirectory,resource,path:resourceLeasePathV1(budget.controlDirectory,resource)},custody.control);await image.recheck();const ordinary=await retireResourceLeasesV1(directory,custody.control,0),claims=await retireResourceQueueClaimsV1(directory,custody.control,0);await image.recheck();
- });await image.close();image=await open();await image.recheck();return image;
+ });await image.close();image=await open();await image.recheck();touchLeaseRetirementV1(stamp);return image;
  }catch(error){try{await image.close();}catch(closing){if(!Object.is(error,closing))throw new AggregateError([error,closing],"Lease image opening and actual close failed");}throw error;}
 }
 
 /** 🎟️ Opens the authored finite backing under original caller custody; unsupported enforcement remains a refusal. */
 export async function openRepositoryCachePartitionV1(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
+ checkResourceLeaseControl(control);if(id!=="nx"||process.platform!=="darwin")return openRepositoryCachePartitionAttemptV1(workspace,id,control);const directory=repositoryCacheBudgetV1(workspace).partitions.nx.directory,{withInactiveNxPublicationRecoveryV1}=await import("./♻️reset/⚡️recovery/🟦️.ts"),{observeInactiveNxPublicationV1,resetInactiveNxCacheWithinBudgetV1}=await import("./♻️reset/🟦️.ts");
+ return withInactiveNxPublicationRecoveryV1(directory,control,{inspect:()=>observeInactiveNxPublicationV1(workspace,control),open:()=>openRepositoryCachePartitionAttemptV1(workspace,id,control),reset:reason=>resetInactiveNxCacheWithinBudgetV1(control,reason).then(()=>{})});
+}
+
+async function openRepositoryCachePartitionAttemptV1(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
  checkResourceLeaseControl(control);const budget=repositoryCacheBudgetV1(workspace),declaration=budget.partitions[id];if(!declaration||declaration.capacityBytes%1048576||declaration.capacityBytes<34603008)throw Error("Finite generated cache partition required");
  if(id==="leases")return openRepositoryLeasePartitionV1(workspace,control);
  const leases=await openRepositoryCachePartitionV1(workspace,"leases",control);let image:NativeImageStorageV1|undefined;try{const leaseDirectory=repositoryLeaseDirectoryV1(workspace);await leases.recheck();requireNativeStoragePathV1(leases.root,leaseDirectory);mkdirSync(leaseDirectory,{recursive:true});mkdirSync(dirname(declaration.directory),{recursive:true});const open=()=>openNativePlatformStorageV1({directory:declaration.directory,leaseDirectory,filesystemBytes:declaration.filesystemBytes,maximumPhysicalBytes:declaration.capacityBytes,control});image=id==="products"?await openRepositoryProductsLayoutV1(workspace,control,open):await open();const admitted=image,scope:PartitionOwner={id,image:admitted,leases,control,live:true,accepting:true,failed:false,sequence:0,pending:new Set(),outcomes:new Set()};const partition=Object.freeze({...admitted,close:()=>closePartition(scope)});partitionOwners.set(partition,scope);return partition;}catch(error){const errors:unknown[]=[error];for(const owned of[image,leases])try{await owned?.close();}catch(closeError){if(!errors.some(value=>Object.is(value,closeError)))errors.push(closeError);}if(errors.length===1)throw errors[0];throw new AggregateError(errors,"Partition admission and complete dependency close failed");}

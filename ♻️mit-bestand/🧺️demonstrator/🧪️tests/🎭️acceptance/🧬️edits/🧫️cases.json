@@ -1,0 +1,66 @@
+{
+  "generator": {
+    "heightId": "height",
+    "initial": 6,
+    "changed": 6.5,
+    "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+    ],
+    "synapseIds": [
+      "e1",
+      "e2",
+      "e3",
+      "e4",
+      "e5",
+      "e6"
+    ]
+  },
+  "koordinator": {
+    "catalogueId": "cad-play-catalogue.spatial.shape.primitive.box",
+    "windowIds": [
+      "cad-play-shape",
+      "cad-play-building",
+      "cad-play-energy",
+      "cad-play-structure-classic"
+    ],
+    "rowPrefix": "cad-play-document.shape"
+  },
+  "aggregator": {
+    "kindId": "Hexagonal Cut Concrete Forest Left",
+    "seedId": "seed-left-001",
+    "vortexCount": 11,
+    "meshUrl": "hexagonal-cut-concrete-forest-left.glb",
+    "windowIds": [
+      "puzzle3d-main-top",
+      "puzzle3d-main-perspective"
+    ]
+  },
+  "bearbeiten": {
+    "stepId": "wall-saw-cut",
+    "label": "Wall Saw Slab Cut",
+    "machine": "wallSaw",
+    "capability": "wallCut",
+    "stepIds": [
+      "wall-saw-cut",
+      "beam-relief-cut",
+      "column-wire-cut",
+      "core-sample",
+      "anchor-hole",
+      "anchor-set",
+      "surface-grind"
+    ]
+  },
+  "verfolgen": {
+    "label": "Acceptance Reuse Marker",
+    "delta": 1,
+    "collection": "positions",
+    "longitude": 0,
+    "latitude": 0
+  }
+}

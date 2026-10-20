@@ -11,7 +11,7 @@ pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan {
  if argv.first().is_some_and(|value| value == "dashboard") { let mut arguments: Vec<String> = ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"].into_iter().map(String::from).collect(); arguments.extend_from_slice(&argv[1..]); return NativeEntrypointPlan { kind: "build", arguments }; }
  let mut index = 0;
  while index < argv.len() { if argv[index] == "--tool" { index += 2; } else if argv[index].starts_with("--tool=") { index += 1; } else { break; } }
- let build = index > 0 || argv.get(index).is_some_and(|value| matches!(value.as_str(), "run" | "run-many" | "affected" | "exec" | "watch" | "dependencies" | "cargo" | "tools" | "reset" | "cache" | "preflight" | "show" | "graph"));
+ let build = index > 0 || argv.get(index).is_some_and(|value| matches!(value.as_str(), "run" | "run-many" | "affected" | "exec" | "watch" | "dependencies" | "cargo" | "tools" | "reset" | "cache" | "preflight" | "show" | "graph" | "inputs" | "incremental" | "concurrency" | "capacity" | "leases" | "remote-execution"));
  NativeEntrypointPlan { kind: if build { "build" } else { "domain" }, arguments: argv.to_vec() }
 }
 

@@ -49,6 +49,7 @@ semio-framework-onboarding = { path = "../../🔨️modules/🎓️onboarding/�
 semio-framework-source-projection = { path = "../../🔨️modules/📁️filesystem/📷️snapshot/📦️packages/🦀️rust" }
 semio-framework-time-travel-actions = { path = "../../🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-tool-run-actions = { path = "../../🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

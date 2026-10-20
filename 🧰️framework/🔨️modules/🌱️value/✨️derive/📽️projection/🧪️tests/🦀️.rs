@@ -8,5 +8,6 @@ impl<'a> Visit<'a> for Paths{
 #[test]
 fn snapshot_projection_expansion_uses_declared_owner_for_empty_and_field_records(){
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧪️tests/🔣️.json")).unwrap();
+ for row in cases["layouts"].as_array().unwrap(){let input:syn::DeriveInput=syn::parse_str(&format!("{} struct Record{{field:u64}}",row["attribute"].as_str().unwrap())).unwrap();let output=super::expand(&input);assert_eq!(output.is_ok(),row["accepted"].as_bool().unwrap(),"{}",row["attribute"]);if let Ok(tokens)=output{let _:syn::File=syn::parse2(tokens).unwrap();}}
  for row in cases["cases"].as_array().unwrap(){let shape=if row["shape"]=="empty"{"struct Record;"}else{"struct Record{field:u64}"};let input:syn::DeriveInput=syn::parse_str(&format!("{} {shape}",row["attribute"].as_str().unwrap())).unwrap();let output=super::expand(&input).unwrap();let file:syn::File=syn::parse2(output).unwrap();let mut paths=Paths{roots:Vec::new()};paths.visit_file(&file);assert!(!paths.roots.is_empty());assert!(paths.roots.iter().all(|root|root==row["root"].as_str().unwrap()),"{}: {:?}",row["id"],paths.roots);}
 }

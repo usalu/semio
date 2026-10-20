@@ -82,7 +82,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
         }
       },
       "cache": false,
@@ -163,7 +164,8 @@
                 }
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
         }
       },
       "cache": false,
@@ -245,7 +247,8 @@
               "en": "Stream worktree or staged changes with external diff and text conversion disabled.",
               "de": "Änderungen im Arbeitsverzeichnis oder Index ohne externe Diff-Programme und Textkonvertierung streamen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
         }
       },
       "cache": false,
@@ -312,7 +315,8 @@
               "en": "Stream a bounded read-only commit history for the selected revision and path.",
               "de": "Einen begrenzten, schreibgeschützten Commit-Verlauf für Revision und Pfad streamen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
         }
       },
       "cache": false,
@@ -403,7 +407,8 @@
               "en": "Start a supervised native shell for advanced commands or an already installed debugger. Input, output and cancellation stay in the dashboard task.",
               "de": "Eine überwachte native Shell für erweiterte Befehle oder einen bereits installierten Debugger starten. Eingabe, Ausgabe und Abbruch bleiben in der Dashboard-Aufgabe."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
         }
       },
       "cache": false,
@@ -510,7 +515,8 @@
               "en": "Stream read-only repository status without index refresh locks or external hooks.",
               "de": "Den schreibgeschützten Repository-Status ohne Index-Aktualisierungssperren oder externe Hooks streamen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
         }
       },
       "cache": false,
@@ -629,7 +635,8 @@
                 }
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
         }
       }
     },
@@ -654,9 +661,11 @@
               "de": "Verfügbarkeit und Programmpfade von Node.js-Inspektor, Python-Pdb, GNU-Debugger und LLVM-Debugger anzeigen. Bei fehlenden optionalen Werkzeugen erscheint der nächste Schritt."
             },
             "parameters": []
-          }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
         }
-      }
+      },
+      "continuous": true
     },
     "setup-debugger": {
       "cache": false,
@@ -683,7 +692,8 @@
               "de": "Vollständigen LLDB-Start prüfen oder festgelegte Host-Pakete einrichten. Linux-Reparatur erfordert root oder nichtinteraktives sudo; maschinenweites Windows-LLVM eine erhöhte Host-Einrichtung. Funktionsfähiges LLDB installiert nichts."
             },
             "parameters": []
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     }

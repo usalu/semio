@@ -2,9 +2,14 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
+import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
+import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
+import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+
+const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
 
 /** 🔒️ The closed set of cache-correctness rules; every finding names exactly one. */
-export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network"] as const;
+export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] as const;
 export type CacheRuleV1 = (typeof CACHE_RULES_V1)[number];
 
 /** 🎯️ The resolved target facts a rule reads: the shape the inference gives a target after its cache policy. */
@@ -63,9 +68,13 @@ export function cacheCorrectnessFindingsV1(record: CacheRecordV1): CacheFindingV
   const { id, root, target } = record, findings: CacheFindingV1[] = [], found = (rule: CacheRuleV1, detail: string) => findings.push({ id, rule, detail });
   const decision = target.metadata?.semio?.cache, semio = target.metadata?.semio ?? {};
   if (decision?.class === "unclassified") found("unclassified-target", "no policy row, declaration or verifying command classifies this target");
+  if (target.cache === false && decision === undefined) found("uncached-without-reason", "cache false records no decision: declare metadata.semio.cache with the class and reason that forbid replay");
   if (record.authoredCache === true && target.cache === false && decision?.class !== "continuous") found("authored-cache-overridden", `authored cache true, resolved ${decision ? `${decision.class}/${decision.reason}` : "uncached"}`);
   if (target.cache !== true) return findings;
   const leaves = expandInputs(target.inputs ?? ["default", "^default"], record.namedInputs);
+  if (leaves.some((leaf) => typeof leaf === "string" && !leaf.startsWith("!") && globSelectsRepositoryV1(projectPath(leaf, root))) && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-repository-input", "declares the whole repository as input and no input precision rule bounds it: add a rule to the input precision document that names what the task reads (traced, static or bound), or record why every file is read (whole, assumed)");
+  const wholeKeys = workspaceKeyViolationsV1(RESOLUTION, leaves, commandOf(target), id);
+  if (wholeKeys.length && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-workspace-rust-key", cargoResolutionTextV1(RESOLUTION, "workspaceKey", cargoResolutionLanguageV1(RESOLUTION, process.env), { subject: id, keys: wholeKeys.join(", ") }));
   if (Array.isArray(target.inputs) && target.inputs.length === 0 && target.executor !== "repo:noop") found("empty-inputs", "inputs [] hashes nothing but the results of dependencies");
   const declaredOutputs = Array.isArray(target.outputs) && target.outputs.length > 0;
   if (decision?.class === "deterministic" && decision.reason === "pure-function-of-inputs" && !declaredOutputs && semio.rustBuildIntent === undefined && semio.rustUnitAggregate === undefined && semio.hostPlatformOutputsV1 === undefined && target.executor !== "repo:noop") found("producer-without-outputs", "a replayed producer declares no output, so a hit restores nothing");
@@ -95,6 +104,15 @@ export function cacheOutputOverlapFindingsV1(records: readonly CacheRecordV1[]):
   return findings;
 }
 
+/** 🪜️ The exempt targets that no longer declare a whole-workspace Rust key (or no longer exist): the exemption list is a ratchet, so an owner who derives a narrower key must delete the entry. */
+export function staleRustKeyExemptionsV1(records: readonly CacheRecordV1[]): string[] {
+  const open = { ...RESOLUTION, workspaceKeys: { ...RESOLUTION.workspaceKeys, exemptTargets: [] } }, byId = new Map(records.map((record) => [record.id, record]));
+  return RESOLUTION.workspaceKeys.exemptTargets.flatMap((row) => row.targets).filter((id) => {
+    const record = byId.get(id);
+    return !record || record.target.cache !== true || workspaceKeyViolationsV1(open, expandInputs(record.target.inputs ?? ["default", "^default"], record.namedInputs), commandOf(record.target)).length === 0;
+  }).sort();
+}
+
 /** 🧮️ Every finding of every rule over a set of resolved targets. */
 export function cacheCorrectnessRepositoryFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
   return [...records.flatMap(cacheCorrectnessFindingsV1), ...cacheOutputOverlapFindingsV1(records)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : a.detail < b.detail ? -1 : 1);
@@ -104,9 +122,23 @@ type PolicyV1 = { targetDefaults?: Record<string, Record<string, unknown>> };
 export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any, policy?: any): any }
 
 /** 📚️ Resolves every authored target of the tracked manifests through the production cache policy (targetDefaults, generator-contract outputs, classification) into the records the rules read. Inference-only projects have no manifest target and are covered by the production outputs gate. */
-export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[]): CacheRecordV1[] {
+const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
+const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
+
+/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
+function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
+  const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
+  if (!rule) return target;
+  const metadata = { ...target.metadata, semio: { ...target.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
+  if (BROAD_EVIDENCE.has(rule.evidence)) return { ...target, metadata };
+  return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
+}
+
+/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
+export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
   const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
   const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;
+  const document = precision ?? (existsSync(join(repoRoot, library, PRECISION_FILE)) ? readInputPrecisionV1(read(`${library}/${PRECISION_FILE}`)) : undefined);
   const injected = new Map<string, string[]>();
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned") continue;
@@ -123,7 +155,7 @@ export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolic
       const id = `${json.name ?? root}:${name}`, base = { ...(policy.targetDefaults?.[name] ?? {}), ...authored, ...(authored.cache === false && authored.inputs === undefined ? { inputs: ["default"] } : {}), options: { ...authored.options, ...(typeof authored.command === "string" && authored.options?.command === undefined ? { command: authored.command } : {}) } } as any;
       const outputs = injected.get(id);
       if (outputs?.length) base.outputs = outputs;
-      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: internals.targetPolicy(name, structuredClone(base)), namedInputs: names });
+      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: narrowedTargetV1(document, json.name ?? root, name, internals.targetPolicy(name, structuredClone(base))), namedInputs: names });
     }
   }
   return records;

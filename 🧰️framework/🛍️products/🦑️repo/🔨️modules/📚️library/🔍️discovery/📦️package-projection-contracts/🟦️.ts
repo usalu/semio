@@ -1,5 +1,5 @@
 import { type GeneratorPreviewProgressPolicyV1 } from "../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { createHash } from "node:crypto";
 import { basename, posix } from "node:path";
 import type { CurrentJcoPackageDestination, GeneratorOutputRoot, GeneratorOwnership, GeneratorProjectionActivation, RegistryCatalogInputDiscovery } from "../📜️taxonomy-contracts/🟦️.ts";

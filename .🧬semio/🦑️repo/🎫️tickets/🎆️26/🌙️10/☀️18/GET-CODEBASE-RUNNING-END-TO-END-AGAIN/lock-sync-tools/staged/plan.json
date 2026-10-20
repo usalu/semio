@@ -1,0 +1,768 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "nx.json",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "\"$schema\": \"./node_modules/nx/schemas/nx-schema.json\",",
+     "new": "\"$schema\": \"./.nx/installation/node_modules/nx/schemas/nx-schema.json\",",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "package.json",
+   "edits": [
+    {
+     "id": "manifest2-manifest2-1",
+     "group": "manifests",
+     "old": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default manifest2"
+    },
+    {
+     "id": "manifest2-manifest2-2",
+     "group": "manifests",
+     "old": "    \"@iarna/toml\": \"2.2.5\",\n    \"@nx/devkit\": \"23.2.0\",\n    \"@nx/js\": \"23.2.0\",\n    \"@nxlv/python\": \"23.0.2\",\n    \"@playwright/test\"",
+     "new": "    \"@iarna/toml\": \"2.2.5\",\n    \"@playwright/test\"",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default manifest2"
+    },
+    {
+     "id": "manifest2-manifest2-3",
+     "group": "manifests",
+     "old": "    \"npm-run-path\": \"^6.0.0\",\n    \"nx\": \"23.2.0\",\n    \"opentype.js\"",
+     "new": "    \"npm-run-path\": \"^6.0.0\",\n    \"opentype.js\"",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default manifest2"
+    }
+   ]
+  },
+  {
+   "path": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎯️selected-runtime/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "require(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "require(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      2
+     ],
+     "source": "bzl-default nx"
+    },
+    {
+     "id": "nx-nx-2",
+     "group": "nx",
+     "old": "createRequire(import.meta.url)(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(),\".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      2
+     ],
+     "source": "bzl-default nx"
+    },
+    {
+     "id": "nx-nx-3",
+     "group": "nx",
+     "old": "createRequire(import.meta.url)(\"nx/src/executors/run-commands/run-commands.impl\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/executors/run-commands/run-commands.impl\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "join(dirname(require.resolve(\"nx/package.json\")), require(\"nx/package.json\").bin.nx)",
+     "new": "(nxRequire => join(dirname(nxRequire.resolve(\"nx/package.json\")), nxRequire(\"nx/package.json\").bin.nx))(createRequire(join(process.cwd(), \".nx/installation/package.json\")))",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "join(root, \"node_modules/nx/schemas/nx-schema.json\")",
+     "new": "join(root, \".nx/installation/node_modules/nx/schemas/nx-schema.json\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "const require = createRequire(import.meta.url);",
+     "new": "const require = parserRequireV1(import.meta.url);",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "export type JavascriptDependencyStoreSelectionV1=Readonly<{kind:\"all\"}>|Readonly<{kind:\"scope\";owner:string}>;",
+     "new": "export type JavascriptDependencyStoreSelectionV1=Readonly<{kind:\"all\"}>|Readonly<{kind:\"scope\";owner:string}>|Readonly<{kind:\"scopes\";owners:readonly string[]}>;",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "requested=selection.kind===\"all\"?projection.plans.map(row=>row.scope):[selection.owner]",
+     "new": "requested=selection.kind===\"all\"?projection.plans.map(row=>row.scope):selection.kind===\"scopes\"?[...selection.owners]:[selection.owner]",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-3",
+     "group": "closure",
+     "old": "requested=selection.kind===\"all\"?projection.owners.scopes.map(row=>row.scope):[selection.owner]",
+     "new": "requested=selection.kind===\"all\"?projection.owners.scopes.map(row=>row.scope):selection.kind===\"scopes\"?[...selection.owners]:[selection.owner]",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "\"owner\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}]},",
+     "new": "\"owner\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}, {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"kind\", \"owners\"], \"properties\": {\"kind\": {\"const\": \"scopes\"}, \"owners\": {\"type\": \"array\", \"minItems\": 1, \"maxItems\": 512, \"uniqueItems\": true, \"items\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}}]},",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "edits": [
+    {
+     "id": "manifest-manifest-1",
+     "group": "manifests",
+     "old": "    \"typescript\": \"5.9.3\",\n    \"@semio-tech/framework-filesystem\": \"workspace:*\"\n  },",
+     "new": "    \"typescript\": \"5.9.3\"\n  },",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default manifest"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/bin/nx\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/bin/nx\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "const sdk=openNxSdkV1(join(repositoryRoot,\"package.json\"));",
+     "new": "const sdk=openNxSdkV1(join(repositoryRoot,\".nx/installation/package.json\"));",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "openNxSdkV1(join(root,\"package.json\")).packageDirectory()",
+     "new": "openNxSdkV1(join(root,\".nx/installation/package.json\")).packageDirectory()",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    },
+    {
+     "id": "nx-nx-2",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/bin/nx.js\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/bin/nx.js\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    },
+    {
+     "id": "nx-nx-3",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/package.json\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/package.json\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "nx-nx-1",
+     "group": "nx",
+     "old": "const installed=createRequire(join(root,\"package.json\")),port=",
+     "new": "const installed=createRequire(join(root,\".nx/installation/package.json\")),port=",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    },
+    {
+     "id": "nx-nx-2",
+     "group": "nx",
+     "old": "const base=join(root,\"package.json\"),installed=createRequire(base),sdk=openNxSdkV1(base);",
+     "new": "const base=join(root,\".nx/installation/package.json\"),installed=createRequire(base),sdk=openNxSdkV1(base);",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default nx"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "edits": [
+    {
+     "id": "closure-closure-3",
+     "group": "closure",
+     "old": "if(buildOperationRequiresV1(command)===\"dependencies\"){const {ensureBuildEnvironmentV1}=await import(\"./🚀️bootstrap/🟦️.ts\");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}",
+     "new": "if(buildOperationRequiresV1(command)===\"dependencies\"){const {ensureBuildEnvironmentV1,buildEnvironmentPlanV1}=await import(\"./🚀️bootstrap/🟦️.ts\"),environmentPlan=buildEnvironmentPlanV1(root,selected.tool,process.env);await ensureBuildEnvironmentV1(root,invocation,phaseControl,environmentPlan.install,undefined,environmentPlan.scope);}",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-4",
+     "group": "closure",
+     "old": "if(untouched){console.log(\"[bazel] no affected tasks\");return;}",
+     "new": "if(untouched){console.log(\"[bazel] no affected tasks\");return;}\n    {const {ensureBuildClosureScopesV1}=await import(\"./🚀️bootstrap/🟦️.ts\");await ensureBuildClosureScopesV1(root,invocation,artifactPhase,()=>Object.values(adapter.planBazelTasksV1(graph,request).tasks).map(task=>task.root),process.env);}",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "edits": [
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "  \"remoteCache\": {\n    \"version\": 1,\n    \"environment\": {",
+     "new": "  \"javascriptInstall\": \"all\",\n  \"javascriptInstallRoots\": [],\n  \"remoteCache\": {\n    \"version\": 1,\n    \"environment\": {",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "}))(createRequire(import.meta.url));",
+     "new": "}))(parserRequireV1(import.meta.url));",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire, isBuiltin } from \"node:module\";",
+     "new": "import { isBuiltin } from \"node:module\";\nimport { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      2
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "import {createHash} from \"node:crypto\";",
+     "new": "import {createHash} from \"node:crypto\";\nimport {fileURLToPath} from \"node:url\";\nimport buildPolicy from \"../🔣️policy.json\" with {type:\"json\"};\nimport type {JavascriptDependencyStoreSelectionV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\";",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-2",
+     "group": "closure",
+     "old": "},publish:(root:string)=>void=publishBuildBootstrapSourcesV1):Promise<void> {",
+     "new": "},publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<void> {",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-3",
+     "group": "closure",
+     "old": "const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,workspace=",
+     "new": "const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,scope=requestedScope??bootstrap.scope,base=scope===\".\"?root:join(root,...scope.split(\"/\")),workspace=",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-4",
+     "group": "closure",
+     "old": "const manifestBytes=bounded(join(root,\"package.json\"),8388608)",
+     "new": "const manifestBytes=bounded(join(base,\"package.json\"),8388608)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-5",
+     "group": "closure",
+     "old": "if(!bounded(join(root,\"package.json\"),8388608).equals(manifestBytes)",
+     "new": "if(!bounded(join(base,\"package.json\"),8388608).equals(manifestBytes)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-6",
+     "group": "closure",
+     "old": "{version:1,scopes:custody.scopes},bootstrap.scope)",
+     "new": "{version:1,scopes:custody.scopes},scope)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-7",
+     "group": "closure",
+     "old": "fast=await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "fast=await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-8",
+     "group": "closure",
+     "old": "confirmed=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "confirmed=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-9",
+     "group": "closure",
+     "old": "settled=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "settled=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-10",
+     "group": "closure",
+     "old": "if(!lstatSync(join(root,\"node_modules\")).isSymbolicLink())",
+     "new": "if(!lstatSync(join(base,\"node_modules\")).isSymbolicLink())",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-11",
+     "group": "closure",
+     "old": "const target=requireNativeStoragePathV1(store.root,realpathSync(join(root,\"node_modules\")))",
+     "new": "const target=requireNativeStoragePathV1(store.root,realpathSync(join(base,\"node_modules\")))",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-12",
+     "group": "closure",
+     "old": "if(binding.scope!==\".\"||binding.generation!==owner.receipts.find(row=>row.scope===\".\")?.generation",
+     "new": "if(binding.scope!==scope||binding.generation!==owner.receipts.find(row=>row.scope===scope)?.generation",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-13",
+     "group": "closure",
+     "old": "row.sourceDirectory===join(root,\"node_modules\")",
+     "new": "row.sourceDirectory===join(base,\"node_modules\")",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-14",
+     "group": "closure",
+     "old": "const require=createRequire(join(root,\"package.json\")),parsers=",
+     "new": "const require=createRequire(join(base,\"package.json\")),parsers=",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    },
+    {
+     "id": "closure-closure-15",
+     "group": "closure",
+     "old": "export function adoptedCandidateV1(status:\"published\"|\"present\"|\"deferred\"|\"stale\"|\"failed\"):boolean{return status===\"published\"||status===\"present\";}",
+     "new": "export function adoptedCandidateV1(status:\"published\"|\"present\"|\"deferred\"|\"stale\"|\"failed\"):boolean{return status===\"published\"||status===\"present\";}\n\n/** 🎛️ Reads the JavaScript install mode: the environment wins over the build policy; anything but `all` and `closure` is refused. */\nexport function javascriptInstallModeV1(environment:Readonly<Record<string,string|undefined>>):\"all\"|\"closure\"{const mode=environment.SEMIO_JS_INSTALL??buildPolicy.javascriptInstall??\"all\";if(mode!==\"all\"&&mode!==\"closure\")throw new Error(`Unknown JavaScript install mode: ${mode}`);return mode;}\n\n/** 📦️ Names the parser package, the only dependency scope the graph inference needs, as a workspace-relative path derived from this module's own location. */\nexport const buildParserScopeV1=(root:string):string=>relative(root,fileURLToPath(new URL(\"./📦️parsers\",import.meta.url))).split(sep).join(\"/\");\n\n/** 🏗️ Builds the dependency installer of one selection, with the same exclusive-hold recheck as the complete installer. */\nexport function javascriptInstallerV1(selection:JavascriptDependencyStoreSelectionV1):BuildEnvironmentInstallerV1{\n return async(root,original,phase,recheck)=>{\n  const {prepareJavascriptDependencies,withJavascriptDependencyStorageV1}=await import(\"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\");\n  checkResourceLeaseControl(phase);await withJavascriptDependencyStorageV1(root,original,phase,(store,control)=>installUnlessReadyV1(store,control,recheck,()=>prepareJavascriptDependencies(\"sync\",root,store,control,selection)).then(()=>undefined));checkResourceLeaseControl(phase);\n };\n}\n\n/** 🧭️ Plans the first JavaScript install of one run: a Bazel run in closure mode needs only the parser package before the graph exists; every other run keeps the complete install. */\nexport type BuildEnvironmentPlanV1=Readonly<{closure:boolean;scope?:string;install?:BuildEnvironmentInstallerV1}>;\n\n/** 🗺️ Chooses the bootstrap scope and installer for a tool and an install mode. */\nexport function buildEnvironmentPlanV1(root:string,tool:\"nx\"|\"bazel\",environment:Readonly<Record<string,string|undefined>>):BuildEnvironmentPlanV1{\n if(tool!==\"bazel\"||javascriptInstallModeV1(environment)!==\"closure\")return Object.freeze({closure:false});\n const scope=buildParserScopeV1(root);return Object.freeze({closure:true,scope,install:javascriptInstallerV1({kind:\"scope\",owner:scope})});\n}\n\n/** 🧮️ Maps project roots onto the deepest declared dependency scope that contains each of them; the workspace root and roots no member contains belong to the root scope `.`. */\nexport function javascriptScopeOwnersV1(scopes:readonly string[],roots:readonly string[]):string[]{\n const declared=[...new Set(scopes)].filter(scope=>scope!==\".\").sort((left,right)=>right.length-left.length||(left<right?-1:1)),owners=new Set<string>();\n for(const raw of roots){const path=raw.replaceAll(\"\\\\\",\"/\").replace(/^(?:\\.\\/)+/u,\"\").replace(/\\/+$/u,\"\");owners.add(declared.find(scope=>path===scope||path.startsWith(scope+\"/\"))??\".\");}\n return [...owners].sort();\n}\n\n/** 🪜️ Installs the owners of a planned task closure after the graph exists; a no-op unless closure mode is selected. */\nexport async function ensureBuildClosureScopesV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,projectRoots:()=>readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<readonly string[]>{\n if(javascriptInstallModeV1(environment)!==\"closure\")return [];\n requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);\n const manifest=JSON.parse(readFileSync(join(root,\"package.json\"),\"utf8\")) as {workspaces?:string[]},owners=javascriptScopeOwnersV1([\".\",...(manifest.workspaces??[])],[...projectRoots(),...buildPolicy.javascriptInstallRoots]);\n if(!owners.length)return owners;\n const {prepareJavascriptDependencies,withJavascriptDependencyStorageV1}=await import(\"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\");\n await withJavascriptDependencyStorageV1(root,invocation,phaseControl,(store,control)=>prepareJavascriptDependencies(\"sync\",root,store,control,{kind:\"scopes\",owners}));checkResourceLeaseControl(phaseControl);return owners;\n}\n",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🔣️.json",
+   "edits": [
+    {
+     "id": "closure-closure-1",
+     "group": "closure",
+     "old": "\"defaultTool\": {\n          \"$ref\": \"#/$defs/BuildTool\"\n        }\n      },\n      \"additionalProperties\": true",
+     "new": "\"defaultTool\": {\n          \"$ref\": \"#/$defs/BuildTool\"\n        },\n        \"javascriptInstall\": {\n          \"enum\": [\n            \"all\",\n            \"closure\"\n          ]\n        },\n        \"javascriptInstallRoots\": {\n          \"type\": \"array\",\n          \"uniqueItems\": true,\n          \"items\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          }\n        }\n      },\n      \"additionalProperties\": true",
+     "counts": [
+      1
+     ],
+     "source": "bzl-default closure"
+    }
+   ]
+  },
+  {
+   "path": "♻️mit-bestand/package.json",
+   "edits": [
+    {
+     "id": "parsers-member",
+     "group": "manifests",
+     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
+    }
+   ]
+  },
+  {
+   "path": "✏️s/package.json",
+   "edits": [
+    {
+     "id": "parsers-member",
+     "group": "manifests",
+     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
+    }
+   ]
+  },
+  {
+   "path": "🌎️hub/package.json",
+   "edits": [
+    {
+     "id": "parsers-member",
+     "group": "manifests",
+     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
+    }
+   ]
+  },
+  {
+   "path": "🎓️teaching/package.json",
+   "edits": [
+    {
+     "id": "parsers-member",
+     "group": "manifests",
+     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
+    }
+   ]
+  },
+  {
+   "path": "🏢️semio-tech/package.json",
+   "edits": [
+    {
+     "id": "parsers-member",
+     "group": "manifests",
+     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
+    }
+   ]
+  }
+ ],
+ "newFiles": [
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs"
+  },
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts"
+  },
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🔣️.json"
+  },
+  {
+   "group": "manifests",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/package.json"
+  }
+ ]
+}

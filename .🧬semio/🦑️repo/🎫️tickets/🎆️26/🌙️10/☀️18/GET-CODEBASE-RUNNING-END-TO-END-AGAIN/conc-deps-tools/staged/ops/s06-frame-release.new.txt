@@ -1,0 +1,1 @@
+for(const lease of [frame.gate,frame.build])if(lease)try{lease.release();}catch(error){retainedJavascriptDependencyStoreCustodyV1.add(lease);if(!failures.some(previous=>Object.is(previous,error)))failures.push(error);frame.stop.abort(error);}

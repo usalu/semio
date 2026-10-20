@@ -1,4 +1,5 @@
 import {requireResourceLeaseCustodyV1} from "../../🟦️.ts";
+import {testPythonV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import {testResourceLeaseConcurrencyV1} from "../⚔️concurrency/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
@@ -94,7 +95,7 @@ print("released", flush=True)
 `;
   const start = (row: ResourceLeaseParticipant): ResourceLeaseChild => {
     const database = join(directory, createHash("sha256").update(row.resource).digest("hex") + ".sqlite");
-    const args = row.runtime === "python" ? [Bun.which("python3") ?? Bun.which("python") ?? "python3", "-u", "-c", python, database, row.mode] : [row.runtime === "bun" ? process.execPath : "node", worker, directory, row.resource, row.mode,...(row.queuedOwner?[row.queuedOwner]:[])];
+    const args = row.runtime === "python" ? [testPythonV1() ?? Bun.which("python") ?? "python3", "-u", "-c", python, database, row.mode] : [row.runtime === "bun" ? process.execPath : "node", worker, directory, row.resource, row.mode,...(row.queuedOwner?[row.queuedOwner]:[])];
     const child = { process: Bun.spawn(args, { stdout: "pipe", stderr: "pipe", stdin: "pipe" }), output: "", errors: "", done: undefined as unknown as Promise<number> };
     const drain = async (stream: ReadableStream<Uint8Array>, key: "output" | "errors") => { for await (const chunk of stream) child[key] += Buffer.from(chunk).toString(); };
     child.done = Promise.all([drain(child.process.stdout, "output"), drain(child.process.stderr, "errors"), child.process.exited]).then(rows => rows[2]);

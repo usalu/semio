@@ -186,6 +186,9 @@ mod outcome_code_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs"]
 mod native_diff_contract_tests;
+#[cfg(test)]
+#[path = "🧪️tests/📦️unpublished-owner/🦀️.rs"]
+mod unpublished_owner_tests;
 
 mod owned_retirement {
     use super::*;

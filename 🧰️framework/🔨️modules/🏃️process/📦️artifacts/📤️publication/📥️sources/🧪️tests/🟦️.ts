@@ -1,3 +1,4 @@
+import {testScratchRootV1} from "../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
@@ -6,7 +7,7 @@ import{fstatSync,lstatSync}from"node:fs";
 import{join,resolve}from"node:path";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from"./🔣️.json";
-const root=resolve(process.cwd(),".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated");
+const root=testScratchRootV1("publication-sources");
 async function fixture(run:(directory:string)=>Promise<void>){await mkdir(root,{recursive:true});const directory=await mkdtemp(join(root,"sources-"));try{await run(directory);}finally{await rm(directory,{recursive:true,force:true});}}
 function heldIdentity(row:Readonly<{dev:number;ino:number}>){let count=0;for(let fd=0;fd<4096;fd++)try{const actual=fstatSync(fd);if(row.dev===actual.dev&&row.ino===actual.ino)count++;}catch{}return count;}
 function held(path:string){return heldIdentity(lstatSync(path));}

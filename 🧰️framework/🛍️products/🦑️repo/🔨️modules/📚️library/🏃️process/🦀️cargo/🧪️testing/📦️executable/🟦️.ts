@@ -5,14 +5,14 @@ import {dirname,join,resolve,relative,isAbsolute} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1} from "@semio-tech/process/compiler-capacity";
-import {runOwnedCommand} from "@semio-tech/process/execution";
-import {readBuildMode,buildModePolicy} from "@semio-tech/process/build-mode";
-import {acquireCargoBuildLeaseV1} from "@semio-tech/process/native-build";
-import {admitCargoSelectionV1} from "@semio-tech/process/artifacts/native-build/source/admission";
-import {pinExecutableArtifact} from "@semio-tech/process/artifact-publication";
-import {withResourceLeases,checkResourceLeaseControl} from "@semio-tech/process/leases";
-import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {readBuildMode,buildModePolicy} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {acquireCargoBuildLeaseV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {admitCargoSelectionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {pinExecutableArtifact} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import {withResourceLeases,checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../../📥️dependencies/🟦️.ts";
 
@@ -41,9 +41,9 @@ export async function runRepositoryCargoTestExecutableV1(value:CargoExecutableTe
  if(manifest.length>256)throw Error("Bounded Cargo test manifest required");
  await withRepositoryCompilerStoreV1(root,mode,control,scriptInvocationEnvironment(invocation,process.env),async (store,control)=>{
   for(let directory=dirname(manifest);;directory=dirname(directory)){const facts=lstatSync(directory);if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("Physical Cargo test manifest ancestry required");if(directory===root)break;}const manifestFacts=lstatSync(manifest);if(!manifestFacts.isFile()||manifestFacts.isSymbolicLink()||manifestFacts.nlink!==1||manifestFacts.size>store.sourceBoundary.maxSourceBytes)throw Error("Bounded physical Cargo test manifest required");
-  const args=["test","--manifest-path",manifest,"-p",request.package,"--test",request.test,"--no-run","--locked","--offline","--profile",buildModePolicy(mode).cargoProfile,"--message-format=json"];
+  const args=["test","--manifest-path",manifest,"-p",request.package,"--test",request.test,"--no-run","--locked","--profile",buildModePolicy(mode).cargoProfile,"--message-format=json"];
   await withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control,storage:store.storage,environment:store.environment},input=>withCompilerWorkspaceWriteV1(store.storage,leaseDirectory,input.control,async()=>{
-   const environment=input.environment,control=input.control,args=[...input.selections[0]!.arguments];
+   const environment={...input.environment,CARGO_NET_OFFLINE:schema.definitions.NetworkProtocol.const.compilerOfflineEnvironment},control=input.control,args=[...input.selections[0]!.arguments,schema.definitions.NetworkProtocol.const.compilerOfflineArgument];
    const capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:leaseDirectory,control,environment}),boundedEnvironment:Record<string,string|undefined>={...environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!boundedEnvironment.MAKEFLAGS&&!boundedEnvironment.CARGO_MAKEFLAGS)boundedEnvironment.CARGO_BUILD_JOBS=String(capacity.parallelism);
    try{await admitCargoSelectionV1({workspaceRoot:root,cwd:root,args,environment:boundedEnvironment,sourceBoundary:store.sourceBoundary,storage:store.storage},control);
    const lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:store.buildDirectory,targetDirectory:boundedEnvironment.CARGO_TARGET_DIR!,args,signal:control.signal,control});

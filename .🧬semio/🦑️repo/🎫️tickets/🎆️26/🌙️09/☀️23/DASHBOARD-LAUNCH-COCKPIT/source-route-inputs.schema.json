@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ticket/dashboard/source-route-inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "reviewOnly", "roster", "preserveRuntimeClosure", "preserveExistingDataInputs", "observationPolicy", "roots", "routes"],
+  "properties": {
+    "version": {"const": 1},
+    "reviewOnly": {"const": true},
+    "roster": {"const": "e2e-source-single-plan.json"},
+    "preserveRuntimeClosure": {"const": true},
+    "preserveExistingDataInputs": {"const": true},
+    "observationPolicy": {"const": "explicit-runtime-entry-and-separate-data-role-review"},
+    "roots": {"type": "object", "additionalProperties": false, "required": ["library", "value", "ui", "dashboard", "mcp", "cli", "osMcp", "sourceWorkspace", "process"], "properties": {"library": {"type": "string"}, "value": {"type": "string"}, "ui": {"type": "string"}, "dashboard": {"type": "string"}, "mcp": {"type": "string"}, "cli": {"type": "string"}, "osMcp": {"type": "string"}, "sourceWorkspace": {"type": "string"}, "process": {"type": "string"}}},
+    "routes": {"type": "array", "minItems": 26, "maxItems": 26, "items": {"type": "object", "additionalProperties": false, "required": ["index", "target", "typedCompiler", "action", "existingLiteralEntry", "entries", "data", "filter"], "properties": {"index": {"type": "integer", "minimum": 0, "maximum": 25}, "target": {"type": "string", "minLength": 3}, "typedCompiler": {"const": false}, "action": {"enum": ["bun-test", "direct-oracle", "direct-verifier"]}, "existingLiteralEntry": {"type": "boolean"}, "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}}, "data": {"type": "array", "items": {"$ref": "#/$defs/entry"}}, "filter": {"type": ["string", "null"]}}}}
+  },
+  "$defs": {"entry": {"type": "object", "additionalProperties": false, "required": ["base", "path"], "properties": {"base": {"enum": ["library", "value", "ui", "dashboard", "mcp", "cli", "osMcp", "sourceWorkspace", "process"]}, "path": {"type": "string", "minLength": 1, "pattern": "^(?!/).+"}}}}
+}

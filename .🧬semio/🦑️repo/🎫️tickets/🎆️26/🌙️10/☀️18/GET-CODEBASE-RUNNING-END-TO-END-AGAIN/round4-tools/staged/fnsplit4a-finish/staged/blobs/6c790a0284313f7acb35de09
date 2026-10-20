@@ -1,0 +1,162 @@
+/** 🔶️ The tokens phase of inspectRustNonRepoJoinBaseSpans. */
+import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
+import type { Binding } from "../🟢️shared/🟦️.ts";
+
+/** 🔷 Builds tokens, pairs, rows, literal of inspectRustNonRepoJoinBaseSpans. */
+export function buildTokensState({ source }: { readonly source: string }) {
+  // 🔓️ No whole-file unpaired-bracket bail (unlike the CARGO_MANIFEST_DIR provers): this function
+  // only ever SUPPRESSES a block, never emits a rewrite, and `inspectRustJoinArgumentSpans` — which
+  // shares this exact tokenizer/pairer and already runs unguarded on every file this feeds — proves
+  // the risk is contained; every match below still requires exact adjacent-token shape to fire.
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens);
+  const rows = new Set<number>();
+  const literal = (token: RustToken | undefined): token is RustToken & { readonly kind: "string" } => token?.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"') && !token.text.includes("\\");
+  const tokensEqual = (start: number, end: number, expected: readonly string[]): boolean => end - start === expected.length && expected.every((text, offset) => tokens[start + offset]?.text === text);
+  const matchCall = (cursor: number, segments: readonly string[]): { readonly openParen: number; readonly close: number } | null => {
+    let index = cursor;
+    if (tokens[index]?.text === "::") index++;
+    for (let step = 0; step < segments.length; step++) {
+      if (tokens[index]?.text !== segments[step]) return null;
+      index++;
+      if (step + 1 < segments.length) { if (tokens[index]?.text !== "::") return null; index++; }
+    }
+    if (tokens[index]?.text !== "(") return null;
+    const close = pairs.get(index);
+    return close === undefined ? null : { openParen: index, close };
+  };
+  /** 🧫️ Consumes a bounded whitelist of pass-through combinators that never smuggle a fresh,
+   * possibly-manifest-rooted value into the chain — only exact-matched fallbacks are trusted.
+   * `parent`/`to_path_buf`/`clone`/`as_path`/`to_owned` are included because each is a pure identity
+   * or ancestor-of-self operation on the SAME filesystem path: none of them can turn a path rooted
+   * outside the repo into one rooted inside it. `parent` in particular only ever walks UP the tree —
+   * a temp directory's ancestor is still under the same non-repo root, however many hops are taken —
+   * so it stays sound with no bound on repetition, unlike e.g. `join`, which is handled separately by
+   * the caller precisely because it CAN introduce a fresh, potentially manifest-relative segment. */
+  const passThroughSuffix = (start: number, end: number): number => {
+    let cursor = start;
+    while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 2]?.text === "(") {
+      const name = tokens[cursor + 1]?.text, close = pairs.get(cursor + 2);
+      if (close === undefined || close >= end) break;
+      const empty = close === cursor + 3;
+      if ((name === "unwrap" || name === "ok" || name === "next" || name === "unwrap_or_default" || name === "parent" || name === "to_path_buf" || name === "clone" || name === "as_path" || name === "to_owned") && empty) { cursor = close + 1; continue; }
+      if ((name === "expect" || name === "nth" || name === "skip") && close > cursor + 2) { cursor = close + 1; continue; }
+      if (name === "unwrap_or_else" && (tokensEqual(cursor + 3, close, ["std", "::", "env", "::", "temp_dir"]) || tokensEqual(cursor + 3, close, ["env", "::", "temp_dir"]))) { cursor = close + 1; continue; }
+      if (name === "map" && (tokensEqual(cursor + 3, close, ["PathBuf", "::", "from"]) || tokensEqual(cursor + 3, close, ["std", "::", "path", "::", "PathBuf", "::", "from"]))) { cursor = close + 1; continue; }
+      break;
+    }
+    return cursor;
+  };
+  const helperCache = new Map<string, boolean>(), helperInProgress = new Set<string>();
+  let functionDeclarations: Map<string, number[]> | undefined;
+  /** 🪜️ One bounded hop into a same-file free function's own tail expression. Bails (never proves) on
+   * anything but exactly one textual `fn NAME` match, keeping this sound without call-site tracing. */
+  const helperReturnsNonRepo = (name: string, depth: number): boolean => {
+    if (helperCache.has(name)) return helperCache.get(name)!;
+    if (helperInProgress.has(name)) return false;
+    helperInProgress.add(name);
+    let result = false;
+    if (!functionDeclarations) {
+      functionDeclarations = new Map();
+      for (let index = 0; index + 1 < tokens.length; index++) if (tokens[index]!.text === "fn") {
+        const declared = tokens[index + 1]!.text, rows = functionDeclarations.get(declared);
+        if (rows) rows.push(index);
+        else functionDeclarations.set(declared, [index]);
+      }
+    }
+    const matches = functionDeclarations.get(name) ?? [];
+    if (matches.length === 1) {
+      const cursor = matches[0]! + 2, paramsClose = tokens[cursor]?.text === "(" ? pairs.get(cursor) : undefined;
+      const braceStart = paramsClose === undefined ? -1 : rustFindTopLevel(tokens, pairs, paramsClose + 1, tokens.length, new Set(["{", ";"]));
+      const braceEnd = braceStart >= 0 && tokens[braceStart]?.text === "{" ? pairs.get(braceStart) : undefined;
+      if (braceEnd !== undefined) result = bodyReturnsNonRepo(braceStart + 1, braceEnd, depth);
+    }
+    helperInProgress.delete(name);
+    helperCache.set(name, result);
+    return result;
+  };
+  /** 🌱️ Recognizes one non-repo root/base expression starting at `cursor`, returning the index just
+   * past it (before any `.join()` chain), or null if unrecognized — callers must then still block. */
+  const rootEnd = (cursor: number, end: number, bindings: ReadonlyMap<string, Binding>, depth: number): number | null => {
+    if (tokens[cursor]?.text === "(") {
+      const close = pairs.get(cursor);
+      if (close === undefined || close >= end) return null;
+      const inner = rootEnd(cursor + 1, close, bindings, depth);
+      return inner === close ? close + 1 : null;
+    }
+    if (tokens[cursor]?.kind === "identifier" && tokens[cursor + 1]?.text !== "::" && bindings.get(tokens[cursor]!.text)?.kind === "nonrepo") return passThroughSuffix(cursor + 1, end);
+    for (const segments of [["std", "env", "temp_dir"], ["env", "temp_dir"], ["std", "env", "args"], ["env", "args"]]) {
+      const call = matchCall(cursor, segments);
+      if (call && call.close === call.openParen + 1) return passThroughSuffix(call.close + 1, end);
+    }
+    // 🧪️ `<any path>::test_support::tempdir()` — a project-owned wrapper, uniquely defined once
+    // (🏪️store/🦀️.rs `pub fn tempdir()`) as `std::env::temp_dir().join(...)`, called via
+    // varying aliases/qualifiers (`store::test_support::tempdir()`, `crate::os_store::test_support
+    // ::tempdir()`, …). Matched by SUFFIX so any qualifying prefix path is accepted, but a BARE
+    // `tempdir()` with no `test_support::` qualifier ahead of it is never trusted.
+    if (tokens[cursor]?.kind === "identifier") {
+      let suffixCursor = cursor;
+      while (tokens[suffixCursor]?.kind === "identifier" && tokens[suffixCursor + 1]?.text === "::") suffixCursor += 2;
+      if (suffixCursor > cursor && tokens[suffixCursor - 2]?.text === "test_support" && tokens[suffixCursor]?.text === "tempdir" && tokens[suffixCursor + 1]?.text === "(") {
+        const close = pairs.get(suffixCursor + 1);
+        if (close === suffixCursor + 2) return passThroughSuffix(close + 1, end);
+      }
+    }
+    for (const segments of [["std", "env", "var"], ["env", "var"], ["std", "env", "var_os"], ["env", "var_os"]]) {
+      const call = matchCall(cursor, segments);
+      if (call && call.close > call.openParen) return passThroughSuffix(call.close + 1, end);
+    }
+    for (const segments of [["std", "fs", "canonicalize"], ["fs", "canonicalize"]]) {
+      const call = matchCall(cursor, segments);
+      if (call && rootEnd(call.openParen + 1, call.close, bindings, depth) === call.close) return passThroughSuffix(call.close + 1, end);
+    }
+    for (const segments of [["Path", "new"], ["std", "path", "Path", "new"], ["PathBuf", "from"], ["std", "path", "PathBuf", "from"]]) {
+      const call = matchCall(cursor, segments);
+      if (call && rootEnd(call.openParen + 1, call.close, bindings, depth) === call.close) return passThroughSuffix(call.close + 1, end);
+    }
+    if (depth > 0 && tokens[cursor]?.kind === "identifier" && tokens[cursor + 1]?.text === "(") {
+      const close = pairs.get(cursor + 1);
+      if (close !== undefined && close < end && helperReturnsNonRepo(tokens[cursor]!.text, depth - 1)) return passThroughSuffix(close + 1, end);
+    }
+    return null;
+  };
+  /** 🔗️ Walks a maximal run of `.join(...)` calls off an already-proven non-repo root, recording only
+   * bare string-literal arguments — non-literal steps don't break the chain's proven status. */
+  const walkJoinChain = (start: number, end: number): number => {
+    let cursor = start;
+    while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 1]?.text === "join" && tokens[cursor + 2]?.text === "(") {
+      const close = pairs.get(cursor + 2);
+      if (close === undefined || close >= end) break;
+      if (close === cursor + 4 && literal(tokens[cursor + 3])) rows.add(tokens[cursor + 3]!.start + 1);
+      cursor = close + 1;
+    }
+    return cursor;
+  };
+  /** 🧮️ Sequentially threads `let` bindings through one function body's statements, then classifies
+   * only whether its tail (implicit-return) expression's root is proven non-repo — no row recording,
+   * since the outer `visit` below independently walks this exact same body for its own literal joins. */
+  const bodyReturnsNonRepo = (start: number, end: number, depth: number): boolean => {
+    const bindings = new Map<string, Binding>();
+    const segments = rustTokenSegments(tokens, pairs, start, end, ";");
+    const hasTrailingSemicolon = end > start && tokens[end - 1]?.text === ";";
+    for (let index = 0; index < segments.length; index++) {
+      const [segStart, segEnd] = segments[index]!, isTail = index === segments.length - 1 && !hasTrailingSemicolon;
+      if (!isTail) {
+        if (tokens[segStart]?.text === "let") {
+          const equal = rustFindTopLevel(tokens, pairs, segStart + 1, segEnd, new Set(["="]));
+          const nameIndex = tokens[segStart + 1]?.text === "mut" ? segStart + 2 : segStart + 1, nameToken = tokens[nameIndex];
+          if (equal >= 0 && nameToken?.kind === "identifier" && nameIndex + 1 === equal) {
+            // 🌓️ Evaluate the RHS BEFORE deleting the old binding: `let x = f(x)` (re-binding
+            // shadowing, e.g. `PathBuf::from(out_dir)`) must still see the prior `x`.
+            const proven = rootEnd(equal + 1, segEnd, bindings, depth) !== null;
+            bindings.delete(nameToken.text);
+            if (proven) bindings.set(nameToken.text, { kind: "nonrepo" });
+          }
+        }
+        continue;
+      }
+      return rootEnd(segStart, segEnd, bindings, depth) !== null;
+    }
+    return false;
+  };
+  return { tokens, pairs, rootEnd, literal, walkJoinChain, rows };
+}

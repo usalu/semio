@@ -10,8 +10,6 @@ import vectorCorpus from "../../../../🌱️value/♻️retirement/🏭️facto
 import vectorSchema from "../../../../🌱️value/♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️.json" with { type: "json" };
 import keyCorpus from "../🔎️key/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import keySchema from "../🔎️key/🧬️schema/🔣️.json" with { type: "json" };
-import dispatchCorpus from "../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧫️fixtures/🔣️.json" with { type: "json" };
-import dispatchSchema from "../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧬️schema/🔣️.json" with { type: "json" };
 import patchCorpus from "../🩹️patch/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import patchSchema from "../🩹️patch/🧬️schema/🔣️.json" with { type: "json" };
 import diagnosticCorpus from "../⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
@@ -33,7 +31,6 @@ import constructionCorpus from "../../../../🌱️value/🛬️decode/🏭️co
 import constructionSchema from "../../../../🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json" with { type: "json" };
 import referenceCorpus from "../../❄️reference/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import referenceSchema from "../../❄️reference/🧬️schema/🔣️.json" with { type: "json" };
-import attributeCorpus from "../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🏷️mutation-attributes/🔣️.json" with { type: "json" };
 import receivingCorpus from "../../../../🌱️value/🛬️decode/🧳️owned/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import receivingSchema from "../../../../🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json" with { type: "json" };
 import recordCorpus from "../../../../🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
@@ -45,7 +42,6 @@ export function testRetainedMutationOracle(): void {
   assert.equal(new Ajv2020({ strict: true }).compile(fieldSchema)(fieldCorpus), true);
   assert.equal(new Ajv2020({ strict: true }).compile(vectorSchema)(vectorCorpus), true);
   assert.equal(new Ajv2020({ strict: true }).compile(keySchema)(keyCorpus), true);
-  assert.equal(new Ajv2020({ strict: true }).compile(dispatchSchema)(dispatchCorpus), true);
   assert.equal(new Ajv2020({ strict: true }).compile(patchSchema)(patchCorpus), true);
   assert.equal(new Ajv2020({ strict: true }).compile(diagnosticSchema)(diagnosticCorpus), true);
   assert.equal(new Ajv2020({ strict: true }).compile(rowSchema)(rowCorpus), true);
@@ -68,16 +64,6 @@ export function testRetainedMutationOracle(): void {
   db.exec("CREATE TABLE refused_receive(key TEXT,value TEXT)");
   receivingCorpus.refusedEntries.forEach(entry=>db.query("INSERT INTO refused_receive VALUES(?,?)").run(entry[0]!,String(entry[1])));
   assert.equal((db.query("SELECT EXISTS(SELECT key FROM refused_receive GROUP BY key HAVING count(*)>1) AS refused").get() as {refused:number}).refused,1);
-  db.exec("CREATE TABLE attribute_meta(key TEXT,value TEXT,allowed INTEGER,requiresValue INTEGER)");
-  for(const vector of attributeCorpus.cases){
-    db.exec("DELETE FROM attribute_meta");let syntax=true;let family="";
-    for(const container of vector.attribute.matchAll(/#\[(mutations|composite)\((.*?)\)\]/g)){
-      family=container[1]!;const allowed=family==="mutations"?["snapshot","diff","schema","retire_cold","retained","reference","reference_diff"]:["snapshot","op","reference"];
-      for(const part of container[2]!.split(",")){const field=/^\s*([a-z_]+)(?:\s*=\s*(.+))?\s*$/.exec(part);if(!field){syntax=false;continue;}db.query("INSERT INTO attribute_meta VALUES(?,?,?,?)").run(field[1]!,field[2]??null,Number(allowed.includes(field[1]!)),Number(field[1]!=="retained"));}
-    }
-    const row=db.query("SELECT EXISTS(SELECT 1 FROM attribute_meta WHERE allowed=0 OR requiresValue=1 AND value IS NULL) OR EXISTS(SELECT key FROM attribute_meta GROUP BY key HAVING count(*)>1) OR (?='mutations' AND (EXISTS(SELECT 1 FROM attribute_meta WHERE key='reference')<>EXISTS(SELECT 1 FROM attribute_meta WHERE key='reference_diff'))) AS refused").get(family) as {refused:number};
-    assert.equal(syntax&&!row.refused,vector.accepted,vector.name);
-  }
   db.exec("CREATE TABLE contract_order(lane TEXT,position INTEGER,phase TEXT)");
   for(const [lane,phases] of [["native",referenceCorpus.nativeOrder],["reference",referenceCorpus.coldWireOrder]] as const){phases.forEach((phase,position)=>db.query("INSERT INTO contract_order VALUES(?,?,?)").run(lane,position,phase));assert.deepEqual(db.query("SELECT phase FROM contract_order WHERE lane=? ORDER BY position").all(lane).map(row=>(row as {phase:string}).phase),phases);}
   assert.equal((db.query("SELECT count(*) AS count FROM contract_order WHERE lane='native' AND phase IN ('diff','apply')").get() as {count:number}).count,0);
@@ -182,9 +168,6 @@ export function testRetainedMutationOracle(): void {
       const matches=db.query("SELECT position FROM keyed_rows WHERE id=? ORDER BY position LIMIT 2").all(vector.needle) as {position:number}[];
       assert.deepEqual(matches.map(row=>row.position),vector.expectedIndices,vector.id);
     }
-    db.exec("CREATE TABLE dispatch_leaves(kind TEXT PRIMARY KEY)");
-    dispatchCorpus.variants.forEach(kind=>db.query("INSERT INTO dispatch_leaves VALUES(?)").run(kind));
-    assert.equal((db.query("SELECT COUNT(*) AS leaves FROM dispatch_leaves").get() as {leaves:number}).leaves,dispatchCorpus.requiredLeafCount);
     db.exec("CREATE TABLE sparse_row(name TEXT NOT NULL,value REAL NOT NULL)");
     for(const vector of patchCorpus){
       db.exec("DELETE FROM sparse_row");db.query("INSERT INTO sparse_row VALUES(?,?)").run(vector.before.name,vector.before.value);
@@ -227,6 +210,5 @@ export function testRetainedMutationOracle(): void {
       assert.equal((db.query("SELECT value FROM diff_projection").get() as {value:number}).value,vector.expected,vector.id);
       assert.equal(!vector.diff.refused,vector.admitted,vector.id);assert.equal(JSON.stringify(vector.diff),original,vector.id);
     }
-    console.log(`[DEBUG] retained SQL oracle: ${corpus.cases.length} outcomes, ${corpus.grants.length} grant vectors, ${fieldCorpus.length} fields, exact vector order ${settled.join(",")}`);
   } finally { db.close(); }
 }

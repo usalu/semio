@@ -450,13 +450,15 @@
       "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
       "target": "build-cli",
       "scope": "binary",
-      "binary": "semio-repo"
+      "binary": "repo"
     },
     {
       "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
       "target": "compile",
       "scope": "binary",
-      "binary": "semio"
+      "binary": "semio",
+      "cacheClass": "driver-owned",
+      "cacheReason": "freshness-owned-by-driver"
     }
   ],
   "fallbackTarget": {

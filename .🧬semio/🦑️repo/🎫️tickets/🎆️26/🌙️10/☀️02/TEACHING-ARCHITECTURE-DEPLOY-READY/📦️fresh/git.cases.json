@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "exact-host-and-retained",
+      "accepted": true
+    },
+    {
+      "id": "host-index-changed",
+      "accepted": false
+    },
+    {
+      "id": "host-head-changed",
+      "accepted": false
+    },
+    {
+      "id": "retained-file-changed",
+      "accepted": false
+    },
+    {
+      "id": "host-identity-changed",
+      "accepted": false
+    },
+    {
+      "id": "source-blob-inclusion",
+      "accepted": false
+    }
+  ],
+  "files": [
+    {
+      "path": ".git/HEAD",
+      "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+    },
+    {
+      "path": ".git/index",
+      "body": "neutral-index"
+    },
+    {
+      "path": ".git/config",
+      "body": "private-operational-config"
+    },
+    {
+      "path": ".git/objects/pack/pack-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.pack",
+      "body": "neutral-pack"
+    },
+    {
+      "path": ".git/objects/pack/pack-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.idx",
+      "body": "neutral-index-pack"
+    }
+  ],
+  "archive": [
+    {
+      "id": "metadata-pax-last-manifest",
+      "accepted": true
+    },
+    {
+      "id": "retained-changed-before-archive",
+      "accepted": false
+    },
+    {
+      "id": "host-changed-during-archive",
+      "accepted": false
+    }
+  ]
+}

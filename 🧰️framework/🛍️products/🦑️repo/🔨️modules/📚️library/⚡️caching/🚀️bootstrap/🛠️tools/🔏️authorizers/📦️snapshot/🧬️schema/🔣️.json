@@ -45,5 +45,39 @@
         }
       }
     }
+  },
+  "$defs": {
+    "EntryRole": {
+      "enum": [
+        "module",
+        "program"
+      ]
+    },
+    "EntryRoleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "entryMain",
+        "importedMain"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "role": {
+          "$ref": "#/$defs/EntryRole"
+        },
+        "entryMain": {
+          "type": "boolean"
+        },
+        "importedMain": {
+          "const": false
+        }
+      }
+    }
   }
 }

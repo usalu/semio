@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
-import { declaredNames, hostPrivate } from "../🧪️test-closure/🟦️.ts";
+import { declaredNames, hostPrivate } from "../🧪️test-closure/🟢️shared/🟦️.ts";
 
 /** 🧩️ One module declaration of a crate, reached through the root file and every mounted file. */
 export type ModuleDecl = {

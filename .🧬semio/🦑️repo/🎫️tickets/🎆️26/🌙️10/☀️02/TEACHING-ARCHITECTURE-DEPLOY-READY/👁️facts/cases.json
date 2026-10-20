@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "closed-plan",
+      "group": "plan",
+      "accepted": true
+    },
+    {
+      "id": "unknown-field",
+      "group": "plan",
+      "accepted": false
+    },
+    {
+      "id": "wrong-caddy",
+      "group": "plan",
+      "accepted": false
+    },
+    {
+      "id": "complete-observation",
+      "group": "observation",
+      "accepted": true
+    },
+    {
+      "id": "wrong-plan-hash",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "terminal-not-zero",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "wrong-cohort",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "wrong-engine",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "wrong-created",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "wrong-token",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "extra-mount",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "raw-log-size",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "raw-log-hash",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "missing-build-id",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "repeated-same-build-id",
+      "group": "observation",
+      "accepted": true
+    },
+    {
+      "id": "different-build-id",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "tag-rebound-before",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "tag-rebound-after",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "image-config-changed",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image-platform",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "missing-caddy-digest",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "caddy-rebound",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "custody-changed-after",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "cancelled",
+      "group": "observation",
+      "accepted": false
+    },
+    {
+      "id": "guest-raw-bytes",
+      "group": "guest",
+      "accepted": true
+    },
+    {
+      "id": "guest-owner-mismatch",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-terminal-mismatch",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-log-symlink",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-log-hardlink",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-log-length",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-log-mutation",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "guest-partial-stdout",
+      "group": "guest",
+      "accepted": true
+    },
+    {
+      "id": "guest-metadata-growth",
+      "group": "guest",
+      "accepted": false
+    },
+    {
+      "id": "cancel-at-publication",
+      "group": "observation",
+      "accepted": false
+    }
+  ]
+}

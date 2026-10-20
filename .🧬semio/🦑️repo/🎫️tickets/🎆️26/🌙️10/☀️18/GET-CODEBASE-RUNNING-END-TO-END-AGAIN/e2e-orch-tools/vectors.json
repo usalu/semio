@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "summary": [
+    { "line": "INFO: 1 process: 1 internal.", "processes": 1, "internal": 1, "cacheHits": 0, "spawns": 0 },
+    { "line": "INFO: 2 processes: 1 disk cache hit, 1 internal.", "processes": 2, "internal": 1, "cacheHits": 1, "spawns": 0 },
+    { "line": "INFO: 13 processes: 6 disk cache hit, 5 internal, 2 darwin-sandbox.", "processes": 13, "internal": 5, "cacheHits": 6, "spawns": 2 },
+    { "line": "[bazel] INFO: 3 processes: 1 remote cache hit, 2 local.", "processes": 3, "internal": 0, "cacheHits": 1, "spawns": 2 },
+    { "line": "\u001b[32mINFO: \u001b[0m107 processes: 72 disk cache hit, 35 local.", "processes": 107, "internal": 0, "cacheHits": 72, "spawns": 35 },
+    { "line": "INFO: 4 processes: 2 linux-sandbox, 1 worker, 1 internal.", "processes": 4, "internal": 1, "cacheHits": 0, "spawns": 3 },
+    { "line": "INFO: Build completed successfully, 1 total action", "none": true },
+    { "line": "Elapsed time: 3.2s, Critical Path: 0.01s", "none": true }
+  ],
+  "verdict": [
+    { "name": "cold-ok", "phase": "cold", "rc": 0, "tests": {}, "status": "PASS" },
+    { "name": "cold-fail", "phase": "cold", "rc": 2, "tests": {}, "status": "FAIL" },
+    { "name": "e2e-test-failed", "phase": "e2e", "rc": 0, "tests": { "failed": 1, "passed": 10 }, "status": "FAIL" },
+    { "name": "warm-zero-hit", "phase": "warm", "mode": "zero", "allow": 0, "rc": 0, "spawns": 0, "summaries": 1, "seconds": 20, "maxSeconds": 600, "slack": 0, "status": "PASS" },
+    { "name": "warm-zero-spawn", "phase": "warm", "mode": "zero", "allow": 0, "rc": 0, "spawns": 1, "summaries": 1, "seconds": 20, "maxSeconds": 600, "slack": 0, "status": "FAIL" },
+    { "name": "warm-allow-two", "phase": "warm", "mode": "allow", "allow": 2, "rc": 0, "spawns": 2, "summaries": 3, "seconds": 20, "maxSeconds": 900, "slack": 0, "status": "PASS" },
+    { "name": "warm-allow-three", "phase": "warm", "mode": "allow", "allow": 2, "rc": 0, "spawns": 3, "summaries": 3, "seconds": 20, "maxSeconds": 900, "slack": 0, "status": "FAIL" },
+    { "name": "warm-allow-slack", "phase": "warm", "mode": "allow", "allow": 2, "rc": 0, "spawns": 3, "summaries": 3, "seconds": 20, "maxSeconds": 900, "slack": 1, "status": "PASS" },
+    { "name": "warm-slow", "phase": "warm", "mode": "zero", "allow": 0, "rc": 0, "spawns": 0, "summaries": 1, "seconds": 700, "maxSeconds": 600, "slack": 0, "status": "WARN" },
+    { "name": "warm-no-evidence", "phase": "warm", "mode": "zero", "allow": 0, "rc": 0, "spawns": 0, "summaries": 0, "seconds": 5, "maxSeconds": 600, "slack": 0, "status": "WARN" },
+    { "name": "warm-rc", "phase": "warm", "mode": "zero", "allow": 0, "rc": 1, "spawns": 0, "summaries": 1, "seconds": 5, "maxSeconds": 600, "slack": 0, "status": "FAIL" },
+    { "name": "warm-skip", "phase": "warm", "mode": "skip", "allow": 0, "rc": 0, "spawns": 9, "summaries": 1, "seconds": 5, "maxSeconds": 600, "slack": 0, "status": "PASS" }
+  ],
+  "slots": [
+    { "line": "[bazel] session slot s1: fresh server", "slots": ["s1"] },
+    { "line": "[bazel] session slot d0: warm server and package", "slots": ["d0"] },
+    { "line": "nothing to see", "slots": [] }
+  ],
+  "waits": [
+    { "line": "[bazel] all 3 Bazel server slots are in use; waiting for one (12 s)", "wait": true },
+    { "line": "Waiting for access to repo:compiler-writer:x (exclusive): position 2 of 3", "wait": true },
+    { "line": "[bazel] session slot s0: warm server", "wait": false }
+  ],
+  "slotsFor": [
+    { "memoryMb": 32768, "cores": 10, "slots": 3 },
+    { "memoryMb": 16384, "cores": 8, "slots": 1 },
+    { "memoryMb": 131072, "cores": 32, "slots": 6 },
+    { "memoryMb": 65536, "cores": 4, "slots": 2 }
+  ],
+  "delta": {
+    "before": "builds: 3\nactions: 100\nexecuted: 40\nlabel only\n",
+    "after": "builds: 5\nactions: 150\nexecuted: 40\nlabel only\ncacheHits = 7\n",
+    "rows": [["actions", 100, 150, 50], ["builds", 3, 5, 2], ["cacheHits", 0, 7, 7]]
+  }
+}

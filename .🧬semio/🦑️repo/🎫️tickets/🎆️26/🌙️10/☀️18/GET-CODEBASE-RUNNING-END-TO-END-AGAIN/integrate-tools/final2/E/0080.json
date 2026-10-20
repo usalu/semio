@@ -1,0 +1,591 @@
+{
+  "name": "@semio-tech/repo-dashboard-rs",
+  "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  },
+  "targets": {
+    "test-dispatch": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test dispatch"
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {"verb":"test","title":{"en":"Check Test Dispatch","de":"Testauswahl prüfen"},"description":{"en":"Verify developer test dispatch and exact Rust law ownership through the Source tests.","de":"Entwicklertestauswahl und exakte Rust-Testzuständigkeit durch Source-Tests prüfen."},"parameters":[]},
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-source-freshness": {
+      "executor": "repo:script",
+      "inputs": ["default", "reads", "testEnv"],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test source-freshness"
+      },
+      "metadata": {
+        "semio": {
+          "execution": { "version": 1, "kind": "source" },
+          "dashboard": {
+            "title": { "en": "Dashboard source freshness", "de": "Dashboard-Quellaktualität" },
+            "description": { "en": "Verify exact Cargo workspace inputs and source changes without building the native dashboard.", "de": "Exakte Cargo-Workspace-Eingaben und Quelländerungen ohne nativen Dashboard-Build prüfen." }
+          }
+        }
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      },
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-authority": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test authority"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-execution": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test execution"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-process-deadline": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default", "testEnv", "reads", "cargoToolchain"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test process-deadline"
+      },
+      "metadata": { "semio": { "dashboard": { "title": { "en": "Process time limits", "de": "Prozesszeitlimits" }, "description": { "en": "Verify selected deadlines with real supervised processes and localized timeout states.", "de": "Ausgewählte Zeitlimits mit echten überwachten Prozessen und übersetzten Ablaufzuständen prüfen." } }, "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" } } }
+    },
+    "test-unit": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test unit"
+      },
+      "cache": true
+    },
+    "test-quick": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-long": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-exhaustive": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-coverage": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test coverage"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-journeys": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test journeys"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-windows": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test windows"
+      },
+      "cache": true
+    },
+    "test-load": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test load"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-smoke": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test smoke"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "run": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "repo-implementation",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "rust",
+                    "env": {
+                      "SEMIO_REPO_IMPLEMENTATION": "rust"
+                    }
+                  },
+                  {
+                    "id": "go",
+                    "env": {
+                      "SEMIO_REPO_IMPLEMENTATION": "go",
+                      "GOWORK": "{workspace}/go.work"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "build"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts run",
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
+        }
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "daemon": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "action",
+                "kind": "choice",
+                "default": "status",
+                "values": [
+                  {
+                    "id": "start",
+                    "args": [
+                      "start"
+                    ]
+                  },
+                  {
+                    "id": "stop",
+                    "args": [
+                      "stop"
+                    ]
+                  },
+                  {
+                    "id": "status",
+                    "args": [
+                      "status"
+                    ]
+                  },
+                  {
+                    "id": "attach",
+                    "args": [
+                      "attach"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "build"
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts daemon",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "install": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts install"
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "build"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "preferences": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "action",
+                "kind": "choice",
+                "default": "show",
+                "values": [
+                  {
+                    "id": "show",
+                    "args": [
+                      "show"
+                    ]
+                  },
+                  {
+                    "id": "set",
+                    "args": [
+                      "set"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "build"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preferences",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "compile": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts compile"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-dashboard",
+            "scope": "binary",
+            "binary": "semio",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "build-script-run"
+              ]
+            }
+          },
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      }
+    }
+  }
+}

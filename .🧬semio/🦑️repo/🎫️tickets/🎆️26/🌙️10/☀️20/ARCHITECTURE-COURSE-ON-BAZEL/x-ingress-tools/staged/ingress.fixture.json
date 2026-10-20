@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "confirm": [
+  {"id": "replay-match-skips-the-second-walk", "replay": {"status": "match", "sha256": "aaaaaaaa"}, "walk": "bbbbbbbb", "expect": {"via": "replay", "sha256": "aaaaaaaa", "walks": 0}},
+  {"id": "deferred-replay-walks-once", "replay": {"status": "deferred", "reason": "membership-directory-moved"}, "walk": "bbbbbbbb", "expect": {"via": "walk", "sha256": "bbbbbbbb", "walks": 1}},
+  {"id": "mismatched-replay-walks-once", "replay": {"status": "mismatch", "class": "input-changed"}, "walk": "cccccccc", "expect": {"via": "walk", "sha256": "cccccccc", "walks": 1}},
+  {"id": "seal-mismatch-walks-once", "replay": {"status": "mismatch", "class": "seal"}, "walk": "dddddddd", "expect": {"via": "walk", "sha256": "dddddddd", "walks": 1}}
+ ],
+ "publish": [
+  {"id": "published-is-silent-to-the-caller", "attempt": {"returns": "published"}, "aborted": false, "expect": {"result": "published", "reports": ["published"], "rethrows": false}},
+  {"id": "busy-never-waits", "attempt": {"returns": "busy"}, "aborted": false, "expect": {"result": "busy", "reports": ["busy"], "rethrows": false}},
+  {"id": "deferred-is-an-outcome", "attempt": {"returns": "deferred"}, "aborted": false, "expect": {"result": "deferred", "reports": ["deferred"], "rethrows": false}},
+  {"id": "failure-is-swallowed-and-reported", "attempt": {"throws": "disk full"}, "aborted": false, "expect": {"result": "error", "reports": ["error:disk full"], "rethrows": false}},
+  {"id": "cancellation-propagates", "attempt": {"throws": "aborted"}, "aborted": true, "expect": {"result": null, "reports": [], "rethrows": true}}
+ ],
+ "writer": [
+  {"id": "free-lease-runs-the-body-and-releases", "lease": "free", "body": "published", "aborted": false, "expect": "published", "released": true},
+  {"id": "held-lease-is-busy-without-body", "lease": "timeout", "body": "published", "aborted": false, "expect": "busy", "released": false},
+  {"id": "cancelled-acquire-propagates", "lease": "timeout", "body": "published", "aborted": true, "expect": "rethrow", "released": false},
+  {"id": "foreign-acquire-failure-propagates", "lease": "other", "body": "published", "aborted": false, "expect": "rethrow", "released": false},
+  {"id": "failing-body-still-releases", "lease": "free", "body": "throw", "aborted": false, "expect": "rethrow", "released": true}
+ ],
+ "files": {"sizes": [0, 1, 65535, 65536, 65537, 300000, 5000000], "chunkCeiling": 65536}
+}

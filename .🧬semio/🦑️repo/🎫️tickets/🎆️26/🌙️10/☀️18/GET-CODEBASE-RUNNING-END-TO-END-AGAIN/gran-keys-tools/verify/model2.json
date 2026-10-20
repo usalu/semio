@@ -1,0 +1,232 @@
+{
+ "workspaces": 240,
+ "crates": 3374,
+ "totalTargets": 12134,
+ "scenarios": [
+  {
+   "id": "root-members",
+   "description": "root Cargo.toml: append one member to [workspace].members (a new crate is added)",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 0,
+   "afterTargets": 0,
+   "toolChanged": false
+  },
+  {
+   "id": "root-comment",
+   "description": "root Cargo.toml: comment-only edit (no parsed difference)",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 0,
+   "afterTargets": 0,
+   "toolChanged": false
+  },
+  {
+   "id": "root-dep-busy",
+   "description": "root Cargo.toml: edit [workspace.dependencies].semio-framework-job (used by 235 root crates)",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 2606,
+   "afterTargets": 9315,
+   "toolChanged": false
+  },
+  {
+   "id": "root-dep-median",
+   "description": "root Cargo.toml: edit [workspace.dependencies].semio-framework-hash (used by 9 root crates)",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 2590,
+   "afterTargets": 9249,
+   "toolChanged": false
+  },
+  {
+   "id": "root-dep-rare",
+   "description": "root Cargo.toml: edit [workspace.dependencies].semio-framework-course (used by 1 root crate)",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 1,
+   "afterTargets": 3,
+   "toolChanged": false
+  },
+  {
+   "id": "root-lints",
+   "description": "root Cargo.toml: edit [workspace.lints]",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 2740,
+   "afterTargets": 9794,
+   "toolChanged": false
+  },
+  {
+   "id": "root-package",
+   "description": "root Cargo.toml: edit [workspace.package].rust-version",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 2724,
+   "afterTargets": 9716,
+   "toolChanged": false
+  },
+  {
+   "id": "root-profile",
+   "description": "root Cargo.toml: add a [profile.dev] table",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 2788,
+   "afterTargets": 9940,
+   "toolChanged": false
+  },
+  {
+   "id": "framework-lints",
+   "description": "nested 🧰️framework/Cargo.toml: edit [workspace.lints] (not in any key today)",
+   "beforeCrates": 0,
+   "beforeTargets": 0,
+   "afterCrates": 3258,
+   "afterTargets": 11745,
+   "toolChanged": false
+  },
+  {
+   "id": "framework-dep",
+   "description": "nested 🧰️framework/Cargo.toml: edit one [workspace.dependencies] entry (not in any key today)",
+   "beforeCrates": 0,
+   "beforeTargets": 0,
+   "afterCrates": 2274,
+   "afterTargets": 8098,
+   "toolChanged": false
+  },
+  {
+   "id": "config-comment",
+   "description": ".cargo/config.toml: comment-only edit",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 0,
+   "afterTargets": 0,
+   "toolChanged": false
+  },
+  {
+   "id": "config-target-dir",
+   "description": ".cargo/config.toml: edit [build].target-dir only",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 0,
+   "afterTargets": 0,
+   "toolChanged": false
+  },
+  {
+   "id": "config-flags",
+   "description": ".cargo/config.toml: edit [build].rustflags",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 3374,
+   "afterTargets": 12134,
+   "toolChanged": true
+  },
+  {
+   "id": "toolchain-comment",
+   "description": "rust-toolchain.toml: comment-only edit",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 0,
+   "afterTargets": 0,
+   "toolChanged": false
+  },
+  {
+   "id": "toolchain-channel",
+   "description": "rust-toolchain.toml: channel bump",
+   "beforeCrates": 3374,
+   "beforeTargets": 12134,
+   "afterCrates": 3374,
+   "afterTargets": 12134,
+   "toolChanged": true
+  }
+ ],
+ "lock": {
+  "stale": 193,
+  "missing": 2,
+  "nearestMismatch": 565,
+  "nearestMismatchSample": [
+   "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
+   "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",
+   "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
+   "🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",
+   "🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust"
+  ],
+  "rootMembers": 564,
+  "picks": [
+   {
+    "package": "proc-macro2@1.0.107",
+    "closureCrates": 562,
+    "afterCrates": 562,
+    "afterTargets": 2134,
+    "nxBeforeTargets": 2546,
+    "nxBeforeCrates": 642,
+    "bazelBeforeCrates": 564,
+    "bazelBeforeTargets": 2554
+   },
+   {
+    "package": "semio-framework-plugin-interpreter@0.1.0",
+    "closureCrates": 113,
+    "afterCrates": 113,
+    "afterTargets": 433,
+    "nxBeforeTargets": 1176,
+    "nxBeforeCrates": 245,
+    "bazelBeforeCrates": 564,
+    "bazelBeforeTargets": 2885
+   },
+   {
+    "package": "semio-repo-test-host@0.1.0",
+    "closureCrates": 1,
+    "afterCrates": 1,
+    "afterTargets": 5,
+    "nxBeforeTargets": 827,
+    "nxBeforeCrates": 139,
+    "bazelBeforeCrates": 564,
+    "bazelBeforeTargets": 2964
+   }
+  ]
+ },
+ "sourceEdits": [
+  {
+   "crate": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust",
+   "name": "equation-1-any-json-engine",
+   "dependents": 0,
+   "crates": 1,
+   "targets": 3
+  },
+  {
+   "crate": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️set-rule/📦️packages/🦀️rust",
+   "name": "semio-s-artifact-bim-model-mut-any-53",
+   "dependents": 20,
+   "crates": 21,
+   "targets": 75
+  },
+  {
+   "crate": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/📦️packages/🦀️rust",
+   "name": "semio-framework-plugin-tool-run-turns",
+   "dependents": 2232,
+   "crates": 2233,
+   "targets": 7956
+  },
+  {
+   "crate": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust",
+   "name": "semio-framework-value-control-contract",
+   "dependents": 3079,
+   "crates": 3080,
+   "targets": 11136
+  }
+ ],
+ "meanDependents": 356.35536455246,
+ "authoredCargoToolchainTargets": 824,
+ "authoredCargoToolchainProjects": 139,
+ "busy": [
+  "semio-framework-job",
+  235
+ ],
+ "median": [
+  "semio-framework-hash",
+  9
+ ],
+ "rare": [
+  "semio-framework-course",
+  1
+ ]
+}

@@ -119,12 +119,18 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick \"--testNamePattern=plugin module|hub program resolution|shared directory access policy\"",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
     },
     "installed-service-check": {
       "executor": "repo:script",

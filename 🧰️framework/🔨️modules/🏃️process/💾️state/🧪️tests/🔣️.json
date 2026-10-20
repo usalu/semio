@@ -39,11 +39,11 @@
       "allowed": false
     },
     {
-      "path": "persistent/development/fixed.img",
+      "path": "persistent/development/fixed.dir",
       "allowed": false
     },
     {
-      "path": "PERSISTENT/DEVELOPMENT/fixed.img",
+      "path": "PERSISTENT/DEVELOPMENT/fixed.dir",
       "allowed": false
     },
     {
@@ -192,6 +192,16 @@
       "directory": false,
       "owner": "actual",
       "expected": "refuse"
+    },
+    {
+      "name": "half-born-intent-and-backing",
+      "charge": true,
+      "phase": "reserved",
+      "binding": false,
+      "intent": true,
+      "directory": true,
+      "owner": "actual",
+      "expected": "resume"
     }
   ],
   "recordTransactions": [

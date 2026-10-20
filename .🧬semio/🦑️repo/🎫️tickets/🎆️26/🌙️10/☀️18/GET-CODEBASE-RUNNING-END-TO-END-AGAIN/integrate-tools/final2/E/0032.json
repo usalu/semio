@@ -1,0 +1,182 @@
+{
+  "name": "@semio-tech/s-fem-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/🏗️fem",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/📦️preparation-owners/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/📦️physical-owners/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/**/*"
+    ]
+  },
+  "targets": {
+    "verify-fem-pcg-publication-owners": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-pcg-publication-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-assembly-physical-owners": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-assembly-physical-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-numerical-page-owners": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-numerical-page-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-numerical-page-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-mesh-preparation-owners": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-mesh-preparation-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-scalar-owners-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-scalar-owners-native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-scalar-owners-native"
+          ]
+        }
+      }
+    },
+    "verify-fem2d-window-config-contract": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem2d-window-config-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-window-config-contract"
+          ]
+        }
+      }
+    },
+    "verify-fem3d-window-config-contract": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem3d-window-config-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-window-config-contract"
+          ]
+        }
+      }
+    },
+    "verify-fem-live-visual-publication": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-live-visual-publication",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-live-visual-publication"
+          ],
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "verify-fem-numerical-microcursor": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-numerical-microcursor",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-numerical-microcursor"
+          ]
+        }
+      }
+    }
+  }
+}

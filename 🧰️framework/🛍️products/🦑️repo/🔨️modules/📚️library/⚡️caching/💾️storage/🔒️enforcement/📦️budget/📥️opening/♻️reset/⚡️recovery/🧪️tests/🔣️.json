@@ -1,0 +1,160 @@
+{
+  "cases": [
+    {
+      "reason": "none",
+      "events": [
+        "inspect",
+        "open"
+      ],
+      "result": "opened"
+    },
+    {
+      "reason": "current-reset-intent",
+      "events": [
+        "inspect",
+        "reset",
+        "open"
+      ],
+      "result": "opened"
+    },
+    {
+      "reason": "unsupported-receipt-shape",
+      "events": [
+        "inspect",
+        "reset",
+        "open"
+      ],
+      "result": "opened"
+    },
+    {
+      "reason": "permission",
+      "events": [
+        "inspect",
+        "open-failed"
+      ],
+      "result": "open-error"
+    },
+    {
+      "reason": "mount-changed",
+      "events": [
+        "inspect",
+        "open-failed"
+      ],
+      "result": "open-error"
+    },
+    {
+      "reason": "unsupported-receipt-shape",
+      "reset": "busy",
+      "events": [
+        "inspect",
+        "reset-failed"
+      ],
+      "result": "reset-error"
+    },
+    {
+      "reason": "unsupported-receipt-shape",
+      "openFailure": true,
+      "events": [
+        "inspect",
+        "reset",
+        "open-failed"
+      ],
+      "result": "open-error"
+    },
+    {
+      "reason": "current-reset-intent",
+      "reset": "invalid-intent",
+      "events": [
+        "inspect",
+        "reset-failed"
+      ],
+      "result": "reset-error"
+    }
+  ],
+  "publications": [
+    {
+      "id": "generic-macos-receipt-without-platform",
+      "publication": {
+        "version": 1,
+        "filesystemBytes": 1048576,
+        "maximumPhysicalBytes": 2097152,
+        "dev": 17,
+        "ino": 101,
+        "size": 1024,
+        "mountDirectory": {
+          "dev": "17",
+          "ino": "102",
+          "mode": 16877
+        },
+        "bootSession": "00000000-0000-0000-0000-000000000001",
+        "ancestry": [
+          "1",
+          "2"
+        ]
+      },
+      "reset": false
+    },
+    {
+      "id": "unsupported-missing-boot-session",
+      "publication": {
+        "version": 1,
+        "filesystemBytes": 1048576,
+        "maximumPhysicalBytes": 2097152,
+        "dev": 17,
+        "ino": 101,
+        "size": 1024,
+        "mountDirectory": {
+          "dev": "17",
+          "ino": "102",
+          "mode": 16877
+        },
+        "ancestry": [
+          "1",
+          "2"
+        ]
+      },
+      "reset": true
+    },
+    {
+      "id": "unsupported-missing-ancestry",
+      "publication": {
+        "version": 1,
+        "filesystemBytes": 1048576,
+        "maximumPhysicalBytes": 2097152,
+        "dev": 17,
+        "ino": 101,
+        "size": 1024,
+        "mountDirectory": {
+          "dev": "17",
+          "ino": "102",
+          "mode": 16877
+        },
+        "bootSession": "00000000-0000-0000-0000-000000000001"
+      },
+      "reset": true
+    },
+    {
+      "id": "fixed-shaped-platform-is-not-generic",
+      "publication": {
+        "version": 1,
+        "filesystemBytes": 1048576,
+        "maximumPhysicalBytes": 2097152,
+        "dev": 17,
+        "ino": 101,
+        "size": 1024,
+        "mountDirectory": {
+          "dev": "17",
+          "ino": "102",
+          "mode": 16877
+        },
+        "bootSession": "00000000-0000-0000-0000-000000000001",
+        "ancestry": [
+          "1",
+          "2"
+        ],
+        "platform": "darwin"
+      },
+      "reset": true
+    }
+  ]
+}

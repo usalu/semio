@@ -2,7 +2,6 @@
 import {writeOwnedCommandOutputV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {frameworkOsViteArtifactInputsV1} from "../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,7 +12,6 @@ import { join, resolve } from "node:path";
 import { checkScriptInvocation, Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { productionBrowserInputHash } from "./⚙️inputs/🟦️.ts";
-import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts";
 
 /** 🔏️ Supplies the build tool with output-affecting environment and ignored configuration bytes. */
 class InputsScript extends Script {
@@ -33,7 +31,7 @@ class CompleteScript extends Script {
   }
 }
 
-/** 🏗️ Builds exactly the variant's components through the build driver, then bundles the browser variant. */
+/** 🏗️ Bundles the browser variant over components the build tool already staged through their `component` targets. */
 class BuildScript extends Script {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args;
@@ -50,7 +48,6 @@ class BuildScript extends Script {
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await buildComponentClosureV1(workspace, playgroundComponentClosureV1(variant, "full"), { facet:"browser",invocation:this.invocation,network:repositoryCargoNetworkV1(this.invocation,workspace),control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
       await buildViteArtifact({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: mode, artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(workspace, "products"), {version:1,mode:mode,renderer:"react",command:"build",engines:"distribution"}), root, workspace, configLoader: "native", config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), owner: `os-dev:${variant}:react`, signal: this.invocation.control.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: mode, SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
     } catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
     finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }

@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "exact-uncertain",
+      "path": "src/a",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "src/a"
+      ],
+      "recovery": "retained/object",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "src/a",
+      "readOnly": true,
+      "expectedRecovery": "retained/object",
+      "changed": true,
+      "reloadRefused": true
+    },
+    {
+      "id": "descendant-uncertain",
+      "path": "src/中/a",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "src"
+      ],
+      "recovery": "retained/object",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "src/中/a",
+      "readOnly": true,
+      "expectedRecovery": "retained/object",
+      "changed": true,
+      "reloadRefused": false
+    },
+    {
+      "id": "neighbor-unaffected",
+      "path": "source/a",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "src"
+      ],
+      "recovery": "retained/object",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "source/a",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    },
+    {
+      "id": "dirty-preserved",
+      "path": "src/a",
+      "dirty": true,
+      "operation": "uncertain",
+      "roots": [
+        "src"
+      ],
+      "recovery": "retained/object",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "src/a",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    },
+    {
+      "id": "pre-effect-error",
+      "path": "src/a",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "src"
+      ],
+      "recovery": null,
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "src/a",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    },
+    {
+      "id": "destination-protected",
+      "path": "dst/a",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "src",
+        "dst"
+      ],
+      "recovery": "actual/dst",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "dst/a",
+      "readOnly": true,
+      "expectedRecovery": "actual/dst",
+      "changed": true,
+      "reloadRefused": false
+    },
+    {
+      "id": "rename-descendant",
+      "path": "src/中/a",
+      "dirty": false,
+      "operation": "rename",
+      "roots": [
+        "src"
+      ],
+      "recovery": null,
+      "destination": "dst",
+      "loaded": false,
+      "expectedPath": "dst/中/a",
+      "readOnly": true,
+      "expectedRecovery": null,
+      "changed": true,
+      "reloadRefused": false
+    },
+    {
+      "id": "rename-loaded-file",
+      "path": "src",
+      "dirty": false,
+      "operation": "rename",
+      "roots": [
+        "src"
+      ],
+      "recovery": null,
+      "destination": "dst",
+      "loaded": true,
+      "expectedPath": "dst",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": true,
+      "reloadRefused": false
+    },
+    {
+      "id": "rename-dirty-preserved",
+      "path": "src/a",
+      "dirty": true,
+      "operation": "rename",
+      "roots": [
+        "src"
+      ],
+      "recovery": null,
+      "destination": "dst",
+      "loaded": false,
+      "expectedPath": "src/a",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    },
+    {
+      "id": "rename-neighbor",
+      "path": "src2/a",
+      "dirty": false,
+      "operation": "rename",
+      "roots": [
+        "src"
+      ],
+      "recovery": null,
+      "destination": "dst",
+      "loaded": false,
+      "expectedPath": "src2/a",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    },
+    {
+      "id": "controller-uncertain",
+      "path": "b.txt",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "b.txt"
+      ],
+      "recovery": "actual/b",
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "b.txt",
+      "readOnly": true,
+      "expectedRecovery": "actual/b",
+      "changed": true,
+      "reloadRefused": true
+    },
+    {
+      "id": "controller-pre-effect",
+      "path": "b.txt",
+      "dirty": false,
+      "operation": "uncertain",
+      "roots": [
+        "b.txt"
+      ],
+      "recovery": null,
+      "destination": null,
+      "loaded": false,
+      "expectedPath": "b.txt",
+      "readOnly": false,
+      "expectedRecovery": null,
+      "changed": false,
+      "reloadRefused": false
+    }
+  ]
+}

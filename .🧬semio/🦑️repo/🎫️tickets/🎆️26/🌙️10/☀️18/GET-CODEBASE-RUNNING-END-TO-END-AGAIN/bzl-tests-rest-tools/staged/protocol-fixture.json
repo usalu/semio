@@ -1,0 +1,615 @@
+{
+  "version": 1,
+  "shards": [
+    {
+      "name": "no shard keeps the list as given",
+      "files": [
+        "b",
+        "a"
+      ],
+      "shard": null,
+      "expected": [
+        "b",
+        "a"
+      ]
+    },
+    {
+      "name": "first of two",
+      "files": [
+        "d",
+        "a",
+        "c",
+        "b",
+        "e"
+      ],
+      "shard": "1/2",
+      "expected": [
+        "a",
+        "c",
+        "e"
+      ]
+    },
+    {
+      "name": "second of two",
+      "files": [
+        "d",
+        "a",
+        "c",
+        "b",
+        "e"
+      ],
+      "shard": "2/2",
+      "expected": [
+        "b",
+        "d"
+      ]
+    },
+    {
+      "name": "duplicates collapse before assignment",
+      "files": [
+        "a",
+        "a",
+        "b"
+      ],
+      "shard": "2/3",
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "more shards than files leaves a shard empty",
+      "files": [
+        "a"
+      ],
+      "shard": "3/4",
+      "expected": []
+    },
+    {
+      "name": "sorting is by UTF-16 code unit",
+      "files": [
+        "b",
+        "B",
+        "a"
+      ],
+      "shard": "1/3",
+      "expected": [
+        "B"
+      ]
+    },
+    {
+      "name": "an emoji sorts before a full-width letter in code unit order",
+      "files": [
+        "Ａ",
+        "😀",
+        "a"
+      ],
+      "shard": "2/3",
+      "expected": [
+        "😀"
+      ]
+    }
+  ],
+  "reads": [
+    {
+      "name": "a shard",
+      "environment": {
+        "SEMIO_TEST_SHARD": "2/3"
+      },
+      "expected": {
+        "index": 2,
+        "total": 3
+      }
+    },
+    {
+      "name": "absent",
+      "environment": {},
+      "expected": null
+    },
+    {
+      "name": "empty",
+      "environment": {
+        "SEMIO_TEST_SHARD": ""
+      },
+      "expected": null
+    },
+    {
+      "name": "the largest total",
+      "environment": {
+        "SEMIO_TEST_SHARD": "64/64"
+      },
+      "expected": {
+        "index": 64,
+        "total": 64
+      }
+    }
+  ],
+  "refusedShards": [
+    "0/2",
+    "3/2",
+    "1/1",
+    "a/b",
+    "1/65",
+    "2/3 ",
+    "1/2/3",
+    "-1/2",
+    "01/2"
+  ],
+  "plans": [
+    {
+      "name": "bun test takes a shard and a result file before its files stop being the last arguments",
+      "command": "/opt/bin/bun",
+      "args": [
+        "test",
+        "./a.ts",
+        "./b.ts"
+      ],
+      "shard": "2/3",
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": "bun-test",
+        "args": [
+          "test",
+          "./a.ts",
+          "./b.ts",
+          "--shard=2/3",
+          "--reporter=junit",
+          "--reporter-outfile=/t/j.xml"
+        ],
+        "sharded": true,
+        "junit": "/t/j.xml"
+      }
+    },
+    {
+      "name": "a Windows path to bun.exe is still bun",
+      "command": "C:\\tools\\bun\\bun.exe",
+      "args": [
+        "test",
+        "x.ts"
+      ],
+      "shard": null,
+      "junit": "C:\\t\\j.xml",
+      "expected": {
+        "tool": "bun-test",
+        "args": [
+          "test",
+          "x.ts",
+          "--reporter=junit",
+          "--reporter-outfile=C:\\t\\j.xml"
+        ],
+        "sharded": false,
+        "junit": "C:\\t\\j.xml"
+      }
+    },
+    {
+      "name": "flags go before a literal double dash",
+      "command": "bun",
+      "args": [
+        "test",
+        "a.ts",
+        "--",
+        "--tail"
+      ],
+      "shard": "1/2",
+      "junit": null,
+      "expected": {
+        "tool": "bun-test",
+        "args": [
+          "test",
+          "a.ts",
+          "--shard=1/2",
+          "--",
+          "--tail"
+        ],
+        "sharded": true,
+        "junit": null
+      }
+    },
+    {
+      "name": "a caller that chose a reporter keeps it and still shards",
+      "command": "bun",
+      "args": [
+        "test",
+        "--reporter=dots",
+        "a.ts"
+      ],
+      "shard": "1/2",
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": "bun-test",
+        "args": [
+          "test",
+          "--reporter=dots",
+          "a.ts",
+          "--shard=1/2"
+        ],
+        "sharded": true,
+        "junit": null
+      }
+    },
+    {
+      "name": "a caller that chose a shard keeps it and the run is not marked sharded",
+      "command": "bun",
+      "args": [
+        "test",
+        "--shard=1/4",
+        "a.ts"
+      ],
+      "shard": "2/2",
+      "junit": null,
+      "expected": {
+        "tool": "bun-test",
+        "args": [
+          "test",
+          "--shard=1/4",
+          "a.ts"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "vitest run takes a shard and a JUnit file next to the default reporter",
+      "command": "node",
+      "args": [
+        "/n/node_modules/.bin/vitest",
+        "run",
+        "--config",
+        "c.ts"
+      ],
+      "shard": "1/2",
+      "junit": "/t/v.xml",
+      "expected": {
+        "tool": "vitest",
+        "args": [
+          "/n/node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "c.ts",
+          "--shard=1/2",
+          "--reporter=default",
+          "--reporter=junit",
+          "--outputFile.junit=/t/v.xml"
+        ],
+        "sharded": true,
+        "junit": "/t/v.xml"
+      }
+    },
+    {
+      "name": "vitest watch mode is not a run and passes through",
+      "command": "node",
+      "args": [
+        "/n/vitest.mjs",
+        "--watch"
+      ],
+      "shard": "1/2",
+      "junit": "/t/v.xml",
+      "expected": {
+        "tool": null,
+        "args": [
+          "/n/vitest.mjs",
+          "--watch"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "cargo test is recognised without a shard or a JUnit flag",
+      "command": "cargo",
+      "args": [
+        "test",
+        "-p",
+        "x"
+      ],
+      "shard": "1/2",
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": "cargo-test",
+        "args": [
+          "test",
+          "-p",
+          "x"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "bun that does not test passes through",
+      "command": "bun",
+      "args": [
+        "run",
+        "x.ts"
+      ],
+      "shard": "1/2",
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": null,
+        "args": [
+          "run",
+          "x.ts"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "cargo with a toolchain selector is still cargo test",
+      "command": "cargo",
+      "args": [
+        "+nightly",
+        "test"
+      ],
+      "shard": "1/2",
+      "junit": null,
+      "expected": {
+        "tool": "cargo-test",
+        "args": [
+          "+nightly",
+          "test"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "cargo build is not a test",
+      "command": "cargo",
+      "args": [
+        "build"
+      ],
+      "shard": null,
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": null,
+        "args": [
+          "build"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "go test is recognised",
+      "command": "/usr/local/go/bin/go",
+      "args": [
+        "test",
+        "./..."
+      ],
+      "shard": null,
+      "junit": null,
+      "expected": {
+        "tool": "go-test",
+        "args": [
+          "test",
+          "./..."
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    },
+    {
+      "name": "an unknown command passes through",
+      "command": "sh",
+      "args": [
+        "-c",
+        "true"
+      ],
+      "shard": "1/2",
+      "junit": "/t/j.xml",
+      "expected": {
+        "tool": null,
+        "args": [
+          "-c",
+          "true"
+        ],
+        "sharded": false,
+        "junit": null
+      }
+    }
+  ],
+  "junit": [
+    {
+      "name": "bun style: flat suites with counts",
+      "xml": "<?xml version=\"1.0\"?><testsuites name=\"bun test\" tests=\"3\"><testsuite name=\"a.ts\" tests=\"2\" failures=\"0\" skipped=\"1\" time=\"0.5\"><testcase name=\"x\"/><testcase name=\"y\"><skipped/></testcase></testsuite><testsuite name=\"b.ts\" tests=\"1\" failures=\"1\" time=\"0.25\"><testcase name=\"z\"><failure type=\"E\"/></testcase></testsuite></testsuites>",
+      "expected": [
+        {
+          "name": "a.ts",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 1,
+          "time": 0.5
+        },
+        {
+          "name": "b.ts",
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "time": 0.25
+        }
+      ]
+    },
+    {
+      "name": "a nested suite stays inside its parent",
+      "xml": "<testsuites><testsuite name=\"outer\" tests=\"2\" failures=\"0\" time=\"1\"><testsuite name=\"inner\" tests=\"1\"><testcase name=\"i\"/></testsuite><testcase name=\"o\"/></testsuite></testsuites>",
+      "expected": [
+        {
+          "name": "outer",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "time": 1
+        }
+      ]
+    },
+    {
+      "name": "a self-closing suite and escaped names",
+      "xml": "<testsuites><testsuite name=\"a &amp; b &lt;c&gt;\" tests=\"0\" time=\"0\"/><testsuite name=\"d\" tests=\"1\" errors=\"1\"><testcase name=\"e\"><error message=\"m\"/></testcase></testsuite></testsuites>",
+      "expected": [
+        {
+          "name": "a & b <c>",
+          "tests": 0,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "time": 0
+        },
+        {
+          "name": "d",
+          "tests": 1,
+          "failures": 0,
+          "errors": 1,
+          "skipped": 0,
+          "time": 0
+        }
+      ]
+    },
+    {
+      "name": "counts missing from the tag are counted from the cases",
+      "xml": "<testsuite name=\"c\"><testcase name=\"1\"/><testcase name=\"2\"><failure message=\"x\"/></testcase><testcase name=\"3\"><skipped/></testcase></testsuite>",
+      "expected": [
+        {
+          "name": "c",
+          "tests": 3,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 1,
+          "time": 0
+        }
+      ]
+    },
+    {
+      "name": "no suites",
+      "xml": "<testsuites/>",
+      "expected": []
+    }
+  ],
+  "paths": [
+    {
+      "name": "an explicit file wins",
+      "environment": {
+        "SEMIO_TEST_XML_OUTPUT_FILE": "/o/test.xml",
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "p",
+        "SEMIO_TASK_TARGET": "t"
+      },
+      "expected": "/o/test.xml"
+    },
+    {
+      "name": "Bazel task identity",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "@a/b",
+        "SEMIO_TASK_TARGET": "test"
+      },
+      "expected": "/r/.cache/b/o/m/tests/results/_a_b-c93bbe63/test/test.xml"
+    },
+    {
+      "name": "Nx task identity",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "NX_TASK_TARGET_PROJECT": "plain",
+        "NX_TASK_TARGET_TARGET": "test-x"
+      },
+      "expected": "/r/.cache/b/o/m/tests/results/plain-a116c9ed/test-x/test.xml"
+    },
+    {
+      "name": "no workspace root means no default",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "p",
+        "SEMIO_TASK_TARGET": "t"
+      },
+      "expected": null
+    },
+    {
+      "name": "no identity means no default",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r"
+      },
+      "expected": null
+    },
+    {
+      "name": "opt out",
+      "environment": {
+        "SEMIO_TEST_REPORT": "0",
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "p",
+        "SEMIO_TASK_TARGET": "t"
+      },
+      "expected": null
+    },
+    {
+      "name": "opt out does not cancel an explicit file",
+      "environment": {
+        "SEMIO_TEST_REPORT": "0",
+        "SEMIO_TEST_XML_OUTPUT_FILE": "/o/x.xml"
+      },
+      "expected": "/o/x.xml"
+    },
+    {
+      "name": "a build target gets no default report",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "p",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "expected": null
+    },
+    {
+      "name": "a test-family target name gets one",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "plain",
+        "SEMIO_TASK_TARGET": "test-native"
+      },
+      "expected": "/r/.cache/b/o/m/tests/results/plain-a116c9ed/test-native/test.xml"
+    },
+    {
+      "name": "a name that only starts like test gets none",
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/r",
+        "SEMIO_TASK_PROJECT": "p",
+        "SEMIO_TASK_TARGET": "testing"
+      },
+      "expected": null
+    }
+  ],
+  "refusedPaths": [
+    {
+      "SEMIO_TEST_XML_OUTPUT_FILE": "relative/test.xml"
+    }
+  ],
+  "reports": [
+    {
+      "name": "root counts are the sums of the suites",
+      "suites": [
+        {
+          "name": "a",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 1,
+          "time": 0.5
+        },
+        {
+          "name": "b",
+          "tests": 1,
+          "failures": 1,
+          "errors": 1,
+          "skipped": 0,
+          "time": 0.25
+        }
+      ],
+      "expected": {
+        "tests": 3,
+        "failures": 1,
+        "errors": 1,
+        "skipped": 1,
+        "time": 0.75
+      }
+    }
+  ]
+}

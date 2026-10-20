@@ -99,7 +99,12 @@
       },
       "cache": false,
       "continuous": true,
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
     },
     "generate-logo": {
       "executor": "repo:script",

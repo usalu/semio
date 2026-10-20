@@ -1,17 +1,19 @@
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{extractGraphPolicyV1}from"../🕸️graph/🕰️generations/🔌️load/🟨️.mjs";
 import dependencySchema from "../🧬️schema/📥️dependencies.json" with { type: "json" };
 import authoringSchema from "../🧬️schema/📥️authoring.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
 import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {buildInvocationGraphSelectionV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
+import {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
 import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {semioBuildParallelFlag} from "../../🏃️process/🌿️environment/🟦️.ts";
 import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {fixedTargetBuildMode} from "../🎚️mode/🟨️.mjs";
 import policy from "../🔣️policy.json" with { type: "json" };
+import projectSchema from "../🧬️schema/📋️project/🔣️.json" with { type: "json" };
 import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
 
 /** 📖️ Admits public help before storage while preserving an opaque child argument tail. */
@@ -48,8 +50,7 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
   const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(prototype|release)|prepare|build|activate-prototype|activate-release|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
   if (demonstrator) {
     if (selected.length) throw new Error("Demonstrator targets accept no compiler arguments");
-    const release = demonstrator[1]!.endsWith("-release");
-    return { args: segments, env: { ...(["prepare", "build"].includes(demonstrator[1]!) ? {} : { SEMIO_BUILD_MODE: release ? "release" : "prototype" }), SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-prototype" } : {}) };
+    return { args: segments, env: { SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-prototype" } : {}) };
   }
   const nativeRuntime = target?.match(/^@semio-tech\/framework-os-dev:(prepare|run|smoke)-(.+)-native-(prototype|release)$/);
   if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2]!, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "release" : "prototype" } };
@@ -95,8 +96,28 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
 }
 type Selection = { args: string[]; env: NodeJS.ProcessEnv; watch?: string };
 
+/** 📑️ Carries only authored compiler intent from one exact selected owner declaration. */
+export interface SelectedBuildTargetModeV1 { readonly project:string;readonly target:string;readonly fixed?:"prototype"|"release";readonly default?:"prototype"|"release" }
+
+/** 🗂️ Reads one exact canonical run declaration before issuing original compiler authority. */
+export function readSelectedBuildTargetModesV1(root:string,args:readonly string[],read:(path:string)=>string=path=>readFileSync(path,"utf8")):readonly SelectedBuildTargetModeV1[]{
+ const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary);if(head[0]!=="run"||head.some(value=>value==="--help"||value==="-h"))return [];
+ const [project,target]=head[1]?.split(":")??[];if(!project||!target||/[*?{}\[\]!]/u.test(project+target))return [];
+ const registry=readBuildOwnerRegistryV1(JSON.parse(read(join(root,"📋️build-owners.json")))),owner=registry.owners.find(row=>row.name===project);if(!owner||!owner.manifest.endsWith("/📋️project.json")&&owner.manifest!=="📋️project.json")return [];
+ const manifest=JSON.parse(read(join(root,owner.manifest)));if(!manifest||manifest.name!==owner.name)throw Error("Canonical selected build owner declaration required: "+project);if(!manifest.targets||!Object.hasOwn(manifest.targets,target))return [];
+ const row=manifest.targets[target],declaration=row.metadata?.semio?.buildMode;if(declaration!==undefined&&validateJsonSchemaSubset({$defs:projectSchema.$defs,$ref:"#/$defs/BuildModeDeclaration"},declaration).length)throw Error("Closed selected target build mode required: "+project+":"+target);
+ return Object.freeze([Object.freeze({project,target,...(declaration?.fixed===undefined?{}:{fixed:readBuildMode(declaration.fixed)}),...(row.defaultConfiguration===undefined?{}:{default:readBuildMode(row.defaultConfiguration)})})]);
+}
+
+
+/** 🗣️ States a refused build mode disagreement in English, then German, naming the fixed-mode targets that pin a mode. */
+export function buildModeConflictMessageV1(values: readonly string[], pinned: readonly string[]): string {
+  const list = values.join(", "), pins = pinned.join(", ");
+  return `Conflicting build modes: ${list}${pins ? ` (fixed by target: ${pins})` : ""}; select one mode with --configuration, -c, a :<configuration> suffix or SEMIO_BUILD_MODE\nWidersprüchliche Build-Modi: ${list}${pins ? ` (fest durch Target: ${pins})` : ""}; wähle genau einen Modus mit --configuration, -c, dem Suffix :<configuration> oder SEMIO_BUILD_MODE`;
+}
+
 /** 🎯️ Resolves mode options before the task graph and daemon receive the environment. */
-export function resolveBuildModeV1(selection: Selection, environment: NodeJS.ProcessEnv): Selection {
+export function resolveBuildModeV1(selection: Selection, environment: NodeJS.ProcessEnv, declarations:readonly SelectedBuildTargetModeV1[]=[]): Selection {
   const delimiter = selection.args.indexOf("--"), head = selection.args.slice(0, delimiter < 0 ? undefined : delimiter), tail = delimiter < 0 ? [] : selection.args.slice(delimiter);
   if (!["run", "run-many", "affected"].includes(head[0]??"")) return selection;
   const configurations: string[] = [], args: string[] = [];
@@ -110,22 +131,24 @@ export function resolveBuildModeV1(selection: Selection, environment: NodeJS.Pro
     const parts = args[1].split(":"); configurations.push(parts.pop()!); args[1] = parts.join(":");
   }
   const targets = args[0] === "run" ? [args[1]?.split(":")[1] ?? ""] : args.flatMap((argument, index) => /^(?:--targets?|-t)=/.test(argument) ? argument.slice(argument.indexOf("=") + 1).split(",") : ["--target", "--targets", "-t"].includes(argument) ? (args[index + 1] ?? "").split(",") : []);
-  const fixed = targets.map(fixedTargetBuildMode).filter((value): value is "prototype" | "release" => value !== undefined);
+  const fixed = [...targets.map(fixedTargetBuildMode),...declarations.map(row=>row.fixed)].filter((value): value is "prototype" | "release" => value !== undefined);
   const authored = selection.env.SEMIO_BUILD_MODE;
   const inherited = environment.SEMIO_BUILD_MODE;
   const explicit = configurations.map(value => readBuildMode(value));
   const values = [...explicit, ...fixed, ...(authored === undefined ? [] : [readBuildMode(authored)]), ...(inherited === undefined ? [] : [readBuildMode(inherited)])];
+  if(!values.length)values.push(...declarations.flatMap(row=>row.default===undefined?[]:[row.default]));
   const mode = values[0] ?? "prototype";
-  if (values.some(value => value !== mode)) throw new Error(`Conflicting build modes: ${values.join(", ")}`);
+  if (values.some(value => value !== mode)) throw new Error(buildModeConflictMessageV1(values, [...targets.flatMap(target => fixedTargetBuildMode(target) === undefined ? [] : [`${target}=${fixedTargetBuildMode(target)}`]),...declarations.flatMap(row=>row.fixed===undefined?[]:[`${row.project}:${row.target}=${row.fixed}`]) ]));
   const compilerArguments = tail.slice(1);
   if (targets.some(target => /^(?:build|wasm|native|component|cpp|package|extension-package|bundle)(?:-|$)/.test(target)) && compilerArguments.some(argument => ["--release", "--dist", "--dev", "--prototype", "--mode", "--build-mode"].includes(argument) || /^(?:--mode|--build-mode|--profile)=/.test(argument))) throw new Error("Select the build prototype or release configuration before --");
   return { ...selection, args: selection.args, env: { ...selection.env, ...buildModeEnvironment(mode, {}) } };
 }
 
 /** 🛠️ Selects a configured implementation without consuming task arguments after the separator. */
-export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:"nx"|"bazel";args:string[];workers?:"on"|"off"} {
+export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:"nx"|"bazel";args:string[];workers?:"on"|"off";graphPolicy?:"fresh"|"current"} {
   let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool,workers=environment.SEMIO_BUILD_WORKERS;
-  const selected:string[]=[];
+  const graph=extractGraphPolicyV1(args,environment),selected:string[]=[];
+  args=graph.args;
   for(let index=0;index<args.length;index++){
     const argument=args[index]!;
     if(argument==="--"){selected.push(...args.slice(index));break;}
@@ -137,7 +160,7 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
   }
   if(tool!=="nx"&&tool!=="bazel")throw Error(`Unknown build tool: ${tool}`);
   readWorkerSwitchV1(workers);
-  return {tool,args:selected,...(workers?{workers:workers as "on"|"off"}:{})};
+  return {tool,args:selected,...(graph.explicit?{graphPolicy:graph.policy}:{}),...(workers?{workers:workers as "on"|"off"}:{})};
 }
 
 /** 🔌️ Translates portable CLI and environment options only at the Nx implementation boundary; `--graph` is the portable alias of `--dry-run` and always names stdout or a file. */
@@ -161,7 +184,7 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
 }
 
 /** 🧭️ Resolves the public selection and compiler configuration before any backend prepares. */
-export function resolveBuildInvocationV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Selection { return resolveBuildModeV1(resolveBuildSelectionV1(root,[...args]),environment); }
+export function resolveBuildInvocationV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Selection { const selected=resolveBuildSelectionV1(root,[...args]);return resolveBuildModeV1(selected,environment,readSelectedBuildTargetModesV1(root,selected.args)); }
 
 /** 🧬️ Resolves an original declared caller without deriving authority from ambient task fields. */
 export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):BuildGraphSelectionV1|undefined{
@@ -188,11 +211,11 @@ export async function loadBuildInvocationGraphV1(root:string,args:readonly strin
 
 
 /** 📥️ An explicit dependency selection enters its original owner before any installed graph tool. */
-export type BuildDependencyInvocationV1=Readonly<{mode:"sync"|"lock";selection:Readonly<{kind:"all"}>|Readonly<{kind:"scope";owner:string}>}>;
+export type BuildDependencyInvocationV1=Readonly<{mode:"sync"|"lock"|"ensure";selection:Readonly<{kind:"all"}>|Readonly<{kind:"scope";owner:string}>}>;
 
-/** 🗝️ Admits only the schema-defined whole or scoped installer operation. */
+/** 🗝️ Admits only the schema-defined whole or scoped installer operation, or the selection-free ensure request. */
 export function readBuildDependencyInvocationV1(args:readonly string[]):BuildDependencyInvocationV1 {
-  const [command,mode,selection,owner]=args,value=selection==="--all"&&args.length===3?{mode,selection:{kind:"all"}}:selection==="--scope"&&args.length===4?{mode,selection:{kind:"scope",owner}}:undefined;
-  if(command!=="dependencies"||value===undefined||validateJsonSchemaSubset(dependencySchema,value).length)throw Error("Expected repo dependencies sync|lock --all|--scope <owner>");
+  const [command,mode,selection,owner]=args,value=mode==="ensure"?(args.length===2?{mode,selection:{kind:"all"}}:undefined):selection==="--all"&&args.length===3?{mode,selection:{kind:"all"}}:selection==="--scope"&&args.length===4?{mode,selection:{kind:"scope",owner}}:undefined;
+  if(command!=="dependencies"||value===undefined||validateJsonSchemaSubset(dependencySchema,value).length)throw Error("Expected repo dependencies sync|lock --all|--scope <owner>, or repo dependencies ensure");
   return value as BuildDependencyInvocationV1;
 }

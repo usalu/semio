@@ -1,0 +1,260 @@
+{
+ "version": 1,
+ "backends": [
+  {
+   "id": "nx",
+   "title": {
+    "en": "Nx with Bun",
+    "de": "Nx mit Bun"
+   },
+   "kind": "external",
+   "module": "../🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
+   "driver": "../🔧️tools/🧶️nx/📐️conformance/🟦️.ts",
+   "dependencyModel": "consumers",
+   "processEnvironment": {
+    "NX_DAEMON": "false"
+   },
+   "nativeSnapshot": {
+    "variable": "SEMIO_NX_NATIVE_SOURCE_SNAPSHOT",
+    "environment": {
+     "NX_DAEMON": "false"
+    }
+   },
+   "operations": {
+    "run": "native",
+    "run-many": "native",
+    "affected": "native",
+    "exec": "native",
+    "inputs": "adapter",
+    "reset": "adapter",
+    "tools": "adapter",
+    "cache": "adapter"
+   },
+   "capabilities": {
+    "plan": {
+     "support": "native"
+    },
+    "run": {
+     "support": "native"
+    },
+    "cache-restore": {
+     "support": "native"
+    },
+    "invalidation": {
+     "support": "native"
+    },
+    "early-cutoff": {
+     "support": "native"
+    },
+    "uncached": {
+     "support": "native"
+    },
+    "outputs": {
+     "support": "native"
+    },
+    "failure-isolation": {
+     "support": "native"
+    },
+    "test-results": {
+     "support": "native"
+    },
+    "affected": {
+     "support": "native"
+    },
+    "cancellation": {
+     "support": "native"
+    },
+    "progress": {
+     "support": "adapter",
+     "note": {
+      "en": "Task start and end are published by the repository adapter, not by Nx.",
+      "de": "Start und Ende einer Aufgabe veröffentlicht der Repository-Adapter, nicht Nx."
+     }
+    },
+    "parallelism": {
+     "support": "native"
+    },
+    "concurrent-invocations": {
+     "support": "native"
+    },
+    "single-flight": {
+     "support": "missing",
+     "note": {
+      "en": "Two Nx processes on one workspace do not coordinate: a cold task can run in both.",
+      "de": "Zwei Nx-Prozesse auf einem Workspace stimmen sich nicht ab: eine kalte Aufgabe kann in beiden laufen."
+     }
+    },
+    "remote-cache": {
+     "support": "native"
+    },
+    "run-record": {
+     "support": "native",
+     "note": {
+      "en": "Nx stores a run record with the cache status of every task.",
+      "de": "Nx speichert einen Laufbericht mit dem Cache-Status jeder Aufgabe."
+     }
+    }
+   }
+  },
+  {
+   "id": "bazel",
+   "title": {
+    "en": "Bazel",
+    "de": "Bazel"
+   },
+   "kind": "external",
+   "module": "../🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
+   "driver": "../🔧️tools/🏗️bazel/📐️conformance/🟦️.ts",
+   "dependencyModel": "all",
+   "operations": {
+    "run": "adapter",
+    "run-many": "adapter",
+    "affected": "adapter",
+    "exec": "adapter",
+    "inputs": "missing",
+    "reset": "adapter",
+    "tools": "adapter",
+    "cache": "adapter"
+   },
+   "capabilities": {
+    "plan": {
+     "support": "adapter"
+    },
+    "run": {
+     "support": "adapter"
+    },
+    "cache-restore": {
+     "support": "adapter"
+    },
+    "invalidation": {
+     "support": "adapter"
+    },
+    "early-cutoff": {
+     "support": "native",
+     "note": {
+      "en": "Action keys contain the digests of the inputs, so equal outputs stop propagation.",
+      "de": "Aktionsschlüssel enthalten die Digests der Eingaben, gleiche Ausgaben stoppen die Weitergabe."
+     }
+    },
+    "uncached": {
+     "support": "adapter"
+    },
+    "outputs": {
+     "support": "adapter"
+    },
+    "failure-isolation": {
+     "support": "adapter"
+    },
+    "test-results": {
+     "support": "adapter"
+    },
+    "affected": {
+     "support": "adapter"
+    },
+    "cancellation": {
+     "support": "adapter"
+    },
+    "progress": {
+     "support": "adapter"
+    },
+    "parallelism": {
+     "support": "adapter"
+    },
+    "concurrent-invocations": {
+     "support": "adapter"
+    },
+    "single-flight": {
+     "support": "native",
+     "note": {
+      "en": "One Bazel server per output base serialises invocations, so the second one finds the first one's result.",
+      "de": "Ein Bazel-Server pro Output-Base serialisiert Aufrufe, der zweite findet das Ergebnis des ersten."
+     }
+    },
+    "remote-cache": {
+     "support": "adapter"
+    },
+    "run-record": {
+     "support": "adapter",
+     "note": {
+      "en": "Read from Bazel's compact execution log.",
+      "de": "Aus Bazels kompaktem Ausführungsprotokoll gelesen."
+     }
+    }
+   }
+  },
+  {
+   "id": "semio",
+   "title": {
+    "en": "Semio build engine",
+    "de": "Semio-Build-Engine"
+   },
+   "kind": "in-house",
+   "module": "../🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
+   "driver": "../🔧️tools/🐙️semio/📐️conformance/🟦️.ts",
+   "dependencyModel": "all",
+   "operations": {
+    "run": "native",
+    "run-many": "native",
+    "affected": "native",
+    "exec": "native",
+    "inputs": "native",
+    "reset": "native",
+    "tools": "native",
+    "cache": "native"
+   },
+   "capabilities": {
+    "plan": {
+     "support": "native"
+    },
+    "run": {
+     "support": "native"
+    },
+    "cache-restore": {
+     "support": "native"
+    },
+    "invalidation": {
+     "support": "native"
+    },
+    "early-cutoff": {
+     "support": "native"
+    },
+    "uncached": {
+     "support": "native"
+    },
+    "outputs": {
+     "support": "native"
+    },
+    "failure-isolation": {
+     "support": "native"
+    },
+    "test-results": {
+     "support": "native"
+    },
+    "affected": {
+     "support": "native"
+    },
+    "cancellation": {
+     "support": "native"
+    },
+    "progress": {
+     "support": "native"
+    },
+    "parallelism": {
+     "support": "native"
+    },
+    "concurrent-invocations": {
+     "support": "native"
+    },
+    "single-flight": {
+     "support": "native"
+    },
+    "remote-cache": {
+     "support": "native"
+    },
+    "run-record": {
+     "support": "native"
+    }
+   }
+  }
+ ]
+}

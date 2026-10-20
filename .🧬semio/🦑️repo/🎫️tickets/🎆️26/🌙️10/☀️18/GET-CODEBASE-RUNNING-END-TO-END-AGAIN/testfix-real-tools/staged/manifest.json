@@ -1,0 +1,576 @@
+{
+ "version": 3,
+ "operations": [
+  {
+   "kind": "delete",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🦀️.rs",
+   "before": "ef96b98247d3882cdb8c59e0e6e1396fbd20c2177fcbc164fe32742412d44f52",
+   "group": "default"
+  },
+  {
+   "kind": "delete",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧪️tests/🦀️.rs",
+   "before": "b1795a7e1037f8b4a6dc95f0c2cc8cacab41f0c694bc167b07d9a51f7198c614",
+   "group": "default"
+  },
+  {
+   "kind": "create",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/Cargo.toml",
+   "file": "0002.bin",
+   "after": "b8acc310df15884a284287add7f04e312af0778ee7c56123817a051c049f5aed",
+   "group": "default"
+  },
+  {
+   "kind": "create",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/📋️project.json",
+   "file": "0003.bin",
+   "after": "b617b1cafc1f61294024158d87e005057a1e048267bcad4fc63cb43e41ac35a2",
+   "group": "default"
+  },
+  {
+   "kind": "create",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/🦀️.rs",
+   "file": "0004.bin",
+   "after": "c3ef2442886f69666777b5716deb5f76b6f09b5b544da4f7790df4b2f499da73",
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "Cargo.lock",
+   "before": "7bdf64ea2016a9a7a8b523160101ac130a460b6a70de976272e4aac2cf971420",
+   "after": "c50d534198987c8fcbf649c39aed46296c05934db514c39c30502d19e853eab4",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "📋️build-owners.json",
+   "before": "82b09906ace0b94a55d6993bc714d5f1a08b54cebea8a8515c5b8e3f6b10642e",
+   "after": "dac47dc887ea25a26903dcbe6126aecfd296b8307080ee4decb12ad22f4b09aa",
+   "hunks": [
+    {
+     "old": "      \"manifest\": \"🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust/📋️project.json\",\n      \"packages\": []",
+     "new": "      \"manifest\": \"🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust/📋️project.json\",\n      \"packages\": []\n    },\n    {\n      \"name\": \"@semio-tech/replication-mutation-retained-field-rs\",\n      \"root\": \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust\",\n      \"manifest\": \"🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/📋️project.json\",\n      \"packages\": []"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/Cargo.toml",
+   "before": "b95a00e7a3d73d8f72678542969536403267e3acc90ab07b01b8cfb1c9e5099a",
+   "after": "a7ad1dbd7de3b0bc26fbfe80ac12f08740f13443a952ff619596dd67f477a103",
+   "hunks": [
+    {
+     "old": "    \"🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust\",\n    \"🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust\",",
+     "new": "    \"🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust\",\n    \"🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust\",\n    \"🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/Cargo.lock",
+   "before": "a609a762f9001b2b680cc0a964b66185e84cdede69b931db62f1b949a761ee6c",
+   "after": "7c69f1f7fcf3de0c13b0b81f2348050b4ae9f013da40490a617488be2cebcf70",
+   "hunks": [
+    {
+     "old": " \"semio-framework-test-fixtures\",\n \"semio-framework-trace\",\n \"semio-framework-trace-memory-testing\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n \"serde_json\",\n]\n\n[[package]]",
+     "new": " \"semio-framework-test-fixtures\",\n \"semio-framework-trace\",\n \"semio-framework-trace-memory-testing\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n \"serde_json\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-test-fixtures\",\n \"semio-framework-trace\",\n \"semio-framework-trace-memory-testing\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n \"serde_json\",\n]\n\n[[package]]"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-test-fixtures\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-test-fixtures\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+   "before": "ad0a3f698488dd80d47d49c79b8d6a80f851b54b213ea603c7fddef07b64b2f3",
+   "after": "4a34bce8f164d98165e205829869d6949405ed66f15fef9df511919a24fef45b",
+   "hunks": [
+    {
+     "old": "}\n/// 🎟️ Independent five-axis admission precedes every action.\npub fn retained_mutation_demand_fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}\n",
+     "new": "}\n"
+    },
+    {
+     "old": "#[path=\"🪡️field/🦀️.rs\"] pub mod field;\npub use field::{RetainedFieldPreparation,RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};",
+     "new": "pub use semio_framework_replication_mutation_retained_field::{RetainedFieldPreparation,RetainedFieldChange,RetainedRecordChange,RetainedRecordChangeField,RetainedRecordFieldChange,RetainedRecordChangeOwner,boxed_record_field,retained_mutation_demand_fits};"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs",
+   "before": "9d947ea0a80f301948f82d98da7fc893bbab11b22d56507bdc0a43afe41a8acd",
+   "after": "67a085d0770133124160c2e0bdb21d93d8dddb53252aef38e563ef6ecde193ab",
+   "hunks": [
+    {
+     "old": "use super::super::ApplyCapability;",
+     "new": "use super::ApplyCapability;"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🦀️.rs",
+   "before": "701ceec8699c78aca3c5a5043062bb8e00b5936340e25b06774dacded03ccaed",
+   "after": "58584de9f002bfb1c69113e860301c795284743ced06600d29f862976c78c59f",
+   "hunks": [
+    {
+     "old": "use crate::retained::{RetainedFieldPreparation,retained_mutation_demand_fits};",
+     "new": "use crate::{field::RetainedFieldPreparation,retained_mutation_demand_fits};"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🦀️.rs",
+   "before": "f76d132eebb52696f6a43014914a5b6af1469e4403515336c160c60ff75a7125",
+   "after": "7d17ddabf7993d68807f43252f16d1f6a942e24f48813800c71828e6a8af578f",
+   "hunks": [
+    {
+     "old": "#[test]fn record_changes_original_sparse_fields_and_paid_frontier_match_neutral_cases(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/🎚️record/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){exercise(row,None);eprintln!(\"[DEBUG] Record original {:?} sparse outputs and exact physical frontier receipts\",row[\"id\"]);}}\n#[test]fn record_changes_partial_original_output_and_child_frontier_close(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/🎚️record/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){for cut in f[\"cancelCuts\"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;exercise(row,Some(cut));eprintln!(\"[DEBUG] Record original {:?} partial original output/child frontier cut={cut}\",row[\"id\"]);}}}",
+     "new": "#[test]fn record_changes_original_sparse_fields_and_paid_frontier_match_neutral_cases(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/🎚️record/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){exercise(row,None);eprintln!(\"[DEBUG] Record original {:?} sparse outputs and exact physical frontier receipts\",row[\"id\"]);}}\n#[test]fn record_changes_partial_original_output_and_child_frontier_close(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/🎚️record/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){for cut in f[\"cancelCuts\"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;exercise(row,Some(cut));eprintln!(\"[DEBUG] Record original {:?} partial original output/child frontier cut={cut}\",row[\"id\"]);}}}"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🦀️.rs",
+   "before": "eafb8ee7ccdf10dbc1b5e72a9e0a814d39b135055e8a3854f4d0547375e3bef4",
+   "after": "095ca6036a46ea700fcc09636e9f51edfa697238e2716769c39ec1c75f2c30cd",
+   "hunks": [
+    {
+     "old": "fn typed_field_changes_plain_text_bytes_and_ieee_preserve_original_children(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"plainCases\"].as_array().unwrap(){for cut in fixture[\"cancelCuts\"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize)).chain(std::iter::once(None)){let same=row[\"unchanged\"].as_bool().unwrap();match row[\"type\"].as_str().unwrap(){\"text\"=>exercise_plain(row[\"authored\"].as_str().unwrap().to_owned(),row[\"original\"].as_str().unwrap().to_owned(),same,cut,|a,b|a==b),\"bytes\"=>{let bytes=|v:&serde_json::Value|v.as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();exercise_plain(bytes(&row[\"authored\"]),bytes(&row[\"original\"]),same,cut,|a,b|a==b)},\"f64\"=>{let number=|v:&serde_json::Value|if v==\"nan\"{f64::NAN}else{v.as_str().unwrap().parse::<f64>().unwrap()};exercise_plain(number(&row[\"authored\"]),number(&row[\"original\"]),same,cut,|a,b|a.to_bits()==b.to_bits());},_=>unreachable!()}eprintln!(\"[DEBUG] Generic field {:?} exact plain typed output/inverse and original child custody cut={cut:?}\",row[\"id\"]);}}}",
+     "new": "fn typed_field_changes_plain_text_bytes_and_ieee_preserve_original_children(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"plainCases\"].as_array().unwrap(){for cut in fixture[\"cancelCuts\"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize)).chain(std::iter::once(None)){let same=row[\"unchanged\"].as_bool().unwrap();match row[\"type\"].as_str().unwrap(){\"text\"=>exercise_plain(row[\"authored\"].as_str().unwrap().to_owned(),row[\"original\"].as_str().unwrap().to_owned(),same,cut,|a,b|a==b),\"bytes\"=>{let bytes=|v:&serde_json::Value|v.as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();exercise_plain(bytes(&row[\"authored\"]),bytes(&row[\"original\"]),same,cut,|a,b|a==b)},\"f64\"=>{let number=|v:&serde_json::Value|if v==\"nan\"{f64::NAN}else{v.as_str().unwrap().parse::<f64>().unwrap()};exercise_plain(number(&row[\"authored\"]),number(&row[\"original\"]),same,cut,|a,b|a.to_bits()==b.to_bits());},_=>unreachable!()}eprintln!(\"[DEBUG] Generic field {:?} exact plain typed output/inverse and original child custody cut={cut:?}\",row[\"id\"]);}}}"
+    },
+    {
+     "old": "fn optional_field_partial_cancellation_and_foreign_sources_remain_owned(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"cases\"].as_array().unwrap(){for cut in fixture[\"cancelCuts\"].as_array().unwrap().iter().map(|cut|cut.as_u64().unwrap()as usize){let mut a=source(nullable(&row[\"authored\"]));let mut b=source(nullable(&row[\"original\"]));let mut foreign=source(nullable(&row[\"authored\"]));let pointer=b.borrow().get().as_ref().map(|text|text.as_ptr());let mut p=RetainedFieldChange::<Option<String>>::default();let mut turns=0;while !p.ready()&&turns<cut{let g=grant(p.decision_demand(a.borrow(),b.borrow(),257).unwrap());assert!(p.decide(a.borrow(),b.borrow(),g).unwrap().progress().fits(g));turns+=1;}if turns>0{assert!(p.equality.verify(foreign.borrow(),b.borrow()).is_err());}let mut change=None;let mut inverse=None;if p.ready()&&turns<cut{let g=grant(p.decision_demand(a.borrow(),b.borrow(),257).unwrap());change=Some(p.take_change(g).unwrap().unwrap().0);turns+=1;while !p.inverse_ready()&&turns<cut{let g=grant(p.inverse_demand(b.borrow(),257).unwrap());assert!(p.inverse(b.borrow(),g).unwrap().progress().fits(g));turns+=1;}if p.inverse_ready()&&turns<cut{inverse=Some(p.take_inverse(grant(p.inverse_take_demand().unwrap())).unwrap().unwrap().0);}}close(&mut p);assert_eq!(b.borrow().get().as_ref().map(|text|text.as_ptr()),pointer);drain(change);drain(inverse);close_source(&mut a);close_source(&mut b);close_source(&mut foreign);eprintln!(\"[DEBUG] Optional original {:?} cancellation cut={cut} source/payload child custody closes under original grants\",row[\"id\"]);}}",
+     "new": "fn optional_field_partial_cancellation_and_foreign_sources_remain_owned(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"cases\"].as_array().unwrap(){for cut in fixture[\"cancelCuts\"].as_array().unwrap().iter().map(|cut|cut.as_u64().unwrap()as usize){let mut a=source(nullable(&row[\"authored\"]));let mut b=source(nullable(&row[\"original\"]));let mut foreign=source(nullable(&row[\"authored\"]));let pointer=b.borrow().get().as_ref().map(|text|text.as_ptr());let mut p=RetainedFieldChange::<Option<String>>::default();let mut turns=0;while !p.ready()&&turns<cut{let g=grant(p.decision_demand(a.borrow(),b.borrow(),257).unwrap());assert!(p.decide(a.borrow(),b.borrow(),g).unwrap().progress().fits(g));turns+=1;}if turns>0{assert!(p.equality.verify(foreign.borrow(),b.borrow()).is_err());}let mut change=None;let mut inverse=None;if p.ready()&&turns<cut{let g=grant(p.decision_demand(a.borrow(),b.borrow(),257).unwrap());change=Some(p.take_change(g).unwrap().unwrap().0);turns+=1;while !p.inverse_ready()&&turns<cut{let g=grant(p.inverse_demand(b.borrow(),257).unwrap());assert!(p.inverse(b.borrow(),g).unwrap().progress().fits(g));turns+=1;}if p.inverse_ready()&&turns<cut{inverse=Some(p.take_inverse(grant(p.inverse_take_demand().unwrap())).unwrap().unwrap().0);}}close(&mut p);assert_eq!(b.borrow().get().as_ref().map(|text|text.as_ptr()),pointer);drain(change);drain(inverse);close_source(&mut a);close_source(&mut b);close_source(&mut foreign);eprintln!(\"[DEBUG] Optional original {:?} cancellation cut={cut} source/payload child custody closes under original grants\",row[\"id\"]);}}"
+    },
+    {
+     "old": "fn optional_field_sparse_changes_and_inverse_preserve_original_sources(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"cases\"].as_array().unwrap(){let mut authored=source(nullable(&row[\"authored\"]));let mut original=source(nullable(&row[\"original\"]));let pointer=original.borrow().get().as_ref().map(|text|text.as_ptr());let(mut field,heap)=observe_heap(RetainedFieldChange::<Option<String>>::default);assert_eq!(heap,(0,0));let mut turns=0;while !field.ready(){let g=grant(field.decision_demand(authored.borrow(),original.borrow(),257).unwrap());assert_eq!(field.decide(authored.borrow(),original.borrow(),RetainedCloneGrant{maximum_items:0,..g}).unwrap().progress(),Default::default());assert!(field.decide(authored.borrow(),original.borrow(),g).unwrap().progress().fits(g));assert!({turns+=1;turns}<100000);}let g=grant(field.decision_demand(authored.borrow(),original.borrow(),257).unwrap());let(change,p)=field.take_change(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(change.is_none(),row[\"unchanged\"].as_bool().unwrap());if let Some(change)=change.as_ref(){assert_eq!(change,&nullable(&row[\"change\"]));}while !field.inverse_ready(){let g=grant(field.inverse_demand(original.borrow(),257).unwrap());assert!(field.inverse(original.borrow(),g).unwrap().progress().fits(g));assert!({turns+=1;turns}<100000);}let g=grant(field.inverse_take_demand().unwrap());let(inverse,p)=field.take_inverse(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(inverse,nullable(&row[\"inverse\"]));close(&mut field);assert_eq!(original.borrow().get().as_ref().map(|text|text.as_ptr()),pointer);assert_eq!(observe_heap(||drop(field)).1,(0,0));drain(change);drain(inverse);close_source(&mut authored);close_source(&mut original);eprintln!(\"[DEBUG] Optional original {:?} exact sparse clear/set/no-op and inverse custody passed\",row[\"id\"]);}}",
+     "new": "fn optional_field_sparse_changes_and_inverse_preserve_original_sources(){let fixture:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in fixture[\"cases\"].as_array().unwrap(){let mut authored=source(nullable(&row[\"authored\"]));let mut original=source(nullable(&row[\"original\"]));let pointer=original.borrow().get().as_ref().map(|text|text.as_ptr());let(mut field,heap)=observe_heap(RetainedFieldChange::<Option<String>>::default);assert_eq!(heap,(0,0));let mut turns=0;while !field.ready(){let g=grant(field.decision_demand(authored.borrow(),original.borrow(),257).unwrap());assert_eq!(field.decide(authored.borrow(),original.borrow(),RetainedCloneGrant{maximum_items:0,..g}).unwrap().progress(),Default::default());assert!(field.decide(authored.borrow(),original.borrow(),g).unwrap().progress().fits(g));assert!({turns+=1;turns}<100000);}let g=grant(field.decision_demand(authored.borrow(),original.borrow(),257).unwrap());let(change,p)=field.take_change(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(change.is_none(),row[\"unchanged\"].as_bool().unwrap());if let Some(change)=change.as_ref(){assert_eq!(change,&nullable(&row[\"change\"]));}while !field.inverse_ready(){let g=grant(field.inverse_demand(original.borrow(),257).unwrap());assert!(field.inverse(original.borrow(),g).unwrap().progress().fits(g));assert!({turns+=1;turns}<100000);}let g=grant(field.inverse_take_demand().unwrap());let(inverse,p)=field.take_inverse(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(inverse,nullable(&row[\"inverse\"]));close(&mut field);assert_eq!(original.borrow().get().as_ref().map(|text|text.as_ptr()),pointer);assert_eq!(observe_heap(||drop(field)).1,(0,0));drain(change);drain(inverse);close_source(&mut authored);close_source(&mut original);eprintln!(\"[DEBUG] Optional original {:?} exact sparse clear/set/no-op and inverse custody passed\",row[\"id\"]);}}"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🦀️.rs",
+   "before": "8d2d7665c58edf405bab0a355bdb6d3c6f3474d07ea28ade6c4552f1fa349fa0",
+   "after": "b2d3eea05874fe6b75bb21105659b1f9959bec4de2bc8652bbc2caa55a5b9c4d",
+   "hunks": [
+    {
+     "old": "#[test]fn indexed_replacement_original_rows_and_moved_payloads_match_neutral_cases(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/📋️indexed/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){exercise(row,None);eprintln!(\"[DEBUG] Indexed original {:?} exact full rows, payload move pointer and physical receipts\",row[\"id\"]);}}\n#[test]fn indexed_replacement_partial_original_deque_and_output_children_close(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../🪡️field/🟰️change/📋️indexed/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){for cut in f[\"cancelCuts\"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;exercise(row,Some(cut));eprintln!(\"[DEBUG] Indexed original {:?} partial authored deque/output child closure cut={cut}\",row[\"id\"]);}}}",
+     "new": "#[test]fn indexed_replacement_original_rows_and_moved_payloads_match_neutral_cases(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/📋️indexed/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){exercise(row,None);eprintln!(\"[DEBUG] Indexed original {:?} exact full rows, payload move pointer and physical receipts\",row[\"id\"]);}}\n#[test]fn indexed_replacement_partial_original_deque_and_output_children_close(){let f:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../🪡️field/🟰️change/📋️indexed/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();for row in f[\"cases\"].as_array().unwrap(){for cut in f[\"cancelCuts\"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;exercise(row,Some(cut));eprintln!(\"[DEBUG] Indexed original {:?} partial authored deque/output child closure cut={cut}\",row[\"id\"]);}}}"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧪️tests/🦀️.rs",
+   "before": "e8d1ef22b92d45ab09f00beeea1e621cc72c585c7535ab66456e54e05ef30325",
+   "after": "660d2c2a8af3dfa4b5c812638e80d2f524252224778ae6ad8bdc835e3b4df77d",
+   "hunks": [
+    {
+     "old": "    let vectors:serde_json::Value=serde_json::from_str(fixture_text!(\"../../📏️body/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();",
+     "new": "    let vectors:serde_json::Value=serde_json::from_str(fixture_text!(\"../../../📏️body/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();"
+    },
+    {
+     "old": "    let vectors: serde_json::Value = serde_json::from_str(fixture_text!(\"../../🪡️field/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();",
+     "new": "    let vectors: serde_json::Value = serde_json::from_str(fixture_text!(\"../../../🪡️field/🧪️tests/🧫️fixtures/🔣️.json\")).unwrap();"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
+   "before": "5da16b756ff4abab2ab3a1f54099f51872d7c5b16487464e08173597c6d41e4b",
+   "after": "cdb92264ba9a7ed91fd17257906eb674309f89054bcb6d5e4fd4e33334389f25",
+   "hunks": [
+    {
+     "old": "semio-framework-mutation-diff = { path = \"../../../🔺️diff/📦️packages/🦀️rust\" }\nsemio-framework-replication-mutation = { path = \"../../../📦️packages/🦀️rust\" }",
+     "new": "semio-framework-mutation-diff = { path = \"../../../🔺️diff/📦️packages/🦀️rust\" }\nsemio-framework-replication-mutation-retained-field = { path = \"../../🪡️field/📦️packages/🦀️rust\" }\nsemio-framework-replication-mutation = { path = \"../../../📦️packages/🦀️rust\" }"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🏛️crate-partition/🟦️.ts",
+   "before": "f3b9e239b893d50301bee348abd175b6a76ac714d25fb7f574fdf6ef2e3fef67",
+   "after": "e9186d4d575aadec14143ce17edfd854ce0da62cf322f3127ff25352729c7ba4",
+   "hunks": [
+    {
+     "old": "  expect(corpus.crates.length).toBe(17);",
+     "new": "  expect(corpus.crates.length).toBe(18);"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🏛️crate-partition/🔣️.json",
+   "before": "532257d4aa5f37035c2398609dc56d35f16015a6a13379d9112c8250a0c78cee",
+   "after": "ae954af086cbf191728be44cf94288b2cb9fdc88a6a086706c788c37dc6ef22e",
+   "hunks": [
+    {
+     "old": "        \"semio-framework-mutation-diff\"\n      ]\n    }\n  ]",
+     "new": "        \"semio-framework-mutation-diff\"\n      ]\n    },\n    {\n      \"package\": \"semio-framework-replication-mutation-retained-field\",\n      \"manifest\": \"🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/Cargo.toml\",\n      \"entry\": \"🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/🦀️.rs\",\n      \"level\": 0,\n      \"dependencies\": [],\n      \"devDependencies\": [],\n      \"peerDependencies\": [\n        \"semio-framework-mutation-diff\"\n      ]\n    }\n  ]"
+    },
+    {
+     "old": "        \"semio-framework-replication-mutation-messages\"",
+     "new": "        \"semio-framework-replication-mutation-messages\",\n        \"semio-framework-replication-mutation-retained-field\""
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/🧬️schema/🏛️crate-partition/🔣️.json",
+   "before": "e083e87041fe75c8dfeeffd48f5c9205dd84fd7f82cfa0770c7712cf5f560f73",
+   "after": "33cbd9b4c33098e49d0a77ea9fe80e7e261c760a0b6740860dc6dcf256967f78",
+   "hunks": [
+    {
+     "old": "      \"minItems\": 17,\n      \"maxItems\": 17,",
+     "new": "      \"minItems\": 18,\n      \"maxItems\": 18,"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+   "before": "dc8ccc5d9e001867f578b1d7c80836609a1c798c49a6f66a3a65d9a1514bbffa",
+   "after": "da7eab79a997f6dcbe27b6f36308c4975c87a3a1b6b08bdb81692c0c2d8b01ff",
+   "hunks": [
+    {
+     "old": "semio-framework-replication-mutation-retained = { path = \"../../🎮️mutation/🧳️retained/📦️packages/🦀️rust\" }\nsemio-framework-replication-presence = { path = \"../../📡️wire/👥️presence/📦️packages/🦀️rust\" }",
+     "new": "semio-framework-replication-mutation-retained = { path = \"../../🎮️mutation/🧳️retained/📦️packages/🦀️rust\" }\nsemio-framework-replication-mutation-retained-field = { path = \"../../🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust\" }\nsemio-framework-replication-presence = { path = \"../../📡️wire/👥️presence/📦️packages/🦀️rust\" }"
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🎓️teaching/Cargo.lock",
+   "before": "b467f9b6fdf6133cdc4a388ffa36e8d13f2bf5c3f4f6fb170fbaedd24c8b147a",
+   "after": "78a86fe8b9456ce97f11cfe779c81dcbc5cf66ee456bc9eed91f71bc31495cf1",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+   "before": "da526297b4901945cb764cfd6b5bfed094a5f247dc209157634456a4263fd6f7",
+   "after": "26b0e4faa6ec1ab24e682922cfcf0985f08c9c061dddab24c392a075224ffa82",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+   "before": "a9af3d7cd13df0159f2cecf426f2e02272d41326f6ea370783daa0f21c7771b9",
+   "after": "9d3101acb2478d9ca13dccce2a11984f85786e3b124e82cd15470f7f6ab70ccf",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+   "before": "d56afbd56de27e6985ec97dbd81bba09ba7848effd027220451d68085999d447",
+   "after": "962d48f789188bbe8955f30d5f19e2a3c0c090698a0c4a73a99e664865808b44",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock",
+   "before": "9cf4a1880a8c54a34c09ff607205939b6f6eb9971018bc8b887b1f27893d2f7a",
+   "after": "b164a260f1f423b9f6d99ad0c5182a4ca7f720654bd6e6d2739b8d90b9be26c3",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock",
+   "before": "50affd37094a9d3d56bf35ae576ce32fd6ac899aaeb5ffa12b6d7ebc036cf294",
+   "after": "791cc2032a8ecb7282a601a1285949e9156bb0d508fbab20fae628802d625342",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/Cargo.lock",
+   "before": "75a1910cb987944f26687596c6ab449d8854e70bc968fcbca2537cfb37896922",
+   "after": "f5b2452e04dfc6a901921144da6a47bdb0f838d24222eaf261f0b23c70692f4a",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock",
+   "before": "52e5bb04e7603e06fd633ea583646346512b32c07107b7786e358ef8af8a4a6e",
+   "after": "a3158d585e9c66c0d39f27219c29ccf97fa0bbed84a36cba351fd9b1d8336981",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock",
+   "before": "4dd47c281cdf75a66315b167341e7d72915843618bc57771a2b12b1f100bacd2",
+   "after": "1c3cb32c4eab4d39ce8f332fa055021924bad3203e02399aca3091454fbfdda9",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/Cargo.lock",
+   "before": "baf0d7c4949b118ec8da3fa93329661d117f69d7c6086f381ac98b0f1b36b3af",
+   "after": "d3dfe0c9a6f97b761a8071d6a69f4237b043be0b62455d780365303c906da038",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/⚙️engine/📍node/Cargo.lock",
+   "before": "0f702ab2f232d9d422dd60ff67b47e98f4c6c6dd3636644a654c4b039f7ddbd7",
+   "after": "c644e13f85b4788e33b66e607884b9e04c191665269cab6ce94ee6a55f29925d",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.lock",
+   "before": "13c6cdbae7a483e93aba2b8dc1914fc532324f7e4197c9c01248c55c7313c58c",
+   "after": "b1640be4fba33d984139f50a8a46bcdf58a72693e6053ef51e47c5f1ce33bac5",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock",
+   "before": "02695f51657bafa3384e1d528bdaf781a9d5475712aa5d8e5854ea1f3e8337c9",
+   "after": "1141456ea5201a5bd5c4939bf61abd3e7e39a4dbbef67cd9f38eff6444ff6481",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  },
+  {
+   "kind": "edit",
+   "rel": "🌎️hub/Cargo.lock",
+   "before": "628c4c0c5532c45ca1b90621d6d0149781a57954b1c7053eab08bce18d1a4c5d",
+   "after": "338ce56372acfcdae66f69325584c4c72d30a2cb645ed13251c0490c7cce1941",
+   "hunks": [
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",\n \"semio-framework-value-native-owned\",\n \"semio-framework-value-persistent\",\n]\n\n[[package]]\nname = \"semio-framework-replication-mutation-retained-field\"\nversion = \"0.1.0\"\ndependencies = [\n \"semio-framework-mutation-diff\",\n \"semio-framework-value\",\n \"semio-framework-value-persistent\",\n]\n"
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-value\",",
+     "new": " \"semio-framework-replication-mutation-messages\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-value\","
+    },
+    {
+     "old": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-presence\",",
+     "new": " \"semio-framework-replication-mutation-retained\",\n \"semio-framework-replication-mutation-retained-field\",\n \"semio-framework-replication-presence\","
+    }
+   ],
+   "group": "default"
+  }
+ ]
+}

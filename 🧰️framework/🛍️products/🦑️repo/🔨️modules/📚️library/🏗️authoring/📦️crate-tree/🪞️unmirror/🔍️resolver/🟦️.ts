@@ -1,7 +1,7 @@
 /** 🔍️ Module-level name resolution over the carved crates of a repository: builds the module tree of every crate from its `#[path]` mounts and resolves `use` leaves and paths through explicit imports, globs and re-exports, recording where a path crosses into another carved crate. */
 import { existsSync, readFileSync } from "node:fs";
 import { posix, resolve } from "node:path";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../../🌳️module-tree/🟦️.ts";
 import { CycleMemo } from "../🔁️cycle-memo/🟦️.ts";
 import { leafBinding, scanSource, scanUseStatements, type ScannedSource, type UseLeaf, type UseStatement } from "../🧵️use-tree/🟦️.ts";

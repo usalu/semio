@@ -1,0 +1,7 @@
+# Portable Inventory Window Preparation
+
+Schema-first neutral sequence inputs were authored under ⏱️inputs before any production performance edit. Seven cases cover success, body/final/both failures, thrown undefined, cancellation and refused precheck. The actual existing image gate must still cover expiry and inherited positive-window restoration; these are not replaced by fake timer assertions. Proposed graph helper uses strict0 before, default500 only during one admitted cohort, strict0 final even after body error, exact single error identity and ordered AggregateError for dual failure. Existing per-file descriptor/hash/ancestry/control/progress remain intact. No Source edit or test execution has occurred for this proposal; current architecture attribution66599 remains unchanged.
+
+Concrete cost audit is in 2026-10-20-portable-input-recheck-audit.md; it does not identify the current stack or prove the live regression delay. Existing public native image facade needs one explicit re-export of its already implemented window API. Final integration belongs in graph settlement tests with actual function extraction and independent SQLite sequence comparison, plus existing actual gate timing/Python oracle tests.
+
+After Low review, the cancellation row was strengthened to abort an actual refined issued control. The final strict check records its attempt before checking the cancelled signal; both exact cancellation failures must be retained in AggregateError. This is prepared regression coverage, not an executed result.

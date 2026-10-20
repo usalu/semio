@@ -38,6 +38,3 @@ semio-s-fem-static = { workspace = true }
 semio-s-fem-test-support = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
-semio-s-plugin-stdio = { path = "../../../../../../🔌️plugins/🗄️stdio/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-semio-base = { path = "../../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust" }
-teaching-proctor-base = { path = "../../../../../../../🎓️teaching/🛂️proctor/🔨️modules/🧱️base/📦️packages/🦀️rust" }

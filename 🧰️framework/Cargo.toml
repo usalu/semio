@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
     "🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
@@ -134,6 +135,7 @@ members = [
     "🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/📐️format/📦️packages/🦀️rust",

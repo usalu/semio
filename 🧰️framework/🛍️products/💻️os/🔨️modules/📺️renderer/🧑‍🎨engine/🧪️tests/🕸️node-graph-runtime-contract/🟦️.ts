@@ -1,4 +1,4 @@
-import{frameworkOsEngineDeliveriesV1}from"@semio-tech/framework/os/modules/dev/builder/vite/artifacts/engines";
+import{frameworkOsEngineDeliveriesV1}from"@semio-tech/framework-os-dev/builder/vite/artifacts/engines";
 import{managedWasmPackagesVitePluginV1}from"@semio-tech/ui-styling/builder/vite/wasm/delivery";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";

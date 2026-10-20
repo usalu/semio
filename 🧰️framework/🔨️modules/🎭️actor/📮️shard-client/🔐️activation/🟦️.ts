@@ -1,8 +1,8 @@
-import { OwnedResidentLedger, type ResidentStep, type ResidentGrant, type OwnedResidentAdmission, type OwnedResidentRecord } from "@semio-tech/value-ts/resident";
-import { uiResidentMetadataEnvelope } from "@semio-tech/ui-contract/retained/resident/metadata";
+import { OwnedResidentLedger, type ResidentStep, type ResidentGrant, type OwnedResidentAdmission, type OwnedResidentRecord } from "../../../🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts";
+import { uiResidentMetadataEnvelope } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { type ActorInstanceOpenRequest, type ActorInstanceLifetime, type ActorInstanceLifecycleReceipt, type ActorInstanceCloseRequest, actorInstanceLifetimeEquals } from "../../🚪️lifetime/🟦️.ts";
-import { OwnedUiInstanceRetirement, OwnedUiInstance, OwnedUiPatchAcknowledgement } from "@semio-tech/ui-contract/retained/instance";
+import { OwnedUiInstanceRetirement, OwnedUiInstance, OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { OriginalOperationAdmission } from "../../🎟️retained-turn/🟦️.ts";
 import type { ActorReturnResult, ActorReturnPageReceipt, ActorReturnOrigin, ActorReturnIdentity } from "../../📤️return/🟦️.ts";
 import type { ActorBytePage } from "../../📃️page/🟦️.ts";
@@ -10,7 +10,7 @@ import type { ShardWorkerLike } from "../🚨️quota/🟦️.ts";
 import type { ShardHeartbeatState } from "../💓️heartbeat/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
 import type { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
-import { returnContentMatches } from "@semio-tech/ui-contract/retained/host/return-content";
+import { returnContentMatches } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
 /** 📦️ The decoded content a consumer binds to a published return; the actor holds it opaquely and never calls into it. */
 export type ShardReturnContent = object;
 

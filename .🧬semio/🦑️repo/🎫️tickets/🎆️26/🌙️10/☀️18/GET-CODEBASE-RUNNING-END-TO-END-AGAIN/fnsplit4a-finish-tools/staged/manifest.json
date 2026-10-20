@@ -1,0 +1,817 @@
+{
+ "schema": "fnsplit4a-finish/1",
+ "ops": [
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🔶️actor-return-codecs-load/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "53e571c058a20af58c2b726b9f60fa034c4bb70e1d498da776eb06285da4e679",
+   "bytes": 13648
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🔸️actor-return-result-matches/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "e67fe9f136664f99ae1859fa96671db662bee17a29ecafb38eccfb88313b08d8",
+   "bytes": 11630
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟠️actor-return-result-framing/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "6d69363bb1e6eedbad30c1d59aa8105193ca5bf813dcea966dbd8db22159d7f0",
+   "bytes": 2885
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "a3f266ae7f11ecce1c5f31551c4d76e674740bc48f86e85dd01c72b651c0ab57",
+   "bytes": 137
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+   "baseSha256": "1180f5f3032a67d188e1bd6e1f624d40e32dce723e2916832d2ed3e81590cfd3",
+   "sha256": "eec297ca44f9935cc32b8ec716f5ac6a2f2a49d6af52d679b1d08a175a12edc7",
+   "bytes": 1686
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🔶️actor-instance-close-fault/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "da88b2afa1838647ac40d15a79b64202bfd5e7764cc1124b0b63223ee921bb08",
+   "bytes": 9673
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🔸️actor-arena-handback-fixture/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "5bf3bd5e847a48da99cdb0ed9d0cf5705a52d4a7f31cbc5deb6c13484faac2c9",
+   "bytes": 10382
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟠️actor-instance-close-receipts/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "e72c37316f7e5fc4648a599b46e39d07fc1c48c6b8a757b504b063cf5da0252e",
+   "bytes": 3733
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "a3f266ae7f11ecce1c5f31551c4d76e674740bc48f86e85dd01c72b651c0ab57",
+   "bytes": 137
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+   "baseSha256": "8a24d8ee532df66847e22f0e71f9167d49c6ea12af7c978d895278946ba02105",
+   "sha256": "812a64fb0cd4db4ea0e635c24ed5683774670f30f7b81d9c7342c5c486820c21",
+   "bytes": 1517
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🔶️artifact-bootstrap-assembler/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "d55672bbbb1dd40889ffb87819c15b254d5cb37a51b12d2d1cdcf95dbf565eb9",
+   "bytes": 1155
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🔸️artifact-bootstrap-protocol/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "c2281b1b50e18b7328451de89f17fa4b283a7786a2d2f7e1b08bae4a9ad48eab",
+   "bytes": 14587
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟠️wire-fixtures/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "27ace4ba2ce297cf249fff99006eb4a0ec0ee821539137acc9dfcf4ee98599dd",
+   "bytes": 10042
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "10fe85df7027a6de18801a6bee4c6db3d1a383df30e50ae130e4c5868a44be74",
+   "bytes": 386
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts",
+   "baseSha256": "d51c38b515e34f6d4c8d9bafaba0293cd341db5653ec8f49d13cb02f14e09b43",
+   "sha256": "54a900619a32ea60f5d94edc72e0f825a47c5106a284d9fb23f3f59332c5b20f",
+   "bytes": 1432
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/👆️swipe/🟦️.ts",
+   "baseSha256": "91b79a05307cb8d8f287c813c4adeb448d0ab997a527e027cbad4d53d8a30ebd",
+   "sha256": "cdc14a92da8948f1c7b343cba798e96214bb2337d0fca21cc2f5420d53fd6a72",
+   "bytes": 12158
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/💡️hints/🟦️.tsx",
+   "baseSha256": "8f60ad2daa2a47a6749c7d1cefcc2bebf4aad3231de3ab977a5845b1a933b2f0",
+   "sha256": "b9738350a0ceef8745d5d0159349ef1641c15bacae38086c915436441a39bf90",
+   "bytes": 4306
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "baseSha256": "60577d2228eb347e9404541ae9d71bca4d9f44a822a385f25ac65c26024ab395",
+   "sha256": "0434103c726af5ffd251eb3b5df9db66cbe4cd141d355157fa4958a07cc7d0e3",
+   "bytes": 6088
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "baseSha256": "68b2e481af5cec3ef330885b9b9650af0b57d5aa46689e682d32c59b8e431f6e",
+   "sha256": "243a2be4d5d5db173a42dde26d2a166602a5311603534f5924abf73f41b62b1f",
+   "bytes": 5119
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx",
+   "baseSha256": "5331db3bd4d57cfa383c498c24369918f546443e5060810fb94ed69d4baf8f77",
+   "sha256": "fb5ba4aa35c13e035cd5d92c510fab9783627a9194f48aa4ef46403b664d0e96",
+   "bytes": 12578
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx",
+   "baseSha256": "eaa39618c666fc593f7b2cd6abf7649386fff9249dff3d84ea06cb1da8f16efd",
+   "sha256": "261820ab39a760cea4d3f6b086ec6cd8483505886d17802feb51d18771320aa7",
+   "bytes": 491
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🔶️before/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "c360517e98d4e1faf0664f118aef54783d6ee72469465bba575bd2a54a5f5073",
+   "bytes": 7596
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🔸️part2/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "4316a99e0da51f0c849c8c0b16f986f8e2ef61b492f1539c48b421b7a6e13e3a",
+   "bytes": 3469
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🟠️part3/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "a2f681c090ecaa52ff94c76386c0a7521b6b0b1a2cb86f9e9d8022981595b3ca",
+   "bytes": 9716
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "ba24f08cdda8ae8b684a2ef977504ae8048f8c94b28e859c2c436281a6363a47",
+   "bytes": 130
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🟦️.ts",
+   "baseSha256": "dfb69dd1930eb60130181ee4e42e793fcc0e6bbeed28255f0391e225caf51f52",
+   "sha256": "101d18d8dfda4896d87720e7219a78cd02b41d835bb173ff7424d87b9ffc7934",
+   "bytes": 834
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👇️hover-and-placement/🔶️active-utility/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "726de3123a03473b33b3cf81a8597f7f71be8753c8bc0933cc5dec7e3d5137ab",
+   "bytes": 9271
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👇️hover-and-placement/🔸️handle-component-hover/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "2bb344529d02a9975781849492187d6b4ce08f3ba1f31533bebeb91bdf8fe98d",
+   "bytes": 7959
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👇️hover-and-placement/🟦️.ts",
+   "baseSha256": "55555424d5358ec71f38a598f882e9a260e65ee32e61b59cf3a3b6e859b9b73e",
+   "sha256": "a3e5b7e330a6bb41b62ecdf57d6436670662800c9a3ea7cb0594be9a4249d41e",
+   "bytes": 2380
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔸️meshes-ref/🟦️.ts",
+   "baseSha256": "6695943de752c21b441afd0825af3d02d846cadc369ff3416b63366597af79bd",
+   "sha256": "f1a1f03cbcaf43517fb5562131044c36e98260d268f8f1dc5dc9567f28982059",
+   "bytes": 13555
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/✅️check-in-sync/🔶️host-mode/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "322f0f95a2d37bfd47f3a71f91b4e0db526f443cb2cd5bbea514909fca4fbd63",
+   "bytes": 18291
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/✅️check-in-sync/🔸️auto-checkin-scheduler/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "c5ffdca3947967ab9ec0f3c8d32158425d73912ee01bbb7b11b0b4bdfbc58e1a",
+   "bytes": 8922
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/✅️check-in-sync/🟦️.tsx",
+   "baseSha256": "096cfa6932499d63672968bd38f17bb87f711fee8839f293e705461753851d6d",
+   "sha256": "604b0ebcbfb372c2f377c196ea7d1199a3ea25a18de251bb461801fa141d9b81",
+   "bytes": 2612
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎥️tutorial-orchestration/🔶️scope/🟦️.ts",
+   "baseSha256": "39906dc28a6423af02428e9b5a358c527b0c8e7987f1581721b94888047f4bd1",
+   "sha256": "78cf1d75fc6c44ba73eb961502789e99e35576862e90e874d327ab68cd362945",
+   "bytes": 7499
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx",
+   "baseSha256": "a59220173daa1233a08c4dadf48df270896af0fedba0be3fb0e5d7bb4bfea08b",
+   "sha256": "75fb766abe137e156752eb1d78d764da94622c4fcc6c6d100d6df1305b498a55",
+   "bytes": 13690
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🔶️catalog/🟦️.ts",
+   "baseSha256": "3560ccca5f8e586b7c4a1fac7dd096f527e70b89881ee5a5cf098e18ddbc1585",
+   "sha256": "a98b7754611af7ae13c25e96cbd88f74e8c59ad845447d9a89f26554c7a8c4d0",
+   "bytes": 16012
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🔸️open-artifact-app/🟦️.ts",
+   "baseSha256": "96e3a940baca6486a9697c7374a707fad5f570a800a5269a6d16d41ebfa8c926",
+   "sha256": "05e60a06eda4873455949be20524d6d0077766687b2cd6496180ddf25ec24a2d",
+   "bytes": 12217
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📬️artifact-opening/🟠️open-entries/🟦️.ts",
+   "baseSha256": "d7c45795b4d2a0ace77bd749ad0a640b1b52e0a259fe91bc853d0eb1c5849bc7",
+   "sha256": "2deab64d366f2a20e01e1b87b10891c7a1b3266a84f8b98b356e863e10c71c8f",
+   "bytes": 9469
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔎️command-bar/🔶️scope/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "1d3b73e8a9032eaf49fe4af5d5a9bfa3b00fba36f4ec231309abe3b94d8b9ee5",
+   "bytes": 14828
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔎️command-bar/🔸️command/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "7fbdf32f30800186e72e901de174c78e01167fb7b36cef2a5e1fcc9aeb0f9c30",
+   "bytes": 13172
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔎️command-bar/🟦️.tsx",
+   "baseSha256": "2990cf09df13f53a92d040bfb4c3d3cb20ade2aecfb332ff51708cf7102c10d3",
+   "sha256": "eb4bcded5165104f72dc2e4fce55416398f19b1f7db92e9707265c7621097c53",
+   "bytes": 2569
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🪪️identity-and-directory-state/🟦️.ts",
+   "baseSha256": "37aeb1aab70f19c2813911eb3b201b0e0a866ef4ef1a590af7aa5e148de302df",
+   "sha256": "827eea0cad0d0bf43805fec800371e84899a9dbac0ac947a97bc43b2d2ec2ba6",
+   "bytes": 27777
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔶️core/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "aadda665d1e247a081a516cf1a93ba1da2c2b5edee3be862acdecfe6adfc5cfa",
+   "bytes": 7526
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔸️shared/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "bcdaea48733b7af1421d6ce0a12796cbd33eac8e73f49df7c1555c986ad2ddb1",
+   "bytes": 606
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟠️close-document/🟦️.ts",
+   "baseSha256": "93b8ec88a28d1842cb1cbc6e3e2244500fe7d67d0e604feffcd7aff13f964c94",
+   "sha256": "e2e400567c28a11f1b66a51a50f870ac29c31556c164a06f25895a2916c1d680",
+   "bytes": 17522
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟠️shell-uri/🟦️.ts",
+   "baseSha256": "6319c23866e61f8d9343154b2287beddebaa790df0d8c45496f8b3b8473b487a",
+   "sha256": "b1453576930d98942cd3224102c1a8d61ca187eaf25b2eb17d8f41988d2958c2",
+   "bytes": 8746
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+   "baseSha256": "79b000aab2ae470df89822e6f523a74a6e14361f6115df2ec83df387370dd39d",
+   "sha256": "ea7745406ae5d4260d5144068c748e0784086c158161a9c2d0f6cf7982e53f32",
+   "bytes": 29842
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/💬️AgentChatPanel/🟦️.tsx",
+   "baseSha256": "2188de70e4511a296af01feda3f6b5479a862a93da6152ebbe7184048c74772b",
+   "sha256": "f012a0e349e3d4a1111de7c433c2554bf2e94667e5f9832795f74953b4859120",
+   "bytes": 11449
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/💬️AgentChatPanel/🧪️tests/🧩️component/🟦️.tsx",
+   "baseSha256": "64ef323fe656fda26449baf4d11cc02f7ded017d826688d977cafb82138a9754",
+   "sha256": "4dd2397c12c5ed291d18ed3d403bf59b1ab4d6794553958f263519a65a51a530",
+   "bytes": 15980
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔶️scene/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "8d9b5e9f800b91147c8e2caba033748219db9de8cb94079242f59a5db056f690",
+   "bytes": 8559
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔸️publish-catalogue-drag/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "310b546aec2e717f7e7876bfde9195aadb8f109c018395f90d42d7eaaa209b91",
+   "bytes": 7851
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟠️context-menu/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "40566f559b129ac62d6e6e59d2d3701805f0560adbde1f6de21130cf565c2cbe",
+   "bytes": 2808
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟢️shared/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "6021bca439b241735a78e6f0f837cc8bcc505d6e0006f21cb6bb31bfb5306115",
+   "bytes": 610
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx",
+   "baseSha256": "0d8708c57dcb281c2ea49c36f0350af7743190da605662784aecb2cae63fe4ff",
+   "sha256": "7751f61679a6091bec08850b59068a7f9f0d05cde7c0cb5bca022e715d4c7023",
+   "bytes": 3127
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🔶️discovered/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "6fe640fa7693fb8a6b010b0bfc499d7c12b450487663db841bf717a12fd0bcdd",
+   "bytes": 6367
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🔸️part2/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "cb1f47cd4724b30cb234fd833c69af25ba47d69be3b31f2b010d30580575f967",
+   "bytes": 10803
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🟠️part3/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "8f3a1be7d24195fff04fcaaef049ed7c694c58d07c4dbf2a70caabe709bf883f",
+   "bytes": 513
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🟢️shared/🟦️.tsx",
+   "baseSha256": null,
+   "sha256": "a6b9e9bfab9bbb27099b1e4328655883299f9d52cc43465196b69108a8a6aa83",
+   "bytes": 15514
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🟦️.tsx",
+   "baseSha256": "abfd2eb27c5a98ac449b455b9057796c8ea15cce4696cb4bdb6e61b70594751e",
+   "sha256": "4ad2b42ba68c1a2fc77f1939eb780f75b23dbecf4929fa4947a1ac90900d3fef",
+   "bytes": 18248
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🔭️config-discovery/🟦️.ts",
+   "baseSha256": "2f4838b480e08bb0c2a5dcb4c0203302f3e20c452aabe691ae2f2894bfdce383",
+   "sha256": "97ff41b68de6efd5937c374bb3b1bef3b97bf5f2c88372996bd8f84221d24566",
+   "bytes": 20546
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🚏️artifact-routes/🟦️.ts",
+   "baseSha256": "6e9a2511f6dc568f14fd32f9f4fd9e27ed7030cb5fa0f668cc8135a5ce9e9533",
+   "sha256": "f15dd50e7762c99108505464425e8593f79d20baf9a5740f14a3f77df5d86e26",
+   "bytes": 15973
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🤝️handshake-ladder/🟦️.ts",
+   "baseSha256": "7947c26f5a566bb76052db89141eb4c83401fa68d86955fb60df58e83fc853d8",
+   "sha256": "0225b88157cab5db0da1d552b4819bbb12b3a77acf529a0514b1e45d77fa7874",
+   "bytes": 7043
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧬️frame-codec/🟦️.ts",
+   "baseSha256": "6f79ae7feccb07537da730e1af5ccc1a857b316d14a651dbe595d05ecd49c873",
+   "sha256": "e83c9ecf9c9de664104ae2b513b08d1746c7903a7712d6f9b7706e2fac18341f",
+   "bytes": 9679
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer/🔶️abort-gesture/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "72d4522b0f82625bab0a7c8ed7761f43d9abc70bf3c5d6301f46494cf53cd0ce",
+   "bytes": 7030
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer/🔸️handle-pointer-move/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "9551bc471c7eaa6e7d469d23317b55069f0a7341e4440a2a90e88d5119dccbca",
+   "bytes": 8607
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer/🟠️handle-wheel/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "9931297ecf345251224f3dcee375d8f4c87909ca9f58f6a495086a12ef57ae84",
+   "bytes": 3449
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer/🟦️.ts",
+   "baseSha256": "64b0ea76ad68c71e22b60b2b88f075f4006089b2a8d7c41a1bef71a34af0599c",
+   "sha256": "b42fb1811267613deec3ae1cc5eb5c5519eedb84aa22431a2c3877ac2d1dae16",
+   "bytes": 1920
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🚦️AgentPresence/🟦️.tsx",
+   "baseSha256": "c0aadced9205473f09bc2aaafce67b7440e952960ac9f659597dc7b43d559ffc",
+   "sha256": "ec327968a0b228ae5707e355951cff0a9c5fc63201ffc5a5fdb6e0e7dece4700",
+   "bytes": 3538
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🚦️AgentPresence/🧪️tests/🧩️component/🟦️.tsx",
+   "baseSha256": "b626caf30053b59786684c2c2568f6bf8f7cba8adacdba6d6751c8d146b97378",
+   "sha256": "f982b14b9d9dc6d3721db60a6937988a4d4eb797ed19e5ba883b7ccf4b82c28a",
+   "bytes": 4737
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🟦️.tsx",
+   "baseSha256": "a47060aa92457d6305e8d6a2ca638c0ccfae16f727926729accf9e6915d46a41",
+   "sha256": "f7c3d6f37c9a79fce1e94960ec3744bc00c907de85801403190b556ee8eca8bf",
+   "bytes": 15682
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🧪️tests/🧩️component/🟦️.tsx",
+   "baseSha256": "0d02f1e2c49b886ad86924049c97c7d03403210b461cbb7ee5612355f6896de5",
+   "sha256": "320127cea6fd4ce08849ff87f755ed62e9367bcc4acc4eac8029c41e88e029b2",
+   "bytes": 9911
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx",
+   "baseSha256": "fc973084db47300ff3d7f3f0e107d2c543bc6cafb3b19efbc272ffcd86d3d12b",
+   "sha256": "4f186e6812907c98c712b798df8f48c39530f3fb32666ed21231048914eed506",
+   "bytes": 49373
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🧪️tests/🧩️component/🟦️.tsx",
+   "baseSha256": "fd3d130c5563ad246ca79eb36f400ce21389edd353f75c5db8a5514fabcd0590",
+   "sha256": "a81210c39fd405cdbddfe41c14df1c998d589ff36eb85305990cad968da1f68a",
+   "bytes": 23308
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🔶️base/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "099f9cc4f52d1e78083276fe5430e5a6fec3787291ebde13dc68133f23bc128a",
+   "bytes": 16717
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🔸️raw-close/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "73402ce4d4cf147d36afaee44e6c38785b52d8287185cba2182c220dbd8eaf04",
+   "bytes": 20135
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟠️mutations/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "38b890e53b1d8f9334657855a8b269bbbdb4e0c917a1dda58635c376a45ae4fd",
+   "bytes": 2996
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+   "baseSha256": "767a017cae0f8ee3182503c73aaabeeb89ea449300042ce7d8bfb5eeec0ab820",
+   "sha256": "5b172e78d8464210239b0829a59dbf3172f37da22de4d3695b8e672e5221191a",
+   "bytes": 1189
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟣️shared/🟦️.tsx",
+   "baseSha256": "29504726bdb1663e274fec0afbf149c7b79eedbf3a2d5a54ff76edb5a58ab237",
+   "sha256": "cbe14dbde9890836724627c9da638f57f689318e069ec14f2f0bd067804411d9",
+   "bytes": 7994
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🔶️macro-files/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "1642cc4bec4714253f4f8065764fff2738b93e356d4d010465fa6a72144ea274",
+   "bytes": 19929
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🔸️framework-reserved-exact/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "e623369dadeb4c794b11bfcc2ce302eb01f58a1e4a9816a6547f8e5a1d970a84",
+   "bytes": 25853
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟠️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "f8b505fa2ef29569b30e161429425a236e0806c35aa91559f011713acf52c66e",
+   "bytes": 3927
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts",
+   "baseSha256": "3a23f1a6a04b12bf114721f02a8bc885dc4d1c3e411b47393ee5da33d66d054f",
+   "sha256": "29cf23f92a1fcfc4c405594252d3b7735050fc1902a4565ca9b78f56f63512b7",
+   "bytes": 4376
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧊️retained-ownership/🟦️.ts",
+   "baseSha256": "5d1f049aadfb91659d793444d6a00dbff11769cc570e54236905e4b5cdfe8311",
+   "sha256": "485ebc1d23113d5c67a5e8488d77da80a7fabc049f065b39669e763a9b379a8a",
+   "bytes": 12737
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts",
+   "baseSha256": "7f028986da53a07a7921e9e87a539f93736ba193c7fa7b7ed3304df81932a462",
+   "sha256": "48156366a21d748a312012591121b3cd8fac4f2713dde82528de4b9b5e2392ac",
+   "bytes": 18725
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🪟️fem2d-mounted-session/🟦️.ts",
+   "baseSha256": "845150438df855e70efa6330ceb6afc4f1abb94484bbf496654219fd0c2d8cef",
+   "sha256": "20f13ef5610f21549eb061b53dda6f83117e10f9c7e13758f586df4443e626eb",
+   "bytes": 11490
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts",
+   "baseSha256": "0b0c012d8e80457968398b476378808efbbf98e0298c53adb848168dff931234",
+   "sha256": "22f7233ea7695c74697915fa205461b134bb984aedb19477f2a569be49e55354",
+   "bytes": 2962
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🎞️frame-transaction/🟦️.ts",
+   "baseSha256": "fe7dcf8821ebeffa9a5d1f054bdd121a45ba3346bf3ad076dd6982d765684cb3",
+   "sha256": "c94794f15a7dbd40c78958d0615e4eee4829a8a153df26bf41b6d1574f9c47af",
+   "bytes": 4397
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🧭️checked-rust-block-scope/🟦️.ts",
+   "baseSha256": "aace5c777eceb469cebcf40ccc098315229c58cc301f412e51621e872813abd2",
+   "sha256": "12d93b19962e5a4b1196a8e981517467d82ff8c8ff8b538cfa655bee8c0c11df",
+   "bytes": 1452
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/🧾️model/🟦️.ts",
+   "baseSha256": "225f5aaf27a5639b7d9fea508b64dc5369d9916c42a2025b2b0e25ba1b5c1641",
+   "sha256": "c906e9e6c3eb221d2a07f2d7ec49e1ea8368c26608a516470dc65befb996b5af",
+   "bytes": 5281
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🔶️result/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "aac444ecb1204ef8da4b46227e96302c0a505bacc7dc0cfcc03c586d8015a021",
+   "bytes": 9423
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🔸️part2/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "591730b434c28625b384c1f607ef2078561dfdc36266f4462f686ff28a990e5f",
+   "bytes": 11473
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🟠️part3/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "e96a59a60f1b9b56a3a288aa00bc22fc3a5094bc7230997c2623f1866d86235c",
+   "bytes": 3565
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "f7914debfefdc2a8899c599fb31e28af3636fe8fae59790f6db7af3465b41c26",
+   "bytes": 21644
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts",
+   "baseSha256": "b19f66f453dc7c0dfa3f488dadc632f62bd5621c0457fc16a742ee1299946f45",
+   "sha256": "c5f369c8b1d2b86406e6d469dc9941196529e2d164d4560bcf68abc644c22934",
+   "bytes": 2231
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧬️mutation-families/🟦️.ts",
+   "baseSha256": "426c5b51552d4281614c9b40c3ddb9a8c296a13ffa5c45e0b3299ef908fe945c",
+   "sha256": "103d5d5382fe1ca3a43274708704227cdb7031b7c6c9ddb0d91eafc9c97dc450",
+   "bytes": 40315
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧱️decl-tree/🟦️.ts",
+   "baseSha256": "df9da43662dbc43ce56626dca535b667dc078710d69a40329347db44c90c5b3f",
+   "sha256": "48cf38b9baf6418d57317568f9a59ff409913153e2f8195bea0d1e3b7e47ca1a",
+   "bytes": 10810
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🪜️lift-kids/🟦️.ts",
+   "baseSha256": "566e2f1a7cc286fc96337cd199d0d582165c6c79135cf9db8d9128fe79b6afd4",
+   "sha256": "b5f7b506910fb9b7530d97f58ebde4dc09249251eba52f0fcc996c1197094c71",
+   "bytes": 10694
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🫗️inline-root/🟦️.ts",
+   "baseSha256": "46ad548691d2b84336b000585c9bfe97a22671a27240755f5e21a9a40cbf24cc",
+   "sha256": "4d1fa000181c42a57b4c7dded9cc0cbee100d8b07a16f227f8c16baa7beb1f55",
+   "bytes": 3001
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🔶️tokens/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "6c790a0284313f7acb35de0991339d8304af795353a1374fe21d64c5113dfe65",
+   "bytes": 11391
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🔸️resolve-qualified-function/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "845b2fb8d1cadcd145531225815732d961644b9f39301c524efec11207633946",
+   "bytes": 9355
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🟠️visit/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "21c76d067d3c0be5fef56255c463930d7b841d21d330725a7b851cc77381b2d8",
+   "bytes": 5584
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🟢️shared/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "73a5bead986c3b480073fcc362916481365f6741838aba9ee73a8d5ddacaef04",
+   "bytes": 127
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts",
+   "baseSha256": "680d5a6fa99520b2d679a08c5b145edd8d6e5427cfbdf0382b9070205df1fa56",
+   "sha256": "b8a9949c2e54dd986284f75135d43039f3d9273236b683340c3e53c6a60a15cb",
+   "bytes": 1479
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/📖️fixture-reads/🟦️.ts",
+   "baseSha256": "a2381fea7ed3cd24dc2ace2fc56cefe438671a3c3318b4ec0cddaba401ff50b8",
+   "sha256": "57979481f554dc476bc000ae23d09ecd98d258a07c9f5edad03ab3ebfbbf7e23",
+   "bytes": 19353
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/📝️docs-and-mounts/🟦️.ts",
+   "baseSha256": "4900650708659d56aed0c1bce601b9074266882145830c97fe8a6e1ede1bbffc",
+   "sha256": "e76ca80f10dd423947d6015e0e6dcc86546d3305e9664c03a6354fedc65036fe",
+   "bytes": 10614
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🚦️test-support-wiring/🟦️.ts",
+   "baseSha256": "ba3b448a752d9b4010aef4522c295956208abdcad2aedb71df1ca72a4680b66c",
+   "sha256": "62c1c2eeb45736cf341f2d75a969aee83e91aa77f54f7bde94eaa87d289bd3c4",
+   "bytes": 15884
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🧰️host-imports/🟦️.ts",
+   "baseSha256": "ec35d13a5dd2b44e134448ee482d92798b61da74c10164ba298a49a68728fcb0",
+   "sha256": "68deeeefa8f29cdc63e9b384d1d88f88dfaab1bdf302893028a9d016043d6e67",
+   "bytes": 6939
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🪝️test-hoisting/🔸️leaves-fixtures-feed-literal/🟦️.ts",
+   "baseSha256": "5f8902262a62b3cc3554bfdd09d4db23cc86c4c4413d10ac5e35a6dc4aa2397c",
+   "sha256": "0ef13b4ba1135a109c1f0134edf33bd011d5a8e8b878684fe2031581404f9e94",
+   "bytes": 12896
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts",
+   "baseSha256": "ee5ce4f16728e0c0d86f3ce848b88a8af16888edea6abfb618b66eaeae168626",
+   "sha256": "ae7997a09a92cdc2053a0cac069d701e2ec4be53ef1b4d97e1b5a9546b839678",
+   "bytes": 17461
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/💥️child-control/🟦️.ts",
+   "baseSha256": "963ff73d5dae688791d47efc903a0f74c6d47443a6a8553d8e2228416269a392",
+   "sha256": "d87038b50e0cf7301b143b17edf4b50d1420a07505ae55c42354585de5ed3183",
+   "bytes": 22938
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/📜️boundary-contracts/🟦️.ts",
+   "baseSha256": "4e807d4fde34543710661a08549bc027461eb53df10aca35192a6413f7c615de",
+   "sha256": "c8b2c5e9159e7a1362c37b090e3227568048b8a4c7167da0079dddc661e20368",
+   "bytes": 6429
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪜️lift-kids/🟦️.ts",
+   "baseSha256": "e0a1133bcd76947cbac75cbdfa7b156140e9646ca28fb7d3b7dcb14e748dee07",
+   "sha256": "619b0e0d015956c811caadffb56771849054bb6353d02bfc958689d2afbc4824",
+   "bytes": 16377
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🧪️tests/🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources/🔶️playground-resolution/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "a529775195b224eb410b32261746f38127853973a18706503c18ec16047496dc",
+   "bytes": 6773
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🧪️tests/🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources/🔸️plugin-source/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "024ce8fe65f195f82e518ac93c9da04554d41b1cadc5506e8958396141ffa638",
+   "bytes": 8805
+  },
+  {
+   "op": "create",
+   "path": "🧰️framework/🧪️tests/🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources/🟠️lease-pool-evict-now/🟦️.ts",
+   "baseSha256": null,
+   "sha256": "f2a0bb40db7cd4c340ca6ebbf58663be13b0fd68470a18ba347ea2f3c8e3c38c",
+   "bytes": 2279
+  },
+  {
+   "op": "modify",
+   "path": "🧰️framework/🧪️tests/🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources/🟦️.ts",
+   "baseSha256": "e8080f7a23f14b812bf21a8df39a670e7c138cb834c6d979edc8a74ddee07068",
+   "sha256": "eb2867f3ce5dd121e80adbc50057b699f49b4d91b0dcc3a669f1fa49ebfac4dc",
+   "bytes": 1036
+  }
+ ]
+}

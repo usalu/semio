@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "build",
+    "publish",
+    "deployCheck",
+    "plan"
+  ],
+  "definitions": {
+    "Strings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cache",
+        "outputs",
+        "forbiddenDecisionClasses",
+        "inputEnvironment",
+        "externalDependencies",
+        "coveredSamples",
+        "closureTypescript"
+      ],
+      "properties": {
+        "cache": {
+          "const": true
+        },
+        "outputs": {
+          "$ref": "#/definitions/Strings"
+        },
+        "forbiddenDecisionClasses": {
+          "$ref": "#/definitions/Strings"
+        },
+        "inputEnvironment": {
+          "$ref": "#/definitions/Strings"
+        },
+        "externalDependencies": {
+          "$ref": "#/definitions/Strings"
+        },
+        "coveredSamples": {
+          "$ref": "#/definitions/Strings"
+        },
+        "closureTypescript": {
+          "$ref": "#/definitions/Strings"
+        }
+      }
+    },
+    "publish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cache",
+        "dependsOn",
+        "inputEnvironment",
+        "outputs"
+      ],
+      "properties": {
+        "cache": {
+          "const": false
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/Strings"
+        },
+        "inputEnvironment": {
+          "$ref": "#/definitions/Strings"
+        },
+        "outputs": {
+          "$ref": "#/definitions/Strings"
+        }
+      }
+    },
+    "deployCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependsOn"
+      ],
+      "properties": {
+        "dependsOn": {
+          "$ref": "#/definitions/Strings"
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "cases"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mode",
+              "environment",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mode": {
+                "enum": [
+                  "prototype",
+                  "release"
+                ]
+              },
+              "environment": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

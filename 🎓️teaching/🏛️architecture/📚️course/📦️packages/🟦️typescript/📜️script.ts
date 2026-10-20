@@ -7,12 +7,12 @@ import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules
 /** ❓️ `@teaching/architecture-course` task router: `bun ./📜️script.ts <dev|dev-site|build|test [quick|long|exhaustive]|test-e2e [--topology <both|dev|rehearsal>] [--serial] [--keep] [--proctor <executable>] [-- <Playwright arguments…>]|typecheck|check|publish|docker-image-build [--tag <tag>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]|docker-stack-bundle [--tag <tag>] [--out <directory>]|deploy-check [--tag <tag>]>`. */
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkCourse } from "../../🚀️deploy/🟦️.ts";
-import { buildCourseReleaseSite, publishCourseSite } from "../../🚀️deploy/🌐️site/🟦️.ts";
+import { buildCourseSite, publishCourseSite } from "../../🚀️deploy/🌐️site/🟦️.ts";
 import { buildCourseImage, publishCourseImage } from "../../🚀️deploy/🐳️docker-image/🟦️.ts";
 import { checkCourseImage } from "../../🚀️deploy/🩺️docker-image-check/🟦️.ts";
 import { checkCourseStack } from "../../🚀️deploy/🧱️docker-stack/🟦️.ts";
@@ -23,6 +23,7 @@ import { runDevStack } from "../../🧱️stack/🟦️.ts";
 import { runBuildPreflightV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { courseBudgetMs } from "../../🏗️builder/⏱️budget/🟦️.ts";
 
 const VITE_CONFIG = "../../🏗️builder/🌐️vite/🟦️.ts";
 
@@ -56,7 +57,8 @@ class DevSiteScript extends BundleScript {
 }
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, VITE_CONFIG);
+    if (segments.length) throw new Error("Course build accepts no arguments");
+    await buildCourseSite(this.repoRoot, this.root, this.invocation);
   }
 }
 class TestScript extends BundleScript {
@@ -77,7 +79,7 @@ class TestEndToEndScript extends BundleScript {
  * spec, and this router against the compiler (`tsconfig.json`). */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "tsconfig.json", owner: "architecture-course:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "tsconfig.json", owner: "architecture-course:typescript", args: segments, timeoutMs: courseBudgetMs(this.invocation) });
   }
 }
 class CheckScript extends BundleScript {
@@ -87,7 +89,7 @@ class CheckScript extends BundleScript {
 }
 class PublishScript extends BundleScript {
   async run(): Promise<void> {
-    await publishCourseSite(this.repoRoot, this.root, this.invocation, () => buildCourseReleaseSite(this.repoRoot, this.root, this.invocation));
+    await publishCourseSite(this.repoRoot, this.root, this.invocation);
   }
 }
 class DockerImageBuildScript extends BundleScript {
@@ -121,8 +123,6 @@ class DockerStackBundleScript extends BundleScript {
 class DeployCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await checkCourseDeployment(this.repoRoot, this.root, {
-      build: () => buildCourseReleaseSite(this.repoRoot, this.root, this.invocation),
-      typecheck: () => typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:course-deployment", 0), cwd: this.root, project: "tsconfig.json", owner: "architecture-course:typescript", args: [], timeoutMs: 120_000 }),
       endToEnd: () => runCourseEndToEnd(this.invocation, this.repoRoot, this.root, fileURLToPath(import.meta.url), playgroundPortEnv("architecture-course"), ["--serial", "--"]),
     }, segments, this.invocation);
   }

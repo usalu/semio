@@ -1,0 +1,13 @@
+# Combined Neutral Final Candidate Review
+
+Disposition: ready to seal the exact33-input manifest and run native neutral tests. No commands/tests/capture/transfer executed by this audit. Physical release/guest proof is not approved by this disposition.
+
+All33candidate file sizes and SHA256 hashes in the four-phase section of combined-neutral-entry.md independently match current bytes. Source8 and Release Git5 match that held roster. Current combined.ts20c92296974a50e0b6654a1df1eca2c6710f18589ae33994887832c25824d044/8668B; combinedschema bea7feb50922e7d4f4a37d33c79395ac4593d3c4ed6903dedc96e6525b0be985/20660B; cases1b0b419b3fd7a3937b3947eca0758c888df59a4b7dde7df26f841b419514a4db/781B. New formattest aa250821f9a9f174bd60b15aeaa1c0f0dd6e24b7f6d0500138c48051fce1f627/6125B. Producer ee06f129471657d15774ed6c580211dcb9fadcb1c2428b8d93a9c3a3c2121f4b/10705B.
+
+Actual settle helper now returns explicit tagged success/failure. Six undefined/null/false/zero/empty/Error throws plus success exercise that helper; phase admission and outer final settlement retain separate failed booleans. Falsy primary values cannot become success or disappear when a final authority check fails. Independent Ajv tag-shape oracle supplements actual helper assertions.
+
+Parent Original remains live under540000ms issued control through four sequential180000/180000/60000/60000ms child scopes. Each child gets its own projected live resource environment and bounded owned command, actual close is awaited, output bounded and exactly one expected collection marker required. Stable full33roster/manifest fences occur before and after each phase and final settlement. Parent receipt explicitly does not prove parent terminal; actual outer native0 remains required. Input framework/test libraries remain external owner authority, not falsely inside ticket33seal.
+
+Format test executes actual Python producer top-level pack Try and following index statements, plus actual manifest file-loop, with closed fake cat-file records of3known commit/tree objects and owned synthetic output only. Independent systemGit verify-pack compares object kinds/sizes on valid pack and refuses packchecksum/indexchecksum/CRC mutations. No host Git metadata/object capture or Sourceblob read is reachable from this extracted block. .as_posix path emission addresses nativeWindows separators. Temporary files stay in generated namespace; fixture output path bound is checked. These are prepared oracles, not observed passes.
+
+No remaining material blocker identified in this requested final delta. Await exact combined.inputs.json seal rather than revisiting changing drafts. Remain available for final artifact verifier audit.

@@ -1,0 +1,54 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🟦️.tsx",
+ "function": "useAgentBridge",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useAgentBridge. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️discovered",
+   "doc": "/** 🔶️ The discovered phase of useAgentBridge. */",
+   "phases": [
+    {
+     "name": "useDiscoveredState",
+     "emoji": "🔷",
+     "doc": "Builds discovered, config, shellKind, generatedShellSessionIdRef of useAgentBridge.",
+     "from": 465,
+     "to": 549
+    }
+   ]
+  },
+  {
+   "dir": "🔸️part2",
+   "doc": "/** 🔸️ The part2 phase of useAgentBridge. */",
+   "phases": [
+    {
+     "name": "usePart2",
+     "emoji": "🔹",
+     "doc": "Runs the effects and registrations of useAgentBridge.",
+     "from": 560,
+     "to": 560
+    }
+   ]
+  },
+  {
+   "dir": "🟠️part3",
+   "doc": "/** 🟠️ The part3 phase of useAgentBridge. */",
+   "phases": [
+    {
+     "name": "usePart3",
+     "emoji": "🟡",
+     "doc": "Runs the effects and registrations of useAgentBridge.",
+     "from": 782,
+     "to": 782
+    }
+   ]
+  }
+ ],
+ "allowExportedMoves": true
+}

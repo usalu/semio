@@ -287,8 +287,8 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
   if(args.length)throw Error("test-diagnostic-admission accepts no arguments");
   const {Database}=await import("bun:sqlite");
   const {replayReportBlocksFinalize,outcomeCodeLevel}=await import("@semio-tech/framework-replication");
-  const law:any=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
-  const schema=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json"),"utf8"));
+  const law:any=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
+  const schema=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json"),"utf8"));
   const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(Boolean(validate(law)),JSON.stringify(validate.errors));
   const replaySource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs"),"utf8");
   const retainedSource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🦀️.rs"),"utf8");
@@ -315,7 +315,6 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
     const row=database.query("SELECT code,message,target,operation FROM diagnostics").get()as{code:string;message:string;target:string;operation:number};
     assert.deepEqual({code:row.code,message:row.message,target:JSON.parse(row.target),opIndex:row.operation},{code:message.code,message:message.message,target:message.target,opIndex:message.opIndex});
    }
-   console.log("[DEBUG] diagnostic-admission: Ajv validates four nonempty scalar diff vectors; SQLite verifies retained/prefix/history/merge projection and invocation ordering; original diagnostics agree; Error/Fatal cannot apply or inverse");
    const cursorRoot=join(this.repoRoot,"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation");
    const cursorLaw:any=JSON.parse(readFileSync(join(cursorRoot,"🧫️fixtures/🔣️.json"),"utf8"));
    const cursorSchema=JSON.parse(readFileSync(join(cursorRoot,"🧬️schema/🔣️.json"),"utf8"));
@@ -327,7 +326,6 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
     const expected={...entry.expected};delete expected.wholeSnapshotClones;delete expected.terminalEmpty;
     assert.deepEqual({...reference,published:Boolean(reference.published)},expected,entry.name);
    }
-   console.log("[DEBUG] cursor-acceptance: nine large paged/small-grant fixtures validated with Ajv/SQLite; granted production cursor execution pending");
   }finally{database.close();}
  }
 }
@@ -337,8 +335,8 @@ export class OwnedReplayCheckScript extends BundleScript {
   if(args.length)throw Error("test-owned-replay accepts no arguments");
   const {Database}=await import("bun:sqlite");
   const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
-  const law=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🔣️.json"),"utf8")).ownedReplay as Array<{name:string;base:number;operations:Array<{value:number;fault:string}>;expected:number;coldClones:number;ownedClones:number;terminalOwners:number}>;
-  const schema=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧫️replay-retirement/🔣️.json"),"utf8")).ownedReplay as Array<{name:string;base:number;operations:Array<{value:number;fault:string}>;expected:number;coldClones:number;ownedClones:number;terminalOwners:number}>;
+  const schema=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json"),"utf8"));
   const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(Boolean(validate(law)),JSON.stringify(validate.errors));
   const database=new Database(":memory:");
   try {
@@ -377,8 +375,6 @@ export class OwnedReplayCheckScript extends BundleScript {
     assert.deepEqual(database.query("SELECT COUNT(*) AS calls FROM canceled_inverse WHERE issuer='original'").get(),{calls:row.issuerCalls});
     assert.deepEqual(database.query("SELECT post FROM cancellation").get(),{post:row.postText});
    }
-   console.log("[DEBUG] inverse cancellation: Ajv/SQLite verifies both decision frontiers, exact issuer row counts and unchanged unpublished projection");
-   console.log("[DEBUG] owned-replay: Ajv/SQLite validates3 refusal/continue vectors, immutable original, clone-admission counts and typed terminal owners; inverse receipt refusal retains original+inverse underexactissuer");
   } finally { database.close(); }
  }
 }
@@ -389,7 +385,6 @@ export class CanonicalSourceIdentityCheckScript extends BundleScript {
   const oracle=await import("../../../../🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧪️tests/🟦️.ts");oracle.runCanonicalSourceIdentityChecks();
   if(segments[0]==="source")return;
   const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,...exactCargoStageEnvironments(),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},laws:["os_store::canonical_edit::source_identity::tests::canonical_source_identity_streams_original_full_fields_and_closes_every_cancelled_prefix","os_store::canonical_edit::source_identity::tests::canonical_source_identity_refuses_a_foreign_live_root_before_reading_it","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_birth_deep_source_and_cancellation_fit4096","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_refuses_original_source_depth65_and_closes_paid_backing"]}]});
-  console.log("[DEBUG] canonical source identity exact native passed "+receipts[0]!.assertions+" original-root laws");
  }
 }
 

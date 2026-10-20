@@ -144,6 +144,67 @@
       "minLength": 1,
       "maxLength": 4096,
       "pattern": "^file:"
+    },
+    "CapturedReadRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scope",
+        "path",
+        "sourceCount"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "enum": [
+            "workspace",
+            "outside"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "sourceCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        }
+      }
+    },
+    "CapturedReadRefusalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "path",
+        "sources",
+        "expected"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "sources": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "expected": {
+          "$ref": "#/definitions/CapturedReadRefusal"
+        }
+      }
     }
   }
 }

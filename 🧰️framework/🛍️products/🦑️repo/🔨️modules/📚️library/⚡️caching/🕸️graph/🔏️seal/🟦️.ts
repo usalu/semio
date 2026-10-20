@@ -5,10 +5,11 @@ import { join, sep } from "node:path";
 import { nxGraphSourceMembershipV2 } from "./📥️membership/🟦️.ts";
 export { nxGraphSourceMembershipV2 };
 import * as observation from "../../../🏗️build/👁️observation/🟨️.mjs";
-const {inferenceHeaderLine,observationsHold}=observation as {inferenceHeaderLine(path:string):string|null;observationsHold(observations:readonly unknown[],limit:number,stableDirectories:Set<string>,symlinks:Set<string>,signal?:AbortSignal):Promise<boolean>};
+import { captureSealFactsV1, retireSealFactsV1, sealFactsFileNameV1, sealFactsHoldV1, type SealFactsV1 } from "./📦️facts/🟦️.ts";
+const {observationsHold}=observation as {observationsHold(observations:readonly unknown[],limit:number,stableDirectories:Set<string>,symlinks:Set<string>,signal?:AbortSignal):Promise<boolean>};
 
 /** 🔏️ The persisted seal format; see `./🧬️schema/🔣️.json`. */
-export const NX_GRAPH_SEAL_FORMAT = 2;
+export const NX_GRAPH_SEAL_FORMAT = 3;
 
 const SEAL_FILE = "semio-graph-seal.json";
 const PREVIOUS_SEAL_FILE = "semio-graph-seal.previous.json";
@@ -21,7 +22,7 @@ const INPUT_FILE = /^(?:package\.json|project\.json|📋️project\.json|pyproje
 type Stamp = readonly [dev: number, ino: number, size: number, mtimeMs: number, ctimeMs: number];
 
 /** 🔏️ Proof that a cached Nx project graph was computed from inputs that can be re-verified without recomputing it. */
-export interface NxGraphSeal {
+export interface NxGraphSeal extends SealFactsV1 {
   readonly format: typeof NX_GRAPH_SEAL_FORMAT;
   readonly nx: string;
   readonly membership: string;
@@ -78,7 +79,8 @@ async function graphStamps(workspaceData: string): Promise<Record<string, Stamp>
 
 /**
  * ✍️ Seals the graph a finished Nx process (`pid`, started at `startedAt`) left in `workspaceData`, when both plugin receipts are that
- * process's and the graph was written after them; otherwise removes any seal. Returns whether a seal was written.
+ * process's and the graph was written after them; otherwise removes any seal. The facts of every inference record the receipts name are captured once into a
+ * deduplicated, digest-named table, so a later check reads that table and stamps the records instead of reading every record again. Returns whether a seal was written.
  */
 export async function writeNxGraphSeal(root: string, workspaceData: string, pid: number, startedAt: number, expectedMembership:string, environment:Readonly<Record<string,string|undefined>>, signal?:AbortSignal): Promise<boolean> {
   const sealPath = join(workspaceData, SEAL_FILE);
@@ -95,14 +97,28 @@ export async function writeNxGraphSeal(root: string, workspaceData: string, pid:
   if(!/^[a-f0-9]{64}$/u.test(expectedMembership))throw Error("Original graph source membership required");
   const tree=await graphInputTree(root,signal);
   if(tree.membership!==expectedMembership)return false;
-  const seal:NxGraphSeal={format:NX_GRAPH_SEAL_FORMAT,nx:await nxIdentity(root),membership:tree.membership,graph,receipts,directories:tree.directories,inputs:tree.inputs};
-  if (JSON.stringify(await graphStamps(workspaceData)) !== JSON.stringify(graph)||!await verifyNxGraphSealV2(root,workspaceData,seal,signal,expectedMembership))return false;
-  await mkdir(workspaceData, { recursive: true });
-  const temporary = `${sealPath}.${process.pid}.tmp`, text = JSON.stringify(seal);
-  await withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:2*Math.ceil(Buffer.byteLength(text)/4096)*4096},async()=>{
-    signal?.throwIfAborted();try{await writeFile(temporary,text,{flag:"wx"});signal?.throwIfAborted();await rename(temporary,sealPath);await writeFile(`${temporary}.previous`,text,{flag:"wx"});signal?.throwIfAborted();await rename(`${temporary}.previous`,join(workspaceData,PREVIOUS_SEAL_FILE));signal?.throwIfAborted();}finally{await rm(temporary,{force:true});await rm(`${temporary}.previous`,{force:true});}
+  const captured=await captureSealFactsV1(workspaceData,RECEIPTS,signal);
+  if(!captured)return false;
+  const seal:NxGraphSeal={format:NX_GRAPH_SEAL_FORMAT,nx:await nxIdentity(root),membership:tree.membership,graph,receipts,directories:tree.directories,inputs:tree.inputs,...captured.seal};
+  if (JSON.stringify(await graphStamps(workspaceData)) !== JSON.stringify(graph)) return false;
+  const temporary = `${sealPath}.${process.pid}.tmp`, text = JSON.stringify(seal), factsName = sealFactsFileNameV1(seal.facts.sha256), factsPath = join(workspaceData, factsName), unit = (bytes: number) => Math.ceil(bytes / 4096) * 4096;
+  return withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:2*unit(Buffer.byteLength(text))+unit(captured.bytes.length)},async()=>{
+    signal?.throwIfAborted();await mkdir(workspaceData, { recursive: true });
+    const factsTemporary = `${factsPath}.${process.pid}.tmp`;
+    try{await writeFile(factsTemporary,captured.bytes,{flag:"wx"});signal?.throwIfAborted();await rename(factsTemporary,factsPath);}finally{await rm(factsTemporary,{force:true});}
+    if(!await verifyNxGraphSealV3(root,workspaceData,seal,signal,expectedMembership)){await retireSealFactsV1(workspaceData,await liveFacts(workspaceData));return false;}
+    let previous:string|undefined;try{previous=(JSON.parse(await readFile(join(workspaceData,PREVIOUS_SEAL_FILE),"utf8")) as NxGraphSeal).facts.sha256;}catch{}
+    try{await writeFile(temporary,text,{flag:"wx"});signal?.throwIfAborted();await rename(temporary,sealPath);await writeFile(`${temporary}.previous`,text,{flag:"wx"});signal?.throwIfAborted();await rename(`${temporary}.previous`,join(workspaceData,PREVIOUS_SEAL_FILE));signal?.throwIfAborted();}finally{await rm(temporary,{force:true});await rm(`${temporary}.previous`,{force:true});}
+    await retireSealFactsV1(workspaceData,new Set([factsName,...(previous&&previous!==seal.facts.sha256?[sealFactsFileNameV1(previous)]:[])]));
+    return true;
   });
-  return true;
+}
+
+/** 🗃️ The fact tables the seal files on disk name. */
+async function liveFacts(workspaceData: string): Promise<Set<string>> {
+  const names = new Set<string>();
+  for (const file of [SEAL_FILE, PREVIOUS_SEAL_FILE]) { try { names.add(sealFactsFileNameV1((JSON.parse(await readFile(join(workspaceData, file), "utf8")) as NxGraphSeal).facts.sha256)); } catch {} }
+  return names;
 }
 
 /** 🧭️ The absolute native path of a repository-relative POSIX path, built without re-normalizing (seal paths are already normal). */
@@ -132,28 +148,19 @@ async function stampsHold(root: string, rows: readonly (readonly [string, Stamp]
 export async function nxGraphSealHolds(root: string, workspaceData: string, signal?:AbortSignal,membership?:string): Promise<boolean> {
   let seal: NxGraphSeal;
   try { seal = JSON.parse(await readFile(join(workspaceData, SEAL_FILE), "utf8")) as NxGraphSeal; } catch { return false; }
-  return verifyNxGraphSealV2(root,workspaceData,seal,signal,membership);
+  return verifyNxGraphSealV3(root,workspaceData,seal,signal,membership);
 }
 
-/** 🔐️ Proves complete publisher custody before any seal is visible to another caller. */
-async function verifyNxGraphSealV2(root:string,workspaceData:string,seal:NxGraphSeal,signal?:AbortSignal,membership?:string):Promise<boolean>{
+/** 🔐️ Proves complete publisher custody before any seal is visible to another caller; its cost is the distinct facts and the recorded stamps, never the inference records. */
+async function verifyNxGraphSealV3(root:string,workspaceData:string,seal:NxGraphSeal,signal?:AbortSignal,membership?:string):Promise<boolean>{
   if (seal.format !== NX_GRAPH_SEAL_FORMAT || seal.nx !== await nxIdentity(root)) return false;
   const graph = await graphStamps(workspaceData);
   if (!graph || GRAPH_FILES.some((name) => !seal.graph[name] || !sameStamp(graph[name]!, seal.graph[name]!))) return false;
   if((membership??(await nxGraphSourceMembershipV2(root,signal)).digest)!==seal.membership)return false;
-  const facts: unknown[] = [];
   for (const name of RECEIPTS) {
     let text: string;
     try { text = await readFile(join(workspaceData, "inference", name), "utf8"); } catch { return false; }
     if (sha256(text) !== seal.receipts[name]) return false;
-    const receipt = JSON.parse(text) as { inference: [string, string][]; observations: unknown[] };
-    for (const [cachePath, digest] of receipt.inference) {
-      let header: string | null;
-      try { header = inferenceHeaderLine(cachePath); } catch { return false; }
-      if (header === null || sha256(header) !== digest) return false;
-      facts.push(...(JSON.parse(header) as { observations: unknown[] }).observations);
-    }
-    facts.push(...receipt.observations);
   }
-  return await stampsHold(root, seal.directories.map(([path, stamp]) => [path, stamp] as const), lstat,true,signal) && await stampsHold(root, seal.inputs, lstat,false,signal) && await observationsHold(facts, 64, new Set(seal.directories.map(([path]) => nativePath(root, path))), new Set(seal.directories.flatMap(([path, , , , links]) => links.map((name) => nativePath(root, path ? `${path}/${name}` : name)))));
+  return await stampsHold(root, seal.directories.map(([path, stamp]) => [path, stamp] as const), lstat,true,signal) && await stampsHold(root, seal.inputs, lstat,false,signal) && await sealFactsHoldV1(workspaceData, seal, (facts) => observationsHold(facts, 64, new Set(seal.directories.map(([path]) => nativePath(root, path))), new Set(seal.directories.flatMap(([path, , , , links]) => links.map((name) => nativePath(root, path ? `${path}/${name}` : name)))),signal), signal);
 }

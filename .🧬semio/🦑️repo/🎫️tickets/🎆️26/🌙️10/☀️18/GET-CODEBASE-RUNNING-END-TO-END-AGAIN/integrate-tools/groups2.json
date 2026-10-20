@@ -1,0 +1,23 @@
+[
+ {
+  "id": "D",
+  "title": "cargo ingress without repeated recheck (ingress-perf)",
+  "sets": [
+   "ingress-perf"
+  ]
+ },
+ {
+  "id": "E",
+  "title": "every uncached task declares a reason and verification tasks become cached (uncached-owners)",
+  "sets": [
+   "uncached-owners"
+  ]
+ },
+ {
+  "id": "F",
+  "title": "lazy Bazel mapping: command plan, affected via rdeps, runfiles limit for tests (bzl-lazy) on the one repo_test",
+  "sets": [
+   "bzl-lazy"
+  ]
+ }
+]

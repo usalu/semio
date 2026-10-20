@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "workspace": "/fixture",
+  "cases": [
+    {
+      "id": "compiled-command-import",
+      "observation": {
+        "closure": [
+          "module.ts"
+        ],
+        "compiled": [
+          "module.ts"
+        ],
+        "imports": [
+          {
+            "source": "module.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [
+        "generator:build"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "resource-only-global-import",
+      "observation": {
+        "closure": [
+          "resource.ts"
+        ],
+        "compiled": [],
+        "imports": [
+          {
+            "source": "resource.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [],
+      "accepted": true
+    },
+    {
+      "id": "same-target-module-and-resource",
+      "observation": {
+        "closure": [
+          "module.ts",
+          "resource.ts"
+        ],
+        "compiled": [
+          "module.ts"
+        ],
+        "imports": [
+          {
+            "source": "module.ts",
+            "producer": "generator:build"
+          },
+          {
+            "source": "resource.ts",
+            "producer": "unrelated:build"
+          }
+        ]
+      },
+      "expected": [
+        "generator:build"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "unrelated-module-not-in-closure",
+      "observation": {
+        "closure": [
+          "module.ts"
+        ],
+        "compiled": [
+          "module.ts"
+        ],
+        "imports": [
+          {
+            "source": "unrelated.ts",
+            "producer": "unrelated:build"
+          }
+        ]
+      },
+      "expected": [],
+      "accepted": true
+    },
+    {
+      "id": "real-self-module-keeps-edge",
+      "observation": {
+        "closure": [
+          "producer.ts"
+        ],
+        "compiled": [
+          "producer.ts"
+        ],
+        "imports": [
+          {
+            "source": "producer.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [
+        "generator:build"
+      ],
+      "accepted": true,
+      "selfConsumer": "generator:build"
+    },
+    {
+      "id": "resource-self-edge-is-not-module-demand",
+      "observation": {
+        "closure": [
+          "producer.ts"
+        ],
+        "compiled": [],
+        "imports": [
+          {
+            "source": "producer.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [],
+      "accepted": true,
+      "selfConsumer": "generator:build"
+    },
+    {
+      "id": "duplicate-producer-union",
+      "observation": {
+        "closure": [
+          "a.ts",
+          "b.ts"
+        ],
+        "compiled": [
+          "a.ts",
+          "b.ts"
+        ],
+        "imports": [
+          {
+            "source": "a.ts",
+            "producer": "generator:build"
+          },
+          {
+            "source": "b.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [
+        "generator:build"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "missing-exact-compiled-evidence",
+      "observation": {
+        "closure": [
+          "module.ts"
+        ],
+        "imports": [
+          {
+            "source": "module.ts",
+            "producer": "generator:build"
+          }
+        ]
+      },
+      "expected": [],
+      "accepted": false
+    }
+  ],
+  "warm": {
+    "closure": [
+      "module.ts",
+      "resource.ts"
+    ],
+    "compiled": [
+      "module.ts"
+    ],
+    "initial": [
+      {
+        "source": "module.ts",
+        "producer": "generator:build"
+      }
+    ],
+    "later": {
+      "source": "resource.ts",
+      "producer": "unrelated:build"
+    },
+    "expected": [
+      "generator:build"
+    ]
+  }
+}

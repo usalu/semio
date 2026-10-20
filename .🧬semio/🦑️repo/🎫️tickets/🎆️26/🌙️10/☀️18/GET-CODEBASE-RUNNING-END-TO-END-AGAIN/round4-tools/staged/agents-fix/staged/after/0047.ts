@@ -1,0 +1,31 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import {KernelOriginalOperationIssuer,KernelOriginalResourcePool,OriginalOperationSource} from "@semio-tech/framework-actor/retained-turn";
+import {withScriptProcessEnvelope,createScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {readNativeLaunchDeclarationV1,readNativeLaunchAdmissionV1,nativeLaunchDurationV1,nativeLaunchEnvironmentV1,NATIVE_LAUNCH_ADMISSION_ENV} from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json";
+import admissionSchema from "../📨️admission/🧬️schema/🔣️.json";
+import law from "../../../../../🧪️tests/🧫️fixtures/⌨️native-entrypoint/🎟️launch/🔣️.json";
+test("finite compiler tasks require their own actual launch policy without renewing input or service authority",()=>{
+ const validate=new Ajv({strict:true}).compile(schema);expect(validate(law.declaration)).toBe(true);const declaration=readNativeLaunchDeclarationV1(law.declaration);const compiler=declaration.compilerTask;
+ expect(compiler.fuel).toBe(120);expect(compiler.grant.maximumCapacityBytes).toBe(2097152);expect(compiler.grant.maximumCapacityBytes).not.toBe(declaration.hostIo.grant.maximumCapacityBytes);const missing={...law.declaration}as Partial<typeof law.declaration>;delete missing.compilerTask;expect(validate(missing)).toBe(false);expect(()=>readNativeLaunchDeclarationV1(missing)).toThrow();
+ const db=new Database(":memory:");try{for(const deadline of[null,1100,3000]){expect(nativeLaunchDurationV1(compiler,deadline,1000)).toBe((db.query("SELECT CASE WHEN ? IS NULL THEN ? ELSE min(?,(?-?)*1000) END AS duration").get(deadline,compiler.maximumElapsedMicroseconds,compiler.maximumElapsedMicroseconds,deadline,1000)as{duration:number}).duration);}expect(compiler.retirementReserve.fuel).toBeLessThan(compiler.fuel);}finally{db.close();}
+});
+test("native launch admission has independently owned currencies, bounded duration and exact cumulative receipts",async()=>{
+ const oracle=new Ajv({strict:true}).compile(schema),declaration=readNativeLaunchDeclarationV1(law.declaration);expect(oracle(declaration)).toBe(true);
+ const db=new Database(":memory:");try{for(const row of law.durations){const result=db.query("SELECT CASE WHEN ? IS NULL THEN ? ELSE min(?,(?-?)*1000) END AS duration").get(row.deadline,declaration.startup.maximumElapsedMicroseconds,declaration.startup.maximumElapsedMicroseconds,row.deadline,row.now)as{duration:number};expect(nativeLaunchDurationV1(declaration.startup,row.deadline,row.now)).toBe(result.duration);expect(result.duration).toBe(row.expected)}
+ const resources={grant:declaration.startup.grant,fuel:declaration.startup.fuel,maximumElapsedUs:BigInt(declaration.startup.maximumElapsedMicroseconds)},pool=new KernelOriginalResourcePool(resources),issuer=new KernelOriginalOperationIssuer(request=>pool.admit(request)),source=new OriginalOperationSource(issuer.admit(resources),()=>1n);
+ for(const spent of law.spent){const turn=source.issue();source.receive({input:turn.input,spent:{copiedItems:spent.copiedItems,copiedBytes:spent.copiedBytes,retainedCapacityBytes:spent.retainedCapacityBytes,releasedBytes:spent.releasedBytes},workUnitsSpent:spent.workUnitsSpent})}
+ const sums=db.query("SELECT sum(json_extract(value,'$.workUnitsSpent')) AS work,sum(json_extract(value,'$.retainedCapacityBytes')) AS capacity,sum(json_extract(value,'$.releasedBytes')) AS released FROM json_each(?)").get(JSON.stringify(law.spent))as{work:number;capacity:number;released:number};expect(source.fuelRemaining).toBe(law.remainingFuel);expect(source.fuelRemaining).toBe(declaration.startup.fuel-sums.work);expect(source.physicalSpent.retainedCapacityBytes).toBe(sums.capacity);expect(source.physicalSpent.releasedBytes).toBe(sums.released);expect(pool.fuelRemaining).toBe(0);source.close();}finally{db.close()}
+ for(const mutation of law.invalid){const value=structuredClone(law.declaration)as any;switch(mutation){case"missing-owner":delete value.owner;break;case"unknown-axis":value.startup.grant.maximumHeap=100;break;case"fractional-fuel":value.hostIo.fuel=1.5;break;case"reserve-fuel-overflow":value.startup.retirementReserve.fuel=value.startup.fuel+1;break;case"reserve-capacity-overflow":value.hostIo.retirementReserve.grant.maximumCapacityBytes=value.hostIo.grant.maximumCapacityBytes+1;break;case"expired-deadline":expect(()=>nativeLaunchDurationV1(declaration.startup,1000,1000)).toThrow();continue;}expect(()=>readNativeLaunchDeclarationV1(value)).toThrow();}
+ await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:launch",maximumElapsedMilliseconds:5000},{},Date.now()),async invocation=>{const environment=nativeLaunchEnvironmentV1(invocation,{SAMPLE:"retained"},declaration,Date.now());expect(environment.SAMPLE).toBe("retained");const admitted=JSON.parse(environment[NATIVE_LAUNCH_ADMISSION_ENV]!);expect(admitted.declaration).toEqual(declaration);expect(admitted.scriptOwner).toBe("fixture:launch");expect(admitted.scriptDeadlineEpochMilliseconds).not.toBeNull();expect(admitted.declaration.startup.grant).toEqual(law.declaration.startup.grant);});
+});
+
+
+test("native admission requires original launch owner and explicit deadline field before crossing the process boundary",()=>{
+ const oracle=new Ajv({strict:true,schemas:[schema]}).compile(admissionSchema),wire={version:1 as const,declaration:readNativeLaunchDeclarationV1(law.declaration),scriptOwner:"fixture:native-original",scriptDeadlineEpochMilliseconds:null};
+ expect(oracle(wire)).toBe(true);expect(readNativeLaunchAdmissionV1(wire)).toEqual(wire);
+ for(const field of["version","declaration","scriptOwner","scriptDeadlineEpochMilliseconds"]){const missing={...wire}as any;delete missing[field];expect(oracle(missing)).toBe(false);expect(()=>readNativeLaunchAdmissionV1(missing)).toThrow();}
+ for(const wireValue of[{...wire,scriptOwner:""},{...wire,scriptOwner:"x".repeat(129)},{...wire,scriptDeadlineEpochMilliseconds:1.5},{...wire,scriptDeadlineEpochMilliseconds:9007199254740992},{...wire,replacementFuel:1000}]){expect(oracle(wireValue)).toBe(false);expect(()=>readNativeLaunchAdmissionV1(wireValue)).toThrow();}
+});

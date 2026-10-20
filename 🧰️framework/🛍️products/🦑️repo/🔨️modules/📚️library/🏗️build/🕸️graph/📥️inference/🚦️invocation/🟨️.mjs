@@ -2,7 +2,7 @@
 import { inferenceInventoryReferencesHoldV1, requireCurrentInferenceInventoryReuseV1 } from "../../../../🏗️build/👁️observation/📥️reuse/🟨️.mjs";
 import { join, resolve } from "node:path";
 import { receiveScriptProcessInvocation, createIssuedResourceControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { requireCurrentObservationV1, observeDependencies, observeInference, settleObservedComputationV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { requireCurrentObservationV1, observeDependencies, observeInference, observeInferenceSnapshotV1, settleObservedComputationV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { requireCurrentSourceInventoryV1 } from "../../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import { withRepositoryBuildGraphFactStoreV1 } from "../../../📥️inputs/💾️storage/🟨️.mjs";
 
@@ -37,7 +37,7 @@ function invokeCurrentImplementationV1(kind, args) {
     requireCurrentSourceInventoryV1();requireCurrentObservationV1();
     const revision = implementationRevision();
     if (revision === revisionIdentity.revision && kind === "metadata")return createMetadataImplementation(...args);
-    if (revision === revisionIdentity.revision) return kind === "nodes" ? observeInference({ cachePath: join(workspaceDataDirectory(args[2].workspaceRoot), "inference", "emoji-project-json.json"), key: [revision, args[0], args[1] ?? null, resolve(args[2].workspaceRoot)],reusable:value=>inferenceInventoryReferencesHoldV1(args[2].workspaceRoot,value,args[2].phaseControl) }, () => settleObservedComputationV1(() => emojiProjectJsonNodes(...args), settlementOptionsV1(args[2]))) : kind === "authority" ? dependencyResolutionAuthorityImplementation(...args) : observeDependencies({ receiptPath: join(workspaceDataDirectory(args[1].workspaceRoot), "inference", "emoji-project-json.receipt.json"), recordDirectory:moduleSourceRecordCacheRootV1(args[1].workspaceRoot) }, () => settleObservedComputationV1(() => createDependenciesImplementation(...args), settlementOptionsV1(args[1])));
+    if (revision === revisionIdentity.revision) return kind === "nodes" ? args[1]?.snapshot ? observeInferenceSnapshotV1(() => emojiProjectJsonNodes(...args)) : observeInference({ cachePath: join(workspaceDataDirectory(args[2].workspaceRoot), "inference", "emoji-project-json.json"), key: [revision, args[0], args[1] ?? null, resolve(args[2].workspaceRoot)],reusable:value=>inferenceInventoryReferencesHoldV1(args[2].workspaceRoot,value,args[2].phaseControl) }, () => settleObservedComputationV1(() => emojiProjectJsonNodes(...args), settlementOptionsV1(args[2]))) : kind === "authority" ? dependencyResolutionAuthorityImplementation(...args) : observeDependencies({ receiptPath: join(workspaceDataDirectory(args[1].workspaceRoot), "inference", "emoji-project-json.receipt.json"), recordDirectory:moduleSourceRecordCacheRootV1(args[1].workspaceRoot) }, () => settleObservedComputationV1(() => createDependenciesImplementation(...args), settlementOptionsV1(args[1])));
     if (reloadedImplementation?.revision !== revision) {
       const entry = { revision, module: services.loadRevision(revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
       reloadedImplementation = entry;

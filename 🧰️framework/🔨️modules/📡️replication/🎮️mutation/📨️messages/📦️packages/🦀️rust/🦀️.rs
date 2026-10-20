@@ -31,10 +31,6 @@ pub use message_concat::MutationMessageConcat;
 pub use message_publication::{MutationMessageBorrowedPublication, MutationMessagePublication, MutationMessagePublicationBatch, MutationMessagePublicationJoin};
 
 #[cfg(test)]
-#[path="../../../🧪️tests/📦️unpublished-owner/🦀️.rs"]
-mod unpublished_owner_tests;
-
-#[cfg(test)]
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]

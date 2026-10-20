@@ -1,0 +1,69 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/🫧️layer/🟦️.tsx",
+ "function": "startShow",
+ "keep": [
+  247,
+  525
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟣️shared",
+  "doc": "/** 🟣️ The shared declarations of startShow. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️page",
+   "doc": "/** 🔶️ The page phase of startShow. */",
+   "phases": [
+    {
+     "name": "buildPageState",
+     "emoji": "🔷",
+     "doc": "Builds page, view of startShow.",
+     "from": 245,
+     "to": 246
+    }
+   ]
+  },
+  {
+   "dir": "🔸️haste",
+   "doc": "/** 🔸️ The haste phase of startShow. */",
+   "phases": [
+    {
+     "name": "buildHasteState",
+     "emoji": "🔹",
+     "doc": "Builds haste, kinds, depictions, pads of startShow.",
+     "from": 248,
+     "to": 368
+    }
+   ]
+  },
+  {
+   "dir": "🟠️announce",
+   "doc": "/** 🟠️ The announce phase of startShow. */",
+   "phases": [
+    {
+     "name": "buildAnnounceState",
+     "emoji": "🟡",
+     "doc": "Builds announce, step, pacer, hit of startShow.",
+     "from": 401,
+     "to": 501
+    }
+   ]
+  },
+  {
+   "dir": "🟢️part6",
+   "doc": "/** 🟢️ The part6 phase of startShow. */",
+   "phases": [
+    {
+     "name": "buildPart6",
+     "emoji": "🔵",
+     "doc": "Runs the effects and registrations of startShow.",
+     "from": 542,
+     "to": 545
+    }
+   ]
+  }
+ ]
+}

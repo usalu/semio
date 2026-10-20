@@ -1,0 +1,17 @@
+import {createRequire} from "node:module";
+import {readFileSync} from "node:fs";
+import {dirname,join,resolve,relative} from "node:path";
+const require=createRequire(import.meta.url),ts=require("typescript"),M="/private/tmp/oo-mirror",LIB=M+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const fixture=JSON.parse(readFileSync(LIB+"/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json","utf8")).generatedCompileOutputs.perTargetConsumption;
+const ownerAdmissionSchema=JSON.parse(readFileSync(LIB+"/🏗️build/🧬️schema/🚪️admission.json","utf8"));
+const parser=require(LIB+"/⚡️caching/📥️inference/🟨️.mjs");
+const source=readFileSync(process.argv[2],"utf8"),tree=ts.createSourceFile("o.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),definition=tree.statements.find((n:any)=>ts.isFunctionDeclaration(n)&&n.name?.text==="discoverBuildOwnerAdmissionFactsV1"),first=definition.body.statements.find((n:any)=>ts.isVariableStatement(n)&&n.declarationList.declarations.some((d:any)=>d.name.getText(tree)==="generatedDependencies")),code=source.slice(first.getStart(tree),definition.body.getEnd()-1);
+const {buildSourceDemandV1}=await import(LIB+"/🏗️build/🕸️graph/🚪️admission/🟦️.ts");
+const root="/fixture",at=(p:string)=>join(root,p),virtual=new Map(Object.entries(fixture.files).map(([p,t])=>[at(p),t as string])),producer=fixture.producer,output=at(producer.output);
+for(const item of fixture.cases){
+ const union=(k:string)=>new Set(Object.values(item.targets).flatMap((r:any)=>(r[k]??[]).map(at)).concat((item.shared?.[k]??[]).map(at)));
+ const files=new Set<string>(),deps=new Set<string>(),targets=Object.keys(item.targets);
+ const ports:any={ownerAdmissionSchema,buildSourceDemandV1,scripts:{modules:new Set(virtual.keys()),generatedImports:new Map(),generatedOutput:(p:string)=>p===output?producer:undefined},compileModules:union("compile"),declaredCompileEntries:union("declared"),commandModules:union("command"),targets,json:{name:producer.project},workspaceRoot:root,context:{},dependencyInputs:new Map(),caretInputs:new Set(),addFile:(p:string)=>files.add(p),dependencies:deps,files,byPackage:new Map(),createRequire:()=>()=>ts,observedTypeScriptHost:()=>({fileExists:(p:string)=>virtual.has(p),readFile:(p:string)=>virtual.get(p),directoryExists:()=>true,getCurrentDirectory:()=>root}),prepareSourceAnalysesV1:()=>({module:{}}),observedSourceAnalysisV1:(_a:unknown,p:string)=>({imports:parser.moduleSourceImports(p,virtual.get(p)),runtimeImports:parser.runtimeModuleSourceImports(p,virtual.get(p))}),observedRequireResolve:(_f:string,s:string)=>{if(virtual.has(s))return s;throw Object.assign(Error("m"),{code:"MODULE_NOT_FOUND"});},buildImportResourceV1:(p:string,s:string)=>({specifier:s.startsWith(".")?resolve(dirname(p),s):s,source:true}),readPhysicalSource:(p:string)=>Buffer.from(virtual.get(p)!),addDependency:()=>{},addInput:()=>{},yieldInferenceV1:async()=>{},stage:async()=>{},buildPath:(p:string)=>p,join,relative,isAbsolute:require("node:path").isAbsolute};
+ let outcome:string;try{const r=await new Function(...Object.keys(ports),"return(async()=>{"+code.replaceAll("import.meta.url",JSON.stringify("file:///"))+"})()")(...Object.values(ports));outcome="ok deps="+JSON.stringify(r.generatedDependencies??{});}catch(e:any){outcome="REFUSED "+String(e.message).slice(0,70);}
+ console.log(item.id.padEnd(62),"expected",item.refusal?"refusal":JSON.stringify(item.generatedDependencies),"=>",outcome);
+}

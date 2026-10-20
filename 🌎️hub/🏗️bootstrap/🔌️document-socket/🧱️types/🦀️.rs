@@ -225,7 +225,7 @@ async fn drain_closing_socket(receiver: &mut SplitStream<WebSocket>) {
 //#endregion 🔖️WebSocket
 
 //#region 🔖️Directory
-pub fn wire_rebootstrap(control: &os_directory::RebootstrapRequired) -> protocol::RebootstrapRequired {
+pub fn wire_rebootstrap(control: &directory::os_directory::RebootstrapRequired) -> protocol::RebootstrapRequired {
     protocol::RebootstrapRequired {
         space_id: control.scope.space_id.clone(),
         document_id: control.scope.document_id.clone(),
@@ -361,7 +361,7 @@ pub const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
 pub fn plan_seeded_hello_frontier(plan: Option<&DocumentOpenPlanAuthorityV1>, db_id: &ProtocolArtifactId) -> Option<RuntimeFrontierSummary> {
     let plan = plan?;
     let baseline = &plan.checkpoint.baseline_frontier;
-    if !matches!(plan.browser_actor, os_directory::DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) || !baseline.is_edited_for(&plan.scope) {
+    if !matches!(plan.browser_actor, directory::os_directory::DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) || !baseline.is_edited_for(&plan.scope) {
         return None;
     }
     Some(RuntimeFrontierSummary { document_id: db_id.clone(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: baseline.chain_hash.0 })

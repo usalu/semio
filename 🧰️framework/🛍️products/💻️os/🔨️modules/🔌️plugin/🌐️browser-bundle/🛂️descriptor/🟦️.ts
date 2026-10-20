@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "@semio-tech/framework-os";
+import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../📦️packages/🟦️typescript/🟦️.ts";
 
 const DESCRIPTOR_ROOT = dirname(fileURLToPath(import.meta.url));
 

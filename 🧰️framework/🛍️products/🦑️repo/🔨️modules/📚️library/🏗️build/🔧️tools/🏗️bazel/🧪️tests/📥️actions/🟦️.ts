@@ -1,5 +1,6 @@
 /** 🏷️ Contract: native Bazel actions declare real inputs, minimal outputs, a stable key and an explicit cache policy. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdir,readFile,rm,symlink,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
@@ -17,7 +18,7 @@ import component from "../../🧬️schema/🔣️.json";
 import targetCache from "../../../../🏃️execution/🧬️schema/💾️cache.json";
 import type {BazelUncachedReasonV1} from "../../📜️script.ts";
 
-const api=await import("../../📜️script.ts"),graph=corpus.graph as any,plan=api.planBazelTasksV1(graph,corpus.request),emitted=api.bazelActionsV1(graph,plan,false),sha=(value:string)=>createHash("sha256").update(value).digest("hex"),python=Bun.which("python3");
+const api=await import("../../📜️script.ts"),graph=corpus.graph as any,plan=api.planBazelTasksV1(graph,corpus.request),emitted=api.bazelActionsV1(graph,plan,false),sha=(value:string)=>createHash("sha256").update(value).digest("hex"),python=testPythonV1();
 
 /** 🧷️ A fixture row whose authored `expected` is read as the type the implementation returns. */
 type Expecting<Row extends {readonly expected:unknown},Expected>=Omit<Row,"expected">&{readonly expected:Expected};

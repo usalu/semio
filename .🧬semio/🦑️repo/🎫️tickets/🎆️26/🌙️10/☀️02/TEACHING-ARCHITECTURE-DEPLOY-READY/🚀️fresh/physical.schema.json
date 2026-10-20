@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fresh Parent Physical Publication and Log",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "publication",
+    "streams",
+    "absence"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "publication": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "new",
+              "foreign-file",
+              "foreign-directory",
+              "nested",
+              "traversal",
+              "pre-cancel",
+              "mid-cancel",
+              "root-replaced"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "maximumBytes",
+          "maximumLines",
+          "accepted",
+          "maximumFramedBytes",
+          "maximumRecords"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "channels",
+              "byte-bound",
+              "line-bound",
+              "large",
+              "partial",
+              "cancel",
+              "fragmented",
+              "framed-byte",
+              "framed-record"
+            ]
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 131072
+          },
+          "maximumLines": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "maximumFramedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 402653184
+          },
+          "maximumRecords": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2097152
+          }
+        }
+      }
+    },
+    "absence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "absent",
+          "refused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "absent",
+              "present",
+              "symlink",
+              "ancestor-symlink"
+            ]
+          },
+          "absent": {
+            "type": "boolean"
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rootReplacement": {
+      "const": {
+        "windowsRenameRefusal": [
+          "EACCES",
+          "EPERM",
+          "EBUSY",
+          "ENOTEMPTY"
+        ],
+        "posixRequiresReplacement": true
+      }
+    },
+    "windowsSymlinkRefusal": {
+      "const": [
+        "EACCES",
+        "EPERM",
+        "ENOSYS"
+      ]
+    }
+  }
+}

@@ -263,7 +263,7 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, schema: Op
 /// 🧾️ Encodes one handcrafted descriptor JSON exactly as the publisher's descriptor bytes are encoded.
 fn encode_descriptor_json(json: serde_json::Value) -> Vec<u8> {
     let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
-    os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))
+    directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))
 }
 
 /// 🏠️ The fixture editor as a HOST of the base package's kind: it declares no kind, hosts `s.fixture.document` from
@@ -472,7 +472,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     if foreign_service {
         descriptor.contributions.inference_services.iter_mut().find(|service| service.inference_schema == "s.gis.gismap.inference").expect("actual GIS inference declaration").contributor = "foreign".into();
     }
-    let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .expect("actual GIS codec receipts")
         .into_iter()

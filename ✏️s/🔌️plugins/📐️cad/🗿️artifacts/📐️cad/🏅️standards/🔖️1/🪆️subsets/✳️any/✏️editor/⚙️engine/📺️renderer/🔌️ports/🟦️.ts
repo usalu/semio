@@ -11,7 +11,8 @@ import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@semio-tech/
 // #region 🔌️PortWiring
 const useFrame = sceneHostPort.fiber.useFrame;
 export const useThree = sceneHostPort.fiber.useThree;
-export const { Line, Text } = sceneHostPort.drei;
+export const { Text } = sceneHostPort.drei;
+export const Line: typeof import("@react-three/drei").Line = sceneHostPort.drei.Line;
 export const THREE = sceneHostPort.three;
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 // #endregion 🔌️PortWiring

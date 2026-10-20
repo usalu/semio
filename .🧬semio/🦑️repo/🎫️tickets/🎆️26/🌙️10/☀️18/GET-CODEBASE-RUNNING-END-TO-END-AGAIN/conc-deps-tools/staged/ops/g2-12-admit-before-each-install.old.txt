@@ -1,0 +1,1 @@
+for(const row of fresh){await fence();if(!anchors)throw Error("Actual installer environment required");

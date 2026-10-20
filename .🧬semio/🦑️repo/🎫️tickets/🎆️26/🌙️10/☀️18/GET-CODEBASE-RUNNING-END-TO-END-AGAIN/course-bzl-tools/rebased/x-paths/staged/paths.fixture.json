@@ -1,0 +1,1175 @@
+{
+  "version": 1,
+  "alias": {
+    "link": "a",
+    "hexLength": 10
+  },
+  "directories": [
+    {
+      "directory": "",
+      "alias": "e3b0c44298"
+    },
+    {
+      "directory": "src/ünï/コード",
+      "alias": "190856fe7a"
+    },
+    {
+      "directory": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+      "alias": "cbd5d0a33b"
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures",
+      "alias": "5d3b18bc64"
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️testing/🔣️json",
+      "alias": "b19db5d0b6"
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🧪️tests/🧪️typednodefields-preflights-every-capture-before-transfer-under-private-r",
+      "alias": "49aa3a9a37"
+    }
+  ],
+  "labels": [
+    {
+      "path": "package.json",
+      "label": "a/e3b0c44298/package.json"
+    },
+    {
+      "path": "README.md",
+      "label": "a/e3b0c44298/README.md"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "label": "a/cbd5d0a33b/📋️project.json"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures/🖱️tutorial-local-interaction.json",
+      "label": "a/5d3b18bc64/🖱️tutorial-local-interaction.json"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️testing/🔣️json/🟦️.ts",
+      "label": "a/b19db5d0b6/🟦️.ts"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🧪️tests/🧪️typednodefields-preflights-every-capture-before-transfer-under-private-r/🟦️.ts",
+      "label": "a/49aa3a9a37/🟦️.ts"
+    },
+    {
+      "path": "src/ünï/コード/mod.ts",
+      "label": "a/190856fe7a/mod.ts"
+    },
+    {
+      "path": "src/ünï/コード/index.ts",
+      "label": "a/190856fe7a/index.ts"
+    }
+  ],
+  "closure": {
+    "files": [
+      "package.json",
+      "README.md",
+      "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "🧰️framework/🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures/🖱️tutorial-local-interaction.json",
+      "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️testing/🔣️json/🟦️.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🧪️tests/🧪️typednodefields-preflights-every-capture-before-transfer-under-private-r/🟦️.ts",
+      "src/ünï/コード/mod.ts",
+      "src/ünï/コード/index.ts"
+    ],
+    "alias": {
+      "units": 47,
+      "bytes": 51
+    },
+    "legacy": {
+      "units": 166,
+      "bytes": 222
+    }
+  },
+  "budgets": [
+    {
+      "name": "macOS arm64 under /Users/ueli/Documents/semio: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "outputBase": "/Users/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 141,
+            "bytes": 145
+          },
+          "runfiles-source": {
+            "units": 212,
+            "bytes": 216
+          },
+          "snapshot": {
+            "units": 197,
+            "bytes": 197
+          },
+          "runfiles-snapshot": {
+            "units": 231,
+            "bytes": 231
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": 25,
+        "slackBytes": 792,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "macOS arm64 under /Users/ueli/Documents/semio: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "outputBase": "/Users/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 260,
+            "bytes": 316
+          },
+          "runfiles-source": {
+            "units": 331,
+            "bytes": 387
+          },
+          "snapshot": {
+            "units": 197,
+            "bytes": 197
+          },
+          "runfiles-snapshot": {
+            "units": 231,
+            "bytes": 231
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": -75,
+        "slackBytes": 636,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "macOS x64 under /Users/dev/Documents/GitHub/semio-workspace: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "darwin",
+        "arch": "x64",
+        "outputBase": "/Users/dev/Documents/GitHub/semio-workspace/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 157,
+            "bytes": 161
+          },
+          "runfiles-source": {
+            "units": 229,
+            "bytes": 233
+          },
+          "snapshot": {
+            "units": 214,
+            "bytes": 214
+          },
+          "runfiles-snapshot": {
+            "units": 248,
+            "bytes": 248
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": 8,
+        "slackBytes": 775,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "macOS x64 under /Users/dev/Documents/GitHub/semio-workspace: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "darwin",
+        "arch": "x64",
+        "outputBase": "/Users/dev/Documents/GitHub/semio-workspace/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 276,
+            "bytes": 332
+          },
+          "runfiles-source": {
+            "units": 348,
+            "bytes": 404
+          },
+          "snapshot": {
+            "units": 214,
+            "bytes": 214
+          },
+          "runfiles-snapshot": {
+            "units": 248,
+            "bytes": 248
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": -92,
+        "slackBytes": 619,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "devcontainer Linux arm64 under /workspaces/semio: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "linux",
+        "arch": "arm64",
+        "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 131,
+            "bytes": 135
+          },
+          "runfiles-source": {
+            "units": 197,
+            "bytes": 201
+          },
+          "snapshot": {
+            "units": 182,
+            "bytes": 182
+          },
+          "runfiles-snapshot": {
+            "units": 216,
+            "bytes": 216
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": 40,
+        "slackBytes": 3879,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "devcontainer Linux arm64 under /workspaces/semio: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "linux",
+        "arch": "arm64",
+        "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 250,
+            "bytes": 306
+          },
+          "runfiles-source": {
+            "units": 316,
+            "bytes": 372
+          },
+          "snapshot": {
+            "units": 182,
+            "bytes": 182
+          },
+          "runfiles-snapshot": {
+            "units": 216,
+            "bytes": 216
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": -60,
+        "slackBytes": 3723,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Linux x64 under /home/ueli/Documents/semio: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "outputBase": "/home/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 140,
+            "bytes": 144
+          },
+          "runfiles-source": {
+            "units": 201,
+            "bytes": 205
+          },
+          "snapshot": {
+            "units": 186,
+            "bytes": 186
+          },
+          "runfiles-snapshot": {
+            "units": 220,
+            "bytes": 220
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": 36,
+        "slackBytes": 3875,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "Linux x64 under /home/ueli/Documents/semio: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "outputBase": "/home/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 259,
+            "bytes": 315
+          },
+          "runfiles-source": {
+            "units": 320,
+            "bytes": 376
+          },
+          "snapshot": {
+            "units": 186,
+            "bytes": 186
+          },
+          "runfiles-snapshot": {
+            "units": 220,
+            "bytes": 220
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": -64,
+        "slackBytes": 3719,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\Users\\ueli\\Documents\\semio without long paths: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\Users\\ueli\\Documents\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 143,
+            "bytes": 147
+          },
+          "snapshot": {
+            "units": 198,
+            "bytes": 198
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": 58,
+        "slackBytes": null,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\Users\\ueli\\Documents\\semio without long paths: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\Users\\ueli\\Documents\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 262,
+            "bytes": 318
+          },
+          "snapshot": {
+            "units": 198,
+            "bytes": 198
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": -6,
+        "slackBytes": null,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\Users\\ueli\\Documents\\semio with long paths: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\Users\\ueli\\Documents\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 143,
+            "bytes": 147
+          },
+          "snapshot": {
+            "units": 198,
+            "bytes": 198
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": 58,
+        "slackBytes": null,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\Users\\ueli\\Documents\\semio with long paths: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\Users\\ueli\\Documents\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 262,
+            "bytes": 318
+          },
+          "snapshot": {
+            "units": 198,
+            "bytes": 198
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": -6,
+        "slackBytes": null,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Windows arm64 under C:\\Users\\firstname.lastname\\source\\repos\\semio without long paths: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "win32",
+        "arch": "arm64",
+        "outputBase": "C:\\Users\\firstname.lastname\\source\\repos\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 160,
+            "bytes": 164
+          },
+          "snapshot": {
+            "units": 217,
+            "bytes": 217
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": 39,
+        "slackBytes": null,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "Windows arm64 under C:\\Users\\firstname.lastname\\source\\repos\\semio without long paths: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "win32",
+        "arch": "arm64",
+        "outputBase": "C:\\Users\\firstname.lastname\\source\\repos\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 279,
+            "bytes": 335
+          },
+          "snapshot": {
+            "units": 217,
+            "bytes": 217
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": -23,
+        "slackBytes": null,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\semio without long paths: alias layout",
+      "derive": "alias",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 122,
+            "bytes": 126
+          },
+          "snapshot": {
+            "units": 177,
+            "bytes": 177
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": 79,
+        "slackBytes": null,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "Windows x64 under C:\\semio without long paths: legacy repository-path layout",
+      "derive": "legacy",
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "disabled",
+        "closure": {
+          "alias": {
+            "units": 166,
+            "bytes": 222
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 241,
+            "bytes": 297
+          },
+          "snapshot": {
+            "units": 177,
+            "bytes": 177
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": 15,
+        "slackBytes": null,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "macOS arm64 under /Users/ueli/Documents/semio: hermetic task keeps the repository layout inside the sandbox",
+      "derive": null,
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "outputBase": "/Users/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 166,
+            "bytes": 222
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 141,
+            "bytes": 145
+          },
+          "runfiles-source": {
+            "units": 212,
+            "bytes": 216
+          },
+          "snapshot": {
+            "units": 197,
+            "bytes": 197
+          },
+          "runfiles-snapshot": {
+            "units": 231,
+            "bytes": 231
+          },
+          "sandbox-source": {
+            "units": 298,
+            "bytes": 354
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": -42,
+        "slackBytes": 669,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "macOS x64 under /Users/dev/Documents/GitHub/semio-workspace: hermetic task keeps the repository layout inside the sandbox",
+      "derive": null,
+      "input": {
+        "platform": "darwin",
+        "arch": "x64",
+        "outputBase": "/Users/dev/Documents/GitHub/semio-workspace/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 166,
+            "bytes": 222
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 157,
+            "bytes": 161
+          },
+          "runfiles-source": {
+            "units": 229,
+            "bytes": 233
+          },
+          "snapshot": {
+            "units": 214,
+            "bytes": 214
+          },
+          "runfiles-snapshot": {
+            "units": 248,
+            "bytes": 248
+          },
+          "sandbox-source": {
+            "units": 314,
+            "bytes": 370
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": -58,
+        "slackBytes": 653,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "devcontainer Linux arm64 under /workspaces/semio: hermetic task keeps the repository layout inside the sandbox",
+      "derive": null,
+      "input": {
+        "platform": "linux",
+        "arch": "arm64",
+        "outputBase": "/workspaces/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 166,
+            "bytes": 222
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 131,
+            "bytes": 135
+          },
+          "runfiles-source": {
+            "units": 197,
+            "bytes": 201
+          },
+          "snapshot": {
+            "units": 182,
+            "bytes": 182
+          },
+          "runfiles-snapshot": {
+            "units": 216,
+            "bytes": 216
+          },
+          "sandbox-source": {
+            "units": 288,
+            "bytes": 344
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": -32,
+        "slackBytes": 3751,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "Linux x64 under /home/ueli/Documents/semio: hermetic task keeps the repository layout inside the sandbox",
+      "derive": null,
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "outputBase": "/home/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 166,
+            "bytes": 222
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 140,
+            "bytes": 144
+          },
+          "runfiles-source": {
+            "units": 201,
+            "bytes": 205
+          },
+          "snapshot": {
+            "units": 186,
+            "bytes": 186
+          },
+          "runfiles-snapshot": {
+            "units": 220,
+            "bytes": 220
+          },
+          "sandbox-source": {
+            "units": 297,
+            "bytes": 353
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": -41,
+        "slackBytes": 3742,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "synthetic: the longest tracked basename of the repository on macOS",
+      "derive": null,
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "outputBase": "/Users/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 91,
+            "bytes": 91
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 185,
+            "bytes": 185
+          },
+          "runfiles-source": {
+            "units": 256,
+            "bytes": 256
+          },
+          "snapshot": {
+            "units": 197,
+            "bytes": 197
+          },
+          "runfiles-snapshot": {
+            "units": 231,
+            "bytes": 231
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": 0,
+        "slackBytes": 767,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "synthetic: the longest tracked basename of the repository on Linux",
+      "derive": null,
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "outputBase": "/home/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 91,
+            "bytes": 91
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 184,
+            "bytes": 184
+          },
+          "runfiles-source": {
+            "units": 245,
+            "bytes": 245
+          },
+          "snapshot": {
+            "units": 186,
+            "bytes": 186
+          },
+          "runfiles-snapshot": {
+            "units": 220,
+            "bytes": 220
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": 11,
+        "slackBytes": 3850,
+        "fits": true,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "synthetic: macOS byte limit binds before the unit limit",
+      "derive": null,
+      "input": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "outputBase": "/Users/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 40,
+            "bytes": 1000
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 134,
+            "bytes": 1094
+          },
+          "runfiles-source": {
+            "units": 205,
+            "bytes": 1165
+          },
+          "snapshot": {
+            "units": 197,
+            "bytes": 197
+          },
+          "runfiles-snapshot": {
+            "units": 231,
+            "bytes": 231
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 1023,
+        "slackUnits": 25,
+        "slackBytes": -142,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "synthetic: Windows long paths still obey the 256 repository rule",
+      "derive": null,
+      "input": {
+        "platform": "win32",
+        "arch": "x64",
+        "outputBase": "C:\\dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\\.cache\\b\\p\\m\\bazel\\outputs\\server\\0123456789abcdef",
+        "longPaths": "enabled",
+        "closure": {
+          "alias": {
+            "units": 47,
+            "bytes": 51
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "source": {
+            "units": 267,
+            "bytes": 271
+          },
+          "snapshot": {
+            "units": 322,
+            "bytes": 322
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": null,
+        "slackUnits": -66,
+        "slackBytes": null,
+        "fits": false,
+        "refusals": 1
+      }
+    },
+    {
+      "name": "synthetic: no sources, only outputs",
+      "derive": null,
+      "input": {
+        "platform": "linux",
+        "arch": "x64",
+        "outputBase": "/home/ueli/Documents/semio/.cache/b/p/m/bazel/outputs/server/0123456789abcdef",
+        "longPaths": "unprobed",
+        "closure": {
+          "alias": {
+            "units": 0,
+            "bytes": 0
+          },
+          "real": {
+            "units": 0,
+            "bytes": 0
+          }
+        }
+      },
+      "expect": {
+        "families": {
+          "snapshot": {
+            "units": 186,
+            "bytes": 186
+          },
+          "runfiles-snapshot": {
+            "units": 220,
+            "bytes": 220
+          }
+        },
+        "limitUnits": 256,
+        "limitBytes": 4095,
+        "slackUnits": 36,
+        "slackBytes": 3875,
+        "fits": true,
+        "refusals": 0
+      }
+    }
+  ]
+}

@@ -7,8 +7,8 @@
 import { type Implementation, type TestEvidence } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import { testFixture as protocolSchema } from "@semio-tech/framework/test/schema";
+import { validateJsonSchemaSubset } from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { testFixture as protocolSchema } from "../../../../../📦️packages/🟦️typescript/🧪️test/🧬️schema/🟦️.ts";
 import { packagesForOwner } from "../🕸️dependencies/🟨️.mjs";
 import { type ComparisonProfileSpec, CORE_COMPARISON_PROFILES, isExcludedTestPath, testFilenameForKind, testLocationPath, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";

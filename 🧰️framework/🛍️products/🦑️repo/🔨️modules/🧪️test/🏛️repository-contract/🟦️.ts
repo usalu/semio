@@ -4,11 +4,11 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature } from "@semio-tech/framework/test/gherkin";
+import { parseFeature } from "../../../../../📦️packages/🟦️typescript/🧪️test/🥒️gherkin/🟦️.ts";
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { type BreachRecord } from "@semio-tech/repo-lib/policy";
-import { getRepoMetaDir } from "@semio-tech/repo-lib/inventory";
+import { getRepoMetaDir } from "../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { isExcludedTestPath, isTestOraclePath, TEST_DOMAIN_REL_PATH, testFilenameForKind, testLocationPath, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { type DiscoveredCase, discoverTestCases, walkDirectories } from "../🧭️case-discovery/🟦️.ts";
 import { oraclePackages } from "../🗃️oracle-registry/🟦️.ts";

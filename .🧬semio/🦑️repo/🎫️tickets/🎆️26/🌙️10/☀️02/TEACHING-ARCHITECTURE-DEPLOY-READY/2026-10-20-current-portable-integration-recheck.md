@@ -1,0 +1,5 @@
+# Current Portable Integration Recheck
+
+Read-only2026-10-20 current graph SHAa83ca8391d460041fb3cf6e03bb45d492856c1f8e6e17804f97cdef8775f31a2,60060B. Correction to earlier checkpoint: the Root helper withPortableInputCohortV1 remains defined at175 but has no invocation. The peer portableInputs expansion at198–216 now uses synchronous readInventoryRecordLeanV1, initial/cadence/final store.recheck and resource continuation. It replaced the earlier managed-reader cohort, so helper presence does not establish effective window integration or measured performance. No native pass exists.
+
+Preserve the peer lean reader and all other Source edits. Release is reviewing the actual consumer finalization/dualerror contract and the smallest clean disposition of Root unused helper/import/export plus7 settlement regressions, either meaningful actual-path integration or removal of superseded code. No Source mutation or historical rollback occurred during this recheck. Frozen test/capture inputs remain unchanged.

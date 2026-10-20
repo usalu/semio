@@ -1,6 +1,6 @@
 /** 🎞️ App channel frame codec: `encodeAppFrame` and `decodeAppFrame` over the tagged app frame wire. */
 
-import { decodeLocalInteractionQueryReply, encodeLocalInteractionQueryReply, readBool, readBytes, readStr, readU8, readVarintU64, readVarintU64Exact, readVecBytes, writeBool, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes } from "@semio-tech/framework-replication";
+import { decodeLocalInteractionQueryReply, encodeLocalInteractionQueryReply, readBool, readBytes, readStr, readU8, readVarintU64, readVarintU64Exact, readVecBytes, writeBool, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { INVOCATION_RESULT_PACK_MAXIMUM_BYTES } from "../../🎁️packs/🟦️.ts";
 import { type AppFrameValue, readDocumentArchive, readOptU64, readVecChildHeadPackEntry, readVecChildPackEntry, readVecWindowConfigPackEntry, writeDocumentArchive, writeOptU64, writeVecChildHeadPackEntry, writeVecChildPackEntry, writeVecWindowConfigPackEntry } from "../../🪢️wire-contracts/🟦️.ts";
 import { APP_FRAME_TAGS, assertAppDocumentIdentity, exactMediaExportFrame, MEDIA_EXPORT_STATES, readMediaExportHandle, writeMediaExportHandle } from "../🏷️codec-primitives/🟦️.ts";

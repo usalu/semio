@@ -5,6 +5,7 @@ import{Database}from"bun:sqlite";
 import schema from"../../../🧬️schema/🔣️.json";
 import processBudgetSchema from"../../../../../../⏱️budget/🧬️schema/🔣️.json";
 import cleanupSchema from"../../../🧬️schema/🧹️cleanup.json";
+import policySchema from"../../../../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import{createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,withAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1}from"../../../🟦️.ts";
 
@@ -22,7 +23,8 @@ test("process birth and physical timers preserve fixed long deadlines and retire
 });
 
 test("actual long finite Original and physical cleanup do not expire at timer overflow",async()=>{
- for(const maximumElapsedMilliseconds of[2147483647,2147483648,9007199254740991-Date.now()-10000]){
+ const maximumPolicyMilliseconds=policySchema.properties.maximumElapsedMilliseconds.maximum;
+ for(const maximumElapsedMilliseconds of[maximumPolicyMilliseconds,maximumPolicyMilliseconds-1,3600000]){
   await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:long-process-timers",maximumElapsedMilliseconds},{fixture:"long-process-timers"},Date.now()),async invocation=>{
    const body=createIssuedResourceControlV1(invocation,"fixture:long-physical",0);
    await withAcceptedPhysicalCleanupV1(body,{version:1,kind:"artifact-scratch",resource:"fixture:long-physical",reserveMilliseconds:20},async(token,control)=>{
@@ -30,8 +32,7 @@ test("actual long finite Original and physical cleanup do not expire at timer ov
    });
   });
  }
- expect(()=>createScriptProcessEnvelope({version:1,owner:"fixture:unrepresentable-timer",maximumElapsedMilliseconds:9007199254740991},{},Date.now())).toThrow();
- console.log("[DEBUG] process birth/physical timer laws: 8 neutral schedules and 3 actual long finite cleanups");
+ for(const maximumElapsedMilliseconds of[maximumPolicyMilliseconds+1,2147483647,2147483648,9007199254740991])expect(()=>createScriptProcessEnvelope({version:1,owner:"fixture:unrepresentable-timer",maximumElapsedMilliseconds},{},Date.now())).toThrow();
 },5000);
 
 test("actual body drain retires its control timer before terminal cleanup",async()=>{
@@ -40,7 +41,7 @@ test("actual body drain retires its control timer before terminal cleanup",async
  try{
   globalThis.setTimeout=((callback:()=>void,milliseconds:number)=>{const handle=realTimeout(callback,milliseconds);scheduled.push({handle,callback});return handle;})as typeof setTimeout;
   globalThis.clearTimeout=((handle:ReturnType<typeof setTimeout>)=>{cleared.add(handle);realClear(handle);})as typeof clearTimeout;
-  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:retired-body-timer",maximumElapsedMilliseconds:2147483648},{},Date.now()),invocation=>withAcceptedPhysicalCleanupV1(createIssuedResourceControlV1(invocation,"fixture:retired-body",0),{version:1,kind:"artifact-scratch",resource:"fixture:retired-body",reserveMilliseconds:20},async(token,body)=>{
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:retired-body-timer",maximumElapsedMilliseconds:policySchema.properties.maximumElapsedMilliseconds.maximum},{},Date.now()),invocation=>withAcceptedPhysicalCleanupV1(createIssuedResourceControlV1(invocation,"fixture:retired-body",0),{version:1,kind:"artifact-scratch",resource:"fixture:retired-body",reserveMilliseconds:20},async(token,body)=>{
    const count=scheduled.length;await beginAcceptedPhysicalCleanupV1(token);const retired=scheduled.filter(row=>cleared.has(row.handle));for(const row of retired)row.callback();
    const actual={scheduled:count,bodyRetired:retired.length,wholeRetained:count-retired.length,staleCallbackAborts:body.signal.aborted||invocation.control.signal.aborted||readAcceptedPhysicalCleanupV1(token).cleanupSignal.aborted,staleCallbackRearms:scheduled.length!==count};expect(actual).toEqual(corpus.bodyRetirement);
    const oracle=database.query("SELECT json_array_length(?1) scheduled,(SELECT count(*) FROM json_each(?1) WHERE json_extract(value,'$.retired')=1) retired").get(JSON.stringify(scheduled.map(row=>({retired:cleared.has(row.handle)}))))as{scheduled:number;retired:number};expect(oracle.scheduled).toBe(actual.scheduled);expect(oracle.retired).toBe(actual.bodyRetired);

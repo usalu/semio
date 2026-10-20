@@ -1,7 +1,7 @@
 import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { posix } from "node:path";
-import { rustTokens, rustTokenPairs, rustTokenSegments, rustAttributes, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens, rustTokenPairs, rustTokenSegments, rustAttributes, rustVisibility } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 /** 📋️ Tool-job coverage inventory: reserved ids, static rows, publication contracts, app-owned rows, dispositions and proofs.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */

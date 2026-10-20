@@ -1,6 +1,6 @@
 /** 🧱️ Backbone worker wire: the framed request and response encoders and decoders of the backbone worker protocol. */
 
-import { parseRetainedCloneGrant } from "@semio-tech/value-ts/retained-clone/wire";
+import { parseRetainedCloneGrant } from "../../🌱️value/📦️packages/🟦️typescript/🧬️retained-clone/🌐️wire/🟦️.ts";
 import { canonicalDirectoryCommandV1, parseDirectoryEventV1 } from "../../📇️directory/🚪️io/📝️text/🟦️.ts";
 import { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1 } from "../../💡️inference/🔌️service/🟦️.ts";
 import { documentCheckInStatusFromValueV1 } from "../../📄️document/📌️check-in/🟦️.ts";

@@ -12,8 +12,8 @@ import {
   importPayloadChunks,
   type ImportChunk
 } from "../../🗄️file-open-import/🟦️.ts";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "@semio-tech/framework-trace/memory";
-import { wireEffectToFriendly } from "@semio-tech/framework-actor/wire-turn";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../⏱️trace/🧮️memory/🟦️.ts";
+import { wireEffectToFriendly } from "../../../🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts";
 
 /** 📤️ TypeScript twin of `🧪️tests/📤️file-open-import/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/📤️file-open-import/🔣️.json`): what `Effect::RequestFileOpen` looks like on the wire,

@@ -620,3 +620,108 @@ Current Widgets session28710 settled whole-command exit101 before any body: two 
 Retry18419 settled whole-command exit0 (`generated/e2e-tui-widgets-tree-editor-current.log`). All8 actual laws passed,0failed0filtered,0.04s; compilation6.64s. The two `editor::tests` laws retain `[DEBUG] multiline editor neutral cases=13 UTF8=true boundedHistory=true`. All six actual `tree::tests` laws passed, including semantic cells against the independent Skia color planes, hover/filter/keyboard/selection/clipping and rebuild identity. This verifies the current whole Widgets closure after the Core/Tree ownership move, replacing only the earlier limited two-law acceptance. The sole native slot was explicitly released to Controls for their focused persistent reproducer; Root terminal three source/editor laws remain pending.
 
 The seven-path canonical help patch has independent bounded Source acceptance. Current Source batch67665 owns its actual suite execution; no test-body pass is inferred from the early help readbacks.
+
+## Retained Report Attribution
+
+The generated source/input array contains190 unique owned paths (max193 UTF16 code units). The separate report array lists these six retained Markdown documents; generated arrays/logs remain disposable output at ticket cleanup.
+
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct19-e2e-native.md`
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct19-macos-execution.md`
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-dashboard-workflow-audit.md`
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-native-editor.md`
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-dependency-ownership-performance.md`
+- `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-native-store-recovery.md`
+
+## October20 Canonical Human Help Freeze
+
+The native USAGE and keyboard header now name the sole public repo dashboard route; the internal view verb is not doubled in human examples. EN/DE customization and daemon usage, task/log errors, connection-skew remedies, README verb table, schema descriptions and relevant native docstrings are coherent. Shared neutral humanUsage vectors validate the canonical prefix and negative historical spellings. The Source dispatch law extracts the actual Rust literals, compares the18 explicit public assets and uses independent SQLite cases; native usage/facade/window-focus/label snapshots agree by source. Low accepted the final bounded source review. No rebuilt dashboard help or new suite body is claimed.
+
+Exact additionally normalized dashboard-relative public assets:
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/⌨️command/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/📜️journal/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/📼️replay/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🔐️lease/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🚦️lifecycle/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🕹️control/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌳️command-tree/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📎️connection/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/🧪️tests/🔬️unit/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏋️load/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🧪️tests/🔬️unit/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🔬️unit/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🖼️window-focus-and-sessions/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎛️dispatch/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🎛️dispatch/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🥒️.feature
+
+Updated exact attribution input contains223 paths (maximum193 UTF16 units). The new retained research report is oct20-source-graph-admission.md; Windows conditional-retirement design is appended to oct20-windows-native-maintenance.md. Neither trace alters current graph or POSIX retirement guards.
+
+## Terminal Controller Gate and Static Source Audit Ownership
+
+Rootterminal3 session68648 settled whole1 before compilation: terminal runtime-audit Source file9963 bytes was refused with only4016 aggregate bytes remaining. No native editor law ran. The limit and Source refusal guard remain unchanged.
+
+The native runtime-audit mixed actual unchanged-screen behavior with source-text searches that embedded five production Rust files. A separate pure-text catalog law embedded four more source reads. Those exact textual assertions now belong the existing advertised dispatch Source control: schema-authored sourceAudit vectors, five positive/negative samples, actual physical asset reads and an independent SQLite text oracle. The native unchanged-screen/dirty/render_due assertions and all other runtime behavior laws remain. No feature flags, hidden skipped laws, new crate, manifest edits or limit increase were added.
+
+Exact static split files: dashboard 🧪️tests/🔬️unit/🩺️runtime-audit/🦀️.rs below 🖥️terminal; existing dispatch schema, corpus, Source suite and feature. Source syntax was inspected, but its suite and the pending native retry are not reported passed.
+
+## Small Canonical Usage Corpus
+
+Retry24709 settled whole1 before compilation with runtime-audit8659 bytes and only2169 bytes remaining. The native window-focus help law introduced in this task embedded the complete46608-byte dispatch corpus merely to obtain one header. That was an overbroad fixture reference.
+
+Canonical usage now has its own single schema/corpus in ⌨️usage/🧬️schema/🔣️.json and ⌨️usage/🧪️tests/🔣️.json. The corpus is1829 bytes. Dispatch Source tests import that authority and retain actual Rust literal/header,18asset and independent SQL checks; the old humanUsage property was removed atomically from dispatch schema/corpus. Native window-focus embeds only the small corpus. No new crate, dependency, feature gate or Source limit increase was introduced.
+
+Exact additional owned paths:
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🧬️schema/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🧪️tests/🔣️.json
+
+Current exact source/input attribution contains231 paths; maximum193 UTF16 units. Controls owns the current two-commit native slot; terminal retry remains next after its explicit whole terminal.
+
+## Actual Compiler Boundary Repairs
+
+Rootterminal3 retry17872 passed the Source extent gate and settled whole101 during actual compilation before any editor test body. It exposed15 TUI engine errors and21 dashboard registry errors. Four pointer methods were syntactically outside impl Tui; two sibling helper methods were private; docking projection accessed Frame Scene private mounted-layout data; three registry declaration types were private while their fields were already used in sibling modules.
+
+The repair restores the impl scope and limits helper/type visibility to their actual parent module. Frame Scene now supplies a read-only borrowed layout/canvas/window mapping query requiring both live node identities and a live common canvas; its mutable mounted collection remains private. Four neutral mount-scope cases, an independent SQLite Source oracle and an actual engine drag-query law cover live, foreign and removed-canvas decisions. Existing drag/preview/cancellation behavior tests remain. No dependency, manifest, limit, feature gate, compatibility alias or mutable Scene export was added. Low accepted the bounded source review; the next native retry remains required.
+
+Exact compile-fix paths:
+
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎬️scene/🦀️.rs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🧾️declarations/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/🪟️drag-preview/🔣️.json
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🧫️fixtures/🪟️drag-preview/🔣️.json
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🪟️drag-preview/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts
+
+## Subsequent Terminal Compilation
+
+Retry82787 settled whole101 before editor bodies. Prior TUI engine and registry compiler failures were resolved; compilation then rejected duplicate source_cancelled catalogue fields. The editor introduced a file/buffer cancellation meaning under a key already used for launcher suggestion cancellation. The editor field and its two consumers are now source_document_cancelled; the launcher field retains its discovery-refresh meaning and consumer. Both English/German translations remain. Low accepted this exact two-file semantic separation. Controls owns String law29145 and the subsequent two-commit check; no terminal retry overlaps them.
+
+Retry93692 settled whole101 at one remaining lib-test path error: docking law referenced the former super::labels module after labels became the actual dashboard_labels crate. The exact consumer now calls dashboard_labels::labels; no alias or behavior change. Production terminal/dependency compilation passed this frontier, but the three editor bodies still had not run.
+
+## Actual Editor Controller Acceptance
+
+Retry43149 settled whole command0. Actual native terminal lib-test result:3 passed,0 failed,74 filtered,0.73s. The named laws verify committed save adoption after late cancellation; browser navigation, Unicode editing/save, foreign conflict preservation and explicit discard; disconnected worker retirement. Retained DEBUG confirms actual workspace bytes and UTF8 behavior. This is controller/native filesystem acceptance, separate from forthcoming installed viewer/PTY acceptance.
+
+Canonical publication now follows through the declared repo-dashboard-rs:build owner; no raw artifact copying or installation record fabrication is used.
+
+## Canonical Publication Entry Repair
+
+The first canonical repo-dashboard-rs:build invocation settled whole1 in0.14s before graph/build effects. dashboardBuildDescendantsV1 attempted a nonexistent package manifest beneath the relocated installation bootstrap folder. dashboardPackageRoot retained its former relative path.
+
+Installation PackageOwner schema data now records the exact physical project identity and paths. The runtime resolves the actual dashboard executable package from that authored installation-relative path. The existing bootstrap suite validates the neutral owner fixture and independently reads the actual nofollow manifest/SQLite owner name; its earlier physical-root assertion remains. Strict prebirth child declaration and Original assertions are unchanged. Missing/invalid installation diagnostics now direct humans to repo dashboard automatic installation, removing obsolete Bun instructions.
+
+## Explicit Language Resolution Follow-Up
+
+Silent English fallback was removed from the language policy and public effective preference projection. Unresolved language is null, and interactive startup shows a no-selection English/Deutsch choice before discovery or daemon work. Explicit confirmation appends the existing event off the UI thread; pre-confirmation cancellation leaves no journal. Valid system and explicit layers retain their precedence. Bilingual noninteractive help and existing intended local/shared preference scopes remain. Exact scope and pending Source/native/installed PTY gates are recorded in oct20-dashboard-language-choice.md. No new runtime pass is claimed.

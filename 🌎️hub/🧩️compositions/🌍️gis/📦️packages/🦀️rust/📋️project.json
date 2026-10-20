@@ -208,7 +208,12 @@
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-edit-durability-check"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     }
   }
 }

@@ -664,11 +664,10 @@
   ],
   "schemaOwnershipHashes": {
     "Namespace": "17b8534c734b5849c45e792a252eec6bf5df83d79105473928b9eb647282a1f9",
-    "OptionalQuota": "3f15b17a572786ee5bdf900de318d21add59d8d3b4177b1c4a2a1602f4e583f9",
+    "OptionalQuota": "984211e5782bea565dcc01f1ec686101366a9cc7578c59dd952010aac92aea77",
     "OptionalLedger": "c51f4436ba05952d4db3a3380c38b42706911ea8bd3265005caeac3575f54557",
     "InferenceDataset": "477f73f937aed0f6a951b14f1ea96502f1f5fba50c4de983b830a71c118bb0e1"
-  }
-,
+  },
   "graphWriterLeaseCases": [
     {
       "id": "warm-lease-infrastructure",

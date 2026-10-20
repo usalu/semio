@@ -1,0 +1,14 @@
+[
+  {
+    "name": "same-root-filesystem",
+    "rootDevice": 71,
+    "entryDevice": 71,
+    "accepted": true
+  },
+  {
+    "name": "nested-mounted-filesystem",
+    "rootDevice": 71,
+    "entryDevice": 72,
+    "accepted": false
+  }
+]

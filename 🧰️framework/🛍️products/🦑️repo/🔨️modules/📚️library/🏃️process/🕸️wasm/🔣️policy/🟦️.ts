@@ -16,7 +16,7 @@ import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🗂️dir
 import {prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {repositoryStrictStorageV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
-import {preparedBinaryen} from "@semio-tech/nx-bootstrap-tools/wasm";
+import {preparedBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {resolveWorkspaceBin} from "../../🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {requestedCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";

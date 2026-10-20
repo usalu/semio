@@ -27,7 +27,9 @@
           "directory": "tools/bun",
           "executable": "bun",
           "mnemonic": "RepoHermetic",
-          "runner": "hermetic-runner.mjs"
+          "runner": "hermetic-runner.mjs",
+          "modulesRunner": "hermetic-modules.mjs",
+          "modulesMnemonic": "RepoHermeticModules"
         },
         "settings": {
           "os": "exec_os",
@@ -105,10 +107,12 @@
           "endpoint": "SEMIO_REMOTE_EXECUTION_ENDPOINT",
           "properties": "SEMIO_REMOTE_EXECUTION_PROPERTIES",
           "platform": "SEMIO_REMOTE_EXECUTION_PLATFORM",
+          "instance": "SEMIO_REMOTE_EXECUTION_INSTANCE",
           "jobs": "SEMIO_REMOTE_EXECUTION_JOBS"
         },
         "remote": {
           "defaultPlatform": "linux-x64",
+          "defaultInstance": "main",
           "defaultJobs": 128,
           "maximumJobs": 512,
           "localFallback": false
@@ -148,7 +152,9 @@
             "directory",
             "executable",
             "mnemonic",
-            "runner"
+            "runner",
+            "modulesRunner",
+            "modulesMnemonic"
           ],
           "properties": {
             "type": {
@@ -175,6 +181,14 @@
             "runner": {
               "type": "string",
               "pattern": "^[a-z][a-z0-9.-]*$"
+            },
+            "modulesRunner": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]*$"
+            },
+            "modulesMnemonic": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*$"
             }
           }
         },
@@ -212,10 +226,15 @@
             "endpoint",
             "properties",
             "platform",
+            "instance",
             "jobs"
           ],
           "properties": {
             "endpoint": {
+              "type": "string",
+              "pattern": "^SEMIO_[A-Z0-9_]+$"
+            },
+            "instance": {
               "type": "string",
               "pattern": "^SEMIO_[A-Z0-9_]+$"
             },
@@ -238,6 +257,7 @@
           "additionalProperties": false,
           "required": [
             "defaultPlatform",
+            "defaultInstance",
             "defaultJobs",
             "maximumJobs",
             "localFallback"
@@ -245,6 +265,10 @@
           "properties": {
             "defaultPlatform": {
               "type": "string"
+            },
+            "defaultInstance": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
             },
             "defaultJobs": {
               "type": "integer",
@@ -345,6 +369,10 @@
         "SEMIO_REMOTE_EXECUTION_PLATFORM": {
           "type": "string",
           "pattern": "^(darwin|linux|windows)-(arm64|x64)$"
+        },
+        "SEMIO_REMOTE_EXECUTION_INSTANCE": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
         },
         "SEMIO_REMOTE_EXECUTION_JOBS": {
           "type": "string",
@@ -502,7 +530,9 @@
         "continuous": "A continuous task never terminates and cannot be a pure action.",
         "orchestration": "An orchestrating target launches further builds through live authority.",
         "tool": "The declaration names a tool this contract does not provision.",
-        "host-inputs": "An input is read from the host, as a runtime command or an environment variable, and cannot be a declared file."
+        "host-inputs": "An input is read from the host, as a runtime command or an environment variable, and cannot be a declared file.",
+        "excepted": "A declared exception removes this proven-unfit target from its hermetic class, with a closed reason the class table records.",
+        "dependencies": "The installed dependency generation cannot be declared as a content-addressed tree: it is absent or an entry leaves its layout."
       }
     },
     "Manifest": {
@@ -589,6 +619,140 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096
+          }
+        },
+        "inputs": {
+          "description": "Every declared input file, workspace-relative. Absent means the execution root is already isolated by the caller.",
+          "type": "array",
+          "maxItems": 1000000,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "class": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 64
+        },
+        "entry": {
+          "description": "The module that issues the original process authority of a class member inside the action.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "markers": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000
+        },
+        "providers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "inputEnv": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "nodeModules": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/definitions/ModulesRow"
+          }
+        }
+      }
+    },
+    "ModulesRow": {
+      "description": "One `node_modules` directory of the isolated workspace: links to workspace packages, links into the dependency tree and the `.bin` shims of the selected entries.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "workspace",
+        "tree",
+        "bin"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "workspace": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "tree": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "bin": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "DependenciesManifest": {
+      "description": "Closed manifest of one dependency tree: the installed stores it copies from and the `<store index>/<identity>` entries it holds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "stores",
+        "ids"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "stores": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100000,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]+/[^/]+$",
+            "maxLength": 512
           }
         }
       }

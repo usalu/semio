@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
-import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView, declaredComponentKind, discoverCatalogPackages, declaredComponentDeploymentDirectoryV1 } from "@semio-tech/repo-lib/inventory";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView, declaredComponentKind, discoverCatalogPackages, declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
 import { closeProjectedPluginV1 } from "../📖️catalog-view/🟦️.ts";
 

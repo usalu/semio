@@ -99,6 +99,11 @@ describe("package assets in the browser kernel", () => {
       expect(descriptorPackageAssets(await fetchDescriptorManifest("demo", "http://page.test/modules/demo/bridge.js"))).toEqual([]);
       serve({ manifest: { pluginId: "demo", apps: [] }, assets: [{ name: "x", sizeBytes: -1, sha256: "0".repeat(64) }] });
       await expect(fetchDescriptorManifest("demo", "http://page.test/modules/demo/bridge.js")).rejects.toThrow("malformed package asset declaration");
+      const dialect = { artifactKind: "s.demo.demo", standard: "1", subset: "*" };
+      serve({ manifest: { pluginId: "demo", apps: [], examples: [{ id: "authored", dialect, artifactJson: "semio …" }] } });
+      expect((await fetchDescriptorManifest("demo", "http://page.test/modules/demo/bridge.js")).examples.map((row) => row.id)).toEqual(["authored"]);
+      serve({ manifest: { pluginId: "demo", apps: [], examples: [{ id: "undialected", artifactJson: "semio …" }] } });
+      await expect(fetchDescriptorManifest("demo", "http://page.test/modules/demo/bridge.js")).rejects.toThrow("example undialected misses its dialect");
     } finally { globalThis.fetch = original; }
   });
 

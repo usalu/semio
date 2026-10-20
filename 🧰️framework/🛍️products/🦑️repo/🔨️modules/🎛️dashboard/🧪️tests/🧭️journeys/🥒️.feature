@@ -314,3 +314,27 @@ Feature: The dashboard is the only control plane for developer processes
     When the developer browses and edits a real UTF8 file
     Then the native view shows German file status and follows the configured save key
     And closing unsaved changes requests explicit localized discard
+
+  @pty
+  Scenario: An unresolved language has no preselection and cancels without a preference event
+    Given no supported system or explicit language and no stored choice
+    Then English and Deutsch appear without an active selection
+    And Enter publishes no event before a choice is selected
+    When the developer selects Deutsch and cancels before confirmation
+    Then the view exits and no preference journal exists
+
+  @pty
+  Scenario: An explicit language choice reopens from its durable event
+    Given no supported system or explicit language and no stored choice
+    When the developer explicitly selects and confirms Deutsch
+    Then the real dashboard displays German controls and commits one language event
+    And reopening with the same unresolved environment uses that event without prompting again
+
+  @pty
+  Scenario: Maximum native document stays responsive
+    Given a 1 MiB Unicode document inside a dedicated directory of 4096 entries
+    When I browse and load it within the authored 5000 millisecond budgets
+    Then end navigation and Unicode editing repaint within 1000 milliseconds each
+    And both viewport directions stay responsive
+    And closing the dirty document retains its buffer and original disk bytes
+    And returning to editing cancels the pending close rather than claiming worker cancellation

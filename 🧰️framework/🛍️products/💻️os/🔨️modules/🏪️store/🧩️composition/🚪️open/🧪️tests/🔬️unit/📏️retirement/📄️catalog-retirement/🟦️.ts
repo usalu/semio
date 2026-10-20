@@ -226,7 +226,7 @@ test("member advancement preserves the actual full grant through child retiremen
     for (const key of ["maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"] as const) expect(child[key]).toBe(original[key]);
   }
   const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
-  const drive = source.slice(source.indexOf("fn drive_active_hydration_retirement"), source.indexOf("/// Admits the selected history"));
+  const drive = source.slice(source.indexOf("fn drive_active_hydration_retirement"), source.indexOf("fn begin_selected_dictionary"));
   expect(drive).toContain("grant: RetainedCloneGrant");
   expect(drive).toContain("artifact_retirement_box_close_step");
   expect(drive).not.toContain("fuel_remaining()");

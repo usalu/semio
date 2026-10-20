@@ -1,0 +1,45 @@
+{
+  "name": "@semio-tech/ui-styling-dotnet",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "tags": [
+    "language:dotnet"
+  ],
+  "targets": {
+    "deps": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+        "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": ["{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs",
+        { "dependentTasksOutputFiles": "**/*" },
+        { "runtime": "dotnet --version" },
+        { "runtime": "node -p \"process.platform.concat(process.arch)\"" }
+      ],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+        "command": "bun ./📜️script.ts build"
+      }
+    }
+  }
+}

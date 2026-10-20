@@ -3,8 +3,9 @@
 
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { courseOriginalBuildModeV1 } from "../../🏗️builder/🎚️mode/🟦️.ts";
+import { courseBudgetMs } from "../../🏗️builder/⏱️budget/🟦️.ts";
 import { buildViteArtifact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
-import { buildModeEnvironment } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildModeEnvironment, type BuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { createHash } from "node:crypto";
 import { copyFileSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -25,9 +26,9 @@ export function releaseProctorOrigin(env: NodeJS.ProcessEnv = process.env): stri
  * build itself. */
 const STAGED_DIRECTORIES: ReadonlySet<string> = new Set([COURSE_PAGES_DIRECTORY.split("/")[0]!, COURSE_BUNDLE_DIRECTORY]);
 
-/** 📂️ Every file below `root`, as `/`-separated relative paths, skipping the directories named in `skip`. */
+/** 📂️ Every file below `root`, as `/`-separated relative paths in name order whatever the file system lists, skipping the directories named in `skip`. */
 function siteFiles(root: string, skip: ReadonlySet<string> = new Set(), prefix = ""): string[] {
-  return readdirSync(join(root, prefix), { withFileTypes: true }).flatMap((entry) => {
+  return readdirSync(join(root, prefix), { withFileTypes: true }).sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0)).flatMap((entry) => {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (path === ".semio-artifact.json") return [];
     if (entry.isDirectory()) return skip.has(path) ? [] : siteFiles(root, skip, path);
@@ -100,27 +101,28 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
   return problems;
 }
 
-/** 🏗️ Selects the release product's stable owner and original workspace-relative configuration. */
-export function courseReleaseBuildPlan(repoRoot: string, bundleRoot: string, environment: Readonly<Record<string, string | undefined>> = process.env): { workspace: string; root: string; config: string; mode: "release"; owner: string; environment: Record<string, string | undefined> } {
-  return { workspace: repoRoot, root: bundleRoot, config: resolve(bundleRoot, "../../🏗️builder/🌐️vite/🟦️.ts"), mode: "release", owner: "architecture-course:site", environment: buildModeEnvironment("release", environment) };
+/** 🏷️ The stable owner of the site product: `build` writes it and `publish` reads it, under the same mode. */
+export const COURSE_SITE_OWNER = "architecture-course:site";
+
+/** 🏗️ Plans the site product: its fixed owner, the original compiler mode and the only environment its bytes depend on, the mode and the proctor origin (never the source revision, a clock or a cache directory of the shell). */
+export function courseSiteBuildPlan(repoRoot: string, bundleRoot: string, mode: BuildMode, environment: Readonly<Record<string, string | undefined>> = process.env): { workspace: string; root: string; config: string; mode: BuildMode; owner: string; environment: Record<string, string | undefined> } {
+  return { workspace: repoRoot, root: bundleRoot, config: resolve(bundleRoot, "../../🏗️builder/🌐️vite/🟦️.ts"), mode, owner: COURSE_SITE_OWNER, environment: buildModeEnvironment(mode, { PROCTOR_URL: releaseProctorOrigin(environment) }) };
 }
 
-/** 📦️ Builds the publication with its fixed release intent and original compiler authority. */
-export async function buildCourseReleaseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
-  courseOriginalBuildModeV1(invocation, "release");
-  await buildViteArtifact({ ...courseReleaseBuildPlan(repoRoot, bundleRoot), invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-release", 0) });
+/** 📦️ Builds the site for the original caller's mode under the plan's owner. The product lives in the products store behind a store receipt, so a warm `build` is a cache hit and never reaches here. */
+export async function buildCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
+  const mode = courseOriginalBuildModeV1(invocation, "dev");
+  await buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-site", 0), signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) });
 }
 
-/** 🚚️ Reads the actual release under immutable custody and exports a separately validated CDN artifact. */
-export async function publishCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation, build: () => void | Promise<void>): Promise<void> {
+/** 🚚️ Reads the release site `build` published, under immutable custody, and exports a separately validated CDN artifact. It builds nothing: the cached `build` task is its prerequisite. */
+export async function publishCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
   courseOriginalBuildModeV1(invocation, "release");
   const proctorOrigin = releaseProctorOrigin();
-  say(`building the site for ${COURSE_SITE_ORIGIN} against ${proctorOrigin}`);
-  await build();
-  const { mode, owner } = courseReleaseBuildPlan(repoRoot, bundleRoot);
-  await withViteArtifactV1(repoRoot, mode, owner, invocation, scriptCompilerAdmissionControlV1(invocation, "architecture-course:site-reader", 0), async artifact => {
+  say(`staging the site built for ${COURSE_SITE_ORIGIN} against ${proctorOrigin}`);
+  await withViteArtifactV1(repoRoot, "release", COURSE_SITE_OWNER, invocation, scriptCompilerAdmissionControlV1(invocation, "architecture-course:site-reader", 0), async artifact => {
     await artifact.recheck();
-    stageCourseSiteArtifact(artifact.path, join(bundleRoot, "dist", mode, COURSE_PAGES_DIRECTORY), proctorOrigin, invocation.control.signal);
+    stageCourseSiteArtifact(artifact.path, join(bundleRoot, "dist", "release", COURSE_PAGES_DIRECTORY), proctorOrigin, invocation.control.signal);
   });
   if (proctorOrigin !== COURSE_PROCTOR_ORIGIN) say(`REHEARSAL artifact for ${proctorOrigin}; do not upload it to the production host`);
 }

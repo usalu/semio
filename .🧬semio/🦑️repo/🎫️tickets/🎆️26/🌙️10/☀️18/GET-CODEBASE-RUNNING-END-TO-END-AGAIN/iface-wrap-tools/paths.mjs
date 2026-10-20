@@ -1,0 +1,11 @@
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+export const HERE = path.dirname(fileURLToPath(import.meta.url));
+export const OS = "🧰️framework/🛍️products/💻️os/🔨️modules";
+export const MCP = `${OS}/🌉️mcp`;
+export const WS = `${MCP}/🏠️workspace`;
+export const SYNC = `${OS}/🏪️store/🔄️sync`;
+export const NATIVE_ACTOR = `${SYNC}/🖥️native/🎭️actor`;
+export const HOST = `${OS}/🔌️plugin/🖥️host`;
+export const src = (name) => fs.readFileSync(path.join(HERE, "src", name), "utf8");

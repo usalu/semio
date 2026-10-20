@@ -1,0 +1,1353 @@
+[
+ {
+  "id": "@semio-tech/framework-os-node-graph-rs:wasm",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "group": "wasm-receipt",
+  "note": "same receipted wasm package producer (`buildAdmittedWasmWebV1` + `verifyProducedWasmPackageV1`) as the cached siblings surface, editor, puzzle, flow; only the authored `cache: false` kept it uncached",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "options": {
+    "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+    "command": "bun ./📜️script.ts wasm"
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ],
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust"
+     },
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "options": {
+    "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+    "command": "bun ./📜️script.ts wasm"
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ],
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "@semio-tech/s-spatial-kernel-semio-session-rs:wasm",
+  "manifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "group": "wasm-receipt",
+  "note": "receipted wasm package producer (`runWasmScript`, the shared rust-package-commands wasm lane); `WasmScript.run()` ignores arguments, so `forwardAllArgs` is dropped",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "options": {
+    "command": "bun ./📜️script.ts wasm",
+    "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+     },
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ]
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "options": {
+    "command": "bun ./📜️script.ts wasm",
+    "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+   },
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+     }
+    }
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/s-cad-composition-rs:wasm",
+  "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📋️project.json",
+  "target": "wasm",
+  "group": "wasm-receipt",
+  "note": "receipted wasm package producer (`buildRepositoryWasmWebV1` + `verifyProducedWasmPackageV1`); `WasmScript.run()` ignores arguments, so `forwardAllArgs` is dropped",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "options": {
+    "command": "bun ./📜️script.ts wasm",
+    "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+     },
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ]
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "options": {
+    "command": "bun ./📜️script.ts wasm",
+    "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+   },
+   "metadata": {
+    "semio": {
+     "wasmPackageSourceV1": {
+      "version": 1,
+      "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+     }
+    }
+   },
+   "outputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+   ]
+  }
+ },
+ {
+  "id": "@teaching/architecture-course:build",
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "group": "course",
+  "note": "Vite release build published through the repository artifact destination (`withRepositoryArtifactDestinationV1` records the store receipt), declared exactly like the cached deck build; extra caller arguments no longer flow into the compiler; inputs name the whole course tree (builder, deploy, content) and the dependency projects, because the Vite configuration path is a string the command closure does not follow",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "dependsOn": [
+    "@semio-tech/assets:build",
+    "@semio-tech/ui-styling-tokens:generate"
+   ],
+   "options": {
+    "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build",
+    "forwardAllArgs": true
+   },
+   "cache": false,
+   "inputs": [
+    "default",
+    {
+     "env": "PROCTOR_URL"
+    }
+   ],
+   "outputs": [],
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "dependsOn": [
+    "@semio-tech/assets:build",
+    "@semio-tech/ui-styling-tokens:generate"
+   ],
+   "options": {
+    "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build"
+   },
+   "cache": true,
+   "inputs": [
+    "default",
+    "^default",
+    "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+    {
+     "env": "PROCTOR_URL"
+    },
+    {
+     "dependentTasksOutputFiles": "**/*",
+     "transitive": false
+    }
+   ],
+   "outputs": [
+    "{projectRoot}/.🧾️store/build.json"
+   ],
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "pure-function-of-inputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "semio-framework-canvas:stage-runtime-assets",
+  "manifest": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📋️project.json",
+  "target": "stage-runtime-assets",
+  "group": "managed-store-receipt",
+  "note": "publishes its two trees through `stageAdmittedArtifactTreesV1`, whose provider uses `withRepositoryArtifactDestinationV1` (receipt recorded); the owner already declares the exact inputs",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "inputs": [
+    "sharedGlobals",
+    "{projectRoot}/📜️script.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf",
+    {
+     "dependentTasksOutputFiles": "**/🔤️shortcodes/🔣️.json"
+    },
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧬️schema/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🟦️.ts"
+   ],
+   "dependsOn": [
+    "@semio-tech/assets:build"
+   ],
+   "outputs": [
+    "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/port-assets",
+    "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/guest-assets"
+   ],
+   "options": {
+    "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+    "command": "bun ./📜️script.ts stage-runtime-assets"
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "inputs": [
+    "sharedGlobals",
+    "{projectRoot}/📜️script.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf",
+    {
+     "dependentTasksOutputFiles": "**/🔤️shortcodes/🔣️.json"
+    },
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧬️schema/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🟦️.ts"
+   ],
+   "dependsOn": [
+    "@semio-tech/assets:build"
+   ],
+   "outputs": [
+    "{projectRoot}/.🧾️store/stage-runtime-assets.json"
+   ],
+   "options": {
+    "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+    "command": "bun ./📜️script.ts stage-runtime-assets"
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "pure-function-of-inputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "workspace:build-storybook",
+  "manifest": "📋️project.json",
+  "target": "build-storybook",
+  "group": "managed-store-receipt",
+  "note": "`buildRepositoryStorybookV1` publishes through `withRepositoryArtifactDestinationV1` (receipt recorded); the script accepts only its declared intent, so caller arguments are no longer forwarded",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "dependsOn": [],
+   "options": {
+    "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
+    "forwardAllArgs": true,
+    "env": {
+     "STORYBOOK_PORT": "6010"
+    }
+   },
+   "cache": false,
+   "outputs": [],
+   "inputs": [
+    "production",
+    "^production",
+    "{workspaceRoot}/.storybook/**/*",
+    {
+     "env": "STORYBOOK_SCOPE"
+    }
+   ],
+   "defaultConfiguration": "prototype",
+   "configurations": {
+    "prototype": {
+     "env": {
+      "SEMIO_BUILD_MODE": "prototype"
+     }
+    },
+    "release": {
+     "env": {
+      "SEMIO_BUILD_MODE": "release"
+     }
+    }
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "managed-output",
+      "reason": "outputs-in-managed-store"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "dependsOn": [],
+   "options": {
+    "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
+    "env": {
+     "STORYBOOK_PORT": "6010"
+    }
+   },
+   "cache": true,
+   "outputs": [
+    "{projectRoot}/.🧾️store/build-storybook.json"
+   ],
+   "inputs": [
+    "production",
+    "^production",
+    "{workspaceRoot}/.storybook/**/*",
+    {
+     "env": "STORYBOOK_SCOPE"
+    }
+   ],
+   "defaultConfiguration": "prototype",
+   "configurations": {
+    "prototype": {
+     "env": {
+      "SEMIO_BUILD_MODE": "prototype"
+     }
+    },
+    "release": {
+     "env": {
+      "SEMIO_BUILD_MODE": "release"
+     }
+    }
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "pure-function-of-inputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "@semio-tech/repo-test-runner-go:build",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/📋️project.json",
+  "target": "build",
+  "group": "verdict",
+  "note": "`runCanonicalGoBuild(PACKAGE_DIR, [\"./...\"])` passes no `-o`, so `go build ./...` publishes nothing: a compile verdict over the module and its declared Go toolchain inputs, exactly like the cached `test` sibling",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "inputs": [
+    "production",
+    "^production",
+    "goToolchain"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go",
+    "command": "bun ./📜️script.ts build"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "inputs": [
+    "production",
+    "^production",
+    "goToolchain"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go",
+    "command": "bun ./📜️script.ts build"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "check-without-outputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "@semio-tech/repo-metrics-go:build",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/📋️project.json",
+  "target": "build",
+  "group": "verdict",
+  "note": "`runCanonicalGoBuild(PACKAGE_DIR, [\"./...\"])` passes no `-o`, so `go build ./...` publishes nothing: a compile verdict over the module and its declared Go toolchain inputs, exactly like the cached `test` sibling",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "inputs": [
+    "production",
+    "^production",
+    "goToolchain"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go",
+    "command": "bun ./📜️script.ts build"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "inputs": [
+    "production",
+    "^production",
+    "goToolchain"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go",
+    "command": "bun ./📜️script.ts build"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "check-without-outputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "@semio-tech/ui-styling:generate",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json",
+  "target": "generate",
+  "group": "noop",
+  "note": "`GenerateScript.run()` only prints `[nx-generate] styling artifacts ready`; the artifacts come from the declared dependency `ui-styling-tokens:generate`, so the target is a pure ordering node",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "inputs": [
+    "default",
+    "^default",
+    "reads",
+    {
+     "dependentTasksOutputFiles": "**/*"
+    }
+   ],
+   "options": {
+    "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts generate",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   },
+   "cache": false,
+   "outputs": [],
+   "dependsOn": [
+    "@semio-tech/ui-styling-tokens:generate"
+   ]
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    "@semio-tech/ui-styling-tokens:generate"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/ui-styling-py:generate",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+  "target": "generate",
+  "group": "noop",
+  "note": "`runStylingPythonGenerateScript` only prints `[nx-generate] styling artifacts ready`; pure ordering node over `ui-styling-tokens:generate`",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "inputs": [
+    "default",
+    "^default",
+    {
+     "dependentTasksOutputFiles": "**/*"
+    }
+   ],
+   "options": {
+    "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+    "command": "bun ./📜️script.ts generate"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   },
+   "cache": false,
+   "outputs": [],
+   "dependsOn": [
+    "@semio-tech/ui-styling-tokens:generate"
+   ]
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    "@semio-tech/ui-styling-tokens:generate"
+   ]
+  }
+ },
+ {
+  "id": "workspace:build",
+  "manifest": "📋️project.json",
+  "target": "build",
+  "group": "noop",
+  "note": "`BuildScript.run` without a slice only logs `Completed the <mode> workspace build graph`; the work is the declared `build` dependencies",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "dependsOn": [
+    {
+     "target": "build",
+     "projects": [
+      "*",
+      "!workspace"
+     ]
+    },
+    "build-storybook"
+   ],
+   "options": {
+    "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build",
+    "forwardAllArgs": true
+   },
+   "cache": false,
+   "outputs": [],
+   "metadata": {
+    "semio": {
+     "orchestrator": true,
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "inputs": [
+    {
+     "env": "SEMIO_BUILD_MODE"
+    }
+   ]
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "orchestrator": true,
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    {
+     "target": "build",
+     "projects": [
+      "*",
+      "!workspace"
+     ]
+    },
+    "build-storybook"
+   ]
+  }
+ },
+ {
+  "id": "workspace:cpp",
+  "manifest": "📋️project.json",
+  "target": "cpp",
+  "group": "noop",
+  "note": "`CppScript` with the default command `all` only logs `Completed the <mode> native graph`; the work is the declared `cpp-test` dependency",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "options": {
+    "command": "bun ./📜️script.ts cpp",
+    "forwardAllArgs": true
+   },
+   "dependsOn": [
+    {
+     "target": "cpp-test",
+     "params": "forward"
+    }
+   ],
+   "outputs": [],
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   }
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    {
+     "target": "cpp-test",
+     "params": "forward"
+    }
+   ]
+  }
+ },
+ {
+  "id": "workspace:prepare",
+  "manifest": "📋️project.json",
+  "target": "prepare",
+  "group": "noop",
+  "note": "`setup prepare` only logs `Build prerequisites completed`; the work is the five declared generator dependencies",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "outputs": [],
+   "dependsOn": [
+    "@semio-tech/framework-schema:generate",
+    "@semio-tech/ui-styling-tokens:generate",
+    "@semio-tech/assets:build",
+    "@semio-tech/framework-graph:generate",
+    "@semio-tech/plugin-registry:generate"
+   ],
+   "options": {
+    "command": "bun ./📜️script.ts setup prepare"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   }
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    "@semio-tech/framework-schema:generate",
+    "@semio-tech/ui-styling-tokens:generate",
+    "@semio-tech/assets:build",
+    "@semio-tech/framework-graph:generate",
+    "@semio-tech/plugin-registry:generate"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/framework-os-dev:build",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "group": "noop",
+  "note": "`CompleteScript` only logs `Production build complete: s/react/release`; the work is the declared `build-s-react` dependency",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "options": {
+    "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+    "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "dependsOn": [
+    "build-s-react"
+   ],
+   "cache": false,
+   "outputs": []
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    "build-s-react"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/repo-vscode:build",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "group": "noop",
+  "note": "`BuildScript extends CompileExtensionScript {}`: the same command as the cached `compile-extension`, which already owns the `📤️dist/<mode>` output; `build` becomes its ordering alias (two cached owners of one output directory were the overlap cache-fix found)",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   },
+   "cache": false,
+   "outputs": [
+    "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
+   ],
+   "inputs": [
+    "default",
+    "^default"
+   ],
+   "dependsOn": [
+    {
+     "target": "generate",
+     "projects": [
+      "@semio-tech/framework-schema"
+     ]
+    },
+    "generate-graphql-types"
+   ]
+  },
+  "after": {
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   },
+   "executor": "repo:noop",
+   "dependsOn": [
+    "compile-extension"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/repo-vscode:build-vsix",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build-vsix",
+  "group": "noop",
+  "note": "keeps its direct dependency on the compiler now that `build` is an ordering alias without outputs; stays uncached (writes the vsix inside the directory `compile-extension` owns)",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "inputs": [
+    "production",
+    "^production",
+    {
+     "dependentTasksOutputFiles": "**/*"
+    }
+   ],
+   "dependsOn": [
+    "build"
+   ],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build-vsix",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   },
+   "cache": false,
+   "outputs": [
+    "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}/🧩️repo.vsix"
+   ]
+  },
+  "after": {
+   "executor": "repo:script",
+   "inputs": [
+    "production",
+    "^production",
+    {
+     "dependentTasksOutputFiles": "**/*"
+    }
+   ],
+   "dependsOn": [
+    "compile-extension"
+   ],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build-vsix",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   },
+   "cache": false,
+   "outputs": [
+    "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}/🧩️repo.vsix"
+   ]
+  }
+ },
+ {
+  "id": "@semio-tech/print-viz-inference:build",
+  "manifest": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "group": "verdict",
+  "note": "`runBuildScript` runs `tsc --noEmit` twice and loads the barrel: a type-check verdict; the program reads files across the whole print tree (worker, io, schema, native-chart-grammar tests), which `production` excludes, so the print tree is declared",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "inputs": [
+    "production",
+    "^production"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build",
+    "forwardAllArgs": true
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-workspace"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "inputs": [
+    "production",
+    "^production",
+    "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
+    "command": "bun ./📜️script.ts build"
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "check-without-outputs"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "@semio-tech/mit-bestand-bericht:build",
+  "manifest": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "group": "verdict",
+  "note": "`CompleteScript` only checks the `%PDF-` header of the three published report PDFs, which are the declared outputs of the three cached `build-*` dependencies; a verdict over those outputs",
+  "requires": [
+   {
+    "target": "build-zwischenbericht",
+    "key": "outputs",
+    "contains": ".cache/b/p/m/print",
+    "by": "demo-bzl (report PDFs are published into the products store slot, not into dist/documents)"
+   },
+   {
+    "target": "build-forschungsbericht",
+    "key": "outputs",
+    "contains": ".cache/b/p/m/print",
+    "by": "demo-bzl (report PDFs are published into the products store slot, not into dist/documents)"
+   },
+   {
+    "target": "build-kompaktbericht",
+    "key": "outputs",
+    "contains": ".cache/b/p/m/print",
+    "by": "demo-bzl (report PDFs are published into the products store slot, not into dist/documents)"
+   }
+  ],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "outputs": [],
+   "dependsOn": [
+    "build-zwischenbericht",
+    "build-forschungsbericht",
+    "build-kompaktbericht"
+   ],
+   "options": {
+    "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+    "command": "bun ../../🔨️modules/📄️documents/📜️script.ts complete",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "aggregate",
+      "reason": "orders-prerequisites"
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": true,
+   "outputs": [],
+   "dependsOn": [
+    "build-zwischenbericht",
+    "build-forschungsbericht",
+    "build-kompaktbericht"
+   ],
+   "options": {
+    "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+    "command": "bun ../../🔨️modules/📄️documents/📜️script.ts complete",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "cache": {
+      "version": 1,
+      "class": "deterministic",
+      "reason": "check-without-outputs"
+     }
+    }
+   },
+   "inputs": [
+    "sharedGlobals",
+    "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
+    "{workspaceRoot}/🧰️framework/🛍️products/📓️print/📦️artifacts/**/*",
+    {
+     "dependentTasksOutputFiles": "**/*",
+     "transitive": false
+    }
+   ]
+  }
+ },
+ {
+  "id": "repo:cache-retire-inactive-preview",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-retire-inactive-preview",
+  "group": "reason",
+  "note": "stays uncached; records the reason (diagnostic/measures-environment) that the 2026-10-20 owner decisions did not cover because the target was added afterwards",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+    "command": "bun ./📜️script.ts cache-retire-inactive preview",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "clean",
+      "title": {
+       "en": "Preview Inactive Compiler Units",
+       "de": "Inaktive Compilereinheiten prüfen"
+      },
+      "description": {
+       "en": "Inspect the current compiler store and its guarded retirement plan without deleting units.",
+       "de": "Aktuellen Compilerspeicher und geschützten Freigabeplan ohne Löschen von Einheiten prüfen."
+      },
+      "parameters": []
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+    "command": "bun ./📜️script.ts cache-retire-inactive preview",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "clean",
+      "title": {
+       "en": "Preview Inactive Compiler Units",
+       "de": "Inaktive Compilereinheiten prüfen"
+      },
+      "description": {
+       "en": "Inspect the current compiler store and its guarded retirement plan without deleting units.",
+       "de": "Aktuellen Compilerspeicher und geschützten Freigabeplan ohne Löschen von Einheiten prüfen."
+      },
+      "parameters": []
+     },
+     "cache": {
+      "version": 1,
+      "class": "diagnostic",
+      "reason": "measures-environment"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "repo:cache-retire-inactive",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "cache-retire-inactive",
+  "group": "reason",
+  "note": "stays uncached; records the reason (side-effecting/mutates-host-store) that the 2026-10-20 owner decisions did not cover because the target was added afterwards",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+    "command": "bun ./📜️script.ts cache-retire-inactive retire",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "clean",
+      "title": {
+       "en": "Retire Inactive Compiler Units",
+       "de": "Inaktive Compilereinheiten freigeben"
+      },
+      "description": {
+       "en": "Free only inactive units in the current compiler store under physical locks, descriptor checks and byte limits.",
+       "de": "Nur inaktive Einheiten des aktuellen Compilerspeichers unter physischen Sperren, Deskriptorprüfungen und Bytegrenzen freigeben."
+      },
+      "parameters": []
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+    "command": "bun ./📜️script.ts cache-retire-inactive retire",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "clean",
+      "title": {
+       "en": "Retire Inactive Compiler Units",
+       "de": "Inaktive Compilereinheiten freigeben"
+      },
+      "description": {
+       "en": "Free only inactive units in the current compiler store under physical locks, descriptor checks and byte limits.",
+       "de": "Nur inaktive Einheiten des aktuellen Compilerspeichers unter physischen Sperren, Deskriptorprüfungen und Bytegrenzen freigeben."
+      },
+      "parameters": []
+     },
+     "cache": {
+      "version": 1,
+      "class": "side-effecting",
+      "reason": "mutates-host-store"
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "repo:test-cargo-retirement",
+  "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "target": "test-cargo-retirement",
+  "group": "reason",
+  "note": "stays uncached; records the reason (live/exercises-host-resources) that the 2026-10-20 owner decisions did not cover because the target was added afterwards",
+  "requires": [],
+  "before": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads",
+    "testEnv"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+    "command": "bun ./📜️script.ts test cargo-retirement",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "test",
+      "title": {
+       "en": "Check Compiler Retirement Controls",
+       "de": "Compilerfreigabe-Steuerung prüfen"
+      },
+      "description": {
+       "en": "Verify the closed maintenance commands, current-store dispatch and retained Original control.",
+       "de": "Geschlossene Wartungsbefehle, aktuelle Speicherzuordnung und erhaltene Original-Steuerung prüfen."
+      },
+      "parameters": []
+     }
+    }
+   }
+  },
+  "after": {
+   "executor": "repo:script",
+   "cache": false,
+   "dependsOn": [],
+   "inputs": [
+    "default",
+    "reads",
+    "testEnv"
+   ],
+   "outputs": [],
+   "options": {
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+    "command": "bun ./📜️script.ts test cargo-retirement",
+    "forwardAllArgs": false
+   },
+   "metadata": {
+    "semio": {
+     "execution": {
+      "version": 1,
+      "kind": "source"
+     },
+     "dashboard": {
+      "verb": "test",
+      "title": {
+       "en": "Check Compiler Retirement Controls",
+       "de": "Compilerfreigabe-Steuerung prüfen"
+      },
+      "description": {
+       "en": "Verify the closed maintenance commands, current-store dispatch and retained Original control.",
+       "de": "Geschlossene Wartungsbefehle, aktuelle Speicherzuordnung und erhaltene Original-Steuerung prüfen."
+      },
+      "parameters": []
+     },
+     "cache": {
+      "version": 1,
+      "class": "live",
+      "reason": "exercises-host-resources"
+     }
+    }
+   }
+  }
+ }
+]

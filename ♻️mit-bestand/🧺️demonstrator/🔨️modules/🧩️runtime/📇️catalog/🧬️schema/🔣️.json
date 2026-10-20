@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/runtime/catalog/cases.json",
+  "title": "DemonstratorBrowserCatalogCases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "host",
+    "assetsDirectory",
+    "panes",
+    "invalidVariants",
+    "catalogInputs",
+    "brandInputs",
+    "brandImports",
+    "admission"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "host": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assetsDirectory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "panes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "runtimeVariant"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runtimeVariant": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "invalidVariants": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "catalogInputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "brandInputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "brandImports": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseUrl",
+        "authority",
+        "expectedCounts",
+        "rejectedMaxRows"
+      ],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxBytes",
+            "maxRows",
+            "maxEdges",
+            "maxWork",
+            "durationMs"
+          ],
+          "properties": {
+            "maxBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "maxRows": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "maxEdges": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "maxWork": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "durationMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30000
+            }
+          }
+        },
+        "expectedCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "targets",
+            "hosts",
+            "playgrounds"
+          ],
+          "properties": {
+            "targets": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "hosts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "playgrounds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            }
+          }
+        },
+        "rejectedMaxRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        }
+      }
+    }
+  }
+}

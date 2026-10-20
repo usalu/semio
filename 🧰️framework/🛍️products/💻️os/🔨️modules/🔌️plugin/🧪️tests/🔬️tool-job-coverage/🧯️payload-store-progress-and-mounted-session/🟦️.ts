@@ -1,5 +1,5 @@
 /** 🧯️ The process global payload store inventory, the actor progress overlay and the mounted fem2d session checks. */
-import { toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobActorProgressOverlayExact, toolJobFem2dMountedSessionExact } from "@semio-tech/repo-lib/laws";
+import { toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobActorProgressOverlayExact, toolJobFem2dMountedSessionExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 🗃 Checks the process global payload owner inventory and the exact shared fixed authority exemption. */
 export function globalPayloadStoreInventoryChecks() {

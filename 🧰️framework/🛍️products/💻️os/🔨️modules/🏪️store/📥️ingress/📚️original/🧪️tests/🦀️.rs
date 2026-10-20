@@ -14,7 +14,7 @@ impl ReplayEdits<Operation> for Ledger{fn replay_edit(&self,id:&str)->Option<&Ed
 fn edit(row:&Row)->Edit<Operation>{Edit{id:row.id.clone(),actor:None,line:None,forwards:(0..row.rows).map(|index|Operation(index as u64)).collect(),inverse:Default::default(),mutation_meta:Vec::new(),verb:None,sequence_number:0,started_at:String::new(),finished_at:None}}
 #[test]
 fn original_ingress_borrows_exact_rows_and_moves_only_accepted_owners(){
- let corpus:Corpus=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:Corpus=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
  for law in corpus.cases{
   DROPS.set(0);let ledger=Ledger(law.ledger.iter().map(edit).collect());let batch:Vec<_>=law.batch.iter().map(edit).collect();let count=ledger.0.iter().chain(batch.iter()).map(|edit|edit.forwards.len()).sum::<usize>();
   let view=OriginalReplayEdits::new(&ledger,&batch);

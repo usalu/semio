@@ -13,8 +13,8 @@ fn drain<T:crate::retirement::RetireOwned>(value:T) {
     let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();
     for turn in 0..100_000 {
         if owner.terminal_is_empty(){return;}
-        let copy=owner.next_copy_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        let d=owner.selected_demand(4096).unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(owner.selected_demand(grant.maximum_copy_bytes).unwrap(),d);
         let(step,heap)=observe_retirement_allocations(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99_999);
     }
 }
@@ -34,7 +34,7 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
             let denied=[Some(RetainedCloneGrant{maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant})];
             for denied in denied.into_iter().flatten(){
-                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied));assert_eq!(heap,(0,0));
+                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied));assert_eq!(heap,(0,0),"[DEBUG] denied compound row={} cut={cut:?} turn={turn} demand={demand:?} granted={grant:?} denied={denied:?} result={:?}",row["name"],result.as_ref().map(|step|step.progress()).map_err(|error|(&error.kind,error.message.as_ref())));
                 match result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.kind,ValueRefusalKind::DepthLimit)}
                 assert_eq!(cursor.advance_demands(source.borrow(),policy["maximumCopyBytes"].as_u64().unwrap()as usize)?,demand,"denied action keeps exact source-bound frontier");
             }
@@ -48,8 +48,8 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
     if let Some(value)=output.take(){drain(value);}
     cursor.begin_close();
     for turn in 0..100_000{
-        if cursor.terminal_is_empty(){break;}let copy=cursor.next_close_copy_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};
+        if cursor.terminal_is_empty(){break;}let d=cursor.close_demands(4096).unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),d);
         let(step,heap)=observe_retirement_allocations(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress()!=Default::default() || cursor.terminal_is_empty(),"exact close stalled: row={} cut={cut:?} turn={turn} grant={grant:?}",row["name"]);assert!(turn<99_999);
     }
     assert!(cursor.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));drain(source);result?;Ok((wire,turns))
@@ -63,7 +63,7 @@ fn law<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,policy
 
 #[test]
 fn retained_clone_normal_demand_generic_compounds(){
-    let policy:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔮️demands/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let policy:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧬️retained-clone/🔮️demands/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in policy["cases"].as_array().unwrap(){match row["kind"].as_str().unwrap(){
         "vec-scalar"=>law::<Vec<i32>>(row,&policy),"vec-string"=>law::<Vec<String>>(row,&policy),"array-string"=>law::<[String;3]>(row,&policy),"record"=>law::<Record>(row,&policy),"enum"=>law::<Variant>(row,&policy),"option-box"=>law::<Option<Box<String>>>(row,&policy),"tuple"=>law::<(String,Vec<i32>)>(row,&policy),_=>unreachable!()
     }}

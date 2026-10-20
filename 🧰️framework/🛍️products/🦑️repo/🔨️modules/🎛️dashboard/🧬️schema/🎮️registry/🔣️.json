@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json",
   "title": "🎮️ Dashboard command registry",
-  "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from build targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `semio commands --json` and the daemon exchange.",
+  "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from build targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `repo dashboard commands --json` and the daemon exchange.",
   "$ref": "#/$defs/TicketCommands",
   "$defs": {
     "LocalizedText": {
@@ -952,7 +952,7 @@
     },
     "RegistryEntry": {
       "type": "object",
-      "description": "📇️ One command as `semio commands --json` lists it.",
+      "description": "📇️ One command as `repo dashboard commands --json` lists it.",
       "properties": {
         "id": {
           "$ref": "#/$defs/CommandId"

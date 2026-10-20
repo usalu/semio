@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "seeds": {
+    "markers": [
+      "📦️packages"
+    ],
+    "manifests": true,
+    "roots": [
+      "✏️s/🔌️plugins/*"
+    ],
+    "isolate": [
+      "🧪️tests"
+    ],
+    "ambient": [
+      "**/🌿️ambient/**/*.d.ts"
+    ]
+  },
+  "cycles": {
+    "collapseFiles": 1500,
+    "refineRounds": 2
+  },
+  "coarsen": {
+    "minimumFiles": 40
+  },
+  "compiler": {
+    "forced": {
+      "composite": true,
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "noEmit": false,
+      "incremental": true,
+      "declarationMap": false,
+      "sourceMap": false,
+      "noEmitOnError": false
+    },
+    "declarationCodes": [
+      [
+        4000,
+        4199
+      ],
+      [
+        2742,
+        2742
+      ],
+      [
+        7056,
+        7056
+      ],
+      [
+        9005,
+        9006
+      ]
+    ],
+    "extraTypes": [
+      "vitest/importMeta"
+    ]
+  },
+  "messages": {
+    "languages": [
+      "en",
+      "de"
+    ],
+    "texts": {
+      "planning": {
+        "en": "Planning TypeScript check units: {files} files",
+        "de": "TypeScript-Prüfeinheiten werden geplant: {files} Dateien"
+      },
+      "checking": {
+        "en": "Checking {units} TypeScript units",
+        "de": "{units} TypeScript-Einheiten werden geprüft"
+      },
+      "hit": {
+        "en": "{unit}: unchanged, result reused",
+        "de": "{unit}: unverändert, Ergebnis wiederverwendet"
+      },
+      "ran": {
+        "en": "{unit}: checked in {milliseconds} ms",
+        "de": "{unit}: in {milliseconds} ms geprüft"
+      },
+      "failed": {
+        "en": "{unit}: {errors} errors",
+        "de": "{unit}: {errors} Fehler"
+      },
+      "done": {
+        "en": "{errors} errors in {units} units ({reused} reused)",
+        "de": "{errors} Fehler in {units} Einheiten ({reused} wiederverwendet)"
+      },
+      "cancelled": {
+        "en": "TypeScript check cancelled",
+        "de": "TypeScript-Prüfung abgebrochen"
+      }
+    }
+  }
+}

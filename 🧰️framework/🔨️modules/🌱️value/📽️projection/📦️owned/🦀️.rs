@@ -12,7 +12,7 @@ impl<T:RetainedClone> OwnedFieldProjection<T>{
  pub fn begin(grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::birth_demand();if !retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"owned field projection birth is not funded"));}Ok((Self{cursor:Default::default(),taken:false,closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"owned field projection is closing, transferred or incomplete")}
-impl<T:RetainedClone> SnapshotProjectionCursor<T> for OwnedFieldProjection<T>{
+impl<T:RetainedClone+SnapshotProjection<Output=T>> SnapshotProjectionCursor<T> for OwnedFieldProjection<T>{
  fn demands(&self,original:RetainedCloneRef<'_,T>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.taken{return Err(invalid());}self.cursor.advance_demands(original,body)}
  fn advance(&mut self,original:RetainedCloneRef<'_,T>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demands(original,body)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}let step=self.cursor.advance(original,body,grant)?;admit_retained_clone_progress(grant,step.progress(),"original owned field projection")?;Ok(step)}
  fn ready(&self)->bool{!self.closing&&!self.taken&&self.cursor.output_ready()}
@@ -24,23 +24,27 @@ impl<T:RetainedClone> SnapshotProjectionCursor<T> for OwnedFieldProjection<T>{
  fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()}
 }
 impl SnapshotProjection for String{
+ type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn begin_projection(grant:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
 }
 impl<T:RetainedClone> SnapshotProjection for Vec<T>{
+ type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn begin_projection(grant:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
 }
 
 impl<T:RetainedClone> SnapshotProjection for Option<T>{
+ type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn begin_projection(grant:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
 }
 
 impl<T:RetainedClone,const N:usize> SnapshotProjection for [T;N]{
+ type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn begin_projection(grant:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}

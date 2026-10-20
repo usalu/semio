@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "body",
+          "final",
+          "expected",
+          "outcome"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "before": {
+            "enum": [
+              "error"
+            ]
+          },
+          "body": {
+            "enum": [
+              "value",
+              "error",
+              "undefined",
+              "cancel"
+            ]
+          },
+          "final": {
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "strict-before",
+                "window-body",
+                "strict-final"
+              ]
+            }
+          },
+          "outcome": {
+            "enum": [
+              "value",
+              "same-body",
+              "same-final",
+              "same-before",
+              "aggregate-body-final"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

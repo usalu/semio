@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-put-slots/v1",
+  "title": "Nx cache put slots",
+  "description": "A bounded number of concurrent physical publications into the shared fixed Nx cache image. Admission is first-in first-out through one queued gate; a slot is an exclusive lease held for the publication; headroom is judged under the shared compiler writer custody minus the maximum artifact charge of every other slot in use.",
+  "definitions": {
+    "Policy": {
+      "const": {"version": 1, "slots": 4, "maximumSlots": 16, "pollInitialMilliseconds": 20, "pollMaximumMilliseconds": 250}
+    }
+  }
+}

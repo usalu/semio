@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-hub-space-commands-authoring"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Studio authoring commands: node, instance, parameter and selection edits"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-space-commands-authoring"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-space-foundation = { workspace = true }
+semio-hub-space-operations = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
+semio-framework-artifact-workflow-workflow = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { path = "../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
+semio-framework-os = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]

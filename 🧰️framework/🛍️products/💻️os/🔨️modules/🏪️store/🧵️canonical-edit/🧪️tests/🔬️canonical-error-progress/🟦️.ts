@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 📏️ One Rust statement sequence as a whitespace-tolerant pattern: `rustfmt` freely spreads a
  * `match` arm or a `;`-separated pair across lines, so anchoring these linkage clauses on one exact
@@ -85,12 +85,12 @@ export function canonicalErrorProgressSelfTests(): number {
 }
 
 import {test,expect} from "bun:test";
-import { moduleFamilyText, pluginFamilyText } from "@semio-tech/framework-plugin/companions/test-support/plugin-family";
+import { moduleFamilyText, pluginFamilyText } from "../../../../🔌️plugin/📦️packages/🦀️rust/🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
-import { valueRefusalCodecSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
-import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { valueRefusalCodecSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🧪️testing/🧫️fixtures/🟦️.ts";
+import { readStoreSourceText } from "../../../../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 test("canonical original failure and depth use supplied authority with independent JSON bytes",()=>{
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));
  for(const sample of row.depthRows){const bytes=Buffer.from(JSON.stringify(sample.source));expect([...bytes]).toEqual([...new TextEncoder().encode(JSON.stringify(sample.source))]);if(sample.refused)expect(bytes.subarray(0,1).toString()).toBe(sample.expectedPrefix);else expect(bytes.toString()).toBe(sample.expectedJson);}

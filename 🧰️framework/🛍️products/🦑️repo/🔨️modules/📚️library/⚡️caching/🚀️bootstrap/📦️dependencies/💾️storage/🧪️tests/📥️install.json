@@ -278,6 +278,7 @@
       "refusal": "Original Bun installation callback released"
     }
   },
+  "producerBackends": {"darwin": "clonefile", "linux": "copyfile", "win32": "copyfile"},
   "producerRecipes": [
     {
       "mode": "sync",
@@ -288,7 +289,7 @@
         "--frozen-lockfile",
         "--ignore-scripts",
         "--linker=isolated",
-        "--backend=hardlink",
+        "--backend={backend}",
         "--cache-dir",
         "/funded/bun-cache"
       ]
@@ -302,7 +303,7 @@
         "--lockfile-only",
         "--ignore-scripts",
         "--linker=isolated",
-        "--backend=hardlink",
+        "--backend={backend}",
         "--cache-dir",
         "/funded/bun-cache"
       ]

@@ -41,9 +41,9 @@ export class PublishScript extends Script {
 export class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
-    if (subcommand === "describe") return await (await import("@semio-tech/framework-plugin/build/driver-stages")).describeComponentsV1(this.repoRoot,this.invocation, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
-    if (subcommand === "profile-independence") return await (await import("@semio-tech/framework-plugin/model/comparison")).profileIndependenceV1(this.repoRoot,this.invocation,rest,scriptCompilerAdmissionControlV1(this.invocation,"components:profile",0));
-    if (subcommand === "iterate" && rest.length === 1) return await (await import("@semio-tech/framework-plugin/build/materialization")).iterateComponentV1(this.repoRoot,this.invocation,rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
+    if (subcommand === "describe") return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot,this.invocation, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
+    if (subcommand === "profile-independence") return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/⚖️comparison/🟦️.ts")).profileIndependenceV1(this.repoRoot,this.invocation,rest,scriptCompilerAdmissionControlV1(this.invocation,"components:profile",0));
+    if (subcommand === "iterate" && rest.length === 1) return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(this.repoRoot,this.invocation,rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
     throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
   }
 }
@@ -59,7 +59,7 @@ export class ComponentsScript extends Script {
 export class ReleaseScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
-    const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([import("@semio-tech/framework-plugin/build/driver-stages"), import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")]);
+    const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts"), import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")]);
     await buildReleasePipelineV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release, { facet:"browser",invocation:this.invocation,network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
   }
 }

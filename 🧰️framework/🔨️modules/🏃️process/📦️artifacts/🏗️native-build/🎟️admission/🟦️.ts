@@ -9,10 +9,11 @@ import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
 import { mkdir, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
-import { tmpdir, totalmem } from "node:os";
+import { availableParallelism, tmpdir, totalmem } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
+import { captureSchedulerReceiptV1, readSchedulerReceiptV1, schedulerIdentityV1, schedulerReceiptFileV1, schedulerReceiptHoldsV1, writeSchedulerReceiptV1 } from "./🔖️scheduler/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../🔒️leases/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🪓️termination/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -40,6 +41,15 @@ export type AdmitRequestV1 = Readonly<{ v: 1; op: "admit"; pass: string; pid: nu
 /** 🏁️ The wrapper's completion report (`DoneReportV1`). */
 export type DoneReportV1 = Readonly<{ v: 1; op: "done"; exit: number; peakRssBytes: number; userMs: number; sysMs: number; startMs: number; endMs: number; rmetaMs: number | null }>;
 
+/** 📦️ The measurements recorded when a cached unit was first built (`ProvenanceV1`). */
+export type CachedProvenanceV1 = Readonly<{ peakRssBytes: number; userMs: number; sysMs: number; wallMs: number; rmetaOffsetMs: number | null }>;
+
+/** 📣️ A wrapper's report that a unit was served from the unit cache instead of compiled (`CachedRequestV1`): the admission facts, the cache key and the recorded measurements. */
+export type CachedRequestV1 = Readonly<Omit<AdmitRequestV1, "op"> & { op: "cached"; cacheKey: string; provenance: CachedProvenanceV1 | null }>;
+
+/** 🔭️ A wrapper's question for the finished record of the unit its scheduler just reported (`RecallRequestV1`). */
+export type RecallRequestV1 = Readonly<{ v: 1; op: "recall"; pass: string; crate: string; outDir: string; extraFilename: string }>;
+
 /** 📒️ One recorded observation of a unit key (`ObservationV1`), the scheduling knowledge `units.jsonl` keeps. */
 export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; outputBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number }>;
 
@@ -47,7 +57,7 @@ export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: numb
 export type UnitEdgeV1 = Readonly<{ artifacts: readonly string[]; edge: "rmeta" | "full" }>;
 
 /** 🧾️ One admitted rustc unit as the broker measured it. */
-export type UnitRecordV1 = Readonly<{ key: string; pass: string; profile: string; target: string; crate: string; package: string; version: string; crateTypes: readonly string[]; primary: boolean; artifact: string; dependencies: readonly UnitEdgeV1[]; buildScriptOutDir: string | null; predictedBytes: number; requestMs: number; admittedMs: number; startMs: number; endMs: number; rmetaMs: number | null; peakRssBytes: number; userMs: number; sysMs: number; exit: number }>;
+export type UnitRecordV1 = Readonly<{ key: string; pass: string; profile: string; target: string; crate: string; package: string; version: string; crateTypes: readonly string[]; primary: boolean; artifact: string; dependencies: readonly UnitEdgeV1[]; buildScriptOutDir: string | null; predictedBytes: number; requestMs: number; admittedMs: number; startMs: number; endMs: number; rmetaMs: number | null; peakRssBytes: number; userMs: number; sysMs: number; exit: number; cache?: Readonly<{ key: string; recorded: boolean }> | null }>;
 
 /** 🧳️ A unit waiting for admission, as the ordering and decision laws see it. */
 export type AdmissionWaiterV1 = Readonly<{ predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number }>;
@@ -262,6 +272,23 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
     createInterface({ input: socket, crlfDelay: Infinity }).on("line", (line) => {
       chain = chain.then(async () => {
         const message = JSON.parse(line) as { op?: string };
+        if (message.op === "cached" && !entry) {
+          const request = admitDefinition<CachedRequestV1>("CachedRequestV1", message), pass = passes.get(request.pass);
+          if (!pass) throw Error(`Unknown build pass ${request.pass}`);
+          const at = now(), recorded = request.provenance;
+          completed.push(Object.freeze({ key: unitKeyV1(request, pass.profile), pass: request.pass, profile: pass.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, predictedBytes: 0, requestMs: at, admittedMs: at, startMs: at, endMs: at, rmetaMs: recorded?.rmetaOffsetMs == null ? null : at, peakRssBytes: recorded?.peakRssBytes ?? 0, userMs: recorded?.userMs ?? 0, sysMs: recorded?.sysMs ?? 0, exit: 0, cache: Object.freeze({ key: request.cacheKey, recorded: recorded !== null }) }));
+          finished = true;
+          lastActivityMs = at;
+          verdict(socket, true);
+          return;
+        }
+        if (message.op === "recall" && !entry) {
+          const request = admitDefinition<RecallRequestV1>("RecallRequestV1", message), artifact = unitArtifactV1(request);
+          const record = [...completed].reverse().find((row) => row.pass === request.pass && row.exit === 0 && !row.cache && row.artifact === artifact) ?? null;
+          if (!socket.destroyed) socket.write(`${JSON.stringify({ v: 1, op: "unit", record })}\n`);
+          finished = true;
+          return;
+        }
         if (message.op === "admit" && !entry) {
           const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", message), pass = passes.get(request.pass);
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
@@ -304,10 +331,17 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   };
 }
 
+/** 🗃️ The compiler chain of a build whose environment names a unit cache (`SEMIO_UNIT_CACHE_ROOT` and the wrapper script): Cargo runs the cache's wrapper, which serves a unit from the cache or falls through to this driver's scheduler, and reports every served unit to the broker so the unit list, critical path and provenance stay complete. Empty when no cache is named. */
+export function compilerWrapperEnvironmentV1(scheduler: string, laneRoot: string, environment: Readonly<Record<string, string | undefined>>): Record<string, string> {
+  const root = environment.SEMIO_UNIT_CACHE_ROOT, script = environment.SEMIO_UNIT_CACHE_SCRIPT;
+  if (!root || !script || environment.SEMIO_UNIT_CACHE === "off") return {};
+  return { RUSTC_WRAPPER: process.execPath, RUSTC: script, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
+}
+
 /** 🪜️ Recorded observations of a finished build: every successful unit's peak, measured output footprint (`outputBytes` by unit artifact), wall, CPU and
  * remaining critical path. */
 export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: ReadonlyMap<string, number>, outputBytes: ReadonlyMap<string, number>, atMs: number): UnitObservationV1[] {
-  return units.filter((unit) => unit.exit === 0).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return { v: 1 as const, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes: bytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }; });
+  return units.filter((unit) => unit.exit === 0 && !unit.cache).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return { v: 1 as const, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes: bytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }; });
 }
 
 /** 📏️ The bytes every output of one unit occupies: the files of its output directory named by its artifact stem (`<stem>.*` or `lib<stem>.*`). */
@@ -317,10 +351,11 @@ export function unitOutputBytesV1(artifact: string, entries: readonly string[], 
 }
 
 /** 🛠️ Compiles the scheduler crate (host, release) and returns its executables by name, examples included on request. */
-export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
+export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; toolchain?: string; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
   requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();for(const path of [options.targetDirectory,options.buildDirectory,...["CARGO_HOME","TMPDIR","TMP","TEMP"].map(name=>{const path=options.environment[name];if(!path)throw Error("Bounded scheduler environment required: "+name);return path;})])requireNativeStoragePathV1(options.storage.backing.root,path);
   const budget = compilerAdmissionBudgetV1(options.control), signal = options.control.signal;
   const manifest = fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml", import.meta.url));
+  const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
   const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:16777216},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
   const child = spawn("cargo", ["build", "--locked", "--release", "--manifest-path", manifest, "--bins", ...(options.examples ? ["--examples"] : []), "--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
@@ -335,6 +370,7 @@ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDi
     ]);
     checkResourceLeaseControl(options.control);
     if (status !== 0 || !executables.has("semio-build-scheduler")) throw Error(`Build scheduler compilation failed (${status}):\n${diagnostics.join("\n")}`);
+    if (identity) { const receipt = captureSchedulerReceiptV1(identity, manifest, executables); if (receipt) writeSchedulerReceiptV1(receiptFile, receipt); }
     return executables;
   } finally { if (deadline) clearTimeout(deadline); signal.removeEventListener("abort", cancel); }
 }

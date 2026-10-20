@@ -8,6 +8,7 @@ import {dirname,join,resolve,relative,isAbsolute} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "../🔣️.json" with {type:"json"};
+import dependencySchema from "../../../../📥️dependencies/🧬️schema/🔣️.json" with {type:"json"};
 
 const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("cargo-executable.ts",text,ts.ScriptTarget.Latest,true);
 const functions=(names:string[])=>ts.transpileModule(tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&names.includes(node.name?.text??"")).map(node=>node.getText(tree).replace(/^export\s+/,"")).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
@@ -30,25 +31,31 @@ test("Cargo test runtime projection agrees with shared vectors and independent S
 
 test("actual Cargo test runner retains current consumer selection and authoritative compiler custody",async()=>{
  const row=fixture.environment[0]!,workspace=resolve("fixture-workspace"),storeRoot=join(workspace,".cache/b/r/m"),product=join(storeRoot,"selected"),executable=join(storeRoot,"test-cli/selected"),invocation=Object.freeze({testOnly:true}),control=Object.freeze({signal:new AbortController().signal});
- for(const provided of [true,false]){
+ const dependencyText=readFileSync(new URL("../../../../📥️dependencies/🟦️.ts",import.meta.url),"utf8"),dependencyTree=ts.createSourceFile("cargo-inputs.ts",dependencyText,ts.ScriptTarget.Latest,true),fetchFunction=dependencyTree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="cargoDependencyFetchArgumentsV1");expect(fetchFunction).toBeDefined();
+ const fetchArguments=new Function("schema","validateJsonSchemaSubset","requireMaterializedPathV1",ts.transpileModule(fetchFunction!.getText(dependencyTree).replace(/^export\s+/,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return cargoDependencyFetchArgumentsV1;")(dependencySchema,validateJsonSchemaSubset,(value:string)=>value),database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema.definitions.NetworkCase);
+ try{for(const network of fixture.network)for(const provided of [true,false]){
+  expect(validate(network),JSON.stringify(validate.errors)).toBe(true);const oracle=database.query("select (?1 and not ?2) compile,?3 fetchOffline").get(network.ready?1:0,network.cancelled?1:0,network.offline?1:0)as{compile:number;fetchOffline:number};expect(Boolean(oracle.compile),network.name).toBe(network.compile);expect(Boolean(oracle.fetchOffline),network.name).toBe(network.fetchOffline);const refusal=Error(network.name),grant=Object.freeze({offline:network.offline});let acquisitions=0;
   let held=false,executions=0,rechecks=0;const commands:Record<string,any>[]=[];
   const ports={schema,validateJsonSchemaSubset,createHash,dirname,join,resolve,relative,isAbsolute,process:{platform:"linux",env:{...row.compiler,SEMIO_BUILD_MODE:"prototype"}},
-   readBuildMode:(value:string)=>value,buildModePolicy:()=>({cargoProfile:"prototype"}),compilerAdmissionBudgetV1:()=>0,scriptCompilerAdmissionControlV1:(received:unknown)=>{expect(received).toBe(invocation);return control;},repositoryCargoNetworkV1:(received:unknown)=>{expect(received).toBe(invocation);return{offline:true};},
+   readBuildMode:(value:string)=>value,buildModePolicy:()=>({cargoProfile:"prototype"}),compilerAdmissionBudgetV1:()=>0,scriptCompilerAdmissionControlV1:(received:unknown)=>{expect(received).toBe(invocation);return control;},repositoryCargoNetworkV1:(received:unknown)=>{expect(received).toBe(invocation);return grant;},
    scriptInvocationEnvironment:(received:unknown,env:Record<string,unknown>)=>{expect(received).toBe(invocation);return{...env,SEMIO_SCRIPT_PROCESS_INVOCATION:"port-current-original"};},
    withRepositoryCompilerStoreV1:async(_root:unknown,_mode:unknown,_control:unknown,_environment:unknown,body:Function)=>body({root:storeRoot,environment:{...row.compiler},sourceBoundary:{maxSourceBytes:1024},storage:{allocation:{bytes:1024},recheck:async()=>{rechecks++;}},buildDirectory:join(storeRoot,"build")},control),
    lstatSync:(path:string)=>({isDirectory:()=>path!==product&&!path.endsWith("Cargo.toml"),isFile:()=>path===product||path.endsWith("Cargo.toml"),isSymbolicLink:()=>false,nlink:1,size:8}),
-   withRepositoryCargoInputsV1:async(options:any,body:Function)=>{expect(options.invocation).toBe(invocation);return body({environment:options.environment,selections:[{arguments:options.args}],control});},
+   withRepositoryCargoInputsV1:async(options:any,body:Function)=>{acquisitions++;expect(options.invocation).toBe(invocation);expect(options.control).toBe(control);expect(options.network).toBe(grant);expect(options.args).toContain("--locked");expect(options.args).not.toContain("--offline");expect(options.args).not.toContain("--frozen");expect(fetchArguments(options.manifest,options.args,options.network).includes("--offline"),network.name).toBe(network.fetchOffline);if(!network.ready||network.cancelled)throw refusal;return body({environment:options.environment,selections:[{arguments:options.args}],control});},
    withCompilerWorkspaceWriteV1:async(_storage:unknown,_directory:unknown,_control:unknown,body:Function)=>body(),acquireCompilerCapacityLeaseV1:async()=>({parallelism:7,release:()=>{}}),admitCargoSelectionV1:async()=>{},acquireCargoBuildLeaseV1:async()=>({release:()=>{}}),requireNativeStoragePathV1:(_root:unknown,path:string)=>path,
    pinExecutableArtifact:async()=>executable,checkResourceLeaseControl:()=>{},withResourceLeases:async(options:any,body:Function)=>{expect(options.signal).toBe(control.signal);held=true;try{return await body();}finally{held=false;}},
-   runOwnedCommand:async(command:string,_args:unknown,_cwd:unknown,stage:string,_budget:unknown,options:any)=>{commands.push({command,stage,env:options.env});expect(options.signal).toBe(control.signal);if(stage==="cargo:test-executable-build")options.onLine(JSON.stringify({reason:"compiler-artifact",target:{name:fixture.request.test,kind:["test"]},executable:product}),"stdout");else{expect(held).toBe(true);executions++;}},
+   runOwnedCommand:async(command:string,_args:unknown,_cwd:unknown,stage:string,_budget:unknown,options:any)=>{commands.push({command,args:_args,stage,env:options.env});expect(options.signal).toBe(control.signal);if(stage==="cargo:test-executable-build")options.onLine(JSON.stringify({reason:"compiler-artifact",target:{name:fixture.request.test,kind:["test"]},executable:product}),"stdout");else{expect(held).toBe(true);executions++;}},
   };
   const run=new Function(...Object.keys(ports),functions(["readCargoExecutableTestRequestV1","selectCargoTestExecutableV1","cargoTestRuntimeEnvironmentV1","runRepositoryCargoTestExecutableV1"])+";return runRepositoryCargoTestExecutableV1;")(...Object.values(ports));
-  if(provided)await run(fixture.request,workspace,invocation,consumer(row.consumer));else await run(fixture.request,workspace,invocation);
+  const operation=provided?run(fixture.request,workspace,invocation,consumer(row.consumer)):run(fixture.request,workspace,invocation);
+  if(!network.compile){await expect(operation).rejects.toBe(refusal);expect(acquisitions).toBe(1);expect(commands).toEqual([]);expect(executions).toBe(0);expect(held).toBe(false);continue;}await operation;expect(acquisitions).toBe(1);
   expect(executions).toBe(1);expect(rechecks).toBeGreaterThanOrEqual(2);expect(held).toBe(false);
   const build=commands.find(command=>command.stage==="cargo:test-executable-build")!.env,selected=commands.find(command=>command.stage==="cargo:test-executable")!.env;
+  expect(commands.find(command=>command.stage==="cargo:test-executable-build")!.args).toContain("--offline");expect(commands.find(command=>command.stage==="cargo:test-executable-build")!.args).toContain("--locked");expect(build.CARGO_NET_OFFLINE).toBe("true");
   expect(build.SEMIO_TEST_CLI).toBe("stale");expect(selected.SEMIO_TEST_CLI).toBe(provided?"current":undefined);
   for(const key of Object.keys(row.compiler).filter(key=>!schema.definitions.RuntimeKeys.const.includes(key)&&key!=="SEMIO_SCRIPT_PROCESS_INVOCATION"))expect(selected[key],key).toBe((row.compiler as Record<string,string>)[key]);
   expect(selected.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe("port-current-original");expect(selected.UNDECLARED_CONSUMER).toBeUndefined();
  }
- console.log("[DEBUG] actual Cargo runner ports retained the selected test consumer under compiler/artifact custody and reapplied the received invocation identity");
+ }finally{database.close();}
+ console.log(`[DEBUG] actual Cargo runner matched ${fixture.network.length} Original network/acquisition cases before locked offline compilation and retained consumer/artifact custody`);
 });

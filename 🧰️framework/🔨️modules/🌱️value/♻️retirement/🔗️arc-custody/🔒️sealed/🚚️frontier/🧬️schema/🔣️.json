@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "admission"
   ],
   "properties": {
     "version": {
@@ -29,16 +30,63 @@
           },
           "aliases": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           },
           "expectedChildHandoffs": {
-            "const": 1
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
           },
           "expectedNativePayloadFrames": {
-            "const": 1
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
           },
           "expectedNestedQueues": {
             "const": 0
+          }
+        }
+      }
+    },
+    "admission": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "supported",
+          "birthKnown",
+          "items",
+          "capacity",
+          "depth",
+          "accepted"
+        ],
+        "properties": {
+          "supported": {
+            "type": "boolean"
+          },
+          "birthKnown": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "capacity": {
+            "enum": [
+              "short",
+              "exact"
+            ]
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "accepted": {
+            "type": "boolean"
           }
         }
       }

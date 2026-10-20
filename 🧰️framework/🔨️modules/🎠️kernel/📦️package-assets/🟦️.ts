@@ -4,7 +4,7 @@
  * page fetches it from {@link PACKAGE_ASSET_ROUTE} when the name lies below a directory in {@link PACKAGE_ASSET_DIRECTORIES}, which
  * is exactly what a dev server mounts, so nothing outside those directories is ever requested or served. */
 import type { ShardAsset } from "@semio-tech/framework-actor/shard-client";
-import { RUNTIME_ASSET_CHANNELS } from "@semio-tech/framework-canvas-ts/runtime-assets";
+import { RUNTIME_ASSET_CHANNELS } from "../../🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 
 /** 🚏️ The route package asset directories are served under; a directory is served at `${route}/${directory}`. */
 export const PACKAGE_ASSET_ROUTE = "/renderer-modules/package-assets";

@@ -1,0 +1,2 @@
+await requireJavascriptDependencyInstalledPathsIncrementalV1(workspace,context,control,row.plan.generation,checkpoint);frame.built.set(row.scope,Math.max(0,freeBefore-concurrentFreeBytesV1(store.root)));await fence();}
+ if(projection.owners.scopes.some(

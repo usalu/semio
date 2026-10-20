@@ -65,7 +65,7 @@
       "fixture": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json",
       "schema": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
       "former": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json",
-      "sha256": "95c6be9e2e39ba7c9dc9da515ecb5d8a079c88fd88b950cce5e253d91ee17133",
+      "sha256": "1a1c40b0d1f02e2064771d111d52c98f3ba4705cbd9f647e19645722c7be7324",
       "consumers": [
         {
           "source": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",

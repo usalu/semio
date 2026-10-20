@@ -3,6 +3,13 @@
   "cases": [
     {
       "text": "",
+      "aliases": 0,
+      "expectedChildHandoffs": 0,
+      "expectedNativePayloadFrames": 0,
+      "expectedNestedQueues": 0
+    },
+    {
+      "text": "",
       "aliases": 1,
       "expectedChildHandoffs": 1,
       "expectedNativePayloadFrames": 1,
@@ -21,6 +28,56 @@
       "expectedChildHandoffs": 1,
       "expectedNativePayloadFrames": 1,
       "expectedNestedQueues": 0
+    }
+  ],
+  "admission": [
+    {
+      "supported": true,
+      "birthKnown": true,
+      "items": 1,
+      "capacity": "exact",
+      "depth": 1,
+      "accepted": true
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "items": 0,
+      "capacity": "exact",
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "items": 1,
+      "capacity": "short",
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "items": 1,
+      "capacity": "exact",
+      "depth": 0,
+      "accepted": false
+    },
+    {
+      "supported": false,
+      "birthKnown": true,
+      "items": 1,
+      "capacity": "exact",
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": false,
+      "items": 1,
+      "capacity": "exact",
+      "depth": 1,
+      "accepted": false
     }
   ]
 }

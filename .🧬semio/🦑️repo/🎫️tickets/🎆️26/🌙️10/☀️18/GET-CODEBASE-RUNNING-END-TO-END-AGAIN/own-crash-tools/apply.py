@@ -3,6 +3,8 @@
 import hashlib, os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..')))
+from winpath import resolve
 
 
 def find_root():
@@ -89,7 +91,7 @@ def main(argv):
     for rel, _, staged_sha, current in state:
         if current == staged_sha:
             continue
-        data = read(os.path.join(HERE, "staged", rel))
+        data = read(resolve(os.path.join(HERE, "staged"), rel))
         if data is None or sha(data) != staged_sha:
             print("ABORT: staged file changed after the manifest was written: " + rel)
             return 3

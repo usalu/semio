@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -43,7 +44,7 @@ print(json.dumps(total))
 test("selects huge rust incremental directories and keeps working sessions, matching Python", () => {
   const selected = fixture.directories.flatMap((directory) => [...cleanSelectHugeRustIncremental(directory, fixture.maxBytes)]).sort();
   expect(selected).toEqual([...fixture.expected].sort());
-  const python = Bun.which("python3") ?? Bun.which("python");
+  const python = testPythonV1() ?? Bun.which("python");
   expect(python).toBeTruthy();
   const oracle = spawnSync(python!, ["-c", PYTHON, JSON.stringify(fixture.directories), JSON.stringify(fixture.maxBytes)], { encoding: "utf8" });
   expect(oracle.status, oracle.stderr).toBe(0);
@@ -75,7 +76,7 @@ test("clean removes huge cargo incremental caches inside the protected cache and
     const notes = join(root, cache, "build", "wasm-dev", "incremental", "notes", "readme.txt");
     mkdirSync(dirname(notes), { recursive: true });
     writeFileSync(notes, "x".repeat(big));
-    const python = Bun.which("python3") ?? Bun.which("python");
+    const python = testPythonV1() ?? Bun.which("python");
     expect(python).toBeTruthy();
     const walked = spawnSync(python!, ["-c", WALK, bigCrate], { encoding: "utf8" });
     expect(walked.status, walked.stderr).toBe(0);

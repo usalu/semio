@@ -1,0 +1,2013 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-storage/v1",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "capacityBytes",
+        "maximumWorkspaceBytes",
+        "maximumArtifactBytes",
+        "leaseDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumWorkspaceBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumArtifactBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "kind",
+        "bytes",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "kind": {
+          "enum": [
+            "compiler-workspace",
+            "compiler-state",
+            "artifact-publication",
+            "artifact-restore",
+            "persistent-state"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "enum": [
+            "reserved",
+            "committed",
+            "retiring"
+          ]
+        },
+        "child": {
+          "$ref": "#/definitions/ChildRequest"
+        },
+        "namespace": {
+          "$ref": "#/definitions/NamespaceReceipt"
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sequence",
+        "allocations"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Allocation"
+          }
+        }
+      }
+    },
+    "Event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "allocation"
+          ],
+          "properties": {
+            "type": {
+              "const": "reserved"
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "expectedSequence",
+            "allocation",
+            "bytes"
+          ],
+          "properties": {
+            "type": {
+              "const": "rebudgeted"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "committed",
+                "retiring",
+                "retired"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "state"
+          ],
+          "properties": {
+            "type": {
+              "const": "checkpoint"
+            },
+            "state": {
+              "$ref": "#/definitions/State"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "namespace"
+          ],
+          "properties": {
+            "type": {
+              "const": "namespace-created"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "namespace": {
+              "$ref": "#/definitions/NamespaceReceipt"
+            }
+          }
+        }
+      ]
+    },
+    "ImageMaintenanceRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "wait"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ImageMaintenanceResult": {
+      "description": "Closed nonblocking admission or the exact original maintenance callback value.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquired"
+          ],
+          "properties": {
+            "acquired": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquired",
+            "value"
+          ],
+          "properties": {
+            "acquired": {
+              "const": true
+            },
+            "value": {}
+          }
+        }
+      ]
+    },
+    "ImageRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 34603008,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ImageProtocol": {
+      "const": {
+        "format": "UDIF",
+        "filesystem": "Case-sensitive APFS",
+        "minimumFilesystemBytes": 33554432,
+        "unitBytes": 1048576,
+        "journalMaximumBytes": 1048576,
+        "mountDirectory": "m",
+        "journalCheckpointBytes": 524288,
+        "journalCheckpointFile": "storage-checkpoint.jsonl",
+        "journalProjectionCacheEntries": 8,
+        "informationMaximumBytes": 1048576,
+        "informationMaximumLines": 32768,
+        "informationAttempts": 8,
+        "informationBackoffMilliseconds": 75,
+        "recheckWindowMilliseconds": 500,
+        "recheckWindowMaximumMilliseconds": 5000,
+        "publicationDirectory": ".publication",
+        "attachArguments": [
+          "-nobrowse",
+          "-noautoopen",
+          "-owners",
+          "on"
+        ],
+        "mountProgram": "/sbin/mount",
+        "mountWithoutOwnersFlag": "noowners",
+        "reservedApplicationEntries": [
+          ".fseventsd",
+          ".metadata_never_index"
+        ]
+      }
+    },
+    "ImageReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "dev",
+        "ino",
+        "size",
+        "mountDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "mountDirectory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json"
+        }
+      }
+    },
+    "ImageMaintenanceCustody": {
+      "description": "Disposition data alone grants no authority; kernel-ex carries a privately issued live proof.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "proof"
+          ],
+          "properties": {
+            "kind": {
+              "const": "kernel-ex"
+            },
+            "proof": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fresh-private"
+            }
+          }
+        }
+      ]
+    },
+    "ImageRetirementExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptSha256",
+        "dev",
+        "ino",
+        "size",
+        "allocatedBytes"
+      ],
+      "properties": {
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "allocatedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ImageRetirementRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "wait"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "wait": {
+          "type": "boolean"
+        },
+        "expectedImage": {
+          "$ref": "#/definitions/ImageRetirementExpectation"
+        }
+      }
+    },
+    "RebudgetRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "expectedSequence",
+        "allocation",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocation": {
+          "$ref": "#/definitions/Allocation"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "CleanupProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "journalMaximumBytes": 1048576,
+        "chunkBytes": 65536,
+        "maximumReadWork": 32,
+        "maximumFundingsPerEnrollment": 1
+      }
+    },
+    "ParentFactoryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mode",
+        "parent",
+        "custody",
+        "stopped",
+        "accepted",
+        "mutate"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "mode": {
+          "enum": [
+            "body",
+            "maintenance"
+          ]
+        },
+        "parent": {
+          "enum": [
+            "actual",
+            "copy"
+          ]
+        },
+        "custody": {
+          "enum": [
+            "actual",
+            "copy",
+            "none"
+          ]
+        },
+        "stopped": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "mutate": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ParentLifetimeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "close": {
+          "enum": [
+            "ok",
+            "frozen"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "close"
+          ]
+        }
+      }
+    },
+    "DisposableChildCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "terminal",
+        "binding",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "cancel",
+            "accepted-failure",
+            "cancel-ex",
+            "cancel-ready",
+            "cancel-sh",
+            "cancel-prebody"
+          ]
+        },
+        "terminal": {
+          "enum": [
+            "ok",
+            "busy",
+            "parent-changed",
+            "failure",
+            "deadline",
+            "loan-copy",
+            "lease-substitution",
+            "loan-replay"
+          ]
+        },
+        "binding": {
+          "enum": [
+            "actual",
+            "none",
+            "foreign",
+            "duplicate",
+            "extra"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "cancel",
+            "accepted-failure",
+            "cleanup"
+          ]
+        }
+      }
+    },
+    "DisposableTransitionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "states",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "mounted",
+              "underlying",
+              "foreign"
+            ]
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "backing",
+            "receipt",
+            "parent",
+            "underlying"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ChildRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "parentIdentity",
+        "directory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "policySha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "parentIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "ChildDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "policySha256"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "NamespaceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "NamespaceReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "bytes",
+        "parent",
+        "entry"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bytes": {
+          "const": 65536
+        },
+        "parent": {
+          "$ref": "#/definitions/NamespaceIdentity"
+        },
+        "entry": {
+          "$ref": "#/definitions/NamespaceIdentity"
+        }
+      }
+    },
+    "NamespaceProtocol": {
+      "const": {
+        "version": 1,
+        "bytes": 65536,
+        "minimumChildMetadataBytes": 65536,
+        "maximumDepth": 1
+      }
+    },
+    "NamespaceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "retained",
+        "unowned"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "success",
+            "error",
+            "undefined",
+            "cancel",
+            "preexisting",
+            "symlink",
+            "replacement",
+            "unknown",
+            "partial",
+            "race"
+          ]
+        },
+        "retained": {
+          "type": "boolean"
+        },
+        "unowned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ProtectedParentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "wait",
+        "receiptSha256",
+        "directory",
+        "backing",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "mounted-parent-read"
+        },
+        "wait": {
+          "const": false
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "size",
+            "allocatedBytes"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      }
+    },
+    "ProtectedParentGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumElapsedMilliseconds",
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      }
+    },
+    "ProtectedParentProtocol": {
+      "const": {
+        "informationObservations": 2,
+        "reserveMilliseconds": 10000,
+        "maximumParents": 64,
+        "maximumReceiptBytes": 4096,
+        "maximumDescendants": 16384
+      }
+    },
+    "ProtectedParentJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "backing",
+        "state",
+        "journalSha256",
+        "journalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "root",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "root": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "state": {
+          "$ref": "#/definitions/State"
+        },
+        "journalSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "journalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        }
+      }
+    },
+    "MappingProtocol": {
+      "const": {
+        "version": 1,
+        "resource": "native-storage-mapping",
+        "maximumOwners": 32,
+        "maximumPending": 32,
+        "maximumDescendants": 64
+      }
+    },
+    "ProtectedMaintenanceRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "wait",
+        "receiptSha256",
+        "directory",
+        "backing",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "mounted-parent-maintenance"
+        },
+        "wait": {
+          "const": false
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "size",
+            "allocatedBytes"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      }
+    },
+    "ProtectedMaintenanceAssociation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "image",
+        "backingIdentity",
+        "kernelIdentity"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "backingIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "kernelIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "ProtectedMaintenanceRoster": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ProtectedMaintenanceAssociation"
+      },
+      "maxItems": 64
+    },
+    "ProtectedMaintenanceTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "root",
+        "terminal"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "publish",
+            "retire",
+            "retain-inactive"
+          ]
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/ProtectedMaintenanceAssociation"
+            }
+          ]
+        }
+      }
+    },
+    "ProtectedMaintenanceDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "classification",
+        "operation",
+        "directory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "current",
+        "leaseDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "classification": {
+          "const": "independent-domain-image"
+        },
+        "operation": {
+          "enum": [
+            "container",
+            "publish",
+            "retire",
+            "retain-inactive"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 34603008,
+          "maximum": 9007199254740991
+        },
+        "current": {
+          "$ref": "#/definitions/ProtectedMaintenanceRequest"
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "maximumLeaseDatabaseBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ProtectedMaintenanceProtocol": {
+      "const": {
+        "informationObservations": 2,
+        "reserveMilliseconds": 10000,
+        "maximumParents": 64,
+        "maximumReceiptBytes": 4096,
+        "maximumDescendants": 64,
+        "maximumEnclosingImages": 4,
+        "maximumChildren": 1
+      }
+    },
+    "ProtectedArtifactAllocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "kind",
+        "bytes",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "kind": {
+          "const": "artifact-publication"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "const": "committed"
+        }
+      }
+    },
+    "ProtectedArtifactExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "action",
+        "policy",
+        "backing",
+        "journalSha256",
+        "journalBytes",
+        "allocation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-artifact-maintenance"
+        },
+        "action": {
+          "enum": [
+            "retain-allocation-payload",
+            "retire-allocation"
+          ]
+        },
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "root",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "root": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "journalSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "journalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "allocation": {
+          "$ref": "#/definitions/ProtectedArtifactAllocation"
+        }
+      }
+    },
+    "ProtectedArtifactPayloadEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "stamp",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "stamp": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        }
+      }
+    },
+    "ProtectedArtifactPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "rootStamp",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "retire-entire-current-recomputable-artifact"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "rootStamp": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/ProtectedArtifactPayloadEntry"
+          }
+        }
+      }
+    },
+    "ProtectedMaintenanceJournalPresence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "backing",
+            "state",
+            "journalSha256",
+            "journalBytes",
+            "presence"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "backing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identity",
+                "root",
+                "maximumPhysicalBytes"
+              ],
+              "properties": {
+                "identity": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "root": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "maximumPhysicalBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "state": {
+              "$ref": "#/definitions/State"
+            },
+            "journalSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "journalBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "presence": {
+              "const": "present"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "presence",
+            "backing"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "presence": {
+              "const": "absent"
+            },
+            "backing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identity",
+                "root",
+                "maximumPhysicalBytes"
+              ],
+              "properties": {
+                "identity": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "root": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "maximumPhysicalBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ProtectedIndependentPayloadExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "policy",
+        "backing",
+        "journal"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "retire-entire-current-independent-payload"
+        },
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "backing": {
+          "$ref": "#/definitions/ProtectedArtifactExpectation/properties/backing"
+        },
+        "journal": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "presence"
+              ],
+              "properties": {
+                "presence": {
+                  "const": "absent"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "presence",
+                "journalSha256",
+                "journalBytes"
+              ],
+              "properties": {
+                "presence": {
+                  "const": "present"
+                },
+                "journalSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "journalBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1048576
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ProtectedArtifactInputProtocol": {
+      "const": {
+        "maximumRoots": 64,
+        "maximumFiles": 512,
+        "maximumFileBytes": 8388608,
+        "maximumBytes": 67108864,
+        "maximumDirectories": 1024,
+        "maximumDepth": 64,
+        "maximumPathUnits": 256,
+        "chunkBytes": 65536,
+        "maximumWork": 65536
+      }
+    },
+    "ProtectedArtifactInputFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "path",
+        "bytes",
+        "sha256",
+        "data"
+      ],
+      "properties": {
+        "root": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 63
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "data": {
+          "type": "string",
+          "maxLength": 11184812
+        }
+      }
+    },
+    "ProtectedArtifactInputBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "roots",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "stage-fresh-immutable-artifact-inputs"
+        },
+        "roots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/definitions/ProtectedArtifactInputFile"
+          }
+        }
+      }
+    },
+    "ProtectedArtifactInputObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "inputSha256",
+        "files",
+        "directories",
+        "bytes",
+        "installedQualified",
+        "allocationRetired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "staged-immutable-artifact-inputs"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "installedQualified": {
+          "const": false
+        },
+        "allocationRetired": {
+          "const": false
+        }
+      }
+    },
+    "PayloadReadRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "path",
+        "stamp",
+        "fileBytes",
+        "offset",
+        "completedLogicalBytes",
+        "attemptedReadWork",
+        "maximumReadWork",
+        "chunkBytes",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-artifact-read-work-refusal"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stamp": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+        },
+        "fileBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "completedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "attemptedReadWork": {
+          "const": 33
+        },
+        "maximumReadWork": {
+          "const": 32
+        },
+        "chunkBytes": {
+          "const": 65536
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "PayloadReadRefusalProtocol": {
+      "const": {
+        "version": 1,
+        "maximumBytes": 4096,
+        "maximumNodes": 32,
+        "maximumDepth": 2,
+        "maximumStringUnits": 256,
+        "maximumKeyUnits": 32,
+        "failureMessage": "Current artifact read work bound exceeded"
+      }
+    },
+    "PayloadStreamProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "current-bounded-complete-payload-stream",
+        "limitsOwner": "CleanupProtocol",
+        "entriesOwner": "ProtectedArtifactPayload",
+        "bound": "authenticated-logical-bytes-plus-maximum-file-eofs",
+        "sameOriginal": true,
+        "callerBudget": false,
+        "writerGrant": false,
+        "sameIssuedPayload": true,
+        "sameCapturePurpose": true
+      }
+    },
+    "ProtectedArtifactInputGroupProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "stage-immutable-artifact-input-group",
+        "maximumBatches": 64,
+        "maximumRoots": 64,
+        "maximumFilesPerRoot": 512,
+        "maximumFiles": 32768,
+        "maximumBytes": 67108864,
+        "maximumDirectories": 65536,
+        "maximumWork": 4194304,
+        "maximumEncodedBytes": 134217728,
+        "maximumObservationBytes": 65536
+      }
+    },
+    "ProtectedArtifactInputGroupBatch": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ProtectedArtifactInputBatch"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "roots": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "ProtectedArtifactInputGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "batches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "stage-immutable-artifact-input-group"
+        },
+        "batches": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/ProtectedArtifactInputGroupBatch"
+          }
+        }
+      }
+    },
+    "ProtectedArtifactInputGroupObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "inputSha256",
+        "roots",
+        "files",
+        "directories",
+        "bytes",
+        "installedQualified",
+        "allocationRetired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "staged-immutable-artifact-input-group"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "roots": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "installedQualified": {
+          "const": false
+        },
+        "allocationRetired": {
+          "const": false
+        }
+      }
+    },
+    "JournalProjectionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "text",
+        "capacityBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

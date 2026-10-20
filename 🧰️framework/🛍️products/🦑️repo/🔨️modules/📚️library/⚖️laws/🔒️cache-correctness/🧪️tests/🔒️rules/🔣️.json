@@ -757,6 +757,11 @@
                   "version": 1,
                   "class": "deterministic",
                   "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "census",
+                  "evidence": "whole"
                 }
               }
             }
@@ -1744,7 +1749,16 @@
             "cache": false,
             "outputs": [
               "{workspaceRoot}/gen"
-            ]
+            ],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "side-effecting",
+                  "reason": "mutates-workspace"
+                }
+              }
+            }
           },
           "namedInputs": {
             "default": [
@@ -2067,6 +2081,1499 @@
             "cache": false,
             "options": {
               "command": "bun x --fix"
+            },
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "side-effecting",
+                  "reason": "mutates-workspace"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "uncached-with-a-reason-is-fine",
+      "records": [
+        {
+          "id": "p:install",
+          "root": "lib/pkg",
+          "authoredCache": false,
+          "target": {
+            "cache": false,
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "side-effecting",
+                  "reason": "mutates-host-store"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "uncached-without-a-reason",
+      "records": [
+        {
+          "id": "p:install",
+          "root": "lib/pkg",
+          "authoredCache": false,
+          "target": {
+            "cache": false,
+            "outputs": []
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "p:install",
+          "uncached-without-reason"
+        ]
+      ]
+    },
+    {
+      "id": "interactive-with-a-reason-is-fine",
+      "records": [
+        {
+          "id": "p:serve",
+          "root": "lib/pkg",
+          "authoredCache": false,
+          "target": {
+            "cache": false,
+            "continuous": true,
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "continuous",
+                  "reason": "serves-until-stopped"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "live-resource-test-with-a-reason-is-fine",
+      "records": [
+        {
+          "id": "p:test-leases",
+          "root": "lib/pkg",
+          "authoredCache": false,
+          "target": {
+            "cache": false,
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "live",
+                  "reason": "exercises-host-resources"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "whole-repository-default-at-the-workspace-root",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "default"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "w:scan",
+          "whole-repository-input"
+        ]
+      ]
+    },
+    {
+      "id": "whole-repository-explicit-glob-in-a-package",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/*"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "w:scan",
+          "whole-repository-input"
+        ]
+      ]
+    },
+    {
+      "id": "whole-repository-double-star-in-a-package",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "w:scan",
+          "whole-repository-input"
+        ]
+      ]
+    },
+    {
+      "id": "narrowed-root-target-keeps-only-reads",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/tools/**/*.ts",
+              "sharedGlobals",
+              "{projectRoot}/📋️project.json"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "scan",
+                  "evidence": "static"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "narrowing-rule-that-left-the-whole-repository",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "default"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "scan",
+                  "evidence": "static"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "w:scan",
+          "whole-repository-input"
+        ]
+      ]
+    },
+    {
+      "id": "whole-by-design-is-a-recorded-reason",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "default"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "census",
+                  "evidence": "whole"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "assumed-reads-are-a-recorded-reason",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "default"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "pending",
+                  "evidence": "assumed"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-root-cargo-lock",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "default",
+              "{workspaceRoot}/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-root-manifest-config-toolchain",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/Cargo.toml",
+              "{workspaceRoot}/.cargo/config.toml",
+              "{workspaceRoot}/rust-toolchain.toml"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-named-group-expands",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "cargoToolchain"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ],
+            "cargoToolchain": [
+              "{workspaceRoot}/Cargo.toml",
+              "{workspaceRoot}/Cargo.lock",
+              "{workspaceRoot}/rustfmt.toml"
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-all-manifests-glob",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/Cargo.toml"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-all-sources-glob",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/*.rs"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-all-schema-glob",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/🧬️schema/**/*"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-braced-tail",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/{Cargo.toml,📋️project.json}"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-generated-group-is-allowed",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "cargoToolchain",
+              "{workspaceRoot}/rustfmt.toml",
+              {
+                "env": "SEMIO_CARGO_LOCK_0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ],
+            "cargoToolchain": [
+              "{workspaceRoot}/rustfmt.toml",
+              {
+                "env": "SEMIO_CARGO_LOCK_0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-crate-owned-files-are-allowed",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/crates/a/Cargo.toml",
+              "{workspaceRoot}/crates/a/**/*.rs",
+              "{workspaceRoot}/🌎️hub/**/*.rs",
+              "{projectRoot}/Cargo.toml"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-whole-by-design-is-a-recorded-reason",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/Cargo.toml",
+              "{workspaceRoot}/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "r",
+                  "evidence": "whole"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-assumed-is-recorded-debt",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "r",
+                  "evidence": "assumed"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-narrowing-rule-does-not-excuse-it",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                },
+                "inputPrecision": {
+                  "version": 1,
+                  "rule": "r",
+                  "evidence": "static"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": [
+        [
+          "r:t",
+          "whole-workspace-rust-key"
+        ]
+      ]
+    },
+    {
+      "id": "rust-key-cargo-metadata-validates-every-manifest",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/**/Cargo.toml",
+              "{workspaceRoot}/**/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            },
+            "options": {
+              "command": "bun x native cargo metadata --manifest a/Cargo.toml"
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "rust-key-negation-is-not-a-key",
+      "records": [
+        {
+          "id": "r:t",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{projectRoot}/**/*",
+              "!{workspaceRoot}/**/Cargo.lock"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "broad-but-not-whole-glob-is-allowed",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": "lib/pkg",
+          "authoredCache": null,
+          "target": {
+            "cache": true,
+            "inputs": [
+              "{workspaceRoot}/🌎️hub/**/*.ts"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
+            }
+          },
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*",
+              "sharedGlobals"
+            ],
+            "sharedGlobals": [
+              {
+                "runtime": "bun --version"
+              },
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ],
+            "production": [
+              "{projectRoot}/**/*",
+              "!{projectRoot}/**/🧪️tests/**/*",
+              "sharedGlobals"
+            ],
+            "testEnv": [
+              {
+                "env": "SEMIO_TEST_LEVEL"
+              }
+            ]
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "uncached-target-has-no-input-contract",
+      "records": [
+        {
+          "id": "w:scan",
+          "root": ".",
+          "authoredCache": null,
+          "target": {
+            "cache": false,
+            "inputs": [
+              "default"
+            ],
+            "outputs": [],
+            "metadata": {
+              "semio": {
+                "cache": {
+                  "version": 1,
+                  "class": "deterministic",
+                  "reason": "check-without-outputs"
+                }
+              }
             }
           },
           "namedInputs": {

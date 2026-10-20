@@ -12,7 +12,8 @@ import { courseOriginalBuildModeV1 } from "../../🏗️builder/🎚️mode/🟦
 import { resolve } from "node:path";
 import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
 import { type ScriptInvocation } from "@semio-tech/process/routing";
-import { buildProctor, type ProctorArtifact } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { type ProctorArtifact } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { acquireProctor } from "../../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import course from "../../🔣️.json" with { type: "json" };
 import deployment from "../🔣️.json" with { type: "json" };
 import { COURSE, COURSE_IMAGE_REPOSITORY, COURSE_STACK_FILES, DEPLOY, DOCKERFILE, docker, dockerOk, dockerServerVersion, flag, interruption, say, sourceRevision } from "../🟦️.ts";
@@ -38,7 +39,7 @@ export async function buildCourseImage(repoRoot: string, segments: readonly stri
     const { revision, created } = sourceRevision(repoRoot);
     const labels = { VERSION: workspaceCargoVersion(repoRoot), REVISION: revision, CREATED: created };
     say(`docker ${await dockerServerVersion(phase)}; building ${reference} (${labels.VERSION}, ${revision})`);
-    artifact = await buildProctor(repoRoot, invocation, process.env, phase, "release");
+    artifact = await acquireProctor(repoRoot, invocation, process.env, phase, "release");
     const checked = await artifact.launch(["check", resolve(repoRoot, COURSE)]).exited;
     if (checked !== 0) throw Error(`Authenticated release proctor course check exited ${checked}`);
     await artifact.withExecutable(async executable => {

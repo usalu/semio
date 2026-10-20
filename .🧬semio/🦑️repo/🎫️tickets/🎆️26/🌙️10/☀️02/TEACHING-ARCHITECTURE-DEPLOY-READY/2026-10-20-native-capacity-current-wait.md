@@ -1,0 +1,7 @@
+# Current Native Capacity Wait
+
+Root26789 is an actual live TTY native exec of the frozen90case neutral suite. Its frontend has not admitted the command: the log reports3584MiB needed and fluctuating spare bytes above the6553MiB floor, so no Bun test collection exists yet. These are observed admission messages, not an OOM or a verdict. Architecture41305 separately queues exclusive dependenciesimage .cache/b/d behind a reported shared request; no PID ownership is inferred.
+
+The actual installed native frontend help was executed through the native binary and returned0 immediately. Its supported build verbs include exec,run,run-many,affected,watch,dependencies,cargo,tools,reset,cache,preflight,show,graph. No global jobs/memory/capacity/cancel/timeout switch was listed by this help. This is a bounded observation, not proof no narrower owner control exists. Current CLI-domainSource Config.Timeout defaults5minutes forMCP/hooks/otherCLI work, not evidence that existing forwarded build invocations inherited that timer. No invented override, floor reduction, rawprocess bypass, signal to unknownPID or new generic CLI capability was used. Generated actual help output is2026-10-20-native-help-current.log.
+
+Current evidence still permits verified waiting on exact live handles while new necessary Source/Git inputs are completed. The previous turn made real Source progress; this continuation applied the eightfile test-first CI/offline change and finished native documentation, reviewed independently. No course deliverable or native unit verdict is claimed.

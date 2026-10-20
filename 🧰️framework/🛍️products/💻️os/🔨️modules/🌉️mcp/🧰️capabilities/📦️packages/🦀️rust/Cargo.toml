@@ -35,6 +35,9 @@ semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️
 semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
 semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
 semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust", optional = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }

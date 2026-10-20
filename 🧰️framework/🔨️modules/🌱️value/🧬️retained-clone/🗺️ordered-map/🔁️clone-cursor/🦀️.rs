@@ -51,6 +51,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
 
 impl<K:RetainedClone,V:RetainedClone> RetainedOrderedMapCloneCursor<K,V>{
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        #[cfg(test)] selected_close_tests::record(self as*const Self as usize,body);
         if !self.closing{return Ok(Default::default());}
         if !self.key_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<K>(&self.key_cursor,body);}
         if !self.value_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<V>(&self.value_cursor,body);}
@@ -62,6 +63,7 @@ impl<K:RetainedClone,V:RetainedClone> RetainedOrderedMapCloneCursor<K,V>{
     }
 }
 impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<K, V>> for RetainedOrderedMapCloneCursor<K, V> {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{RetainedOrderedMapCloneCursor::<K,V>::close_demands(self,body)}
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered map cannot quote a closing or spent clone"));}
@@ -283,3 +285,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedClone for RetainedOrderedMap<K,
         RetainedOrderedMapCloneCursor::default()
     }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️dispatch/🦀️.rs"]
+mod selected_close_tests;

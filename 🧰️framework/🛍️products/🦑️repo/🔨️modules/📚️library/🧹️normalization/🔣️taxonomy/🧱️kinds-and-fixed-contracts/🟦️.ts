@@ -1,5 +1,5 @@
 /** 🧱️ The taxonomy v7 prelude, file and directory kinds, fixed filename and directory contracts, rejections, configurable entries and resolution rules. */
-import { requireExactKeys, requireRecord, requireString, requireStringArray, type UnknownRecord } from "@semio-tech/schema-validator-ts";
+import { requireExactKeys, requireRecord, requireString, requireStringArray, type UnknownRecord } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { validateTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import type { Taxonomy as DiscoveryTaxonomy } from "../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { createTaxonomyPathMatcher, parseFixedDirectoryContractSetScope, parseNamedFixedDirectoryContractSetScope } from "../../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";

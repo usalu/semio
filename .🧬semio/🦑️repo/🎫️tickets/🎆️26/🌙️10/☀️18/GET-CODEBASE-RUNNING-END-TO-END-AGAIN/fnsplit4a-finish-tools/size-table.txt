@@ -1,0 +1,18 @@
+| function | file dir | before | root after | largest piece after | pieces |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `toolJobCoverageRun` | `🎯️tool-job-coverage/🏁️run` | 324 | 42 | 153 | 3 |
+| `useAgentBridge` | `🧱️elements/🔗️AgentBridge` | 325 | 6 | 223 | 4 |
+| `registerTests1` | `🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev` | 327 | 5 | 149 | 4 |
+| `inspectRustNonRepoJoinBaseSpans` | `🔍️discovery/🔀️rust-non-repo-join-bases` | 348 | 7 | 157 | 4 |
+| `registerTests1` | `🧪️tests/🧪️artifact-bootstrap-protocol` | 336 | 5 | 194 | 4 |
+| `toolJobLatestWinsSelfTests` | `🧪️tests/🔬️tool-job-latest-wins` | 314 | 6 | 153 | 3 |
+| `useCheckInAndSync` | `🏛️ShellHost/✅️check-in-sync` | 313 | 10 | 191 | 2 |
+| `useCommandBar` | `🏛️ShellHost/🔎️command-bar` | 330 | 8 | 171 | 2 |
+| `FrameworkOsShellInner` | `🧱️elements/🏛️ShellHost` | 344 | 298 | 298 | 2 |
+| `useInkPointer` | `🖋️InkCanvasHost/👆️ink-pointer` | 308 | 6 | 143 | 3 |
+| `Canvas2dHost` | `🧱️elements/📐️Canvas2dHost` | 356 | 50 | 147 | 4 |
+| `registerPlaygroundActionAndPluginSourceTests` | `🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources` | 306 | 5 | 135 | 3 |
+| `registerSessionBrokerPortTests` | `🧪️tests/🔑️session-broker-port` | 325 | 5 | 167 | 4 |
+| `useWorldHoverAndPlacement` | `🌐️World3dHost/👇️hover-and-placement` | 305 | 5 | 159 | 2 |
+| `registerTests1` | `🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te` | 303 | 5 | 141 | 4 |
+| `transformTestClosure` | `📦️crate-tree/🧪️test-closure` | 315 | 6 | 148 | 4 |

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel Affected Query",
+  "description": "How `affected` is answered by Bazel itself: every changed file and every project is a node of one generated package, a project lists the changed files that touch it and the projects it depends on, and `rdeps` over the changed-file nodes returns every project to rebuild. No checkout file is read, so deleted files and untracked files behave like any other change.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "workspace": "affected",
+        "project": "^p_[0-9a-f]{16}$",
+        "file": "^f_[0-9a-f]{16}$",
+        "module": "affected_universe",
+        "options": ["--lockfile_mode=off", "--incompatible_autoload_externally=", "--keep_going", "--output=label", "--noshow_progress", "--noshow_loading_progress"],
+        "serverIdleSeconds": 120
+      }
+    },
+    "Touches": {
+      "description": "The changed files that touch each project directly, by project name.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+    },
+    "Answer": {
+      "description": "What the query printed: one label per line.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^//:(?:p|f)_[0-9a-f]{16}$" }
+    }
+  }
+}

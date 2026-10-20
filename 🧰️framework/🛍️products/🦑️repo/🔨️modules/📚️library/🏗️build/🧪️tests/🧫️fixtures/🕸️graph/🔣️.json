@@ -361,6 +361,8 @@
     "progressDelayMilliseconds": 2,
     "optionalPaths": [
       "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "ip/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "rr/aaaaaaaaaaaaaaaaaaaaaaaa.json",
       "np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.pack",
       "np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.idx",
       "mr/abc-123-aaaaaaaaaaaaaaaa.pack",
@@ -545,6 +547,68 @@
     "contentionProgress": [
       "start",
       "end"
+    ],
+    "observationBlockCases": [
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "np/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "ip/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "rr/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.1.2.tmp",
+        "accepted": true
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.br",
+        "accepted": false
+      },
+      {
+        "path": "unknown/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/../ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.tmp",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.1.tmp",
+        "accepted": false
+      }
     ]
   },
   "nativeAdmissionMemo": {
@@ -2498,7 +2562,7 @@
     "moduleReceiving": {
       "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
       "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
-    "commandModule": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
+      "commandModule": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
       "operation": "prepareJavascriptDependencies",
       "scriptHeader": "#!/usr/bin/env bun",
       "operationExports": [
@@ -2894,6 +2958,7 @@
       }
     ],
     "storagePorts": [
+      "requireCurrentRepositoryBuildGraphConsumerV1",
       "createBuildGraphOptionalQuotaV1",
       "isBuildGraphOptionalCachePathV1",
       "buildGraphWriterDirectoryAdmittedV1",
@@ -2902,10 +2967,12 @@
       "buildGraphWriterMaintenanceDueV1",
       "prepareBuildGraphOptionalHeadroomV1",
       "maintainBuildGraphOptionalCachesV1",
+      "buildGraphWriterOptionalQuotaFactsV1",
       "withBuildGraphOptionalPublicationV1",
       "registerBuildGraphOptionalHandleV1",
       "repositoryBuildGraphDataDirectoryV1",
       "buildGraphWriterResourceV1",
+      "withRepositoryBuildGraphConsumerV1",
       "withRepositoryBuildGraphFactStoreV1",
       "requireRepositoryBuildGraphWriterV1",
       "repositoryBuildGraphWriterDirectoryV1",
@@ -4279,7 +4346,800 @@
         "compiled": true,
         "include": true
       }
-    ]
+    ],
+    "sourceObservationScopes": [
+      {
+        "id": "peer-module-does-not-promote-resource",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": true,
+            "resource": true,
+            "module": false,
+            "declared": false
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": false,
+            "module": true,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "generate": [],
+          "check": [
+            "payload.ts"
+          ]
+        }
+      },
+      {
+        "id": "peer-resource-does-not-suppress-compile",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": false,
+            "resource": true,
+            "module": false,
+            "declared": false
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": false,
+            "module": false,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "check": [
+            "payload.ts"
+          ]
+        }
+      },
+      {
+        "id": "declared-entry-overrides-own-resource",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": false,
+            "resource": true,
+            "module": false,
+            "declared": true
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": true,
+            "module": false,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "generate": [
+            "payload.ts"
+          ],
+          "check": []
+        }
+      }
+    ],
+    "selfCycleDiagnosticSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "producer"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "selfCycleDiagnostics": [
+      {
+        "id": "actual-consumer-producer",
+        "project": "fixture-app",
+        "target": "generate",
+        "expected": {
+          "project": "fixture-app",
+          "target": "generate",
+          "producer": "fixture-app:generate"
+        }
+      },
+      {
+        "id": "json-escaped-unicode-identity",
+        "project": "fixture-🧪️-\"quoted\"",
+        "target": "generate",
+        "expected": {
+          "project": "fixture-🧪️-\"quoted\"",
+          "target": "generate",
+          "producer": "fixture-🧪️-\"quoted\":generate"
+        }
+      }
+    ],
+    "commandGeneratedImportScope": {
+      "version": 1,
+      "workspace": "/fixture",
+      "cases": [
+        {
+          "id": "compiled-command-import",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "resource-only-global-import",
+          "observation": {
+            "closure": [
+              "resource.ts"
+            ],
+            "compiled": [],
+            "imports": [
+              {
+                "source": "resource.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true
+        },
+        {
+          "id": "same-target-module-and-resource",
+          "observation": {
+            "closure": [
+              "module.ts",
+              "resource.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              },
+              {
+                "source": "resource.ts",
+                "producer": "unrelated:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "unrelated-module-not-in-closure",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "unrelated.ts",
+                "producer": "unrelated:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true
+        },
+        {
+          "id": "real-self-module-keeps-edge",
+          "observation": {
+            "closure": [
+              "producer.ts"
+            ],
+            "compiled": [
+              "producer.ts"
+            ],
+            "imports": [
+              {
+                "source": "producer.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true,
+          "selfConsumer": "generator:build"
+        },
+        {
+          "id": "resource-self-edge-is-not-module-demand",
+          "observation": {
+            "closure": [
+              "producer.ts"
+            ],
+            "compiled": [],
+            "imports": [
+              {
+                "source": "producer.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true,
+          "selfConsumer": "generator:build"
+        },
+        {
+          "id": "duplicate-producer-union",
+          "observation": {
+            "closure": [
+              "a.ts",
+              "b.ts"
+            ],
+            "compiled": [
+              "a.ts",
+              "b.ts"
+            ],
+            "imports": [
+              {
+                "source": "a.ts",
+                "producer": "generator:build"
+              },
+              {
+                "source": "b.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "missing-exact-compiled-evidence",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": false
+        }
+      ],
+      "warm": {
+        "closure": [
+          "module.ts",
+          "resource.ts"
+        ],
+        "compiled": [
+          "module.ts"
+        ],
+        "initial": [
+          {
+            "source": "module.ts",
+            "producer": "generator:build"
+          }
+        ],
+        "later": {
+          "source": "resource.ts",
+          "producer": "unrelated:build"
+        },
+        "expected": [
+          "generator:build"
+        ]
+      },
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "closure",
+          "compiled",
+          "imports"
+        ],
+        "properties": {
+          "closure": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1024
+          },
+          "compiled": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1024
+          },
+          "imports": {
+            "type": "array",
+            "maxItems": 1024,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "producer"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "producer": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "declaredProjectScope": {
+      "version": 1,
+      "files": {
+        "tsconfig.base.json": "{\"compilerOptions\":{\"target\":\"ES2022\",\"module\":\"ESNext\",\"moduleResolution\":\"Bundler\",\"strict\":true,\"noEmit\":true,\"noLib\":true,\"allowImportingTsExtensions\":true,\"resolveJsonModule\":true,\"types\":[]}}\n",
+        "tsconfig.a.json": "{\"extends\":\"./tsconfig.base.json\",\"files\":[\"./program-a.ts\",\"./shape.d.ts\"]}\n",
+        "tsconfig.b.json": "{\"extends\":\"./tsconfig.base.json\",\"files\":[\"./program-b.ts\"]}\n",
+        "entry-a.ts": "import \"./module-a.ts\";import payload from \"./resource.ts?raw\";export const a=payload;\n",
+        "entry-b.ts": "import \"./module-b.ts\";export const b=1;\n",
+        "entry-plain.ts": "export const plain=1;\n",
+        "module-a.ts": "import \"./command-output.ts\";export const a=1;\n",
+        "module-b.ts": "import \"./other-command-output.ts\";export const b=1;\n",
+        "resource.ts": "import \"./resource-output.ts\";export const resource=1;\n",
+        "program-a.ts": "import \"./typed-output.ts\";import data from \"./data.json\";import type {Shape} from \"./shape.d.ts\";export const typed:Shape=data;\n",
+        "program-b.ts": "import \"./other-output.ts\";export const other=1;\n",
+        "shape.d.ts": "export interface Shape{value:number}\n",
+        "data.json": "{\"value\":1}\n",
+        "typed-output.ts": "export const generated=1;\n",
+        "other-output.ts": "export const generated=2;\n",
+        "unrelated.ts": "export const unrelated=1;\n"
+      },
+      "commands": {
+        "a": {
+          "entry": "entry-a.ts",
+          "closure": [
+            "entry-a.ts",
+            "module-a.ts",
+            "resource.ts"
+          ],
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ]
+        },
+        "b": {
+          "entry": "entry-b.ts",
+          "closure": [
+            "entry-b.ts",
+            "module-b.ts"
+          ],
+          "compiled": [
+            "entry-b.ts",
+            "module-b.ts"
+          ]
+        },
+        "plain": {
+          "entry": "entry-plain.ts",
+          "closure": [
+            "entry-plain.ts"
+          ],
+          "compiled": [
+            "entry-plain.ts"
+          ]
+        }
+      },
+      "produced": [
+        {
+          "path": "command-output.ts",
+          "target": "command:generate",
+          "output": "command-output.ts"
+        },
+        {
+          "path": "other-command-output.ts",
+          "target": "other-command:generate",
+          "output": "other-command-output.ts"
+        },
+        {
+          "path": "typed-output.ts",
+          "target": "typed:generate",
+          "output": "typed-output.ts"
+        },
+        {
+          "path": "other-output.ts",
+          "target": "other:generate",
+          "output": "other-output.ts"
+        }
+      ],
+      "programs": {
+        "a": [
+          "data.json",
+          "program-a.ts",
+          "shape.d.ts",
+          "tsconfig.a.json",
+          "tsconfig.base.json",
+          "typed-output.ts"
+        ],
+        "both": [
+          "data.json",
+          "other-output.ts",
+          "program-a.ts",
+          "program-b.ts",
+          "shape.d.ts",
+          "tsconfig.a.json",
+          "tsconfig.b.json",
+          "tsconfig.base.json",
+          "typed-output.ts"
+        ]
+      },
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "command",
+          "configs",
+          "pollution",
+          "readFailure",
+          "self",
+          "accepted",
+          "compiled",
+          "dependencies",
+          "allProduced"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "enum": [
+              "a",
+              "b",
+              "plain",
+              null
+            ]
+          },
+          "configs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "maxItems": 2
+          },
+          "pollution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "target",
+                "output"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "readFailure": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "self": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "compiled": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "allProduced": {
+            "type": "boolean"
+          }
+        }
+      },
+      "cases": [
+        {
+          "id": "mixed-compiler-inputs-retain-command-roles",
+          "command": "a",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate",
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "generated-only-initially-empty-imports",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "all-compiler-files-produced-keeps-empty-name-union",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "tsconfig.a.json",
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "all-program:generate"
+          ],
+          "allProduced": true
+        },
+        {
+          "id": "multiple-configs-keep-each-producer",
+          "command": "a",
+          "configs": [
+            "tsconfig.a.json",
+            "tsconfig.b.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate",
+            "other:generate",
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "same-config-pollution-does-not-become-project-demand",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            },
+            {
+              "source": "tsconfig.a.json",
+              "target": "poison:generate",
+              "output": "poison.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "produced-file-bypasses-ordinary-read",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "typed-output.ts",
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "ordinary-compiler-input-read-remains-fail-closed",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "data.json",
+          "self": false,
+          "accepted": false,
+          "compiled": [],
+          "dependencies": [],
+          "allProduced": false
+        },
+        {
+          "id": "no-declaration-keeps-original-command",
+          "command": "a",
+          "configs": [],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "no-command-closure-does-not-open-compiler-project",
+          "command": null,
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [],
+          "dependencies": [],
+          "allProduced": false
+        },
+        {
+          "id": "real-compiler-self-producer-remains-strict",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": null,
+          "self": true,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "fixture:check"
+          ],
+          "allProduced": false
+        }
+      ]
+    }
   },
   "libraryScriptSurface": {
     "package": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
@@ -4400,7 +5260,8 @@
             "patterns": [
               "domain/source.ts"
             ],
-            "compile": true
+            "compile": true,
+            "target": "compile1"
           }
         ],
         "matched": [
@@ -4409,7 +5270,12 @@
         ],
         "compileMatched": [
           "domain/source.ts"
-        ]
+        ],
+        "compileByTarget": {
+          "compile1": [
+            "domain/source.ts"
+          ]
+        }
       },
       {
         "id": "scoped-exclusions",
@@ -4429,7 +5295,8 @@
             "patterns": [
               "domain/narrow/**/*.ts"
             ],
-            "compile": true
+            "compile": true,
+            "target": "compile1"
           }
         ],
         "matched": [
@@ -4438,7 +5305,12 @@
         ],
         "compileMatched": [
           "domain/narrow/source.ts"
-        ]
+        ],
+        "compileByTarget": {
+          "compile1": [
+            "domain/narrow/source.ts"
+          ]
+        }
       },
       {
         "id": "requested-input-freshness",
@@ -4451,7 +5323,8 @@
             "patterns": [
               "domain/source.ts"
             ],
-            "compile": true
+            "compile": true,
+            "target": "compile0"
           },
           {
             "patterns": [
@@ -4466,7 +5339,12 @@
         ],
         "compileMatched": [
           "domain/source.ts"
-        ]
+        ],
+        "compileByTarget": {
+          "compile0": [
+            "domain/source.ts"
+          ]
+        }
       }
     ]
   },
@@ -4615,85 +5493,223 @@
       "cases": [
         {
           "id": "runtime-type-erasure",
-          "runtime": [
-            "command.ts"
-          ],
-          "compile": [],
           "expected": [
             [
+              "generate",
               "command.ts",
               "runtime"
             ],
             [
+              "generate",
               "peer.ts",
               "runtime"
             ]
           ],
-          "refusal": null
+          "refusal": null,
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expectedDependencies": {}
         },
         {
           "id": "typed-self-output",
-          "runtime": [],
-          "compile": [
-            "peer.ts"
-          ],
           "expected": [
             [
+              "generate",
               "peer.ts",
               "compile"
             ]
           ],
-          "refusal": "compile"
+          "refusal": "compile",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            }
+          ],
+          "expectedDependencies": {}
         },
         {
           "id": "runtime-self-output",
-          "runtime": [
-            "command.ts"
-          ],
-          "compile": [],
           "peer": "import \"./generated.ts\"; export const value=1;",
           "expected": [
             [
+              "generate",
               "command.ts",
               "runtime"
             ],
             [
+              "generate",
               "peer.ts",
               "runtime"
             ]
           ],
-          "refusal": "runtime"
+          "refusal": "runtime",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expectedDependencies": {}
         },
         {
           "id": "runtime-to-compiler-upgrade",
-          "runtime": [
-            "command.ts"
-          ],
-          "compile": [
-            "compiler.ts"
-          ],
           "expected": [
             [
+              "generate",
               "command.ts",
               "runtime"
             ],
             [
+              "generate",
               "peer.ts",
               "runtime"
             ],
             [
+              "generate",
               "compiler.ts",
               "compile"
             ],
             [
+              "generate",
               "peer.ts",
               "compile"
             ]
           ],
-          "refusal": "compile"
+          "refusal": "compile",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": [
+                "compiler.ts"
+              ]
+            }
+          ],
+          "expectedDependencies": {}
+        },
+        {
+          "id": "fresh-generator-and-typed-consumer",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            },
+            {
+              "target": "check",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            }
+          ],
+          "expected": [
+            [
+              "generate",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "check",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": null,
+          "expectedDependencies": {
+            "check": [
+              "fixture-app:generate"
+            ]
+          }
+        },
+        {
+          "id": "typed-generator-and-runtime-consumer",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            },
+            {
+              "target": "check",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expected": [
+            [
+              "check",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "check",
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile",
+          "expectedDependencies": {}
         }
       ]
-    }
+    },
+    "commandScopes": [
+      {
+        "target": "generate",
+        "modules": [
+          "command.ts",
+          "peer.ts"
+        ],
+        "resources": [
+          "payload.ts",
+          "schema.json",
+          "Cargo.toml"
+        ]
+      },
+      {
+        "target": "check",
+        "modules": [
+          "compiler.ts",
+          "payload.ts"
+        ],
+        "resources": [
+          "schema.json",
+          "payload.ts"
+        ]
+      }
+    ]
   },
   "dataProducerInputRoles": [
     {
@@ -4763,6 +5779,16 @@
     },
     {
       "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+      "target": "typegen",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
       "target": "test",
       "expected": "compile"
     }
@@ -5040,6 +6066,722 @@
       },
       "unknown": "unregisteredSourceGroup",
       "contract": "selectedContract"
+    }
+  },
+  "nativeScope": {
+    "cases": [
+      {
+        "id": "base-declaration",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "source-own-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-test",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "mixed-selected-tasks",
+        "selectedSource": true,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "named-source-inputs",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "source-caret-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "expected": "source",
+        "inputRole": "compile"
+      },
+      {
+        "id": "source-named-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "source",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-caret-inputs",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-named-inputs",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "input-only-caret",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "pure-freshness-caret",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "pure-freshness-named",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "pure-freshness-both",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "native-upgrade-wins-over-freshness",
+        "selectedSource": true,
+        "selectedNative": true,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      {
+        "inputRole": "freshness"
+      },
+      null,
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "writer": true,
+        "inputRole": "freshness"
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": "native",
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "inputRole": "freshness"
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "default"
+      }
+    ],
+    "discovery": [
+      {
+        "id": "base-root-cargo",
+        "targets": [],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "source-root-cargo",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "source-explicit-caret",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "nativeCalls": 1,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        },
+        "observation": "compile"
+      },
+      {
+        "id": "selected-native-test",
+        "targets": [
+          "test"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "named-input-only",
+        "targets": [],
+        "inputNames": [
+          "default"
+        ],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "mixed-source-native",
+        "targets": [
+          "source",
+          "test"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "base-package-is-declaration-only",
+        "targets": [],
+        "inputNames": [],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "named-data-package-stays-freshness",
+        "targets": [],
+        "inputNames": [
+          "default"
+        ],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "source-freshness-package-stays-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "source-freshness-caret-stays-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-retains-all-matched-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [
+          "default"
+        ],
+        "caret": true,
+        "observation": "freshness",
+        "matchedData": [
+          "facts.txt"
+        ],
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-preserves-runtime-owner-and-caret",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "runtimeImport": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        }
+      },
+      {
+        "id": "freshness-still-refuses-self-generated-output",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "runtimeImport": true,
+        "rejectSelfGenerated": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-upgrades-to-native-before-reobservation",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "upgradeNative": true,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        }
+      },
+      {
+        "id": "compile-source-preserves-package-declarations",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "observation": "compile",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {}
+      }
+    ],
+    "assembly": [
+      {
+        "id": "selected-base",
+        "selected": true,
+        "targets": [],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-source",
+        "selected": true,
+        "targets": [
+          "source"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-named-input",
+        "selected": true,
+        "targets": [],
+        "inputs": [
+          "default"
+        ],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-native",
+        "selected": true,
+        "targets": [
+          "test"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "test"
+        ],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-mixed",
+        "selected": true,
+        "targets": [
+          "source",
+          "test"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "test"
+        ],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-release",
+        "selected": true,
+        "targets": [
+          "release"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "release"
+        ],
+        "release": [
+          "release"
+        ],
+        "commandExpansion": 0
+      },
+      {
+        "id": "all-owners",
+        "selected": false,
+        "targets": [],
+        "inputs": [],
+        "rootDiscovery": 1,
+        "preparation": [
+          "source",
+          "test",
+          "release",
+          "generator"
+        ],
+        "release": [
+          "release"
+        ],
+        "commandExpansion": 1
+      }
+    ],
+    "route": {
+      "target": "test-native-image-observation",
+      "suite": "native-image-observation",
+      "execution": "source",
+      "observation": "freshness",
+      "typechecks": false,
+      "entry": "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
+    }
+  },
+  "commandInputRoles": {
+    "files": {
+      "entry.ts": "export const value = 1;",
+      "facade.ts": "export {token} from \"./generated.ts\";"
+    },
+    "cases": [
+      {
+        "id": "freshness-data-facade",
+        "role": "freshness",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts"
+        ],
+        "generated": []
+      },
+      {
+        "id": "default-compile-facade",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "explicit-compile-facade",
+        "role": "compile",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "explicit-runtime-freshness-facade",
+        "role": "freshness",
+        "runtime": [
+          "{projectRoot}/facade.ts"
+        ],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "actual-command-import-retained",
+        "role": "freshness",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "entry": "export {token} from \"./facade.ts\";",
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      }
+    ],
+    "invalid": [
+      [],
+      null,
+      "facade.ts",
+      [
+        "{projectRoot}/../facade.ts"
+      ],
+      [
+        "{projectRoot}/facade.d.ts"
+      ],
+      [
+        "{projectRoot}/**/facade.ts"
+      ],
+      [
+        "{projectRoot}/facade.ts",
+        "{projectRoot}/facade.ts"
+      ],
+      [
+        "{projectRoot}/facade\\bad.ts"
+      ],
+      [
+        "{projectRoot}/facade\u0000.ts"
+      ],
+      [
+        "{projectRoot}/missing.ts"
+      ]
+    ],
+    "longAbsolute": "{projectRoot}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.ts",
+    "generatorPromotionSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "manifest",
+        "entry",
+        "barrel",
+        "producer",
+        "cases"
+      ],
+      "properties": {
+        "contract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "barrel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "role",
+              "commandImportsBarrel",
+              "includesBarrel"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "freshness",
+                  "compile",
+                  null
+                ]
+              },
+              "commandImportsBarrel": {
+                "type": "boolean"
+              },
+              "includesBarrel": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "generatorPromotion": {
+      "contract": "styling-tokens",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "entry": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "barrel": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+      "producer": "@semio-tech/ui-styling-tokens:generate",
+      "cases": [
+        {
+          "id": "actual-styling-freshness-enrichment",
+          "role": "freshness",
+          "commandImportsBarrel": false,
+          "includesBarrel": false
+        },
+        {
+          "id": "default-compile-enrichment",
+          "role": null,
+          "commandImportsBarrel": false,
+          "includesBarrel": true
+        },
+        {
+          "id": "explicit-compile-enrichment",
+          "role": "compile",
+          "commandImportsBarrel": false,
+          "includesBarrel": true
+        },
+        {
+          "id": "actual-command-selfedge-survives-freshness",
+          "role": "freshness",
+          "commandImportsBarrel": true,
+          "includesBarrel": true
+        }
+      ]
     }
   }
 }

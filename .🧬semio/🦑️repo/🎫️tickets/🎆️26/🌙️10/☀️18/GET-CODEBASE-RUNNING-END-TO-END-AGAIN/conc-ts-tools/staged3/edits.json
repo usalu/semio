@@ -1,0 +1,36 @@
+[
+ {
+  "id": "typecheck-command-units",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🪁️typecheck/🟦️.ts",
+  "why": "Adds the unit-wise development gate `typecheck units`; `typecheck` and `typecheck project` (monolithic release gate) are unchanged.",
+  "ops": [
+   {
+    "old": "import selectionSchema from \"./🧬️schema/🎯️project.json\" with { type: \"json\" };\nconst selectionContract=compileJsonSchemaSubset(selectionSchema);\n",
+    "new": "import selectionSchema from \"./🧬️schema/🎯️project.json\" with { type: \"json\" };\nimport unitsSchema from \"./🧬️schema/🎯️units.json\" with { type: \"json\" };\nconst selectionContract=compileJsonSchemaSubset(selectionSchema),unitsContract=compileJsonSchemaSubset(unitsSchema);\n",
+    "count": 1
+   },
+   {
+    "old": "/** 🪁️ Type-checks every `🦑️repo` product TypeScript source.",
+    "new": "/** 🧩️ Reads `typecheck units <config.json> [--only <unit>]... [--jobs 1-8] [--replan]`: the unit-wise development gate. */\nexport function readTypecheckUnitsSelectionV1(words:readonly string[]):Readonly<{project:string;only:readonly string[];jobs:number;replan:boolean}>{\n const rest=[...words],selection:{project:string|undefined;only:(string|undefined)[];jobs:number;replan:boolean}={project:rest.shift(),only:[],jobs:1,replan:false};\n while(rest.length){const flag=rest.shift();if(flag===\"--only\")selection.only.push(rest.shift());else if(flag===\"--jobs\")selection.jobs=Number(rest.shift());else if(flag===\"--replan\")selection.replan=true;else selection.project=undefined;}\n if(unitsContract.validate(selection).length)throw Error(\"Expected typecheck units <workspace-relative configuration.json> [--only <unit>]... [--jobs 1-8] [--replan]\");return selection as {project:string;only:readonly string[];jobs:number;replan:boolean};\n}\n\n/** 📂️ Resolves the unit-wise selection to a real configuration inside the workspace. */\nexport async function resolveTypecheckUnitsSelectionV1(workspace:string,words:readonly string[]):Promise<Readonly<{cwd:string;project:string;only:readonly string[];jobs:number;replan:boolean}>>{\n const selection=readTypecheckUnitsSelectionV1(words),cwd=await realpath(workspace),project=await realpath(resolve(cwd,selection.project)),distance=relative(cwd,project);\n if(project.length>256||isAbsolute(distance)||distance===\"..\"||distance.startsWith(\"..\"+sep)||!(await stat(project)).isFile())throw Error(\"TypeScript project must be a real workspace configuration\");return{cwd,project,only:selection.only,jobs:selection.jobs,replan:selection.replan};\n}\n\n/** 🪁️ Type-checks every `🦑️repo` product TypeScript source.",
+    "count": 1
+   },
+   {
+    "old": "    const selection=segments[0]===\"project\"?await resolveTypecheckProjectSelectionV1(this.repoRoot,segments.slice(1)):undefined;\n",
+    "new": "    if(segments[0]===\"units\"){\n      const units=await resolveTypecheckUnitsSelectionV1(this.repoRoot,segments.slice(1)),{typecheckRepositoryUnitsV1}=await import(\"../../🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts\");\n      await typecheckRepositoryUnitsV1({workspace:this.repoRoot,invocation:this.invocation,control:createIssuedResourceControlV1(this.invocation,\"typecheck:units\",0),cwd:units.cwd,project:units.project,only:units.only,jobs:units.jobs,replan:units.replan,owner:\"repo:typescript-units\",timeoutMs:1_800_000});return;\n    }\n    const selection=segments[0]===\"project\"?await resolveTypecheckProjectSelectionV1(this.repoRoot,segments.slice(1)):undefined;\n",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "id": "typecheck-units-target",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "why": "Dashboard target for the unit-wise check; uncached because the unit store is its own content-addressed cache.",
+  "ops": [
+   {
+    "old": "    \"typecheck\": {\n",
+    "new": "    \"typecheck-units\": {\n      \"metadata\": {\n        \"semio\": {\n          \"execution\": { \"version\": 1, \"kind\": \"source\" },\n          \"cache\": { \"version\": 1, \"class\": \"diagnostic\", \"reason\": \"reads-caller-input\" },\n          \"dashboard\": {\n            \"title\": { \"en\": \"Check TypeScript unit by unit\", \"de\": \"TypeScript einheitenweise prüfen\" },\n            \"description\": { \"en\": \"Fast development check: only units whose sources or dependency declarations changed are checked; results are shared between sessions. The monolithic check stays the release gate.\", \"de\": \"Schnelle Entwicklungsprüfung: nur Einheiten mit geänderten Quellen oder Abhängigkeitsdeklarationen werden geprüft; Ergebnisse werden zwischen Sitzungen geteilt. Die monolithische Prüfung bleibt das Freigabetor.\" },\n            \"verb\": \"check\",\n            \"parameters\": [\n              { \"id\": \"config\", \"title\": { \"en\": \"Project configuration\", \"de\": \"Projektkonfiguration\" }, \"description\": { \"en\": \"Choose an authored configuration used by the TypeScript compiler.\", \"de\": \"Verfasste Konfiguration für den TypeScript-Compiler auswählen.\" }, \"kind\": \"text\", \"default\": \"tsconfig.json\", \"valuePositional\": true, \"suggestions\": { \"source\": \"configs\" } }\n            ]\n          }\n        }\n      },\n      \"executor\": \"repo:script\",\n      \"cache\": false,\n      \"options\": {\n        \"cwd\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript\",\n        \"command\": \"bun ./📜️script.ts typecheck units\",\n        \"forwardAllArgs\": true\n      },\n      \"outputs\": []\n    },\n    \"typecheck\": {\n",
+    "count": 1
+   }
+  ]
+ }
+]

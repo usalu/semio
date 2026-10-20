@@ -1,0 +1,90 @@
+{
+ "repo-library (overlay, before the two source fixes)": {
+  "TS4023": [
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔌️provider/🟦️.ts:13",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🔌️provider/🟦️.ts:17",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🔌️provider/🟦️.ts:14",
+   "🧰️framework/🔨️modules/🏃️process/🛠️repository-tooling/🟦️.ts:57",
+   "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🟦️.ts:25",
+   "🧰️framework/🔨️modules/🏃️process/🧩️artifact-package/🟦️.ts:20",
+   "🧰️framework/🔨️modules/🏃️process/🧩️extension-package/🟦️.ts:16",
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🔌️provider/🟦️.ts:32",
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts:9"
+  ]
+ },
+ "plugins ✏️s (real tree 21:05)": {
+  "TS2742": [
+   "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🧵️gis-inference-bridge/🟦️.ts:4",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🌍️scene-lanes/🟦️.ts:19",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👆️pointer-and-drop/🔶️active-utility/🟦️.ts:10",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts:23",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts:29",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔶️attractions/🟦️.ts:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔸️meshes-ref/🟦️.ts:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🟦️.ts:8",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎨️theme-driver-settings/🎨️theme-and-driver-state/🟦️.tsx:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎨️theme-driver-settings/🟦️.tsx:6",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/⌨️registers-and-context-menu/🟦️.tsx:25",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx:34",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx:8",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🎓️override-anchors-and-introduction/🟦️.ts:12",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🧱️dock-model-and-persistence/🟦️.ts:12",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🔶️brand/🟦️.tsx:14",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🔶️plugin-filter/🟦️.tsx:5",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts:169",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧾️row-actions/🟦️.tsx:30",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/📐️map-parsing/🟦️.ts:152"
+  ],
+  "TS4023": [
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔌️provider/🟦️.ts:13",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🔌️provider/🟦️.ts:17",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🔌️provider/🟦️.ts:14",
+   "🧰️framework/🔨️modules/🏃️process/🛠️repository-tooling/🟦️.ts:57",
+   "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🟦️.ts:25",
+   "🧰️framework/🔨️modules/🏃️process/🧩️artifact-package/🟦️.ts:20",
+   "🧰️framework/🔨️modules/🏃️process/🧩️extension-package/🟦️.ts:16",
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🔌️provider/🟦️.ts:32"
+  ],
+  "TS4058": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧠️resident-pool-and-metadata/🧰️resident-test-kit/🟦️.tsx:5",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx:86",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:347"
+  ],
+  "TS4082": [
+   "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🧵️gis-inference-bridge/🟦️.ts:4"
+  ],
+  "TS4094": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🌐️wasi/🟦️.ts:58"
+  ],
+  "TS5056": [
+   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.d.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.d.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/🟦️.d.ts",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.d.ts"
+  ]
+ },
+ "plugins ✏️s after group 2 (overlay of the real tree 22:45, 596 units)": {
+  "TS2742": [
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🔌️ports/🟦️.ts:14",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🌍️scene-lanes/🟦️.ts:19",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👆️pointer-and-drop/🔶️active-utility/🟦️.ts:10",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts:23",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts:29",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔶️attractions/🟦️.ts:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🔸️meshes-ref/🟦️.ts:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🟦️.ts:8",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎨️theme-driver-settings/🎨️theme-and-driver-state/🟦️.tsx:18",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎨️theme-driver-settings/🟦️.tsx:6",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/⌨️registers-and-context-menu/🟦️.tsx:25",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🎯️focused-program-and-introduction/🟦️.tsx:34",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx:8",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🎓️override-anchors-and-introduction/🟦️.ts:12",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🏗️dock-assembly/🧱️dock-model-and-persistence/🟦️.ts:12",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🔶️brand/🟦️.tsx:14",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🔶️plugin-filter/🟦️.tsx:5",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts:169",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧾️row-actions/🟦️.tsx:30",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/📐️map-parsing/🟦️.ts:152"
+  ]
+ }
+}

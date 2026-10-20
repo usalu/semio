@@ -58,26 +58,34 @@ export function buildChangedFilesCommandsV1(head:readonly string[]):readonly (re
   return commands;
 }
 
-/** 🧭️ Maps changed files to the projects Nx's affected locators touch (deepest owning root, `{workspaceRoot}/…` target inputs, `nx.json` for all) and closes over dependents; the one rule every build tool shares for `affected`. */
-export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string[]):string[] {
-  const names=Object.keys(graph.projects),owners=[...names].sort((a,b)=>graph.projects[b]!.root.length-graph.projects[a]!.root.length||(a<b?-1:1)),affected=new Set<string>(),prefix="{workspaceRoot}/";
-  if(files.includes("nx.json"))for(const name of names)affected.add(name);
+/** 🧭️ Maps changed files to the projects they touch directly (the deepest owning root, projects whose target inputs name a changed `{workspaceRoot}/…` file with named inputs expanded, and every project when `nx.json` changes) and keeps one or more touching files per project; the one rule every build tool shares before it closes over dependents. */
+export function affectedTouchesV1(graph:BuildGraphV1,files:readonly string[]):Map<string,string[]> {
+  const names=Object.keys(graph.projects),owners=[...names].sort((a,b)=>graph.projects[b]!.root.length-graph.projects[a]!.root.length||(a<b?-1:1)),touches=new Map<string,string[]>(),prefix="{workspaceRoot}/";
+  const touch=(name:string,file:string)=>{const row=touches.get(name);if(!row)touches.set(name,[file]);else if(!row.includes(file))row.push(file);};
+  if(files.includes("nx.json"))for(const name of names)touch(name,"nx.json");
   else if(files.length){
-    for(const file of files){const owner=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));if(owner)affected.add(owner);}
+    for(const file of files){const owner=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));if(owner)touch(owner,file);}
     const extract=(inputs:readonly unknown[],named:Record<string,readonly unknown[]>,seen:ReadonlySet<string>):string[]=>inputs.flatMap(input=>typeof input==="string"?Object.hasOwn(named,input)?seen.has(input)?[]:extract(named[input]!,named,new Set(seen).add(input)):input.startsWith(prefix)?[input.slice(prefix.length)]:[]:typeof input==="object"&&input!==null&&typeof (input as {fileset?:unknown}).fileset==="string"&&(input as {fileset:string}).fileset.startsWith(prefix)?[(input as {fileset:string}).fileset.slice(prefix.length)]:[]),matchers=new Map<string,(file:string)=>boolean>();
     const matcher=(pattern:string)=>{let known=matchers.get(pattern);if(!known){if(/[?*+@!]\(/u.test(pattern))known=()=>true;else{const glob=new Bun.Glob(pattern);known=(file:string)=>glob.match(file);}matchers.set(pattern,known);}return known;};
     for(const name of names){
-      if(affected.has(name))continue;
+      if(touches.has(name))continue;
       const named={...graph.namedInputs,...graph.projects[name]!.namedInputs} as Record<string,readonly unknown[]>,patterns=new Set(Object.values(graph.projects[name]!.targets).flatMap(target=>target.inputs?extract(target.inputs,named,new Set()):[]));
-      if([...patterns].some(pattern=>files.some(matcher(pattern))))affected.add(name);
+      const hit=files.find(file=>[...patterns].some(pattern=>matcher(pattern)(file)));
+      if(hit!==undefined)touch(name,hit);
     }
   }
+  return touches;
+}
+
+/** 🧭️ Closes the projects touched by changed files over their dependents, as Nx's affected does; the neutral answer every build tool must reproduce. */
+export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string[]):string[] {
+  const affected=new Set(affectedTouchesV1(graph,files).keys());
   let changed=true;while(changed){changed=false;for(const edge of graph.dependencies)if(affected.has(edge.target)&&!affected.has(edge.source)&&graph.projects[edge.source]){affected.add(edge.source);changed=true;}}
   return [...affected].sort();
 }
 
 /** 🧮️ Resolves portable execution selections and forwards literal task arguments. */
-export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation):Promise<{tasks:string[];args:string[];parallel?:number;workers?:boolean;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
+export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,affectedProjects:(files:readonly string[])=>Promise<readonly string[]>|readonly string[]=files=>affectedBuildProjectsV1(graph,files)):Promise<{tasks:string[];args:string[];parallel?:number;workers?:boolean;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
   checkScriptInvocation(invocation);
   const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary),forwarded=boundary<0?[]:args.slice(boundary+1),operation=head[0];
   const enabled=(names:string[])=>buildBooleanOptionV1(head,names.map(name=>name.slice(2)))??false;
@@ -104,7 +112,7 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
         const control=scriptCompilerAdmissionControlV1(invocation,"build:affected-files",30_000);
         files=[...new Set((await Promise.all(buildChangedFilesCommandsV1(head).map(command=>captureOwnedCommandV1("git",[...command],root,{control})))).flatMap(output=>output.split("\0").filter(Boolean)))];
       }
-      const affected=new Set(affectedBuildProjectsV1(graph,files));
+      const affected=new Set(enabled(["--all"])?[]:await affectedProjects(files));
       if(!enabled(["--all"]))projects=projects.filter(project=>affected.has(project));
     }
     const targetOptions=buildOptionsV1(head,["targets","target","t"]).flatMap(value=>value.split(",").filter(Boolean));

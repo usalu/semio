@@ -97,9 +97,9 @@
           "kind": {
             "enum": [
               "task",
+              "test",
               "noop",
-              "launch",
-              "test"
+              "launch"
             ]
           },
           "restore": {

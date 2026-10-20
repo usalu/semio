@@ -234,13 +234,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
 
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
         assert.ok(preparation, `${targetName} needs declared prerequisites`);
-        assert.equal(preparation.cache, false, `${targetName} builds its closure through the driver`);
-        assert.equal(preparation.metadata?.semio?.orchestrator, true);
+        assert.equal(preparation.cache, true, `${targetName} is a cached verdict over its staged component closure`);
+        assert.deepEqual(preparation.outputs, []);
         const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
         assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:wasm`));
-        assert.equal(wgpuPreparation.cache, false, `${wgpuTargetName} builds its closure through the driver`);
-        assert.deepEqual(wgpuPreparation.outputs, preparation.outputs, `${wgpuTargetName} publishes the same boot closure modules`);
+        assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} is a cached verdict over its staged component closure`);
+        assert.deepEqual(wgpuPreparation.dependsOn.filter((id: string) => id.endsWith(":component")), preparation.dependsOn.filter((id: string) => id.endsWith(":component")), `${wgpuTargetName} waits for the same boot closure components`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
         assert.ok(activationTarget, `${activationName} must follow completed preparation`);
         assert.equal(activationTarget.cache, true, `${activationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
@@ -248,7 +248,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.deepEqual(activationTarget.dependsOn, [targetName]);
         const wgpuActivationName = `activate-${playground.variant}-wgpu-${profile}`, wgpuActivationTarget = preparationProject.targets[wgpuActivationName];
         assert.ok(wgpuActivationTarget, `${wgpuActivationName} must follow completed preparation`);
-        assert.equal(wgpuActivationTarget.cache, false, `${wgpuActivationName} publishes live extensions and reload notifications on every activation`);
+        assert.equal(wgpuActivationTarget.cache, true, `${wgpuActivationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
         assert.deepEqual(wgpuActivationTarget.outputs, [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`]);
         assert.deepEqual(wgpuActivationTarget.dependsOn, [wgpuTargetName]);
         {
@@ -272,12 +272,12 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const hostLauncher = componentLaunchers.find((entry) => entry.pluginId === playground.pluginId);
         if (!hostLauncher) throw new Error(`${playground.variant}: host plugin must launch`);
         const moduleOf = (pluginId: string) => contracts.find((project) => project.name === componentLaunchers.find((entry) => entry.pluginId === pluginId)?.project);
-        const hostDirectory = moduleOf(playground.pluginId) && toml.parse(readFileSync(join(root, moduleOf(playground.pluginId)!.root, "Cargo.toml"), "utf8")).package.metadata.semio["deployment-directory"];
-        if (hostDirectory !== undefined) assert.ok(preparation.outputs.some((output: string) => output.endsWith(`/${hostDirectory}`)), `${targetName}: boot prepare must publish the host module`);
+        const bootComponents = preparation.dependsOn.filter((id: string) => id.endsWith(":component"));
+        assert.ok(bootComponents.includes(`${moduleOf(playground.pluginId)!.name}:component`), `${targetName}: boot prepare must wait for the host component`);
         const fullSession = buildPlaygroundSession(playground.variant, (await import("@semio-tech/plugin-registry/catalog-view")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
-        assert.ok(preparation.outputs.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
-        if (fullSession.length > preparation.outputs.length + 5) assert.ok(preparation.outputs.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
-        for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(preparation.dependsOn.includes(prerequisite));
+        assert.ok(bootComponents.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
+        if (fullSession.length > bootComponents.length + 5) assert.ok(bootComponents.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
+        for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(!preparation.dependsOn.includes(prerequisite), `${targetName}: ${prerequisite} belongs to the component targets`);
         const engines = playground.engines.map((engine: string) => contracts.find((project) => resolve(root, project.root) === resolve(root, engine))!.name + ":wasm");
         for (const engine of engines) assert.ok(preparation.dependsOn.includes(engine));
         assert.ok(preparation.dependsOn.includes(`@semio-tech/plugin-registry:session-${playground.variant}`));

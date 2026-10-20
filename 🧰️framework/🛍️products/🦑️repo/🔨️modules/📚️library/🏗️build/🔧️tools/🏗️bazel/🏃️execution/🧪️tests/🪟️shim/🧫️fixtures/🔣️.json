@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "executable": "C:\\tools\\bun\\bun.exe",
+  "rows": [
+    {"name": "script target", "platform": "win32", "path": "/w/node_modules/.bin/tsc", "target": "../typescript/bin/tsc.js", "kind": "cmd", "real": "/w/node_modules/typescript/bin/tsc.js", "exists": true},
+    {"name": "extensionless script", "platform": "win32", "path": "/w/a/node_modules/.bin/vite", "target": "../vite/bin/vite", "kind": "cmd", "real": "/w/a/node_modules/vite/bin/vite", "exists": true},
+    {"name": "native executable", "platform": "win32", "path": "/w/node_modules/.bin/esbuild", "target": "../esbuild/bin/esbuild.exe", "kind": "exe", "real": "/w/node_modules/esbuild/bin/esbuild.exe", "exists": true},
+    {"name": "percent sign", "platform": "win32", "path": "/w/node_modules/.bin/x", "target": "../pk%g/x.js", "kind": "refuse", "exists": true},
+    {"name": "missing target", "platform": "win32", "path": "/w/node_modules/.bin/y", "target": "../none/y.js", "kind": "missing", "exists": false},
+    {"name": "posix keeps the symbolic link", "platform": "linux", "path": "/w/node_modules/.bin/tsc", "target": "../typescript/bin/tsc", "kind": "link"},
+    {"name": "darwin keeps the symbolic link", "platform": "darwin", "path": "/w/node_modules/.bin/tsc", "target": "../typescript/bin/tsc", "kind": "link"}
+  ]
+}

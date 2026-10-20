@@ -1,0 +1,11 @@
+# Receipt to Next Plan Independent Review
+
+Read-only comparison of2026-10-20-fresh-manual-receipt-map.md against actual current owner entrypoints, return shapes and final/export admissions. No plan generation, code edit, command or private effect. No material mapping blocker found.
+
+Raw file SHA and compact JSON binding distinctions are correct: create/provision receive raw expected SHA; Source receiver, Git, observer and exporter bind JSON.stringify parsed plans; controller terminal binds raw cohort file SHA. JSON.stringify preserves parsed key order and is not sorted-key canonicalization. Actual create/capture IDs, identity receipt and manifest fields must remain unavailable until their corresponding owners complete. Receiver identity receipt is raw creation result; later Source captureReceiptSha256 is raw fresh-source-receipt, not the source-complete wrapper.
+
+Git transfer owner publishes inner fresh-git-proof file containing fresh-linux-git-terminal with nested actual proof, and separately wraps that terminal in fresh-git-transfer-terminal. Controller/source and exporter/final gitTerminal must bind raw INNER terminal bytes; their readGitProof call consumes its nested proof with compact Git-plan binding. Dirty capture and guest observations remain separate. Current CLI prepare/transfer extra archive receipt SHA and Source capture argument shapes match the note.
+
+Controller workload equals builder.runToken and its actual21 ordered terminal must match raw cohort SHA, native and Source. Observer consumes that genuine terminal/raw log, verifies immutable build ID/tag/Caddy facts, and produces image/log refs without inventing product receipts. Export admission independently requires actual21, Source/Git/provision evidence; it precedes final verification and creates the actual product pair. Observer and export can occur in either order after21, but final requires both actual outputs and their owned terminal0.
+
+Optional boundaries/product/Cargo evidence stay explicitly unavailable unless measured; no final Source or clean-revision assertion is invented. Reseal current Source/input pins immediately before effects, validate each actual next object using its owner schema, preserve immutable prior plans and claims. All future IDs, receipt digests, output facts and statuses remain unknown at preparation time.

@@ -1,0 +1,27 @@
+[
+ {
+  "name": "crate-alias module drops the module segment",
+  "input": "use semio_framework_value::retirement_queue::RetirementQueue;\n",
+  "expected": "use semio_framework_value_retirement_queue::RetirementQueue;\n"
+ },
+ {
+  "name": "crate-alias module in a mixed group",
+  "input": "use semio_framework_value::{DslValue, retirement_queue::RetirementQueue, ordered::OrderedMap};\n",
+  "expected": "use semio_framework_value::DslValue;\nuse semio_framework_value_retirement_queue::RetirementQueue;\nuse semio_framework_value_ordered::ordered::OrderedMap;\n"
+ },
+ {
+  "name": "qualified paths in types and expressions",
+  "input": "fn f(q: &semio_framework_value::retirement_queue::RetirementQueue) { let _ = semio_framework_value::ordered::OrderedSet::new(); }\n",
+  "expected": "fn f(q: &semio_framework_value_retirement_queue::RetirementQueue) { let _ = semio_framework_value_ordered::ordered::OrderedSet::new(); }\n"
+ },
+ {
+  "name": "flat function-owned item with alias",
+  "input": "use semio_framework_value::OriginalAliasBatch as Batch;\n",
+  "expected": "use semio_framework_value_original_aliases::OriginalAliasBatch as Batch;\n"
+ },
+ {
+  "name": "alias head path through a crate alias",
+  "input": "use protocol::value::ordered::SharedOwner;\n",
+  "expected": "use semio_framework_value_ordered::ordered::SharedOwner;\n"
+ }
+]

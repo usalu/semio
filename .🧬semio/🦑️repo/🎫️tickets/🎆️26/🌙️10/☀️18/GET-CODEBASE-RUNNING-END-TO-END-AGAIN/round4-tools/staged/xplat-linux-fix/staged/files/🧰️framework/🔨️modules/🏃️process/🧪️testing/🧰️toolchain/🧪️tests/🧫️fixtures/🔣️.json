@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "resolution": [
+    {"name": "a machine with python3", "platform": "linux", "which": {"python3": "/usr/bin/python3"}, "runs": {"/usr/bin/python3 --version": [0, "Python 3.11.2"]}, "tool": "python", "path": "/usr/bin/python3", "tried": ["python3"]},
+    {"name": "the Windows Store stub answers nothing and python is real", "platform": "win32", "which": {"python3": "C:\\Users\\u\\AppData\\Local\\Microsoft\\WindowsApps\\python3.exe", "python": "C:\\Python312\\python.exe"}, "runs": {"C:\\Users\\u\\AppData\\Local\\Microsoft\\WindowsApps\\python3.exe --version": [9009, ""], "C:\\Python312\\python.exe --version": [0, "Python 3.12.1"]}, "tool": "python", "path": "C:\\Python312\\python.exe", "tried": ["python3", "python"]},
+    {"name": "only the py launcher exists and is turned into the interpreter", "platform": "win32", "which": {"py": "C:\\Windows\\py.exe"}, "runs": {"C:\\Windows\\py.exe -3 --version": [0, "Python 3.12.0"], "C:\\Windows\\py.exe -3 -c import sys;print(sys.executable)": [0, "C:\\Python312\\python.exe\r\n"]}, "tool": "python", "path": "C:\\Python312\\python.exe", "tried": ["python3", "python", "py -3"]},
+    {"name": "python2 is not python3", "platform": "linux", "which": {"python": "/usr/bin/python"}, "runs": {"/usr/bin/python --version": [0, "Python 2.7.18"]}, "tool": "python", "path": null, "tried": ["python3", "python"]},
+    {"name": "py is a Windows candidate only", "platform": "darwin", "which": {"py": "/usr/local/bin/py"}, "runs": {}, "tool": "python", "path": null, "tried": ["python3", "python"]},
+    {"name": "ripgrep found", "platform": "linux", "which": {"rg": "/usr/bin/rg"}, "runs": {"/usr/bin/rg --version": [0, "ripgrep 14.1.0"]}, "tool": "ripgrep", "path": "/usr/bin/rg", "tried": ["rg"]},
+    {"name": "ripgrep absent", "platform": "win32", "which": {}, "runs": {}, "tool": "ripgrep", "path": null, "tried": ["rg"]},
+    {"name": "a program called rg that is not ripgrep", "platform": "linux", "which": {"rg": "/usr/bin/rg"}, "runs": {"/usr/bin/rg --version": [0, "something else 1"]}, "tool": "ripgrep", "path": null, "tried": ["rg"]}
+  ]
+}

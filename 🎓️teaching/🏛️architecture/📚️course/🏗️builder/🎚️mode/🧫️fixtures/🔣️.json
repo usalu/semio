@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "decisions": [
+    {"id": "dev-prototype", "intent": "dev", "originalMode": "prototype", "expected": "allowed:prototype"},
+    {"id": "dev-release", "intent": "dev", "originalMode": "release", "expected": "allowed:release"},
+    {"id": "release-release", "intent": "release", "originalMode": "release", "expected": "allowed:release"},
+    {"id": "release-prototype", "intent": "release", "originalMode": "prototype", "expected": "refused:release-required"}
+  ],
+  "malformed": [
+    {"intent": "stage", "originalMode": "release"},
+    {"intent": "release"},
+    {"intent": "release", "originalMode": "debug"},
+    {"intent": "release", "originalMode": null}
+  ],
+  "oracle": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["intent", "originalMode", "outcome"],
+    "allOf": [
+      {"if": {"properties": {"originalMode": {"const": "release"}}, "required": ["originalMode"]}, "then": {"properties": {"outcome": {"const": "allowed:release"}}}},
+      {"if": {"properties": {"originalMode": {"const": "prototype"}, "intent": {"const": "dev"}}, "required": ["originalMode", "intent"]}, "then": {"properties": {"outcome": {"const": "allowed:prototype"}}}},
+      {"if": {"properties": {"originalMode": {"const": "prototype"}, "intent": {"const": "release"}}, "required": ["originalMode", "intent"]}, "then": {"properties": {"outcome": {"const": "refused:release-required"}}}}
+    ]
+  }
+}

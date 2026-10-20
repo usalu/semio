@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import { requireStoreReceiptV1, storeReceiptOutputV1 } from "../../🏗️build/🧾️store-receipt/🟨️.mjs";
 
 const fields=["cratePath","project","package","binary","target"];
 const identifier=/^[a-z0-9][a-z0-9-]{0,127}$/u;
@@ -77,14 +78,16 @@ export function nativeHostSourceFactsV1(cratePath,view) {
   return {package:packageName,project:project.name,binaries,targets,modes:Object.fromEntries(targets.map(target=>[target,["prototype","release"]])),outputs:Object.fromEntries(targets.map(name=>[name,Object.fromEntries(["prototype","release"].map(mode=>[mode,(project.targets[name].configurations[mode].outputs??project.targets[name].outputs)?.map(output=>typeof output==="string"?output.replaceAll("{options.env.SEMIO_BUILD_MODE}",mode):output)]))]))};
 }
 
-/** 📦 Resolves one exact published artifact directory from the selected producer target. */
-export function nativeHostArtifactPathV1(host,profile,facts,platform) {
+/** 📦 Resolves the published executable through the store receipt the selected producer target declares as its only output: the receipt names the one published directory of the profile, the executable lies inside it. */
+export function nativeHostArtifactPathV1(host,profile,facts,platform,receipt) {
   if(!["prototype","release"].includes(profile)) throw new Error("Native host profile must be exact");
   const outputs=facts.outputs[host.target]?.[profile];
-  if(!Array.isArray(outputs) || outputs.length!==1 || typeof outputs[0]!=="string" || !outputs[0].startsWith("{projectRoot}/")) throw new Error("Native host must publish exactly one owned directory");
-  const output=outputs[0].slice("{projectRoot}/".length);
-  if(!output || /[{}\\:\u0000]/u.test(output) || output.split("/").some(part=>!part || part==="." || part==="..")) throw new Error("Native host output is outside its producer");
-  return `${host.cratePath}/${output}/${host.binary}${platform==="win32"?".exe":""}`;
+  if(!Array.isArray(outputs) || outputs.length!==1 || outputs[0]!==storeReceiptOutputV1(host.target)) throw new Error("Native host must declare exactly its store receipt as output");
+  const checked=requireStoreReceiptV1(receipt);
+  if(checked.project!==host.project || checked.target!==host.target) throw new Error("Native host receipt belongs to another producer");
+  const [published]=checked.entries;
+  if(checked.entries.length!==1 || checked.links.length!==0 || published.kind!=="directory" || published.path.split("/").at(-1)!==profile) throw new Error("Native host receipt must name exactly one published directory of its profile");
+  return `${published.path}/${host.binary}${platform==="win32"?".exe":""}`;
 }
 
 /** 🧾 Captures every selected producer input while admitting both executable host declarations. */

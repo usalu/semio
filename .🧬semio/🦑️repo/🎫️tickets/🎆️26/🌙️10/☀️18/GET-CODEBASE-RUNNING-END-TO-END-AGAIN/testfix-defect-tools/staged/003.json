@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "neutralRoots": [
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json",
+    "🧰️framework/🔨️modules/🌱️value",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/📁️filesystem",
+    "🧰️framework/🔨️modules/📚️compiler",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator"
+  ],
+  "absentRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub"
+  ],
+  "reference": {
+    "script": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+    "command": "test-reference",
+    "budgetMs": 30000
+  },
+  "testDependencies": [
+    "typescript",
+    "@types/bun",
+    "@types/node",
+    "ajv",
+    "@iarna/toml",
+    "jsonc-parser"
+  ]
+}

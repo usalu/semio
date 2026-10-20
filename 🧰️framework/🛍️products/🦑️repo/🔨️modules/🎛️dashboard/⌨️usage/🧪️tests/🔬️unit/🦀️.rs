@@ -2,11 +2,12 @@ use super::{FLAGS, USAGE};
 
 #[test]
 fn usage_names_every_native_verb_and_states_that_there_are_no_others() {
-    for verb in ["dashboard", "commands", "run", "tasks", "logs", "stop|restart|kill", "open", "daemon", "preferences", "catalog", "plugin registry", "command-tree"] {
-        assert!(USAGE.contains(&format!("semio {verb}")), "{verb} is not documented");
+    for verb in ["commands", "run", "tasks", "logs", "stop|restart|kill", "open", "daemon", "preferences", "catalog", "plugin registry", "command-tree"] {
+        assert!(USAGE.contains(&format!("repo dashboard {verb}")), "{verb} is not documented");
     }
-    assert!(USAGE.contains("semio --help") && USAGE.contains("Semio has no other verbs"));
-    assert!(USAGE.contains("semio run workspace:test") && USAGE.contains("semio run <id> --detach --wait-ready"));
+    assert!(USAGE.contains("  repo dashboard [--language"));
+    assert!(USAGE.contains("repo dashboard --help") && USAGE.contains("The dashboard has no other verbs"));
+    assert!(USAGE.contains("repo dashboard run workspace:test") && USAGE.contains("Human developers start tasks through the dashboard command catalog"));
     assert!(!USAGE.contains("<route>") && !USAGE.contains("forwarded"), "nothing is forwarded to another script");
     assert!(!USAGE.contains("launch"), "no launch file exists any more");
 }

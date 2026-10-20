@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "bytes": "proctor-product-fixture-bytes",
+  "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+  "receipts": [
+    {
+      "id": "valid-prototype",
+      "valid": true,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": [
+          "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/🦀️.rs"
+        ]
+      }
+    },
+    {
+      "id": "valid-release-windows",
+      "valid": true,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "release",
+        "platform": "win32",
+        "architecture": "x64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor.exe",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": []
+      }
+    },
+    {
+      "id": "extra-field",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": [],
+        "builtAt": "2026-10-20"
+      }
+    },
+    {
+      "id": "unknown-mode",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "debug",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": []
+      }
+    },
+    {
+      "id": "short-hash",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad/proctor",
+        "sha256": "7cad",
+        "bytes": 29,
+        "sources": []
+      }
+    },
+    {
+      "id": "path-escape",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "../proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": []
+      }
+    },
+    {
+      "id": "duplicate-source",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": [
+          "a.rs",
+          "a.rs"
+        ]
+      }
+    },
+    {
+      "id": "empty-executable",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 0,
+        "sources": []
+      }
+    },
+    {
+      "id": "unknown-platform",
+      "valid": false,
+      "receipt": {
+        "version": 1,
+        "package": "teaching-proctor",
+        "binary": "proctor",
+        "mode": "prototype",
+        "platform": "freebsd",
+        "architecture": "arm64",
+        "executable": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor",
+        "sha256": "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73",
+        "bytes": 29,
+        "sources": []
+      }
+    }
+  ],
+  "depInfo": [
+    {
+      "id": "one-rule-and-phony-targets",
+      "text": "/t/debug/deps/proctor-cc: /w/a/lib.rs /w/a/mod.rs\n\n/w/a/lib.rs:\n/w/a/mod.rs:\n",
+      "paths": [
+        "/w/a/lib.rs",
+        "/w/a/mod.rs"
+      ]
+    },
+    {
+      "id": "escaped-spaces-and-emoji",
+      "text": "/t/debug/deps/x-1: /w/🧰️framework/a\\ b.rs /w/c.rs\n\n/w/🧰️framework/a\\ b.rs:\n/w/c.rs:\n",
+      "paths": [
+        "/w/🧰️framework/a b.rs",
+        "/w/c.rs"
+      ]
+    },
+    {
+      "id": "env-and-checksum-comments",
+      "text": "/t/debug/deps/x-1: /w/a.rs /w/data/x.json\n\n# env-dep:CARGO_PKG_VERSION=0.1.0\n# checksum:blake3=0123 file_len=3 /w/a.rs\n/w/a.rs:\n/w/data/x.json:\n",
+      "paths": [
+        "/w/a.rs",
+        "/w/data/x.json"
+      ]
+    },
+    {
+      "id": "drive-letter-target",
+      "text": "C:/w/target/debug/deps/x-1.rlib: C:/w/a.rs\n",
+      "paths": [
+        "C:/w/a.rs"
+      ]
+    },
+    {
+      "id": "no-dependencies",
+      "text": "/t/debug/deps/x-1:\n",
+      "paths": []
+    },
+    {
+      "id": "empty",
+      "text": "",
+      "paths": []
+    }
+  ],
+  "cargo": {
+    "executable": "/t/debug/proctor",
+    "stdout": [
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"registry+https://github.com/rust-lang/crates.io-index#serde@1.0.0\",\"target\":{\"kind\":[\"lib\"],\"name\":\"serde\"},\"filenames\":[\"/t/debug/deps/libserde-11.rlib\"],\"executable\":null}",
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🧰️framework/dep#dep@0.1.0\",\"target\":{\"kind\":[\"lib\"],\"name\":\"dep\"},\"filenames\":[\"/t/debug/deps/libdep-aa.rlib\",\"/t/debug/deps/libdep-aa.rmeta\"],\"executable\":null}",
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🧰️framework/dep#dep@0.1.0\",\"target\":{\"kind\":[\"custom-build\"],\"name\":\"build-script-build\"},\"filenames\":[\"/t/debug/build/dep-bb/build_script_build-bb\"],\"executable\":\"/t/debug/build/dep-bb/build_script_build-bb\"}",
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🧰️framework/macro#macro@0.1.0\",\"target\":{\"kind\":[\"proc-macro\"],\"name\":\"macro\"},\"filenames\":[\"/t/debug/deps/libmacro-dd.dylib\"],\"executable\":null}",
+      "not json at all",
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🎓️teaching/proctor#teaching-proctor@0.1.0\",\"target\":{\"kind\":[\"bin\"],\"name\":\"proctor\"},\"filenames\":[\"/t/debug/deps/proctor-cc\"],\"executable\":\"/t/debug/proctor\"}",
+      "{\"reason\":\"build-finished\",\"success\":true}"
+    ],
+    "depInfoFiles": [
+      "/t/debug/deps/dep-aa.d",
+      "/t/debug/build/dep-bb/build_script_build-bb.d",
+      "/t/debug/deps/macro-dd.d",
+      "/t/debug/deps/proctor-cc.d"
+    ],
+    "withoutExecutable": [
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🎓️teaching/proctor#teaching-proctor@0.1.0\",\"target\":{\"kind\":[\"lib\"],\"name\":\"proctor\"},\"filenames\":[\"/t/debug/deps/libproctor-cc.rlib\"],\"executable\":null}",
+      "{\"reason\":\"build-finished\",\"success\":true}"
+    ],
+    "twoExecutables": [
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🎓️teaching/proctor#teaching-proctor@0.1.0\",\"target\":{\"kind\":[\"bin\"],\"name\":\"proctor\"},\"filenames\":[\"/t/debug/deps/proctor-cc\"],\"executable\":\"/t/debug/proctor\"}",
+      "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w/🎓️teaching/proctor#teaching-proctor@0.1.0\",\"target\":{\"kind\":[\"bin\"],\"name\":\"proctor\"},\"filenames\":[\"/t/debug/deps/proctor-dd\"],\"executable\":\"/t/debug/proctor2\"}"
+    ]
+  },
+  "globs": {
+    "roots": [
+      "🎓️teaching/🛂️proctor",
+      "🧰️framework/🔨️modules/⏳️async",
+      "🧰️framework/🛍️products/📚️course"
+    ],
+    "data": [
+      "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json"
+    ],
+    "inputs": [
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*.rs",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+      "!{workspaceRoot}/**/target/**",
+      "!{workspaceRoot}/**/dist/**",
+      "!{workspaceRoot}/**/node_modules/**"
+    ],
+    "covered": [
+      "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs",
+      "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/Cargo.toml",
+      "🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/🦀️.rs",
+      "🧰️framework/🛍️products/📚️course/🔨️modules/👥️presence/📦️packages/🦀️rust/Cargo.toml",
+      "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json"
+    ],
+    "uncovered": [
+      "🧰️framework/🔨️modules/📡️replication/🦀️.rs",
+      "🧰️framework/🔨️modules/⏳️async/dist/🦀️.rs",
+      "🎓️teaching/🛂️proctor/target/debug/build/x.rs",
+      "🧰️framework/🔨️modules/⏳️async/node_modules/x/Cargo.toml",
+      "🧰️framework/🔨️modules/⏳️async/🦀️.rs.bak",
+      "🧰️framework/🔨️modules/⏳️async-extra/🦀️.rs",
+      "🧰️framework/🔨️modules/🌱️value/🧬️schema/other.json",
+      "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json.bak"
+    ]
+  },
+  "resolution": [
+    {
+      "id": "valid",
+      "mode": "prototype",
+      "receipt": "valid-prototype",
+      "files": {
+        "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor": "proctor-product-fixture-bytes"
+      },
+      "expect": null
+    },
+    {
+      "id": "no-receipt",
+      "mode": "prototype",
+      "receipt": null,
+      "files": {},
+      "expect": "missing"
+    },
+    {
+      "id": "other-mode-only",
+      "mode": "release",
+      "receipt": null,
+      "files": {},
+      "expect": "missing"
+    },
+    {
+      "id": "unparsable-json",
+      "mode": "prototype",
+      "raw": "{not json",
+      "files": {},
+      "expect": "invalid"
+    },
+    {
+      "id": "schema-invalid",
+      "mode": "prototype",
+      "receipt": "extra-field",
+      "files": {},
+      "expect": "invalid"
+    },
+    {
+      "id": "receipt-of-another-mode",
+      "mode": "release",
+      "receipt": "valid-prototype",
+      "files": {},
+      "expect": "mode"
+    },
+    {
+      "id": "receipt-of-another-platform",
+      "mode": "release",
+      "receipt": "valid-release-windows",
+      "host": {
+        "platform": "linux",
+        "architecture": "x64"
+      },
+      "files": {},
+      "expect": "platform"
+    },
+    {
+      "id": "executable-deleted",
+      "mode": "prototype",
+      "receipt": "valid-prototype",
+      "files": {},
+      "expect": "executable"
+    },
+    {
+      "id": "executable-truncated",
+      "mode": "prototype",
+      "receipt": "valid-prototype",
+      "files": {
+        "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor": "proctor-product"
+      },
+      "expect": "size"
+    },
+    {
+      "id": "executable-altered",
+      "mode": "prototype",
+      "receipt": "valid-prototype",
+      "files": {
+        "7cad1ceb8ee19eb714a4bba18f1e92121936f783046394067d1b3f0b83a47d73/proctor": "proctor-product-fixture-bytez"
+      },
+      "expect": "hash"
+    }
+  ]
+}

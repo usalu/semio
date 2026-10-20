@@ -329,8 +329,38 @@
     {
       "id": "inventory-unknown-refused",
       "mode": "inventory",
+      "label": "fifth",
+      "collision": false,
+      "accepted": false
+    },
+    {
+      "id": "inventory-third",
+      "mode": "inventory",
       "label": "third",
       "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-inventory-third.json"
+    },
+    {
+      "id": "inventory-third-collision",
+      "mode": "inventory",
+      "label": "third",
+      "collision": true,
+      "accepted": false
+    },
+    {
+      "id": "inventory-fourth",
+      "mode": "inventory",
+      "label": "fourth",
+      "collision": false,
+      "accepted": true,
+      "name": "2026-10-20-runtime-process-observation-inventory-fourth.json"
+    },
+    {
+      "id": "inventory-fourth-collision",
+      "mode": "inventory",
+      "label": "fourth",
+      "collision": true,
       "accepted": false
     }
   ]

@@ -1,6 +1,8 @@
 import { cargoWorkspacePreparationInvocationV1} from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {getWorkspaceRoot} from "../../🗂️workspaces/🟦️.ts";
+import {tmpdir} from "node:os";
+import {prepareTestCommandV1,testProtocolMessageV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🚦️protocol/🟦️.ts";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation,type ScriptProgress} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -38,7 +40,11 @@ export async function runRepositoryCommand(invocation:ScriptInvocation,command:s
    remaining();const root=getWorkspaceRoot(environment),request=cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root),root,args,cwd,environment);
    if(request)await runOwnedCommand(request.command,[...request.args],request.cwd,label+":preparation",remaining(),{...transport,env:scriptInvocationEnvironment(invocation,request.environment),stdout:"stderr"});
   }
-  await runOwnedCommand(command,args,cwd,label,remaining(),{...transport,env:scriptInvocationEnvironment(invocation,environment)});
+  const prepared=prepareTestCommandV1(command,args,environment,tmpdir()),started=performance.now();
+  let outcome:{code:number|null;signal:string|null;reason?:string}={code:0,signal:null};
+  try{await runOwnedCommand(command,[...prepared.args],cwd,label,remaining(),{...transport,env:scriptInvocationEnvironment(invocation,{...environment,...prepared.environment})});}
+  catch(error){outcome={code:1,signal:null,reason:String(error instanceof Error?error.message:error).slice(0,2000)};throw error;}
+  finally{try{prepared.finish({...outcome,durationMs:performance.now()-started});}catch(error){process.stderr.write(testProtocolMessageV1("reportFailed",{reason:String(error)})+"\n");}}
   await publish("complete");
  }catch(error){if(invocation.control.signal.aborted)throw invocation.control.signal.reason;throw error;}
 }

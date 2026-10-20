@@ -5,7 +5,7 @@ import { operationDiagnosticFanouts, type PluginOperationDiagnostic } from "../�
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { mediaTransportPort } from "@semio-tech/framework/os/modules/renderer/engine/media/channel";
+import { mediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/channel";
 import { type Effect, type HistoryPatch, type InvocationResponse } from "@semio-tech/framework";
 import {
   decodePackValue

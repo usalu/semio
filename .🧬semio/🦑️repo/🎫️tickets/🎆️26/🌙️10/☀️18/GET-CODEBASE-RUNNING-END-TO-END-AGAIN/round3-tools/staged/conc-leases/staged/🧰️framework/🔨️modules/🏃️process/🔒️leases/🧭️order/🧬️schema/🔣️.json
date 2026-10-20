@@ -1,0 +1,468 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/lease-order/v1",
+  "title": "Lease lock order, hold-and-wait and deadlock policy",
+  "definitions": {
+    "Rule": {
+      "enum": [
+        "enforce",
+        "observe",
+        "off"
+      ]
+    },
+    "Mode": {
+      "enum": [
+        "shared",
+        "exclusive"
+      ]
+    },
+    "Match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "prefix",
+            "exact"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "Class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rank",
+        "scope",
+        "owner",
+        "title",
+        "match"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "scope": {
+          "enum": [
+            "machine",
+            "checkout",
+            "project",
+            "crate",
+            "generation",
+            "path",
+            "session"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "match": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Match"
+          }
+        }
+      }
+    },
+    "Allowed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "reason"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "reason": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "rules",
+        "holdAndWait",
+        "cycle",
+        "registry",
+        "fairness",
+        "gate",
+        "classes",
+        "allowed"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outOfOrder",
+            "holdAndWait",
+            "selfDeadlock",
+            "cycle"
+          ],
+          "properties": {
+            "outOfOrder": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "holdAndWait": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "selfDeadlock": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "cycle": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            }
+          }
+        },
+        "holdAndWait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "graceMilliseconds",
+            "pollMilliseconds"
+          ],
+          "properties": {
+            "graceMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "pollMilliseconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 60000
+            }
+          }
+        },
+        "cycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "intervalMilliseconds"
+          ],
+          "properties": {
+            "intervalMilliseconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 60000
+            }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "flushMilliseconds",
+            "maximumEntryBytes",
+            "maximumViolations"
+          ],
+          "properties": {
+            "flushMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60000
+            },
+            "maximumEntryBytes": {
+              "type": "integer",
+              "minimum": 1024,
+              "maximum": 1048576
+            },
+            "maximumViolations": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            }
+          }
+        },
+        "gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releaseWhileWaiting",
+            "pollInitialMilliseconds",
+            "pollMaximumMilliseconds"
+          ],
+          "properties": {
+            "releaseWhileWaiting": {
+              "type": "boolean"
+            },
+            "pollInitialMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            },
+            "pollMaximumMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            }
+          }
+        },
+        "fairness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "queuedWithResourceLeases"
+          ],
+          "properties": {
+            "queuedWithResourceLeases": {
+              "type": "boolean"
+            }
+          }
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Class"
+          }
+        },
+        "allowed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Allowed"
+          }
+        }
+      }
+    },
+    "Held": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource",
+        "mode",
+        "atMs"
+      ],
+      "properties": {
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "mode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "held",
+        "heldMode",
+        "heldRank",
+        "heldClass",
+        "requested",
+        "requestedMode",
+        "requestedRank",
+        "requestedClass",
+        "atMs",
+        "pid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "out-of-order",
+            "hold-and-wait",
+            "self-deadlock",
+            "cycle"
+          ]
+        },
+        "held": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "heldMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "heldRank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heldClass": {
+          "type": "string"
+        },
+        "requested": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "requestedMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "requestedRank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requestedClass": {
+          "type": "string"
+        },
+        "waitedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockerPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "blockerHeldSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycle": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "enforced": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "outOfOrder": {
+          "en": "Lock order violated: {requested} ({requestedClass}, rank {requestedRank}) is requested while {held} ({heldClass}, rank {heldRank}) is held {heldMode}. Acquire locks in ascending rank or release {held} first.",
+          "de": "Sperrreihenfolge verletzt: {requested} ({requestedClass}, Rang {requestedRank}) wird angefordert, während {held} ({heldClass}, Rang {heldRank}) {heldMode} gehalten wird. Sperren in aufsteigendem Rang nehmen oder {held} zuerst freigeben."
+        },
+        "holdAndWait": {
+          "en": "Refusing to wait: {requested} ({requestedMode}) has been unavailable for {seconds} s{blocker} while this process holds {held} exclusively, which blocks everyone who needs {held}. Release {held} before waiting, or acquire {requested} first.",
+          "de": "Warten abgelehnt: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, während dieser Prozess {held} exklusiv haelt und damit alle blockiert, die {held} brauchen. {held} vor dem Warten freigeben oder {requested} zuerst nehmen."
+        },
+        "selfDeadlock": {
+          "en": "Self-deadlock: {requested} is requested {requestedMode} while this process already holds it {heldMode}. Take the strongest mode up front or use the queued upgrade.",
+          "de": "Selbst-Verklemmung: {requested} wird {requestedMode} angefordert, obwohl dieser Prozess es bereits {heldMode} haelt. Den stärksten Modus gleich nehmen oder das Upgrade der Warteschlange benutzen."
+        },
+        "cycle": {
+          "en": "Deadlock detected: {cycle}. This request was chosen to fail so the others can proceed.",
+          "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewaehlt, damit die anderen fortfahren können."
+        },
+        "blocker": {
+          "en": ", held by process {pid} for {heldSeconds} s",
+          "de": ", gehalten von Prozess {pid} seit {heldSeconds} s"
+        },
+        "observed": {
+          "en": "[lease-order] {message}",
+          "de": "[lease-order] {message}"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "registryDirectoryEnvironment": "SEMIO_LEASE_REGISTRY_DIRECTORY",
+        "policyEnvironment": "SEMIO_LEASE_ORDER_POLICY",
+        "modeEnvironment": "SEMIO_LEASE_ORDER",
+        "inheritedEnvironment": "SEMIO_LEASE_INHERITED",
+        "maximumReportedResourceCharacters": 120,
+        "maximumInherited": 64
+      }
+    }
+  }
+}

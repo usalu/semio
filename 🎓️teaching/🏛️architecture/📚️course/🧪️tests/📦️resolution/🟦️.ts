@@ -80,25 +80,25 @@ it("declares the quick minimum for source ownership and course runtime unit proo
   } finally { if (before === undefined) delete process.env.SEMIO_TEST_LEVEL; else process.env.SEMIO_TEST_LEVEL = before; }
 });
 
-for (const row of fixture.sourceExports) it(`resolves authored public source wrapper ${row.specifier}`, () => {
+for (const row of fixture.generatedExports) it(`resolves generated public projection ${row.specifier}`, () => {
   const workspace = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../.."), manifestPath = resolve(workspace, row.manifest);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { name: string; exports: Record<string, string> };
   const actual = publicRuntimePackageExportsV1(manifest).find(entry => entry.specifier === row.specifier);
   expect(actual?.target).toBe(row.target);
   expect(resolveExports(manifest, row.specifier)).toEqual([row.target]);
-  const wrapper = resolve(dirname(manifestPath), row.target), source = ts.createSourceFile(wrapper, readFileSync(wrapper, "utf8"), ts.ScriptTarget.Latest, true);
+  const projection = resolve(dirname(manifestPath), row.target), text = readFileSync(projection, "utf8"), source = ts.createSourceFile(projection, text, ts.ScriptTarget.Latest, true);
+  expect(text.startsWith(`/** @generated from ${row.origin.slice(row.origin.indexOf("🖱️"))} — do not edit. */`)).toBe(true);
+  expect(existsSync(resolve(workspace, row.origin))).toBe(true);
   const values: string[] = [], types: string[] = [];
   for (const statement of source.statements) {
-    expect(ts.isExportDeclaration(statement)).toBe(true);
-    if (!ts.isExportDeclaration(statement)) continue;
-    expect(statement.exportClause && ts.isNamedExports(statement.exportClause)).toBe(true);
-    expect(statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)).toBe(true);
-    if (!statement.exportClause || !ts.isNamedExports(statement.exportClause) || !statement.moduleSpecifier || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-    expect(resolve(dirname(wrapper), statement.moduleSpecifier.text)).toBe(resolve(workspace, row.source));
-    for (const entry of statement.exportClause.elements) (statement.isTypeOnly || entry.isTypeOnly ? types : values).push(entry.name.text);
+    const exported = ts.canHaveModifiers(statement) && ts.getModifiers(statement)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+    if (!exported) continue;
+    if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) values.push((declaration.name as ts.Identifier).text);
+    else if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) types.push(statement.name.text);
+    else throw Error("Unexpected generated projection statement");
   }
   expect(values.sort()).toEqual([...row.values].sort());
   expect(types.sort()).toEqual([...row.types].sort());
   const resolved = ts.resolveModuleName(row.specifier, resolve(dirname(manifestPath), "__source_contract__.ts"), { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext, allowImportingTsExtensions: true }, ts.sys);
-  expect(resolved.resolvedModule?.resolvedFileName).toBe(wrapper.replaceAll("\\", "/"));
+  expect(resolved.resolvedModule?.resolvedFileName).toBe(projection.replaceAll("\\", "/"));
 });

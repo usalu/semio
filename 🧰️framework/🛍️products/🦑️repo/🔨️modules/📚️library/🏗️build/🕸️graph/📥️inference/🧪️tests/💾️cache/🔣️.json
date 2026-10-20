@@ -189,6 +189,60 @@
         "reason": "measures-environment"
       },
       "valid": false
+    },
+    {
+      "id": "mutates-host-store",
+      "value": {
+        "version": 1,
+        "class": "side-effecting",
+        "reason": "mutates-host-store"
+      },
+      "valid": true
+    },
+    {
+      "id": "exercises-host-resources",
+      "value": {
+        "version": 1,
+        "class": "live",
+        "reason": "exercises-host-resources"
+      },
+      "valid": true
+    },
+    {
+      "id": "reenters-build-tool",
+      "value": {
+        "version": 1,
+        "class": "aggregate",
+        "reason": "reenters-build-tool"
+      },
+      "valid": true
+    },
+    {
+      "id": "reads-caller-input",
+      "value": {
+        "version": 1,
+        "class": "diagnostic",
+        "reason": "reads-caller-input"
+      },
+      "valid": true
+    },
+    {
+      "id": "host-resources-under-a-foreign-class",
+      "value": {
+        "version": 1,
+        "class": "side-effecting",
+        "reason": "exercises-host-resources"
+      },
+      "valid": false
+    },
+    {
+      "id": "caller-input-under-a-foreign-class",
+      "value": {
+        "version": 1,
+        "class": "live",
+        "reason": "reads-caller-input"
+      },
+      "valid": false
     }
   ],
   "policy": [
@@ -777,9 +831,9 @@
     "perProfile": [
       {
         "name": "prepare-{variant}-native-{profile}",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs",
+        "cache": true,
         "continuous": false
       },
       {
@@ -819,9 +873,9 @@
       },
       {
         "name": "prepare-{variant}-react-{profile}",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "check-without-outputs",
+        "cache": true,
         "continuous": false
       },
       {
@@ -840,46 +894,46 @@
       },
       {
         "name": "activate-{variant}-wgpu-{profile}",
-        "class": "side-effecting",
-        "reason": "publishes-live-state",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs",
+        "cache": true,
         "continuous": false
       },
       {
         "name": "prepare-{variant}-wgpu-{profile}",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "check-without-outputs",
+        "cache": true,
         "continuous": false
       }
     ],
     "perVariant": [
       {
         "name": "prepare-{variant}-react",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "check-without-outputs",
+        "cache": true,
         "continuous": false
       },
       {
         "name": "prepare-{variant}-wgpu",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "check-without-outputs",
+        "cache": true,
         "continuous": false
       },
       {
         "name": "build-{variant}-react-release",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs",
+        "cache": true,
         "continuous": false
       },
       {
         "name": "build-{variant}-react",
-        "class": "driver-owned",
-        "reason": "freshness-owned-by-driver",
-        "cache": false,
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs",
+        "cache": true,
         "continuous": false
       }
     ],

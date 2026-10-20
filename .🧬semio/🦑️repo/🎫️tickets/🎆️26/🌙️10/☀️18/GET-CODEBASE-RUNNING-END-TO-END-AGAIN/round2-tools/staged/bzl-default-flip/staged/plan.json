@@ -1,0 +1,858 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "README.md",
+   "sha256": "f33539e214845a2fac0ad44cbfe5c665d10547dbe7b74ac54244e0a8a7d458fd",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx is the default backend and Bazel is selectable with `--tool=bazel` (or `SEMIO_BUILD_TOOL=bazel`, inherited by nested tasks)",
+     "new": "Bazel is the default backend and Nx is selectable with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`, inherited by nested tasks)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx (default) and Bazel execute the same graph.",
+     "new": "Bazel (default) and Nx execute the same graph.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-3",
+     "group": "flip",
+     "old": "Nx remains the default build tool (`defaultTool` in",
+     "new": "Bazel is the default build tool (`defaultTool` in",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-4",
+     "group": "flip",
+     "old": "Bazel qualification does not change the default automatically.",
+     "new": "Nx stays selectable with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "bun.lock",
+   "sha256": "281fb5934757d0889f5793579f28f4f9b622bb57cd67b083e60d45138cd948e5",
+   "edits": [
+    {
+     "id": "manifest-1",
+     "group": "manifest",
+     "old": "        \"@nxlv/python\": \"23.0.2\",\n        \"@semio-tech/framework-filesystem\": \"workspace:*\",\n        \"nx\": \"23.2.0\",",
+     "new": "        \"@nxlv/python\": \"23.0.2\",\n        \"nx\": \"23.2.0\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts",
+   "sha256": "5e03f212fab8eb81854ceaf3f940d4df5be7b1aa0bbc5ca08fb0815782443fab",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "bun repo${env.SEMIO_BUILD_TOOL === \"bazel\" ? \" --tool=bazel\" : \"\"} run",
+     "new": "bun repo${env.SEMIO_BUILD_TOOL === \"nx\" ? \" --tool=nx\" : \"\"} run",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "sha256": "a5eaa7eef6187892a78b5688d98adcb1bc46ddf6b2cc2c9071d279417d15d5e7",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "See Setup per platform below. |",
+     "new": "See Setup per platform below. `tools setup bazel` needs neither the JavaScript install nor Nx and opens only the tools and dependencies partitions; the products partition is opened by the first run. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "Siehe Einrichtung je Plattform unten. |",
+     "new": "Siehe Einrichtung je Plattform unten. `tools setup bazel` braucht weder die JavaScript-Installation noch Nx und öffnet nur die Partitionen für Werkzeuge und Abhängigkeiten; die Produkte-Partition öffnet erst der erste Lauf. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-3",
+     "group": "commands",
+     "old": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | no | |",
+     "new": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | no | Reads the portable graph; never starts Nx or Bazel, by design. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-4",
+     "group": "commands",
+     "old": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | no | |",
+     "new": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | no | Bun installs the JavaScript dependencies for both tools, by design. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-5",
+     "group": "commands",
+     "old": "| `cargo …` | neutral | neutral | no | |",
+     "new": "| `cargo …` | neutral | neutral | no | The repository's compile ingress; Bazel's Cargo actions call it, so it is the leaf of both tools, by design. Run Rust targets with `run <project>:build\\|check\\|test` to use Bazel's cache. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-6",
+     "group": "commands",
+     "old": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | nein | |",
+     "new": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | nein | Liest den portablen Graphen; startet bewusst weder Nx noch Bazel. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-7",
+     "group": "commands",
+     "old": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | nein | |",
+     "new": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | nein | Bun installiert die JavaScript-Abhängigkeiten für beide Werkzeuge, bewusst. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-8",
+     "group": "commands",
+     "old": "| `cargo …` | neutral | neutral | nein | |",
+     "new": "| `cargo …` | neutral | neutral | nein | Das Eingangstor des Repositorys zum Kompilieren; Bazels Cargo-Actions rufen es auf, es ist also das Blatt beider Werkzeuge, bewusst. Rust-Targets mit `run <project>:build\\|check\\|test` ausführen, um Bazels Cache zu nutzen. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-9",
+     "group": "flip",
+     "old": "**Nx with Bun** (default) and **Bazel** (`--tool=bazel`)",
+     "new": "**Bazel** (default) and **Nx with Bun** (`--tool=nx`)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-10",
+     "group": "flip",
+     "old": "then `defaultTool` of the policy (`nx`).",
+     "new": "then `defaultTool` of the policy (`bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-11",
+     "group": "flip",
+     "old": "(`--tool`, default `nx`).",
+     "new": "(`--tool`, default `bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-12",
+     "group": "flip",
+     "old": "Nx is the default (`defaultTool`). The repository does not use Nx project discovery;",
+     "new": "Nx is selected with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`); Bazel is the default (`defaultTool`). The repository does not use Nx project discovery;",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-13",
+     "group": "flip",
+     "old": "so each one works with `--tool=nx` (default) and `--tool=bazel`.",
+     "new": "so each one works with `--tool=bazel` (default) and `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-14",
+     "group": "flip",
+     "old": "**Nx mit Bun** (Standard) und **Bazel** (`--tool=bazel`)",
+     "new": "**Bazel** (Standard) und **Nx mit Bun** (`--tool=nx`)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-15",
+     "group": "flip",
+     "old": "dann `defaultTool` der Richtlinie (`nx`).",
+     "new": "dann `defaultTool` der Richtlinie (`bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-16",
+     "group": "flip",
+     "old": "(`--tool`, Standard `nx`).",
+     "new": "(`--tool`, Standard `bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-17",
+     "group": "flip",
+     "old": "Nx ist der Standard. Das Repository nutzt keine Nx-Projektentdeckung,",
+     "new": "Nx wird mit `--tool=nx` (oder `SEMIO_BUILD_TOOL=nx`) gewählt; Bazel ist der Standard (`defaultTool`). Das Repository nutzt keine Nx-Projektentdeckung,",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-18",
+     "group": "flip",
+     "old": "also mit `--tool=nx` (Standard) und `--tool=bazel`.",
+     "new": "also mit `--tool=bazel` (Standard) und `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-19",
+     "group": "flip",
+     "old": "then the policy default `nx`.",
+     "new": "then the policy default `bazel`.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide, EN, only once that set is applied"
+    },
+    {
+     "id": "flip-20",
+     "group": "flip",
+     "old": "| | Nx (default) | Bazel (`--tool=bazel`) |",
+     "new": "| | Nx (`--tool=nx`) | Bazel (default) |",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide table header"
+    },
+    {
+     "id": "flip-21",
+     "group": "flip",
+     "old": "Use Nx for the default flow. Choose Bazel when you want results shared across selections and machines, workers, or remote execution.",
+     "new": "Use Bazel for the default flow: results are shared across selections and machines, and workers and remote execution are available. Select Nx with `--tool=nx` when you want its task runner and cache.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide advice, EN"
+    },
+    {
+     "id": "flip-22",
+     "group": "flip",
+     "old": "dann der Standard der Richtlinie `nx`.",
+     "new": "dann der Standard der Richtlinie `bazel`.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide, DE"
+    },
+    {
+     "id": "flip-23",
+     "group": "flip",
+     "old": "| | Nx (Standard) | Bazel (`--tool=bazel`) |",
+     "new": "| | Nx (`--tool=nx`) | Bazel (Standard) |",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide table header, DE"
+    },
+    {
+     "id": "flip-24",
+     "group": "flip",
+     "old": "Nimm Nx für den Standardablauf. Wähle Bazel, wenn du Ergebnisse über Auswahlen und Rechner hinweg teilen, Worker oder Remote-Ausführung nutzen willst.",
+     "new": "Nimm Bazel für den Standardablauf: Ergebnisse werden über Auswahlen und Rechner hinweg geteilt, Worker und Remote-Ausführung stehen bereit. Wähle Nx mit `--tool=nx`, wenn du seinen Task-Runner und Cache willst.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide advice, DE"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🥒️.feature",
+   "sha256": "eb45bf2a53eaf98b0de5a0d8fa2c5b6d3ae9f67a9de9537ab7101d96802aff20",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx remains the task execution authority.",
+     "new": "The selected build tool remains the task execution authority.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🥒️.feature",
+   "sha256": "285caa3c184815e1c0e541b86269305f882b15377557e797476abda64cfd501d",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "And Nx remains responsible for build and installation tasks",
+     "new": "And the selected build tool remains responsible for build and installation tasks",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go",
+   "sha256": "9eedc7040ee92a3119f612c37188b49addc51b0532b3daf8dd81d6fe502fecb2",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel.",
+     "new": "provision the default tool with repo tools setup and both tools with repo tools setup all. Bazel is the default; select Nx with --tool=nx.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/📋️orchestration/🟦️.ts",
+   "sha256": "d0c5e3d3ec5d8c949dec6f09aa7b744d2f741cee489929654779bcc07c07c768",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "import buildPolicy from \"../../../🏗️build/🔣️policy.json\" with { type: \"json\" };\nimport probeSchema",
+     "new": "import probeSchema",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "const selected = process.env.SEMIO_BUILD_TOOL ?? buildPolicy.defaultTool;",
+     "new": "const selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? \"nx\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the probe names its tool; the selected build tool no longer decides which cache is measured"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "sha256": "dbd8ebd5e60d31b2d8b313b0871af8e8785f8cbfe9bbcb5588be73eacf8c726d",
+   "edits": [
+    {
+     "id": "manifest-1",
+     "group": "manifest",
+     "old": "    \"typescript\": \"5.9.3\",\n    \"@semio-tech/framework-filesystem\": \"workspace:*\"\n  },",
+     "new": "    \"typescript\": \"5.9.3\"\n  },",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the dependencies row broke the closed pinned recipe; the devDependencies row stays for the tests that import it"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "sha256": "b4e57b3d7d9889014fb7f0b5e1270e88dfd1919456032d2ea7e57da975662158",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx with Bun (default) and Bazel.",
+     "new": "Bazel (default) and Nx with Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx mit Bun (Standard) und Bazel.",
+     "new": "Bazel (Standard) und Nx mit Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-3",
+     "group": "flip",
+     "old": "then the policy default (nx).",
+     "new": "then the policy default (bazel).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-4",
+     "group": "flip",
+     "old": "dann der Standard der Policy (nx).",
+     "new": "dann der Standard der Policy (bazel).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "sha256": "8750b710dff735c8b056b2434e86ff4d724ebd2a16d82caeda990fbff3a1fcc1",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "{withBazelStorageV1}=await import(\"./🔧️tools/🏗️bazel/💾️storage/🟦️.ts\")",
+     "new": "{withBazelSetupStorageV1}=await import(\"./🔧️tools/🏗️bazel/💾️storage/🟦️.ts\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "await withBazelStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{",
+     "new": "await withBazelSetupStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🔣️.json",
+   "sha256": "934aa625025d763fe720a6176f0ed668066165692084b1030280053d229632cb",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "\"name\": \"alias-release\",\n      \"args\": [\n",
+     "new": "\"name\": \"alias-release\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert"
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "\"name\": \"opaque-tail\",\n      \"args\": [\n",
+     "new": "\"name\": \"opaque-tail\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert"
+    },
+    {
+     "id": "prep-3",
+     "group": "prep",
+     "old": "\"name\": \"reset\",\n      \"args\": [\n",
+     "new": "\"name\": \"reset\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert"
+    },
+    {
+     "id": "prep-4",
+     "group": "prep",
+     "old": "\"name\": \"watch\",\n      \"args\": [\n",
+     "new": "\"name\": \"watch\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert"
+    },
+    {
+     "id": "prep-5",
+     "group": "prep",
+     "old": "      \"name\": \"dependencies\",\n      \"args\": [\n        \"dependencies\",\n        \"sync\",\n        \"--all\"\n      ],\n      \"mode\": \"release\",\n      \"main\": null,\n      \"javascript\": false\n    }\n  ],",
+     "new": "      \"name\": \"dependencies\",\n      \"args\": [\n        \"dependencies\",\n        \"sync\",\n        \"--all\"\n      ],\n      \"mode\": \"release\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"nx-tools-setup\",\n      \"args\": [\n        \"--tool=nx\",\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": [\n        \"nx\",\n        \"--version\"\n      ],\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-tools-setup\",\n      \"args\": [\n        \"--tool=bazel\",\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-tools-setup-bazel\",\n      \"args\": [\n        \"tools\",\n        \"setup\",\n        \"bazel\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-reset\",\n      \"args\": [\n        \"--tool=bazel\",\n        \"reset\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    }\n  ],",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "tools setup never declares an Nx launch for bazel, whatever the default"
+    },
+    {
+     "id": "flip-6",
+     "group": "flip",
+     "old": "    {\n      \"name\": \"bazel\",\n      \"args\": [\n        \"--tool=bazel\",",
+     "new": "    {\n      \"name\": \"default-bazel-run\",\n      \"args\": [\n        \"run\",\n        \"app:build\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"default-bazel-tools-setup\",\n      \"args\": [\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"default-bazel-reset\",\n      \"args\": [\n        \"reset\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel\",\n      \"args\": [\n        \"--tool=bazel\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the new default declares no Nx launch for run, tools setup and reset"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "sha256": "220afe90ce3f7ae939399bd642dfa89ca8655d7a1dc7c67201980011fafa85dd",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "\"defaultTool\": \"nx\",",
+     "new": "\"defaultTool\": \"bazel\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts",
+   "sha256": "687361ab37cdd7d4fe640ecf11d8803a5f42a7a119bdba978673a5da313332cb",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "actualPhase))));}\n\nconst cachePolicy=",
+     "new": "actualPhase))));}\n/** 🧳️ The two stores `tools setup bazel` writes: the executable and the module catalog never touch the products partition. */\nexport type BazelSetupStorageV1=Pick<BazelStorageV1,\"tools\"|\"dependencies\"|\"paths\">;\n/** 🛂️ Refuses fabricated setup contexts; the products root is a declared path here and is never opened. */\nexport async function requireBazelSetupStorageV1(root:string,storage:BazelSetupStorageV1):Promise<void>{for(const id of [\"tools\",\"dependencies\"] as const){const store=storage[id];requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(root,id))throw Error(\"Original declared Bazel partition required\");}const roots={tools:storage.tools.root,dependencies:storage.dependencies.root,products:repositoryCachePartitionRootV1(root,\"products\")},layout=bazelCacheLayoutV1(roots);if(JSON.stringify(layout)!==JSON.stringify(storage.paths))throw Error(\"Original Bazel partition layout required\");for(const key of [\"executable\",\"install\",\"modules\"] as const)requireNativeStoragePathV1(key===\"modules\"?roots.dependencies:roots.tools,layout[key]);}\n/** 🏬️ Keeps only the tools and dependencies stores alive while Bazel and its fixed module catalog are provisioned. */\nexport function withBazelSetupStorageV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(storage:BazelSetupStorageV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withRepositoryCacheStoreV1(root,\"tools\",invocation,phaseControl,(tools,toolPhase)=>withRepositoryCacheStoreV1(root,\"dependencies\",invocation,toolPhase,(dependencies,actualPhase)=>body(Object.freeze({tools,dependencies,paths:bazelCacheLayoutV1({tools:tools.root,dependencies:dependencies.root,products:repositoryCachePartitionRootV1(root,\"products\")})}),actualPhase)));}\n\nconst cachePolicy=",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "setup storage: tools + dependencies only"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts",
+   "sha256": "5ac3c68d220d27574a400b11c54252b1454db9fc8283667242e0a9a9cf260f84",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "import {spawnSync} from \"node:child_process\";",
+     "new": "import {spawnSync} from \"node:child_process\";\nimport ts from \"typescript\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "},900000);",
+     "new": "},900000);\n\nconst setupContract={type:\"object\",required:[\"opens\",\"full\",\"installSkipped\"],additionalProperties:false,properties:{opens:{type:\"array\",uniqueItems:true,minItems:2,items:{enum:[\"tools\",\"dependencies\",\"products\"]}},full:{type:\"array\",uniqueItems:true,minItems:3,items:{enum:[\"tools\",\"dependencies\",\"products\"]}},installSkipped:{type:\"array\",uniqueItems:true,minItems:1,items:{type:\"string\"}}}};\ntest(\"tools setup bazel opens only the tools and dependencies partitions and never installs JavaScript or Nx, read by the TypeScript compiler and a text oracle\",()=>{\n expect(new Ajv({strict:true}).validate(setupContract,fixture.setup)).toBe(true);\n const parse=(path:string)=>{const file=join(import.meta.dir,path);return ts.createSourceFile(file,readFileSync(file,\"utf8\"),ts.ScriptTarget.Latest,true);},declaration=(file:ts.SourceFile,name:string)=>file.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!;\n const opened=(node:ts.Node)=>{const names:string[]=[],visit=(child:ts.Node)=>{if(ts.isCallExpression(child)&&ts.isIdentifier(child.expression)&&child.expression.text===\"withRepositoryCacheStoreV1\"&&child.arguments[1]&&ts.isStringLiteral(child.arguments[1]))names.push(child.arguments[1].text);ts.forEachChild(child,visit);};visit(node);return names;};\n const storageFile=parse(\"../🟦️.ts\"),setup=declaration(storageFile,\"withBazelSetupStorageV1\"),full=declaration(storageFile,\"withBazelStorageV1\");\n expect(opened(setup)).toEqual(fixture.setup.opens);expect(opened(full)).toEqual(fixture.setup.full);\n for(const node of [setup,full])expect(opened(node)).toEqual([...node.getText().matchAll(/withRepositoryCacheStoreV1\\(root,\"(\\w+)\"/g)].map(match=>match[1]));\n const entry=parse(\"../../../../📜️script.ts\"),leases=declaration(entry,\"runOwnedBuildInLeasesV1\"),branches:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))branches.push(node);ts.forEachChild(node,visit);};visit(leases);\n const tools=branches.find(node=>node.expression.getText()==='command===\"tools\"')!,guard=branches.find(node=>node.thenStatement.getText().includes(\"ensureBuildEnvironmentV1\"))!;\n expect(tools.getText()).toContain(\"withBazelSetupStorageV1\");expect(tools.getText()).not.toContain(\"withBazelStorageV1\");expect(tools.getText()).not.toContain(\"ensureBuildEnvironmentV1\");\n const skipped:string[]=[],collect=(node:ts.Node)=>{if(ts.isArrayLiteralExpression(node))skipped.push(...node.elements.filter(ts.isStringLiteral).map(element=>element.text));ts.forEachChild(node,collect);};collect(guard.expression);\n expect(skipped.sort()).toEqual([...fixture.setup.installSkipped].sort());expect(guard.expression.getText()).toMatch(/^!\\[.*\\]\\.includes\\(command\\)$/u);\n});",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "language-agnostic fixture rows in the storage fixture plus a compiler-API law"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🧫️fixtures/🔣️.json",
+   "sha256": "b5b031ee06c222ca3b1af6493ad8a7145151c347895ef0a5dada92773f5ede39",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "  \"sandbox\": {\"forbiddenRcFlags\": [\"spawn_strategy\", \"strategy\", \"genrule_strategy\", \"sandbox_base\", \"sandbox_add_mount_pair\", \"sandbox_writable_path\", \"ignore_unsupported_sandboxing\", \"incompatible_sandbox_hermetic_tmp\", \"experimental_sandbox_async_tree_delete_idle_threads\"], \"expectedRunner\": \"darwin-sandbox\", \"roots\": {\"tools\": \"/Users/dev/repo/.cache/b/t/m\", \"dependencies\": \"/Users/dev/repo/.cache/b/d/m\", \"products\": \"/Users/dev/repo/.cache/b/p/m\"}, \"workspace\": \"/Users/dev/repo/.cache/b/p/m/bazel/workspaces/0123456789abcdef\"}\n}",
+     "new": "  \"sandbox\": {\"forbiddenRcFlags\": [\"spawn_strategy\", \"strategy\", \"genrule_strategy\", \"sandbox_base\", \"sandbox_add_mount_pair\", \"sandbox_writable_path\", \"ignore_unsupported_sandboxing\", \"incompatible_sandbox_hermetic_tmp\", \"experimental_sandbox_async_tree_delete_idle_threads\"], \"expectedRunner\": \"darwin-sandbox\", \"roots\": {\"tools\": \"/Users/dev/repo/.cache/b/t/m\", \"dependencies\": \"/Users/dev/repo/.cache/b/d/m\", \"products\": \"/Users/dev/repo/.cache/b/p/m\"}, \"workspace\": \"/Users/dev/repo/.cache/b/p/m/bazel/workspaces/0123456789abcdef\"},\n  \"setup\": {\"opens\": [\"tools\", \"dependencies\"], \"full\": [\"tools\", \"dependencies\", \"products\"], \"installSkipped\": [\"tools\", \"reset\", \"cache\"]}\n}",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "setup contract rows"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "sha256": "98039af82e424cec73122478e99370a1e060b451038f8fe2875cdb68b26dcb6d",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "import {withBazelStorageV1,requireBazelStorageV1,bazelCacheFlagsV1,type BazelStorageV1} from \"./💾️storage/🟦️.ts\";",
+     "new": "import {withBazelStorageV1,requireBazelStorageV1,requireBazelSetupStorageV1,bazelCacheFlagsV1,type BazelStorageV1,type BazelSetupStorageV1} from \"./💾️storage/🟦️.ts\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "storage:BazelStorageV1,phaseControl:ResourceLeaseControl):Promise<{lock:string;repository:string}>",
+     "new": "storage:BazelSetupStorageV1,phaseControl:ResourceLeaseControl):Promise<{lock:string;repository:string}>",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-3",
+     "group": "setup",
+     "old": "await requireBazelStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const environment=issueBuildTaskEnvironmentV1(root,invocation,{kind:\"noop\"},[],storage.dependencies.environment)",
+     "new": "await requireBazelSetupStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const environment=issueBuildTaskEnvironmentV1(root,invocation,{kind:\"noop\"},[],storage.dependencies.environment)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts",
+   "sha256": "ed5c223f6f353a417328e4ce442f6b7520b92fa04182e05d9240028bd0f28109",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(process.cwd(),[\"repo\",...args],{SEMIO_BUILD_MODE:\"prototype\"})",
+     "new": "createBuildBootstrapCapabilitiesV1(process.cwd(),[\"repo\",...args],{SEMIO_BUILD_MODE:\"prototype\",SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts",
+   "sha256": "13f1f3d4de85cb9d91d25fd5e03e1e7ba5ab46c2570398f9a0287aca229bb0c5",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(root,[\"repo\",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom)})",
+     "new": "createBuildBootstrapCapabilitiesV1(root,[\"repo\",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom),SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored)})",
+     "new": "createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored),SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-3",
+     "group": "prep",
+     "old": "import {parseBuildInvocationV1,nxBuildArgumentsV1,resolveBuildInvocationV1} from \"../../../🧭️invocation/🟦️.ts\";",
+     "new": "import {parseBuildInvocationV1,nxBuildArgumentsV1,resolveBuildInvocationV1} from \"../../../🧭️invocation/🟦️.ts\";\nimport buildPolicy from \"../../../🔣️policy.json\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-4",
+     "group": "prep",
+     "old": "expect(parseBuildInvocationV1([\"show\",\"projects\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"bazel\");",
+     "new": "expect(parseBuildInvocationV1([\"show\",\"projects\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"bazel\");\n  expect(parseBuildInvocationV1([\"run\",\"app:build\"],{}).tool).toBe(buildPolicy.defaultTool);expect(parseBuildInvocationV1([\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"nx\"}).tool).toBe(\"nx\");expect(parseBuildInvocationV1([\"--tool=nx\",\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"nx\");expect(parseBuildInvocationV1([\"--tool=bazel\",\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"nx\"}).tool).toBe(\"bazel\");",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md",
+   "sha256": "f11c41fe197ce607de107585d2c257c05bf7a0b26f5d8a82770a33520bd575cb",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "bun repo --tool=bazel run <project>:<task>[:<configuration>]",
+     "new": "bun repo --tool=nx run <project>:<task>[:<configuration>]",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx remains the configured default while Bazel qualification is in progress.",
+     "new": "Bazel is the configured default; Nx stays selectable with `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs",
+   "sha256": "c21128155e58ffc0d5b09c9b6310ed0bc65cbc563ed96822bd4233a0e9e48c7c",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel.",
+     "new": "provision the default tool with repo tools setup and both tools with repo tools setup all. Bazel is the default; select Nx with --tool=nx.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🚪️entrypoint-contract.json",
+   "sha256": "1afddba1b2e14a36aab83239f512d5f2d95e50550685e54c583309a16e940786",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "\"--tool=bazel\",\n    \"Nx remains the default\"",
+     "new": "\"--tool=nx\",\n    \"Bazel is the default\"",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  }
+ ]
+}

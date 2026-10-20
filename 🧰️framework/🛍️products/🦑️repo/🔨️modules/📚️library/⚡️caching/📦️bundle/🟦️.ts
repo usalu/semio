@@ -1,6 +1,6 @@
 import { scriptInvocationEnvironment, requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1, createRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdir, mkdtemp, readFile, lstat, realpath, copyFile, writeFile } from "node:fs/promises";
 import type { BunBundleRequest, BunBundleResult } from "./🟦️bun/🟦️.ts";
 import { availableParallelism } from "node:os";

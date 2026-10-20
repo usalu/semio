@@ -1,0 +1,12 @@
+import {readFileSync} from "node:fs";
+const SB = process.env.GK_ROOT ?? "/private/tmp/gk/sb", LIBROOT = process.env.GK_LIBROOT ?? SB, L = LIBROOT + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const {cacheCorrectnessRepositoryFindingsV1, repositoryCacheRecordsV1} = await import(L + "/⚖️laws/🔒️cache-correctness/🟦️.ts");
+const plugin: any = await import(L + "/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+await plugin.libraryBootstrap;
+const t0 = performance.now();
+const records = repositoryCacheRecordsV1(SB, plugin.cacheInternals);
+const findings = cacheCorrectnessRepositoryFindingsV1(records);
+const by: Record<string, number> = {};
+for (const f of findings) by[f.rule] = (by[f.rule] ?? 0) + 1;
+console.log(JSON.stringify({records: records.length, seconds: (performance.now() - t0) / 1000, findings: findings.length, by}));
+for (const f of findings) if (f.rule === "whole-workspace-rust-key") console.log(f.id, "|", f.detail.match(/key (.*?):/)?.[1]);

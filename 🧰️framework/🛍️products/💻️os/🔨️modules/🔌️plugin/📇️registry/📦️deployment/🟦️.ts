@@ -1,7 +1,7 @@
 import schemaModule from "./🧬️schema/🔣️.json" with { type: "json" };
 import routes from "./🛣️routes.json" with { type: "json" };
-import { parseInstallationDirectoryV1, installationDirectoryEmoji, type InstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
-import "@semio-tech/assets/published-page";
+import { parseInstallationDirectoryV1, installationDirectoryEmoji, type InstallationDirectoryV1 } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
+import "../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🌐️published-page/🟦️.ts";
 
 export type ModuleDirectory = { readonly pluginId: string; readonly directoryName: InstallationDirectoryV1 };
 export type ModuleRoutes = { readonly plugin: string; readonly extension: string };

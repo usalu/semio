@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Continuous Course Targets: Readiness And Parameters",
+  "type": "object",
+  "required": ["targets", "parameters", "cases", "refused", "announcement"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "targets": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["ready", "stack"],
+        "additionalProperties": false,
+        "properties": {
+          "ready": { "$ref": "#/definitions/Ready" },
+          "stack": { "type": "boolean" }
+        }
+      }
+    },
+    "parameters": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "choices", "environment", "ports", "follows", "proctor"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "choices": { "type": "object", "additionalProperties": { "type": "string" } },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+          "ports": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 65535 } },
+          "follows": { "type": "boolean" },
+          "proctor": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" }
+        }
+      }
+    },
+    "refused": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "ready", "environment"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "ready": { "type": "object" },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } }
+        }
+      }
+    },
+    "announcement": {
+      "type": "object",
+      "required": ["listenAfterMilliseconds", "line"],
+      "additionalProperties": false,
+      "properties": {
+        "listenAfterMilliseconds": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "line": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "definitions": {
+    "Ready": {
+      "type": "object",
+      "required": ["port", "portEnv"],
+      "additionalProperties": false,
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "portEnv": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$" }
+      }
+    }
+  }
+}

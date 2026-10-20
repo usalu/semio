@@ -1,0 +1,43 @@
+{
+ "version": 1,
+ "file": "a.json",
+ "result": {
+  "inputs": [
+   "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"
+  ],
+  "targets": {
+   "build": {
+    "inputs": [
+     "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+    ],
+    "options": {
+     "command": "echo 1"
+    }
+   },
+   "test": {
+    "inputs": [
+     "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+     "short"
+    ],
+    "options": {
+     "command": "echo 2"
+    }
+   }
+  }
+ },
+ "persisted": {
+  "ageMilliseconds": 2300,
+  "computations": 1
+ },
+ "racy": {
+  "ageMilliseconds": 0,
+  "computations": 1
+ },
+ "oversize": {
+  "extraBytes": 1048576,
+  "persistedComputations": 1,
+  "racyComputations": 2
+ }
+}

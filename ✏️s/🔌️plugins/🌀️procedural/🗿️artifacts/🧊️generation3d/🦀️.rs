@@ -10,6 +10,8 @@ extern crate semio_framework_os_kernel as vcs;
 
 
 
+pub use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
+
 //#region 🔖️Declaration
 /// 🧾️ Defines s.generation3d's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {

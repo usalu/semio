@@ -1,7 +1,7 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
 import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import type { ResidentGrant } from "@semio-tech/value-ts/resident";
-import { OwnedUiInstance, OwnedUiInstanceRetirement, type OwnedUiPatchAcknowledgement } from "@semio-tech/ui-contract/retained/instance";
+import { OwnedUiInstance, OwnedUiInstanceRetirement, type OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceOpenRequest } from "../../🚪️lifetime/🟦️.ts";
 import { NO_RETURN_FAULT, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput, type ShardInstanceOwner, isRetryableLifecycleTurn } from "../🔐️activation/🟦️.ts";
 import type { OwnedNativeUiPatchAuthority, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";

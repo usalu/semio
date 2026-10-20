@@ -1,0 +1,143 @@
+{
+ ".": {
+  "members": 135,
+  "added": [
+   {
+    "member": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@nx/devkit",
+    "lock": "23.2.0",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@nx/js",
+    "lock": "23.2.0",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@nxlv/python",
+    "lock": "23.0.2",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@types/vscode",
+    "lock": "^1.104.0",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@vscode/test-cli",
+    "lock": "^0.0.10",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "@vscode/vsce",
+    "lock": "^3.5.0",
+    "manifest": null
+   },
+   {
+    "member": "",
+    "name": "workspace",
+    "field": "devDependencies",
+    "dep": "nx",
+    "lock": "23.2.0",
+    "manifest": null
+   }
+  ],
+  "missing": []
+ },
+ "♻️mit-bestand": {
+  "members": 310,
+  "added": [
+   {
+    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [],
+  "missing": []
+ },
+ "✏️s": {
+  "members": 306,
+  "added": [
+   {
+    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [],
+  "missing": []
+ },
+ "🌎️hub": {
+  "members": 314,
+  "added": [
+   {
+    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [],
+  "missing": []
+ },
+ "🎓️teaching": {
+  "members": 136,
+  "added": [
+   {
+    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [],
+  "missing": []
+ },
+ "🏢️semio-tech": {
+  "members": 308,
+  "added": [
+   {
+    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
+    "name": "@semio-tech/build-parsers"
+   }
+  ],
+  "removed": [
+   "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+  ],
+  "changed": [],
+  "missing": []
+ }
+}

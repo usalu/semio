@@ -6,15 +6,16 @@ import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { frameworkOsEngineSourceOwnersV1 } from "../../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
 const { existsSync, lstatSync, readFileSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "playground-targets";
-let POLICY, readToml, buildPath, LIBRARY_ROOT, executionTargetV1, withCacheDecision, PROJECT_BASENAME, readPhysicalSource, loaded, nativePreparation, componentModelOutputV1, PLUGIN_MODULES_ROOT, prepareSourceAnalysesV1, revisionIdentity;
+let POLICY, readToml, buildPath, LIBRARY_ROOT, executionTargetV1, withCacheDecision, PROJECT_BASENAME, readPhysicalSource, loaded, nativePreparation, prepareSourceAnalysesV1, revisionIdentity;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ POLICY, buildPath, LIBRARY_ROOT, PROJECT_BASENAME, readPhysicalSource, componentModelOutputV1, PLUGIN_MODULES_ROOT } = registry.coordinates);
+  ({ POLICY, buildPath, LIBRARY_ROOT, PROJECT_BASENAME, readPhysicalSource } = registry.coordinates);
   ({ readToml, nativePreparation } = registry.nativeManifests);
   ({ executionTargetV1, withCacheDecision } = registry.targetPolicy);
   ({ loaded } = registry.bootstrap);
@@ -119,8 +120,9 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
 }
 
 /** 🎮️ Declares completed runtime prerequisites, cacheable validation and profile-specific browser producers.
- * React activation owns its restorable runtime directory. WGPU activation publishes live extensions,
- * fonts and reload notifications, so it must execute after every cacheable preparation. */
+ * A lane's preparation is a cached verdict over the `component` targets of its closure (each replays from its own receipt), so no lane compiles; its
+ * activation owns a restorable runtime directory and hashes the owner trees of the components it records. The production Vite bundle replays from the
+ * receipt of its store output over the `viteBundleSources` contract (the framework and os-dev trees, the lane's owner roots and development contribution). */
 /** 🎯️ Generated Nx targets for every playground preparation, activation, install and serve command.
  * @param {readonly string[]} configFiles
  * @param {string} workspaceRoot
@@ -135,8 +137,9 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
   const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   const projectOwners = new Map(), nativeHostOwners = new Map(), nativePlans = new Map();
   const componentPrerequisites=async id=>{if(!nativePlans.has(id)){await advance("build:playground-native");nativePlans.set(id,nativePreparation(components.get(id).cratePath,workspaceRoot,contracts,false,nativeFiles,nativeClosures).map(contract=>contract.target));}return nativePlans.get(id);};
-  const closurePrerequisites=async(ids,facet)=>{const prerequisites=["@semio-tech/os-plugin-describe-rs:build",...(facet==="browser"?["workspace:deps-wasm-opt"]:[])];for(const id of ids)prerequisites.push(...await componentPrerequisites(id));return [...new Set(prerequisites)].sort();};
-  const closureOutputs=(ids,facet="browser",mode="{options.env.SEMIO_BUILD_MODE}")=>[...ids].sort().flatMap(id=>{const row=components.get(id),directory=loaded.componentDeploymentDirectoryV1(row);return[componentModelOutputV1(row.cratePath,mode),...(facet==="browser"&&directory!==undefined?[`{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${directory}`]:[])];});
+  const componentTargetsOf=async ids=>{const targets=[];for(const id of [...ids].sort()){await componentPrerequisites(id);targets.push(`${components.get(id).project}:component`);}return targets;};
+  const ownerSources=ids=>[...new Set([...ids].map(id=>{const parts=components.get(id).cratePath.split("/");return parts.length>=4&&parts.slice(-3).join("/")==="🧩️component/📦️packages/🦀️rust"?parts.slice(0,-3).join("/"):parts.join("/");}))].sort().flatMap(owner=>[`{workspaceRoot}/${owner}/**/*`,...POLICY.generatedDirectories.map(directory=>`!{workspaceRoot}/${owner}/**/${directory}/**/*`)]);
+  const transitiveOutputs={ dependentTasksOutputFiles: "**/*", transitive: true };
   const orchestrator = { semio: { orchestrator: true } };
   const projectAt = (root) => {
     const path = join(workspaceRoot, root, PROJECT_BASENAME);
@@ -189,7 +192,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
     // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
     const bootSelected = loaded.runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
     const selected = loaded.runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
-    const bootPrerequisites=await closurePrerequisites(bootSelected,"browser"),selectedPrerequisites=await closurePrerequisites(selected,"browser"),nativePrerequisites=await closurePrerequisites(selected,"model");
+    const bootComponents=await componentTargetsOf(bootSelected),selectedComponents=await componentTargetsOf(selected);
     const engines = new Set([...new Set([...(playground.engines ?? []), ...loaded.declaredBrowserSessionEnginesV1(workspaceRoot, playground.devContribution)])].map((path) => {
       const root = buildPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
@@ -198,12 +201,12 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
     for (const profile of ["prototype", "release"]) {
       const nativeScript = "bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts";
       result[`prepare-${playground.variant}-native-${profile}`] = withCacheDecision({
-        cache: false,
-        metadata: orchestrator,
-        outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/native/${playground.variant}`, ...closureOutputs(selected,"model",profile)],
-        dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...nativePrerequisites],
+        cache: true,
+        outputs: [storeReceiptOutputV1(`prepare-${playground.variant}-native-${profile}`)],
+        inputs: [transitiveOutputs],
+        dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...selectedComponents],
         options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
-      }, "driver-owned", "freshness-owned-by-driver");
+      }, "deterministic", "pure-function-of-inputs");
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = withCacheDecision({
         cache: false, continuous: false, outputs: [],
         dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${nativeHost?.project??wgpuProject.name}:${nativeHost?.target??"native-build"}`],
@@ -218,51 +221,52 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       cache: true,
       parallelism: false,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/react/${playground.variant}`],
-      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
+      inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-react-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` },
       }, "deterministic", "pure-function-of-inputs");
       result[`prepare-${playground.variant}-react-${profile}`] = withCacheDecision({
-      cache: false,
-      metadata: orchestrator,
-      outputs: closureOutputs(bootSelected),
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", ...rendererEngines, ...engines, ...bootPrerequisites],
+      cache: true,
+      outputs: [],
+      inputs: [transitiveOutputs],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", ...rendererEngines, ...engines, ...bootComponents],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
-      }, "driver-owned", "freshness-owned-by-driver");
+      }, "deterministic", "check-without-outputs");
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-wgpu-${profile}`] = withCacheDecision({
-      cache: false,
+      cache: true,
+      parallelism: false,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/wgpu/${playground.variant}`],
-      inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
+      inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
-      }, "side-effecting", "publishes-live-state");
+      }, "deterministic", "pure-function-of-inputs");
       result[`prepare-${playground.variant}-wgpu-${profile}`] = withCacheDecision({
-      cache: false,
-      metadata: orchestrator,
-      outputs: closureOutputs(bootSelected),
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootPrerequisites],
+      cache: true,
+      outputs: [],
+      inputs: [transitiveOutputs],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootComponents],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
-      }, "driver-owned", "freshness-owned-by-driver");
+      }, "deterministic", "check-without-outputs");
     }
     const name = `build-${playground.variant}-react-release`;
-    const buildIdentity=createHash("sha256").update("os-dev:"+playground.variant+":react").digest("hex").slice(0,16);
-    const buildRoot = `{workspaceRoot}/.cache/b/p/m/vite`;
-    const buildOutput = `${buildRoot}/release/${buildIdentity}/out`;
+    const contribution = playground.devContribution === undefined ? undefined : JSON.parse(readFileSync(join(workspaceRoot, playground.devContribution), "utf8"));
+    const contributionSources = contribution === undefined ? [] : [`{workspaceRoot}/${playground.devContribution}`, ...(typeof contribution.ownerRoot === "string" ? [`{workspaceRoot}/${buildPath(contribution.ownerRoot)}/**/*`] : []), ...(contribution.browserSessionFactories ?? []).filter(row => typeof row.engine === "string").map(row => `{workspaceRoot}/${buildPath(row.engine).replace(/^\.\//u, "")}/**/*`)];
     result[name] = withCacheDecision({
-      cache: false,
+      cache: true,
+      parallelism: false,
       metadata: orchestrator,
-      outputs: [buildOutput],
+      outputs: [storeReceiptOutputV1(name)],
       // 🌐️ `S_HUB_URL` and `S_DATA_DIR` are baked into the bundle at Vite `define` time
       // (`🏗️builder/🌐️vite/🟦️.ts:237`, `import.meta.env.VITE_S_HUB_URL`), so two bundles that differ
       // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
       // cache key ignores them and a cached bundle silently answers for the wrong hub.
-      inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedPrerequisites, "@semio-tech/assets:build"],
+      inputs: ["production", "^production", "viteBundleSources", transitiveOutputs, ...ownerSources(selected), ...contributionSources, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedComponents, "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
-    }, "driver-owned", "freshness-owned-by-driver");
+    }, "deterministic", "pure-function-of-inputs");
     result[`build-${playground.variant}-react`] = {
-      ...result[name], outputs: [`${buildRoot}/{options.env.SEMIO_BUILD_MODE}/${buildIdentity}/out`],
+      ...result[name], outputs: [storeReceiptOutputV1(`build-${playground.variant}-react`)],
       configurations: {
         prototype: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react prototype` },
         release: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release` },

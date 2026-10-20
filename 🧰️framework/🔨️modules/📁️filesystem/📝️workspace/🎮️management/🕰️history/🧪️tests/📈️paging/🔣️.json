@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "four-segment-first-page",
+      "segments": 4,
+      "perSegment": 17,
+      "offset": 0,
+      "expected": {
+        "entries": 64,
+        "proofs": 65,
+        "chainWalks": 2,
+        "selectionReads": 8,
+        "next": true
+      }
+    },
+    {
+      "name": "four-segment-continuation",
+      "segments": 4,
+      "perSegment": 17,
+      "offset": 64,
+      "expected": {
+        "entries": 4,
+        "proofs": 4,
+        "chainWalks": 2,
+        "selectionReads": 8,
+        "next": false
+      }
+    },
+    {
+      "name": "selected-empty-segment",
+      "segments": 1,
+      "perSegment": 0,
+      "offset": 0,
+      "expected": {
+        "entries": 0,
+        "proofs": 0,
+        "chainWalks": 2,
+        "selectionReads": 2,
+        "next": false
+      }
+    }
+  ],
+  "interference": [
+    {
+      "phase": "Checking",
+      "change": "object",
+      "expected": "refused"
+    },
+    {
+      "phase": "Checking",
+      "change": "outcome",
+      "expected": "refused"
+    },
+    {
+      "phase": "Checking",
+      "change": "reconciliation",
+      "expected": "refused"
+    },
+    {
+      "phase": "Checking",
+      "change": "selection",
+      "expected": "refused"
+    },
+    {
+      "phase": "Checking",
+      "change": "seal",
+      "expected": "refused"
+    },
+    {
+      "phase": "Checking",
+      "change": "ancestor",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "object",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "outcome",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "reconciliation",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "selection",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "seal",
+      "expected": "refused"
+    },
+    {
+      "phase": "Listing",
+      "change": "ancestor",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "object",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "outcome",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "reconciliation",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "selection",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "seal",
+      "expected": "refused"
+    },
+    {
+      "phase": "Complete",
+      "change": "ancestor",
+      "expected": "refused"
+    }
+  ]
+}

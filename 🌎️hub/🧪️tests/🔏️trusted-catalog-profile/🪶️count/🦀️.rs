@@ -25,7 +25,7 @@ pub async fn verified_count_profile(root:&Path,component:&[u8],document_id:&str)
  let descriptor=semio_hub_trusted_catalog_descriptor::decode_package_descriptor(&emitted)?;
  if descriptor.manifest.plugin_id!="neutral-host-fixture"||descriptor.package_id!="semio:neutral-host-fixture"||!descriptor.manifest.dependencies.is_empty(){return Err(fail("Count test profile requires its exact declared dependency-free package".into()))}
  let component_sha=hex_lower(&Sha256::digest(component));let component_blake=hex_lower(Hasher::new().update(component).finalize().as_bytes());
- let descriptor_bytes=os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+ let descriptor_bytes=directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
  let pack_hash=runtime.codec_pack_schema_hash(&compiled,KIND,budget()).await.map_err(|e|fail(format!("actual Count pack identity: {e}")))?;
  if pack_hash==[0;32]{return Err(fail("Count guest structural identity is absent".into()))}
  let pair=runtime.codec_genesis(&compiled,KIND,document_id,budget()).await.map_err(|e|fail(format!("actual Count genesis: {e}")))?;

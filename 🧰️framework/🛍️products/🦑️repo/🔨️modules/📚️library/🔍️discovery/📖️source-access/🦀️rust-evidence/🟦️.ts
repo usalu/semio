@@ -1,12 +1,12 @@
 /** 🦀️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
  * @see 📜️script.ts
  */
-import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
 import { inspectRustModuleGraphFacts } from "../../🌐️rust-module-graph/🟦️.ts";
 import { inspectRustStructure } from "../../🏛️rust-structure/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../🟦️.ts";
 import { isAbsolute, posix, sep } from "node:path";
-import { listSourceFamily } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { listSourceFamily } from "../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE } from "../../../⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
 
@@ -132,6 +132,8 @@ export function policyReadRustPolicySource(repoRoot: string, sourcePath: string)
  * comment or a string. Replaces the old `body.includes(traitName)` substring check, which a doc
  * comment merely NAMING the trait (e.g. "still needs ArtifactBuilder") would satisfy without a
  * single real `impl` block existing.
+ *
+ * A Rust char literal (`'"'`, `'{'`, `'\n'`, `'\''`, `'\u{1F600}'`, …) is told from a lifetime/generic tick (`'a`, `'static`) because a char literal always closes with another `'` within a few characters (accounting for escapes) and a lifetime tick never does. Without this, a char literal whose content is itself `'"'` gets misread as the START of a double-quoted string, silently swallowing everything up to the next literal `"` in the file, which can hide real code (e.g. a later `impl Trait for ...`) from every regex-based policy check that runs against the stripped output. A char literal is copied through whole; for a lifetime tick only the tick is copied, because the identifier that follows contains no quote characters.
  */
 export function policyStripRustCommentsAndStrings(content: string): string {
   let out = "";
@@ -166,13 +168,6 @@ export function policyStripRustCommentsAndStrings(content: string): string {
       continue;
     }
     if (content[i] === "'") {
-      // 🩹 Rust char literal (`'"'`, `'{'`, `'\n'`, `'\''`, `'\u{1F600}'`, …) vs a lifetime/generic
-      // tick (`'a`, `'static`) — a char literal always closes with another `'` within a few chars
-      // (accounting for escapes); a lifetime tick never does. Without this, a char literal whose
-      // content is itself `'"'` gets misread as the START of a double-quoted string by the block
-      // above, silently swallowing everything up to the next literal `"` in the file — which can
-      // hide real code (e.g. a later `impl Trait for ...`) from every regex-based policy check
-      // that runs against the stripped output.
       let j = i + 1;
       if (content[j] === "\\") {
         j += 1;
@@ -191,8 +186,6 @@ export function policyStripRustCommentsAndStrings(content: string): string {
         i = j + 1;
         continue;
       }
-      // Not a char literal -- a lifetime/generic tick. Copy just the tick through; the identifier
-      // that follows contains no quote characters, so falling through the loop handles it safely.
       out += content[i];
       i++;
       continue;

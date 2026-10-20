@@ -8,7 +8,7 @@ use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjec
 
 #[path = "📝️text/🦀️.rs"]
 mod text;
-pub use text::{ArtifactOperationImage, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor};
+pub use text::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor};
 
 #[path = "📦️output/🦀️.rs"]
 mod output;

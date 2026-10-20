@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {decodeCargoProvenanceV1,CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1} from "../../🟦️.ts";
 import {completedCargoClosureRosterV1,readCompletedCargoOriginV1,type CompletedCargoOriginV1,type CompletedCargoClosureRowV1} from "../📋️inventory/🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schemaDocument from "../🧬️schema/🔣️.json" with { type: "json" };
 import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
 const schema=structuredClone(schemaDocument),maximumBytes=sourceSchema.properties.maximumBytes.const,maximumFiles=sourceSchema.properties.maximumFiles.const,maximumIndexBytes=sourceSchema.properties.maximumManifestBytes.const;

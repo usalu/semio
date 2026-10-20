@@ -82,22 +82,31 @@ test("portable UI ownership schema keeps exact generic and workspace routes at t
 });
 
 test("all original workspace census declarations retain their exact TypeScript AST text", () => {
-  const source = parse(corpus.repoScript);
+  const sources = [parse(corpus.repoScript), parse(corpus.repoOwner)];
+  const declared = (source: ts.SourceFile, name: string) => source.statements.find(node => ((ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.getText(source) === name) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => declaration.name.getText(source) === name)));
+  const lines = (text: string) => text.split("\n").map(line => line.trim()).join("\n");
   for (const row of corpus.censusDeclarations) {
-    const statement = source.statements.find(node => ((ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.getText(source) === row.name) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => declaration.name.getText(source) === row.name)));
-    expect(statement, row.name).toBeDefined();
-    expect(createHash("sha256").update(statement!.getText(source)).digest("hex"), row.name).toBe(row.sha256);
+    const owner = sources.find(source => declared(source, row.name));
+    expect(owner, row.name).toBeDefined();
+    expect(createHash("sha256").update(declared(owner!, row.name)!.getText(owner!)).digest("hex"), row.name).toBe(row.sha256);
+    if (!("runner" in row)) continue;
+    const runner = declared(sources[1]!, row.runner) as ts.FunctionDeclaration | undefined;
+    expect(runner?.body, row.runner).toBeDefined();
+    expect(createHash("sha256").update(lines(runner!.body!.getText(sources[1]!).replaceAll("context.", "this."))).digest("hex"), row.runner).toBe(row.runnerBodySha256);
   }
 });
 
 test("the original Storybook handlers preserve root commands, caller arguments and UI environment", () => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "router-ownership-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => {
-  const source = parse(corpus.repoScript);
-  const declarations = source.statements.filter(node => (ts.isClassDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.declaration)) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(row => row.name.getText(source) === "storybookEnv")));
-  expect(declarations).toHaveLength(3);
+  const source = parse(corpus.repoScript), owner = parse(corpus.repoOwner);
+  const declarations = [
+    ...source.statements.filter(node => ts.isClassDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.declaration)).map(node => node.getText(source)),
+    ...owner.statements.filter(node => (ts.isFunctionDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.runner)) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(row => row.name.getText(owner) === "storybookEnv"))).map(node => node.getText(owner).replace(/^export /, "")),
+  ];
+  expect(declarations).toHaveLength(corpus.storybookCases.length * 2 + 1);
   const calls: { command: string; args: string[]; options: { cwd: string; env: Record<string, string> } }[] = [];
   const environment = { WATCHPACK_POLLING: "explicit-watch", CHOKIDAR_USEPOLLING: "explicit-chokidar" };
   const context = { BundleScript, process: { env: environment }, devToolingEnv: (env: Record<string, string>) => ({ ...environment, ...env }), runCmd: (command: string, args: string[], options: { cwd: string; env: Record<string, string> }) => calls.push({ command, args, options }), root, invocation };
-  const executable = ts.transpileModule(declarations.map(row => row.getText(source)).join("\n") + "\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const executable = ts.transpileModule(declarations.join("\n") + "\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const handlers = runInNewContext(executable + "\nhandlers;", context) as BundleScript[];
   for (let index = 0; index < corpus.storybookCases.length; index++) {
     const row = corpus.storybookCases[index]!;

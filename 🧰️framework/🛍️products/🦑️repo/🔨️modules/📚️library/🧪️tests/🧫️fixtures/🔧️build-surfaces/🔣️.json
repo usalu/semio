@@ -352,16 +352,16 @@
       "site",
       "proctor"
     ],
-    "command": "bun repo dependencies sync --all",
+    "command": "repo dependencies sync --all",
     "cases": [
       {
         "name": "complete-all",
-        "command": "bun repo dependencies sync --all",
+        "command": "repo dependencies sync --all",
         "accepted": true
       },
       {
         "name": "quoted-all",
-        "command": "bun repo dependencies sync \"--all\"",
+        "command": "repo dependencies sync \"--all\"",
         "accepted": true
       },
       {
@@ -376,22 +376,22 @@
       },
       {
         "name": "root-subset",
-        "command": "bun repo dependencies sync --scope .",
+        "command": "repo dependencies sync --scope .",
         "accepted": false
       },
       {
         "name": "lock-refresh",
-        "command": "bun repo dependencies lock --scope .",
+        "command": "repo dependencies lock --scope .",
         "accepted": false
       },
       {
         "name": "foreign-scope",
-        "command": "bun repo dependencies sync --scope other",
+        "command": "repo dependencies sync --scope other",
         "accepted": false
       },
       {
         "name": "extra-argument",
-        "command": "bun repo dependencies sync --scope . --ignore-scripts",
+        "command": "repo dependencies sync --scope . --ignore-scripts",
         "accepted": false
       }
     ]

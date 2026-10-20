@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge } from "../../🟦️.tsx";
 import { decodeShellToGateway, encodeGatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
-import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟦️.tsx";
+import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟢️shared/🟦️.tsx";
 import { shellAppFault } from "@semio-tech/framework/mcp/channel";
 import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
 import { channelAppPayloadsFixtureUrl } from "@semio-tech/framework-os-mcp/testing/fixtures";

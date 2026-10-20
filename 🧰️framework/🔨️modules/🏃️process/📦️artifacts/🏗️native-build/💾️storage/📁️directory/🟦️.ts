@@ -7,7 +7,9 @@ import{createNativeDirectoryExchangePortV1}from"./🔀️exchange/🟦️.ts";
 import{createNativeDirectoryJournaledPortV1}from"./🪟️journal/🟦️.ts";
 import{nativeWindowsSystemHostPortV1}from"./🪟️host/🟦️.ts";
 import type{NativeWindowsHostPortV1}from"./🪟️host/🟦️.ts";
-export{nativeDirectoryProtocolV1,observeNativeDirectoryIdentityV1,readNativeDirectoryIdentityV1};
+import{measureNativeDirectoryUsageV1,measureNativeDirectoryUsageAsyncV1,nativeDirectoryEntryBoundV1,nativeDirectoryUsageV1,createNativeDirectoryUsageV1,type NativeDirectoryUsageV1}from"./📏️usage/🟦️.ts";
+export{nativeDirectoryProtocolV1,observeNativeDirectoryIdentityV1,readNativeDirectoryIdentityV1,measureNativeDirectoryUsageV1,measureNativeDirectoryUsageAsyncV1,nativeDirectoryEntryBoundV1,nativeDirectoryUsageV1,createNativeDirectoryUsageV1};
+export type{NativeDirectoryUsageV1};
 export type{NativeDirectoryIdentityV1,NativeDirectoryLayoutV1,NativeDirectoryPlatformPortV1,NativeDirectoryRecoveryV1,NativeDirectoryStateV1};
 const schema=nativeDirectorySchemaV1,protocol=nativeDirectoryProtocolV1(),same=sameNativeDirectoryIdentityV1;
 
@@ -71,19 +73,6 @@ export function probeNativeDirectoryExchangeV1(directory:string,port:NativeDirec
  try{const first=join(base,"a"),second=join(base,"b");mkdirSync(first);mkdirSync(second);exchangeNativeDirectoriesV1(first,second,port);}finally{rmSync(base,{recursive:true,force:true});}
 }
 
-/** 🧮️ Measures physical bytes below a root without following links or counting a hard link twice. */
-export function measureNativeDirectoryUsageV1(root:string,maximumEntries:number=protocol.maximumEntries):Readonly<{allocatedBytes:number;logicalBytes:number;entries:number}>{
- if(!Number.isSafeInteger(maximumEntries)||maximumEntries<1)throw Error("Positive entry bound required");
- const seen=new Set<string>(),stack:{path:string;depth:number}[]=[{path:resolve(root),depth:0}];let allocatedBytes=0,logicalBytes=0,entries=0;
- for(let item=stack.pop();item;item=stack.pop()){
-  const row=lstatSync(item.path,{bigint:true});if(++entries>maximumEntries)throw Error("Directory usage entry bound exceeded");
-  if(row.isFile()&&row.nlink>1n){const key=row.dev+":"+row.ino;if(seen.has(key))continue;seen.add(key);}
-  allocatedBytes+=Number(row.blocks)*512;logicalBytes+=row.isFile()?Number(row.size):0;
-  if(row.isDirectory()){if(item.depth>=protocol.maximumDepth)throw Error("Directory usage depth bound exceeded");for(const name of readdirSync(item.path))stack.push({path:join(item.path,name),depth:item.depth+1});}
- }
- if(!Number.isSafeInteger(allocatedBytes))throw Error("Directory usage overflow");return Object.freeze({allocatedBytes,logicalBytes,entries});
-}
-
 /** ⚖️ Bounds each payload request by its filesystem envelope and the journal and complete measured tree by their physical ceiling. */
 export function admitNativeDirectoryCapacityV1(value:unknown):Readonly<{remainingBytes:number}>{
  if(validateJsonSchemaSubset(schema.definitions.Admission,value,schema).length)throw Error("Closed directory capacity request required");
@@ -92,21 +81,23 @@ export function admitNativeDirectoryCapacityV1(value:unknown):Readonly<{remainin
  return Object.freeze({remainingBytes:Math.min(row.maximumPhysicalBytes-row.usedBytes,row.maximumPhysicalBytes-row.reservedBytes)-row.requestBytes});
 }
 
-/** 📏️ Charges every admission against a running estimate of the real tree and re-measures the tree periodically, on a commit, and before any refusal. */
-export type NativeDirectoryMeterV1=Readonly<{admit(request:unknown):void}>;
-export function createNativeDirectoryMeterV1(input:Readonly<{root:string;filesystemBytes:number;maximumPhysicalBytes:number;measure?:(root:string)=>number;now?:()=>number}>):NativeDirectoryMeterV1{
+/** 📏️ Charges every admission against a running estimate of the real tree and re-measures the tree periodically, on a commit, and before any refusal; the measurements are shared with every other reader of the tree, never overlap and never block the event loop. */
+export type NativeDirectoryMeterV1=Readonly<{admit(request:unknown,signal?:AbortSignal):Promise<void>}>;
+export function createNativeDirectoryMeterV1(input:Readonly<{root:string;filesystemBytes:number;maximumPhysicalBytes:number;measure?:(root:string,signal?:AbortSignal)=>number|Promise<number>;usage?:NativeDirectoryUsageV1;now?:()=>number}>):NativeDirectoryMeterV1{
  if(validateJsonSchemaSubset(schema.definitions.MeterLimits,{filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes},schema).length)throw Error("Closed directory meter limits required");
- const limits=protocol.meter,measure=input.measure??((root:string)=>measureNativeDirectoryUsageV1(root).allocatedBytes),now=input.now??Date.now;let measured:number|undefined,measuredAt=0,admitted=0;
- const refresh=()=>{measured=measure(input.root);measuredAt=now();admitted=0;return measured;};
+ const limits=protocol.meter,now=input.now??Date.now,usage=input.measure?undefined:input.usage??nativeDirectoryUsageV1(input.root,input.maximumPhysicalBytes),measure=(signal?:AbortSignal):Promise<number>=>usage?usage.fresh(signal):Promise.resolve(input.measure!(input.root,signal));
+ let measured:number|undefined,measuredAt=0,admitted=0;
+ const refresh=async(signal?:AbortSignal)=>{const startedAt=now(),before=admitted,bytes=await measure(signal);measured=bytes;measuredAt=startedAt;admitted=Math.max(0,admitted-before);return bytes;};
+ const stale=()=>measured===undefined||now()-measuredAt>=limits.intervalMilliseconds;
  const gate=(used:number,requestBytes:number)=>admitNativeDirectoryCapacityV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,reservedBytes:0,usedBytes:used,requestBytes});
- return Object.freeze({admit:(value:unknown)=>{
+ return Object.freeze({admit:async(value:unknown,signal?:AbortSignal)=>{
   if(validateJsonSchemaSubset(schema.definitions.MeterRequest,value,schema).length)throw Error("Closed directory meter request required");
   const request=value as Readonly<{mode:"reserve"|"commit"|"recheck";requestBytes:number}>;
-  if(request.mode==="commit"){gate(refresh(),0);return;}
-  if(request.mode==="recheck"){gate(measured===undefined||now()-measuredAt>=limits.intervalMilliseconds?refresh():measured+admitted,0);return;}
-  let used=measured===undefined||admitted+request.requestBytes>=limits.intervalBytes||now()-measuredAt>=limits.intervalMilliseconds?refresh():measured+admitted;
-  if(used+request.requestBytes>input.maximumPhysicalBytes)used=refresh();
-  gate(used,request.requestBytes);admitted+=request.requestBytes;
+  if(request.mode==="commit"){gate(await refresh(signal),0);return;}
+  if(request.mode==="recheck"){if(stale())await refresh(signal);gate(measured!+admitted,0);return;}
+  if(measured===undefined||admitted+request.requestBytes>=limits.intervalBytes||stale())await refresh(signal);
+  if(measured!+admitted+request.requestBytes>input.maximumPhysicalBytes)await refresh(signal);
+  gate(measured!+admitted,request.requestBytes);admitted+=request.requestBytes;
  }});
 }
 

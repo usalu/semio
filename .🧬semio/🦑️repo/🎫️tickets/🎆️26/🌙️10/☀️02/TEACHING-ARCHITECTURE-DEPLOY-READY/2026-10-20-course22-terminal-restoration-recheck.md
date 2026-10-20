@@ -1,0 +1,9 @@
+# Course22 Terminal And Restoration Recheck
+
+Bounded ticket-generated metadata/receipt and4096byte historical-log-tail read only. No command,private runtime query,signal,Source edit or restoration.
+
+Course22 log remains4,055,558bytes,mtime2026-10-20T13:59:41.829Z. Its tail contains diagnostic stage/activity,not terminal receipt. No newer private-build command receipt exists in the bounded current generated roster. Latest private-build-command-terminal.json remains16,371bytes,13:53:47.894Z and describes tools setup nx13:49:43.020→13:53:47.891,status0/raw0,not course22. Latest retained builder resume is12:55:30.932Z; latest process inventory samples are12:07/12:10,before course22. No new builder/process receipt after13:59:41 was found in these named families. Missing22832handle and unchanged log do not prove terminal or continued life. Actual course22 termination remains unproved.
+
+Reverse restoration inputs remain exact: inner cycle22 install690bytes/SHA6c39be59af1ce6de16eb88be76f069c500d1ef7bd892096d24ca35e0ea4afea6; failure cycle20 install859bytes/SHA6b1d85959f42dee9af89c9f10896c1fd499e7f9bd7626c1ed24d0d60b343729f; stage cycle20 install706bytes/SHA99b3dd8563b4db9b0b685ce0132df10cfdab938f91d2f218d607cc11b4ea86f9. All3complete plan records excluding active equal corresponding receipts; all3remain activetrue. Their exact matching cycle removal paths remain absent.
+
+Retained integration handoff inputs also match full extent/hash: Root patch helper59def571…112698B; cycle helperf376a5e8…21444B; coexistence fixture7ae3cb4a…147300B. They retain inverse order inner07da→bootstrapd272,then failure reader2b68→stage238,then stage238→original2bd. This authenticates prepared metadata/input roster only; private physical Source bytes/current builder state were not reread. No restoration is authorized until actual managed ownership/lifetime is reconciled by Root.

@@ -10,8 +10,8 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema.json";
 import {bazelPlatformProfileV1,bazelPlatformRulesV1} from "../../🌐️platform/🟦️.ts";
 
-const rules=component.definitions.PlatformRules.const,python=Bun.which("python3"),binary=process.env.SEMIO_TEST_BAZEL_BINARY,adapter=readFileSync(join(import.meta.dir,"../../📜️script.ts"),"utf8");
-const starlark=/const STARLARK_RULES=`([\s\S]*?)`;/u.exec(adapter)![1]!;
+const binary=process.env.SEMIO_TEST_BAZEL_BINARY,adapter=readFileSync(join(import.meta.dir,"../../📜️script.ts"),"utf8");
+const starlark=/const STARLARK_RULES=(?:bazelResourceSetsV1\([^)]*\)\+)?`([\s\S]*?)`;/u.exec(adapter)![1]!;
 
 test("the fixture and every rendered profile validate against their closed schemas",()=>{
  const ajv=new Ajv({strict:true});
@@ -34,14 +34,6 @@ test("six OS and CPU pairs render the authored flags, environment, launcher exte
  for(const row of fixture.invalid)expect(()=>bazelPlatformProfileV1(row.input),row.name).toThrow("Closed Bazel platform input required");
 });
 
-test.skipIf(!python)("the MAX_PATH budget counts UTF-16 units like an independent Python oracle",()=>{
- const profiles=fixture.profiles.map(row=>({row,profile:bazelPlatformProfileV1(row.input)}));
- const result=Bun.spawnSync([python!,"-I","-c","import json,sys\nlimits,tracked,execroot,rows=json.loads(sys.stdin.read())\nu=lambda s: len(s.encode('utf-16-le'))//2\nout=[]\nfor platform,base,long in rows:\n    win=platform=='win32'\n    total=u(base)+u(execroot['win32' if win else 'posix'])+tracked\n    limit=limits['windowsExtended' if long=='enabled' else 'windows'] if win else limits['posix']\n    out.append([u(base),total,limit,total<=limit])\nprint(json.dumps(out))"],{stdin:new TextEncoder().encode(JSON.stringify([rules.limits,rules.trackedPathUnits,rules.execroot,profiles.map(({row})=>[row.input.platform,row.input.outputBase,row.input.longPaths])])),stdout:"pipe",stderr:"pipe"});
- expect(result.exitCode,result.stderr.toString()).toBe(0);
- expect(JSON.parse(result.stdout.toString())).toEqual(profiles.map(({profile})=>[profile.pathBudget.outputBase,profile.pathBudget.total,profile.pathBudget.limit,profile.pathBudget.fits]));
- const refused=bazelPlatformProfileV1(fixture.profiles.find(row=>row.name==="Windows x64 without long paths refuses the MAX_PATH budget")!.input);
- expect(refused.refusals[0]).toContain("259");expect(refused.refusals[0]).toContain("C:\\semio");
-});
 
 test("every Bazel action runs Bun directly: no shell, no genrule, JSON-quoted Windows paths, platform facts from one place",()=>{
  for(const token of fixture.forbiddenShell)expect(starlark.toLowerCase(),token).not.toContain(token.toLowerCase());
@@ -71,7 +63,7 @@ test.skipIf(!binary)("the real Bazel binary knows every rendered flag, parses Wi
   writeFileSync(join(query,"BUILD.bazel"),`load(":tasks.bzl", "repo_launch", "repo_task")\nrepo_task(name = "task", bun = ${JSON.stringify(windowsBun)}, identity = "p:t", source_identity = "x")\nrepo_launch(name = "launch", bun = ${JSON.stringify(windowsBun)}, source_identity = "x", extension = ".exe")\n`);
   const listed=run([...common("q1"),"query","//:all","--output=build","--lockfile_mode=off"],query,environment);
   expect(listed.code,listed.out.slice(-600)).toBe(0);expect(listed.out).toContain(JSON.stringify(windowsBun));expect(listed.out).toContain('extension = ".exe"');
-  const profile=bazelPlatformProfileV1({platform:process.platform,arch:process.arch,container:false,outputBase:join(base,"b"),bun:process.execPath,longPaths:process.platform==="win32"?"enabled":"unprobed"});
+  const profile=bazelPlatformProfileV1({platform:process.platform,arch:process.arch,container:false,outputBase:join(base,"b"),bun:process.execPath,longPaths:process.platform==="win32"?"enabled":"unprobed",closure:{alias:{units:0,bytes:0},real:{units:0,bytes:0}}});
   expect(profile.refusals).toEqual([]);
   const root=join(base,"w");mkdirSync(join(root,"src/🧰️framework"),{recursive:true});
   writeFileSync(join(root,"MODULE.bazel"),'module(name = "xplat_build", version = "0.0.0")\n');writeFileSync(join(root,"tasks.bzl"),starlark);

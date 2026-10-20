@@ -189,6 +189,13 @@ impl Scene {
         self.valid(id)
     }
 
+    /// 🪟️ Borrows one mounted layout only when both live node identities belong to its live canvas.
+    pub fn window_layout_containing(&self, first: NodeId, second: NodeId) -> Option<(&WindowLayout, NodeId, &[(String, NodeId)])> {
+        if !self.contains(first) || !self.contains(second) { return None; }
+        let mounted = self.window_layouts.iter().find(|mounted| self.contains(mounted.canvas) && mounted.windows.iter().any(|(_, node)| *node == first) && mounted.windows.iter().any(|(_, node)| *node == second))?;
+        Some((&mounted.layout, mounted.canvas, &mounted.windows))
+    }
+
     fn valid(&self, id: NodeId) -> bool {
         self.slots.get(id.index as usize).is_some_and(|s| s.generation == id.generation && s.node.is_some())
     }

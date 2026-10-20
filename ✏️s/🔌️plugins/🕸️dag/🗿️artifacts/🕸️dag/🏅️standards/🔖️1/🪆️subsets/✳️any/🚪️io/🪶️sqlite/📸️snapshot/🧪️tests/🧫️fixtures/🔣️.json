@@ -18,10 +18,10 @@
       }
     },
     {
-      "name": "independent-unresolved-alias",
+      "name": "unresolved-alias",
       "schema": "dag.dag",
       "content": {
-        "childId": "local-alias",
+        "childId": "target\u0000!@/独立🌍",
         "target": {
           "artifactId": "target\u0000!@/独立🌍",
           "dialect": {
@@ -36,7 +36,7 @@
       "name": "unrestricted-literal",
       "schema": "dag.dag",
       "content": {
-        "childId": "\u0000!@/引用🌍",
+        "childId": "distinct\u0000!@/😀",
         "target": {
           "artifactId": "distinct\u0000!@/😀",
           "dialect": {

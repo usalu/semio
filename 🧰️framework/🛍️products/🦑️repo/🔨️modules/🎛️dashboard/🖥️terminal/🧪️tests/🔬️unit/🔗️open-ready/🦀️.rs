@@ -31,7 +31,7 @@ fn open_ready_routes_keyboard_overview_and_context_menu_using_shared_vectors() {
 
 #[test]
 fn open_ready_customization_is_localized_deduplicated_and_cancellable() {
-    let mut preferences = Preferences { language: "de".into(), ..Default::default() };
+    let mut preferences = Preferences { language: Some("de".into()), ..Default::default() };
     preferences.apply(&Change::parse(r#"{"prefix":"ctrl+a","bindings":{"prefix.open-ready":["g"],"prefix.cancel-open-ready":["G"]}}"#).unwrap());
     let (mut dashboard, mut tui) = dashboard_with(preferences);
     let mut task = session("ready-task", label("dev", "quiz", ""), SessionStatus::Running, None);

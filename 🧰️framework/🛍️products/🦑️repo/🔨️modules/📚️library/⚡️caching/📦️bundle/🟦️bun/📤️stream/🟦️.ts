@@ -1,6 +1,6 @@
 import{createHash}from"node:crypto";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 type Name="source.js"|"source.js.map"|"metadata.json";
 /** 📨️ Carries bounded compiler data without granting a filesystem destination. */

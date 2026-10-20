@@ -1,4 +1,6 @@
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1} from "./📥️capture/🟦️.ts";
+import {tmpdir} from "node:os";
+import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
 export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
@@ -34,7 +36,12 @@ export interface OwnedCommandOptions {
  * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
  * Resolves with the output tail. */
 export async function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
- const {result,tail}=await captureOwnedCommandBodyV1(command,args,cwd,options,false);
+ const prepared=prepareTestCommandV1(command,args,options.env??process.env,tmpdir()),started=performance.now(),granted=Object.keys(prepared.environment).length?{...options,env:{...(options.env??process.env),...prepared.environment}}:options;
+ let captured:Awaited<ReturnType<typeof captureOwnedCommandBodyV1>>;
+ try{captured=await captureOwnedCommandBodyV1(command,prepared.args,cwd,granted,false);}
+ catch(error){try{prepared.finish({code:1,signal:null,reason:String(error instanceof Error?error.message:error).slice(0,2000),durationMs:performance.now()-started});}catch{}throw error;}
+ const {result,tail}=captured;
+ try{prepared.finish({code:result.status,signal:result.signal,durationMs:performance.now()-started});}catch(error){process.stderr.write(testProtocolMessageV1("reportFailed",{reason:String(error)})+"\n");}
  if(result.status===0&&result.signal===null)return tail;
  throw new Error(`${command} ${args.join(" ")} exited with status ${result.status} signal ${result.signal}\n${tail}`);
 }
@@ -47,7 +54,8 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
 }
 
 /** ⌛️ Checks one monotonic command deadline in intervals within the native timer range. */
-function startOwnedCommandTimeoutV1(milliseconds:number,expire:()=>void):()=>void {
+export function startOwnedCommandTimeoutV1(milliseconds:number,expire:()=>void):()=>void {
+  if(!Number.isSafeInteger(milliseconds)||milliseconds<0||typeof expire!=="function")throw Error("Finite nonnegative safe command timeout and callback required");
   const started=performance.now();let active=milliseconds>0,timer:ReturnType<typeof setTimeout>|undefined;
   const check=():void=>{if(!active)return;const remaining=milliseconds-(performance.now()-started);if(remaining<=0){active=false;expire();}else timer=setTimeout(check,Math.min(processBudgetSchema.$defs.TimerMaximumMilliseconds.const,Math.ceil(remaining)));};
   if(active)check();

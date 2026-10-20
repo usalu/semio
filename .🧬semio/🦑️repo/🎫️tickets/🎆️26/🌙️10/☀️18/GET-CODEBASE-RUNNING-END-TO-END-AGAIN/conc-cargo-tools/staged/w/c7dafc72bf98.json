@@ -1,0 +1,180 @@
+{
+ "locks": {
+  "registry": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"00\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n",
+  "sparse": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"sparse+https://index.crates.io/\"\nchecksum = \"00\"\n",
+  "git": "version = 3\n\n[[package]]\nname = \"dep\"\nversion = \"0.1.0\"\nsource = \"git+https://example.test/dep#abc\"\n",
+  "path": "version = 3\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\n",
+  "broken": "version = [\n",
+  "other": "version = 3\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"00\"\n\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"serde\"]\n"
+ },
+ "classes": {
+  "registry": "registry",
+  "sparse": "registry",
+  "git": "unsupported",
+  "path": "unsupported",
+  "broken": "unsupported",
+  "other": "registry"
+ },
+ "owners": [
+  {
+   "name": "member of the root workspace",
+   "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/a\"]\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\n"
+   },
+   "manifest": "crates/a/Cargo.toml",
+   "lock": "Cargo.lock"
+  },
+  {
+   "name": "member of a nested workspace wins over the root",
+   "files": {
+    "Cargo.toml": "[workspace]\n",
+    "inner/Cargo.toml": "[workspace]\nmembers = [\"a\"]\n",
+    "inner/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\n"
+   },
+   "manifest": "inner/a/Cargo.toml",
+   "lock": "inner/Cargo.lock"
+  },
+  {
+   "name": "explicit package.workspace",
+   "files": {
+    "Cargo.toml": "[workspace]\n",
+    "x/Cargo.toml": "[package]\nname = \"x\"\nversion = \"0.1.0\"\nworkspace = \"..\"\n"
+   },
+   "manifest": "x/Cargo.toml",
+   "lock": "Cargo.lock"
+  },
+  {
+   "name": "standalone package owns its lock",
+   "files": {
+    "solo/Cargo.toml": "[package]\nname = \"solo\"\nversion = \"0.1.0\"\n"
+   },
+   "manifest": "solo/Cargo.toml",
+   "lock": "solo/Cargo.lock"
+  }
+ ],
+ "sequence": [
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": false
+  },
+  {
+   "op": "addCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": true
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "addCrate",
+   "name": "unrelated-9.9.9.crate",
+   "index": "idx"
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "addSource",
+   "name": "serde-1.0.0"
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "replaceCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "holds",
+   "expect": false
+  },
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": true
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "removeCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "holds",
+   "expect": false
+  },
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": false
+  },
+  {
+   "op": "addCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "capture",
+   "lock": "registry",
+   "defined": true
+  },
+  {
+   "op": "holds",
+   "expect": true
+  },
+  {
+   "op": "writeLock",
+   "lock": "other"
+  },
+  {
+   "op": "holds",
+   "expect": false
+  },
+  {
+   "op": "capture",
+   "lock": "git",
+   "defined": false
+  },
+  {
+   "op": "capture",
+   "lock": "path",
+   "defined": false
+  },
+  {
+   "op": "capture",
+   "lock": "broken",
+   "defined": false
+  }
+ ],
+ "tamper": [
+  {
+   "name": "request mismatch",
+   "mutate": "request",
+   "admitted": false
+  },
+  {
+   "name": "unknown field",
+   "mutate": "extra",
+   "admitted": false
+  },
+  {
+   "name": "intact",
+   "mutate": "none",
+   "admitted": true
+  }
+ ]
+}

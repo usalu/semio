@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,16 +32,25 @@ type Limits struct {
 	MaxEventBytes    int
 	MaxEvents        int
 	MaxHandlers      int
+	MaxTasks         int
+	RingEvents       bool
 }
 
 func DefaultLimits() Limits {
-	return Limits{MaxPayloadBytes: 1 << 20, MaxNesting: 64, MaxPageItems: 64, MaxRegistryItems: 4096, MaxRecentIDs: 4096, MaxEventBytes: 64 << 20, MaxEvents: 100000, MaxHandlers: 8}
+	return Limits{MaxPayloadBytes: 1 << 20, MaxNesting: 64, MaxPageItems: 64, MaxRegistryItems: 4096, MaxRecentIDs: 4096, MaxEventBytes: 64 << 20, MaxEvents: 100000, MaxHandlers: 32, MaxTasks: 1024}
+}
+
+// 🏭️ProductionLimits are the limits of the served process: the event log is a ring, so a session that runs for days never loses its connection to a full log.
+func ProductionLimits() Limits {
+	limits := DefaultLimits()
+	limits.MaxEventBytes, limits.MaxEvents, limits.RingEvents = 16<<20, 20000, true
+	return limits
 }
 
 func (limits Limits) normalized() (Limits, error) {
 	defaults := DefaultLimits()
-	values := []*int{&limits.MaxPayloadBytes, &limits.MaxNesting, &limits.MaxPageItems, &limits.MaxRegistryItems, &limits.MaxRecentIDs, &limits.MaxEventBytes, &limits.MaxEvents, &limits.MaxHandlers}
-	fallbacks := []int{defaults.MaxPayloadBytes, defaults.MaxNesting, defaults.MaxPageItems, defaults.MaxRegistryItems, defaults.MaxRecentIDs, defaults.MaxEventBytes, defaults.MaxEvents, defaults.MaxHandlers}
+	values := []*int{&limits.MaxPayloadBytes, &limits.MaxNesting, &limits.MaxPageItems, &limits.MaxRegistryItems, &limits.MaxRecentIDs, &limits.MaxEventBytes, &limits.MaxEvents, &limits.MaxHandlers, &limits.MaxTasks}
+	fallbacks := []int{defaults.MaxPayloadBytes, defaults.MaxNesting, defaults.MaxPageItems, defaults.MaxRegistryItems, defaults.MaxRecentIDs, defaults.MaxEventBytes, defaults.MaxEvents, defaults.MaxHandlers, defaults.MaxTasks}
 	for index, value := range values {
 		if *value < 0 {
 			return Limits{}, errors.New("mcp: negative limit")
@@ -96,6 +107,7 @@ type Server struct {
 	prompts        map[string]promptRegistration
 	generations    map[string]uint64
 	sessions       map[string]*Session
+	tasks          *TaskStore
 	handlerWorkers atomic.Int64
 	handlerActive  atomic.Int64
 	handlerQueued  atomic.Int64
@@ -110,12 +122,19 @@ func NewServer(config Config) (*Server, error) {
 		return nil, errors.New("mcp: server name and version are required")
 	}
 	config.Limits = limits
-	return &Server{config: config, log: NewEventLog(limits.MaxEventBytes, limits.MaxEvents), tools: map[string]toolRegistration{}, resources: map[string]resourceRegistration{}, templates: map[string]ResourceTemplate{}, prompts: map[string]promptRegistration{}, generations: map[string]uint64{}, sessions: map[string]*Session{}}, nil
+	log := NewEventLog(limits.MaxEventBytes, limits.MaxEvents)
+	if limits.RingEvents {
+		log = NewRingEventLog(limits.MaxEventBytes, limits.MaxEvents)
+	}
+	return &Server{config: config, log: log, tasks: NewTaskStore(limits.MaxTasks), tools: map[string]toolRegistration{}, resources: map[string]resourceRegistration{}, templates: map[string]ResourceTemplate{}, prompts: map[string]promptRegistration{}, generations: map[string]uint64{}, sessions: map[string]*Session{}}, nil
 }
 
 func (server *Server) RegisterTool(schema Tool, handler ToolHandler) error {
 	if strings.TrimSpace(schema.Name) == "" || handler == nil || schema.InputSchema.Type != "object" || (schema.OutputSchema != nil && schema.OutputSchema.Type != "object") {
 		return errors.New("mcp: invalid tool registration")
+	}
+	if schema.Execution != nil && schema.Execution.TaskSupport != "" && schema.Execution.TaskSupport != TaskSupportForbidden && schema.Execution.TaskSupport != TaskSupportOptional && schema.Execution.TaskSupport != TaskSupportRequired {
+		return errors.New("mcp: invalid task support")
 	}
 	server.mu.Lock()
 	defer server.mu.Unlock()
@@ -226,6 +245,12 @@ func (server *Server) capabilities() ServerCapabilities {
 	capabilities := ServerCapabilities{}
 	if len(server.tools) > 0 {
 		capabilities.Tools = &ListCapability{}
+		for _, registration := range server.tools {
+			if execution := registration.schema.Execution; execution != nil && (execution.TaskSupport == TaskSupportOptional || execution.TaskSupport == TaskSupportRequired) {
+				capabilities.Tasks = &TasksCapability{List: &EmptyCapability{}, Cancel: &EmptyCapability{}, Requests: &TaskRequestCapability{Tools: &TaskToolsCapability{Call: &EmptyCapability{}}}}
+				break
+			}
+		}
 	}
 	if len(server.resources) > 0 || len(server.templates) > 0 {
 		capabilities.Resources = &ResourceCapability{}
@@ -258,6 +283,7 @@ type Session struct {
 	server       *Server
 	peer         string
 	generation   uint64
+	clientInfo   Implementation
 	sink         Sink
 	mu           sync.Mutex
 	phase        sessionPhase
@@ -277,6 +303,58 @@ func newSession(server *Server, peer string, generation uint64, sink Sink) *Sess
 
 func (session *Session) Peer() string       { return session.peer }
 func (session *Session) Generation() uint64 { return session.generation }
+
+// 🪪️ClientInfo is the implementation the peer announced in `initialize`; empty before it.
+func (session *Session) ClientInfo() Implementation {
+	session.mu.Lock()
+	defer session.mu.Unlock()
+	return session.clientInfo
+}
+
+type sessionContextKey struct{}
+
+// 🪢️SessionFrom returns the session whose request a handler serves.
+func SessionFrom(ctx context.Context) (*Session, bool) {
+	session, ok := ctx.Value(sessionContextKey{}).(*Session)
+	return session, ok
+}
+
+// 🛟️guarded runs a handler and turns a panic into an ordinary internal error, so one faulty tool never ends the connection of every other call.
+func guarded[Result any](call func() (Result, error)) (result Result, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			fmt.Fprintf(os.Stderr, "[repo-mcp] handler panic: %v\n%s", recovered, debug.Stack())
+			err = fmt.Errorf("mcp: handler panic: %v", recovered)
+		}
+	}()
+	return call()
+}
+
+// 📢️notify sends one server notification to the peer and records it.
+func (session *Session) notify(ctx context.Context, method string, params any) error {
+	payload, err := json.Marshal(struct {
+		JSONRPC string `json:"jsonrpc"`
+		Method  string `json:"method"`
+		Params  any    `json:"params"`
+	}{JSONRPC: JSONRPCVersion, Method: method, Params: params})
+	if err != nil {
+		return err
+	}
+	if len(payload) > session.server.config.Limits.MaxPayloadBytes {
+		return ErrPayloadTooLarge
+	}
+	if err := session.server.log.Commit(context.Background(), EventInput{Kind: "notification.sent", Peer: session.peer, Generation: session.generation, Payload: cloneRaw(payload)}); err != nil {
+		return err
+	}
+	if session.sink == nil {
+		return nil
+	}
+	if err := session.sink(ctx, payload); err != nil {
+		session.drop(ErrPeerDropped)
+		return ErrPeerDropped
+	}
+	return nil
+}
 
 func (session *Session) Dispatch(ctx context.Context, payload []byte) ([]byte, error) {
 	request, idRaw, protocolError := session.decodeRequest(payload)
@@ -373,6 +451,7 @@ func (session *Session) shutdown(cause error, record bool) {
 			active.cancel(cause)
 		}
 		session.mu.Unlock()
+		session.server.tasks.CancelOwner(session, cause)
 		go func() {
 			session.wait.Wait()
 			session.mu.Lock()
@@ -422,6 +501,7 @@ func (session *Session) route(ctx context.Context, request Request) (any, *RPCEr
 			return nil, rpcError(CodeInvalidRequest, "already initialized")
 		}
 		session.phase = phaseInitialized
+		session.clientInfo = params.ClientInfo
 		session.mu.Unlock()
 		return InitializeResult{ProtocolVersion: negotiateProtocolVersion(params.ProtocolVersion), Capabilities: session.server.capabilities(), ServerInfo: session.server.config.ServerInfo, Instructions: session.server.config.Instructions}, nil
 	}
@@ -439,6 +519,14 @@ func (session *Session) route(ctx context.Context, request Request) (any, *RPCEr
 		return session.listTools(request.Params)
 	case "tools/call":
 		return session.callTool(ctx, request.Params)
+	case "tasks/get":
+		return session.getTask(request.Params)
+	case "tasks/result":
+		return session.taskResult(ctx, request.Params)
+	case "tasks/list":
+		return session.listTasks(request.Params)
+	case "tasks/cancel":
+		return session.cancelTask(request.Params)
 	case "resources/list":
 		return session.listResources(request.Params)
 	case "resources/templates/list":
@@ -514,7 +602,23 @@ func (session *Session) callTool(ctx context.Context, raw json.RawMessage) (any,
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "tool not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	execution := TaskSupportForbidden
+	if registration.schema.Execution != nil && registration.schema.Execution.TaskSupport != "" {
+		execution = registration.schema.Execution.TaskSupport
+	}
+	if params.Task != nil {
+		if execution == TaskSupportForbidden {
+			return nil, rpcError(CodeInvalidParams, "tool does not support task execution")
+		}
+		return session.startTask(registration, params)
+	}
+	if execution == TaskSupportRequired {
+		return nil, rpcError(CodeMethodNotFound, "tool requires task execution")
+	}
+	ctx = context.WithValue(ctx, sessionContextKey{}, session)
+	result, err := guarded(func() (CallToolResult, error) {
+		return registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}
@@ -535,7 +639,9 @@ func (session *Session) readResource(ctx context.Context, raw json.RawMessage) (
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "resource not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	result, err := guarded(func() (ReadResourceResult, error) {
+		return registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}
@@ -556,7 +662,9 @@ func (session *Session) getPrompt(ctx context.Context, raw json.RawMessage) (any
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "prompt not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	result, err := guarded(func() (GetPromptResult, error) {
+		return registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
+	})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}

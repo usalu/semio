@@ -4,7 +4,7 @@
 import type { IconName } from "@semio-tech/assets";
 import { type UtilityCategory, type UtilityNode } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { type ActionDefinition } from "@semio-tech/framework-manifest/action-types-and-semantics";
-import { type ToolDefinition, type ToolRef, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
+import { type ToolDefinition, type ToolRef, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 import { type WindowMeasure } from "@semio-tech/framework-manifest/app-definition-refresh-and-context-menu";
 
 //#region 🧰️ActionUtilities

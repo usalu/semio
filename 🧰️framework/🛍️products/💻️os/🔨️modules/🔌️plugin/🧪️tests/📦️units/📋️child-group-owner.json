@@ -4,7 +4,7 @@
   "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/⚖️laws/🦀️.rs",
   "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
   "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
-  "canonicalModuleSha256": "7c7beaa9738215f7fd0026a6bf544d1dfd0efc36ab2014aa5d55ad9b4dedce2c",
+  "canonicalModuleSha256": "14e4d7baaeb2de6acc65a04a4fef14ce7cc4e9c070bb93f0ee0952e917cc3f4e",
   "oldActiveInstances": 32,
   "newUniqueObligations": 16,
   "oldLawAssertions": 872,
@@ -13,7 +13,7 @@
   "laws": [
     {
       "name": "child_complete_group_source_candidate_reader_retains_actual_partial8194_pages",
-      "canonicalSha256": "e9e8b4e385364b234529f4af11f7c81c4e7878657f37146c0bd1c803963dec0c",
+      "canonicalSha256": "acd894f685a4ad6e5cbe3eb8637b22ff1cf5190e64f74121341feef86bc8523a",
       "originalSha256": "e043b652e4680765ff99bb0307bfd2da1a7a9b5658f1185439b3e09c7d42f53a",
       "assertions": 15,
       "debugOnlyRemoved": [
@@ -38,7 +38,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_paged_semantic8194_metadata_and_labels",
-      "canonicalSha256": "d32516277c805830fb9e435eb6324623736264088502054617c107261659090e",
+      "canonicalSha256": "8acb7b3a17e359145b5d5c3d55f10a179595a7b73d236b39dc1aaa77e93faea3",
       "originalSha256": "dde95ff6380d587ee4344e389aa2937d7b1706198ba391b0ffc048f6182fba36",
       "assertions": 26,
       "debugOnlyRemoved": [
@@ -101,7 +101,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_accepted_ledger_retains_original_registry_sources",
-      "canonicalSha256": "aef8553e229a9c1b24125ec4cebaadcd15ca38f72ba619b19aaad44f1a53e57e",
+      "canonicalSha256": "5231e2ce333661d87c41ac694f7a4138bbba55f8f9d69707c5e305b636790478",
       "originalSha256": "62b747eeaf1d5106bb360d59ad88a8a039f43699f4cb6451f89ade0fe8fb0eb8",
       "assertions": 67,
       "debugOnlyRemoved": [
@@ -161,7 +161,7 @@
   "remaining": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
-      "sha256": "5c17aa63bd9a2ca75e12ce481e85865bf03c8837ec7b77dba3b1827fb6fd84af",
+      "sha256": "cc6865131795f8e92216b275b950cda0a689851eeb27f513a98ccb22e3b05e4e",
       "functions": [
         {
           "name": "test_retained_keyed_dispatch",
@@ -185,11 +185,11 @@
         },
         {
           "name": "drive_host_typed_continuations",
-          "sha256": "edb1ec70781df0c769e1aabd7bc9430a837c0d73783c2641240ef053606676f8"
+          "sha256": "a070e636d449ff04da8b81961cd5eb0ea51eed4689b17289768823e13b66c3f7"
         },
         {
           "name": "drive_host_call_with_deferred_acks",
-          "sha256": "1dcbe1e679e01a0dc4d0e35d0e6bc1aa89c7575c68e5c640d3b7298e20b892b0"
+          "sha256": "2226acaed263317426824d5335b80daf2835ba73e662b1b142694b5cb78a3033"
         },
         {
           "name": "assert_landing_terminal_lane",
@@ -243,7 +243,7 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
-      "sha256": "08c4234199230665377d8f61b210584a9bd0302b5438777919ab1689af2e0539",
+      "sha256": "306bad1a7d58664af9b38c3ca11c369625b270f6bab27071089aef8ab677d5b6",
       "functions": [
         {
           "name": "module_source",
@@ -251,13 +251,13 @@
         },
         {
           "name": "instance_source",
-          "sha256": "c0761d3aca06864a3cd7361c25bfc515f7086b36b7a6d5bab1489d8ee22904a5"
+          "sha256": "a991a6888b4618536c0cd39b04e48a55094ecdcc4ec281c135ef986967fbcd03"
         }
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔎️census-oracles-and-fixture-machine/🦀️.rs",
-      "sha256": "d9b73293563df5986db8fe63cf25c782962517e3e0070eda665d64d7808d8665",
+      "sha256": "92237a991143f37a181d68fbfc6c783ce6089e7a6586a67ddf424cc5a5fb1f6f",
       "functions": [
         {
           "name": "decide",
@@ -303,7 +303,7 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔐️two-turn-presence-and-root-retirement/🦀️.rs",
-      "sha256": "c96e29d1c02b6419fea67f7e0bc560bc77867fa28a24c09730a2a133a892084b",
+      "sha256": "c0b26f210eb4c291ddd3decacca1f4926a8c65bc31d703325bf6850a64a84e85",
       "functions": [
         {
           "name": "preflight",
@@ -315,7 +315,7 @@
         },
         {
           "name": "advance",
-          "sha256": "2e762cf04a56362f9a23a58673553217ccd99d020f36648edcd4a51a4e848ebf"
+          "sha256": "979976d132736596e607950821abe5f966e5efe4415f87465de644976fa409ab"
         },
         {
           "name": "checkpoint",
@@ -362,6 +362,10 @@
           "sha256": "08b1f2912cbffea61deccca819be55e4390bc82c7d18faf6718e1a32d13ec26a"
         },
         {
+          "name": "next_demand",
+          "sha256": "3c24c2f0f26a7b93b17b213fbdf918252a7d1d74df89c1ada06203e77d061019"
+        },
+        {
           "name": "close_step",
           "sha256": "344380bca9e35d37abc9fdea474aa613b23e197c6866c550489c582758a65212"
         },
@@ -387,11 +391,11 @@
         },
         {
           "name": "retirement_birth_bytes",
-          "sha256": "73dbb827b6c232e65db491e4ca5facb63284e2088a5e79bce7c5082cfacf7b9f"
+          "sha256": "e8235451df1559aaf2696a108151d2c63eb5d7938fd524a7fe9dec2072814864"
         },
         {
           "name": "retire",
-          "sha256": "0f14020b1bd066f03487784cfec6e18cabac7d867551b785e28fde2fbb8b9b5a"
+          "sha256": "429421cbb59ab3aa3d1a74a2e04587cc7497e65b9d1e07d8df856c26b84cb40f"
         },
         {
           "name": "close_mounted",
@@ -409,11 +413,11 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🚫️cancellation-publication-boundaries/🦀️.rs",
-      "sha256": "21200322dc46d0b19544336e3bec8e0079e8cb3c387af904a3c018efa1ed2e95",
+      "sha256": "0c125b38d51249b4c97fa36e9f6540f18ab192e4c3d83dde44911a41ee3b843f",
       "functions": [
         {
           "name": "retained_cancellation_publication_boundaries",
-          "sha256": "b7a08554ef9577726ebf6d7e7eb8f89eca43e9bb4a754d1a238333dd1273eb24"
+          "sha256": "b72efc131eeae88c5e9d1d89b71277c6a0dca427beffaad10bbaa0636ad0e69f"
         },
         {
           "name": "fixture_latest_wins_key",
@@ -421,21 +425,21 @@
         },
         {
           "name": "latest_wins_owned_key_retains_zero_and_subexact_headers",
-          "sha256": "ef4266e3a95709ed15ff0cfc764b44dd0eca29b6a0be946026db0ee51bce4cf2"
+          "sha256": "a3c818d3ca40071e1e14e8d849659062234df60f48410e39f0ae36457db87fcd"
         }
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/📌️document-cancellation-and-latest-wins-keys/🦀️.rs",
-      "sha256": "c9d6da8f40fd88b4a592a2ea2a3d687af01c6bb3c68e1d4da947b5fe1453bf04",
+      "sha256": "591e95f4ba48062d744c964a23176cad7f8d0a2bcb5185007162f880e3748a52",
       "functions": [
         {
           "name": "retained_document_cancellation",
-          "sha256": "6da8a0b6249ebc3fd155b75e6fbe786605a603e68311841666b55ea63e240519"
+          "sha256": "000b6625212111be9aa7b2913df8c9447dc62fe6af4ae6ec731475ea3c5626f2"
         },
         {
           "name": "retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire",
-          "sha256": "49f1f983362953fd03f0f0f77f7a7e833381c9366fe3fc8645c841504320a7b6"
+          "sha256": "7b12570f58cc20229215ad9c8167da5919f24b6de853e638803efdb04b36435c"
         },
         {
           "name": "retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim",
@@ -457,17 +461,17 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/⚖️slot-and-publication-fairness/🦀️.rs",
-      "sha256": "5fec9980fbb313c1c7ebcb53dad648af2bd222bcd8e2bdf4edc5f5d11f84b5f0",
+      "sha256": "2bc6c929523b344a528d0d290a8872b79304861bdca1db41b9621c49441dc102",
       "functions": [
         {
           "name": "retained_latest_wins_slot_and_publication_fairness",
-          "sha256": "2aedce171830c9ae8a1ff597b966a724cbacaef6e5ec4253e4793f110227204b"
+          "sha256": "72f580c3e313df698c08a1a3eeef8167bf5972066fe185ed73dcb23b7532c4ea"
         }
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🌐️neutral-hostile-rows/🦀️.rs",
-      "sha256": "8901af31f089d37722a0a7fded35f52e9e111a920b70113f52b7af00b2e77515",
+      "sha256": "27e4bf38ac5f127b4ab4a8c6f3ea8ebb9d8158b1caa11f6e8122ef55f1e02f60",
       "functions": [
         {
           "name": "language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle",
@@ -481,7 +485,7 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/👪️child-genesis-wire-and-group-owner/🦀️.rs",
-      "sha256": "5dbd46b53b571351109249203f432cf6a6964bdf7129e3ff38efbc23e0859af4",
+      "sha256": "4689c6bdd579558c727511c3417a8d8b5314bf612d6aa574427292c1f46ce8e7",
       "functions": [
         {
           "name": "document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root",
@@ -503,15 +507,15 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane/🦀️.rs",
-      "sha256": "497b516b8e24e9869b3ec28c39b0edff3627e90fa1f4357320f605ec31b216fe",
+      "sha256": "5664a155f03d92c7d62648517ee9a544c0185aea51413a31fa6676e2a58641e2",
       "functions": [
         {
           "name": "full_operation_source_rejects_generic_reducers_and_old_monolithic_shells",
-          "sha256": "1af965936f55f61db69558e7813f545b25ff97c007d1d1f614e1d204da69a075"
+          "sha256": "e1ff29f108b5984389e8c08b1c5432fb294fc8b1fba6e4858cdeaa8d92b6f767"
         },
         {
           "name": "fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers",
-          "sha256": "748666ea8f9ce3fdfb530017d917e5ec5cca3761e8bdb1c0e998c91edd5b00eb"
+          "sha256": "c3387e4b7003afe33329c4ac0c15680d97bf3661c6d59c154070c87f12ce7180"
         },
         {
           "name": "language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields",
@@ -519,48 +523,12 @@
         },
         {
           "name": "host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate",
-          "sha256": "c7da454b424fabc0a13d7303f0131bb5531d451826c44077081f01d53c43de77"
+          "sha256": "b93d97f66851d45155c632ad43955c86443673fc062f117ea121b3c4e19e463a"
         }
       ]
     }
   ],
   "closure": [
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
-      "bytes": 17427,
-      "nonblank": 110,
-      "sha256": "ee63c86799fd2e603e8c8f1c21efd9195ab9f19b361e32464b74bcdf358c1094"
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
-      "bytes": 37586,
-      "nonblank": 218,
-      "sha256": "e61aa4f14b551102a5be7315f7b48c5b1b0cbeafaf5419b4e5064606a0a2435e"
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧩️projection/🦀️.rs",
-      "bytes": 6212,
-      "nonblank": 82,
-      "sha256": "fd6ce68b85454859bf4d52db45ffe889fc350ce0c7cfef8b49b63049e96acc76"
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
-      "bytes": 10332,
-      "nonblank": 103,
-      "sha256": "08f287164cf5d5f9541d83f088a6ce9f835a991845430bedbcd0e6fe7a68fb47"
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs",
-      "bytes": 8049,
-      "nonblank": 46,
-      "sha256": "0ad0152fe7d8bf97c7fbfee6d4b81520c63349ca2109a99f66ea9d53db378b28"
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🪪️registry/🦀️.rs",
-      "bytes": 7825,
-      "nonblank": 42,
-      "sha256": "9a15cfcc4ac32b5e5ea8684bed9ee936c351d8cd4a2e70763daf0d9845a2c911"
-    },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations/🦀️.rs",
       "bytes": 2273,
@@ -569,15 +537,15 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🦀️.rs",
-      "bytes": 4341,
-      "nonblank": 89,
-      "sha256": "f3db0fd89e9db0a39c8fba058dd45b9eacadb1e0d723c9453eb034b9df7cbec7"
+      "bytes": 4481,
+      "nonblank": 95,
+      "sha256": "c063562685a65106744290c54611bf0a248aa92615b163f4ccfa9dfbf99b0e4c"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs",
-      "bytes": 12470,
-      "nonblank": 64,
-      "sha256": "8a7fc3789c26265e9d918d174b6a178457c7400f2559bf3bbe5aca973f8bc9f0"
+      "bytes": 12665,
+      "nonblank": 65,
+      "sha256": "83ff6f3cf2512ab01553efdde20271bdd69801b3867bda633501d0c8f12e9d45"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs",
@@ -587,21 +555,27 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🦀️.rs",
-      "bytes": 3589,
-      "nonblank": 66,
-      "sha256": "201d7aa2ae153a8caf62622bdc775925757db470d2c4a12312dda22760142e01"
+      "bytes": 3792,
+      "nonblank": 71,
+      "sha256": "524b9a9c98e3aa3b45311c597df6a864d26137f1de2248741b85cf11ba8a19b9"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs",
-      "bytes": 7884,
-      "nonblank": 93,
-      "sha256": "a99e4836a6388e312a383689ca9066c39bce48d2c8ea4eddc1ba76aceda2fbc1"
+      "bytes": 7995,
+      "nonblank": 94,
+      "sha256": "5c2998e275eb57ef288c6a325cdbe26156a562708f481b5d5e900f8b224a59dd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧪️sum-law/🦀️.rs",
+      "bytes": 550,
+      "nonblank": 8,
+      "sha256": "83b12934146ec77b2f786c5cd38e2ebb1e601efcc2043c7497fdb5d061dcbfbc"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs",
-      "bytes": 15006,
-      "nonblank": 223,
-      "sha256": "699308e58561571597b992b5123a974c22f354676240a7ac51a16c90bad4ffe0"
+      "bytes": 15181,
+      "nonblank": 230,
+      "sha256": "7bc399efadea1f17ae818022ff41582475f47692c91d6a6bc6e7015e665267b6"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs",
@@ -611,9 +585,9 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🦀️.rs",
-      "bytes": 1722,
-      "nonblank": 31,
-      "sha256": "20c22a136ac01239ef58fe24b9bb6a35b2c175a6f7d3f991452e93f47ef37ce4"
+      "bytes": 1904,
+      "nonblank": 36,
+      "sha256": "7a2f44d524073150b0c3e979e7ecfd02d8c748a9025205c03f2380b5bbe4de42"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📝️test-app-document-set-count-unit/🦀️.rs",
@@ -622,10 +596,16 @@
       "sha256": "7ba208b2e070e9b11f437df99b210dac152856c37c1946bffd2fe354598513e9"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧪️sum-law/🦀️.rs",
+      "bytes": 502,
+      "nonblank": 9,
+      "sha256": "de4e3e4d886e9c60c519f2323b0866c82a71fff0aec3bbbddd1761a3093c8aa7"
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🦀️.rs",
-      "bytes": 6461,
-      "nonblank": 73,
-      "sha256": "7176f0720fa70ca32fd3b686629c450c78a2c79bcf0d67c0c120a062aa33ee9a"
+      "bytes": 6819,
+      "nonblank": 79,
+      "sha256": "9ddb6ea6505b4d3c0637509fcc8e22e8de05d80729c92f5a4f9409bbe222a50a"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🏷️test-app-document-set-label-unit/🦀️.rs",
@@ -634,10 +614,16 @@
       "sha256": "24ab97d2e4d670305aa4e7ebbf57e4c4fcc9cbb6a42f6499fe9457a5021e6ab5"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧪️sum-law/🦀️.rs",
+      "bytes": 526,
+      "nonblank": 9,
+      "sha256": "648b6a24826dccb42df76183dfbb3bfef98771cb600aca3791ac85c334294ee3"
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs",
-      "bytes": 2746,
-      "nonblank": 47,
-      "sha256": "a61392bc1b6b37b2ae15e1d0b138e2f4ba993bc2231a7559cf36fdbe70449203"
+      "bytes": 2935,
+      "nonblank": 52,
+      "sha256": "b4395a6d9504d55f3d8ec92855168ca192e9d5da12237ac7287c75d2069650ee"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs",
@@ -646,10 +632,52 @@
       "sha256": "a49d4ec7c31b9dbc3b7ef83b2858d747bb46b8158e57edcdc89e304ee92215f3"
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧪️sum-law/🦀️.rs",
+      "bytes": 1330,
+      "nonblank": 18,
+      "sha256": "6ea0a38cd5ca695a06d431ef471866544d20c2c44a4330dda4413629a2b528ad"
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs",
-      "bytes": 1596,
+      "bytes": 1606,
       "nonblank": 23,
-      "sha256": "9c09e20ab9eda8e9f58841e365087705b383d0715e0de7261a9d695f04b872a9"
+      "sha256": "f0efab9a26817a39cf4e3ab1b1e6709929c827abd45176466de6f959725aa79c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+      "bytes": 17470,
+      "nonblank": 112,
+      "sha256": "bd57e458d00a5baa059b3e12c10ed99d950be8de77f2e43eb6892ded54a951b0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+      "bytes": 38345,
+      "nonblank": 224,
+      "sha256": "28bb44d9ec932a0ae0ff870b298aa99f53e196d9285ee288d51372421733c13f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧩️projection/🦀️.rs",
+      "bytes": 6252,
+      "nonblank": 83,
+      "sha256": "9e9c28c1212e25610d457757572739371257831c8fb3127c60ebb0345aff2885"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+      "bytes": 10388,
+      "nonblank": 104,
+      "sha256": "47bf52e9af2c24f0b2c4c0bc861a1298f0a4da81921bb9102d71af5fb7365377"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs",
+      "bytes": 8284,
+      "nonblank": 48,
+      "sha256": "6e4ce7bc7a2017df6b6cc3d8ad58092678efe771a5eaa3074dd7b529b884f8c0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🪪️registry/🦀️.rs",
+      "bytes": 8037,
+      "nonblank": 44,
+      "sha256": "0cef67fb308a82ba48b285e6c2bca362e3961ac094e1c97f6dd0e94982beb7e4"
     }
   ],
   "dependencies": [
@@ -657,15 +685,20 @@
     "semio-framework-diagnostic",
     "semio-framework-dsl-record",
     "semio-framework-dsl-record-derive",
+    "semio-framework-os-command",
     "semio-framework-os-kernel",
     "semio-framework-pack-json",
     "semio-framework-plugin-decl-emission",
+    "semio-framework-replication",
     "semio-framework-schema-composition",
     "semio-framework-test-fixtures",
+    "semio-framework-tool-machine",
     "semio-framework-trace",
     "semio-framework-ui-locale",
     "semio-framework-value",
     "semio-framework-value-derive",
+    "semio-framework-value-native-owned",
+    "semio-framework-value-persistent",
     "serde",
     "serde_json"
   ]

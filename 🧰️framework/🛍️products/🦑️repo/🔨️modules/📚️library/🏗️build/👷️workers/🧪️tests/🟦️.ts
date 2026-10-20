@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
@@ -16,7 +17,7 @@ const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:stri
 
 /** 🐍️ Evaluates the same fixture rows with Python's regular expressions and arithmetic, an implementation of the rules that shares nothing with the module under test. */
 function python(program:string,input:unknown):any{
- const run=spawnSync("python3",["-I","-c",program],{input:JSON.stringify(input),encoding:"utf8"});
+ const run=spawnSync(testPythonV1()??"python3",["-I","-c",program],{input:JSON.stringify(input),encoding:"utf8"});
  if(run.error||run.status!==0)throw new Error("python3 oracle: "+(run.error?.message??run.stderr));
  return JSON.parse(run.stdout);
 }

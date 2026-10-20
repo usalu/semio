@@ -1,0 +1,700 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fresh Architecture Linux Cohort V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "cohort",
+    "workload",
+    "source",
+    "builder",
+    "native",
+    "tag",
+    "limits",
+    "steps"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "architecture-linux-cohort"
+    },
+    "cohort": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "workload": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "volume",
+        "manifestSha256",
+        "manifestBytes",
+        "files",
+        "bytes",
+        "revision",
+        "atomicHostSnapshot",
+        "captureReceiptSha256",
+        "gitReceiptSha256"
+      ],
+      "properties": {
+        "root": {
+          "const": "/repo"
+        },
+        "volume": {
+          "type": "string",
+          "pattern": "^semio-course-source-[a-f0-9]{12}-[a-f0-9]{8}$"
+        },
+        "manifestSha256": {
+          "type": "string",
+          "pattern": "^(?!8579fa82486d7a67d41046c62d04167914d25b4ff3747d6514f2c0c44a836c36$)[a-f0-9]{64}$"
+        },
+        "manifestBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967296
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "atomicHostSnapshot": {
+          "const": false
+        },
+        "captureReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "gitReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "builder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "image",
+        "created",
+        "runToken",
+        "user",
+        "dedicated",
+        "identityReceiptSha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(?!b28d90788b3e7e94c98667ea3500a976657dad3cd9e33b20365924becadb4cd6$)[a-f0-9]{64}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^semio-course-native-[a-f0-9]{32}$"
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "created": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 64
+        },
+        "runToken": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "user": {
+          "enum": [
+            "",
+            "0",
+            "0:0",
+            "root",
+            "root:root"
+          ]
+        },
+        "dedicated": {
+          "const": true
+        },
+        "identityReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "provisionReceiptSha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/tmp/semio-course-native-[a-f0-9]{32}/repo$"
+        },
+        "sha256": {
+          "const": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c"
+        },
+        "bytes": {
+          "const": 11767992
+        },
+        "provisionReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "tag": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!latest$)[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "milliseconds",
+        "commandMilliseconds",
+        "outputBytes",
+        "outputLines",
+        "cleanupMilliseconds"
+      ],
+      "properties": {
+        "milliseconds": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 43200000
+        },
+        "commandMilliseconds": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 7200000
+        },
+        "outputBytes": {
+          "const": 67108864
+        },
+        "outputLines": {
+          "const": 262144
+        },
+        "cleanupMilliseconds": {
+          "const": 60000
+        }
+      }
+    },
+    "steps": {
+      "const": [
+        "help",
+        "preflight",
+        "tools",
+        "lock",
+        "sync",
+        "suite-1",
+        "suite-2",
+        "suite-3",
+        "suite-4",
+        "suite-5",
+        "suite-6",
+        "suite-7",
+        "suite-8",
+        "suite-9",
+        "typecheck-1",
+        "typecheck-2",
+        "typecheck-3",
+        "material",
+        "browser",
+        "deployment",
+        "bundle"
+      ]
+    }
+  },
+  "definitions": {
+    "commands": {
+      "const": {
+        "help": [
+          "--help"
+        ],
+        "preflight": [
+          "preflight"
+        ],
+        "tools": [
+          "tools",
+          "setup",
+          "all"
+        ],
+        "lock": [
+          "dependencies",
+          "lock",
+          "--all"
+        ],
+        "sync": [
+          "dependencies",
+          "sync",
+          "--all"
+        ],
+        "suite-1": [
+          "run",
+          "@semio-tech/course:test",
+          "--configuration=release"
+        ],
+        "suite-2": [
+          "run",
+          "@semio-tech/course-rs:test",
+          "--configuration=release"
+        ],
+        "suite-3": [
+          "run",
+          "@semio-tech/pets:test",
+          "--configuration=release"
+        ],
+        "suite-4": [
+          "run",
+          "@semio-tech/pets-rs:test",
+          "--configuration=release"
+        ],
+        "suite-5": [
+          "run",
+          "@semio-tech/course-react:test",
+          "--configuration=release"
+        ],
+        "suite-6": [
+          "run",
+          "@semio-tech/pets-react:test",
+          "--configuration=release"
+        ],
+        "suite-7": [
+          "run",
+          "@semio-tech/course-tests-runs-rs:test",
+          "--configuration=release"
+        ],
+        "suite-8": [
+          "run",
+          "@teaching/proctor:test",
+          "--configuration=release"
+        ],
+        "suite-9": [
+          "run",
+          "@teaching/architecture-course:test",
+          "--configuration=release"
+        ],
+        "typecheck-1": [
+          "run",
+          "@semio-tech/course-react:typecheck",
+          "--configuration=release"
+        ],
+        "typecheck-2": [
+          "run",
+          "@semio-tech/pets:typecheck",
+          "--configuration=release"
+        ],
+        "typecheck-3": [
+          "run",
+          "@semio-tech/pets-react:typecheck",
+          "--configuration=release"
+        ],
+        "material": [
+          "run",
+          "@teaching/proctor:check",
+          "--configuration=release",
+          "--",
+          "/repo/🎓️teaching/🏛️architecture/📚️course/🔣️.json"
+        ],
+        "browser": [
+          "run",
+          "@teaching/architecture-course:ci-browser-prepare",
+          "--configuration=release"
+        ],
+        "deployment": [
+          "run",
+          "@teaching/architecture-course:deploy-check",
+          "--configuration=release",
+          "--",
+          "--tag",
+          "{tag}"
+        ],
+        "bundle": [
+          "run",
+          "@teaching/architecture-course:docker-stack-bundle",
+          "--configuration=release",
+          "--",
+          "--tag",
+          "{tag}",
+          "--out",
+          "/repo/🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/proctor"
+        ]
+      }
+    },
+    "policy": {
+      "const": {
+        "ticket": "teaching-architecture-deploy-ready",
+        "workload": "architecture-acceptance",
+        "pollMilliseconds": 1000,
+        "transportMilliseconds": 10000,
+        "transportBytes": 65536,
+        "readChunkBytes": 16384,
+        "receiptBytes": 65536,
+        "cleanupMilliseconds": 45000,
+        "workloadIdentity": "workload equals exact builder runToken; guest owner binds sealed plan hash"
+      }
+    },
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "plan",
+        "ownership",
+        "controller",
+        "guest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "plan": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "ownership": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "controller": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "guest": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "argv",
+        "status",
+        "signal",
+        "elapsedMilliseconds"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "help",
+            "preflight",
+            "tools",
+            "lock",
+            "sync",
+            "suite-1",
+            "suite-2",
+            "suite-3",
+            "suite-4",
+            "suite-5",
+            "suite-6",
+            "suite-7",
+            "suite-8",
+            "suite-9",
+            "typecheck-1",
+            "typecheck-2",
+            "typecheck-3",
+            "material",
+            "browser",
+            "deployment",
+            "bundle"
+          ]
+        },
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^SIG[A-Z0-9]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elapsedMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200000
+        }
+      }
+    },
+    "guestTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "binding",
+        "workload",
+        "sourceManifestSha256",
+        "nativeSha256",
+        "tag",
+        "parentEnvelopeForwarded",
+        "childTerminal",
+        "steps",
+        "nativeRechecked",
+        "reason",
+        "outputBytes",
+        "outputLines",
+        "started",
+        "finished"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "binding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "workload": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "sourceManifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "nativeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?!latest$)[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+        },
+        "parentEnvelopeForwarded": {
+          "const": false
+        },
+        "childTerminal": {
+          "type": "boolean"
+        },
+        "steps": {
+          "type": "array",
+          "maxItems": 21,
+          "items": {
+            "$ref": "#/definitions/step"
+          }
+        },
+        "nativeRechecked": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "cancelled",
+                "deadline",
+                "command-deadline",
+                "native-failed",
+                "output-limit",
+                "launcher-refused",
+                "native-changed",
+                "custody-refused"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "outputLines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "started": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finished": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding",
+        "cohort",
+        "workload",
+        "cursor",
+        "size",
+        "chunk",
+        "phase",
+        "terminal"
+      ],
+      "properties": {
+        "binding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cohort": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "workload": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "chunk": {
+          "type": "string",
+          "maxLength": 21848,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        },
+        "phase": {
+          "enum": [
+            "running",
+            "terminal"
+          ]
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/guestTerminal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -63,3 +63,4 @@ tiny-skia = "0.11.4"
 ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_scene = { path = "../../../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-ui-testing-paint-policy = { path = "../../../../../../🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }

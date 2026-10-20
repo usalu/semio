@@ -456,7 +456,8 @@
               "minLength": 1,
               "maxLength": 256
             }
-          }
+          },
+          "description": "🧷️ Exact published namespace observation and durable inode within the authenticated immutable tooling store; the live device is bound to its current store namespace."
         },
         "bytes": {
           "type": "integer",
@@ -483,6 +484,90 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GenerationDirectoryPolicy": {
+      "const": {
+        "publishedDevice": "publication-namespace-observation",
+        "durableDirectoryField": "inode",
+        "currentNamespace": "authenticated-tooling-store",
+        "maximumAncestors": 64,
+        "liveFields": [
+          "dev",
+          "ino",
+          "mode",
+          "size",
+          "nlink",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "ancestorFields": [
+          "dev",
+          "ino",
+          "mode"
+        ]
+      }
+    },
+    "GenerationDirectoryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "published",
+        "rootDevice",
+        "device",
+        "inode",
+        "directory",
+        "alias",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "published": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "device",
+            "inode"
+          ],
+          "properties": {
+            "device": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "inode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "description": "🧷️ Exact published namespace observation and durable inode within the authenticated immutable tooling store; the live device is bound to its current store namespace."
+        },
+        "rootDevice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "device": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directory": {
+          "type": "boolean"
+        },
+        "alias": {
+          "type": "boolean"
         },
         "accepted": {
           "type": "boolean"

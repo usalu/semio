@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020.js";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 
 test("original VCS order and lane selection match SQLite event projection", () => {
   expect(new Ajv2020({ strict: true }).compile(schema)(corpus)).toBe(true);

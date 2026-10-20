@@ -1,0 +1,8 @@
+[package]
+name = "semio-framework-value-control-contract"
+version = "0.1.0"
+edition = "2021"
+[lib]
+path = "@REPO@/🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🦀️.rs"
+[dependencies]
+serde = { version = "1", features = ["derive"] }

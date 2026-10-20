@@ -1,5 +1,5 @@
 //#region 🧬️BindingIndexContract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexGrant, type NumericIndexOrdinal, type NumericIndexReader, type NumericIndexRetirement } from "@semio-tech/value-ts/ordered/numeric";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexGrant, type NumericIndexOrdinal, type NumericIndexReader, type NumericIndexRetirement } from "../../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiSceneBinding, type OwnedUiSceneBindingRetirement } from "../🟦️.ts";
 import type { RetainedUiWireStep } from "../../../📦️wire/🟦️.ts";
 export type OwnedUiSceneBindingReadStep = RetainedUiWireStep | { readonly kind: "value"; readonly id: number; readonly ordinal: NumericIndexOrdinal; readonly value: OwnedUiSceneBinding; readonly items: number; readonly bytes: number };

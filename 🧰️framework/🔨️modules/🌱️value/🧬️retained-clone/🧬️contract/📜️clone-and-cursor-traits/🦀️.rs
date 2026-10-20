@@ -30,14 +30,14 @@ pub fn bulk_run_progress(elements: usize, width: usize) -> RetainedCloneProgress
 
 /// 🧷️ Transfers one native owner once; after `take`, callers must close the spent cursor before dropping it.
 /// 🎟️ Borrows the actual selected child closure quote without advancing its typed owner.
-pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}Ok(crate::RetirementDemand{copy_bytes:cursor.next_close_copy_byte_demand()?,capacity_bytes:cursor.next_close_capacity_byte_demand(body)?,release_bytes:cursor.next_close_release_byte_demand()?,depth:cursor.next_close_depth_demand()?})}
+pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}cursor.close_demands(body)}
 
 pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn output_ready(&self)->bool{false}
         /// 🚦️ Explicit cursor owners override their close lifecycle; absent closure intent is unstarted.
     fn close_started(&self)->bool{false}
     /// 🎟️ Quotes one close action from the actual paid currencies.
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(body)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?})}
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
 /// 🎟️ Quotes the actual next immutable-source turn before any work or allocation.
     fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor lacks an original-source advance quote"))

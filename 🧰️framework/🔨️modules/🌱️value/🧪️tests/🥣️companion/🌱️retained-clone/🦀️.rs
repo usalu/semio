@@ -16,3 +16,6 @@ pub mod paged;
 
 #[path = "../../../🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs"]
 mod close_demand_tests;
+
+#[path="../../../🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🦀️.rs"]
+mod string_output_tests;

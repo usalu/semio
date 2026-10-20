@@ -16,10 +16,12 @@ export interface BazelCargoClassV1{subcommand:"check"|"build"|"test";manifest:st
 /** 🔁️ The local CPU request that makes one Cargo action own the machine: Bazel clamps it to the host, so Cargo actions run one at a time and waiting actions hold no process, like the compiler lease the ingress takes. */
 export const BAZEL_CARGO_EXCLUSIVE_V1=policy.exclusive;
 
-/** 🧮️ Names the Cargo subcommand and manifest of a native task from its authored command; every other task is not a Cargo task. */
+/** 🧮️ Names the Cargo subcommand and manifest of a native task from its authored command, or the `build` of a component task (its driver compiles the one crate); every other task is not a Cargo task. */
 export function bazelCargoClassV1(task:{definition:{execution:{command?:string};metadata?:unknown}}):BazelCargoClassV1|undefined{
  const kind=(task.definition.metadata as {semio?:{execution?:{kind?:string}}}|undefined)?.semio?.execution?.kind,command=task.definition.execution.command;
- if(kind!=="native"||typeof command!=="string")return undefined;
+ if(typeof command!=="string")return undefined;
+ if(kind==="orchestration"){const match=new RegExp(policy.componentCommand,"u").exec(command);return match?{subcommand:"build",manifest:match[1]!.replace(/^"|"$/gu,"")}:undefined;}
+ if(kind!=="native")return undefined;
  const match=new RegExp(policy.nativeCommand,"u").exec(command);
  return match?{subcommand:match[1] as BazelCargoClassV1["subcommand"],manifest:match[2]!.replace(/^"|"$/gu,"")}:undefined;
 }

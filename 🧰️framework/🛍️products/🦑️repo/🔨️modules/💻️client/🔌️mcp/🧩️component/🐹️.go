@@ -18,6 +18,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
  cli "github.com/usalu/semio/repo/cli"
 	"github.com/usalu/semio/repo/providers"
 	"github.com/usalu/semio/repo/workspace"
@@ -51,7 +54,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if _, err := runMCPForProfile(context.Background(), stdioTransport{reader: os.Stdin, writer: os.Stdout}, NewClientRepository(profile), profile); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if _, err := runMCPForProfile(ctx, stdioTransport{reader: os.Stdin, writer: os.Stdout}, NewClientRepository(profile), profile); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -62,11 +67,34 @@ func runMCP(ctx context.Context, transport Transport, repository RepositoryHandl
 }
 
 func runMCPForProfile(ctx context.Context, transport Transport, repository RepositoryHandlers, profile providers.McpClientKind) (*Server, error) {
+	started := time.Now()
 	server, err := NewRepositoryServerFor(repository, profile)
 	if err != nil {
 		return nil, err
 	}
+	buildTools := registerBuildSurface(server)
+	fmt.Fprintf(os.Stderr, "[repo-mcp] ready pid=%d profile=%s tools=%d buildTools=%d in %s\n", os.Getpid(), profile, len(server.tools), buildTools, time.Since(started).Round(time.Millisecond))
 	return serveMCP(ctx, transport, server)
+}
+
+// 🏗️registerBuildSurface adds the tools derived from the neutral catalogue and reports how many; when the repository has no policy or the catalogue does not derive, the server keeps serving tickets and goals and says why on stderr.
+func registerBuildSurface(server *Server) int {
+	root, bound := workspace.LookupRootDir()
+	if !bound {
+		return 0
+	}
+	surface, err := LoadBuildSurface(root)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			fmt.Fprintf(os.Stderr, "[repo-mcp] build tools unavailable: %v\n", err)
+		}
+		return 0
+	}
+	if err := surface.Register(server); err != nil {
+		fmt.Fprintf(os.Stderr, "[repo-mcp] build tools unavailable: %v\n", err)
+		return 0
+	}
+	return len(surface.Tools)
 }
 
 func serveMCP(ctx context.Context, transport Transport, server *Server) (*Server, error) {

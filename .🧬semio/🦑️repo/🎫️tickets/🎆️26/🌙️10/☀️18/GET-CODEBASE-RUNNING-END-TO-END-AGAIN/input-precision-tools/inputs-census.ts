@@ -3,7 +3,7 @@ import {readFileSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 const B="../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts";
-const api=await import(process.env.BZL_LAZY_ADAPTER??B),root="/Users/ueli/Documents/semio",dir=join(import.meta.dir,"..","🗑️generated","input-precision"),graph=JSON.parse(readFileSync(join(dir,"graph.json"),"utf8"));
+const api=await import(process.env.BZL_LAZY_ADAPTER??B),root="/Users/ueli/Documents/semio",dir=join(import.meta.dir,"..","🗑️generated","input-precision"),graph=JSON.parse(readFileSync(join(dir,process.env.IP_GRAPH??"graph.json"),"utf8"));
 const git=spawnSync("git",["-c","core.fsmonitor=false","ls-files","-co","--exclude-standard","-z"],{cwd:root,maxBuffer:512*1024*1024});
 const inventory=[...new Set(git.stdout.toString().split("\0").filter(Boolean))].filter(path=>!path.startsWith(".🧬semio/")&&!path.startsWith(".git/")).sort();
 const t0=performance.now(),index=api.bazelSourceIndexV1(inventory),indexMs=Math.round(performance.now()-t0);
@@ -21,5 +21,5 @@ for(const action of emitted.values()){
 rows.sort((a,b)=>b.files-a.files);
 const bucket=(n:number)=>rows.filter(r=>r.files>=n).length;
 const summary={inventory:inventory.length,indexMs,cachedTasks:rows.length,over100:bucket(100),over1000:bucket(1000),over10000:bucket(10000),over50000:bucket(50000),over100000:bucket(100000),median:rows[Math.floor(rows.length/2)]?.files,top:rows.slice(0,40)};
-writeFileSync(join(dir,"inputs-census.json"),JSON.stringify({...summary,all:rows}));
+writeFileSync(join(dir,process.env.IP_CENSUS??"inputs-census.json"),JSON.stringify({...summary,all:rows}));
 console.log(JSON.stringify(summary,null,1));

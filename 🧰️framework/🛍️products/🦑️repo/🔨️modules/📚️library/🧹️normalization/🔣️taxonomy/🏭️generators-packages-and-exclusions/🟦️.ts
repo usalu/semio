@@ -1,5 +1,5 @@
 /** 🏭️ The generator contracts, ecosystems, package rules, source dispositions, path exclusions and the assembled schema. */
-import { requireExactKeys, requireLiteral, requireRecord, requireString, requireStringArray, type UnknownRecord } from "@semio-tech/schema-validator-ts";
+import { requireExactKeys, requireLiteral, requireRecord, requireString, requireStringArray, type UnknownRecord } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { TaxonomyV7 } from "../📚️loaded/🟦️.ts";
 import type { Taxonomy as DiscoveryTaxonomy } from "../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { createTaxonomyPathMatcher } from "../../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";

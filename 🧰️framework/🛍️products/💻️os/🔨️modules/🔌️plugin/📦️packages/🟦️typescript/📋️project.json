@@ -17,24 +17,21 @@
     },
     "support": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
-        "default",
-        "^default",
-        "reads",
-        "production",
-        "browserBundleSources"
+        "sharedGlobals",
+        "browserBundleSources",
+        { "externalDependencies": ["@bytecodealliance/preview2-shim"] }
       ],
       "outputs": [
-        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
-        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules/🧵️shard"
+        "{projectRoot}/.🧾️store/support.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts support"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
         }
       },
       "dependsOn": []

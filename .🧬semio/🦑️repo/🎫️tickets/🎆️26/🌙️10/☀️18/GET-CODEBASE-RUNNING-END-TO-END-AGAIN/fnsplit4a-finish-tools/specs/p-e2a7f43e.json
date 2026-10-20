@@ -1,0 +1,40 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👇️hover-and-placement/🟦️.ts",
+ "function": "useWorldHoverAndPlacement",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of useWorldHoverAndPlacement. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️active-utility",
+   "doc": "/** 🔶️ The active utility phase of useWorldHoverAndPlacement. */",
+   "phases": [
+    {
+     "name": "useActiveUtilityState",
+     "emoji": "🔷",
+     "doc": "Builds activeUtility, altHeldRef, brushMode, cameraRef of useWorldHoverAndPlacement.",
+     "from": 16,
+     "to": 154
+    }
+   ]
+  },
+  {
+   "dir": "🔸️handle-component-hover",
+   "doc": "/** 🔸️ The handle component hover phase of useWorldHoverAndPlacement. */",
+   "phases": [
+    {
+     "name": "useHandleComponentHoverState",
+     "emoji": "🔹",
+     "doc": "Builds handleComponentHover, handleVortexHover, handleVortexSelect, handleConnectDragStart of useWorldHoverAndPlacement.",
+     "from": 162,
+     "to": 307
+    }
+   ]
+  }
+ ]
+}

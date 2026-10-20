@@ -1,0 +1,370 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Native CI Command Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "version",
+    "scope",
+    "workflow",
+    "mode",
+    "jobs",
+    "provision",
+    "envelope",
+    "ordinaryCommands",
+    "preserve",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./🧬️schema/🔣️.json"
+    },
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "architecture-course-native-ci-ingress"
+    },
+    "workflow": {
+      "const": ".github/workflows/architecture-course.yml"
+    },
+    "mode": {
+      "const": "release"
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "check",
+          "site",
+          "proctor"
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "provision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "shell",
+        "nativeDirectory",
+        "nativeExecutable",
+        "recipe",
+        "usableNativeAction",
+        "absentOrUnusableAction",
+        "recoveryOwner",
+        "recoveryConfiguration",
+        "recoveryArguments",
+        "requiredAfterRecovery",
+        "pathVisibleFrom",
+        "maximumRecoveryAttempts"
+      ],
+      "properties": {
+        "id": {
+          "const": "native-repo"
+        },
+        "shell": {
+          "const": "bash"
+        },
+        "nativeDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nativeExecutable": {
+          "const": "repo"
+        },
+        "recipe": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "usableNativeAction": {
+          "const": "retain"
+        },
+        "absentOrUnusableAction": {
+          "const": "one-owned-recovery"
+        },
+        "recoveryOwner": {
+          "const": "repo-mcp:build"
+        },
+        "recoveryConfiguration": {
+          "const": "release"
+        },
+        "recoveryArguments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "requiredAfterRecovery": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "pathVisibleFrom": {
+          "const": "next-step"
+        },
+        "maximumRecoveryAttempts": {
+          "const": 1
+        }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "required",
+        "nativeOrdinaryExecutable"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "nativeOrdinaryExecutable": {
+          "const": "repo"
+        }
+      }
+    },
+    "ordinaryCommands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check",
+        "site",
+        "proctor"
+      ],
+      "properties": {
+        "check": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "site": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "proctor": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "minItems": 1,
+          "maxItems": 16
+        }
+      }
+    },
+    "preserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatchOnly",
+        "defaultBranchOnly",
+        "runnerVariable",
+        "jobNames",
+        "pinnedActions",
+        "checkoutCredentials",
+        "proctorPublishAfterLogin",
+        "siteArtifact",
+        "outwardActionsUnchanged"
+      ],
+      "properties": {
+        "dispatchOnly": {
+          "const": true
+        },
+        "defaultBranchOnly": {
+          "const": true
+        },
+        "runnerVariable": {
+          "const": "ARCHITECTURE_COURSE_RUNNER"
+        },
+        "jobNames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "pinnedActions": {
+          "const": true
+        },
+        "checkoutCredentials": {
+          "const": false
+        },
+        "proctorPublishAfterLogin": {
+          "const": true
+        },
+        "siteArtifact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outwardActionsUnchanged": {
+          "const": true
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "enum": [
+              "accept",
+              "refuse"
+            ]
+          },
+          "initialNative": {
+            "enum": [
+              "absent"
+            ]
+          },
+          "initialNativeHelp": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "initialNativeMagic": {
+            "enum": [
+              "ELF"
+            ]
+          },
+          "receiptPresent": {
+            "type": "boolean"
+          },
+          "recoveryStatus": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "finalNativeHelp": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "finalNative": {
+            "enum": [
+              "absent"
+            ]
+          },
+          "recoveryCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "change": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "initialNative"
+            ],
+            "properties": {
+              "initialNative": {
+                "enum": [
+                  "absent"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "initialNativeHelp"
+            ],
+            "properties": {
+              "initialNativeHelp": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "change"
+            ],
+            "properties": {
+              "change": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "policy": {
+    "algorithm": "sha256",
+    "implementation": "first-party-hash-port",
+    "chunkBytes": 16384,
+    "readExtent": "captured-length",
+    "historyTextInspectionBytes": 1048576,
+    "maximumManagedFileBytes": 67108864
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "encoding": "utf8",
+      "value": "",
+      "repeat": 1,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ascii",
+      "encoding": "utf8",
+      "value": "abc",
+      "repeat": 1,
+      "bytes": 3,
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    {
+      "name": "unicode-crlf",
+      "encoding": "utf8",
+      "value": "Grüße 🦑\r\n",
+      "repeat": 1,
+      "bytes": 14,
+      "sha256": "b019b5f8eb4e40fd7d44cd4014d21a682a564e59cf173bb5d7675450bfb6e598"
+    },
+    {
+      "name": "binary",
+      "encoding": "hex",
+      "value": "00ff800d0a",
+      "repeat": 1,
+      "bytes": 5,
+      "sha256": "6171db06a1c89b1ff8ab77e479d5df976ccd88a7b63567b4b18f413649e12ff3"
+    },
+    {
+      "name": "chunk-boundary",
+      "encoding": "utf8",
+      "value": "0123456789abcdef",
+      "repeat": 1025,
+      "bytes": 16400,
+      "sha256": "007d692bc869bd04e6eb36e8495a45476108a1f4120a8af8290930ad0d5279ff"
+    },
+    {
+      "name": "larger-than-text-editor",
+      "encoding": "hex",
+      "value": "00ff",
+      "repeat": 1048576,
+      "bytes": 2097152,
+      "sha256": "a4ecb96839389f4c6d06304be2ab7f1bc2dc7b37b4d4ed33d575045ef1c53574"
+    }
+  ]
+}

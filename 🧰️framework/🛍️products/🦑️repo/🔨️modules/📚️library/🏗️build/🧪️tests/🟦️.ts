@@ -1,3 +1,4 @@
+import "./🎯️source-roster/🟦️.ts";
 import "../⚙️operations/🧪️tests/🟦️.ts";
 import "../🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts";
 import "../📥️source/🛗️zero-touch/🧪️tests/🟦️.ts";
@@ -46,3 +47,7 @@ test("workspace build gate requires compiler intent and emits the completed grap
     if (before === undefined) delete process.env.SEMIO_BUILD_MODE; else process.env.SEMIO_BUILD_MODE = before;
   }
 }));
+
+import "./🕸️graph/🌱️native-scope/🟦️.ts";
+
+import "../../⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🚪️gate/🧪️tests/🟦️.ts";

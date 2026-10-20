@@ -1,6 +1,6 @@
 # Dashboard Human Workflow Audit
 
-This is a bounded source audit on October 20, not a native viewer pass. The current dashboard binary has not yet been successfully rebuilt/installed in this task. The controls owner is executing the nine-library native compiler gate; Core and canonical dashboard installation follow it.
+The table below preserves the initial bounded source audit on October20, before the native document workflow was added. It is historical gap evidence, not a description of the current source or a native viewer pass. The current dashboard binary has not yet been successfully rebuilt/installed in this task. The controls owner is executing the nine-library native compiler gate; Core and canonical dashboard installation follow it.
 
 | Workflow | Actual authored route | Evidence and current limit |
 | --- | --- | --- |
@@ -25,3 +25,9 @@ Current root AGENTS requires humans to use the dashboard and forbids IDE use. Th
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md`: current external-edit instruction and task controls.
 
 No production files were edited for this audit. No frontend runtime claim is derived from source alone.
+
+## Current Source And Runtime Readback
+
+The external open-source control has been removed. Current source adds Files/Document native window bodies, a cancellable filesystem workspace worker, a reusable multiline Textarea implementation and localized customizable document actions. Existing source files can be browsed, loaded, edited, saved with optimistic revision checks, reloaded after confirmation and inspected through authenticated readonly recovery documents. The declared supervised workspace terminal covers other file operations and Git inside the dashboard.
+
+Actual filesystem53877 passed10native laws whole0 on macOS. Current Widgets18419 passed all8laws whole0, including both editor laws and all13shared Unicode/CRLF/history/readonly vectors. The dashboard controller3laws, actual installed edit/save/conflict PTY journeys, catalog launcher and debugger lifecycle remain pending. Source implementation and these independent library passes do not establish complete native dashboard usability or cold/warm startup performance. See oct20-native-editor.md, oct20-source-workspace.md and oct20-e2e-verification.md for current evidence.

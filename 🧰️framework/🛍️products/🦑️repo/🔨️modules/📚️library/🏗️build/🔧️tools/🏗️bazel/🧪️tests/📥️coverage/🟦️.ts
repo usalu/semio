@@ -1,5 +1,6 @@
 /** 🧪️ Contract: a selected, unconsumed, cached task named test that declares no outputs is a Bazel test target; everything else keeps its action kind. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readFile} from "node:fs/promises";
 import ts from "typescript";
 import Ajv from "ajv";
@@ -8,7 +9,7 @@ import component from "../../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema.json";
 
-const runner="\u{1F4DC}\uFE0Fscript.ts",api=await import("../../📜️script.ts"),graph=fixture.graph as any,python=Bun.which("python3"),ajv=()=>new Ajv({strict:true}).addSchema(coverageSchema,"coverage");
+const runner="\u{1F4DC}\uFE0Fscript.ts",api=await import("../../📜️script.ts"),graph=fixture.graph as any,python=testPythonV1(),ajv=()=>new Ajv({strict:true}).addSchema(coverageSchema,"coverage");
 
 test("test disposition fixture is closed and its expectations are admitted by the neutral schema",()=>{
  const validate=ajv().compile(fixtureSchema);

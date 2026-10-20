@@ -1,5 +1,8 @@
 //! 🔗️ Shared immutable owners retain Arc backing custody until aliases and weak leases close.
 
+#[path="📦️original/🦀️.rs"]
+pub mod original;
+
 use super::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use crate::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{sync::Arc,mem::ManuallyDrop};

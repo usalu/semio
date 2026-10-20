@@ -1,0 +1,41 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Graph memory governor / Speichergrenze des Graph-Aufbaus",
+ "description": "EN: The managed memory of one graph construction is bounded by a budget: a new project inference starts only while the heap is within the budget (after one collection), never more than the worker count run at once, a budget exceeded by retained data degrades to one project at a time, equal long strings of results and stored documents are one instance. DE: Der verwaltete Speicher eines Graph-Aufbaus ist durch ein Budget begrenzt: eine neue Projektableitung startet nur, solange der Heap im Budget liegt (nach einer Speicherbereinigung), es laufen nie mehr Projekte als Arbeiter, ein durch gehaltene Daten überschrittenes Budget führt zu einem Projekt nach dem anderen, gleiche lange Zeichenketten von Ergebnissen und gespeicherten Dokumenten sind eine Instanz.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "defaultBudgetMegabytes": 3072,
+    "minimumBudgetMegabytes": 1024,
+    "grantShare": 0.5,
+    "resumeRatio": 0.85,
+    "pollMilliseconds": 50,
+    "sampleMilliseconds": 25,
+    "admitMinimumMilliseconds": 100,
+    "collectMinimumMilliseconds": 2000,
+    "retainedMilliseconds": 30000,
+    "progressMilliseconds": 5000,
+    "retainedImageBytes": 33554432,
+    "minimumInternedLength": 24,
+    "maximumInternedCharacters": 67108864,
+    "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
+    "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN"
+   }
+  },
+  "Messages": {
+   "const": {
+    "en": {
+     "waiting": "graph: waiting for memory ({used} of {budget} MB in use, {running} projects running)",
+     "serial": "graph: memory above the budget of {budget} MB ({used} MB in use), inferring one project at a time",
+     "resumed": "graph: memory below the budget again ({used} of {budget} MB), resuming"
+    },
+    "de": {
+     "waiting": "Graph: wartet auf Speicher ({used} von {budget} MB belegt, {running} Projekte laufen)",
+     "serial": "Graph: Speicher über dem Budget von {budget} MB ({used} MB belegt), Projekte werden einzeln abgeleitet",
+     "resumed": "Graph: Speicher wieder unter dem Budget ({used} von {budget} MB), es geht weiter"
+    }
+   }
+  }
+ }
+}

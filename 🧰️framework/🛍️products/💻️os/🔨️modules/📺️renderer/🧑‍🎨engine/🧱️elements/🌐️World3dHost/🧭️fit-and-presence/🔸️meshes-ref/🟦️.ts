@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { marqueeCoverageFromGesture, useLabel, type SelectionMarqueeCoverage, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { GestureRecognizer } from "@semio-tech/framework";
 import { DEFAULT_LOD_GRID_FACTOR, type WorldCameraState } from "@semio-tech/framework/infinite/world/r3f";
-import { CAMERA_SYNC_DEBOUNCE_MS } from "../../../📐️Canvas2dHost/🟦️.tsx";
+import { CAMERA_SYNC_DEBOUNCE_MS } from "../../../📐️Canvas2dHost/🟢️shared/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { suggestionMenuOwnsWindow, suggestionPopupOwnsWindow } from "../../../🎣️suggestion-submenu/🟦️.ts";
 import { mergeWorldViewportCamera, worldCameraSetCameraDispatchArgs } from "../../🔭️scene-schema/🟦️.ts";
@@ -180,7 +180,7 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
     [dispatch, interactionDomainId, node.surfaceId, references, selectionMode],
   );
 
-  /** 🏁️ Reference-marker hover is a POINTERMOVE lane like the instance and vortex ones, so it coalesces onto
+  /** 📍️ Reference-marker hover is a POINTERMOVE lane like the instance and vortex ones, so it coalesces onto
    * the latest marker and keeps one round trip outstanding — it used to dispatch one guest turn per move with
    * no gate at all, the same unbounded shape wave B33 measured on the vortex lane (§3). The record lookup
    * reads `referencesRef` so a republished scene cannot rebuild the dispatcher and drop its in-flight state. */

@@ -29,6 +29,9 @@ semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/�
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }
 semio-framework-os = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -37,8 +37,8 @@ export function admitPlaygroundNativeHostV1(value: unknown, resolveOwner: (crate
 export function parsePlaygroundNativeHostV1(block: string, fieldName?: "nativeHost" | "mcpHost"): PlaygroundNativeHostV1 | undefined;
 /** 🧾️ Reads validated Cargo and project source facts. */
 export function nativeHostSourceFactsV1(cratePath: string, view: NativeHostSourceViewV1): NativeHostSourceFactsV1;
-/** 🚀️ Resolves a declared platform executable from its actual publication directory. */
-export function nativeHostArtifactPathV1(host: PlaygroundNativeHostV1, profile: "prototype" | "release", facts: NativeHostSourceFactsV1, platform: string): string;
+/** 🚀️ Resolves a declared platform executable through the store receipt of its producer target. */
+export function nativeHostArtifactPathV1(host: PlaygroundNativeHostV1, profile: "prototype" | "release", facts: NativeHostSourceFactsV1, platform: string, receipt: unknown): string;
 /** 🧵️ Returns the exact selected producer input closure. */
 export function declaredPlaygroundHostInputPathsV1(manifest: string, view: NativeHostSourceViewV1): string[];
 

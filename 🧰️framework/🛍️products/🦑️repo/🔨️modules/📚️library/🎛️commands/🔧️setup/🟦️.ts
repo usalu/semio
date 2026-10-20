@@ -81,20 +81,20 @@ export class SetupScript extends Script {
         prepare: () => console.log("[prepare] Build prerequisites completed"),
         devcontainer: (rest) => this.runDevcontainer(rest),
       },
-      "bun ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach|gitkraken>]",
+      "bun ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach>]",
     );
   }
 
   /** 🔁️ The devcontainer lifecycle `.devcontainer/devcontainer.json` runs: `start` on every container start, `attach` on
-   * every editor attach, `gitkraken` to open GitKraken Desktop on the checkout. Loaded on demand, so no other verb pays for it.
+   * every container attach. Loaded on demand, so no other verb pays for it.
    * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts */
   private async runDevcontainer(segments: string[]): Promise<void> {
     const lifecycle = await import("../../⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts");
     const host = lifecycle.processLifecycleHost(), context = lifecycle.processLifecycleContext(this.root);
     await dispatchSubcommand(
       segments,
-      { start: () => lifecycle.devcontainerStart(host, context), attach: () => lifecycle.devcontainerAttach(host, context), gitkraken: () => lifecycle.launchGitKraken(host, context) },
-      "bun ./📜️script.ts setup devcontainer <start|attach|gitkraken>",
+      { start: () => lifecycle.devcontainerStart(host, context), attach: () => lifecycle.devcontainerAttach(host, context) },
+      "bun ./📜️script.ts setup devcontainer <start|attach>",
     );
   }
 

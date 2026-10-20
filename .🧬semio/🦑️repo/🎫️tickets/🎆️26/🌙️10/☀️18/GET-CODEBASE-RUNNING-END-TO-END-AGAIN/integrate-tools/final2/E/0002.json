@@ -1,0 +1,67 @@
+{
+  "name": "@semio-tech/procedural-js",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️transforms/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧬️schema/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/**/📚️examples/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/**/*",
+        "{workspaceRoot}/bun.lock"
+      ],
+      "outputs": []
+    },
+    "test-renderer-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
+        "{workspaceRoot}/🧰️framework/**/*",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": []
+    }
+  }
+}

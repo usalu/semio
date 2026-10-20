@@ -1,4 +1,4 @@
-import { foldPathEmojiIdentity } from "@semio-tech/framework/identity/path";
+import { foldPathEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { OPAQUE_PATH_EXCLUSIONS } from "../👥️mutation-owner-rules/🟦️.ts";
 import type { TaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";
 

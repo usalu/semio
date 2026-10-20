@@ -191,7 +191,7 @@ func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {
   if len(argv[index]) >= 7 && argv[index][:7] == "--tool=" { index++; continue }; break
  }
  if index > 0 { return NativeEntrypointPlan{"build", arguments} }
- if index < len(argv) { switch argv[index] { case "run", "run-many", "affected", "exec", "watch", "dependencies", "cargo", "tools", "reset", "cache", "preflight", "show", "graph": return NativeEntrypointPlan{"build", arguments} } }
+ if index < len(argv) { switch argv[index] { case "run", "run-many", "affected", "exec", "watch", "dependencies", "cargo", "tools", "reset", "cache", "preflight", "show", "graph", "inputs", "incremental", "concurrency", "capacity", "leases", "remote-execution": return NativeEntrypointPlan{"build", arguments} } }
  return NativeEntrypointPlan{"domain", arguments}
 }
 
@@ -221,7 +221,7 @@ func RunCLI() error {
  plan := PlanNativeEntrypoint(os.Args[1:])
  if plan.Kind == "build" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }
  if plan.Kind == "workspace" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }
- if len(os.Args) == 1 || os.Args[1] == "--help" || os.Args[1] == "-h" { fmt.Fprintln(os.Stdout, "Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]") }
+ if len(os.Args) == 1 || os.Args[1] == "--help" || os.Args[1] == "-h" { fmt.Fprintln(os.Stdout, "Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph, inputs, incremental, concurrency, capacity, leases, remote-execution\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]") }
 	if err := workspace.BindWorkingDirectory(); err != nil {
 		return err
 	}

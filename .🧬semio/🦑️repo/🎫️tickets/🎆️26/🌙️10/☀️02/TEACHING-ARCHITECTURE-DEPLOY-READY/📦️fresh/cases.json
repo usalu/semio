@@ -1,0 +1,322 @@
+{
+  "version": 1,
+  "paths": [
+    {
+      "path": "module/🟦️.ts",
+      "accepted": true
+    },
+    {
+      "path": "empty.txt",
+      "accepted": true
+    },
+    {
+      "path": "../escape",
+      "accepted": false
+    },
+    {
+      "path": "/absolute",
+      "accepted": false
+    },
+    {
+      "path": "a\\b",
+      "accepted": false
+    },
+    {
+      "path": "a:b",
+      "accepted": false
+    },
+    {
+      "path": "a//b",
+      "accepted": false
+    },
+    {
+      "path": "a/./b",
+      "accepted": false
+    },
+    {
+      "path": "line\nfeed",
+      "accepted": false
+    }
+  ],
+  "epochs": [
+    {
+      "id": "stable",
+      "accepted": true
+    },
+    {
+      "id": "source-hash-changed",
+      "accepted": false
+    },
+    {
+      "id": "source-identity-changed",
+      "accepted": false
+    },
+    {
+      "id": "critical-expected-hash-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "critical-absence-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "provider-changed",
+      "accepted": false
+    },
+    {
+      "id": "membership-changed",
+      "accepted": false
+    },
+    {
+      "id": "registry-changed",
+      "accepted": false
+    },
+    {
+      "id": "tracked-added",
+      "accepted": false
+    },
+    {
+      "id": "untracked-added",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-path",
+      "accepted": false
+    },
+    {
+      "id": "explicit-extra-critical",
+      "accepted": true
+    },
+    {
+      "id": "explicit-critical-missing-catalog",
+      "accepted": false
+    },
+    {
+      "id": "explicit-null-absence",
+      "accepted": true
+    },
+    {
+      "id": "explicit-nonnull-absence",
+      "accepted": false
+    }
+  ],
+  "transfer": [
+    {
+      "id": "stable-direct-pax",
+      "accepted": true
+    },
+    {
+      "id": "source-before-stream-changed",
+      "accepted": false
+    },
+    {
+      "id": "wrong-before-custody",
+      "accepted": false
+    },
+    {
+      "id": "wrong-after-custody",
+      "accepted": false
+    },
+    {
+      "id": "receiver-nonterminal",
+      "accepted": false
+    },
+    {
+      "id": "receiver-byte-count-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "cancel-before-admission",
+      "accepted": false
+    },
+    {
+      "id": "cancel-during-stream",
+      "accepted": false
+    }
+  ],
+  "payload": [
+    {
+      "path": "src/🟦️.ts",
+      "accepted": true
+    },
+    {
+      "path": ".cache/file",
+      "accepted": false
+    },
+    {
+      "path": "a/node_modules/x",
+      "accepted": false
+    },
+    {
+      "path": ".semio-private/source.json",
+      "accepted": false
+    },
+    {
+      "path": "a/🤖️generated/x",
+      "accepted": false
+    }
+  ],
+  "stableRead": [
+    "ordinary",
+    "empty",
+    "symlink",
+    "hardlink",
+    "name-replaced",
+    "descriptor-mutated",
+    "ancestor-replaced",
+    "short-read",
+    "grew-at-eof",
+    "cancelled"
+  ],
+  "pax": [
+    {
+      "path": "🧪️/ä.txt",
+      "text": "Unicode body\n",
+      "executable": false
+    },
+    {
+      "path": "empty.txt",
+      "text": "",
+      "executable": false
+    },
+    {
+      "path": "bin/tool",
+      "text": "#!/bin/sh\n",
+      "executable": true
+    },
+    {
+      "path": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "text": "PAX long path",
+      "executable": false
+    }
+  ],
+  "absence": [
+    {
+      "id": "missing-final",
+      "accepted": true,
+      "absent": true
+    },
+    {
+      "id": "missing-ancestor",
+      "accepted": true,
+      "absent": true
+    },
+    {
+      "id": "present-final",
+      "accepted": true,
+      "absent": false
+    },
+    {
+      "id": "symlink-ancestor",
+      "accepted": false
+    },
+    {
+      "id": "replaced-ancestor",
+      "accepted": false
+    },
+    {
+      "id": "ancestor-enotdir",
+      "accepted": false
+    }
+  ],
+  "catalog": [
+    {
+      "id": "fixed-minimum",
+      "critical": [],
+      "accepted": true,
+      "required": []
+    },
+    {
+      "id": "ignored-ordinary",
+      "critical": [
+        {
+          "path": "ignored/course.d.mts",
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ],
+      "accepted": true,
+      "required": [
+        "ignored/course.d.mts"
+      ]
+    },
+    {
+      "id": "non-git-ordinary",
+      "critical": [
+        {
+          "path": "course/new-source.ts",
+          "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      "accepted": true,
+      "required": [
+        "course/new-source.ts"
+      ]
+    },
+    {
+      "id": "explicit-absent",
+      "critical": [
+        {
+          "path": "missing/source.ts",
+          "sha256": null
+        }
+      ],
+      "accepted": true,
+      "required": [
+        "missing/source.ts"
+      ]
+    },
+    {
+      "id": "unicode-byte-order",
+      "critical": [
+        {
+          "path": "é/source.ts",
+          "sha256": null
+        },
+        {
+          "path": "🧪️/source.ts",
+          "sha256": null
+        },
+        {
+          "path": "z/source.ts",
+          "sha256": null
+        }
+      ],
+      "accepted": true,
+      "required": [
+        "z/source.ts",
+        "é/source.ts",
+        "🧪️/source.ts"
+      ]
+    },
+    {
+      "id": "duplicate-plan-path",
+      "critical": [
+        {
+          "path": "course/same.ts",
+          "sha256": null
+        },
+        {
+          "path": "course/same.ts",
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-fixed-member",
+      "omitFixed": true,
+      "critical": [],
+      "accepted": false
+    },
+    {
+      "id": "malformed-critical-pin",
+      "critical": [
+        {
+          "path": "course/bad.ts",
+          "sha256": "malformed"
+        }
+      ],
+      "accepted": false
+    }
+  ]
+}

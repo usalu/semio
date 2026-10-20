@@ -11,6 +11,11 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "build": {

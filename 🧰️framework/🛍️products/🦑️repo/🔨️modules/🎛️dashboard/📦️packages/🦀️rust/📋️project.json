@@ -13,16 +13,15 @@
       "reads"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -36,37 +35,110 @@
         "cargoToolchain"
       ],
       "outputs": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test dispatch"
       },
       "metadata": {
         "semio": {
-          "dashboard": {"verb":"test","title":{"en":"Check Test Dispatch","de":"Testauswahl prüfen"},"description":{"en":"Verify developer test dispatch and exact Rust law ownership through the Source tests.","de":"Entwicklertestauswahl und exakte Rust-Testzuständigkeit durch Source-Tests prüfen."},"parameters":[]},
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Check Test Dispatch",
+              "de": "Testauswahl prüfen"
+            },
+            "description": {
+              "en": "Verify developer test dispatch and exact Rust law ownership through the Source tests.",
+              "de": "Entwicklertestauswahl und exakte Rust-Testzuständigkeit durch Source-Tests prüfen."
+            },
+            "parameters": []
+          },
           "execution": {
             "version": 1,
             "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-language": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "reads",
+        "testEnv",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json"
+      ],
+      "outputs": [],
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test language",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌐️language/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Verify language choice",
+              "de": "Sprachauswahl prüfen"
+            },
+            "description": {
+              "en": "Check explicit language negotiation and the shared choice oracle without installing the dashboard.",
+              "de": "Explizite Sprachauflösung und gemeinsame Auswahlfälle ohne Dashboard-Installation prüfen."
+            }
           }
         }
       }
     },
     "test-source-freshness": {
       "executor": "repo:script",
-      "inputs": ["default", "reads", "testEnv"],
+      "inputs": [
+        "default",
+        "reads",
+        "testEnv",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🧬️schema/🔣️.json"
+      ],
       "outputs": [],
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test source-freshness"
       },
       "metadata": {
         "semio": {
-          "execution": { "version": 1, "kind": "source" },
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
           "dashboard": {
-            "title": { "en": "Dashboard source freshness", "de": "Dashboard-Quellaktualität" },
-            "description": { "en": "Verify exact Cargo workspace inputs and source changes without building the native dashboard.", "de": "Exakte Cargo-Workspace-Eingaben und Quelländerungen ohne nativen Dashboard-Build prüfen." }
-          }
+            "title": {
+              "en": "Dashboard source freshness",
+              "de": "Dashboard-Quellaktualität"
+            },
+            "description": {
+              "en": "Verify exact Cargo workspace inputs and source changes without building the native dashboard.",
+              "de": "Exakte Cargo-Workspace-Eingaben und Quelländerungen ohne nativen Dashboard-Build prüfen."
+            }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts"
+          ]
         }
       }
     },
@@ -89,6 +161,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "driver-owned",
+            "reason": "freshness-owned-by-driver"
           }
         }
       }
@@ -111,6 +188,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -133,6 +215,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -155,6 +242,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -162,13 +254,37 @@
     "test-process-deadline": {
       "executor": "repo:script",
       "cache": false,
-      "inputs": ["default", "^default", "testEnv", "reads", "cargoToolchain"],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test process-deadline"
       },
-      "metadata": { "semio": { "dashboard": { "title": { "en": "Process time limits", "de": "Prozesszeitlimits" }, "description": { "en": "Verify selected deadlines with real supervised processes and localized timeout states.", "de": "Ausgewählte Zeitlimits mit echten überwachten Prozessen und übersetzten Ablaufzuständen prüfen." } } } }
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "title": {
+              "en": "Process time limits",
+              "de": "Prozesszeitlimits"
+            },
+            "description": {
+              "en": "Verify selected deadlines with real supervised processes and localized timeout states.",
+              "de": "Ausgewählte Zeitlimits mit echten überwachten Prozessen und übersetzten Ablaufzuständen prüfen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
     },
     "test-unit": {
       "executor": "repo:script",
@@ -204,6 +320,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -226,6 +347,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -248,6 +374,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -270,6 +401,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -278,7 +414,8 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test journeys"
+        "command": "bun ./📜️script.ts test journeys",
+        "forwardAllArgs": false
       },
       "cache": false,
       "metadata": {
@@ -292,9 +429,27 @@
                 "target": "compile"
               }
             ]
-          }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts"
+          ]
         }
-      }
+      },
+      "inputs": [
+        "default",
+        "reads",
+        "testEnv",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/**/*"
+      ],
+      "outputs": [],
+      "dependsOn": []
     },
     "test-windows": {
       "executor": "repo:script",
@@ -316,7 +471,8 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test load"
+        "command": "bun ./📜️script.ts test load",
+        "forwardAllArgs": false
       },
       "cache": false,
       "metadata": {
@@ -330,9 +486,27 @@
                 "target": "compile"
               }
             ]
-          }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏋️load/🟦️.ts"
+          ]
         }
-      }
+      },
+      "inputs": [
+        "default",
+        "reads",
+        "testEnv",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/**/*"
+      ],
+      "outputs": [],
+      "dependsOn": []
     },
     "test-smoke": {
       "executor": "repo:script",
@@ -352,6 +526,11 @@
                 "target": "compile"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }
@@ -391,6 +570,11 @@
                 "target": "build"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
           }
         }
       },
@@ -403,7 +587,8 @@
           "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
         }
       },
-      "cache": false
+      "cache": false,
+      "continuous": true
     },
     "daemon": {
       "metadata": {
@@ -484,6 +669,11 @@
                 "target": "build"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
           }
         }
       }
@@ -523,6 +713,11 @@
                 "target": "build"
               }
             ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
           }
         }
       },
@@ -532,7 +727,8 @@
         "command": "bun ./📜️script.ts preferences",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "continuous": true
     },
     "compile": {
       "executor": "repo:script",
@@ -567,7 +763,60 @@
               ]
             }
           },
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": {
+            "version": 1,
+            "class": "driver-owned",
+            "reason": "freshness-owned-by-driver"
+          }
+        }
+      }
+    },
+    "test-cold-start": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "reads",
+        "testEnv"
+      ],
+      "outputs": [],
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test cold-start",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "build"
+              }
+            ]
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/❄️cold-start/🟦️.ts"
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Cold Dashboard Launch",
+              "de": "Kalten Dashboard-Start prüfen"
+            },
+            "description": {
+              "en": "Verify a naturally absent or stale canonical installation through the real lazy build and native commands check, then retain it for a warm replay.",
+              "de": "Eine tatsächlich fehlende oder veraltete Installation durch echten bedarfsweisen Build und nativen Befehlscheck prüfen, danach den warmen Wiederaufruf bestätigen."
+            }
+          }
         }
       }
     }

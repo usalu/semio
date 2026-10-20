@@ -1,6 +1,10 @@
 import{physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"./📋️data/📥️load/🟨️.mjs";
-import {repositoryBuildGraphWriterDirectoryV1} from "./💾️storage/🟨️.mjs";
+import {repositoryBuildGraphWriterDirectoryV1, withBuildGraphOptionalPublicationV1} from "./💾️storage/🟨️.mjs";
+import { createRequire } from "node:module";
+import { createCargoResolutionContextV1, cargoResolutionPartsV1, flushCargoReceiptsV1, readCargoResolutionPolicyV1 } from "./🦀️resolution/🟦️.ts";
+import { createCargoReceiptWriterV1 } from "./🦀️resolution/💾️receipt/🟨️.mjs";
+import resolutionDocument from "./🦀️resolution/🔣️.json" with { type: "json" };
 import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, lstatSync, renameSync, rmSync, existsSync as persistedExists } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -58,17 +62,57 @@ export function deduplicateProjectInputs(inputs, root) {
 }
 
 /** 🧾️ Publishes identical content-addressed closure bytes atomically across independent graph writers. */
+const VERIFIED_CLOSURES_V1=new Map();
+
+/** 🧾️ Publishes identical content-addressed closure bytes atomically across independent graph writers; a closure whose stamp equals the one last verified equal is not read again. */
 function publishInputClosureV1(path,contract){
- const verify=()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract)||!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");};
+ const verify=()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract))throw Error("Original immutable input closure bytes required");const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return;if(!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});};
  if(persistedExists(path)){verify();return;}
  const temporary=path+"~"+randomUUID();if(temporary.length>256||[...temporary].length>256)throw Error("Input closure staging path exceeds256 characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameSync(temporary,path);verify();}finally{rmSync(temporary,{force:true});}
 }
+
+/** 📍️ Projects the project-root sentinel into a repository-relative Cargo manifest. */
+export function cargoManifestInputV1(root){return root==="."?"Cargo.toml":`${root}/Cargo.toml`;}
 
 /** 🔒️ A lock projection is batched by the same native hasher without compiler subprocesses. */
 export function cargoLockInput(manifest, workspaceRoot) {
   const captured = captureCargoLockInventoryV1({ version: 1, manifest },workspaceRoot), contract = captured.text, key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-lock-closures"), path = join(directory, `${key}.json`);
   publishInputClosureV1(path,contract);
   return { env: `SEMIO_CARGO_LOCK_${key}` };
+}
+
+const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 512;
+
+/** 🗃️ Reuses the immutable captured inventory of an identical file roster: it is a pure function of the roster and the workspace root, and thousands of projects share the same command closure. */
+function capturedInventoryV1(files, workspaceRoot) {
+  const hash = createHash("sha256").update(workspaceRoot).update("\0");
+  for (const file of files) hash.update(file).update("\0");
+  const key = hash.digest("hex"), known = INVENTORY_MEMO_V1.get(key);
+  if (known !== undefined) return known;
+  const captured = captureSourceInputInventoryV1({ version: 1, files }, workspaceRoot);
+  if (INVENTORY_MEMO_V1.size >= INVENTORY_MEMO_LIMIT_V1) INVENTORY_MEMO_V1.delete(INVENTORY_MEMO_V1.keys().next().value);
+  INVENTORY_MEMO_V1.set(key, captured);
+  return captured;
+}
+
+const resolutionPolicy = readCargoResolutionPolicyV1(resolutionDocument), resolutionRuns = new WeakMap();
+let tomlParser;
+
+/** 🦀️ Refreshes the resolution receipts of one crate while the graph is built, under the graph writer's custody: every manifest of one graph construction is read and digested once through plain reads (the receipts are validated by digest when they are used, so these reads need no observation), a receipt whose digests still hold costs no derivation, and a failing crate simply has no receipt. */
+async function warmCargoResolutionV1(workspaceRoot, scripts, manifest, context) {
+  try {
+    const key = typeof scripts === "object" && scripts !== null ? scripts : context;
+    let run = resolutionRuns.get(key);
+    if (!run) {
+      tomlParser ??= createRequire(import.meta.url)("@iarna/toml").parse;
+      const bytes = (path) => { try { return readFileSync(join(workspaceRoot, path)); } catch (error) { if (error?.code === "ENOENT" || error?.code === "ENOTDIR") return null; throw error; } };
+      const digest = (buffer) => createHash("sha256").update(buffer).digest("hex");
+      const host = { read: async (path) => { const buffer = bytes(path); return buffer === null ? null : { value: tomlParser(buffer.toString("utf8")), sha: digest(buffer) }; }, digest: async (path) => { const buffer = bytes(path); return buffer === null ? null : digest(buffer); } };
+      resolutionRuns.set(key, run = createCargoResolutionContextV1(host, resolutionPolicy, createCargoReceiptWriterV1(repositoryBuildGraphWriterDirectoryV1(workspaceRoot, "inference"), withBuildGraphOptionalPublicationV1)));
+    }
+    await cargoResolutionPartsV1(run, manifest, { tolerant: true });
+    await flushCargoReceiptsV1(run);
+  } catch {}
 }
 
 /** 🧮️ Shares exact inventories while backends hash their current byte digest once per unique closure. */
@@ -94,7 +138,7 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
   }
   if (exact.length < 1) return residual;
   const helpers = ["./🟨️.mjs", "./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)))).split("\\").join("/"));
-  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = captureSourceInputInventoryV1({ version: 1, files },workspaceRoot), contract = captured.text;
+  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = capturedInventoryV1(files, workspaceRoot), contract = captured.text;
   const key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"), manifest = join(directory, `${key}.json`);
   publishInputClosureV1(manifest,contract);
   const script = fileURLToPath(new URL("./🧮️digest/🟨️.mjs", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))), schema = fileURLToPath(new URL("./🧮️digest/🔣️schema.json", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
@@ -134,10 +178,10 @@ export function internProjectInputGroups(groups) {
   return result;
 }
 
-/** 📥️ Projects source and compiler input ownership independently of target orchestration. */
+/** 📥️ Projects source and compiler input ownership independently of target orchestration. The named input `cargoToolchain` of a Rust project is generated here (raw tool files plus the crate's resolution marker, which only a persisted graph carries), never authored: an authored definition of it is replaced; a persisted graph also refreshes the crate's resolution receipts. */
 export async function inferProjectInputs(json, root, workspaceRoot, facts, scripts, context) {
   const { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs, owned } = context;
-  const nativeRoot = json.metadata?.nativeRoot ?? root;
+  const nativeRoot = json.metadata?.nativeRoot ?? root, nativeManifest=cargoManifestInputV1(nativeRoot);
   const tools = ["javascript"];
   if (existsSync(join(workspaceRoot, root, "Cargo.toml")) || json.targets?.wasm) tools.push("cargo");
   if (json.targets?.wasm || json.targets?.["extension-package"] || (tools.includes("cargo") && json.targets?.package)) tools.push("wasm");
@@ -175,13 +219,16 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
   const production = ["!{projectRoot}/**/🧪️tests/**/*", ...examples, "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
   if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
   const declarations = json.namedInputs ?? {}, exclusions = [];
-  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
+  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeManifest}`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
   const artifactSources = artifactTypeScript ? [...await relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json"] : [];
   const javascript = POLICY.toolchains.javascript;
   const artifactCommandSources = artifactTypeScript ? [...await relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
-  const groups = (sourceContracts) => ({ ...declarations, ...sourceContracts, default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...exclusions, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) });
+  const cargoManifest = existsSync(join(workspaceRoot, nativeManifest)) ? nativeManifest : undefined, persisted = context.sourceRepresentation !== "source";
+  if (persisted && cargoManifest && tools.includes("cargo")) await warmCargoResolutionV1(workspaceRoot, scripts, cargoManifest, context);
+  const cargoToolchain = tools.includes("cargo") ? [...POLICY.toolchains.cargo.files.map((file) => `{workspaceRoot}/${file}`), ...(persisted && cargoManifest ? [cargoLockInput(cargoManifest, workspaceRoot)] : [])] : undefined;
+  const groups = (sourceContracts) => ({ ...declarations, ...sourceContracts, ...(cargoToolchain ? { cargoToolchain } : {}), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...exclusions, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) });
   const sourceContracts = await declaredSourceInputs(json, workspaceRoot, groups({}));
   const sourceScopes = [...inputs, ...Object.values(declarations).flat(), ...Object.values(sourceContracts).flat(), ...(nativeSources ?? []), ...(nativeTests ?? [])];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {

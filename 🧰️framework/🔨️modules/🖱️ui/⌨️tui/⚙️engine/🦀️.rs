@@ -156,6 +156,7 @@ mod frame_layout_and_overlays;
 #[path = "⌨️input-dispatch/🦀️.rs"]
 mod input_dispatch;
 
+impl Tui {
     /// 🛑️ Cancels a held pointer operation without emitting a layout command.
     pub fn cancel_pointer(&mut self) -> bool {
         let held = self.press.take();
@@ -181,6 +182,8 @@ mod input_dispatch;
             if let NodeContent::Chrome(state) = &mut self.scene.node_raw_mut(node).content { state.set_drop_target(None); }
         }
     }
+
+}
 
 #[path = "🖱️mouse-and-hover/🦀️.rs"]
 mod mouse_and_hover;

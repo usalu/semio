@@ -1,4 +1,4 @@
-import { ephemeralMap } from "@semio-tech/framework-transient";
+import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { extname } from "node:path";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";

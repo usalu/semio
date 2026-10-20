@@ -1,0 +1,116 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases",
+  "projects",
+  "workspaceManifests",
+  "lock",
+  "taxonomy",
+  "digests"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "extractor",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "extractor": {
+      "enum": [
+       "project-json",
+       "package-json",
+       "go-mod",
+       "cargo-package"
+      ]
+     },
+     "text": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "expected": {}
+    }
+   }
+  },
+  "projects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "root",
+     "config"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "root": {
+      "type": "string"
+     },
+     "nativeRoot": {
+      "type": "string"
+     },
+     "config": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "workspaceManifests": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "lock": {
+   "type": "string"
+  },
+  "taxonomy": {
+   "type": "string"
+  },
+  "digests": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "tree",
+     "digest"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "tree": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    }
+   }
+  }
+ }
+}

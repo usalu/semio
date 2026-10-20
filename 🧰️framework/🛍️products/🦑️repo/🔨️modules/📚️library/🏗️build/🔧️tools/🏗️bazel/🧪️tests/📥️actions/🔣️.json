@@ -539,9 +539,10 @@
     "        \"t_22b308f061d695be.snapshot\",",
     "        \"t_b9f6bc1659d098ec.snapshot\",",
     "    ],",
+    "    size = \"enormous\",",
     "    timeout = \"eternal\",",
     "    cache = True,",
-    "    host_state = \"The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks.\",",
+    "    host_state = \"The test process runs in the real checkout like a task: its working directory, the declared source-tree reads, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks; the result is cached as a Bazel test result and as a remote cache entry.\",",
     ")",
     "",
     "repo_noop(",
@@ -1147,6 +1148,116 @@
       "valid": false,
       "expected": {
         "error": "Closed repository cache decision required"
+      }
+    },
+    {
+      "name": "host-store-uncached",
+      "task": {
+        "cache": false,
+        "outputs": [],
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "side-effecting",
+              "reason": "mutates-host-store"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "side-effecting"
+      }
+    },
+    {
+      "name": "host-resources-uncached",
+      "task": {
+        "cache": false,
+        "outputs": [],
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "live",
+              "reason": "exercises-host-resources"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "live"
+      }
+    },
+    {
+      "name": "caller-input-uncached",
+      "task": {
+        "cache": false,
+        "outputs": [],
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "diagnostic",
+              "reason": "reads-caller-input"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "diagnostic"
+      }
+    },
+    {
+      "name": "reentering-verb-uncached",
+      "task": {
+        "cache": false,
+        "outputs": [],
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "aggregate",
+              "reason": "reenters-build-tool"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "aggregate"
+      }
+    },
+    {
+      "name": "interactive-with-a-reason",
+      "task": {
+        "cache": false,
+        "continuous": true,
+        "metadata": {
+          "semio": {
+            "cache": {
+              "version": 1,
+              "class": "continuous",
+              "reason": "serves-until-stopped"
+            }
+          }
+        }
+      },
+      "skipCache": false,
+      "valid": true,
+      "expected": {
+        "cache": false,
+        "reason": "continuous"
       }
     }
   ]

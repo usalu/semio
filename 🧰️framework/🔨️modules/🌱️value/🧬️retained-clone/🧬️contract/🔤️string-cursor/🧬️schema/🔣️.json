@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/value/retained-clone/string-readiness",
+  "title": "Complete String Clone Output Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "states",
+    "texts",
+    "bodyBytes",
+    "cancelCuts",
+    "closeBeforeTake",
+    "closeTurns",
+    "maximumIdleTurns",
+    "closeFunding",
+    "closeGrants"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "states": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "complete",
+          "closing",
+          "output",
+          "ready"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "closing": {
+            "type": "boolean"
+          },
+          "output": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "texts": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "repeat"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65537
+          }
+        }
+      }
+    },
+    "bodyBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096
+      },
+      "minItems": 2
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17
+          }
+        ]
+      },
+      "minItems": 7
+    },
+    "closeBeforeTake": {
+      "const": [
+        false,
+        true
+      ]
+    },
+    "closeTurns": {
+      "const": 1024
+    },
+    "maximumIdleTurns": {
+      "const": 16
+    },
+    "closeFunding": {
+      "const": "selected-currencies"
+    },
+    "closeGrants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "demand",
+          "grant",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "demand": {
+            "$ref": "#/$defs/CloseDemand"
+          },
+          "grant": {
+            "$ref": "#/$defs/CloseGrant"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "CloseDemand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "CloseGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    }
+  }
+}

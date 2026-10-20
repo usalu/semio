@@ -1,0 +1,9 @@
+/** 📐️ Refuses early, with a bilingual diagnostic and before anything is touched, when the declared dependencies partition cannot hold the package cache, scratch space and the installed generation set plus one building set for this platform's install backend. */
+async function requireJavascriptDependencyBudgetV1(workspace:string,control:ResourceLeaseControl):Promise<void>{
+ const backends=(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Readonly<Record<string,string>>}).backends,required=concurrentRequiredImageBytesV1(backends[process.platform]==="clonefile"),declared=repositoryCacheBudgetV1(workspace).partitions.dependencies.usableBytes;
+ if(declared>=required)return;
+ await javascriptDependencyConcurrencyReportV1(control)(concurrentEventV1({event:"refused",neededBytes:required,freeBytes:declared}));
+ const values={needed:Math.ceil(required/1048576),free:Math.floor(declared/1048576)};
+ throw Error(concurrentTextV1(concurrentLanguageV1(process.env),"budgetTooSmall",values),{cause:Object.freeze({version:1,purpose:"dependency-budget-refusal",neededBytes:required,declaredBytes:declared,en:concurrentTextV1("en","budgetTooSmall",values),de:concurrentTextV1("de","budgetTooSmall",values)})});
+}
+/** 🛂️ Refuses to start one more generation the image cannot hold:

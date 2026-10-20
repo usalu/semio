@@ -375,16 +375,16 @@ fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_
     let refusal = validate_descriptor(&stale_record, &stale, &bundle.packages).expect_err("a catalog of another app channel").to_string();
     assert!(refusal.contains("semio:fixture-editor") && refusal.contains(&format!("app channel {}", directory::os_spr::CHANNEL_VERSION - 1)) && refusal.contains(&format!("speaks app channel {}", directory::os_spr::CHANNEL_VERSION)), "{refusal}");
 
-    let mut unknown = os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+    let mut unknown = directory::os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
     let DslValue::Object(fields) = &mut unknown else { panic!("descriptor object") };
     fields.push(("unexpected".to_owned(), DslValue::Null));
-    let error = decode_package_descriptor(&os_pack::pack_rt::encode_wire_value(&unknown)).expect_err("unknown descriptor field");
+    let error = decode_package_descriptor(&directory::os_pack::pack_rt::encode_wire_value(&unknown)).expect_err("unknown descriptor field");
     assert!(error.to_string().contains("unknown field") || error.to_string().contains("canonical schema projection"));
 
-    let mut duplicate = os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+    let mut duplicate = directory::os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
     let DslValue::Object(fields) = &mut duplicate else { panic!("descriptor object") };
     fields.push(("packageId".to_owned(), DslValue::String("semio:fixture-editor".to_owned())));
-    assert!(decode_package_descriptor(&os_pack::pack_rt::encode_wire_value(&duplicate)).expect_err("duplicate descriptor field").to_string().contains("duplicate object field"));
+    assert!(decode_package_descriptor(&directory::os_pack::pack_rt::encode_wire_value(&duplicate)).expect_err("duplicate descriptor field").to_string().contains("duplicate object field"));
     assert!(valid_package_id("semio:fixture-editor"));
     assert!(!valid_package_id("fixture.editor.native"));
     assert!(!valid_package_id("semio:Fixture"));

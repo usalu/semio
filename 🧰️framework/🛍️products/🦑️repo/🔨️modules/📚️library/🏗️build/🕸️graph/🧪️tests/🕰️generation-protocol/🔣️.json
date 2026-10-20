@@ -1,0 +1,192 @@
+{
+ "version": 1,
+ "functions": {
+  "loadBuildGraphV1": {
+   "start": "export async function loadBuildGraphV1(",
+   "end": "/** 🎚️ Resolves one configuration"
+  },
+  "generationHostV1": {
+   "start": "function generationHostV1(",
+   "end": "/** 🔍️ Names the first difference"
+  },
+  "generationFilesV1": {
+   "start": "function generationFilesV1(",
+   "end": "/** 🕰️ Binds the repository"
+  },
+  "discoverBuildGraphPartV1": {
+   "start": "export async function discoverBuildGraphPartV1(",
+   "end": "/** 🧺️ Keeps exactly the discovered files"
+  },
+  "invalidateBuildGraphV1": {
+   "start": "export async function invalidateBuildGraphV1(",
+   "end": "const inventoryDirectoriesV1="
+  }
+ },
+ "order": [
+  {
+   "name": "the generation branch runs before any graph writer lease is requested",
+   "function": "loadBuildGraphV1",
+   "before": "if(options.selection.kind===\"all\"&&!options.baseline){",
+   "after": "withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{"
+  },
+  {
+   "name": "the full inference oracle runs only after the generation graph exists",
+   "function": "loadBuildGraphV1",
+   "before": "loadGenerationGraphV1(generationHostV1(",
+   "after": "requireEqualBuildGraphsV1(graph,await loadBuildGraphV1("
+  },
+  {
+   "name": "the node inference of the part runs inside one observation capture before the environment is derived",
+   "function": "discoverBuildGraphPartV1",
+   "before": "captureObservedSourceInputsV1(async()=>{",
+   "after": "deriveEnvironmentV1({"
+  },
+  {
+   "name": "the environment is derived before the edges of the other owners are chosen",
+   "function": "discoverBuildGraphPartV1",
+   "before": "deriveEnvironmentV1({",
+   "after": "const edgeNames="
+  },
+  {
+   "name": "edges are computed after the project nodes of the part exist",
+   "function": "discoverBuildGraphPartV1",
+   "before": "const primary=await owner.discoverBuildProjectsV1(",
+   "after": "owner.discoverBuildDependenciesV1(options,graphContext)"
+  },
+  {
+   "name": "metadata follows the edge pass whose publication it consumes",
+   "function": "discoverBuildGraphPartV1",
+   "before": "owner.discoverBuildDependenciesV1(options,graphContext)",
+   "after": "owner.createMetadata("
+  }
+ ],
+ "present": [
+  {
+   "name": "the policy reaches the load as a closed value",
+   "function": "loadBuildGraphV1",
+   "text": "policy:options.graph?.policy??\"fresh\""
+  },
+  {
+   "name": "a closure is only requested through the graph option",
+   "function": "loadBuildGraphV1",
+   "text": "closure:options.graph?.closure"
+  },
+  {
+   "name": "the shared reader uses the shared cache store",
+   "function": "generationHostV1",
+   "text": "withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl"
+  },
+  {
+   "name": "the builder queues on the one generation scope",
+   "function": "generationHostV1",
+   "text": "withBuildGraphStateV1(root,invocation,phaseControl,body,generationScopeV1)"
+  },
+  {
+   "name": "the facts resource is the workspace graph facts lease",
+   "function": "generationHostV1",
+   "text": "resources:{facts:\"repository-graph-facts:\"+resolve(root)}"
+  },
+  {
+   "name": "the lease is exclusive, queued and released in finally",
+   "function": "generationHostV1",
+   "text": "mode:\"exclusive\""
+  },
+  {
+   "name": "the lease is released",
+   "function": "generationHostV1",
+   "text": "finally{held.release();}"
+  },
+  {
+   "name": "the lease wait honours cancellation",
+   "function": "generationHostV1",
+   "text": "signal:options.signal??control.signal"
+  },
+  {
+   "name": "membership is proven by the frontier before a walk",
+   "function": "generationHostV1",
+   "text": "frontierHoldsV1(previous.frontier,statEntry,{signal})"
+  },
+  {
+   "name": "the frontier is stamped from the start of the walk",
+   "function": "generationHostV1",
+   "text": "const capturedAt=Date.now(),all=await workspaceBuildFilesV1("
+  },
+  {
+   "name": "environment rows are checked by the environment module",
+   "function": "generationHostV1",
+   "text": "environmentRowHoldsV1("
+  },
+  {
+   "name": "every document path stays inside the original store",
+   "function": "generationFilesV1",
+   "text": "requireNativeStoragePathV1(store.root,path)"
+  },
+  {
+   "name": "the store is rechecked while documents move",
+   "function": "generationFilesV1",
+   "text": "await store.recheck()"
+  },
+  {
+   "name": "the part infers only the named roots",
+   "function": "discoverBuildGraphPartV1",
+   "text": "ownerRoots:part.roots"
+  },
+  {
+   "name": "the part reports the facts of every owner",
+   "function": "discoverBuildGraphPartV1",
+   "text": "onOwnerObservations"
+  },
+  {
+   "name": "the part runs the test contributions over all features",
+   "function": "discoverBuildGraphPartV1",
+   "text": "discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(\".feature\")),{},context)"
+  },
+  {
+   "name": "the part keeps the policy contributions of unowned roots",
+   "function": "discoverBuildGraphPartV1",
+   "text": "!realRoots.has(dirname(file))"
+  },
+  {
+   "name": "the part replaces the virtual groups wholesale",
+   "function": "discoverBuildGraphPartV1",
+   "text": "replaceTags:[\"tests\",\"policy\"]"
+  },
+  {
+   "name": "a reset withdraws the generation",
+   "function": "invalidateBuildGraphV1",
+   "text": ".invalidate({reason:\"reset\""
+  }
+ ],
+ "absent": [
+  {
+   "name": "the host never takes the graph facts writer",
+   "function": "generationHostV1",
+   "text": "withRepositoryBuildGraphFactStoreV1("
+  },
+  {
+   "name": "the host never queues on the unscoped graph writer",
+   "function": "generationHostV1",
+   "text": "withBuildGraphStateV1(root,invocation,phaseControl,body)"
+  },
+  {
+   "name": "the host never publishes a monolith",
+   "function": "generationHostV1",
+   "text": "canonical.json"
+  },
+  {
+   "name": "the part never reads the whole workspace again",
+   "function": "discoverBuildGraphPartV1",
+   "text": "workspaceBuildFilesV1("
+  },
+  {
+   "name": "the part never takes a writer itself",
+   "function": "discoverBuildGraphPartV1",
+   "text": "withBuildGraphStateV1("
+  },
+  {
+   "name": "the reset takes no second lease on the facts resource",
+   "function": "invalidateBuildGraphV1",
+   "text": "lease:"
+  }
+ ]
+}

@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import { minimatch } from "minimatch";
-import { cacheCorrectnessRepositoryFindingsV1, globMatchesV1, policyCacheCorrectnessBreaches, repositoryCacheRecordsV1, type CacheFindingV1 } from "../../🟦️.ts";
+import { cacheCorrectnessRepositoryFindingsV1, globMatchesV1, policyCacheCorrectnessBreaches, repositoryCacheRecordsV1, staleRustKeyExemptionsV1, type CacheFindingV1 } from "../../🟦️.ts";
 import corpus from "./🔣️.json" with { type: "json" };
 import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
@@ -45,4 +45,11 @@ test("no replayed target of the repository breaks a cache-correctness rule", asy
   const records = repositoryCacheRecordsV1(workspace, plugin.cacheInternals as never), findings = cacheCorrectnessRepositoryFindingsV1(records);
   expect(records.length).toBeGreaterThan(3000);
   expect(policyCacheCorrectnessBreaches(findings).map((breach) => breach.summary).slice(0, 40), `${findings.length} cache-correctness finding(s)`).toEqual([]);
+}, 120000);
+
+
+test("every exempt whole-workspace Rust key still exists: the exemption list only shrinks", async () => {
+  const plugin = await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+  await plugin.libraryBootstrap;
+  expect(staleRustKeyExemptionsV1(repositoryCacheRecordsV1(workspace, plugin.cacheInternals as never))).toEqual([]);
 }, 120000);

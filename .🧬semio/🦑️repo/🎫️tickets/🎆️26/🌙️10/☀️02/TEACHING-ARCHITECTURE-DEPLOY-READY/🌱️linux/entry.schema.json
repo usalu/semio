@@ -1,0 +1,375 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "cohort",
+    "captureId",
+    "capturePlanSha256",
+    "engineId",
+    "image",
+    "name",
+    "volume",
+    "runToken",
+    "operation",
+    "identity",
+    "manifest",
+    "native",
+    "milliseconds",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "fresh-linux-create",
+        "fresh-linux-receiver",
+        "fresh-linux-provision"
+      ]
+    },
+    "cohort": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "captureId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "capturePlanSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "engineId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "image": {
+      "const": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^semio-course-native-[a-f0-9]{32}$"
+    },
+    "volume": {
+      "type": "string",
+      "pattern": "^semio-course-source-[a-f0-9]{12}-[a-f0-9]{8}$"
+    },
+    "runToken": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "identity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "created",
+            "user",
+            "receiptSha256"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "created": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 64
+            },
+            "user": {
+              "enum": [
+                "",
+                "0",
+                "0:0",
+                "root",
+                "root:root"
+              ]
+            },
+            "receiptSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
+    },
+    "manifest": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes",
+            "files",
+            "sourceBytes",
+            "captureReceiptSha256"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 134217728
+            },
+            "files": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 262144
+            },
+            "sourceBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967296
+            },
+            "captureReceiptSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/tmp/semio-course-native-[a-f0-9]{32}/repo$"
+        },
+        "sha256": {
+          "const": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c"
+        },
+        "bytes": {
+          "const": 11767992
+        }
+      }
+    },
+    "milliseconds": {
+      "const": 900000
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrySha256",
+        "receiverSha256",
+        "controllerSha256",
+        "provisionSha256"
+      ],
+      "properties": {
+        "entrySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receiverSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "controllerSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "provisionSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fresh Dedicated Linux Entry Admission",
+  "definitions": {
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "creation",
+        "owner",
+        "receiverNamespace",
+        "receiverFlow"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "creation": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "owner": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "receiverNamespace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "receiverFlow": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "receiverCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted",
+              "path",
+              "body"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

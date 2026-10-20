@@ -1,5 +1,5 @@
 //! 🧳️ Original typed list children become persistent native rows through mandatory receiving and funded ownership transfers.
-use super::{NativeReceive,NativeReceiver};
+use super::{NativeReceive,NativeReceiver,receiving_child_body_budget};
 use crate::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::{PersistentList,PersistentListBuilder},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::{ManuallyDrop,size_of};
 /// 👓️ Existing original native array owners lend constant-cost cardinality and ranked typed child references.
@@ -39,7 +39,7 @@ impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Persisten
    Phase::Bind=>Ok(fixed(original.binding_copy_bytes()+m)),Phase::Count=>Ok(fixed(m)),
    Phase::Initialize=>{let mut d=PersistentListBuilder::<T>::constructor_demand();d.capacity_bytes=size_of::<PersistentListBuilder<T>>();nested(d,size_of::<Option<Box<PersistentListBuilder<T>>>>()*2+m)},
    Phase::RowBirth=>nested(T::receive_birth_demand(),size_of::<Option<T::Receiver>>()*2+m),
-   Phase::RowAdvance=>nested(self.child()?.demands(self.row_source(original)?,body)?,m),
+   Phase::RowAdvance=>nested(self.child()?.demands(self.row_source(original)?,receiving_child_body_budget(body,m))?,m),
    Phase::RowTake=>nested(self.child()?.take_demand()?,size_of::<Option<T>>()*2+m),
    Phase::RowClose=>if self.child()?.terminal_is_empty(){Ok(fixed(size_of::<Option<T::Receiver>>()*2+m))}else{nested(self.child()?.close_demands(body.saturating_sub(m))?,m)},
    Phase::RowSeal=>nested(crate::native_decoding::NativeOwnedDecodeControl::shared_birth_demand::<T>(),m),
@@ -54,7 +54,7 @@ impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Persisten
    Phase::Count=>{self.count=original.get().row_count().map_err(|e|e.with_retained_progress(receipt(d)))?;self.phase=Phase::Initialize;receipt(d)},
    Phase::Initialize=>{let extra=size_of::<Option<Box<PersistentListBuilder<T>>>>()*2+m;let builder=PersistentListBuilder::new(self.count,child_grant(g,extra))?.ok_or_else(phase_error)?;control.charge(d.capacity_bytes)?;*self.builder=Some(Box::new(builder));self.phase=if self.count==0{Phase::Finish}else{Phase::RowBirth};receipt(d)},
    Phase::RowBirth=>{let extra=size_of::<Option<T::Receiver>>()*2+m;control.charge(d.capacity_bytes)?;let(child,p)=T::begin_receive(child_grant(g,extra))?;*self.child=Some(child);self.phase=Phase::RowAdvance;enlarge(p,extra)?},
-   Phase::RowAdvance=>{let source=self.row_source(original)?;let child=self.child.as_mut().ok_or_else(phase_error)?;let p=child.advance(source,control,body,child_grant(g,m)).map_err(|e|retained_error(e,m))?.progress();if child.output_ready(){self.phase=Phase::RowTake;}enlarge(p,m)?},
+   Phase::RowAdvance=>{let source=self.row_source(original)?;let child=self.child.as_mut().ok_or_else(phase_error)?;let p=child.advance(source,control,receiving_child_body_budget(body,m),child_grant(g,m)).map_err(|e|retained_error(e,m))?.progress();if child.output_ready(){self.phase=Phase::RowTake;}enlarge(p,m)?},
    Phase::RowTake=>{let extra=size_of::<Option<T>>()*2+m;control.charge(d.capacity_bytes)?;let child=self.child.as_mut().ok_or_else(phase_error)?;let(row,p)=child.take(child_grant(g,extra))?.ok_or_else(phase_error)?;*self.raw=Some(row);child.begin_close();self.phase=Phase::RowClose;enlarge(p,extra)?},
    Phase::RowClose=>{let child=self.child.as_mut().ok_or_else(phase_error)?;if child.terminal_is_empty(){self.child.take();self.phase=Phase::RowSeal;receipt(d)}else{control.charge(d.capacity_bytes)?;let p=child.close_step(child_grant(g,m)).map_err(|e|retained_error(e,m))?.progress();enlarge(p,m)?}},
    Phase::RowSeal=>{let result=control.receive_shared(&mut self.raw,&mut self.sealed,SharedIssuer::owned());if self.sealed.is_some(){self.phase=Phase::RowAdopt;}if result.is_err()&&self.sealed.is_some(){self.begin_close();}let mut p=result.map_err(|e|retained_error(e,m))?;p.copied_bytes=d.copy_bytes;p},

@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "directories": [
+    "build-input-closures",
+    "build-lock-closures"
+  ],
+  "maximumBytes": 4096,
+  "records": {
+    "good": {
+      "text": "{\"version\":1,\"files\":[\"bunfig.toml\",\"tsconfig.json\",\"🧰️framework/📜️script.ts\"]}",
+      "sha256": "9094db62aa4b515b20b071885ee872789e017613b5c34df3f5180d3c2049ac90"
+    },
+    "other": {
+      "text": "{\"version\":1,\"files\":[\"another.ts\"]}",
+      "sha256": "bd11745ad2540a7968affdcf6722fb3e8175c25b519f9a7221a5443a8f332c31"
+    },
+    "notJson": {
+      "text": "not json at all",
+      "sha256": "92628a747890d02d1459c6eb45fd13cfa63bbb6d346412cff190297cf9c33d39"
+    }
+  },
+  "cases": [
+    {
+      "name": "valid-leaf-reads-and-hashes",
+      "record": "good",
+      "fileKey": "good",
+      "expect": "value"
+    },
+    {
+      "name": "leaf-named-after-other-content-is-refused",
+      "record": "other",
+      "fileKey": "good",
+      "expect": "content differs from its name"
+    },
+    {
+      "name": "empty-leaf-is-refused",
+      "record": "empty",
+      "fileKey": "good",
+      "expect": "Single-link bounded regular"
+    },
+    {
+      "name": "leaf-over-the-bound-is-refused",
+      "record": "good",
+      "fileKey": "good",
+      "maximumBytes": 8,
+      "expect": "Single-link bounded regular"
+    },
+    {
+      "name": "non-json-leaf-with-matching-name-fails-parsing",
+      "record": "notJson",
+      "fileKey": "notJson",
+      "expect": "JSON"
+    },
+    {
+      "name": "missing-leaf-is-refused",
+      "record": null,
+      "fileKey": "good",
+      "expect": "ENOENT"
+    },
+    {
+      "name": "symbolic-link-is-refused",
+      "record": "good",
+      "fileKey": "good",
+      "link": "symbolic",
+      "expect": "Single-link bounded regular"
+    },
+    {
+      "name": "second-hard-link-is-refused",
+      "record": "good",
+      "fileKey": "good",
+      "link": "hard",
+      "expect": "Single-link bounded regular"
+    }
+  ],
+  "refusals": [
+    {
+      "name": "unknown-directory",
+      "directory": "somewhere-else",
+      "key": "9094db62aa4b515b20b071885ee872789e017613b5c34df3f5180d3c2049ac90",
+      "expect": "Closed inventory leaf identity required"
+    },
+    {
+      "name": "short-key",
+      "directory": "build-input-closures",
+      "key": "abc",
+      "expect": "Closed inventory leaf identity required"
+    },
+    {
+      "name": "uppercase-key",
+      "directory": "build-input-closures",
+      "key": "9094DB62AA4B515B20B071885EE872789E017613B5C34DF3F5180D3C2049AC90",
+      "expect": "Closed inventory leaf identity required"
+    },
+    {
+      "name": "zero-bound",
+      "directory": "build-input-closures",
+      "key": "9094db62aa4b515b20b071885ee872789e017613b5c34df3f5180d3c2049ac90",
+      "maximumBytes": 0,
+      "expect": "Closed inventory leaf identity required"
+    }
+  ]
+}

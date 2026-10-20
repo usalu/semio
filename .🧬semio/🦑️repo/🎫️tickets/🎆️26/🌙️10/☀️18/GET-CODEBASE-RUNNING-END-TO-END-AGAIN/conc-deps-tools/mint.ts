@@ -1,0 +1,3 @@
+import {createScriptProcessEnvelope,scriptProcessEnvironment} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createNativeBuildCallerCapabilitiesV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts";
+process.stdout.write(scriptProcessEnvironment(createScriptProcessEnvelope({version:1,owner:"conc-deps",maximumElapsedMilliseconds:900000},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),{}).SEMIO_SCRIPT_PROCESS_INVOCATION!);

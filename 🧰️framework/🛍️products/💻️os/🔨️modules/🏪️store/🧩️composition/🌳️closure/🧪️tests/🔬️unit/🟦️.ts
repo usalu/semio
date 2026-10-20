@@ -1,10 +1,10 @@
 /** 🧪️ Graphlib topology and Ajv shape independently verify recursive document closure. */
-import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-reference";
+import { artifactReferenceSchema } from "../../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🗿️artifact-reference/🟦️.ts";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
 import vectors from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import { ioSchema } from "@semio-tech/framework/io/testing/fixtures";
+import { ioSchema } from "../../../../../../../../📦️packages/🟦️typescript/🚪️io/🧪️testing/🧫️fixtures/🟦️.ts";
 import { OwnedDocumentClosure, type OwnedDocumentClosureInput } from "../../🟦️.ts";
 import ownerSchema from "../../../../🪆️child/🏠️owner/🧬️schema/🔣️.json" with { type: "json" };
 import { parseOwnerRef } from "../../../../🪆️child/🏠️owner/🧬️schema/🟦️.ts";

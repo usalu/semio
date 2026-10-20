@@ -8,7 +8,7 @@
   "before": {
     "schema": "dag.dag",
     "content": {
-      "childId": "\u0000!@/引用🌍",
+      "childId": "distinct\u0000!@/😀",
       "target": {
         "artifactId": "distinct\u0000!@/😀",
         "dialect": {
@@ -22,7 +22,7 @@
   "edited": {
     "schema": "dag.dag",
     "content": {
-      "childId": "independent child",
+      "childId": "independent target",
       "target": {
         "artifactId": "independent target",
         "dialect": {
@@ -52,7 +52,7 @@
     "dag_document": 1,
     "dag_content_child": 1
   },
-  "editSql": "UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'",
+  "editSql": "UPDATE dag_content_child SET child_id='independent target',artifact_id='independent target'",
   "publicMetadata": {
     "columns": [
       "id",
@@ -82,5 +82,5 @@
   "foreignKeys": [
     "dag_content_child.document_id=dag_document.id"
   ],
-  "scope": "Complete real two-field persisted parent and literal child identity; no child graph capture/render/global-frame claim."
+  "scope": "Complete real two-field persisted parent and literal child identity equal to its target artifact id; no child graph capture/render/global-frame claim."
 }

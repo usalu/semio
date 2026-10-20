@@ -1,0 +1,26 @@
+{
+  "energy": {
+    "paneId": "energie",
+    "toolTabId": "tool.energySimulation",
+    "toolCategoryId": "framework.category.tool",
+    "complete": "^(Complete, ready to finalize|Fertig, bereit zum Abschließen) ·",
+    "finalized": "^(Finalized|Abgeschlossen) ·",
+    "aborted": "^(Aborted, nothing was changed|Abgebrochen, nichts wurde geändert) ·",
+    "finalStep": "(?:Final: .* kWh after [0-9]+ of [0-9]+ timesteps|Endgültig: .* kWh nach [0-9]+ von [0-9]+ Zeitschritten)",
+    "noResult": "No result was accepted|Kein Ergebnis wurde übernommen"
+  },
+  "fem": {
+    "paneId": "statik",
+    "panelTabId": "fem3d.panel.results",
+    "panelCategoryId": "framework.category.display",
+    "caption": "Case: dead",
+    "phase": 0.1,
+    "initialScale": 300,
+    "changedScale": 600,
+    "steps": [
+      { "action": "change", "scale": 600 },
+      { "action": "undo", "scale": 300 },
+      { "action": "redo", "scale": 600 }
+    ]
+  }
+}

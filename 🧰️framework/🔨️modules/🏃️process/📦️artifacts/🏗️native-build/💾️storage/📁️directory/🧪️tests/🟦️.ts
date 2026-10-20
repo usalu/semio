@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {createHash} from "node:crypto";
@@ -51,7 +52,7 @@ test("the real kernel exchange swaps two names atomically and an independent pyt
   const before=[ino(first),ino(second)],port=nativeDirectorySystemPortV1();
   exchangeNativeDirectoriesV1(first,second,port);
   expect([ino(first),ino(second)]).toEqual([before[1],before[0]]);expect(readFileSync(join(first,"marker"),"utf8")).toBe("second");
-  const python=Bun.which("python3");
+  const python=testPythonV1();
   if(python){const program=process.platform==="darwin"?"import ctypes,sys;l=ctypes.CDLL('/usr/lib/libSystem.B.dylib');r=l.renameatx_np(-2,sys.argv[1].encode(),-2,sys.argv[2].encode(),2)":"import ctypes,sys;l=ctypes.CDLL(None);r=l.renameat2(-100,sys.argv[1].encode(),-100,sys.argv[2].encode(),2)";
    const run=sh(python,"-c",program+";sys.exit(0 if r==0 else 1)",first,second);
    if(run.exitCode===0){expect([ino(first),ino(second)]).toEqual(before);expect(readFileSync(join(first,"marker"),"utf8")).toBe("first");}}
@@ -150,32 +151,32 @@ test("the exchange probe leaves no scratch directory and the schema declares bot
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
-test("the meter charges every admission against the cap: many small writes, one large write and growth after commit are all refused, an honest writer never is",()=>{
+test("the meter charges every admission against the cap: many small writes, one large write and growth after commit are all refused, an honest writer never is",async()=>{
  for(const row of fixture.meter){
   let written=0,clock=0;const counts={reserve:0,commit:0,recheck:0},refused:Record<"reserve"|"commit"|"recheck",number|null>={reserve:null,commit:null,recheck:null};
   const meter=createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,measure:()=>written,now:()=>clock});
-  const attempt=(mode:"reserve"|"commit"|"recheck",requestBytes:number)=>{counts[mode]++;try{meter.admit({mode,requestBytes});return true;}catch(error){expect((error as Error).message,row.id).toBe(protocol.refusals.capacity);refused[mode]=counts[mode];return false;}};
+  const attempt=async(mode:"reserve"|"commit"|"recheck",requestBytes:number)=>{counts[mode]++;try{await meter.admit({mode,requestBytes});return true;}catch(error){expect((error as Error).message,row.id).toBe(protocol.refusals.capacity);refused[mode]=counts[mode];return false;}};
   run:for(const step of row.steps as readonly {repeat:number;reserve:number;write:number;free?:boolean;commit?:boolean;recheck?:boolean;advanceMilliseconds?:number}[])for(let index=0;index<step.repeat;index++){
    if(step.free){written=0;continue;}
-   if(step.reserve>0&&!attempt("reserve",step.reserve))break run;
+   if(step.reserve>0&&!await attempt("reserve",step.reserve))break run;
    written+=step.write;
-   if(step.commit&&!attempt("commit",0))break run;
-   if(step.recheck){clock+=step.advanceMilliseconds??0;if(!attempt("recheck",0))break run;}
+   if(step.commit&&!await attempt("commit",0))break run;
+   if(step.recheck){clock+=step.advanceMilliseconds??0;if(!await attempt("recheck",0))break run;}
   }
   expect(refused.reserve,row.id).toBe((row as {refusedAtReserve?:number|null}).refusedAtReserve??null);expect(refused.commit,row.id).toBe((row as {refusedAtCommit?:number|null}).refusedAtCommit??null);expect(refused.recheck,row.id).toBe((row as {refusedAtRecheck?:number|null}).refusedAtRecheck??null);
  }
- for(const value of fixture.meterMalformed)expect(()=>createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:33554432,maximumPhysicalBytes:34603008,measure:()=>0}).admit(value),JSON.stringify(value)).toThrow("Closed directory meter request");
+ for(const value of fixture.meterMalformed)await expect(createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:33554432,maximumPhysicalBytes:34603008,measure:()=>0}).admit(value),JSON.stringify(value)).rejects.toThrow("Closed directory meter request");
  expect(()=>createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:0,maximumPhysicalBytes:1})).toThrow("Closed directory meter limits");
 });
 
-test("the meter over a real tree refuses many small files and one large file that bypassed the old sixteen MiB gate",()=>{
+test("the meter over a real tree refuses many small files and one large file that bypassed the old sixteen MiB gate",async()=>{
  const base=scratch();try{
   const small=join(base,"small");mkdirSync(small);const meter=createNativeDirectoryMeterV1({root:small,filesystemBytes:33554432,maximumPhysicalBytes:34603008});let refusedAt=0;
-  for(let index=1;index<=70&&!refusedAt;index++){try{meter.admit({mode:"reserve",requestBytes:524288});writeFileSync(join(small,"f"+index),Buffer.alloc(524288,index));}catch(error){expect((error as Error).message).toBe(protocol.refusals.capacity);refusedAt=index;}}
+  for(let index=1;index<=70&&!refusedAt;index++){try{await meter.admit({mode:"reserve",requestBytes:524288});writeFileSync(join(small,"f"+index),Buffer.alloc(524288,index));}catch(error){expect((error as Error).message).toBe(protocol.refusals.capacity);refusedAt=index;}}
   expect(refusedAt).toBeGreaterThan(55);expect(refusedAt).toBeLessThanOrEqual(67);
   const large=join(base,"large");mkdirSync(large);const second=createNativeDirectoryMeterV1({root:large,filesystemBytes:33554432,maximumPhysicalBytes:34603008});
-  second.admit({mode:"reserve",requestBytes:1048576});writeFileSync(join(large,"big"),Buffer.alloc(67108864,1));
-  expect(()=>second.admit({mode:"commit",requestBytes:0})).toThrow(protocol.refusals.capacity);
+  await second.admit({mode:"reserve",requestBytes:1048576});writeFileSync(join(large,"big"),Buffer.alloc(67108864,1));
+  await expect(second.admit({mode:"commit",requestBytes:0})).rejects.toThrow(protocol.refusals.capacity);
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
@@ -193,8 +194,8 @@ test("every platform port honours one swap contract: sibling swap, identity proo
 });
 
 
-test("directory meter separates metadata, fresh entitlement and recovered committed content",()=>{
- const db=new Database(":memory:");try{for(const row of fixture.meterLifecycle){let written=row.initialBytes,clock=0;const create=()=>createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,measure:()=>written,now:()=>clock});let meter=create();for(const step of row.steps as readonly {mode:"write"|"reopen"|"reserve"|"commit"|"recheck";bytes?:number;accepted?:boolean}[]){if(step.mode==="write"){written+=step.bytes!;continue;}if(step.mode==="reopen"){meter=create();clock+=2000;continue;}const request=step.bytes!;let accepted=true;try{meter.admit({mode:step.mode,requestBytes:request});}catch(error){expect((error as Error).message,row.id).toBe(protocol.refusals.capacity);accepted=false;}const physical=db.query("SELECT ?1+?2<=?3 AND ?2<=?4 accepted").get(written,request,row.maximumPhysicalBytes,row.filesystemBytes)as{accepted:number};expect(accepted,row.id).toBe(step.accepted!);expect(accepted,row.id).toBe(Boolean(physical.accepted));}}}finally{db.close();}
+test("directory meter separates metadata, fresh entitlement and recovered committed content",async()=>{
+ const db=new Database(":memory:");try{for(const row of fixture.meterLifecycle){let written=row.initialBytes,clock=0;const create=()=>createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,measure:()=>written,now:()=>clock});let meter=create();for(const step of row.steps as readonly {mode:"write"|"reopen"|"reserve"|"commit"|"recheck";bytes?:number;accepted?:boolean}[]){if(step.mode==="write"){written+=step.bytes!;continue;}if(step.mode==="reopen"){meter=create();clock+=2000;continue;}const request=step.bytes!;let accepted=true;try{await meter.admit({mode:step.mode,requestBytes:request});}catch(error){expect((error as Error).message,row.id).toBe(protocol.refusals.capacity);accepted=false;}const physical=db.query("SELECT ?1+?2<=?3 AND ?2<=?4 accepted").get(written,request,row.maximumPhysicalBytes,row.filesystemBytes)as{accepted:number};expect(accepted,row.id).toBe(step.accepted!);expect(accepted,row.id).toBe(Boolean(physical.accepted));}}}finally{db.close();}
 });
 
 

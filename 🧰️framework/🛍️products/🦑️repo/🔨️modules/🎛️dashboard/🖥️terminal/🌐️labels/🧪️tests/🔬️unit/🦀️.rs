@@ -44,10 +44,10 @@ fn the_catalogue_follows_the_chosen_language() {
 #[test]
 fn command_line_messages_follow_the_language_of_the_preference() {
     let root = std::path::Path::new("workspace-without-preferences");
-    let by_flag = |language: &str| labels(dashboard_preferences::cli_locale(root, &dashboard_core::args::parse(&["daemon".to_string(), "--language".to_string(), language.to_string()])));
+    let by_flag = |language: &str| labels(dashboard_preferences::cli_locale(root, &dashboard_core::args::parse(&["daemon".to_string(), "--language".to_string(), language.to_string()])).expect("explicit language"));
     let (english, german) = (by_flag("en"), by_flag("de"));
-    assert_eq!(english.cli_daemon_usage.as_str(), "usage: semio daemon start|stop|status|attach|serve");
-    assert_eq!(german.cli_daemon_usage.as_str(), "Verwendung: semio daemon start|stop|status|attach|serve");
+    assert_eq!(english.cli_daemon_usage.as_str(), "usage: repo dashboard daemon start|stop|status|attach|serve");
+    assert_eq!(german.cli_daemon_usage.as_str(), "Verwendung: repo dashboard daemon start|stop|status|attach|serve");
     assert_eq!(english.cli_daemon_stopped.as_str(), "stopped workspace dashboard daemon");
     assert_eq!(german.cli_daemon_stopped.as_str(), "Dashboard-Dienst des Arbeitsbereichs gestoppt");
     assert_eq!(german.cli_unknown_verb.fill(&[("verb", "x")]).as_str(), "[semio] unbekannter Befehl x");

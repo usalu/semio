@@ -1,0 +1,69 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:dependencies/generation-ingress-followup-fixture/v1",
+ "title": "Dependency generation ingress follow-up fixture",
+ "description": "Language-agnostic scenarios of the review follow-up: a replay that cannot capture is contained and decided by the complete walk, the walk start time that bounds the settle rule is the earliest one, and the evidence cap equals the relative-create file cap.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "guard", "origin", "decision", "cap"],
+ "properties": {
+  "version": {"const": 1},
+  "guard": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Guard"}},
+  "origin": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Origin"}},
+  "decision": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Decision"}},
+  "cap": {"$ref": "#/definitions/Cap"}
+ },
+ "definitions": {
+  "Sha": {"type": "string", "pattern": "^[a-f0-9]{8}$"},
+  "Guard": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "run", "aborted", "expect"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "run": {
+     "oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["returns"], "properties": {"returns": {"enum": ["match", "deferred", "mismatch"]}}},
+      {"type": "object", "additionalProperties": false, "required": ["throws"], "properties": {"throws": {"type": "string", "minLength": 1}}}
+     ]
+    },
+    "aborted": {"type": "boolean"},
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["status", "reason", "rethrows"],
+     "properties": {"status": {"type": ["string", "null"]}, "reason": {"type": ["string", "null"]}, "rethrows": {"type": "boolean"}}
+    }
+   }
+  },
+  "Origin": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "shared", "pass", "expect"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "shared": {"type": ["integer", "null"], "minimum": 0},
+    "pass": {"type": "integer", "minimum": 0},
+    "expect": {"type": "integer", "minimum": 0}
+   }
+  },
+  "Decision": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "replay", "owner", "walk", "expect"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "replay": {"enum": ["match", "deferred", "mismatch", "throws"]},
+    "owner": {"$ref": "#/definitions/Sha"},
+    "walk": {"$ref": "#/definitions/Sha"},
+    "expect": {"enum": ["ready", "custody-changed"]}
+   }
+  },
+  "Cap": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["fileCap", "evidenceCap"],
+   "properties": {"fileCap": {"const": 67108864}, "evidenceCap": {"const": 67108864}}
+  }
+ }
+}

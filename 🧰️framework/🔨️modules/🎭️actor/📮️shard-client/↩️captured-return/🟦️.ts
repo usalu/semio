@@ -1,6 +1,6 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
 import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
-import { OwnedResidentRecordDetachment, OwnedResidentRetirement, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
+import { OwnedResidentRecordDetachment, OwnedResidentRetirement, type ResidentGrant, type ResidentStep } from "../../../🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts";
 import { decodeActorReturnResult, encodeActorReturnDrive, type ActorReturnDrive, type ActorReturnResult } from "../../📤️return/🟦️.ts";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { type CapturedReturn, type CapturedReturnWork, NO_RETURN_FAULT, type ShardInstanceOwner, type ShardReturnAdmission, type ShardReturnReport, mintCapturedReturn, mintCapturedReturnPage, residentChild, residentGrant, residentStep, returnAdmission, returnDomainEnvelope, sameReturnIdentity, sameReturnOrigin } from "../🔐️activation/🟦️.ts";

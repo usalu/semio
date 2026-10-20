@@ -347,6 +347,26 @@
         "scope": "view",
         "key": "ctrl+g",
         "action": "suggest-cancel"
+      },
+      {
+        "scope": "prefix",
+        "key": "N",
+        "action": "create-file"
+      },
+      {
+        "scope": "prefix",
+        "key": "M",
+        "action": "create-directory"
+      },
+      {
+        "scope": "prefix",
+        "key": "E",
+        "action": "rename-entry"
+      },
+      {
+        "scope": "prefix",
+        "key": "X",
+        "action": "retain-entry"
       }
     ]
   },
@@ -539,6 +559,67 @@
         }
       ],
       "problems": 1
+    },
+    {
+      "name": "guided file commands accept custom bindings",
+      "prefix": "ctrl+b",
+      "overrides": {
+        "prefix.create-file": [
+          "alt+n"
+        ],
+        "prefix.create-directory": [
+          "alt+m"
+        ],
+        "prefix.rename-entry": [
+          "alt+r"
+        ],
+        "prefix.retain-entry": [
+          "alt+x"
+        ]
+      },
+      "problems": 0,
+      "resolve": [
+        {
+          "scope": "prefix",
+          "key": "alt+n",
+          "action": "create-file"
+        },
+        {
+          "scope": "prefix",
+          "key": "alt+m",
+          "action": "create-directory"
+        },
+        {
+          "scope": "prefix",
+          "key": "alt+r",
+          "action": "rename-entry"
+        },
+        {
+          "scope": "prefix",
+          "key": "alt+x",
+          "action": "retain-entry"
+        },
+        {
+          "scope": "prefix",
+          "key": "N",
+          "action": null
+        },
+        {
+          "scope": "prefix",
+          "key": "M",
+          "action": null
+        },
+        {
+          "scope": "prefix",
+          "key": "E",
+          "action": null
+        },
+        {
+          "scope": "prefix",
+          "key": "X",
+          "action": null
+        }
+      ]
     }
   ]
 }

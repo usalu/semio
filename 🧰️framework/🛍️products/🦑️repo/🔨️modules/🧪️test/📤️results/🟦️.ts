@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type Implementation, type MutationOutcomeClass, type PlatformId, type TestRole, IMPLEMENTATIONS, TEST_ROLES } from "@semio-tech/framework/test/adapter";
+import { type Implementation, type MutationOutcomeClass, type PlatformId, type TestRole, IMPLEMENTATIONS, TEST_ROLES } from "../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { TEST_LEVELS, type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";

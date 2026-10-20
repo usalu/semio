@@ -1,0 +1,719 @@
+{
+ "version": 1,
+ "description": "Language-agnostic planner fixture: engine and oracle must produce exactly the expected units, dependencies, JSON inputs, ambient files and order.",
+ "document": {
+  "version": 1,
+  "seeds": {
+   "markers": [
+    "📦️packages"
+   ],
+   "manifests": true,
+   "roots": [
+    "✏️s/🔌️plugins/*"
+   ],
+   "isolate": [
+    "🧪️tests"
+   ],
+   "ambient": [
+    "**/🌿️ambient/**/*.d.ts"
+   ]
+  },
+  "cycles": {
+   "collapseFiles": 10,
+   "refineRounds": 2
+  },
+  "coarsen": {
+   "minimumFiles": 0
+  },
+  "compiler": {
+   "forced": {
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "incremental": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmitOnError": false
+   },
+   "declarationCodes": [
+    [
+     4000,
+     4199
+    ],
+    [
+     2742,
+     2742
+    ],
+    [
+     7056,
+     7056
+    ],
+    [
+     9005,
+     9006
+    ]
+   ],
+   "extraTypes": [
+    "vitest/importMeta"
+   ]
+  },
+  "messages": {
+   "languages": [
+    "en",
+    "de"
+   ],
+   "texts": {
+    "planning": {
+     "en": "Planning TypeScript check units: {files} files",
+     "de": "TypeScript-Prüfeinheiten werden geplant: {files} Dateien"
+    },
+    "checking": {
+     "en": "Checking {units} TypeScript units",
+     "de": "{units} TypeScript-Einheiten werden geprüft"
+    },
+    "hit": {
+     "en": "{unit}: unchanged, result reused",
+     "de": "{unit}: unverändert, Ergebnis wiederverwendet"
+    },
+    "ran": {
+     "en": "{unit}: checked in {milliseconds} ms",
+     "de": "{unit}: in {milliseconds} ms geprüft"
+    },
+    "failed": {
+     "en": "{unit}: {errors} errors",
+     "de": "{unit}: {errors} Fehler"
+    },
+    "done": {
+     "en": "{errors} errors in {units} units ({reused} reused)",
+     "de": "{errors} Fehler in {units} Einheiten ({reused} wiederverwendet)"
+    },
+    "cancelled": {
+     "en": "TypeScript check cancelled",
+     "de": "TypeScript-Prüfung abgebrochen"
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "name": "acyclic-modules",
+   "description": "Two modules joined by one import: two units, the importer depends on the importer's target.",
+   "files": [
+    "app/📦️packages/ts/index.ts",
+    "app/src/a.ts",
+    "lib/📦️packages/ts/index.ts",
+    "lib/core/c.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "app/src/a.ts",
+     "lib/core/c.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:app": {
+      "files": [
+       "app/📦️packages/ts/index.ts",
+       "app/src/a.ts"
+      ],
+      "dependencies": [
+       "dir:lib"
+      ],
+      "json": []
+     },
+     "dir:lib": {
+      "files": [
+       "lib/📦️packages/ts/index.ts",
+       "lib/core/c.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:lib",
+     "dir:app"
+    ],
+    "ambient": []
+   }
+  },
+  {
+   "name": "isolated-tests",
+   "description": "Files below an isolated directory form their own unit per root; production never depends on it.",
+   "files": [
+    "lib/📦️packages/ts/index.ts",
+    "lib/core/c.ts",
+    "lib/🧪️tests/c.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "lib/🧪️tests/c.ts",
+     "lib/core/c.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:lib": {
+      "files": [
+       "lib/📦️packages/ts/index.ts",
+       "lib/core/c.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:lib#🧪️tests": {
+      "files": [
+       "lib/🧪️tests/c.ts"
+      ],
+      "dependencies": [
+       "dir:lib"
+      ],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:lib",
+     "dir:lib#🧪️tests"
+    ],
+    "ambient": []
+   }
+  },
+  {
+   "name": "small-cycle-collapses",
+   "description": "Two modules whose files form no file cycle but whose modules import each other: one collapsed unit.",
+   "files": [
+    "a/📦️packages/ts/index.ts",
+    "a/x.ts",
+    "a/w.ts",
+    "b/📦️packages/ts/index.ts",
+    "b/y.ts",
+    "b/z.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "a/x.ts",
+     "b/y.ts"
+    ],
+    [
+     "b/z.ts",
+     "a/w.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "group:a": {
+      "files": [
+       "a/w.ts",
+       "a/x.ts",
+       "a/📦️packages/ts/index.ts",
+       "b/y.ts",
+       "b/z.ts",
+       "b/📦️packages/ts/index.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "group:a"
+    ],
+    "ambient": []
+   }
+  },
+  {
+   "name": "large-cycle-refines",
+   "description": "A cyclic core above the collapse limit is split along its directories until the unit graph is acyclic.",
+   "files": [
+    "a/📦️packages/ts/index.ts",
+    "a/p/1.ts",
+    "a/q/2.ts",
+    "b/📦️packages/ts/index.ts",
+    "b/r/3.ts",
+    "b/s/4.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "a/p/1.ts",
+     "b/r/3.ts"
+    ],
+    [
+     "b/s/4.ts",
+     "a/q/2.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:a/📦️packages": {
+      "files": [
+       "a/📦️packages/ts/index.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:a/p": {
+      "files": [
+       "a/p/1.ts"
+      ],
+      "dependencies": [
+       "dir:b/r"
+      ],
+      "json": []
+     },
+     "dir:a/q": {
+      "files": [
+       "a/q/2.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:b/📦️packages": {
+      "files": [
+       "b/📦️packages/ts/index.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:b/r": {
+      "files": [
+       "b/r/3.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:b/s": {
+      "files": [
+       "b/s/4.ts"
+      ],
+      "dependencies": [
+       "dir:a/q"
+      ],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:a/q",
+     "dir:a/📦️packages",
+     "dir:b/r",
+     "dir:a/p",
+     "dir:b/s",
+     "dir:b/📦️packages"
+    ],
+    "ambient": []
+   },
+   "override": {
+    "cycles": {
+     "collapseFiles": 2,
+     "refineRounds": 2
+    }
+   }
+  },
+  {
+   "name": "file-cycle-collapses",
+   "description": "Two single-file units that import each other cannot be refined: collapsed even above the limit.",
+   "files": [
+    "a/x.ts",
+    "b/y.ts"
+   ],
+   "manifests": [
+    "a",
+    "b"
+   ],
+   "edges": [
+    [
+     "a/x.ts",
+     "b/y.ts"
+    ],
+    [
+     "b/y.ts",
+     "a/x.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "group:a": {
+      "files": [
+       "a/x.ts",
+       "b/y.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "group:a"
+    ],
+    "ambient": []
+   },
+   "override": {
+    "cycles": {
+     "collapseFiles": 1,
+     "refineRounds": 2
+    }
+   }
+  },
+  {
+   "name": "ambient-and-json",
+   "description": "Global declaration files belong to no unit; JSON imported across units is an input of the importer.",
+   "files": [
+    "lib/📦️packages/ts/index.ts",
+    "lib/🌿️ambient/g.d.ts",
+    "lib/core/c.ts",
+    "app/a.ts"
+   ],
+   "manifests": [
+    "app"
+   ],
+   "edges": [
+    [
+     "app/a.ts",
+     "lib/core/c.ts"
+    ]
+   ],
+   "json": [
+    [
+     "app/a.ts",
+     "lib/core/data.json"
+    ]
+   ],
+   "expect": {
+    "units": {
+     "dir:app": {
+      "files": [
+       "app/a.ts"
+      ],
+      "dependencies": [
+       "dir:lib"
+      ],
+      "json": [
+       "lib/core/data.json"
+      ]
+     },
+     "dir:lib": {
+      "files": [
+       "lib/📦️packages/ts/index.ts",
+       "lib/core/c.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:lib",
+     "dir:app"
+    ],
+    "ambient": [
+     "lib/🌿️ambient/g.d.ts"
+    ]
+   }
+  },
+  {
+   "name": "coarsen-merges-siblings",
+   "description": "Tiny sibling units merge into one cluster when the unit graph stays acyclic.",
+   "files": [
+    "pk/a/1.ts",
+    "pk/b/2.ts",
+    "pk/c/3.ts",
+    "pk/d/4.ts"
+   ],
+   "manifests": [
+    "pk/a",
+    "pk/b",
+    "pk/c",
+    "pk/d"
+   ],
+   "edges": [
+    [
+     "pk/a/1.ts",
+     "pk/c/3.ts"
+    ],
+    [
+     "pk/b/2.ts",
+     "pk/c/3.ts"
+    ],
+    [
+     "pk/d/4.ts",
+     "pk/a/1.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "group:cluster/pk/a": {
+      "files": [
+       "pk/a/1.ts",
+       "pk/b/2.ts",
+       "pk/c/3.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:pk/d": {
+      "files": [
+       "pk/d/4.ts"
+      ],
+      "dependencies": [
+       "group:cluster/pk/a"
+      ],
+      "json": []
+     }
+    },
+    "order": [
+     "group:cluster/pk/a",
+     "dir:pk/d"
+    ],
+    "ambient": []
+   },
+   "override": {
+    "coarsen": {
+     "minimumFiles": 3
+    }
+   }
+  },
+  {
+   "name": "coarsen-refuses-cycle",
+   "description": "A merge that would close a cycle through a third unit is refused.",
+   "files": [
+    "pk/a/1.ts",
+    "pk/b/2.ts",
+    "other/x/1.ts",
+    "other/x/2.ts",
+    "other/x/3.ts"
+   ],
+   "manifests": [
+    "pk/a",
+    "pk/b",
+    "other/x"
+   ],
+   "edges": [
+    [
+     "pk/a/1.ts",
+     "other/x/1.ts"
+    ],
+    [
+     "other/x/2.ts",
+     "pk/b/2.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:pk/a": {
+      "files": [
+       "pk/a/1.ts"
+      ],
+      "dependencies": [
+       "dir:other/x"
+      ],
+      "json": []
+     },
+     "dir:pk/b": {
+      "files": [
+       "pk/b/2.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:other/x": {
+      "files": [
+       "other/x/1.ts",
+       "other/x/2.ts",
+       "other/x/3.ts"
+      ],
+      "dependencies": [
+       "dir:pk/b"
+      ],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:pk/b",
+     "dir:other/x",
+     "dir:pk/a"
+    ],
+    "ambient": []
+   },
+   "override": {
+    "coarsen": {
+     "minimumFiles": 3
+    }
+   }
+  },
+  {
+   "name": "same-stem-sources-split",
+   "description": "`x.ts` and `x.tsx` would write one declaration path: the `.tsx` becomes its own unit.",
+   "files": [
+    "lib/📦️packages/ts/index.ts",
+    "lib/e/x.ts",
+    "lib/e/x.tsx",
+    "lib/e/y.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "lib/e/y.ts",
+     "lib/e/x.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:lib": {
+      "files": [
+       "lib/📦️packages/ts/index.ts",
+       "lib/e/x.ts",
+       "lib/e/y.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "file:lib/e/x.tsx": {
+      "files": [
+       "lib/e/x.tsx"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:lib",
+     "file:lib/e/x.tsx"
+    ],
+    "ambient": []
+   }
+  },
+  {
+   "name": "collision-inside-cycle-refines",
+   "description": "A cyclic core that would hold `x.ts` and `x.tsx` together is refined instead of collapsed, although it is below the collapse limit; the part that stays cyclic collapses without the clash.",
+   "files": [
+    "a/📦️packages/ts/index.ts",
+    "a/p/x.ts",
+    "a/p/x.tsx",
+    "a/q/w.ts",
+    "a/q/y.ts",
+    "b/📦️packages/ts/index.ts",
+    "b/r/z.ts"
+   ],
+   "manifests": [],
+   "edges": [
+    [
+     "a/q/w.ts",
+     "a/p/x.tsx"
+    ],
+    [
+     "a/p/x.tsx",
+     "b/r/z.ts"
+    ],
+    [
+     "b/r/z.ts",
+     "a/q/y.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:a/📦️packages": {
+      "files": [
+       "a/📦️packages/ts/index.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:a/p": {
+      "files": [
+       "a/p/x.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:b/📦️packages": {
+      "files": [
+       "b/📦️packages/ts/index.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "group:a/q": {
+      "files": [
+       "a/p/x.tsx",
+       "a/q/w.ts",
+       "a/q/y.ts",
+       "b/r/z.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:a/p",
+     "dir:a/📦️packages",
+     "dir:b/📦️packages",
+     "group:a/q"
+    ],
+    "ambient": []
+   }
+  },
+  {
+   "name": "glob-root",
+   "description": "A directory matching a root glob is a unit root without a manifest.",
+   "files": [
+    "✏️s/🔌️plugins/p1/a.ts",
+    "✏️s/🔌️plugins/p2/b.ts",
+    "✏️s/other.ts"
+   ],
+   "manifests": [
+    "✏️s"
+   ],
+   "edges": [
+    [
+     "✏️s/🔌️plugins/p1/a.ts",
+     "✏️s/🔌️plugins/p2/b.ts"
+    ]
+   ],
+   "json": [],
+   "expect": {
+    "units": {
+     "dir:✏️s": {
+      "files": [
+       "✏️s/other.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     },
+     "dir:✏️s/🔌️plugins/p1": {
+      "files": [
+       "✏️s/🔌️plugins/p1/a.ts"
+      ],
+      "dependencies": [
+       "dir:✏️s/🔌️plugins/p2"
+      ],
+      "json": []
+     },
+     "dir:✏️s/🔌️plugins/p2": {
+      "files": [
+       "✏️s/🔌️plugins/p2/b.ts"
+      ],
+      "dependencies": [],
+      "json": []
+     }
+    },
+    "order": [
+     "dir:✏️s",
+     "dir:✏️s/🔌️plugins/p2",
+     "dir:✏️s/🔌️plugins/p1"
+    ],
+    "ambient": []
+   }
+  }
+ ]
+}

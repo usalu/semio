@@ -4,7 +4,6 @@
     "exchange": "supported",
     "caseSensitive": "yes",
     "imageTool": true,
-    "longPaths": "unprobed",
     "paths": [
       {
         "label": "workspace",
@@ -87,7 +86,6 @@
       "id": "windows-ascii-needs-no-elevation",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "paths": [
           {
             "label": "workspace",
@@ -113,7 +111,6 @@
       "id": "windows-unicode-checkout",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "paths": [
           {
             "label": "workspace",
@@ -142,7 +139,6 @@
       "id": "windows-emoji-ancestry",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "paths": [
           {
             "label": "workspace",
@@ -160,7 +156,6 @@
       "id": "windows-unicode-temp-only-warns",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "paths": [
           {
             "label": "workspace",
@@ -180,28 +175,9 @@
       ]
     },
     {
-      "id": "windows-long-paths-disabled",
-      "patch": {
-        "platform": "win32",
-        "longPaths": "disabled",
-        "paths": [
-          {
-            "label": "workspace",
-            "path": "C:\\semio",
-            "blocking": true
-          }
-        ]
-      },
-      "refusals": [
-        "LongPathsEnabled"
-      ],
-      "warnings": []
-    },
-    {
       "id": "windows-journaled-swap-unsupported",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "exchange": "unsupported",
         "paths": [
           {
@@ -220,7 +196,6 @@
       "id": "windows-case-sensitivity-unavailable",
       "patch": {
         "platform": "win32",
-        "longPaths": "enabled",
         "caseSensitive": "no",
         "paths": [
           {
@@ -247,9 +222,6 @@
     }
   ],
   "invalid": [
-    {
-      "longPaths": "maybe"
-    },
     {
       "exchange": "maybe"
     },

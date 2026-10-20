@@ -1,0 +1,411 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+   "edits": [
+    {
+     "id": "bootstrap-import",
+     "group": "bootstrap",
+     "old": "import {createHash} from \"node:crypto\";",
+     "new": "import {createHash} from \"node:crypto\";\nimport {bootstrapKeyV1,lockedVersionV1,type LockGraphV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts\";\nimport {currentHostV1,selectPackageManagerV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "bootstrap-key",
+     "group": "bootstrap",
+     "old": "lock=bounded(join(root,\"bun.lock\"),8388608),key=createHash(\"sha256\").update(JSON.stringify([manifest.dependencies,manifest.devDependencies,manifest.optionalDependencies,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest(\"hex\");",
+     "new": "packageManager=selectPackageManagerV1(\"javascript\"),packageHost=currentHostV1(),lock=bounded(join(root,packageManager.primaryLockName()),8388608),key=bootstrapKeyV1(packageManager,{manifest,host:packageHost,lock}),lockGraph=(()=>{let graph:LockGraphV1|undefined;return()=>graph??=packageManager.parseLock(lock);})();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "bootstrap-recheck",
+     "group": "bootstrap",
+     "old": "!bounded(join(root,\"bun.lock\"),8388608).equals(lock)",
+     "new": "!bounded(join(root,packageManager.primaryLockName()),8388608).equals(lock)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "bootstrap-locked-version",
+     "group": "bootstrap",
+     "old": "escaped=name.replace(/[.*+?^${}()|[\\]\\\\]/g,\"\\\\$&\"),locked=new RegExp('\"'+escaped+'\"\\\\s*:\\\\s*\\\\[\\\\s*\"'+escaped+'@([^\"\\\\s]+)\"').exec(lock.toString())?.[1];",
+     "new": "locked=lockedVersionV1(lockGraph(),name);",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "bootstrap-generation-directory",
+     "group": "bootstrap",
+     "old": "join(store.root,\"j\",binding.generation.slice(0,20),\"node_modules\")",
+     "new": "join(store.root,packageManager.generationDirectory(),binding.generation.slice(0,20),\"node_modules\")",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "edits": [
+    {
+     "id": "graph-policy",
+     "group": "graph",
+     "old": "      \"go.mod\",\n      \"bun.lock\"\n    ],",
+     "new": "      \"go.mod\"\n    ],\n    \"lockEcosystems\": [\n      \"javascript\"\n    ],",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "edits": [
+    {
+     "id": "graph-import",
+     "group": "graph",
+     "old": "import{fileURLToPath}from\"node:url\";",
+     "new": "import{fileURLToPath}from\"node:url\";\nimport{selectPackageManagerV1}from\"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "graph-members",
+     "group": "graph",
+     "old": "const {basenames,suffixes}=graphDeclarationV1(\"../🔣️policy.json\").graphMembers as {basenames:string[];suffixes:string[]},names=new Set(basenames);",
+     "new": "const {basenames,suffixes,lockEcosystems}=graphDeclarationV1(\"../🔣️policy.json\").graphMembers as {basenames:string[];suffixes:string[];lockEcosystems:string[]},names=new Set([...basenames,...lockEcosystems.flatMap(ecosystem=>selectPackageManagerV1(ecosystem).lockFileNames())]);",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+   "edits": [
+    {
+     "id": "graph-test-import",
+     "group": "graph",
+     "old": "import {buildGraphMembersV1} from \"../../../🕸️graph/🟦️.ts\";",
+     "new": "import {buildGraphMembersV1} from \"../../../🕸️graph/🟦️.ts\";\nimport {selectPackageManagerV1} from \"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "graph-test-oracle",
+     "group": "graph",
+     "old": "const members=(policy as {graphMembers:{basenames:string[];suffixes:string[]}}).graphMembers,oracle=picomatch([`**/{${members.basenames.join(\",\")}}`,",
+     "new": "const members=(policy as {graphMembers:{basenames:string[];suffixes:string[];lockEcosystems:string[]}}).graphMembers,oracle=picomatch([`**/{${[...members.basenames,...members.lockEcosystems.flatMap(ecosystem=>selectPackageManagerV1(ecosystem).lockFileNames())].join(\",\")}}`,",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "storage-import",
+     "group": "storage",
+     "old": "import {createHash} from \"node:crypto\";",
+     "new": "import {createHash} from \"node:crypto\";\nimport {currentHostV1,selectPackageManagerV1} from \"../🔌️managers/📚️catalog/🟦️.ts\";\nimport {parseJsoncV1} from \"../🔌️managers/📖️formats/🟦️.ts\";\nconst packageManagerV1=selectPackageManagerV1(\"javascript\"),lockNameV1=packageManagerV1.primaryLockName(),scopeConfigV1=packageManagerV1.configurationNames(\"scope\")[0]!,generationDirectoryV1=packageManagerV1.generationDirectory(),packageManagerRuntimeV1=()=>packageManagerV1.runtimeIdentity(currentHostV1()),readLockDocumentV1=(text:string):any=>parseJsoncV1(text);\n/** 📁️ Names the store directory every generation of the selected JavaScript manager lives in. */\nexport const javascriptDependencyGenerationDirectoryV1=generationDirectoryV1;",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-arguments",
+     "group": "storage",
+     "old": "return Object.freeze([\"install\",mode===\"sync\"?\"--frozen-lockfile\":\"--lockfile-only\",\"--\"+recipe.lifecycle,\"--linker=\"+recipe.linker,\"--backend=\"+backend,\"--cache-dir\",cache]);}",
+     "new": "return Object.freeze(packageManagerV1.render(mode,{platform:process.platform,cache}).arguments);}",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-environment",
+     "group": "storage",
+     "old": "for(const candidate of[path.join(home,\".bunfig.toml\"),path.join(config,\".bunfig.toml\"),path.join(home,\".npmrc\")])javascriptDependencyProducerArgumentsV1(\"sync\",candidate);Object.assign(output,{HOME:home,USERPROFILE:home,XDG_CONFIG_HOME:config,XDG_CACHE_HOME:cache,TMPDIR:temporary,TMP:temporary,TEMP:temporary,NODE_ENV:recipe.nodeEnvironment,BUN_INSTALL_CACHE_DIR:cache,BUN_INSTALL_GLOBAL_DIR:global,BUN_INSTALL_BIN:bin});",
+     "new": "for(const candidate of[...packageManagerV1.configurationNames(\"home\").map(name=>path.join(home,name)),...packageManagerV1.configurationNames(\"config\").map(name=>path.join(config,name))])javascriptDependencyProducerArgumentsV1(\"sync\",candidate);Object.assign(output,packageManagerV1.environment(root,{},path===posix?\"/\":\"\\\\\"));",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-scope-configuration",
+     "group": "storage",
+     "old": "ownConfig=join(sourceRoot,\"bunfig.toml\"),rootConfig=join(workspace,\"bunfig.toml\")",
+     "new": "ownConfig=join(sourceRoot,scopeConfigV1),rootConfig=join(workspace,scopeConfigV1)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-stage-configuration",
+     "group": "storage",
+     "old": "files.push({path:join(directory,\"bunfig.toml\"),bytes:configuration})",
+     "new": "files.push({path:join(directory,scopeConfigV1),bytes:configuration})",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-ambient-roles",
+     "group": "storage",
+     "old": "[[installSchema.$defs.ProducerRecipeProtocol.const.home,[\".bunfig.toml\",\".npmrc\"]],[installSchema.$defs.ProducerRecipeProtocol.const.config,[\".bunfig.toml\"]]]as const",
+     "new": "[[installSchema.$defs.ProducerRecipeProtocol.const.home,packageManagerV1.configurationNames(\"home\")],[installSchema.$defs.ProducerRecipeProtocol.const.config,packageManagerV1.configurationNames(\"config\")]]as const",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-lock-name",
+     "group": "storage",
+     "old": "\"bun.lock\"",
+     "new": "lockNameV1",
+     "counts": [
+      17
+     ]
+    },
+    {
+     "id": "storage-runtime-identity",
+     "group": "storage",
+     "old": "process.versions.bun",
+     "new": "packageManagerRuntimeV1()",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "storage-lock-document",
+     "group": "storage",
+     "old": "Bun.JSONC.parse(",
+     "new": "readLockDocumentV1(",
+     "counts": [
+      3
+     ]
+    },
+    {
+     "id": "storage-generation-directory",
+     "group": "storage",
+     "old": "\"j\"",
+     "new": "generationDirectoryV1",
+     "counts": [
+      36
+     ]
+    },
+    {
+     "id": "storage-generation-root",
+     "group": "storage",
+     "old": "roots:[\"j/\"+plan.generation.slice(0,20)]",
+     "new": "roots:[generationDirectoryV1+\"/\"+plan.generation.slice(0,20)]",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "storage-profiles",
+     "group": "storage",
+     "old": "for(const profile of[\"bun-import\",\"bun-require\"]as const){",
+     "new": "for(const profile of packageManagerV1.resolutionProfiles()){",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "storage-pin-ambient-roles",
+     "group": "storage",
+     "old": "[[installSchema.$defs.ProducerRecipeProtocol.const.home,[\".bunfig.toml\",\".npmrc\"]],[installSchema.$defs.ProducerRecipeProtocol.const.config,[\".bunfig.toml\"]]]",
+     "new": "[[installSchema.$defs.ProducerRecipeProtocol.const.home,packageManagerV1.configurationNames(\"home\")],[installSchema.$defs.ProducerRecipeProtocol.const.config,packageManagerV1.configurationNames(\"config\")]]",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+   "edits": [
+    {
+     "id": "storage-pin-generation-binding",
+     "group": "storage",
+     "old": "posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,\"\")).join(\"\\n\")+\";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};\"",
+     "new": "generationDirectoryV1:\"j\",posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,\"\")).join(\"\\n\")+\";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};\"",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "storage-bundle-prelude",
+     "group": "storage",
+     "old": "await build({ stdin: { contents: \"const installSchema=\"+JSON.stringify(dependencyInstallSchema)+\";\"+operation.getText(source), loader: \"ts\" }, outfile: module,",
+     "new": "await build({ bundle: true, stdin: { contents: \"import {selectPackageManagerV1} from \"+JSON.stringify(join(owner, \"🔌️managers/📚️catalog/🟦️.ts\"))+\";const packageManagerV1=selectPackageManagerV1(\\\"javascript\\\");const installSchema=\"+JSON.stringify(dependencyInstallSchema)+\";\"+operation.getText(source), loader: \"ts\", resolveDir: owner }, outfile: module,",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "incremental-import",
+     "group": "storage",
+     "old": "import {javascriptDependencySourceOwnerRuntimeV1,",
+     "new": "import {javascriptDependencyGenerationDirectoryV1,javascriptDependencySourceOwnerRuntimeV1,",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "incremental-generation-directory",
+     "group": "storage",
+     "old": "\"j\"",
+     "new": "javascriptDependencyGenerationDirectoryV1",
+     "counts": [
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+   "edits": [
+    {
+     "id": "register-target",
+     "group": "register",
+     "old": "    \"test-javascript-installed-paths\": {\n",
+     "new": "    \"test-package-manager-seam\": {\n      \"executor\": \"repo:script\",\n      \"cache\": false,\n      \"outputs\": [],\n      \"dependsOn\": [],\n      \"options\": {\n        \"cwd\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching\",\n        \"command\": \"bun ./📜️script.ts test package-manager-seam\",\n        \"forwardAllArgs\": false\n      },\n      \"metadata\": {\n        \"semio\": {\n          \"execution\": {\n            \"version\": 1,\n            \"kind\": \"source\"\n          },\n          \"cache\": {\n            \"version\": 1,\n            \"class\": \"live\",\n            \"reason\": \"exercises-host-resources\"\n          }\n        }\n      }\n    },\n    \"test-javascript-installed-paths\": {\n",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",
+   "edits": [
+    {
+     "id": "register-suite",
+     "group": "register",
+     "old": "\"javascript-incremental-sync\":\"🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts\",",
+     "new": "\"package-manager-seam\":\"🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts\",\"javascript-incremental-sync\":\"🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts\",",
+     "counts": [
+      1
+     ]
+    }
+   ]
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📖️formats/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️policy.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json",
+   "group": "ratchet"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🔣️.json",
+   "group": "seam"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json",
+   "group": "seam"
+  }
+ ]
+}

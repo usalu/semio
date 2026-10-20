@@ -1,6 +1,6 @@
 /** 🎛️ App channel command codec: `encodeAppCommand` and `decodeAppCommand` over the tagged app command wire. */
 
-import { decodeLocalInteractionQueryCommand, encodeLocalInteractionQueryCommand, mutationEnvelopeFromWire, mutationEnvelopeToWire, readBytes, readStr, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope } from "@semio-tech/framework-replication";
+import { decodeLocalInteractionQueryCommand, encodeLocalInteractionQueryCommand, mutationEnvelopeFromWire, mutationEnvelopeToWire, readBytes, readStr, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { replicationPackCodec } from "../../🎁️packs/🟦️.ts";
 import { type AppCommandValue, type MediaExportHandle, readDocumentArchive, readOptU8, readVecChildPackEntry, readWindowConfigPackEntry, writeDocumentArchive, writeOptU8, writeVecChildPackEntry, writeWindowConfigPackEntry } from "../../🪢️wire-contracts/🟦️.ts";
 import { APP_COMMAND_TAGS, exactMediaExportFrame, readMediaExportHandle, writeMediaExportHandle } from "../🏷️codec-primitives/🟦️.ts";

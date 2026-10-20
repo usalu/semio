@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn mounted_snapshot_preparation_records_original_receipts_before_readiness() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let number = |field: &str, index: usize| row[field][index].as_u64().unwrap() as usize;
         let grant = RetainedCloneGrant { maximum_items: number("grant", 0), maximum_copy_bytes: number("grant", 1), maximum_capacity_bytes: number("grant", 2), maximum_release_bytes: number("grant", 3), maximum_depth: number("grant", 4) };
@@ -14,6 +14,5 @@ fn mounted_snapshot_preparation_records_original_receipts_before_readiness() {
         assert_eq!(result.is_err(), row["fault"].as_bool().unwrap(), "{}", row["name"]);
         assert_eq!(cx.retained_progress(), progress);
         if let Ok(actual) = result { assert_eq!(actual, readiness); }
-        println!("[DEBUG] mounted-snapshot-preparation {} readiness={} fault={}", row["name"], readiness, result.is_err());
     }
 }

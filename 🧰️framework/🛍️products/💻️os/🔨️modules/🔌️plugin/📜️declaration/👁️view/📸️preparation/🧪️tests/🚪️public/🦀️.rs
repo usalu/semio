@@ -47,11 +47,10 @@ impl ArtifactApp for PreparationApp {
 
 #[semio_framework_async_macros::async_test]
 async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readiness() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut policy = artifact_app_laws::fixture_mounted_policy();
     policy.preparation.maximum_items = 8;
     let mut identity = artifact_app_laws::fixture_identity();
-    println!("[DEBUG] original mounted preparation instance bytes={}", std::mem::size_of::<VcsArtifactApp<PreparationApp>>());
     let mut app = Box::pin(VcsArtifactApp::<PreparationApp>::new(PreparationApp, replication::ActorId("mounted-preparation".into()), policy, &mut identity)).await;
     artifact_app_laws::settle_store_constructor(&mut app, policy);
     let original_parent_identity=app.fixture_original_document_identity().as_ptr()as usize;
@@ -70,17 +69,15 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
         assert_eq!(cx.retained_progress(), progress);
         let observed = ORIGINAL.with(|probe| probe.take().unwrap());
         let pre_heap=observed.pre_heap.expect("original callback samples live allocator scope");assert_eq!(pre_heap.requested_bytes,fixture["preAdmissionHeap"]["requestedBytes"].as_u64().unwrap()as usize);assert_eq!(pre_heap.released_bytes,fixture["preAdmissionHeap"]["releasedBytes"].as_u64().unwrap()as usize);assert!(!pre_heap.overflowed);assert_eq!(observed.source_version,result.is_ok().then_some(original_source_version)); assert_eq!(observed.parent_identity,if result.is_ok(){original_parent_identity}else{0},"admitted poll view must borrow original envelope identity"); assert_eq!(observed.calls, 1); assert_eq!(observed.grant, admitted_grant); assert_eq!(observed.reads, usize::from(ready && result.is_ok()));
-        println!("[DEBUG] original mounted snapshot boundary {} calls={} reads={} fault={} preHeapRequested={} preHeapReleased={}", row["name"], observed.calls, observed.reads, result.is_err(),pre_heap.requested_bytes,pre_heap.released_bytes);
     }
     let mut sequence = 0; let mut receipt = RetainedCloneProgress::default();
     let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), StepBudget::new(0, u64::MAX, policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
     ORIGINAL.with(|probe| probe.set(Some(Default::default())));
     assert!(PluginApp::pending_effects(&mut app, None, &mut cx).await.unwrap().is_empty());
     assert_eq!(ORIGINAL.with(|probe| probe.take().unwrap().calls), 0);
-    let closure = artifact_app_laws::close_registered_fixture_app(&mut app, policy);
+    let _ = artifact_app_laws::close_registered_fixture_app(&mut app, policy);
     assert!(PluginApp::close_terminal_is_empty(&app));
-    println!("[DEBUG] original mounted preparation application closed through {} funded receipts", closure.len());
 }
 
 #[test]
-fn mounted_pending_source_version_compares_complete_original_authority(){let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let version=|v:&serde_json::Value|{let hex=v["canonicalRevision"].as_str().unwrap();let canonical_revision=std::array::from_fn(|i|u8::from_str_radix(&hex[i*2..i*2+2],16).unwrap());(semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:v["baseRevision"].as_u64().unwrap(),generation:v["generation"].as_u64().unwrap(),canonical_revision},v["overlay"].as_u64().unwrap())};for row in f["sourceVersions"].as_array().unwrap(){assert_eq!(version(&row["before"])!=version(&row["after"]),row["changed"].as_bool().unwrap());println!("[DEBUG] original pending full version {} changed={}",row["name"],row["changed"]);}}
+fn mounted_pending_source_version_compares_complete_original_authority(){let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let version=|v:&serde_json::Value|{let hex=v["canonicalRevision"].as_str().unwrap();let canonical_revision=std::array::from_fn(|i|u8::from_str_radix(&hex[i*2..i*2+2],16).unwrap());(semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:v["baseRevision"].as_u64().unwrap(),generation:v["generation"].as_u64().unwrap(),canonical_revision},v["overlay"].as_u64().unwrap())};for row in f["sourceVersions"].as_array().unwrap(){assert_eq!(version(&row["before"])!=version(&row["after"]),row["changed"].as_bool().unwrap());}}

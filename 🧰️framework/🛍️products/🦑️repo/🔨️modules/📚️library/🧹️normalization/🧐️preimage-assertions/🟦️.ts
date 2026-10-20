@@ -1,4 +1,4 @@
-import { requireRecord, type UnknownRecord } from "@semio-tech/schema-validator-ts";
+import { requireRecord, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type GeneratorContractSpec } from "../🔣️taxonomy/🏭️generators-packages/🟦️.ts";
 import { normalizeRelative } from "../🛣️path/🟦️.ts";

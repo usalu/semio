@@ -10,8 +10,7 @@
           "source": "build-input-closures",
           "lock": "build-lock-closures"
         },
-        "markerPattern": "^SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})$",
-        "lockFile": "Cargo.lock"
+        "markerPattern": "^SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})$"
       }
     },
     "SourceManifest": {

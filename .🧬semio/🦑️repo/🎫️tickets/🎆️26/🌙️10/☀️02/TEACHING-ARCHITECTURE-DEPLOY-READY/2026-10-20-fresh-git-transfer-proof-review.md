@@ -1,0 +1,19 @@
+# Fresh Git Transfer And Guest Proof Review
+
+Read separate draft 🌱️linux/git.ts,git-receiver.py and 📦️fresh/git-transfer.ts,git-archive.ts without commands or effects. Frozen12-file90-case closure was not modified. Draft31neutral cases remain unexecuted at review time.
+
+Material contract correction sent Release and Root: receiver refuses guest tracked-dirty differing from host dirtyAtCapture and host readGitProof repeats equality. Captured Source is explicitly non-atomic and omits generated/tool state, so a genuine guest observation may differ. Preserve actual guest dirty and host dirty separately with an equality observation; gate authentic HEAD/time/Source+metadata identity, not presumed dirty equivalence. Release acknowledged and is correcting only the Git draft with accepted-difference and malformed-observation cases.
+
+The current physical metadata channel uses frozen bounded PAX definitions, closed ordinary nonexecutable .git HEAD/index/config/ref/pack paths and manifest, rejects replace refs and preexisting .git, enforces archive bytes/SHA and each metadata hash, then rehashes after Git observations. Fresh Source manifest digest/bytes is checked before and after. Full actual/usr/bin/git argv is recorded for rev-parse HEAD, log-1%cI and tracked-only porcelain-z status; all statuses/signals/output hashes are real. Closed environment clears inherited GIT_* and pins DIR/WORK_TREE/INDEX/COMMON to extracted/repo/.git, disables optional writes/replace/global/systemconfig/fsmonitor/hooks/renames. No host Original is forwarded; proof is an independent guest tool observation, not product command execution.
+
+Host entry admits exact builder identity/engine/image/token/Sourcevolume/newcohort and sealed manifest/archive/head/time/counts. It hashes exact payload before effects, authenticates before/after transport, validates closed proof fields and fullargv, then publishes exclusive receipt. Normal operations use actual accepted body signal/deadline, preserving cleanupreserve60s. Failure inspects exact exclusive guestphaseowner plus dedicated builder before stop+finalinspection. Guest/client terminal and stoppedbuilder remain separate; no Sourcevolume deletion or fabricated terminal is introduced.
+
+Runtime transfer independently authenticates actual new genuinecapture receipt+metadata namespace, pins reviewed nine-module archive closure, recomputes archive/currenthostmetadata fences, compares prepared receipt archive/head/time/counts to admission, and invokes withFreshGit with compact admissionSHA. Source/builderevidence receipt content authenticity ultimately remains Root's final seal responsibility; guest verifies actual Source manifest bytes but does not independently interpret every upstream receipt.
+
+No fresh producer, transport, actual guest Git proof, native Original/product gate or final controller seal has executed in this audit. Await corrected final Git roster and actual neutral results; this report grants no physical entry approval.
+
+## Corrected Five-File Roster
+
+Git inputs.json SHA256a71110fd2239dc4f3851b36c73ec10d299c9db3f485db6d0ef94e53750846ae8 independently matches; all5file sizes/hashes match. Prepared cases33. Receiver now gates actual HEAD/time only and records guest dirty, host dirtyAtCapture and dirtyMatchesCapture. Host proof admission checks the binding and equality observation truth; guest dirty difference is accepted, malformed boolean/inconsistent observation refused. This resolves the material dirty-equivalence blocker. Disposition: ready for native neutral testing of this roster, with no executed pass or physical transfer approval claimed.
+
+Producer followup readback also confirms explicit cleared/pinned GIT environment and final replace-ref refusal. Whole closure and combined runner remain separately reviewed/sealed inputs; this five-file disposition does not freeze those drafts.

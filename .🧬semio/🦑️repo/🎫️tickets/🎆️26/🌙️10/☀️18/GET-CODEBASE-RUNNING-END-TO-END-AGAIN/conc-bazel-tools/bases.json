@@ -1,0 +1,10 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": "91b2605c1f5d87967e1b0a4da99e24bed03d8c14776b17648e9b0cdeec6ecdc7",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts": "d7b6bec435c5e8e43b21d206afe250f24521199f86e436f68c4b41808b93220d",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧬️schema/🔣️.json": "77aa3d238fba06e68078908a3811f2e473c370f2270d543152591472efa8d985",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts": "2ab6ad41dedb5d538f94c139b48cf44a4b57979eed0d9e3c21129572d6a96f26",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts": "7fa10e02d21d011898149487ed7b13fb8d221d99efe898ee4adf73f15a86c729",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts": "458251562a929d71aa255181ca58f56f57cfbe8aac12e1904327a12737ed5e84",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🧫️fixtures/🔣️.json": "1c602f813f05b7a81f6eb076a6fbf60d0df0e1e178d79ad039ed3991b0eb6bfe",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts": "b22e7ae1c0fa4f5206ddbb579fd65dbefe65cebcb36f4155b1cf4647960081cf"
+}

@@ -1,0 +1,339 @@
+{
+  "version": 1,
+  "wireCases": [
+    {
+      "id": "success",
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}",
+      "accepted": true
+    },
+    {
+      "id": "error",
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":{\"code\":-32601,\"message\":\"Not found\"}}",
+      "accepted": true
+    },
+    {
+      "id": "notification",
+      "line": "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}",
+      "accepted": true
+    },
+    {
+      "id": "server-request",
+      "line": "{\"jsonrpc\":\"2.0\",\"id\":\"roots-1\",\"method\":\"roots/list\",\"params\":{}}",
+      "accepted": true
+    },
+    {
+      "id": "diagnostic",
+      "line": "starting build...",
+      "accepted": false
+    },
+    {
+      "id": "wrong-version",
+      "line": "{\"jsonrpc\":\"1.0\",\"id\":1,\"result\":{}}",
+      "accepted": false
+    },
+    {
+      "id": "array",
+      "line": "[]",
+      "accepted": false
+    },
+    {
+      "id": "empty-envelope",
+      "line": "{\"jsonrpc\":\"2.0\"}",
+      "accepted": false
+    }
+  ],
+  "readyCases": [
+    {
+      "id": "native-ready",
+      "value": {
+        "protocolVersion": "2026-07-28",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "semio",
+          "version": "0.1.0"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "gateway-warming",
+      "value": {
+        "protocolVersion": "2026-07-28",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "semio",
+          "version": "warming"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "other-server",
+      "value": {
+        "protocolVersion": "2026-07-28",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "repo",
+          "version": "1.0"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "other-protocol",
+      "value": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "semio",
+          "version": "0.1.0"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "no-native-tools",
+      "value": {
+        "protocolVersion": "2026-07-28",
+        "capabilities": {},
+        "serverInfo": {
+          "name": "semio",
+          "version": "0.1.0"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "no-server-version",
+      "value": {
+        "protocolVersion": "2026-07-28",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "semio"
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "exchangeCases": [
+    {
+      "id": "correlated-response",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "response"
+    },
+    {
+      "id": "mismatched-response",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "duplicate-response",
+      "pendingId": 1,
+      "completedIds": [
+        1
+      ],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "unsolicited-response",
+      "pendingId": null,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "bounded-roots-response",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": "roots-1",
+        "method": "roots/list",
+        "params": {}
+      },
+      "action": "roots"
+    },
+    {
+      "id": "unknown-server-method",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": "other-1",
+        "method": "other/method",
+        "params": {}
+      },
+      "action": "method-not-found"
+    },
+    {
+      "id": "duplicate-server-request",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [
+        "string:roots-1"
+      ],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": "roots-1",
+        "method": "roots/list",
+        "params": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "notification-boundary",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 127,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "notifications/tools/list_changed",
+        "params": {}
+      },
+      "action": "notification"
+    },
+    {
+      "id": "notification-flood",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 128,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "notifications/tools/list_changed",
+        "params": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "message-flood",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 128,
+      "notifications": 0,
+      "nowMs": 1,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "deadline-exact",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 100,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "reject"
+    },
+    {
+      "id": "deadline-expired",
+      "pendingId": 1,
+      "completedIds": [],
+      "serverIds": [],
+      "messages": 0,
+      "notifications": 0,
+      "nowMs": 101,
+      "deadlineMs": 100,
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {}
+      },
+      "action": "reject"
+    }
+  ]
+}

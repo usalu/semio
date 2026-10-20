@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, linkSync, symlinkSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -8,7 +9,7 @@ export async function testArtifactOverlapIndex(workspace: string): Promise<void>
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/artifact-registry/🔣️.json"), "utf8")).overlapIndex;
   const { createArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
   const declarations = fixture.nested.map((path: string, index: number) => ({ owner: `owner-${index}:build`, path: `${fixture.directory}/${path}` }));
-  const python = Bun.which("python3") ?? Bun.which("python"); assert.ok(python);
+  const python = testPythonV1() ?? Bun.which("python"); assert.ok(python);
   const program = "import json,sys,unicodedata\nd=sorted(json.loads(sys.argv[1]),key=lambda x:(x['path'],x['owner']));out=[]\nf=lambda p:unicodedata.normalize('NFC',p).lower()\nfor i,a in enumerate(d):\n for b in d[i+1:]:\n  x,y=f(a['path']),f(b['path'])\n  if x==y or x.startswith(y+'/') or y.startswith(x+'/'):out.append({'rule':'CACHE-03','owner':b['owner'],'path':b['path'],'evidence':'Output overlaps '+a['owner']+' at '+a['path']})\nprint(json.dumps(out))";
   const oracle = Bun.spawnSync([python, "-c", program, JSON.stringify(declarations)], { cwd: workspace, stdout: "pipe", stderr: "pipe", timeout: 30000 });
   assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
@@ -50,7 +51,7 @@ export async function testArtifactRegistry(workspace: string, output: string): P
   assert.equal(measurement.totals.apparent, fixture.files.reduce((sum: number, file: { text: string }) => sum + Buffer.byteLength(file.text), 0));
   assert.ok(progress.length > 0); assert.equal(progress.at(-1), fixture.files.length);
   const oracleProgram = "import os,stat,json,sys\nseen=set();total={'apparent':0,'allocated':0,'files':0}\nfor directory,dirs,files in os.walk(sys.argv[1],followlinks=False):\n dirs.sort();files.sort()\n for name in files:\n  s=os.lstat(os.path.join(directory,name));key=(s.st_dev,s.st_ino)\n  if not stat.S_ISREG(s.st_mode) or key in seen:continue\n  seen.add(key);total['apparent']+=s.st_size;total['allocated']+=getattr(s,'st_blocks',(s.st_size+511)//512)*512;total['files']+=1\nprint(json.dumps(total))";
-  const python = Bun.which("python3") ?? Bun.which("python"); assert.ok(python, "Native Python filesystem oracle is required");
+  const python = testPythonV1() ?? Bun.which("python"); assert.ok(python, "Native Python filesystem oracle is required");
   const oracle = Bun.spawnSync([python, "-c", oracleProgram, workspaceRoot], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
   assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
   const expected = JSON.parse(oracle.stdout.toString());

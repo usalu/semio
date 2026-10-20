@@ -12,7 +12,6 @@ async fn db_io_fault_returns_original_typed_pack_error_owner() {
     let DbError::Pack(pack::PackError::Refusal(pack::PackRefusal::ValueRefusal(error))) = fault.into_db_error() else { panic!("original typed Pack error") };
     assert_eq!(error.message.as_ptr(), pointer);
     assert_eq!(serde_json::json!({"message":error.message}), serde_json::json!({"message":row["message"]}));
-    eprintln!("[DEBUG] DB I/O terminal returns the actual Pack refusal with its original owned message allocation");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -43,7 +42,6 @@ async fn db_io_fault_retirement_releases_one_original_semantic_allocation_at_a_t
     let Some(DbError::Protocol(protocol::ProtocolError::Malformed { what, offset, detail })) = owner else { panic!("original oversized cause") };
     assert_eq!((what, offset, detail.as_ptr(), detail.capacity()), ("fixture", 42, pointer, capacity));
     assert_eq!(serde_json::json!({"message":detail}), serde_json::json!({"message":fixture["cases"][0]["message"]}));
-    eprintln!("[DEBUG] DB structured fault obeys independent finite parent release authority and preserves one-over original causes with heap0");
 }
 
 struct FaultCustodyTransportPolicy;
@@ -54,7 +52,7 @@ impl pack::PackTransportPolicy for FaultCustodyTransportPolicy {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_fault_maintenance_serves_every_tier_while_retaining_unsupported_original() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
     let context = pack::PackTransportContext::try_new(pack::TransportAdmission::new(4096, 0), FaultCustodyTransportPolicy).ok().unwrap();
     let original = context.reserve::<std::io::Error>(pack::PackTransportCategory::NativeIo, pack::PackRetryDisposition::Never).unwrap().publish(std::io::Error::from(std::io::ErrorKind::NotFound));
     let pointer = original.source_error().downcast_ref::<std::io::Error>().unwrap() as *const std::io::Error;
@@ -99,7 +97,6 @@ async fn db_io_fault_maintenance_serves_every_tier_while_retaining_unsupported_o
     let DbError::Pack(pack::PackError::TransportFailure(original)) = fault.into_db_error() else { panic!("original transport handback") };
     assert_eq!(original.source_error().downcast_ref::<std::io::Error>().unwrap() as *const std::io::Error, pointer);
     assert!(!db_io_lost_owner_close_step().unwrap());
-    eprintln!("[DEBUG] DB fault round-robin serves primary, overflow and quarantine with heap0 while preserving unsupported original source identity");
 }
 
 #[derive(Debug)]
@@ -114,7 +111,7 @@ impl Drop for FaultCustodySource {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_fault_prebirth_custody_preserves_full_denied_cancelled_and_stale_originals() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
     let expected = &fixture["reservation"];
     let cancellation = db_io_fault_custody_reserve().unwrap();
     let cancelled_slot = cancellation.slot;
@@ -191,12 +188,11 @@ async fn db_io_fault_prebirth_custody_preserves_full_denied_cancelled_and_stale_
     }
     drop(original);
     assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), expected["sourceDropsAfterExplicitDrop"].as_u64().unwrap() as usize);
-    eprintln!("[DEBUG] DB full custody admission refuses before producer with heap0; cancellation, stale access and exactly-once original handoff preserve source pointer, capacity and retry");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_fault_refused_task_handback_retains_original_custody_after_cause_close_or_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
     for transfer in [false, true] {
         let custody = db_io_fault_custody_reserve().unwrap();
         let (slot, generation) = (custody.slot, custody.generation);
@@ -242,12 +238,11 @@ async fn db_io_fault_refused_task_handback_retains_original_custody_after_cause_
         assert!(!DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).cells[slot].reserved);
         drop(original);
     }
-    eprintln!("[DEBUG] DB refused aggregate handback retains exact original reservation after semantic closure and explicit cause transfer; repaired handback releases once outside custody guard");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_fault_full_custody_refuses_actual_task_admission_before_backend_effects() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️fault-custody/🔣️.json")).unwrap();
     let expected = &fixture["task"];
     let storage = MemoryStorage::new(db_io_test_pool()).await.unwrap();
     let document = DbIoText::try_from_str(expected["document"].as_str().unwrap()).unwrap();
@@ -278,7 +273,6 @@ async fn db_io_fault_full_custody_refuses_actual_task_admission_before_backend_e
     while task.close_step().unwrap().is_some() {}
     assert_eq!(storage.latest_generation(&ArtifactId::from(expected["document"].as_str().unwrap())).await.unwrap(), None);
     storage.close().await.unwrap();
-    eprintln!("[DEBUG] DB full custody refuses actual SnapshotWrite admission with heap0, unchanged original page pointer/generation/operation/backend, unchanged task arena and no producer steps");
 }
 
 use db_io_core::{CatalogStorage as _, DB_IO_PAGE_BYTES, DbIoPageWriter, DbIoPages, IndexStorage as _, LeaseStorage as _, PayloadStorage as _, WalSegmentState, WalStorage as _};

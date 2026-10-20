@@ -1,4 +1,4 @@
-import { buildModesV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildModesV1, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🎯️ Fixed preparation and release targets retain the mode encoded by their workflow. */
 export function fixedTargetBuildMode(name) {
@@ -10,9 +10,12 @@ export function fixedTargetBuildMode(name) {
 /** 🧬️ Every configured dependency can inherit the initiating task's compiler mode. */
 export function targetBuildModes(name, target) {
   const buildModes = buildModesV1();
-  const fixed = fixedTargetBuildMode(name), configurations = { ...target.configurations };
+  const named = fixedTargetBuildMode(name), declared = target.metadata?.semio?.buildMode?.fixed;
+  const authored = declared === undefined ? undefined : readBuildMode(declared), fallback = target.defaultConfiguration === undefined ? "prototype" : readBuildMode(target.defaultConfiguration);
+  if (named !== undefined && authored !== undefined && named !== authored) throw new Error(`Conflicting target build modes: ${name}=${named}, declared=${authored}\nWidersprüchliche Target-Build-Modi: ${name}=${named}, deklariert=${authored}`);
+  const fixed = named ?? authored, configurations = { ...target.configurations };
   for (const mode of buildModes) configurations[mode] = { ...configurations[mode], env: { ...target.options?.env, ...configurations[mode]?.env, SEMIO_BUILD_MODE: mode } };
   const inputs = [...(target.inputs ?? ["default", "^default"])];
   if (!inputs.some(input => input?.env === "SEMIO_BUILD_MODE")) inputs.push({ env: "SEMIO_BUILD_MODE" });
-  return { ...target, defaultConfiguration: fixed ?? "prototype", configurations, ...(target.cache ? { inputs } : {}), metadata: { ...target.metadata, semio: { ...target.metadata?.semio, buildMode: { ...(fixed ? { fixed } : {}), modes: buildModes } } } };
+  return { ...target, defaultConfiguration: fixed ?? fallback, configurations, ...(target.cache ? { inputs } : {}), metadata: { ...target.metadata, semio: { ...target.metadata?.semio, buildMode: { ...(fixed ? { fixed } : {}), modes: buildModes } } } };
 }

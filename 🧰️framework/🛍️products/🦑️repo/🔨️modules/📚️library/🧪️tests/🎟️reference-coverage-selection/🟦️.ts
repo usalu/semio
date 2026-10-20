@@ -5,6 +5,7 @@ import Ajv from "ajv";
 import differenceWith from "lodash/differenceWith.js";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Token = Readonly<{ id: string; adapter: string; start: number; end: number; value: string; rewriteKind?: string; physicalInterpretation?: string; physicalTargets?: readonly string[]; unsupportedReason?: string }>;
@@ -108,17 +109,17 @@ test("reference coverage gate is registered through its exact default-budget rou
   const expected = vector.execution, pkg = join(library, "📦️packages/🟦️typescript"), project = JSON.parse(readFileSync(join(pkg, "📋️project.json"), "utf8")), packageJson = JSON.parse(readFileSync(join(pkg, "package.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe("bun ./📜️script.ts test " + expected.route);
   expect(packageJson.scripts[expected.target]).toBe('bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:' + expected.target);
-  const router = readFileSync(join(pkg, "📜️script.ts"), "utf8");
+  const { path: routePath, text: router } = readRegisteredTestRoute(root, expected.route);
   expect(router).toContain('if (segments[0] === "' + expected.route + '")');
   expect(router).toContain('🧪️tests/🎟️reference-coverage-selection/🟦️.ts');
-  const routerTree = ts.createSourceFile("📜️script.ts", router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];
+  const routerTree = ts.createSourceFile(routePath, router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(routerTree) === 'segments[0] === "' + expected.route + '"') branches.push(node); ts.forEachChild(node, visit); };
   visit(routerTree);
   expect(branches).toHaveLength(1);
   const body = branches[0]!.thenStatement.getText(routerTree);
   for (const compiler of compilers) {
-    const calls: unknown[][] = [], operation = new Function("join", "process", "runRepositoryTestCommand", compiler.compile("async function route(segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
-    await operation.call({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
+    const calls: unknown[][] = [], operation = new Function("join", "process", "runRepositoryTestCommand", compiler.compile("async function route(context: { repoRoot: string }, segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
+    await operation({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
     expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "./🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
   }
 });

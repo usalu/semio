@@ -8,7 +8,17 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
 import { withHostPlatformOutputsV1 } from "../../../🎯️host-platform/🟦️.ts";
-const { existsSync, readFileSync } = observedFs;
+import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
+import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as rawReadFileSync, renameSync as rawRenameSync, writeFileSync as rawWriteFileSync } from "node:fs";
+import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
+import { withBuildGraphOptionalPublicationV1 } from "../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
+import { observedTypeScriptHost } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { deriveInputsV1, inputPrecisionDecisionV1, inputPrecisionLanguageV1, inputPrecisionTextV1, readInputPrecisionV1, selectRuleV1 } from "../../../📥️inputs/🎯️precision/🟦️.ts";
+import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../../📥️inputs/🦀️resolution/🟦️.ts";
+import resolutionDocument from "../../../📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+const resolutionPolicy = readCargoResolutionPolicyV1(resolutionDocument);
+const { existsSync, readFileSync, readdirSync } = observedFs;
 
 /** 🪓️ Broad project groups that a native target replaces with its Cargo module closure; every other authored input still reaches the hash. */
 const NATIVE_REPLACED_INPUTS = new Set(["default", "^default", "production", "^production", "nativeSources", "^nativeSources", "nativeTestSources", "^nativeTestSources"]);
@@ -46,18 +56,153 @@ export function nativeTargetInputsV1(runsTests, generated, declared) {
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-assembly";
+
+const PRECISION_FILES = ["🏗️build/📥️inputs/🎯️precision/🟦️.ts", "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json"];
+const PRECISION_RULES = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
+const precisionContexts = new WeakMap();
+
+/** 🦀️ Lists the directory of every Cargo manifest the build discovers, skipping generated trees. */
+function precisionCargoManifestsV1(workspaceRoot) {
+  const found = [], walk = (directory) => {
+    for (const entry of readdirSync(join(workspaceRoot, directory), { withFileTypes: true })) {
+      const path = buildPath(join(directory, entry.name));
+      if (entry.isSymbolicLink() || path === "compose" || path === "temp/compose" || entry.name === ".🧬semio" || POLICY.generatedDirectories.includes(entry.name)) continue;
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile() && entry.name === "Cargo.toml") found.push(directory);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🔷️ The compiler side of the TypeScript program analysis: one file's imports resolved with the compiler's own module resolution under the tsconfig options (a fresh resolution cache per file, so the facts it consulted are all recorded), and the answer to any recorded fact, both through the observed file system so the enclosing inference depends on exactly what a derivation would have read. */
+function precisionProgramHostV1(workspaceRoot, scripts, documentOf, compilerOf) {
+  const prefix = `${workspaceRoot}/`, absolutePath = (path) => (isAbsolute(path) ? path : join(workspaceRoot, path)), relativePath = (path) => (path.startsWith(prefix) ? buildPath(path.slice(prefix.length)) : path), sha = (value) => createHash("sha256").update(value).digest("hex");
+  const programs = new Map();
+  let observed, analysis;
+  const sysOf = () => (observed ??= observedTypeScriptHost(compilerOf().sys));
+  const optionsOf = (tsconfig) => {
+    let options = programs.get(tsconfig);
+    if (!options) {
+      const compiler = compilerOf(), path = join(workspaceRoot, tsconfig), read = compiler.readConfigFile(path, compiler.sys.readFile);
+      options = compiler.parseJsonConfigFileContent(read.config, { ...compiler.sys, readDirectory: () => [] }, dirname(path), undefined, path).options;
+      programs.set(tsconfig, options);
+    }
+    return options;
+  };
+  const answer = (kind, path) => {
+    const sys = sysOf();
+    if (kind === "file") return sys.fileExists(path);
+    if (kind === "directory") return sys.directoryExists(path);
+    if (kind === "text") { const text = sys.readFile(path); return text === undefined ? "!missing" : sha(text); }
+    if (kind === "realpath") return sys.realpath?.(path) ?? null;
+    if (kind === "directories") return JSON.stringify(sys.getDirectories(path));
+    try { return sha(readFileSync(path)); } catch { return null; }
+  };
+  const receipts = precisionReceiptsV1(workspaceRoot);
+  return {
+    get compiler() { return compilerOf().version; },
+    fact: (kind, path) => answer(kind, absolutePath(path)),
+    imports: async (file, tsconfig) => {
+      const compiler = compilerOf(), options = optionsOf(tsconfig), base = sysOf(), facts = [], recorded = new Set(), source = join(workspaceRoot, file), resolved = new Set();
+      const record = (kind, path, value) => {
+        const fact = { kind, path: relativePath(path), value }, id = JSON.stringify(fact);
+        if (!recorded.has(id)) { recorded.add(id); facts.push(fact); }
+        return value;
+      };
+      const sys = {
+        ...base,
+        fileExists: (path) => record("file", path, base.fileExists(path)),
+        directoryExists: (path) => record("directory", path, base.directoryExists(path)),
+        readFile: (path, encoding) => { const text = base.readFile(path, encoding); record("text", path, text === undefined ? "!missing" : sha(text)); return text; },
+        realpath: base.realpath && ((path) => { const value = base.realpath(path); record("realpath", path, value ?? null); return value; }),
+        getDirectories: (path) => { const value = base.getDirectories(path); record("directories", path, JSON.stringify(value)); return value; },
+      };
+      const cache = compiler.createModuleResolutionCache(workspaceRoot, (value) => value, options);
+      for (const specifier of observedSourceAnalysisV1(analysis ??= prepareSourceAnalysesV1().module, source).imports) {
+        const hit = compiler.resolveModuleName(specifier, source, options, sys, cache).resolvedModule?.resolvedFileName;
+        if (hit && hit.startsWith(prefix) && !hit.includes("/node_modules/")) resolved.add(buildPath(hit.slice(prefix.length)));
+      }
+      return { resolved: [...resolved].sort(), facts };
+    },
+    receipts,
+    check: (phase, index) => yieldInferenceV1(scripts.context, phase, index),
+    report: (event) => {
+      const document = documentOf();
+      process.stderr.write(`[input-precision] ${inputPrecisionTextV1(document, event, inputPrecisionLanguageV1(document, process.env))}\n`);
+    },
+  };
+}
+
+/** 📇️ Keeps the program receipts as optional, recomputable graph cache leaves (`ip/<24 hex>.json`, brotli) under the graph data directory; they are read outside the observation because every fact they carry is re-checked through it. */
+function precisionReceiptsV1(workspaceRoot) {
+  const directory = () => join(workspaceDataDirectory(workspaceRoot), "ip"), leaf = (key) => join(directory(), `${createHash("sha256").update(key).digest("hex").slice(0, 24)}.json`);
+  return {
+    read: (key) => { try { return brotliDecompressSync(rawReadFileSync(leaf(key))).toString("utf8"); } catch { return undefined; } },
+    write: (key, image) => {
+      const target = leaf(key), bytes = brotliCompressSync(Buffer.from(image, "utf8"), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5, [zlibConstants.BROTLI_PARAM_SIZE_HINT]: image.length } });
+      let previous = 0;
+      try { previous = rawLstatSync(target).size; } catch {}
+      withBuildGraphOptionalPublicationV1(target, { peakBytes: bytes.byteLength, retainedDeltaBytes: Math.min(bytes.byteLength, bytes.byteLength - previous) }, () => {
+        const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
+        rawMkdirSync(directory(), { recursive: true });
+        rawWriteFileSync(temporary, bytes, { flag: "wx" });
+        rawRenameSync(temporary, target);
+      });
+    },
+  };
+}
+
+/** 🎯️ The input precision rules and the engine host of one graph construction. */
+function precisionContextV1(workspaceRoot, facts, scripts) {
+  const known = precisionContexts.get(scripts);
+  if (known) return known;
+  for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file));
+  const rules = join(LIBRARY_ROOT, PRECISION_RULES), document = existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : undefined;
+  const local = (path) => join(workspaceRoot, path), cargo = { cache: new Map(), closures: new Map() };
+  let compiler, kinds, manifests;
+  const host = {
+    exists: (path) => existsSync(local(path)),
+    readText: (path) => { try { return readFileSync(local(path), "utf8"); } catch { return undefined; } },
+    listDirectory: (path) => { try { return readdirSync(local(path), { withFileTypes: true }).map((entry) => ({ name: entry.name, directory: entry.isDirectory() })); } catch { return []; } },
+    get kinds() { return kinds ??= JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8")).fileKinds; },
+    importClosure: async (entries) => (await relativeScriptInputs(entries.map(local), workspaceRoot, scripts)).map((path) => path.replace(/^\{workspaceRoot\}\//u, "")),
+    cargoManifests: () => manifests ??= precisionCargoManifestsV1(workspaceRoot),
+    cargoRoots: (crate) => nativeDependencyRoots(crate, workspaceRoot, true, cargo.cache, cargo.closures),
+    cargoSources: (root) => cargoSourceInputs(root, workspaceRoot, facts, true),
+    cargoToolchain: POLICY.toolchains.cargo.files,
+    cargoIdentity: (directory) => (readToml(join(workspaceRoot, directory, "Cargo.toml")).package ? loaded.cargoLockInput(loaded.cargoManifestInputV1(directory||"."), workspaceRoot) : undefined),
+    program: precisionProgramHostV1(workspaceRoot, scripts, () => document, () => (compiler ??= createRequire(import.meta.url)("typescript"))),
+  };
+  const context = { document, host };
+  precisionContexts.set(scripts, context);
+  return context;
+}
+
+/** 🎯️ Narrows one cached target's broad inherited inputs to what its input precision rule derives and records the rule as `metadata.semio.inputPrecision`; a `whole` or `assumed` rule keeps the inherited inputs and records why, and a rule that cannot bound its reads refuses the graph, so no whole-repository input returns silently. */
+async function preciseInputsV1(project, name, command, policy, workspaceRoot, facts, scripts, intern) {
+  const { document, host } = precisionContextV1(workspaceRoot, facts, scripts), identity = { project, target: name, command };
+  const rule = document && selectRuleV1(document, identity);
+  if (!rule) return policy;
+  const metadata = { ...policy.metadata, semio: { ...policy.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
+  if (rule.evidence === "whole" || rule.evidence === "assumed") return { ...policy, metadata };
+  let derived;
+  try { derived = await deriveInputsV1(document, rule, identity, host); }
+  catch (error) { if (error?.name === "InputPrecisionErrorV1") throw new Error(`Input precision rule ${rule.id} cannot bound ${project}:${name}: ${error.message}`, { cause: error }); throw error; }
+  return { ...policy, metadata, inputs: [...policy.inputs.filter((input) => !(typeof input === "string" && derived.drops.includes(input))), ...derived.patterns, ...derived.groups, ...(derived.markers ?? []), ...intern(derived.files.map((file) => `{workspaceRoot}/${file}`))] };
+}
 /** 🧾️ Gives a target whose output lives in the managed products store its receipt as the one restorable output; it replays when authored cacheable, because a hit is verified against the store and re-executes when the content or its links are gone. */
 function receiptedStoreTargetV1(policy, name, reason) {
   return withCacheDecision({ ...policy, outputs: [storeReceiptOutputV1(name)] }, policy.cache ? "deterministic" : "managed-output", policy.cache ? "pure-function-of-inputs" : reason);
 }
 
-let targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
+let workspaceDataDirectory, targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
   ({ libraryBootstrap, loaded } = registry.bootstrap);
   ({ nativeDependencyRoots, readToml, cargoSourceInputs, goManifest } = registry.nativeManifests);
-  ({ buildPath, LIBRARY_ROOT, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned } = registry.coordinates);
+  ({ buildPath, LIBRARY_ROOT, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned, workspaceDataDirectory } = registry.coordinates);
   ({ readTaxonomyProjectionV1, TAXONOMY, prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ targetScriptSources,createScriptInputCache, yieldInferenceV1, relativeScriptInputs, genericCommandFallbackInputs, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs } = registry.scriptInputs);
   ({ resolveOutputPath, generatorContractInputs, generatorOutputOwners, outputRootInputs, generatorOutputCouplingInputs } = registry.generatorOutputs);
@@ -81,7 +226,7 @@ export async function nativeSourceWatchPlanV1(root, workspaceRoot) {
       if (local.startsWith("../")) throw Error("Native watch workspace authority escapes repository");
       includes.add(local);
     }
-    for (const path of POLICY.toolchains.cargo.files) includes.add(path);
+    for (const path of [...POLICY.toolchains.cargo.files, ...POLICY.toolchains.cargo.identity]) includes.add(path);
     const projectPath = join(workspaceRoot, nativeRoot, PROJECT_BASENAME);
     const project = existsSync(projectPath) ? JSON.parse(readFileSync(projectPath, "utf8")) : {};
     for (const path of cargoSourceInputs(nativeRoot, workspaceRoot, new Map(), false) ?? []) files.add(path.replace(/^\{workspaceRoot\}\//u, ""));
@@ -146,9 +291,10 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeRoot = json.metadata?.nativeRoot ?? root;
   if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);
+  const nativeManifest=loaded.cargoManifestInputV1(nativeRoot);
   const nativeProject = existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml"));
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
-  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...await cargoTargets(root, workspaceRoot, commandInputs,scripts), ...json.targets, ...Object.fromEntries(Object.entries(componentBuildTargets(root, workspaceRoot)).map(([name, target]) => [name, withCacheDecision(target, "driver-owned", "freshness-owned-by-driver")])), ...await printDocumentTargets(json, root, workspaceRoot, scripts) }, ownsScript && json.targets?.wasm ? observedSourceAnalysisV1(prepareSourceAnalysesV1().script,join(projectDir,SCRIPT_BASENAME)).wasm : false);
+  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...await cargoTargets(root, workspaceRoot, commandInputs,scripts), ...json.targets, ...componentBuildTargets(root, workspaceRoot), ...await printDocumentTargets(json, root, workspaceRoot, scripts) }, ownsScript && json.targets?.wasm ? observedSourceAnalysisV1(prepareSourceAnalysesV1().script,join(projectDir,SCRIPT_BASENAME)).wasm : false);
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
     const name = contract.target.slice(contract.target.lastIndexOf(":") + 1), target = declared[name];
@@ -181,7 +327,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     let policy = targetPolicy(name,inherited);
     const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
     if (execution === "native" && !nativeProject) throw Error(`Native execution contract requires a native project owner: ${json.name}:${name}`);
-    const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && (execution === "native" || (await nativeTargetCommandInputs({...policy,configurations:undefined},workspaceRoot,commandInputs,scripts,root)).some(path=>typeof path==="string"&&(path.includes(CARGO_TEST_DRIVER)||path.includes("/🏃️process/📦️artifacts/🏗️native-build/")||path.includes("/🏃️process/📦️artifacts/🕸️wasm-build/"))));
+    const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && (execution === "native" || typeof policy.options?.command === "string" && (await nativeTargetCommandInputs({...policy,configurations:undefined},workspaceRoot,commandInputs,scripts,root)).some(path=>typeof path==="string"&&(path.includes(CARGO_TEST_DRIVER)||path.includes("/🏃️process/📦️artifacts/🏗️native-build/")||path.includes("/🏃️process/📦️artifacts/🕸️wasm-build/"))));
     const nativeTarget = execution !== "source" && !orchestrator && (nativePolicyTarget || nativeProject && /^(?:build|wasm|native|test|lint|check|verify)(?:-|$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts"));
     const artifactTarget = artifactTypeScript && /^(?:build|check|test)$/.test(name);
     if(nativePolicyTarget){
@@ -191,8 +337,8 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
       const ownerCwd=policy.options?.cwd??root;
       const boundCommand=bindBuildCommandV1(command,workspaceRoot,ownerCwd,root,[]).command;
       policy.executor="repo:script";
-      let nativeOwnerCommand;try{nativeOwnerCommand=declaredNativeOwnerCommandV1(`${nativeRoot}/Cargo.toml`,ownerCwd,boundCommand);}catch(error){throw new Error(`Original discovered native command owner ${json.name}:${name}: ${error.message}`,{cause:error});}
-      policy.options={...policy.options,ownerArguments:true,cwd:".",nativeOwnerCommand,command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      let nativeOwnerCommand;try{nativeOwnerCommand=declaredNativeOwnerCommandV1(nativeManifest,ownerCwd,boundCommand);}catch(error){throw new Error(`Original discovered native command owner ${json.name}:${name}: ${error.message}`,{cause:error});}
+      policy.options={...policy.options,ownerArguments:true,cwd:".",nativeOwnerCommand,command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(nativeManifest)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
       const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
       if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
       else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
@@ -213,10 +359,12 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
       const runsTests = nativeTargetRunsTestsV1(name, target.metadata?.semio?.execution, commandSources), authored = nativeAuthoredInputsV1(policy.inputs ?? [], commandInputs);
       policy.inputs = nativeTargetInputsV1(runsTests, [...internCommandSources(commandSources), ...nativeLockInputs(policy), ...(policy.cargoTestPolicyInputs ?? [])], runsTests ? [...(POLICY.targetDefaults?.test?.inputs ?? []), ...authored] : authored);
       delete policy.cargoTestPolicyInputs;
+      const wholeKeys = workspaceKeyViolationsV1(resolutionPolicy, commandSources, policy.options?.command);
+      if (wholeKeys.length) throw new Error(cargoResolutionTextV1(resolutionPolicy, "workspaceKey", cargoResolutionLanguageV1(resolutionPolicy, process.env), { subject: `${json.name}:${name}`, keys: wholeKeys.join(", ") }));
     }
-    if (nativeTarget && nativeProject && readToml(join(workspaceRoot, nativeRoot, "Cargo.toml")).package) {
+    if ((nativeTarget || policy.metadata?.semio?.componentStoreV1) && nativeProject && readToml(join(workspaceRoot, nativeRoot, "Cargo.toml")).package) {
       const lockOwner = join(LIBRARY_ROOT, "🏗️build/📥️inputs/🔒️lock/📜️script.ts");
-      policy.inputs.push(...await relativeScriptInputs([lockOwner], workspaceRoot, scripts), `{workspaceRoot}/${buildPath(relative(workspaceRoot, join(dirname(lockOwner), "🔣️schema.json")))}`, loaded.cargoLockInput(`${nativeRoot}/Cargo.toml`, workspaceRoot));
+      policy.inputs.push(...await relativeScriptInputs([lockOwner], workspaceRoot, scripts), `{workspaceRoot}/${buildPath(relative(workspaceRoot, join(dirname(lockOwner), "🔣️schema.json")))}`, loaded.cargoLockInput(nativeManifest, workspaceRoot));
     }
     if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(await genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts, root))];
@@ -226,8 +374,9 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
       if (policy.cache) policy = withCacheDecision(policy, "deterministic", "check-without-outputs");
     }
     if(policy.metadata?.semio?.wasmPackageSourceV1)policy = receiptedStoreTargetV1(policy, name, "outputs-in-managed-store");
-    const source=await targetScriptSources(target,workspaceRoot,scripts,root,nativeProject?`${nativeRoot}/Cargo.toml`:undefined);if(source.generatedDependencies?.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:source.generatedDependencies}).targets[name];
+    const source=await targetScriptSources(target,workspaceRoot,scripts,root,nativeProject?nativeManifest:undefined);if(source.generatedDependencies?.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:source.generatedDependencies}).targets[name];
     if (POLICY.serialTargets?.includes(name)) policy.parallelism = false;
+    if (policy.cache && policy.inputs) policy = await preciseInputsV1(json.name, name, inherited.options?.command ?? inherited.command, policy, workspaceRoot, facts, scripts, internCommandSources);
     normalized[name] = loaded.targetBuildModes(name, cachedOutputsAdmittedV1(policy));
   }
   for (const contract of Object.values(contracts)) {

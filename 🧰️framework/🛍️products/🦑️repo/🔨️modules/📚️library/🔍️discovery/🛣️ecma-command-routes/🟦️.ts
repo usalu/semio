@@ -1,4 +1,4 @@
-import { ecmaProgram, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "@semio-tech/compiler-syntax-ecma-ts";
+import { ecmaProgram, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
 import type { PackageGlueGrammarSpec } from "../📜️taxonomy-contracts/🟦️.ts";
 
 interface EcmaRouteBinding {

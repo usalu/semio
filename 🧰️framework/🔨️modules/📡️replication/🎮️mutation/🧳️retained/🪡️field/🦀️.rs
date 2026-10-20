@@ -3,7 +3,7 @@
 pub mod change;
 pub use change::{RetainedFieldChange};
 pub use change::record::{RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
-use super::super::ApplyCapability;
+use super::ApplyCapability;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedFieldCursor, admit_retained_clone_close, admit_retained_clone_progress};
 

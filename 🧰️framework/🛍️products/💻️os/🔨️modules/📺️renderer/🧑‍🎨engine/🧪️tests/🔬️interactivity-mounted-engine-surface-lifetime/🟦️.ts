@@ -1,5 +1,5 @@
-import { INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, interactivityMountedEngineSurfaceLifetimeFailures } from "@semio-tech/repo-lib/laws";
-import { policyReadRustPolicySource, policyReadModuleTreeSource } from "@semio-tech/repo-lib/inventory";
+import { INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, interactivityMountedEngineSurfaceLifetimeFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
+import { policyReadRustPolicySource, policyReadModuleTreeSource } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 
 /** 🧪️ Executes interactivity mounted engine surface lifetime policy assertions. */
 export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: string): void {

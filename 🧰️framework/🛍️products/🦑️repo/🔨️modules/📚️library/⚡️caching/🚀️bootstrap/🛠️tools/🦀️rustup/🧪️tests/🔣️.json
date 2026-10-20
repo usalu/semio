@@ -439,5 +439,85 @@
         }
       }
     }
+  ],
+  "directoryCases": [
+    {
+      "name": "same namespace",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777232",
+      "device": "16777232",
+      "inode": "401",
+      "directory": true,
+      "alias": false,
+      "accepted": true
+    },
+    {
+      "name": "remounted namespace",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777229",
+      "device": "16777229",
+      "inode": "401",
+      "directory": true,
+      "alias": false,
+      "accepted": true
+    },
+    {
+      "name": "foreign current filesystem",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777229",
+      "device": "16777232",
+      "inode": "401",
+      "directory": true,
+      "alias": false,
+      "accepted": false
+    },
+    {
+      "name": "replacement inode",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777229",
+      "device": "16777229",
+      "inode": "402",
+      "directory": true,
+      "alias": false,
+      "accepted": false
+    },
+    {
+      "name": "symbolic alias",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777229",
+      "device": "16777229",
+      "inode": "401",
+      "directory": true,
+      "alias": true,
+      "accepted": false
+    },
+    {
+      "name": "ordinary file",
+      "published": {
+        "device": "16777232",
+        "inode": "401"
+      },
+      "rootDevice": "16777229",
+      "device": "16777229",
+      "inode": "401",
+      "directory": false,
+      "alias": false,
+      "accepted": false
+    }
   ]
 }

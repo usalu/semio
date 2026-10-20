@@ -32,7 +32,7 @@ use semio_hub_trusted_catalog::TrustedCatalogLoader;
 use protocol::ArtifactId as WireArtifactId;
 use semio_hub_document_routes::inference::{acquire_gis_map_approval_ingress, revalidate_gis_map_approval_authority};
 use semio_hub_runtime::presence::{db_artifact_id, document_scope_key_v1};
-use semio_framework_os_kernel as directory_access_permits;
+use directory as directory_access_permits;
 use semio_hub_runtime::support::now_ms;
 use semio_hub_runtime::readiness;
 use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, ShareTokenDirectory};

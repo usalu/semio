@@ -3,14 +3,15 @@ import {lstatSync,readFileSync,readdirSync,statSync,unlinkSync} from "node:fs";
 import {homedir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withArtifactRelativeDirectoryV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {readBunWorkspaceListingProjectionV1,type BunWorkspaceObservedOwnershipV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import {javascriptDependencyReadContextV1,javascriptDependencySourceOwnerRuntimeV1,observeJavascriptDependencyBindingsReadV1,readJavascriptDependencyBindingReceiptReadV1,type JavascriptDependencyReadContextV1,type readJavascriptDependencySourceOwnerScopeReadV1} from "../../💾️storage/🟦️.ts";
 import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
-import {captureGenerationReceiptV1,generationLocationV1,generationProtocolV1 as protocol,generationSha256V1,parseGenerationReceiptV1,verifyGenerationReceiptV1,type GenerationControlV1,type GenerationProducerFileV1,type GenerationProducerV1,type GenerationProducerVariableV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyResultV1} from "../🟦️.ts";
+import {captureGenerationReceiptV1,confirmGenerationWalkV1,generationLocationV1,generationProtocolV1 as protocol,generationSha256V1,guardGenerationReplayV1,generationWalkOriginV1,parseGenerationReceiptV1,publishGenerationBestEffortV1,runGenerationWriterV1,verifyGenerationReceiptV1,type GenerationControlV1,type GenerationPublishOutcomeV1,type GenerationReplayResultV1,type GenerationProducerFileV1,type GenerationProducerV1,type GenerationProducerVariableV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyResultV1} from "../🟦️.ts";
 
 const repositoryRoot=resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../../../.."),compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const scopeKey=(scope:string)=>generationSha256V1(scope).slice(0,16);
@@ -108,10 +109,10 @@ export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:st
 
 const colon=(json:string|null):string|null=>json===null?null:(JSON.parse(json)as string[]).join(":");
 /** 🗺️ Maps one completed walk onto the neutral capture input; nothing outside the walk's own results is consulted. */
-export async function captureJavascriptDependencyGenerationReceiptV1(workspace:string,store:Readonly<{root:string}>,control:GenerationControlV1,walk:JavascriptDependencyGenerationWalkV1,observed:BunWorkspaceObservedOwnershipV1,startedAtMs:number,invocation:ScriptInvocation,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()){
+export async function captureJavascriptDependencyGenerationReceiptV1(workspace:string,store:Readonly<{root:string}>,control:GenerationControlV1,walk:JavascriptDependencyGenerationWalkV1,observed:BunWorkspaceObservedOwnershipV1,startedAtMs:number,invocation:ScriptInvocation,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1(),implementation?:Awaited<ReturnType<typeof captureJavascriptDependencyGenerationImplementationV1>>){
  const root=resolve(workspace),evidence=walk.evidence,plans=new Map(walk.projection.plans.map(row=>[row.scope,row.plan]));
  return captureGenerationReceiptV1({
-  workspace:root,storeRoot:store.root,scope:evidence.scope,startedAtMs,implementation:await captureJavascriptDependencyGenerationImplementationV1(invocation,subject),runtime:javascriptDependencyGenerationRuntimeV1(),producer:observeJavascriptDependencyGenerationProducerV1(root,store.root,walk.required,subject.ambient),recipeSha256:walk.projection.recipeSha256,ownershipSha256:walk.projection.owners.sha256,required:walk.required,
+  workspace:root,storeRoot:store.root,scope:evidence.scope,startedAtMs,implementation:implementation??await captureJavascriptDependencyGenerationImplementationV1(invocation,subject),runtime:javascriptDependencyGenerationRuntimeV1(),producer:observeJavascriptDependencyGenerationProducerV1(root,store.root,walk.required,subject.ambient),recipeSha256:walk.projection.recipeSha256,ownershipSha256:walk.projection.owners.sha256,required:walk.required,
   inputs:walk.projection.plans.map(row=>({scope:row.scope,sources:row.plan.sources.map(source=>({path:source.path,kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,bytes:source.bytes}))})),
   membership:observed,
   bindings:walk.required.map(name=>({scope:name,pairs:plans.get(name)!.bindings,observation:evidence.bindings.find(([scope])=>scope===name)![1]})),
@@ -121,12 +122,62 @@ export async function captureJavascriptDependencyGenerationReceiptV1(workspace:s
  });
 }
 
+const relativeWriteCeilingBytes=65536,replayEntries:readonly string[]=Object.freeze(["in-process-replay"]),replayImplementation:Awaited<ReturnType<typeof captureJavascriptDependencyGenerationImplementationV1>>=Object.freeze({entries:replayEntries,loadedAtMs:0,files:Object.freeze([])}),sharedRetireGraceMilliseconds=600000;
+/** 📝️ Writes immutable evidence through the bounded relative-create API in chunks within its write ceiling and removes a partially written file instead of leaving it behind. */
+export async function writeJavascriptDependencyGenerationFilesV1(storeRoot:string,files:readonly Readonly<{name:string;bytes:Uint8Array}>[],checkpoint:()=>void,yieldContinuation:()=>Promise<void>):Promise<void>{
+ const state:{unfinished?:string}={};
+ try{
+  await withArtifactRelativeDirectoryV1(storeRoot,checkpoint,async base=>{
+   if(await base.entry(protocol.directory)===null){await base.withNewDirectory(protocol.directory,async child=>{await child.sync();});await base.sync();}
+   await base.withDirectory(protocol.directory,async directory=>{
+    for(const file of files){
+     const existing=await directory.entry(file.name);
+     if(existing){if(existing.kind!=="file"||existing.size!==BigInt(file.bytes.length))throw Error("Existing immutable generation file changed");continue;}
+     state.unfinished=file.name;
+     await directory.withNewFile(file.name,async handle=>{let offset=0;while(offset<file.bytes.length){checkpoint();offset+=handle.write(file.bytes,offset,Math.min(relativeWriteCeilingBytes,file.bytes.length-offset),offset);await yieldContinuation();}handle.sync();});
+     state.unfinished=undefined;
+     await directory.sync();
+    }
+   });
+  });
+ }catch(error){
+  if(state.unfinished!==undefined)await removeUnfinishedGenerationLeafV1(storeRoot,state.unfinished).catch(()=>{});
+  throw error;
+ }
+}
+/** 🧽️ Removes the one leaf a failed write created through a fresh descriptor scope, because the failed scope retains its created leaf and refuses further children. */
+async function removeUnfinishedGenerationLeafV1(storeRoot:string,name:string):Promise<void>{
+ await withArtifactRelativeDirectoryV1(storeRoot,()=>{},base=>base.withDirectory(protocol.directory,async directory=>{const leaf=await directory.entry(name);if(leaf&&leaf.kind==="file")await directory.remove(name,leaf);}));
+}
+
+/** 🧫️ Replays a completed walk's own recorded observations against the live tree under the caller's custody; nothing is persisted, so the implementation closure and its settle rule do not apply. */
+async function replayJavascriptDependencyGenerationWalkUnguardedV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined=walk.observed?.(),subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<GenerationReplayResultV1>{
+ if(!observed)throw Error("Retained workspace topology required");
+ const generation=controlOf(context,control,"shared",checkpoint),replaySubject:JavascriptDependencyGenerationSubjectV1=Object.freeze({...subject,entries:replayEntries}),captured=await captureJavascriptDependencyGenerationReceiptV1(workspace,{root:context.root},generation,walk,observed,startedAtMs,context.invocation,replaySubject,replayImplementation);
+ if(captured.status==="deferred")return Object.freeze({status:"deferred",reason:captured.reason,...(captured.path===undefined?{}:{path:captured.path})});
+ const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,replaySubject));
+ if(proof.status!=="match")return Object.freeze({status:"mismatch",class:proof.class,...(proof.path===undefined?{}:{path:proof.path})});
+ return proof.sha256===walk.sha256?Object.freeze({status:"match",sha256:proof.sha256}):Object.freeze({status:"mismatch",class:"seal"});
+}
+/** 🛡️ Replays a completed walk and contains a replay that cannot capture, so the complete walk decides instead of the command failing. */
+export function replayJavascriptDependencyGenerationWalkV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined=walk.observed?.(),subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<GenerationReplayResultV1>{
+ return guardGenerationReplayV1({run:()=>replayJavascriptDependencyGenerationWalkUnguardedV1(workspace,context,control,checkpoint,walk,startedAtMs,observed,subject),aborted:()=>control.signal.aborted});
+}
+/** 🤝️ Publishes one receipt under the caller's SHARED Store custody, serialised only against other receipt writers, and reports busy instead of waiting for anybody. */
+export async function publishJavascriptDependencyGenerationReceiptSharedV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number):Promise<GenerationPublishOutcomeV1>{
+ const root=resolve(workspace);
+ return runGenerationWriterV1({acquire:()=>acquireResourceLease({directory:repositoryLeaseDirectoryV1(root),resource:"javascript-dependency-generation-writer:"+root,mode:"exclusive",signal:control.signal,control,timeoutMs:0}),aborted:()=>control.signal.aborted,body:async()=>{await store.recheck();checkpoint();const outcome=await publishJavascriptDependencyGenerationReceiptV1(workspace,store,control,checkpoint,walk,startedAtMs,walk.observed?.(),javascriptDependencyGenerationSubjectV1(),sharedRetireGraceMilliseconds);await store.recheck();return outcome;}});
+}
+/** 📣️ Reports the publication outcomes the receipt writer itself stays silent about. */
+export const reportJavascriptDependencyGenerationPublishV1=(scope:string)=>(outcome:GenerationPublishOutcomeV1|"error",detail?:string):void=>{if(outcome==="busy"||outcome==="error")console.error("[DATA] Store dependency generation receipt "+outcome+" "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-"+outcome,scope,...(detail===undefined?{}:{message:detail})}));};
+export {confirmGenerationWalkV1,generationWalkOriginV1,publishGenerationBestEffortV1};
+
 /** 📮️ Publishes one receipt under the caller's exclusive Store custody after proving it against the live tree; a receipt only saves time, so every failure except cancellation reports why nothing was written. */
-export async function publishJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined=walk.observed?.(),subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<"published"|"present"|"deferred"|"stale"|"failed"> {
- try{return await writeJavascriptDependencyGenerationReceiptV1(workspace,store,control,checkpoint,walk,startedAtMs,observed,subject);}
+export async function publishJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined=walk.observed?.(),subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1(),graceMilliseconds:number=0):Promise<"published"|"present"|"deferred"|"stale"|"failed"> {
+ try{return await writeJavascriptDependencyGenerationReceiptV1(workspace,store,control,checkpoint,walk,startedAtMs,observed,subject,graceMilliseconds);}
  catch(error){if(control.signal.aborted)throw error;console.error("[DATA] Store dependency generation receipt failed "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-failure",scope:walk.evidence.scope,message:String((error as Error)?.message??error).slice(0,300)}));return "failed";}
 }
-async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined,subject:JavascriptDependencyGenerationSubjectV1):Promise<"published"|"present"|"deferred"|"stale"> {
+async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined,subject:JavascriptDependencyGenerationSubjectV1,graceMilliseconds:number):Promise<"published"|"present"|"deferred"|"stale"> {
  if(!observed)throw Error("Retained workspace topology required");
  const context=await javascriptDependencyReadContextV1(workspace,store),scope=walk.evidence.scope,generation=controlOf(context,control,"exclusive",checkpoint);
  if((await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,scope,subject)).status==="match")return "present";
@@ -135,30 +186,20 @@ async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,sto
  const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject));
  if(proof.status!=="match"||proof.sha256!==walk.sha256){console.error("[DATA] Store dependency generation receipt stale "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-stale",scope,...(proof.status==="mismatch"?{class:proof.class,...(proof.path===undefined?{}:{path:proof.path})}:{})}));return "stale";}
  const receiptName=scopeKey(scope)+"."+captured.receipt.sha256+protocol.receiptSuffix,receiptBytes=Buffer.from(JSON.stringify(captured.receipt)+"\n"),all=[...captured.files,{name:receiptName,bytes:receiptBytes}];
- await withArtifactRelativeDirectoryV1(store.root,checkpoint,async base=>{
-  if(await base.entry(protocol.directory)===null){await base.withNewDirectory(protocol.directory,async child=>{await child.sync();});await base.sync();}
-  await base.withDirectory(protocol.directory,async directory=>{
-   for(const file of all){
-    const existing=await directory.entry(file.name);
-    if(existing){if(existing.kind!=="file"||existing.size!==BigInt(file.bytes.length))throw Error("Existing immutable generation file changed");continue;}
-    await directory.withNewFile(file.name,async handle=>{let offset=0;while(offset<file.bytes.length){checkpoint();offset+=handle.write(file.bytes,offset,Math.min(262144,file.bytes.length-offset),offset);await control.yieldContinuation();}handle.sync();});
-    await directory.sync();
-   }
-  });
- });
- retireJavascriptDependencyGenerationFilesV1(store.root,scope);
+ await writeJavascriptDependencyGenerationFilesV1(store.root,all,checkpoint,()=>control.yieldContinuation());
+ retireJavascriptDependencyGenerationFilesV1(store.root,scope,graceMilliseconds);
  return "published";
 }
 
 /** 🧹️ Removes superseded receipts of one scope and every evidence file no remaining receipt names; failure only costs disk. */
-export function retireJavascriptDependencyGenerationFilesV1(storeRoot:string,scope:string):void{
- const directory=join(storeRoot,protocol.directory);
+export function retireJavascriptDependencyGenerationFilesV1(storeRoot:string,scope:string,graceMilliseconds:number=0):void{
+ const directory=join(storeRoot,protocol.directory),aged=(name:string)=>graceMilliseconds<=0||Date.now()-lstatSync(join(directory,name)).mtimeMs>=graceMilliseconds;
  try{
   const names=readdirSync(directory),prefix=scopeKey(scope)+".",receipts=names.filter(name=>name.endsWith(protocol.receiptSuffix)),newest=receipts.filter(name=>name.startsWith(prefix)).map(name=>({name,at:lstatSync(join(directory,name)).mtimeMs})).sort((a,b)=>b.at-a.at)[0]?.name,keep=new Set<string>();
   for(const name of receipts){
-   if(name.startsWith(prefix)&&name!==newest){unlinkSync(join(directory,name));continue;}
+   if(name.startsWith(prefix)&&name!==newest&&aged(name)){unlinkSync(join(directory,name));continue;}
    try{const receipt=parseGenerationReceiptV1(readFileSync(join(directory,name)));keep.add(receipt.membership.frontier.name);keep.add(receipt.execution.evidence.name);keep.add(receipt.implementation.evidence.name);}catch{}
   }
-  for(const name of names)if(evidenceName.test(name)&&!keep.has(name))unlinkSync(join(directory,name));
+  for(const name of names)if(evidenceName.test(name)&&!keep.has(name)&&aged(name))unlinkSync(join(directory,name));
  }catch{}
 }

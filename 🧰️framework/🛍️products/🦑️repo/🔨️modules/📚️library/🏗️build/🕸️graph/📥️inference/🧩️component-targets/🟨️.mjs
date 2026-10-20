@@ -3,17 +3,18 @@ import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { printArtifactNxOutputV1 } from "../../../../../../../📓️print/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
 const { existsSync, readFileSync, statSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "component-targets";
-let SCRIPT_BASENAME, relativeScriptInputs, executionTargetV1, DEFAULT_EXECUTOR, buildPath, readToml, LIBRARY_ROOT, loaded, componentModelOutputV1, PLUGIN_MODULES_ROOT, POLICY, nativePreparation;
+let SCRIPT_BASENAME, relativeScriptInputs, executionTargetV1, withCacheDecision, DEFAULT_EXECUTOR, buildPath, readToml, LIBRARY_ROOT, loaded, componentModelOutputV1, PLUGIN_MODULES_ROOT, POLICY, nativePreparation;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
   ({ SCRIPT_BASENAME, DEFAULT_EXECUTOR, buildPath, LIBRARY_ROOT, componentModelOutputV1, PLUGIN_MODULES_ROOT, POLICY } = registry.coordinates);
   ({ relativeScriptInputs } = registry.scriptInputs);
-  ({ executionTargetV1 } = registry.targetPolicy);
+  ({ executionTargetV1, withCacheDecision } = registry.targetPolicy);
   ({ readToml, nativePreparation } = registry.nativeManifests);
   ({ loaded } = registry.bootstrap);
 }
@@ -63,25 +64,32 @@ export async function cargoTargets(root, workspaceRoot, commandInputs,scripts) {
   }, target === "test" ? "test" : "production"))]));
 }
 
-/** 🧩️ The one on-demand target of every plugin and extension crate: `component` builds exactly that component through the build driver (its Cargo pass
- * restricted to the one package, then describe, receipt, transpile, `wasm-opt`, probe and module) for the tests and tools that load it. It is uncached
- * (Cargo freshness and the stage cache are the authorities) and never part of a release graph, which compiles every component inside its one driver task.
- * @see ../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
+/** 🧩️ The one target of every plugin and extension crate that builds it: `component` runs exactly that component through the build driver (its Cargo pass
+ * restricted to the one package, then describe, receipt, transpile, `wasm-opt`, probe and module) for the playground lanes, tests and tools that load it.
+ * It replays from the task cache: the crate's exact Cargo closure, the committed descriptor pair, the Rust toolchain, the pinned Binaryen manifest, the jco
+ * and preview2 shim packages and the driver's own import closure are its inputs, and the receipt of the module and model directories it published into the
+ * products store is its one restorable output (a hit is verified against the store). Cargo compiles one component at a time, so the target is serial.
+ * It is never part of a release graph, which compiles every component inside its one driver task.
+ * @see ../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
+ * @see ../../../🧾️store-receipt/🧬️schema/🔣️.json */
 export function componentBuildTargets(root, workspaceRoot) {
   const path = join(workspaceRoot, root, "Cargo.toml");
   if (!existsSync(path)) return {};
   const manifest = readToml(path), metadata = manifest.package?.metadata;
   if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) return {};
   if (manifest.lib?.["crate-type"]?.length !== 1 || manifest.lib["crate-type"][0] !== "cdylib") throw new Error(`Component ${metadata.component.package} must be a cdylib-only component crate: ${path}`);
-  const script = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts", moduleDirectory = loaded.componentDeploymentDirectoryV1(metadata.semio);
-  return { component: executionTargetV1("orchestration", {
+  const script = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts", owner = buildPath(join(root, "..", "..")), toolchain = POLICY.toolchains.cargo;
+  const binaryen = buildPath(relative(workspaceRoot, join(LIBRARY_ROOT, "⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json")));
+  return { component: withCacheDecision(executionTargetV1("orchestration", {
     executor: DEFAULT_EXECUTOR,
-    cache: false,
-    metadata: { semio: { orchestrator: true } },
+    cache: true,
+    parallelism: false,
+    metadata: { semio: { orchestrator: true, componentStoreV1: { version: 1 } } },
     dependsOn: ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
-    outputs: [componentModelOutputV1(buildPath(root)), ...(moduleDirectory === undefined ? [] : [`{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${moduleDirectory}`])],
+    inputs: ["nativeSources", "^nativeSources", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${owner}/🛂️.descriptor.semio`, `{workspaceRoot}/${owner}/🔣️.json`, `{workspaceRoot}/${binaryen}`, ...toolchain.files.map((file) => `{workspaceRoot}/${file}`), ...toolchain.environment.map((env) => ({ env })), ...toolchain.commands.map((runtime) => ({ runtime })), { externalDependencies: ["@bytecodealliance/jco", "@bytecodealliance/preview2-shim"] }, { runtime: 'node -p "process.platform.concat(process.arch)"' }],
+    outputs: [storeReceiptOutputV1("component")],
     options: { cwd: ".", command: `bun ${JSON.stringify(script)} component --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, path)))}`, forwardAllArgs: false },
-  }) };
+  }), "deterministic", "pure-function-of-inputs") };
 }
 
 /** 🧩️ The crate roots of every plugin and extension component, the crates a release orchestrator's driver compiles. */

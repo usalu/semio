@@ -4,10 +4,10 @@ import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
-import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
+import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 
 /** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
-const packInferenceRecordV1=bytes=>brotliCompressSync(bytes,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:bytes.length}});
+const packInferenceRecordV1=bytes=>new Promise((accept,reject)=>brotliCompress(bytes,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:bytes.length}},(error,packed)=>error?reject(error):accept(packed)));
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,6 +30,7 @@ const inferenceValidationScopes = new AsyncLocalStorage();
 const sourceCaptures = new AsyncLocalStorage();
 const recordScopes = new AsyncLocalStorage();
 const recordStores = new Map();
+const recordStoreHandles = new Map();
 const usedInference = new Map();
 const originalInferencePublications = new Map();
 const loadObservations = new Map();
@@ -46,6 +47,16 @@ let authorityDigest;
 
 /** 📊️ Exposes owned project computation counts without influencing source admission. */
 export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}
+
+/** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */
+export function projectInferenceObservationsV1(cachePath){return originalInferencePublications.get(cachePath)?.observations;}
+
+/** 🪨️ Runs a partial inference in project scope without an all-or-nothing round: every project is consistent with the facts of its own record, contradictory facts between projects are legitimate and a project that raced an edit is stale in the next verification instead of restarting the pass. */
+export async function observeInferenceSnapshotV1(compute){
+ requireCurrentObservationV1();loadSealed=true;
+ const nested=new Map();
+ return inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute));
+}
 
 /** 📊️ Reports owned observation counts without exposing or discarding original source facts. */
 export function sourceObservationStatsV1(){let projectObservationRows=0;for(const project of projectImages.values())projectObservationRows+=project.observations.length;return {loadObservations:loadObservations.size,projectImages:projectImages.size,originalInferencePublications:originalInferencePublications.size,projectObservationRows,captureObservations:sourceCaptures.getStore()?.size??0,recordStores:recordStores.size,analysisEntries:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes};}
@@ -85,14 +96,14 @@ export async function observeProjectInferenceV1({cachePath,key,owner,reusable},c
  const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,inferenceAuthorityDigestV1(),key])).digest("hex"),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
  if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
-  const value=JSON.parse(previous.image);
+  const value=JSON.parse(previous.image.toString("utf8"));
   if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
  const value=await observeInferenceComputationV1({cachePath,key,reusable},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
  const publication=originalInferencePublications.get(cachePath);
  if(!publication)throw Error("Original project inference observations required");
  inherit(publication.observations);
- projectImages.set(cachePath,{identity,image:JSON.stringify(value),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
+ projectImages.set(cachePath,{identity,image:Buffer.from(JSON.stringify(value)),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
  return value;
 }
 
@@ -113,6 +124,10 @@ function observationKeyV1(row){let key=observationKeys.get(row);if(key===undefin
 
 /** 🪢️ Shares one row object between every project that observed identical bytes, so persisted headers cost memory by distinct fact, not by project. */
 const internedObservations=new Map(),INTERNED_OBSERVATIONS=4194304;
+
+/** 🧾️ The JSON text of one observation row, serialised once per row object: a header costs concatenation, not the repeated serialisation of rows that thousands of projects share. */
+const observationJsons=new WeakMap();
+function observationRowsJsonV1(rows){return "["+rows.map(row=>{let text=observationJsons.get(row);if(text===undefined){text=JSON.stringify(row);observationJsons.set(row,text);}return text;}).join(",")+"]";}
 function internObservationsV1(rows){return rows.map(row=>{if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();const key=observationKeyV1(row),known=internedObservations.get(key);if(known)return known;internedObservations.set(key,row);return row;});}
 function canonicalObservationV1(kind,path,fact){
  if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();
@@ -530,14 +545,23 @@ function current(observations) {
  */
 /** 🧳️ Keeps packed descriptors inside the original graph writer lifetime. */
 function observedRecordStoreV1(path){
- let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,"0-0-0000000000000000.pack"),plan,write)});recordStores.set(path,records);const original=records;registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original)recordStores.delete(path);}});}return records;
+ let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,"0-0-0000000000000000.pack"),plan,write)});recordStores.set(path,records);const original=records;recordStoreHandles.set(path,registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original){recordStores.delete(path);recordStoreHandles.delete(path);}}}));}return records;
+}
+
+/** 🔌️ Closes one project's pack store once its inference is persisted: its descriptors and location index are not kept for the remaining projects of the graph. */
+function releaseObservedRecordStoreV1(path){
+ const records=recordStores.get(path);if(!records)return;
+ recordStores.delete(path);const unregister=recordStoreHandles.get(path);recordStoreHandles.delete(path);
+ try{records.close();}finally{unregister?.();}
 }
 
 /**
  * 🪨️ Runs one inference pass in rounds until a single round observed one mutually consistent source snapshot; only that round's facts reach
  * the caller's scope and capture. Projects whose images still hold are reused, so a round re-infers only the projects a concurrent edit
  * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written
- * file); otherwise its failure is genuine and rethrown with its facts retained.
+ * file); otherwise its failure is genuine and rethrown with its facts retained. A failure that demands a restart (`BUILD_AUTHORITY_CHANGED`) or
+ * that returns unchanged (same code and message) in the next round is genuine as well: a peer editing the tree must not keep a deterministic
+ * failure looking transient for `limit` whole-inference rounds.
  * @template T
  * @param {() => Promise<T> | T} compute
  * @param {{ readonly signal?: AbortSignal; readonly limit?: number; readonly onRound?: (round: { round: number; conflict?: string; failure?: unknown }) => void | Promise<void> }} [options]
@@ -545,6 +569,7 @@ function observedRecordStoreV1(path){
  */
 export async function settleObservedComputationV1(compute,{signal,limit=64,onRound}={}){
  const parent=scopes.getStore(),capture=sourceCaptures.getStore(),accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};
+ let previousFailure;
  for(let round=0;;round++){
   signal?.throwIfAborted();
   const nested=new Map(),captured=new Map(),started=Date.now();let value,failure,failed=false;
@@ -552,6 +577,9 @@ export async function settleObservedComputationV1(compute,{signal,limit=64,onRou
   signal?.throwIfAborted();
   const rows=[...nested.values()],consistent=consistentObservationsV1(rows);
   if(consistent&&!failed){accept(rows,captured.values());return value;}
+  const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return"";}})()]):undefined;
+  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||signature===previousFailure)){accept(rows,captured.values());throw failure;}
+  previousFailure=signature;
   if(consistent&&await observationsHold(rows,64,new Set(),new Set(),signal)){
    signal?.throwIfAborted();
    const youngest=Math.max(0,...rows.map(({kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(source.mtimeMs??0,source.ctimeMs??0):0;}));
@@ -583,7 +611,7 @@ async function observeInferenceComputationV1({cachePath,key,reusable},compute,ne
   const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   let candidate;
   try {
-    const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);
+    const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);if(Array.isArray(header.blocks))header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks),...header.observations];
     if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && (nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))) {
       candidate={value:JSON.parse(text.slice(split+1)),header,headerDigest:createHash("sha256").update(text.slice(0,split)).digest("hex")};
     }
@@ -595,6 +623,7 @@ async function observeInferenceComputationV1({cachePath,key,reusable},compute,ne
   const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
   requireCurrentObservationV1();records.flush();
   if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();
+  releaseObservedRecordStoreV1(`${cachePath}.records`);
   const rows = [...authority, ...observations.values()];retainSourceFactsV1(rows);
   retainObservationsV1(parent,rows);
   const consistent=consistentObservationsV1(rows);
@@ -605,8 +634,8 @@ async function observeInferenceComputationV1({cachePath,key,reusable},compute,ne
   usedInference.set(cachePath, null);
   if (consistent && !racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
-    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, resultSha256:createHash("sha256").update(image).digest("hex"), authorityObservations: authority, observations: rows });
-    const packed=packInferenceRecordV1(Buffer.from(`${header}\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
+    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = inferenceHeaderTextV1(digest,createHash("sha256").update(image).digest("hex"),authority,rows,dirname(cachePath));
+    const packed=await packInferenceRecordV1(Buffer.from(`${header}\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
     if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, packed,{flag:"wx"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,createHash("sha256").update(header).digest("hex"));
   }
   return result;
@@ -667,6 +696,70 @@ export async function receiveSourcePreparationV1(original,control){
 export function inferenceHeaderLine(cachePath) {
   const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), newline = text.indexOf("\n");
   return newline < 0 ? null : text.slice(0, newline);
+}
+
+/** 🧱️ The shared fact table of persisted records: the rows of one record are cut into content-defined blocks (a cut follows every row whose key hash hits the mask once a block has its minimum rows), so the long runs of rows that thousands of projects share, such as one command closure, become the same block files and a record header lists block digests instead of repeating the rows. */
+const BLOCK_MINIMUM_ROWS=32,BLOCK_MAXIMUM_ROWS=4096,BLOCK_CUT_MASK=0x7f;
+const blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=new Map(),blocksByDigest=new Map(),blocksWritten=new Set();
+let blockRowCounter=0;
+const blockRowIdV1=row=>{let id=blockRowIdentities.get(row);if(id===undefined){id=++blockRowCounter;blockRowIdentities.set(row,id);}return id;};
+const blockRowCutV1=row=>{let cut=blockRowCuts.get(row);if(cut===undefined){const key=observationKeyV1(row);let hash=0x811c9dc5;for(let at=0;at<key.length;at++){hash^=key.charCodeAt(at);hash=Math.imul(hash,16777619);}cut=(hash>>>0)&BLOCK_CUT_MASK;blockRowCuts.set(row,cut);}return cut;};
+function partitionObservationsV1(rows){
+ const blocks=[];let current=[],ids=[];
+ for(const row of rows){
+  current.push(row);ids.push(blockRowIdV1(row));
+  if(current.length>=BLOCK_MAXIMUM_ROWS||current.length>=BLOCK_MINIMUM_ROWS&&blockRowCutV1(row)===0){blocks.push({rows:current,key:ids.join(",")});current=[];ids=[];}
+ }
+ if(current.length)blocks.push({rows:current,key:ids.join(",")});
+ return blocks;
+}
+
+/** 🧊️ One full-digest observation block path is shared by readers and publishers. */
+export function inferenceObservationBlockPathV1(directory,digest){const policy=sourceAnalysisSchemaV1.$defs.observationBlock.const;if(typeof directory!=="string"||resolve(directory)!==directory||typeof digest!=="string"||!new RegExp(policy.digestPattern,"u").test(digest))throw Error("Canonical observation block path required");const path=join(directory,policy.directory,digest+policy.extension);if(path.length>256)throw Error("Observation block path exceeds256 characters");return path;}
+
+/** 💾️ Writes one block file once per process and directory; a block the quota refuses stays inline in its record. */
+function persistInferenceBlockV1(directory,block){
+ let known=blocksByIdentity.get(block.key);
+ if(known===undefined){known={digest:createHash("sha256").update(observationRowsJsonV1(block.rows)).digest("hex"),rows:block.rows};blocksByIdentity.set(block.key,known);if(!blocksByDigest.has(known.digest))blocksByDigest.set(known.digest,block.rows);}
+ block.digest=known.digest;
+ const stamp=directory+"\0"+known.digest;if(blocksWritten.has(stamp))return true;
+ const path=inferenceObservationBlockPathV1(directory,known.digest);
+ if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}
+ const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows))),temporary=`${path}.${process.pid}.${Date.now()}.tmp`;if(temporary.length>256)throw Error("Observation block staging path exceeds256 characters");
+ if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{fs.mkdirSync(dirname(path),{recursive:true});fs.writeFileSync(temporary,packed,{flag:"wx"});fs.renameSync(temporary,path);}))return false;
+ blocksWritten.add(stamp);return true;
+}
+
+/** 🧾️ The header text of a record: blocks first (written before the record that names them), rows no block could hold inline. */
+function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){
+ const blocks=[],inline=[];
+ for(const block of partitionObservationsV1(rows)){if(persistInferenceBlockV1(directory,block))blocks.push(block.digest);else for(const row of block.rows)inline.push(row);}
+ return `{"digest":${JSON.stringify(digest)},"resultSha256":"${resultSha256}","authorityObservations":${observationRowsJsonV1(authority)},"blocks":${JSON.stringify(blocks)},"observations":${observationRowsJsonV1(inline)}}`;
+}
+
+/** 📖️ The rows of the named blocks, each block read, verified against its name and interned once per process; a bad block is removed so the record that named it is recomputed. */
+function expandInferenceBlocksV1(directory,digests){
+ const rows=[];
+ for(const digest of digests){
+  let block=blocksByDigest.get(digest);
+  if(block===undefined){
+   const path=inferenceObservationBlockPathV1(directory,digest);
+   try{
+    const text=brotliDecompressSync(fs.readFileSync(path)).toString("utf8");
+    if(createHash("sha256").update(text).digest("hex")!==digest)throw Error("Inference block content differs from its name");
+    block=internObservationsV1(JSON.parse(text));blocksByDigest.set(digest,block);
+   }catch(error){try{fs.rmSync(path,{force:true});}catch{}throw error;}
+  }
+  for(const row of block)rows.push(row);
+ }
+ return rows;
+}
+
+/** 🧾️ A persisted record header with its blocks expanded: every row the record observed, in block order followed by the inline rows. */
+export function readInferenceHeaderV1(cachePath){
+ const text=brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"),newline=text.indexOf("\n"),header=JSON.parse(text.slice(0,newline));
+ header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks??[]),...header.observations];
+ return header;
 }
 
 /**

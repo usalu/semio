@@ -20,11 +20,11 @@ pub struct SuggestionSpec { pub source: SuggestionSource, #[serde(skip_serializi
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct AppliesTo { pub(super) all: Option<bool>, pub(super) verbs: Option<Vec<String>>, pub(super) playground: Option<bool> }
+pub(super) struct AppliesTo { pub(super) all: Option<bool>, pub(super) verbs: Option<Vec<String>>, pub(super) playground: Option<bool> }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct ValueDeclaration { pub(super) id: String, pub(super) env: Option<BTreeMap<String, String>>, pub(super) build_flags: Option<Vec<String>>, pub(super) args: Option<Vec<String>> }
+pub(super) struct ValueDeclaration { pub(super) id: String, pub(super) env: Option<BTreeMap<String, String>>, pub(super) build_flags: Option<Vec<String>>, pub(super) args: Option<Vec<String>> }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -94,7 +94,7 @@ pub(super) struct CompoundDeclaration { #[serde(default, deserialize_with = "loc
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GroupDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) id: String, pub(super) targets: Vec<String>, pub(super) projects: Vec<String> }
+pub(super) struct GroupDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) id: String, pub(super) targets: Vec<String>, pub(super) projects: Vec<String> }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

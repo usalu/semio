@@ -1,0 +1,724 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "exact-inactive-old-receipt-data",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": true
+    },
+    {
+      "id": "foreign-entry",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          },
+          "other": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "backing-hardlink",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "2",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "receipt-hardlink",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "2",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "mounted-root",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "18",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "linked-root",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "link",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-root-residue",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [
+          "foreign"
+        ],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "oversized-backing",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "2001"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "oversized-receipt",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "4097"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-receipt",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    },
+    {
+      "id": "foreign-capsule-device",
+      "facts": {
+        "directory": {
+          "kind": "directory",
+          "dev": "17",
+          "ino": "100",
+          "mode": 16877,
+          "nlink": "2",
+          "size": "96"
+        },
+        "entries": {
+          "fixed.dmg": {
+            "kind": "file",
+            "dev": "18",
+            "ino": "101",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "1000"
+          },
+          "image.json": {
+            "kind": "file",
+            "dev": "17",
+            "ino": "102",
+            "mode": 33152,
+            "nlink": "1",
+            "size": "250"
+          },
+          "m": {
+            "kind": "directory",
+            "dev": "17",
+            "ino": "103",
+            "mode": 16877,
+            "nlink": "2",
+            "size": "64"
+          }
+        },
+        "rootNames": [],
+        "maximumPhysicalBytes": 2000
+      },
+      "accepted": false
+    }
+  ],
+  "kernelCases": [
+    {
+      "id": "unmapped",
+      "mounts": [
+        "/",
+        "/System/Volumes/Data"
+      ],
+      "images": [],
+      "accepted": true
+    },
+    {
+      "id": "exact-root-mount",
+      "mounts": [
+        "/",
+        "/repo/.cache/b/n/m"
+      ],
+      "images": [],
+      "accepted": false
+    },
+    {
+      "id": "nested-mount",
+      "mounts": [
+        "/",
+        "/repo/.cache/b/n/m/child"
+      ],
+      "images": [],
+      "accepted": false
+    },
+    {
+      "id": "backing-mounted-elsewhere",
+      "mounts": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "/elsewhere/image",
+          "device": "17",
+          "inode": "101"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "other-image",
+      "mounts": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "/other",
+          "device": "17",
+          "inode": "999"
+        }
+      ],
+      "accepted": true
+    }
+  ],
+  "resumeCases": [
+    {
+      "id": "intent-only-first-cut",
+      "removed": [],
+      "accepted": true,
+      "currentDevice": "17"
+    },
+    {
+      "id": "device-renumbered-current-namespace",
+      "removed": [
+        "image.json"
+      ],
+      "currentDevice": "99",
+      "accepted": true
+    },
+    {
+      "id": "receipt-removed-cut",
+      "removed": [
+        "image.json"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "backing-removed-cut",
+      "removed": [
+        "image.json",
+        "fixed.dmg"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "root-removed-cut",
+      "removed": [
+        "image.json",
+        "fixed.dmg",
+        "m"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "replaced-backing-refused",
+      "removed": [
+        "image.json"
+      ],
+      "mutate": "backing",
+      "accepted": false
+    },
+    {
+      "id": "unknown-residue-refused",
+      "removed": [
+        "image.json"
+      ],
+      "mutate": "unknown",
+      "accepted": false
+    },
+    {
+      "id": "replaced-namespace-refused",
+      "removed": [
+        "image.json"
+      ],
+      "mutate": "namespace",
+      "accepted": false
+    },
+    {
+      "id": "changed-ancestor-refused",
+      "removed": [
+        "image.json"
+      ],
+      "mutate": "ancestry",
+      "accepted": false
+    },
+    {
+      "id": "mixed-published-namespace-refused",
+      "removed": [],
+      "mutate": "published-device",
+      "accepted": false
+    },
+    {
+      "id": "mixed-live-volume-refused",
+      "removed": [],
+      "mutate": "live-device",
+      "accepted": false
+    }
+  ],
+  "expectations": [
+    {
+      "id": "same-observation",
+      "stampMatches": true,
+      "hashMatches": true,
+      "accepted": true
+    },
+    {
+      "id": "changed-identity",
+      "stampMatches": false,
+      "hashMatches": true,
+      "accepted": false
+    },
+    {
+      "id": "changed-bytes",
+      "stampMatches": true,
+      "hashMatches": false,
+      "accepted": false
+    }
+  ],
+  "publicationReceivers": [
+    {
+      "id": "original-capsule-root",
+      "nested": false,
+      "accepted": true
+    },
+    {
+      "id": "nested-capsule-receiver",
+      "nested": true,
+      "accepted": false
+    }
+  ],
+  "removalReceivers": [
+    {
+      "id": "current-issued-file",
+      "kind": "file",
+      "scope": "current",
+      "copied": false,
+      "accepted": true,
+      "count": 1
+    },
+    {
+      "id": "current-issued-directory",
+      "kind": "directory",
+      "scope": "current",
+      "copied": false,
+      "accepted": true,
+      "count": 1
+    },
+    {
+      "id": "closed-file-scope",
+      "kind": "file",
+      "scope": "closed",
+      "copied": false,
+      "accepted": false,
+      "count": 1
+    },
+    {
+      "id": "copied-current-file",
+      "kind": "file",
+      "scope": "current",
+      "copied": true,
+      "accepted": false,
+      "count": 1
+    },
+    {
+      "id": "closed-directory-scope",
+      "kind": "directory",
+      "scope": "closed",
+      "copied": false,
+      "accepted": false,
+      "count": 1
+    },
+    {
+      "id": "same-frame-two-issued-siblings",
+      "kind": "file",
+      "scope": "current",
+      "copied": false,
+      "accepted": true,
+      "count": 2
+    }
+  ],
+  "plannedProvenance": [
+    {
+      "id": "fresh-intent-published-this-attempt",
+      "initialIntent": false,
+      "publishedIntent": true,
+      "resuming": false
+    },
+    {
+      "id": "existing-intent-resumed",
+      "initialIntent": true,
+      "publishedIntent": false,
+      "resuming": true
+    },
+    {
+      "id": "empty-capsule",
+      "initialIntent": false,
+      "publishedIntent": false,
+      "resuming": false
+    }
+  ],
+  "finalRemovals": [
+    {
+      "id": "final-post-remove",
+      "foreignReplacement": false,
+      "accepted": true
+    },
+    {
+      "id": "final-peer-replacement",
+      "foreignReplacement": true,
+      "accepted": false
+    }
+  ]
+}

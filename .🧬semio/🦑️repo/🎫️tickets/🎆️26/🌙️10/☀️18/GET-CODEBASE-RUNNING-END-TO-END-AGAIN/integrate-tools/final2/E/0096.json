@@ -1,0 +1,39 @@
+{
+  "name": "@semio-tech/repo-test-dotnet",
+  "projectType": "library",
+  "tags": [
+    "language:dotnet"
+  ],
+  "targets": {
+    "deps": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "deps"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build"
+      }
+    }
+  }
+}

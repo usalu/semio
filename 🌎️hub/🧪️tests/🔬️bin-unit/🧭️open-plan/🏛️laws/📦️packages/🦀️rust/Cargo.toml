@@ -50,3 +50,4 @@ semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 axum = { version = "0.8", features = ["ws"] }
 futures = "0.3"
+semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

@@ -6,7 +6,7 @@ import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1,withReque
 import {type CargoDependencyNetworkV1} from "../../../../📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts";
 import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {runOwnedCommand,startOwnedCommandTimeoutV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import installationSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import orchestrationSchema from "../../../../🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json" with { type: "json" };
@@ -24,7 +24,7 @@ const manifest=(root:string,mode:BuildMode)=>join(cache(root),"🎛️dashboard"
 const slashes=(path:string)=>path.replaceAll("\\","/");
 
 /** 📦️ The crate directory of the dashboard executable; its sources live in the sibling modules of `🎛️dashboard`. */
-export const dashboardPackageRoot=resolve(import.meta.dir,"../📦️packages/🦀️rust");
+export const dashboardPackageRoot=resolve(import.meta.dir,installationSchema.definitions.PackageOwner.const.installationRelative);
 
 /** 🧾️ The source trees an installation was built from and the cheap digest they had at that moment. */
 export type DashboardSources={readonly roots:readonly string[];readonly manifests:readonly string[];readonly digest:string};
@@ -46,9 +46,9 @@ export function dashboardInstalled(root:string,mode:BuildMode):boolean { try{ins
 /** 📍️ Resolves the installation record before the finite tools reader admits executable bytes. */
 export function installedDashboard(root:string,mode:BuildMode,workspace:string):string {
   const file=manifest(root,mode);
-  if(!existsSync(file))throw new Error("Dashboard is not installed. Run bun run dashboard:install once, then start bun run dashboard.");
+  if(!existsSync(file))throw new Error("Dashboard is not installed. Start repo dashboard to install it automatically.");
   const value=JSON.parse(readFileSync(file,"utf8"));
-  if(!validDashboardRecord(value,mode))throw new Error("Invalid dashboard installation record; run bun run dashboard:install.");
+  if(!validDashboardRecord(value,mode))throw new Error("Invalid dashboard installation record. Start repo dashboard to rebuild it automatically.");
   const executable=resolve(workspace,value.path);
   return executable;
 }
@@ -185,9 +185,9 @@ export async function launchDashboard(root:string,args:readonly string[],options
   const mode=readBuildMode(options.mode),control=options.control;compilerAdmissionBudgetV1(control);
   const reason=mayRunStale(args)&&dashboardInstalled(root,mode)?undefined:await staleDashboard(root,mode);compilerAdmissionBudgetV1(control);
   if(reason)await withRequestedIssuedResourceControlV1(control,buildPreparationBudgetMs(),preparation=>rebuildDashboard(reason,{...options,control:preparation}));
-  const controller=new AbortController(),signal=AbortSignal.any([control.signal,controller.signal]),budget=compilerAdmissionBudgetV1(control),expiry=budget?setTimeout(()=>controller.abort(Error("Original dashboard launch deadline exhausted")),budget):undefined;
+  const controller=new AbortController(),signal=AbortSignal.any([control.signal,controller.signal]),budget=compilerAdmissionBudgetV1(control),stopTimeout=startOwnedCommandTimeoutV1(budget,()=>controller.abort(Error("Original dashboard launch deadline exhausted")));
   try{return await withInstalledDashboardV1(root,options,executable=>new Promise<number>((accept,reject)=>{
     const child=spawn(executable,args,{cwd:root,env:scriptInvocationEnvironment(options.invocation,{...process.env,SEMIO_BUILD_MODE:mode}),signal,stdio:"inherit",windowsHide:true});
     child.once("error",reject);child.once("close",(code,closedSignal)=>accept(code??(closedSignal==="SIGINT"?130:1)));
-  }));}finally{if(expiry)clearTimeout(expiry);}
+  }));}finally{stopTimeout();}
 }

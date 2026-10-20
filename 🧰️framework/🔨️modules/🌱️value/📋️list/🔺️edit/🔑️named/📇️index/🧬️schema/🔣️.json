@@ -2,7 +2,7 @@
  "$schema":"http://json-schema.org/draft-07/schema#",
  "title":"Admitted Named Key Index Laws",
  "type":"object","additionalProperties":false,
- "required":["schema","cases","lengths","prefixLength","bodyBytes","cancelCuts","deniedCurrencies","laws"],
+ "required":["schema","cases","lengths","prefixLength","bodyBytes","cancelCuts","deniedCurrencies","laws","retirementWork"],
  "properties":{
   "schema":{"const":"value.named.admitted-index/v1"},
   "cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","keys","queries","expected"],"properties":{"id":{"type":"string"},"keys":{"type":"array","items":{"type":"string"}},"queries":{"type":"array","items":{"type":"string"}},"expected":{"oneOf":[{"type":"null"},{"type":"array","items":{"oneOf":[{"type":"null"},{"type":"integer","minimum":0}]}}]}}}},
@@ -11,6 +11,7 @@
   "bodyBytes":{"type":"array","items":{"type":"integer","minimum":1}},
   "cancelCuts":{"type":"array","items":{"type":"integer","minimum":0}},
   "deniedCurrencies":{"const":["items","copy","capacity","release","depth"]},
+  "retirementWork":{"const":{"fixedTurns":1024,"turnsPerRow":256,"maximumIdleTurns":16}},
   "laws":{"const":{"opaqueUtf8":true,"foreignSourceRefused":true,"captureRows":false,"reuseBaseSort":false,"fundedRankPath":true,"exactHeapReceipts":true,"terminalDropBytes":0}}
  }
 }

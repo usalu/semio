@@ -1,5 +1,5 @@
 //#region 🧬️SceneContract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexGrant, type NumericIndexReader } from "@semio-tech/value-ts/ordered/numeric";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexGrant, type NumericIndexReader } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { captureTypedUiPayload, type OwnedUiPayload, type RetainedUiComponent, type UiPayloadRetirement, type UiSurfaceByteView } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 

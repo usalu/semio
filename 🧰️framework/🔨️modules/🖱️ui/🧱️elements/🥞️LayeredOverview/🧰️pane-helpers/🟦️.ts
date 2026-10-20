@@ -1,3 +1,4 @@
+/** 🧰️ The pane helpers of LayeredOverview: poster capture, reduced motion, cells, hash sync, veil and window helpers. */
 import { type LayeredOffset, type LayeredCell, type LayeredVeil, veilClipPath, type LayeredWindow } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 
@@ -64,7 +65,7 @@ export function hashPaneId(ids: readonly string[]): string | null {
   return ids.includes(raw) ? raw : null;
 }
 
-/** 🔗️ Mirrors the opened pane into the hash with `replaceState` (no history entries); a hash naming no pane, such as a skip link, is left alone. */
+/** 🪞️ Mirrors the opened pane into the hash with `replaceState` (no history entries); a hash naming no pane, such as a skip link, is left alone. */
 export function syncHash(opened: string | null, ids: readonly string[]): void {
   const current = window.location.hash.replace(/^#/, "");
   if (opened === null ? !ids.includes(current) : current === opened) return;

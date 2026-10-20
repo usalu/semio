@@ -1,6 +1,6 @@
 /** 🧾️ The interactive job evaluation fixtures, the proof catalog evaluation checks and the admission order and bounded preparation checks. */
-import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobProofCatalogFailures, toolJobFrameworkReservedRoutesExact, toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact, toolJobImportPreparationBounded, toolJobFullOperationBounded, toolJobPluginInstanceSource, toolJobSourceMutation } from "@semio-tech/repo-lib/laws";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobProofCatalogFailures, toolJobFrameworkReservedRoutesExact, toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact, toolJobImportPreparationBounded, toolJobFullOperationBounded, toolJobPluginInstanceSource, toolJobSourceMutation } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { evaluateToolJobSources, exactBoundedFirstStepProof } from "../🧮️source-evaluation/🟦️.ts";
 
 /** 🔎 Runs the fixture sources that must leave at least one unmigrated tool job row and returns them for the final count. */

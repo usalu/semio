@@ -33,9 +33,7 @@ export const scratch: string[] = [];
 
 /** 📂️ A throw-away directory holding `files` (relative path → content). */
 export function tree(files: Record<string, string | Uint8Array>): string {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : realpathSync(tmpdir());
-  mkdirSync(parent, { recursive: true });
-  const root = mkdtempSync(join(parent, "course-deploy-"));
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "course-deploy-"));
   scratch.push(root);
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });

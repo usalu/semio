@@ -1,0 +1,3 @@
+# Export Primitive Membership Review
+
+Stable read-only actual .git/index observation 2026-10-20T17:50:47.282Z: DIRCv2,190304entries,57134450B. Full NUL-terminated UTF8 path .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY/🚀️run/📜️script.ts was present in the stable v2name representation. Descriptor/name identity,size,mtime,ctime unchanged through complete streaming read. This is a current membership observation, not a Git mutation or a future freeze. The helper stays unchanged. No production Source file is copied by the proposed current ticket-primitive reuse; no actual export occurred.

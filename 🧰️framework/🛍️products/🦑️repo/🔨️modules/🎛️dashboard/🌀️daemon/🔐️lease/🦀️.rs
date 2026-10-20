@@ -1,5 +1,5 @@
 //! 🔐️ The lease of a workspace daemon: the lock file the operating system releases when the daemon exits and the pid file
-//! `semio daemon status` reads.
+//! `repo dashboard daemon status` reads.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/✉️ipc/🦀️.rs
 
@@ -27,7 +27,7 @@ impl Drop for WorkspaceLease {
     }
 }
 
-/// 🏷️ Writes the pid file `semio daemon status` reads.
+/// 🏷️ Writes the pid file `repo dashboard daemon status` reads.
 pub fn write_pid(root: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(ipc::daemon_dir(root))?;
     std::fs::write(ipc::pid_path(root), format!("{}\n", std::process::id()))

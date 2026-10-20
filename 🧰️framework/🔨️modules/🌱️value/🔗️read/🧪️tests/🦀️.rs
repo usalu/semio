@@ -18,11 +18,11 @@ fn drain<T:crate::ErasedSnapshotRetirement>(owner:&mut T,copy:usize)->(usize,usi
 
 fn recover_source<A:crate::retirement::RetireOwned+Sync>(source:&mut crate::retained_clone::RetainedCloneSource<String,A>,births:&mut usize,released:&mut usize)->A {
     for _ in 0..100000 {
-        let copy=source.next_take_copy_byte_demand().unwrap();let release=source.next_take_release_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_take_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:source.next_take_depth_demand().unwrap()};
-        let(result,heap)=observe_retirement_allocations(||source.take_authority(RetainedCloneGrant{maximum_items:0,..grant}));assert_eq!(heap,(0,0));match result{Ok(crate::retained_clone::RetainedCloneSourceTake::Pending(progress))=>assert_eq!(progress,Default::default()),Err(_)=>{},_=>panic!("unfunded original read transfer")}
+        let demand=source.next_take_demand(4096).unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(source.next_take_demand(grant.maximum_copy_bytes).unwrap(),demand);
+        let(result,heap)=observe_retirement_allocations(||source.take_authority(RetainedCloneGrant{maximum_items:0,..grant}));assert_eq!(heap,(0,0));match result{Ok(crate::retained_clone::RetainedCloneSourceTake::Pending(progress))=>assert_eq!(progress,Default::default()),Err(_)=>{},_=>panic!("unfunded original read transfer")}assert_eq!(source.next_take_demand(4096).unwrap(),demand);
         let(result,heap)=observe_retirement_allocations(||source.take_authority(grant).unwrap());let progress=match &result{crate::retained_clone::RetainedCloneSourceTake::Pending(progress)|crate::retained_clone::RetainedCloneSourceTake::Ready(_,progress)=>*progress};assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));*births+=heap.0;*released+=heap.1;
-        if let crate::retained_clone::RetainedCloneSourceTake::Ready(original,_)=result{assert!(source.terminal_is_empty());return original;}
+        if let crate::retained_clone::RetainedCloneSourceTake::Ready(original,_)=result{assert!(source.terminal_is_empty());assert!(source.next_take_demand(4096).is_err());return original;}
     }
     panic!("original read capsule handback did not complete");
 }

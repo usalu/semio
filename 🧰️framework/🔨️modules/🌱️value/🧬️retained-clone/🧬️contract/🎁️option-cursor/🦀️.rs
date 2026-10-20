@@ -5,6 +5,7 @@ use super::*;
 pub struct OptionCursor<T: RetainedClone> {
     pub(super) child: T::Cursor,
     pub(super) child_value: Option<T>,
+    child_closing: bool,
     pub(super) output: Option<Option<T>>,
     pub(super) source: Option<RetainedCloneBinding>,
     pub(super) spent: bool,
@@ -14,12 +15,12 @@ pub struct OptionCursor<T: RetainedClone> {
 
 impl<T: RetainedClone> Default for OptionCursor<T> {
     fn default() -> Self {
-        Self { child: T::retained_clone_cursor(), child_value: None, output: None, source: None, spent: false, closing: false, close: RetainedCloneClose::default() }
+        Self { child: T::retained_clone_cursor(), child_value: None, child_closing: false, output: None, source: None, spent: false, closing: false, close: RetainedCloneClose::default() }
     }
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
-    fn output_ready(&self)->bool{self.output.is_some()}
+    fn output_ready(&self)->bool{!self.closing&&!self.spent&&self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,Option<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"optional original clone is closing or spent"))}if self.output.is_some()||source.get().is_none(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}if self.child_value.is_some(){let mut demand=clone_cursor_close_demand::<T>(&self.child,body)?;demand.depth=demand.depth.max(1);return Ok(demand)}if self.child.output_ready(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}self.child.advance_demands(source.project(1,|value|value.as_ref().unwrap()),body)}
 
     fn advance(&mut self, source: RetainedCloneRef<'_, Option<T>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
@@ -66,7 +67,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
                             return Ok(RetainedCloneStep::Progress(progress));
                         }
                         self.child_value = Some(self.child.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional child completed without an owner"))?);
-                        let _ = self.child.begin_close();
+                        let _ = self.child.begin_close();self.child_closing=true;
                         Ok(RetainedCloneStep::Progress(progress.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?))
                     }
                 }
@@ -75,6 +76,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
     }
 
     fn take(&mut self) -> Option<Option<T>> {
+        if !self.output_ready(){return None;}
         let output = self.output.take();
         if output.is_some() {
             self.spent = true;
@@ -92,11 +94,20 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
 
     
 
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if !self.child.terminal_is_empty(){let mut d=if self.child_closing{self.child.close_demands(body)?}else{Default::default()};d.depth=d.depth.max(1);return Ok(d);}
+        if !self.close.is_empty(){return self.close.next_owner_demands::<T>(false,&None,body);}
+        if self.child_value.is_some(){return self.close.next_owner_demands::<T>(true,&None,body);}
+        self.close.next_owner_demands::<Option<T>>(self.output.is_some(),&self.source,body)
+    }
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement")); }
+        if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.child.terminal_is_empty() {
-            if self.child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !self.child_closing {self.child.begin_close();self.child_closing=true; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
             let step = self.child.close_step(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.child.terminal_is_empty(), "retained child close")?.progress()));
         }
         if !self.close.is_empty() { return self.close.step_granted(grant); }

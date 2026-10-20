@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "command": [
+    "commands",
+    "--check"
+  ],
+  "coldRequired": true,
+  "warmReceiptUnchanged": true,
+  "cases": [
+    {
+      "id": "absent",
+      "installed": false,
+      "valid": false,
+      "recorded": null,
+      "current": "2:current",
+      "cold": true
+    },
+    {
+      "id": "invalid-record",
+      "installed": true,
+      "valid": false,
+      "recorded": null,
+      "current": "2:current",
+      "cold": true
+    },
+    {
+      "id": "naturally-stale",
+      "installed": true,
+      "valid": true,
+      "recorded": "1:old",
+      "current": "2:current",
+      "cold": true
+    },
+    {
+      "id": "current-is-not-cold-proof",
+      "installed": true,
+      "valid": true,
+      "recorded": "2:current",
+      "current": "2:current",
+      "cold": false
+    }
+  ]
+}

@@ -62,7 +62,12 @@
       "cache": false,
       "dependsOn": [
         "build"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "test-fresh-component": {
       "executor": "repo:script",
@@ -123,13 +128,6 @@
     "nativeTestSources": [
       "default",
       "reads"
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },

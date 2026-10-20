@@ -1,0 +1,170 @@
+{
+  "caseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "acquired",
+      "usedBytes",
+      "availableBytes",
+      "failAt",
+      "inventoryCalls",
+      "deleted",
+      "result",
+      "failure"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "acquired": {
+        "type": "boolean"
+      },
+      "usedBytes": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1073741824
+      },
+      "availableBytes": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967296
+      },
+      "failAt": {
+        "enum": [
+          "none",
+          "identity",
+          "cancel"
+        ]
+      },
+      "inventoryCalls": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "deleted": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "result": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "failure": {
+        "enum": [
+          null,
+          "identity",
+          "cancel",
+          "headroom"
+        ]
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "deferred-pressure",
+      "acquired": false,
+      "usedBytes": 536870913,
+      "availableBytes": 1073741823,
+      "failAt": "none",
+      "inventoryCalls": 0,
+      "deleted": 0,
+      "result": false,
+      "failure": null
+    },
+    {
+      "id": "deferred-healthy",
+      "acquired": false,
+      "usedBytes": 0,
+      "availableBytes": 1073741824,
+      "failAt": "none",
+      "inventoryCalls": 0,
+      "deleted": 0,
+      "result": false,
+      "failure": null
+    },
+    {
+      "id": "healthy-noop",
+      "acquired": true,
+      "usedBytes": 0,
+      "availableBytes": 1073741824,
+      "failAt": "none",
+      "inventoryCalls": 1,
+      "deleted": 0,
+      "result": false,
+      "failure": null
+    },
+    {
+      "id": "low-water-boundary",
+      "acquired": true,
+      "usedBytes": 536870912,
+      "availableBytes": 1073741824,
+      "failAt": "none",
+      "inventoryCalls": 1,
+      "deleted": 0,
+      "result": false,
+      "failure": null
+    },
+    {
+      "id": "low-water-retirement",
+      "acquired": true,
+      "usedBytes": 536870913,
+      "availableBytes": 1073741824,
+      "failAt": "none",
+      "inventoryCalls": 1,
+      "deleted": 1,
+      "result": true,
+      "failure": null
+    },
+    {
+      "id": "physical-headroom-retirement",
+      "acquired": true,
+      "usedBytes": 100,
+      "availableBytes": 1073741823,
+      "failAt": "none",
+      "inventoryCalls": 1,
+      "deleted": 1,
+      "result": true,
+      "failure": null
+    },
+    {
+      "id": "changed-identity-refuses",
+      "acquired": true,
+      "usedBytes": 536870913,
+      "availableBytes": 1073741824,
+      "failAt": "identity",
+      "inventoryCalls": 1,
+      "deleted": 0,
+      "result": null,
+      "failure": "identity"
+    },
+    {
+      "id": "cancel-before-unlink",
+      "acquired": true,
+      "usedBytes": 536870913,
+      "availableBytes": 1073741824,
+      "failAt": "cancel",
+      "inventoryCalls": 1,
+      "deleted": 0,
+      "result": null,
+      "failure": "cancel"
+    },
+    {
+      "id": "required-headroom-unavailable",
+      "acquired": true,
+      "usedBytes": 0,
+      "availableBytes": 1073741823,
+      "failAt": "none",
+      "inventoryCalls": 1,
+      "deleted": 0,
+      "result": null,
+      "failure": "headroom"
+    }
+  ]
+}

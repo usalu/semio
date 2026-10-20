@@ -128,7 +128,6 @@
         "exchange",
         "caseSensitive",
         "imageTool",
-        "longPaths",
         "paths"
       ],
       "properties": {
@@ -137,13 +136,6 @@
             "win32",
             "darwin",
             "linux"
-          ]
-        },
-        "longPaths": {
-          "enum": [
-            "enabled",
-            "disabled",
-            "unprobed"
           ]
         },
         "exchange": {

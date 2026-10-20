@@ -1,5 +1,5 @@
 /** 🌳️ Complete framework-owned intrinsic variants, independent of JSON projection. */
-import{parseSchemaRecord}from"@semio-tech/schema-ts/record";
+import{parseSchemaRecord}from"../../../🧬️schema/📦️packages/🟦️typescript/🧾️record/🟦️.ts";
 import {parseBinary64,type Binary64} from "../../🔢️ieee754/🟦️.ts";
 import type{NativeDecodeControl}from"../../🛬️decode/🟦️.ts";
 import {textScalarUtf8Width as scalarBytes,textUtf8ByteLength as textBytes} from "../../📝️text/🟦️.ts";

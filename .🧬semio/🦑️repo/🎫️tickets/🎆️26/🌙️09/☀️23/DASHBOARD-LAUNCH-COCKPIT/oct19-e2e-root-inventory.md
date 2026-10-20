@@ -395,3 +395,192 @@ The new semantic workspace backend, schema, sixteen neutral vectors, ten native 
 - `📋️build-owners.json`
 
 Three missing owner rows were handcrafted for the Source workspace, its existing native package and the new snapshot-projection native package. Each name/root/manifest is read from its actual project declaration, packages remains empty because these modules own no package.json, and existing rows/provider declarations/order are preserved. This is registration only; no generated migration or broad registry sync was added.
+
+
+## October20 Read-Only Persistent Namespace And Ancestry Repair
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🥒️.feature`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/📥️inspection.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🧪️tests/🥒️.feature`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts`
+
+Thirteen exact permanent source/test/schema paths include the concurrent boot receipt safety correction within the shared cleanup owner. Current publication format remains closed and required; no old-format receipt migration or compatibility API remains. Two mount-binding laws, three ancestry laws and one actual receiver law are selected through the existing native-image-observation Source target. All six are authored, independently reviewed, and unrun while Source26 waits for graph access. See oct20-persistent-device-identity.md and oct20-independent-device-binding.md.
+
+
+## Exact Selected Source Runtime Input
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/e2e-source-single-plan.json`
+
+Retain this hand-authored26-target command input after generated logs are removed. It records single-owner declared routes and pending/running state, without claiming inferred prerequisites or test passes.
+
+
+## October20 Selected Native Observation Scope
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🥒️.feature`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts`
+
+Source demand policy distinguishes declaration-only/source-input/native-preparation roles; schema10neutral+4invalid cases and6actual discovery scenarios use independent SQLite. Exact shared Source input/per-target generated dependency changes from concurrent work are preserved. See oct20-native-admission-scope.md; runtime pending.
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs
+
+- 🧰️framework/🔨️modules/🏃️process/📋️project.json
+
+## Graph Optional Inventory Custody
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎟️custody/🟦️.ts
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎟️custody/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎟️custody/🥒️.feature
+
+## Fixed Inactive Nx Reset Registration
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧬️schema/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🥒️.feature
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json
+
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/e2e-source-extra-plan.json
+
+## Four Retirement Namespace Bindings
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/♻️retirement.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🥒️.feature`
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/📥️inspection.ts`
+
+## Current Host Capacity Grant Inheritance
+
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🥒️.feature`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧪️tests/🟦️.ts`
+
+## Preliminary Fleet Attribution Refresh 2026-10-20T17:12Z
+
+Curated Root records, native owner264 paths, controls owner205 paths and current exact Root additions yield540 normalized candidate source/input/removal paths (483present,57absent), maximum absolute UTF16 path193 and none above256. No AGENTS paths, outside-workspace paths, generated output or broad shared Git diff are included. The absent rows still require final intentional-removal attribution; this is a preliminary snapshot while Windows and automatic recovery work continue. The generated union is temporary evidence, not a completion claim.
+
+## Current Attribution Readback
+
+Refreshed provisional normalized union from separately curated Root/High/Controls inputs:555 candidate file paths,497 currently present and58 absent, maximum absolute UTF16 path193; no directories, generated paths or AGENTS files. This is a provisional readback, not a broad shared Git attribution. Known IDE/ticket launch-config retirements and intentional legacy CLI/dashboard relocations remain absent. One additional staging-fixture absent path is pending High adjudication. Final list will be refreshed after remaining accepted edits and real gates.
+
+High adjudicated the additional absent staging fixture: it was semantically relocated from staging/🧫fixtures/🔣json to staging/🧪tests/🧫fixtures/🔣json; actual test reads the latter. Keep old removal and replacement attribution without legacy recreation.
+
+## Document Worker Yield
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🥒️.feature`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json`
+
+## Build Tool Progress Presentation
+
+Schema/test-only preparation for the existing process progress owner. Production file is attributed once the red gate and implementation settle.
+
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json`
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🥒️.feature`
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-tooling-progress.md`
+
+## Guided Entry Commands And Rooted Recovery Namespace
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🟦️.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-guided-file-management.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-acceptance-ledger.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-e2e-verification.md`
+
+## Current Tree/Content/History Backend And Declared Hash Edge
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🪪️namespace/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🔏️fingerprint/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🔏️fingerprint/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🔏️fingerprint/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/Cargo.lock`
+- `Cargo.lock`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-retained-content-fingerprint.md`
+
+## Segmented History Test-First Inputs
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧪️tests/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct20-workspace-history-lifecycle.md`
+
+## Segmented History Native Owner
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🦀️.rs`
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧭️decision/🦀️.rs`
+
+
+## Final Cold Native Entry And Secondary Control Retirement
+
+- `README.md`
+- `🧰️framework/🛍️products/🦑️repo/README.md`
+- `.devcontainer/devcontainer.json`
+- `.devcontainer/Dockerfile`
+- `.devcontainer/README.md`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🔁️lifecycle/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🚀️runtime-bootstrap/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧪️tests/🔏️encoding/🦀️.rs`
+
+## Bounded History Paging Work
+
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧬️schema/📈️paging.json`
+- `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧪️tests/📈️paging/🔣️.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/README.md`

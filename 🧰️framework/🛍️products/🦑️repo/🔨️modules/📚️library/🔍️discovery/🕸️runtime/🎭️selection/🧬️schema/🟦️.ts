@@ -1,9 +1,9 @@
 import type {CompletedCargoPublicationReferenceV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reference";
-import cargoReferenceSchema from "@semio-tech/process/artifacts/native-build/receipt/retention/reference/schema.json";
+import cargoReferenceSchema from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️json/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import type { FileObservationControlV1, PhysicalFileClaimV1 } from "@semio-tech/framework-filesystem/observation";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { RuntimeCargoObservationV1 } from "../../🧬️schema/🟦️.ts";
 import type { RuntimeDynamicImportOwnerV1, RuntimeGraphEvidenceV1 } from "../../🟦️.ts";
 import schemaDocument from "./🔣️.json" with { type: "json" };

@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "paneId": "koordinator",
+      "brand": "ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND",
+      "exampleId": "demo",
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"
+    },
+    {
+      "paneId": "aussuchen",
+      "brand": "ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND",
+      "exampleId": "demo",
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"
+    },
+    {
+      "paneId": "bearbeiten",
+      "brand": "ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND",
+      "exampleId": "concrete-forest",
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️.rs"
+    }
+  ]
+}

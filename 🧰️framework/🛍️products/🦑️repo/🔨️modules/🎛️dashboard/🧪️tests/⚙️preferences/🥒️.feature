@@ -2,8 +2,9 @@ Feature: Opinionated Optional Dashboard Preferences
   Scenario: Starting without preferences
     Given no workspace, local, environment or argument overrides
     When the native dashboard starts
-    Then it immediately shows task controls in the language the system names, or in the first language of the declared fallback chain, English, with dark appearance
-    And native terminology, React, tabbed output and the Ctrl B prefix key are selected without questions
+    Then a supported system language shows task controls immediately with dark appearance
+    And an unresolved language shows an unselected English and Deutsch choice before task controls
+    And native terminology, React, tabbed output and the Ctrl B prefix key remain customizable
   Scenario: Resolving layered preferences
     Given the shared preference vectors
     When workspace events, local events, environment and arguments are applied in order
@@ -20,11 +21,13 @@ Feature: Opinionated Optional Dashboard Preferences
     When the preferences are replayed workspace first and local second
     Then the later layer wins per binding and the other bindings stay
     And a prefix that only types, a binding without keys or an unknown binding is rejected before it is published
-  Scenario: The language falls back from the stored choice to the system and then to the declared chain
+  Scenario: The language resolves from explicit choices or system settings and otherwise requires a choice
     Given the language chain declared as data and no hard-coded default language
     When a stored choice, an environment override, a system locale and no locale at all are resolved in turn
     Then a stored choice beats the system and the override beats the stored choice
-    And the system locale beats the first language of the declared fallback chain
+    And missing or unsupported system locales require an explicit choice
+    And Enter without a selection stays in the chooser
+    And cancellation publishes no preference event
     And a compacted journal never freezes a language the journal did not choose
   Scenario: The language follows the preference everywhere
     Given the preference language de

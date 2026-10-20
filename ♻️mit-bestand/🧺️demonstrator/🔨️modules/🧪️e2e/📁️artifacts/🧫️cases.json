@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "sessionId": "01234567-89ab-4cde-8fab-0123456789ab",
+  "sessionDirectory": "0123456789ab4cde8fab0123456789ab",
+  "project": "chromium",
+  "retries": 2,
+  "titles": [
+    "pane roster",
+    "overview chrome",
+    "generator boot",
+    "koordinator boot",
+    "aggregator boot",
+    "energie boot",
+    "aussuchen boot",
+    "bearbeiten boot",
+    "verfolgen boot",
+    "statik boot",
+    "aussuchen preview",
+    "aussuchen undo-redo",
+    "energie run-cancel",
+    "statik undo-redo",
+    "funding logos",
+    "generator undo-redo",
+    "koordinator undo-redo",
+    "aggregator undo-redo",
+    "bearbeiten undo-redo",
+    "verfolgen undo-redo"
+  ],
+  "directFiles": [
+    "trace.zip",
+    "error-context.md",
+    "p.png"
+  ],
+  "invalidSessionIds": [
+    "",
+    "../outside",
+    "01234567-89ab-4cde-8fab-0123456789a",
+    "01234567-89ab-4cde-8fab-0123456789ab-extra"
+  ],
+  "workerFiles": [
+    ".playwright-artifacts-95/traces/00000000000000000000-00000000000000000000-retry2-recording191.network",
+    ".playwright-artifacts-95/traces/resources/0000000000000000000000000000000000000000.jpeg"
+  ]
+}

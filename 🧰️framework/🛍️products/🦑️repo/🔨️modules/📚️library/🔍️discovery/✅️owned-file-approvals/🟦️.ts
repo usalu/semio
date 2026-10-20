@@ -1,6 +1,6 @@
 import { parseGeneratorPreviewLiteralCommandV1 } from "../../🏭️generator/👁️preview/🔤️arguments/🟦️.ts";
-import { reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
-import { ephemeralMap } from "@semio-tech/framework-transient";
+import { reservedDocumentationBasename } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync } from "node:fs";
@@ -135,7 +135,7 @@ export function semanticExactOwnedDocumentCorrectionAuthority(catalog: OwnerProj
 
 const gitIndexFileModeCache = ephemeralMap<string, ReadonlyMap<string, number>>("framework.products.repo.modules.lib.discovery.component.ts.gitIndexFileModeCache");
 
-/** 🗝️ Stage-zero blob permission bits recorded in Git's index, keyed by the path Git reports relative to `repoRoot`; empty outside a work tree. */
+/** 🗝️ Stage-zero blob permission bits recorded in Git's index, keyed by the path Git reports relative to `repoRoot`; empty outside a work tree, where the platform default is the only authority. */
 function gitIndexFileModes(repoRoot: string): ReadonlyMap<string, number> {
   const cached = gitIndexFileModeCache.get(repoRoot);
   if (cached) return cached;
@@ -150,7 +150,7 @@ function gitIndexFileModes(repoRoot: string): ReadonlyMap<string, number> {
       if (stage !== "0" || (mode !== "100644" && mode !== "100755")) continue;
       modes.set(row.slice(tab + 1).normalize("NFC"), mode === "100755" ? 0o755 : 0o644);
     }
-  } catch { /* outside a Git work tree the platform default below is the only authority */ }
+  } catch {}
   gitIndexFileModeCache.set(repoRoot, modes);
   return modes;
 }

@@ -1,0 +1,191 @@
+{
+ "version": 1,
+ "entries": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
+   "rule": "checkout-write",
+   "count": 2,
+   "reason": "passes process.cwd() as workspaceRoot to a read-only project inference inside a child script text"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts",
+   "rule": "checkout-write",
+   "count": 3,
+   "reason": "publishes build reports into the real diagnostics partition under unique random names and removes them; needs a sandbox workspace root with its own partition"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts",
+   "rule": "checkout-write",
+   "count": 1,
+   "reason": "child script text writes next to its own temp directory"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️live-activation/🟦️.ts",
+   "rule": "fixed-port-bind",
+   "count": 1,
+   "reason": "asserts the declared `--port` argument of a target command; nothing binds"
+  },
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 4,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 2,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🧪️tests/🔬️unit/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "🌎️hub/🧪️tests/🏷️hub-freshness/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "probes a path that must stay absent; nothing is written"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔌️providers/🧪️tests/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "builds provider-map strings only; nothing is written"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🧪️tests/🔬️unit/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🧪️tests/🔬️unit/🦀️.rs",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧪️tests/🏖️sandbox/🐹️.go",
+   "rule": "fixed-tmp-dir",
+   "count": 2,
+   "reason": "observes a path outside the checkout on purpose; nothing is written"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🧪️tests/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "string/path construction under the shared temp name; the SUT reads it (use testScratchRootV1)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️workspace/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "string/path construction under the shared temp name; the SUT reads it (use testScratchRootV1)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️mutation-taxonomy/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "string/path construction under the shared temp name; the SUT reads it (use testScratchRootV1)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go",
+   "rule": "go-unsandboxed-writer",
+   "count": 1,
+   "reason": "Go unit writes a helper script below a path derived by the test; use t.TempDir()"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/📋️capability-listing/🐹️.go",
+   "rule": "go-unsandboxed-writer",
+   "count": 1,
+   "reason": "adapter builds the repo binary into the shared cache `🗃️bin` of the real checkout (concurrent builds race); needs a per-run output directory in the build script"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🤝️jsonrpc-handshake/🐹️.go",
+   "rule": "go-unsandboxed-writer",
+   "count": 1,
+   "reason": "adapter builds the repo binary into the shared cache `🗃️bin` of the real checkout (concurrent builds race); needs a per-run output directory in the build script"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🧯️g3-hostile-source/🐹️.go",
+   "rule": "go-unsandboxed-writer",
+   "count": 1,
+   "reason": "lists forbidden call names as strings; nothing is written"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/🟦️.ts",
+   "rule": "persistent-native-state",
+   "count": 1,
+   "reason": "refusal proof: copied and expired controls must be refused before any physical intent; its scratch area is the sandbox since this change"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🧪️tests/🟦️.ts",
+   "rule": "persistent-native-state",
+   "count": 1,
+   "reason": "dev local-hub session callback proof under S_LOCAL_ONLY; no partition birth is requested by the test"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs",
+   "rule": "rust-checkout-write",
+   "count": 1,
+   "reason": "bless-style generator test rewrites a checked-in fixture next to the crate on every run (gate it behind an explicit bless switch)"
+  },
+  {
+   "file": "🏢️semio-tech/🎡️play/🧪️tests/🧪️playpages/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 4,
+   "reason": "vitest lane: scratch lives in the generated folder of a foreign ticket; vite cannot load the sandbox module (JSON import attributes) until vitest gets its own scratch helper"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧩️contribution/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 1,
+   "reason": "symlink-boundary proof must run below the workspace root; needs a sandbox workspace root"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 1,
+   "reason": "scratch must lie below the workspace (inputs are workspace-relative); needs a sandbox workspace root, then testScratchRootV1"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 1,
+   "reason": "scratch must lie below the workspace (inputs are workspace-relative); needs a sandbox workspace root, then testScratchRootV1"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 2,
+   "reason": "scratch must lie below the workspace (inputs are workspace-relative); needs a sandbox workspace root, then testScratchRootV1"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts",
+   "rule": "ticket-scratch-root",
+   "count": 1,
+   "reason": "scratch must lie below the workspace (inputs are workspace-relative); needs a sandbox workspace root, then testScratchRootV1"
+  }
+ ]
+}

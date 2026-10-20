@@ -1,5 +1,5 @@
 /** 🤝️ The peer presence roster, the paged command ingress and the kernel request queue checks. */
-import { toolJobPeerInteractionRootsExact, toolJobPagedIngressExact } from "@semio-tech/repo-lib/laws";
+import { toolJobPeerInteractionRootsExact, toolJobPagedIngressExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 👥 Checks that the peer presence roster stays fixed, typed, validated and committed with its generation. */
 export function peerPresenceRosterChecks() {

@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "@semio-tech/repo-lib/inventory";
+import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 
 //#region 🧮️SourceCensus
 /** 🧱️ The JavaScript libraries reachable only through their interface module, package → owning directory (the dependency

@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentApprovalAffordance, AgentApprovalsNotice, approvalSecondsRemaining, focusAgentApprovalV1, parseApprovalSummary } from "../../🟦️.tsx";
-import { type PendingAgentApproval } from "../../../🔗️AgentBridge/🟦️.tsx";
+import { type PendingAgentApproval } from "../../../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 afterEach(cleanup);

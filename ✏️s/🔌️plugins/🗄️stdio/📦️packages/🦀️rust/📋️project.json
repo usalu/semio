@@ -49,12 +49,20 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
     },
     "deletion-proof": {
       "executor": "repo:script",
@@ -62,6 +70,11 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts deletion-proof"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+        }
       }
     }
   }

@@ -1,0 +1,86 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:dependencies/generation-ingress-fixture/v1",
+ "title": "Dependency generation ingress fixture",
+ "description": "Language-agnostic scenarios of the ordinary-command ingress: how a completed walk is confirmed, how a receipt publication ends without deciding readiness, how receipt writers exclude each other without queueing, and which evidence sizes the bounded relative-create writer must carry.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "confirm", "publish", "writer", "files"],
+ "properties": {
+  "version": {"const": 1},
+  "confirm": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Confirm"}},
+  "publish": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Publish"}},
+  "writer": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Writer"}},
+  "files": {"$ref": "#/definitions/Files"}
+ },
+ "definitions": {
+  "Sha": {"type": "string", "pattern": "^[a-f0-9]{8}$"},
+  "Replay": {
+   "oneOf": [
+    {"type": "object", "additionalProperties": false, "required": ["status", "sha256"], "properties": {"status": {"const": "match"}, "sha256": {"$ref": "#/definitions/Sha"}}},
+    {"type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": {"status": {"const": "deferred"}, "reason": {"type": "string", "minLength": 1}}},
+    {"type": "object", "additionalProperties": false, "required": ["status", "class"], "properties": {"status": {"const": "mismatch"}, "class": {"type": "string", "minLength": 1}}}
+   ]
+  },
+  "Confirm": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "replay", "walk", "expect"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "replay": {"$ref": "#/definitions/Replay"},
+    "walk": {"$ref": "#/definitions/Sha"},
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["via", "sha256", "walks"],
+     "properties": {"via": {"enum": ["replay", "walk"]}, "sha256": {"$ref": "#/definitions/Sha"}, "walks": {"enum": [0, 1]}}
+    }
+   }
+  },
+  "Outcome": {"enum": ["published", "present", "deferred", "stale", "failed", "busy"]},
+  "Publish": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "attempt", "aborted", "expect"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "attempt": {
+     "oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["returns"], "properties": {"returns": {"$ref": "#/definitions/Outcome"}}},
+      {"type": "object", "additionalProperties": false, "required": ["throws"], "properties": {"throws": {"type": "string", "minLength": 1}}}
+     ]
+    },
+    "aborted": {"type": "boolean"},
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["result", "reports", "rethrows"],
+     "properties": {"result": {"type": ["string", "null"]}, "reports": {"type": "array", "items": {"type": "string"}}, "rethrows": {"type": "boolean"}}
+    }
+   }
+  },
+  "Writer": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "lease", "body", "aborted", "expect", "released"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "lease": {"enum": ["free", "timeout", "other"]},
+    "body": {"enum": ["published", "throw"]},
+    "aborted": {"type": "boolean"},
+    "expect": {"enum": ["published", "busy", "rethrow"]},
+    "released": {"type": "boolean"}
+   }
+  },
+  "Files": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["sizes", "chunkCeiling"],
+   "properties": {
+    "sizes": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 33554432}},
+    "chunkCeiling": {"const": 65536}
+   }
+  }
+ }
+}

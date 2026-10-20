@@ -1,9 +1,10 @@
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {createNativeWindowsHostPortV1,nativeWindowsExtendedPathV1,nativeWindowsUtf16V1,readNativeWindowsLongPathsEnabledV1,requireNativeWindowsCaseStatusV1,type NativeWindowsBindingV1} from "../🟦️.ts";
 import {nativeDirectoryProtocolV1} from "../../📋️contract/🟦️.ts";
 
-const protocol=nativeDirectoryProtocolV1(),windows=protocol.exchange.windows,python=Bun.which("python3");
+const protocol=nativeDirectoryProtocolV1(),windows=protocol.exchange.windows,python=testPythonV1();
 const py=(code:string,...args:string[])=>{if(!python)return undefined;const run=Bun.spawnSync([python,"-I","-c",code,...args],{stdout:"pipe",stderr:"pipe"});if(run.exitCode!==0)throw Error(run.stderr.toString());return run.stdout.toString().trim();};
 const recorder=(script:{handle?:bigint;moveOk?:boolean;flushOk?:boolean;closeOk?:boolean;freeOk?:boolean;free?:number;status?:number;error?:number}={})=>{
  const calls:unknown[][]=[];

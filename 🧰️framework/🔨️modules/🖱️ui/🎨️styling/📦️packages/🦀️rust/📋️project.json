@@ -47,7 +47,12 @@
         "command": "bun ./📜️script.ts fonts",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",
@@ -153,13 +158,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"
-    ],
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
     ],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },

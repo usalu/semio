@@ -19,7 +19,7 @@ import { DIRECTORY_PREFERENCE_PAGE_PATH_V1 } from "../📇️directory/🧬️sc
 import { DIRECTORY_EVENT_PAGE_MAX_BYTES } from "../📇️directory/🧬️schema/📄️event-page/🟦️.ts";
 import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, directoryCommandErrorFromStatus } from "../📇️directory/🧬️schema/🎫️command/🟦️.ts";
 import { DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES } from "../📇️directory/🧬️schema/📋️admin-page/🟦️.ts";
-import { encodeClientFrame } from "@semio-tech/framework-replication";
+import { encodeClientFrame } from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import type { DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DocumentScope } from "../📇️directory/🟦️.ts";
 import { DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES } from "../📇️directory/🟦️.ts";
 

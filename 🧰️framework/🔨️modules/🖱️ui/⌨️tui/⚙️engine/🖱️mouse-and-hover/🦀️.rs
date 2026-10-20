@@ -178,7 +178,7 @@ match self.press.take() {
         }
         }
 
-    fn propose_dock(&self, chrome: NodeId, held_chrome: NodeId, source: &str, pos: Pos) -> Option<DockPreview> {
+    pub(super) fn propose_dock(&self, chrome: NodeId, held_chrome: NodeId, source: &str, pos: Pos) -> Option<DockPreview> {
         let NodeContent::Chrome(ChromeState::Window(window)) = &self.scene.node(chrome).content else { return None };
         let rect = self.scene.rect(chrome);
         let NodeContent::Chrome(state) = &self.scene.node(chrome).content else { return None };
@@ -186,18 +186,18 @@ match self.press.take() {
         let placement = if let Some(corner) = corner { DockPlacement::Corner(corner) } else { DockPlacement::at(rect, pos)? };
         let target = window.tab_ids.get(window.active_stack_tab).filter(|id| id.as_str() != source).or_else(|| window.tab_ids.iter().find(|id| id.as_str() != source)).or_else(|| matches!(placement, DockPlacement::Corner(_)).then(|| window.tab_ids.iter().find(|id| id.as_str() == source)).flatten())?.clone();
         let tab_index = corner.map(|corner| state.window_corner_insert_index(rect, pos, corner, source));
-        let mounted = self.scene.window_layouts.iter().find(|mounted| self.scene.contains(mounted.canvas) && mounted.windows.iter().any(|(_, node)| *node == chrome) && mounted.windows.iter().any(|(_, node)| *node == held_chrome))?;
-        let mut projected = mounted.layout.clone();
+        let (layout, canvas, windows) = self.scene.window_layout_containing(chrome, held_chrome)?;
+        let mut projected = layout.clone();
         if !semio_framework_ui_tui_frame::layout::dock_window(&mut projected, source, &target, placement, tab_index) { return None; }
-        let window_rect = semio_framework_ui_tui_frame::layout::solve_window_layout(&projected, self.scene.rect(mounted.canvas)).into_iter().find(|measure| measure.window_kind_id == source)?.rect;
-        let source_node = mounted.windows.iter().find(|(id, _)| id == source)?.1;
+        let window_rect = semio_framework_ui_tui_frame::layout::solve_window_layout(&projected, self.scene.rect(canvas)).into_iter().find(|measure| measure.window_kind_id == source)?.rect;
+        let source_node = windows.iter().find(|(id, _)| id == source)?.1;
         let NodeContent::Chrome(ChromeState::Window(source_state)) = &self.scene.try_node(source_node)?.content else { return None };
         let mut window = (**source_state).clone();
         let stack = semio_framework_ui_tui_frame::layout::stack_hosting(&projected, source)?;
         window.stack_tabs = stack.children.iter().map(|child| WindowStackTabState {
             label: child.title.clone().unwrap_or_else(|| child.window_kind_id.clone()),
             corner: child.corner.unwrap_or_default(),
-            status: mounted.windows.iter().find(|(id, _)| id == &child.window_kind_id).and_then(|(_, node)| self.scene.try_node(*node)).and_then(|node| match &node.content { NodeContent::Chrome(ChromeState::Window(state)) => state.status, _ => None }),
+            status: windows.iter().find(|(id, _)| id == &child.window_kind_id).and_then(|(_, node)| self.scene.try_node(*node)).and_then(|node| match &node.content { NodeContent::Chrome(ChromeState::Window(state)) => state.status, _ => None }),
         }).collect();
         window.tab_ids = stack.children.iter().map(|child| child.window_kind_id.clone()).collect();
         window.active_stack_tab = window.tab_ids.iter().position(|id| id == source)?;
@@ -261,7 +261,7 @@ if self.hovered == node {
         self.hide_tooltip();
     }
 
-    fn update_hover(&mut self, hit: Option<NodeId>, pos: Option<Pos>) {
+    pub(super) fn update_hover(&mut self, hit: Option<NodeId>, pos: Option<Pos>) {
         let target = hit.and_then(|hit| self.hover_target(hit));
         self.set_hover_node(target);
                 self.emphasize_chrome(hit);

@@ -37,7 +37,7 @@ export function useOpenEntriesState({ session, loadedPluginsRef, dispatch, plugi
    * panel section, and what the context-menu/palette entries focus. `undefined` with no session or
    * router (nothing to list yet), and for a non-surface app — one bound to no subset, such as the
    * workflow studio — which has no dialect to open anything else against. */
-  /** 👁️✏️ A hub document's session routes "Open with…" over its own catalog closure (program ids), pins stay keyed by plugin id. */
+  /** 🗃️ A hub document's session routes "Open with…" over its own catalog closure (program ids), pins stay keyed by plugin id. */
   const openWithEntries = useMemo(() => {
     if (!session || !appRouter || !session.app.dialect) return undefined;
     const catalogModule = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.catalogModule;
@@ -70,7 +70,7 @@ export function useOpenEntriesState({ session, loadedPluginsRef, dispatch, plugi
   );
   core.showTransientNotice = showTransientNotice;
   showTransientNoticeRef.current = showTransientNotice;
-  /** 🧯️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
+  /** 🔒️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
    * lease knows to render as a notice instead of letting it crash into `ShellFaultBoundary`. */
   const isViewerReadOnlyFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === SURFACE_FAULT_CODES.ViewerReadOnly, []);
   core.isViewerReadOnlyFault = isViewerReadOnlyFault;
@@ -80,7 +80,7 @@ export function useOpenEntriesState({ session, loadedPluginsRef, dispatch, plugi
    * "app.command.rejected"`, `Fault.severity` mirrors the rejected `DispatchReport.worst`). */
   const isMutationRejectedFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === COMMAND_REJECTED_FAULT_CODE, []);
   core.isMutationRejectedFault = isMutationRejectedFault;
-  /** ⚖️ One toast per gesture for a rejected local dispatch — worst level already IS `fault.severity`
+  /** 🍞️ One toast per gesture for a rejected local dispatch — worst level already IS `fault.severity`
    * (that field mirrors `DispatchReport.worst`), body = the first cause's localized `ui.mutation.
    * code.*` label + its English prose, falling back to `ui.mutation.rejected.body` when the fault
    * carries no `causes` yet (the guest-side wiring that populates them is a different lane). */
@@ -94,7 +94,7 @@ export function useOpenEntriesState({ session, loadedPluginsRef, dispatch, plugi
     [showTransientNotice],
   );
   core.showMutationRejectedNotice = showMutationRejectedNotice;
-  /** ⚖️ Remote-origin merge-outcome bridge (contract freeze §C6/§C9) — fed by `applyRemoteMergeRef`
+  /** 🌉️ Remote-origin merge-outcome bridge (contract freeze §C6/§C9) — fed by `applyRemoteMergeRef`
    * (see its declaration doc) from `ensureBackboneWorker`'s `remoteMutations` handling. A non-null
    * `conflicts` roster replaces the Conflicts panel's roster exactly like `dispatchResolveConflict`'s
    * reply does — `📌️ChromePanels`' panel and `ShellSync`'s quarantine badge both derive from `state.

@@ -146,9 +146,9 @@ test("clearing the disk cache empties ac and cas, keeps tmp and gc, unlinks link
 });
 
 test("clearing the server bases stops a server that exits when its pid file vanishes, then removes only output bases, the ledger and event streams",async()=>{
- const directory=temporary(),outside=temporary(),base=join(directory,"0123456789abcdef");
+ const directory=temporary(),outside=temporary(),base=join(directory,"s0");
  try{
-  lay(directory,[{path:"0123456789abcdef/execroot/_main/bazel-out/x",bytes:3},{path:"0123456789abcdef/action_cache",bytes:3},{path:"0123456789abcdef/server/server.pid.txt",bytes:0},{path:"fedcba9876543210/server/other",bytes:1},{path:"not-a-base/kept",bytes:1},{path:"metrics.json",bytes:2},{path:"0123456789abcdef.events.json",bytes:2}]);
+  lay(directory,[{path:"s0/execroot/_main/bazel-out/x",bytes:3},{path:"s0/action_cache",bytes:3},{path:"s0/server/server.pid.txt",bytes:0},{path:"s1/server/other",bytes:1},{path:"s0.session.json",bytes:2},{path:"not-a-base/kept",bytes:1},{path:"metrics.json",bytes:2},{path:"s0.events.json",bytes:2}]);
   writeFileSync(join(outside,"sentinel"),"keep");
   const watcher=spawn(process.execPath,["-e","const f=process.argv[1];setInterval(()=>{if(!require('fs').existsSync(f))process.exit(0)},50)",join(base,"server/server.pid.txt")],{stdio:"ignore"});
   const exited=new Promise<number|null>(resolve=>watcher.on("exit",code=>resolve(code)));
@@ -170,26 +170,26 @@ test("recorded build metrics add up in the ledger, consume their event stream an
  const directory=temporary(),workspace=join(directory,"workspace"),layout=bazelCacheLayoutV1({tools:join(directory,"t"),dependencies:join(directory,"d"),products:join(directory,"p")});
  try{
   mkdirSync(layout.server,{recursive:true});
-  const events=bazelBuildEventsFileV1(layout,workspace),event=(name:string)=>JSON.stringify(fixture.metrics.find(row=>row.name===name)!.event)+"\n";
+  const events=bazelBuildEventsFileV1(layout,"s0"),event=(name:string)=>JSON.stringify(fixture.metrics.find(row=>row.name===name)!.event)+"\n";
   expect(events.length).toBeLessThanOrEqual(256);
   expect(dirname(events)).toBe(layout.server);
   await withControl(async control=>{
    expect(await readBazelLedgerV1(layout)).toEqual({builds:0,actions:0,executed:0,cacheHits:0});
    writeFileSync(events,event("cold"));
-   await recordBazelBuildMetricsV1(directory,layout,workspace,control);
+   await recordBazelBuildMetricsV1(directory,layout,"s0",control);
    expect(existsSync(events)).toBe(false);
    writeFileSync(events,event("disk-cache-restore"));
-   await recordBazelBuildMetricsV1(directory,layout,workspace,control);
+   await recordBazelBuildMetricsV1(directory,layout,"s0",control);
    const {version,...totals}=fixture.ledger.expected;
    expect(version).toBe(1);
    expect(await readBazelLedgerV1(layout)).toEqual(totals);
    writeFileSync(events,"{\"id\":{\"started\":{}}}\n");
-   await recordBazelBuildMetricsV1(directory,layout,workspace,control);
+   await recordBazelBuildMetricsV1(directory,layout,"s0",control);
    expect(await readBazelLedgerV1(layout)).toEqual(totals);
    writeFileSync(join(layout.server,"metrics.json"),"{");
    expect(await readBazelLedgerV1(layout)).toEqual({builds:0,actions:0,executed:0,cacheHits:0});
    writeFileSync(events,event("up-to-date"));
-   await recordBazelBuildMetricsV1(directory,layout,workspace,control);
+   await recordBazelBuildMetricsV1(directory,layout,"s0",control);
    expect(await readBazelLedgerV1(layout)).toEqual({builds:1,actions:1,executed:0,cacheHits:0});
   });
  }finally{rmSync(directory,{recursive:true,force:true});}
@@ -258,7 +258,7 @@ const binary=process.env.SEMIO_TEST_BAZEL_BINARY;
 
 /** 🏗️ Runs the pinned Bazel binary in a scratch workspace whose genrules form a chain, so the cache numbers come from the real thing. */
 function bazel(workspace:string,state:string,args:readonly string[]){
- const run=spawnSync(binary!,["--nosystem_rc","--nohome_rc",`--output_user_root=${join(state,"user")}`,`--install_base=${join(state,"install")}`,`--output_base=${join(state,"0123456789abcdef")}`,"--max_idle_secs=120",...args],{cwd:workspace,encoding:"utf8",maxBuffer:64*1024*1024,timeout:540_000});
+ const run=spawnSync(binary!,["--nosystem_rc","--nohome_rc",`--output_user_root=${join(state,"user")}`,`--install_base=${join(state,"install")}`,`--output_base=${join(state,"s0")}`,"--max_idle_secs=120",...args],{cwd:workspace,encoding:"utf8",maxBuffer:64*1024*1024,timeout:540_000});
  if(run.status!==0)throw Error(`bazel ${args.join(" ")} failed: ${run.stdout}${run.stderr}`);
  return run.stdout+run.stderr;
 }
@@ -281,11 +281,11 @@ test.skipIf(binary===undefined)("real Bazel: the census, the build metrics and t
    const restored=metrics();
    expect(restored.executed).toBe(0);expect(restored.cacheHits).toBe(3);
    expect(await measureBazelDiskCacheV1(actions,walk)).toEqual(census);
-   const pid=Number(readFileSync(join(state,"0123456789abcdef/server/server.pid.txt"),"utf8"));
+   const pid=Number(readFileSync(join(state,"s0/server/server.pid.txt"),"utf8"));
    expect(()=>process.kill(pid,0)).not.toThrow();
    await clearBazelServerBasesV1(state,walk);
    expect(()=>process.kill(pid,0)).toThrow();
-   expect(existsSync(join(state,"0123456789abcdef"))).toBe(false);
+   expect(existsSync(join(state,"s0"))).toBe(false);
    expect(existsSync(join(state,"install"))).toBe(true);
    await clearBazelDiskCacheV1(actions,walk);
    expect(await measureBazelDiskCacheV1(actions,walk)).toEqual({available:true,entries:0,bytes:0});

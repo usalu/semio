@@ -1,10 +1,315 @@
 {
- "$schema":"http://json-schema.org/draft-07/schema#",
- "type":"object","additionalProperties":false,"required":["version","help","originalModeCases","fixedTargetCases"],
- "properties":{
-  "version":{"const":1},
-  "help":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["args","expected"],"properties":{"args":{"type":"array","items":{"type":"string"}},"expected":{"type":"boolean"}}}},
-  "originalModeCases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","args","authored","inherited","expected"],"properties":{"id":{"type":"string","minLength":1},"args":{"type":"array","minItems":2,"items":{"type":"string"}},"authored":{"enum":["prototype","release",null]},"inherited":{"enum":["prototype","release",null]},"expected":{"enum":["prototype","release",null]}}}},
-  "fixedTargetCases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","mode"],"properties":{"name":{"type":"string"},"mode":{"enum":["prototype","release",null]}}}}
- }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "help",
+    "originalModeCases",
+    "fixedTargetCases",
+    "conflictCases",
+    "targetDeclarations",
+    "declarationSelections",
+    "ownedWorkflow"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "help": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "expected"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "originalModeCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "args",
+          "authored",
+          "inherited",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "authored": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "inherited": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "expected": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "conflictCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "args",
+          "authored",
+          "inherited",
+          "english",
+          "german"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "authored": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "inherited": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "english": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "german": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "fixedTargetCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mode"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "targetDeclarations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "target",
+          "named",
+          "fixed",
+          "default",
+          "expected",
+          "schemaAccepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "target": {
+            "type": "object"
+          },
+          "named": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "fixed": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "default": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "prototype",
+              "release",
+              null
+            ]
+          },
+          "schemaAccepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "declarationSelections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "cases"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "args",
+              "inherited",
+              "expected",
+              "reads"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "inherited": {
+                "enum": [
+                  "prototype",
+                  "release",
+                  null
+                ]
+              },
+              "expected": {
+                "enum": [
+                  "prototype",
+                  "release",
+                  null
+                ]
+              },
+              "reads": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ownedWorkflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "args",
+        "mode"
+      ],
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        }
+      }
+    }
+  }
 }

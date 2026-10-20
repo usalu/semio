@@ -1,7 +1,7 @@
 import {join,relative,isAbsolute,resolve} from "node:path";
-import {pinExecutableArtifact} from "@semio-tech/process/artifact-publication";
+import {pinExecutableArtifact} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../💾️storage/🟦️.ts";

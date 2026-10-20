@@ -1,0 +1,21 @@
+import * as real from "node:fs/promises";
+
+export * from "node:fs/promises";
+type Guard = { write(fn: string, args: readonly unknown[]): void; open(fn: string, args: readonly unknown[]): void; spawn(command: unknown, args: readonly unknown[]): void; exec(command: unknown): void };
+const guard = (): Guard | undefined => (globalThis as { __semioTestGuardV1?: Guard }).__semioTestGuardV1;
+const writes = <Fn extends (...args: never[]) => unknown>(name: string, fn: Fn): Fn => ((...args: unknown[]) => { guard()?.write(name, args); return (fn as unknown as (...rest: unknown[]) => unknown)(...args); }) as unknown as Fn;
+const opens = <Fn extends (...args: never[]) => unknown>(name: string, fn: Fn): Fn => ((...args: unknown[]) => { guard()?.open(name, args); return (fn as unknown as (...rest: unknown[]) => unknown)(...args); }) as unknown as Fn;
+export const writeFile = writes("writeFile", real.writeFile);
+export const appendFile = writes("appendFile", real.appendFile);
+export const mkdir = writes("mkdir", real.mkdir);
+export const rm = writes("rm", real.rm);
+export const rmdir = writes("rmdir", real.rmdir);
+export const unlink = writes("unlink", real.unlink);
+export const rename = writes("rename", real.rename);
+export const copyFile = writes("copyFile", real.copyFile);
+export const cp = writes("cp", real.cp);
+export const truncate = writes("truncate", real.truncate);
+export const symlink = writes("symlink", real.symlink);
+export const link = writes("link", real.link);
+export const open = opens("open", real.open);
+export default { ...real, writeFile, appendFile, mkdir, rm, rmdir, unlink, rename, copyFile, cp, truncate, symlink, link, open };

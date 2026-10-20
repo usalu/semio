@@ -24,10 +24,8 @@
       "build --experimental_disk_cache_gc_max_age=30d",
       "build --repo_contents_cache_gc_max_age=3d"
     ],
-    "workspaces": [
-      {"workspace": "/bounded/products/bazel/workspaces/a1", "sha256Prefix": "060b59b17e73eee6"},
-      {"workspace": "/bounded/products/bazel/workspaces/b2", "sha256Prefix": "4b16157afa2ef650"}
-    ],
+    "slots": ["s0", "s1", "s2"],
+    "refusedSlots": ["a1", "../s0", "s100", "S0", "/abs", "s0/x", "", "0123456789abcdef"],
     "accepted": [
       {"name": "default is disk only", "environment": {}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false, "tokenEnvironment": {}, "helper": false},
       {"name": "empty values are unset", "environment": {"SEMIO_REMOTE_CACHE_ENDPOINT": "", "SEMIO_REMOTE_CACHE_ACCESS": ""}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false, "tokenEnvironment": {}, "helper": false},
@@ -63,5 +61,6 @@
     {"name": "emoji output and server base on Linux are fine", "platform": "linux", "layout": {"install": "/home/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs", "server": "/home/dev/🧰️repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/home/dev/🧰️repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
     {"name": "accent output base on Windows", "platform": "win32", "layout": {"install": "C:\\Users\\Jürgen\\repo\\.cache\\b\\t\\bazel\\install", "outputs": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs", "server": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true}
   ],
-  "sandbox": {"forbiddenRcFlags": ["spawn_strategy", "strategy", "genrule_strategy", "sandbox_base", "sandbox_add_mount_pair", "sandbox_writable_path", "ignore_unsupported_sandboxing", "incompatible_sandbox_hermetic_tmp", "experimental_sandbox_async_tree_delete_idle_threads"], "expectedRunner": "darwin-sandbox", "roots": {"tools": "/Users/dev/repo/.cache/b/t/m", "dependencies": "/Users/dev/repo/.cache/b/d/m", "products": "/Users/dev/repo/.cache/b/p/m"}, "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces/0123456789abcdef"}
+  "sandbox": {"forbiddenRcFlags": ["spawn_strategy", "strategy", "genrule_strategy", "sandbox_base", "sandbox_add_mount_pair", "sandbox_writable_path", "ignore_unsupported_sandboxing", "incompatible_sandbox_hermetic_tmp", "experimental_sandbox_async_tree_delete_idle_threads"], "expectedRunner": "darwin-sandbox", "roots": {"tools": "/Users/dev/repo/.cache/b/t/m", "dependencies": "/Users/dev/repo/.cache/b/d/m", "products": "/Users/dev/repo/.cache/b/p/m"}},
+  "setup": {"opens": ["tools", "dependencies"], "full": ["tools", "dependencies", "products"], "installSkipped": ["tools", "reset", "cache", "remote-execution"]}
 }

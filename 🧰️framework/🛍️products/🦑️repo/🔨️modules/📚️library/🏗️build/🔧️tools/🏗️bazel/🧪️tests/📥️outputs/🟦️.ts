@@ -1,5 +1,6 @@
 /** 🔒 A cached Bazel task must produce every output it declares: the fixture is the contract, an independent Python implementation of the rule is the oracle. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import fixture from "./🔣️.json" with {type:"json"};
 import {bazelMissingOutputRefusedV1} from "../../📜️script.ts";
@@ -17,7 +18,7 @@ test("every fixture case is refused or admitted exactly as authored",()=>{
 });
 
 test("an independent Python implementation of the rule agrees on every case",()=>{
- const run=spawnSync("python3",["-I","-c",python],{input:JSON.stringify(fixture),encoding:"utf8"});
+ const run=spawnSync(testPythonV1()??"python3",["-I","-c",python],{input:JSON.stringify(fixture),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);
  expect(JSON.parse(run.stdout)).toEqual(fixture.cases.map(row=>row.refused));
 });

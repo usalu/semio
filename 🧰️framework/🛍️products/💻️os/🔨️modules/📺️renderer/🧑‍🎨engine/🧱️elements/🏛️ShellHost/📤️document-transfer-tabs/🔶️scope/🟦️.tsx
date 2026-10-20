@@ -57,7 +57,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       },
     };
   };
-  /** 📤️ The focused document program, or `null` when the Home or the space host has the canvas. */
+  /** 🎯️ The focused document program, or `null` when the Home or the space host has the canvas. */
   const documentTransferTarget = (): { readonly target: ActiveSession; readonly handle: PluginWasmHandle } | null => {
     const target = resolveSyncTargetSession();
     if (target === null || target.app.id === hostAppId || target.app.id === landingAppId) return null;

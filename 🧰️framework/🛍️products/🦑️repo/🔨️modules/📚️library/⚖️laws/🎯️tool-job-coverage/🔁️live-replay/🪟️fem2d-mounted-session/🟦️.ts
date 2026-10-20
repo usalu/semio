@@ -1,3 +1,4 @@
+/** 🪟️ The mounted FEM2D session contract of the live replay law. */
 import { toolJobRustBlock } from "../../📋️inventory/🟦️.ts";
 
 /** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. `session`, `editor`, `model`, `mesh` and `analyses` are the source families of the carved crates with their canonical test files, `glue` is the hub composition manifest, `reactor` the reactor family, `store` the os Store with the value snapshot-read crate and `frameworkPlugin` the plugin family. */

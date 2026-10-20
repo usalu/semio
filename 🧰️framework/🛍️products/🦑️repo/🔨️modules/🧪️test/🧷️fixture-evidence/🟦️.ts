@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type TestEvidence, EVIDENCE_CLASSES, MUTATION_OUTCOME_CLASSES } from "@semio-tech/framework/test/adapter";
+import { type TestEvidence, EVIDENCE_CLASSES, MUTATION_OUTCOME_CLASSES } from "../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";

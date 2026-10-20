@@ -2,7 +2,7 @@
 import { toolJobRustBlock } from "../../../🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { policyStripRustCommentsAndStrings } from "../../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 
-/** 🧭️ Extracts one uniquely declared Rust item through the shared literal/comment-aware block scanner. */
+/** 🔎️ Extracts one uniquely declared Rust item through the shared literal/comment-aware block scanner. */
 export function interactivityCheckedRustBlockScope(source: string, marker: string, name: string, failures: string[]): string | undefined {
   const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const declarations = [...source.matchAll(new RegExp(`^[\\t ]*${escaped}`, "gmu"))];

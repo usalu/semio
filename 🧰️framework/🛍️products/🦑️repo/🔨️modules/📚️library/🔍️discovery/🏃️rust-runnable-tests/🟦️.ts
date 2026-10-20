@@ -1,4 +1,4 @@
-import { type RustAttributes, type RustToken, rustAttributes, rustFindTopLevel, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
+import { type RustAttributes, type RustToken, rustAttributes, rustFindTopLevel, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { RustRunnableTestFact, RustTestFacts, RustTestModuleFact } from "../🦀️rust-fact-contracts/🟦️.ts";
 
 /** 📍️ Reads a single decoded module mount from actual Rust path metadata. */

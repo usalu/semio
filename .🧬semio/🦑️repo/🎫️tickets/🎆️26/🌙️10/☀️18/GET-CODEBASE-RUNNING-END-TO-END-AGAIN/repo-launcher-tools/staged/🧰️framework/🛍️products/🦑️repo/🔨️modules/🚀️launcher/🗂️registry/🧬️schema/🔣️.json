@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.launcher.runtimes/1",
+  "title": "Runtime registry of the repo launcher",
+  "description": "The pinned JavaScript runtimes the repo launcher provisions, the repository implementation entries it starts through them, and the EN/DE texts it prints. Every runtime is an adapter: the launcher knows only this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "contract", "languages", "language", "routing", "selected", "runtimes", "implementation", "cache", "messages"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "contract": { "const": 1 },
+    "languages": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/Language" } },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol"],
+      "properties": { "protocol": { "$ref": "#/$defs/RelativePath" } }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalogue"],
+      "properties": { "catalogue": { "$ref": "#/$defs/RelativePath" } }
+    },
+    "selected": { "$ref": "#/$defs/Name" },
+    "runtimes": { "type": "object", "minProperties": 1, "propertyNames": { "$ref": "#/$defs/Name" }, "additionalProperties": { "$ref": "#/$defs/Runtime" } },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entries"],
+      "properties": {
+        "version": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "key"],
+          "properties": { "file": { "$ref": "#/$defs/RelativePath" }, "key": { "type": "string", "minLength": 1 } }
+        },
+        "entries": { "type": "object", "minProperties": 1, "propertyNames": { "$ref": "#/$defs/Name" }, "additionalProperties": { "$ref": "#/$defs/Entry" } }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "mirrorEnvironment", "runtimeEnvironment", "toolsPartition", "user", "maximumPathLength"],
+      "properties": {
+        "environment": { "$ref": "#/$defs/EnvironmentName" },
+        "mirrorEnvironment": { "$ref": "#/$defs/EnvironmentName" },
+        "runtimeEnvironment": { "$ref": "#/$defs/EnvironmentName" },
+        "toolsPartition": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Segment" } },
+        "user": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Segment" } },
+        "maximumPathLength": { "const": 256 }
+      }
+    },
+    "messages": { "type": "object", "minProperties": 1, "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" }, "additionalProperties": { "$ref": "#/$defs/Text" } }
+  },
+  "$defs": {
+    "Language": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+    "Name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "Segment": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\:*?\"<>|\\u0000-\\u001f]+$" },
+    "EnvironmentName": { "type": "string", "pattern": "^SEMIO_[A-Z0-9_]+$" },
+    "RelativePath": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\:*?\"<>|\\u0000-\\u001f.][^:*?\"<>|\\u0000-\\u001f]*$" },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["script", "prefix"],
+      "properties": {
+        "runtime": { "$ref": "#/$defs/Name" },
+        "script": { "$ref": "#/$defs/RelativePath" },
+        "prefix": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "executable", "probe", "download", "launch", "distributions"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "executable": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unix", "windows"],
+          "properties": { "unix": { "$ref": "#/$defs/Segment" }, "windows": { "$ref": "#/$defs/Segment" } }
+        },
+        "probe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["arguments"],
+          "properties": { "arguments": { "type": "array", "minItems": 1, "items": { "type": "string" } } }
+        },
+        "download": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base", "format", "member", "maximumExtractedBytes"],
+          "properties": {
+            "base": { "type": "string", "pattern": "^https://[a-z0-9.-]+/[A-Za-z0-9._/-]+$" },
+            "format": { "const": "zip" },
+            "member": { "type": "string", "pattern": "^[A-Za-z0-9._{}/-]+$" },
+            "maximumExtractedBytes": { "type": "integer", "minimum": 1048576, "maximum": 1073741824 }
+          }
+        },
+        "launch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["before", "options", "environment"],
+          "properties": {
+            "before": { "type": "array", "items": { "type": "string" } },
+            "options": { "type": "object", "propertyNames": { "enum": ["watch", "cwd"] }, "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "string" } } },
+            "environment": { "type": "object", "propertyNames": { "pattern": "^[A-Z][A-Z0-9_]*$" }, "additionalProperties": { "type": "string" } }
+          }
+        },
+        "distributions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/Distribution" } }
+      }
+    },
+    "Distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "arch", "libc", "archive", "bytes", "sha256"],
+      "properties": {
+        "platform": { "enum": ["win32", "darwin", "linux"] },
+        "arch": { "enum": ["x64", "arm64"] },
+        "libc": { "enum": ["any", "gnu", "musl"] },
+        "archive": { "type": "string", "pattern": "^[A-Za-z0-9._-]+\\.zip$" },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

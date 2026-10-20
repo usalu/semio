@@ -7,7 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGenerationV1, type NativeBuildJobV1, type NativeBuildPipelineV1, type NativeBuildPlanV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts";
 import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🌱️environment/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 
 
 //#region 🧩️ReleaseComponentPlan

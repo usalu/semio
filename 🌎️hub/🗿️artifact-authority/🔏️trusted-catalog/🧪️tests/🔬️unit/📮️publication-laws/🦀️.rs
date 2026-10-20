@@ -14,26 +14,26 @@ fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
         options.limits.max_depth = u16::try_from(limits["maxDepth"].as_u64().unwrap()).unwrap();
         options.limits.max_items = limits["maxItems"].as_u64().unwrap();
         options.limits.max_total_alloc = u64::MAX;
-        let decoded = os_pack::pack_rt::decode_wire_value_with_options(&bytes, &options);
+        let decoded = directory::os_pack::pack_rt::decode_wire_value_with_options(&bytes, &options);
         match row["grammar"]["outcome"].as_str().unwrap() {
             "accepted" => assert_eq!(serde_json::to_value(decoded.expect("admitted bounded value")).unwrap(), row["grammar"]["value"], "{}", row["id"]),
             "limit" => assert!(matches!(decoded, Err(os_store::PackError::LimitExceeded(_))), "{}: {decoded:?}", row["id"]),
             "malformed" => {
                 assert!(matches!(decoded, Err(os_store::PackError::Malformed { .. })), "{}: {decoded:?}", row["id"]);
-                assert!(matches!(os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
+                assert!(matches!(directory::os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
             }
             "truncated" => {
                 let expected = row["grammar"]["offset"].as_u64().unwrap();
                 assert_eq!(expected, bytes.len() as u64);
                 assert!(matches!(decoded, Err(os_store::PackError::Truncated(offset)) if offset == expected), "{}: {decoded:?}", row["id"]);
-                assert!(matches!(os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Truncated(offset)) if offset == expected), "default wire facade: {}", row["id"]);
+                assert!(matches!(directory::os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Truncated(offset)) if offset == expected), "default wire facade: {}", row["id"]);
             }
             outcome => panic!("unknown bounded wire outcome {outcome}"),
         }
     }
     let mut amplified = Vec::new();
-    os_pack::pack_rt::write_varint_u64(&mut amplified, 1);
-    os_pack::pack_rt::write_varint_u64(&mut amplified, 2 * 1024 * 1024);
+    directory::os_pack::pack_rt::write_varint_u64(&mut amplified, 1);
+    directory::os_pack::pack_rt::write_varint_u64(&mut amplified, 2 * 1024 * 1024);
     amplified.resize(amplified.len() + 2 * 1024 * 1024, b'x');
     amplified.extend_from_slice(&[1, 1, 0x11, 0x0c, 32]);
     for _ in 0..32 {

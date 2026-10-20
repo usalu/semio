@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "complete",
+      "fault": "none",
+      "stage": "final",
+      "completed": 10,
+      "accepted": true
+    },
+    {
+      "id": "create-exit",
+      "fault": "exit",
+      "stage": "create",
+      "completed": 0,
+      "accepted": false
+    },
+    {
+      "id": "source-exit",
+      "fault": "exit",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "controller-exit",
+      "fault": "exit",
+      "stage": "controller",
+      "completed": 6,
+      "accepted": false
+    },
+    {
+      "id": "transfer-signal",
+      "fault": "signal",
+      "stage": "gitTransfer",
+      "completed": 4,
+      "accepted": false
+    },
+    {
+      "id": "unknown-terminal",
+      "fault": "unknown",
+      "stage": "create",
+      "completed": 0,
+      "accepted": false
+    },
+    {
+      "id": "throw-undefined",
+      "fault": "undefined",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "throw-null",
+      "fault": "null",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "throw-false",
+      "fault": "false",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "throw-zero",
+      "fault": "zero",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "throw-empty",
+      "fault": "empty",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "missing-receipt",
+      "fault": "receipt",
+      "stage": "create",
+      "completed": 0,
+      "accepted": false
+    },
+    {
+      "id": "plan-refused",
+      "fault": "plan",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    },
+    {
+      "id": "changed-input",
+      "fault": "pins",
+      "stage": "gitCapture",
+      "completed": 2,
+      "accepted": false
+    },
+    {
+      "id": "final-refused",
+      "fault": "final",
+      "stage": "final",
+      "completed": 10,
+      "accepted": false
+    },
+    {
+      "id": "execution-error",
+      "fault": "error",
+      "stage": "source",
+      "completed": 1,
+      "accepted": false
+    }
+  ],
+  "streams": [
+    {
+      "id": "exact",
+      "chunks": [
+        "abc",
+        "\n"
+      ],
+      "limit": 4,
+      "accepted": true
+    },
+    {
+      "id": "over-limit",
+      "chunks": [
+        "abc",
+        "de"
+      ],
+      "limit": 4,
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "chunks": [],
+      "limit": 4,
+      "accepted": true
+    }
+  ],
+  "settlements": [
+    {
+      "fault": "undefined",
+      "accepted": false
+    },
+    {
+      "fault": "null",
+      "accepted": false
+    },
+    {
+      "fault": "false",
+      "accepted": false
+    },
+    {
+      "fault": "zero",
+      "accepted": false
+    },
+    {
+      "fault": "empty",
+      "accepted": false
+    },
+    {
+      "fault": "error",
+      "accepted": false
+    }
+  ],
+  "publications": [
+    {
+      "fault": "undefined",
+      "accepted": false
+    },
+    {
+      "fault": "null",
+      "accepted": false
+    },
+    {
+      "fault": "false",
+      "accepted": false
+    },
+    {
+      "fault": "zero",
+      "accepted": false
+    },
+    {
+      "fault": "empty",
+      "accepted": false
+    },
+    {
+      "fault": "error",
+      "accepted": false
+    }
+  ]
+}

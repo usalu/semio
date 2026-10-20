@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "portable": ["remote", "sandboxed", "local"],
+  "registeredNowhereOnTheHost": {"darwin": "linux-sandbox", "linux": "darwin-sandbox", "win32": "linux-sandbox"},
+  "runners": {"darwin": ["darwin-sandbox", "processwrapper-sandbox", "local"], "linux": ["linux-sandbox", "processwrapper-sandbox", "local"], "win32": ["local"]},
+  "refusal": "no strategy with that identifier was registered"
+}

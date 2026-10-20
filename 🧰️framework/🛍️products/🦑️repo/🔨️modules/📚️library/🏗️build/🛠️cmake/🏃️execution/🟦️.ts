@@ -2,11 +2,11 @@ import { windowsCompilerEnvironment } from "../🪟️toolchain/🟦️.ts";
 /** 🏃️ Execution: module exporting `runRepositoryCmakeV1`. */
 import{withRepositoryToolingStoreV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
-import{requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
-import{withCompilerState}from"@semio-tech/process/compiler-state";
-import{requireIssuedResourceControlInvocationV1}from"@semio-tech/process/routing";
-import type{ScriptInvocation}from"@semio-tech/process/routing";
+import{readNativeStorageReservationPolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{withCompilerState}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import{readNativeCallerAuthorityV1}from"../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{jsonSchemaSubsetValueEquals,validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

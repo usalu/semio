@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "parentRoot": "/fixture/m",
+  "cases": [
+    {
+      "name": "half-born state of the incident: reserved persistent-state charge, nothing committed",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "37fd31e586e75f487f64800de0cfaa12",
+            "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+            "kind": "persistent-state",
+            "bytes": 1075838976,
+            "phase": "reserved"
+          }
+        }
+      ],
+      "directory": "/fixture/m/persistent/development",
+      "expected": "persistent-state",
+      "recovery": {
+        "binding": false,
+        "intent": true,
+        "directoryPresent": true,
+        "expected": "resume"
+      }
+    },
+    {
+      "name": "the same state after the birth committed",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "37fd31e586e75f487f64800de0cfaa12",
+            "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+            "kind": "persistent-state",
+            "bytes": 1075838976,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "37fd31e586e75f487f64800de0cfaa12"
+        }
+      ],
+      "directory": "/fixture/m/persistent/development",
+      "expected": "persistent-state",
+      "recovery": {
+        "binding": true,
+        "intent": true,
+        "directoryPresent": true,
+        "expected": "resume"
+      }
+    },
+    {
+      "name": "persistent namespace without any persistent-state charge is unfunded",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        }
+      ],
+      "directory": "/fixture/m/persistent/development",
+      "expected": "unfunded",
+      "recovery": null
+    },
+    {
+      "name": "persistent-state charge but a directory outside the reserved namespace is unfunded",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "37fd31e586e75f487f64800de0cfaa12",
+            "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+            "kind": "persistent-state",
+            "bytes": 1075838976,
+            "phase": "reserved"
+          }
+        }
+      ],
+      "directory": "/fixture/m/other/development",
+      "expected": "unfunded",
+      "recovery": null
+    },
+    {
+      "name": "a nested directory below the namespace entry is unfunded",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "37fd31e586e75f487f64800de0cfaa12",
+            "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+            "kind": "persistent-state",
+            "bytes": 1075838976,
+            "phase": "reserved"
+          }
+        }
+      ],
+      "directory": "/fixture/m/persistent/development/deeper",
+      "expected": "unfunded",
+      "recovery": null
+    },
+    {
+      "name": "a funded child keeps its own accounting",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "5ed6027d6a7d11b5bb252ecc154f239e",
+            "owner": "repository:nx-namespace",
+            "kind": "compiler-state",
+            "bytes": 67239936,
+            "phase": "reserved",
+            "child": {
+              "directory": "/fixture/m/aaaaaaaaaaaaaaaaaaaab79e3376ad394ca713cf/native",
+              "filesystemBytes": 66060288,
+              "maximumPhysicalBytes": 67108864,
+              "policySha256": "c07a5c3c5bdf1fc49339d3e845f4cad2b8ca8d85b2242a5b04cdaeb63df13b86",
+              "version": 1,
+              "allocation": "5ed6027d6a7d11b5bb252ecc154f239e",
+              "parentIdentity": "[1,2,3,4]"
+            }
+          }
+        }
+      ],
+      "directory": "/fixture/m/aaaaaaaaaaaaaaaaaaaab79e3376ad394ca713cf/native",
+      "expected": "funded",
+      "recovery": null
+    },
+    {
+      "name": "an unknown directory with only the store charge is unfunded",
+      "journal": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "1b8a210e3c669963f6e3cb22ca0f7550",
+            "owner": "repository:products-store",
+            "kind": "artifact-publication",
+            "bytes": 24692916224,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "1b8a210e3c669963f6e3cb22ca0f7550"
+        }
+      ],
+      "directory": "/fixture/m/zzzz/native",
+      "expected": "unfunded",
+      "recovery": null
+    }
+  ]
+}

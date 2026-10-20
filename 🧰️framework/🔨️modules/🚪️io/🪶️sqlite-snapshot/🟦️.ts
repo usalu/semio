@@ -1,5 +1,5 @@
-import { hostContinuations } from "@semio-tech/framework-async/continuation";
-import {textUtf8ByteLength} from "@semio-tech/value-ts/text";
+import { hostContinuations } from "../../⏳️async/📦️packages/🟦️typescript/🪃️continuation/🟦️.ts";
+import {textUtf8ByteLength} from "../../🌱️value/📦️packages/🟦️typescript/📝️text/🟦️.ts";
 /** 🪶️ Dependency-free relational SQLite 3 physical engine. @see https://sqlite.org/fileformat.html */
 import { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 export { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";

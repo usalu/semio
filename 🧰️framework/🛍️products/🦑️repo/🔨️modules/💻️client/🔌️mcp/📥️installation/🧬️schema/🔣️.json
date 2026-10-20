@@ -157,6 +157,55 @@
           ]
         }
       }
+    },
+    "BuildPublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "mode",
+        "binary",
+        "destination",
+        "rejected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "darwin",
+            "win32"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "binary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "destination": {
+          "enum": [
+            "fresh-nested",
+            "default",
+            "same-owner",
+            "unowned-empty",
+            "foreign-owner",
+            "symlink"
+          ]
+        },
+        "rejected": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

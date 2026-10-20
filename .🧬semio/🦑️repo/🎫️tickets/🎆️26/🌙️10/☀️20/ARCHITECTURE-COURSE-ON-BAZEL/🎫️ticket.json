@@ -1,0 +1,22 @@
+{
+  "title": "Architecture Course on Bazel",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Get the architecture course (@teaching/architecture-course and its dependency closure: proctor, course product, pets, assets, tokens) running and building efficiently over Bazel (`bun repo --tool=bazel run ...`) as part of the new build system: every course target (build, test, typecheck, check, dev, dev-site, publish, test-e2e) executes through the Bazel backend on macOS, Linux and Windows; warm rebuilds are cache hits; selected edits invalidate only affected actions; progress and cancellation work. Related: tickets 26/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL, 26/10/18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN (wave 1020b Bazel executors) and 26/10/02/TEACHING-ARCHITECTURE-DEPLOY-READY. Fleet: Opus 5.5 coordinator, Sonnet 5.5 High executors, Haiku 5.5 High auditors.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "3ad96927-5270-49b7-bb64-6ff2d67cecf6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-20 15:04:29",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the architecture course (@teaching/architecture-course and its dependency closure: proctor, course product, pets, assets, tokens) running and building efficiently over Bazel (`bun repo --tool=bazel run ...`) as part of the new build system: every course target (build, test, typecheck, check, dev, dev-site, publish, test-e2e) executes through the Bazel backend on macOS, Linux and Windows; warm rebuilds are cache hits; selected edits invalidate only affected actions; progress and cancellation work. Related: tickets 26/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL, 26/10/18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN (wave 1020b Bazel executors) and 26/10/02/TEACHING-ARCHITECTURE-DEPLOY-READY. Fleet: Opus 5.5 coordinator, Sonnet 5.5 High executors, Haiku 5.5 High auditors.",
+      "effort": "high"
+    }
+  ]
+}

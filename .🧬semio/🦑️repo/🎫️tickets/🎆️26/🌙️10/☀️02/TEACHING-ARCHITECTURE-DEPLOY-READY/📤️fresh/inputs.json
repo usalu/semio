@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "status": "held-candidate-unrun",
+  "cases": 50,
+  "files": [
+    {
+      "path": "🌱️linux/git.schema.json",
+      "bytes": 11684,
+      "sha256": "7afc00cc84a49d1eb3ac6c8e80f0ec7f0ed53e134ce37b3e97683676c43743dd"
+    },
+    {
+      "path": "🌱️linux/git.ts",
+      "bytes": 11001,
+      "sha256": "e5b888a348c90dd052268355f24d0bceb19100b953ee6ce2f60d81673ad7d515"
+    },
+    {
+      "path": "🌱️linux/schema.json",
+      "bytes": 16112,
+      "sha256": "13ee7028e2d212d4ab6c7348dd5c3a592f930f38cf8560f1e881aac03eacff55"
+    },
+    {
+      "path": "🌱️linux/script.ts",
+      "bytes": 22123,
+      "sha256": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d"
+    },
+    {
+      "path": "📤️fresh/cases.json",
+      "bytes": 4833,
+      "sha256": "d0778a558594d7574130eda94cfbb417acfcf25bbbb8da18bd4b773b06fcae7e"
+    },
+    {
+      "path": "📤️fresh/core.ts",
+      "bytes": 6591,
+      "sha256": "eb740d8cbcf8d76713ca9083e61fb2e45e444a0d34596368d40632a8e835d48a"
+    },
+    {
+      "path": "📤️fresh/entry.ts",
+      "bytes": 16902,
+      "sha256": "985c505ca5b34f5d12b711123b93f6f5871eb474c27417bb079bb76651173061"
+    },
+    {
+      "path": "📤️fresh/modes.ts",
+      "bytes": 1134,
+      "sha256": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163"
+    },
+    {
+      "path": "📤️fresh/oracle.py",
+      "bytes": 1572,
+      "sha256": "f9191846ab7b80ec3be01ad2900694470c8c067218a70055619ddf15d55b9bc5"
+    },
+    {
+      "path": "📤️fresh/promotion.ts",
+      "bytes": 3967,
+      "sha256": "37df5b90be796e092212d0b94b443091cf66af58f7d8fa77642dc66013e618ee"
+    },
+    {
+      "path": "📤️fresh/schema.json",
+      "bytes": 6228,
+      "sha256": "cb7101668d5b5688f9d52c42e76a3644ce0e2fd570a9eaed773cdc0a30fa7398"
+    },
+    {
+      "path": "📤️fresh/tests.ts",
+      "bytes": 17477,
+      "sha256": "55e8ca1dd970ad108261a3822eea023fa09d3de40dae8d0d3b2192f97f5dbaf3"
+    },
+    {
+      "path": "🔬️final/core.ts",
+      "bytes": 19438,
+      "sha256": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5"
+    },
+    {
+      "path": "🔬️final/entry.ts",
+      "bytes": 5674,
+      "sha256": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85"
+    },
+    {
+      "path": "🔬️final/integration.ts",
+      "bytes": 9104,
+      "sha256": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25"
+    },
+    {
+      "path": "🚀️run/📜️script.ts",
+      "bytes": 51934,
+      "sha256": "70b595102d215379bccbd23877a49e52b95ca88957fa739ec7f6b183bbc7bc98"
+    }
+  ]
+}

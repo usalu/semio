@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "proctor",
+    "proxy",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "proctor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "config"
+      ],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^ghcr[.]io/usalu/architecture-course-proctor:[a-z0-9-]+$"
+        },
+        "config": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      }
+    },
+    "proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "reference",
+        "config"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "pattern": "^caddy:[0-9.]+@sha256:[a-f0-9]{64}$"
+        },
+        "reference": {
+          "type": "string",
+          "pattern": "^caddy:sha256-[a-f0-9]{64}$"
+        },
+        "config": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "stable",
+              "dirty-revision",
+              "retag-before-save",
+              "retag-after-save",
+              "aba-during-save",
+              "wrong-config-bytes",
+              "missing-proctor-tag",
+              "missing-caddy-alias",
+              "duplicate-tag",
+              "duplicate-config-entry",
+              "missing-config",
+              "truncated-archive",
+              "bad-header-checksum",
+              "timestamp-pax",
+              "path-pax",
+              "hybrid-consistent",
+              "hybrid-wrong-config",
+              "hybrid-wrong-tag",
+              "cancel-before-save",
+              "cancel-during-verification"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

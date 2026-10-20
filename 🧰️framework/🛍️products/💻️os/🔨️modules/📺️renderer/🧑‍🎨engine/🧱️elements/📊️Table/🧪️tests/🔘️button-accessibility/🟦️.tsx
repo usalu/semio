@@ -4,7 +4,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { chromium } from "playwright";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createAccessibilityMirror } from "@semio-tech/framework/os/modules/renderer/engine/targets/wgpu/accessibility-mirror";
+import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
 import { TableHost } from "../../🟦️.tsx";
 import fixture from "../🧫️fixtures/🔘️button-accessibility/🔣️.json" with { type: "json" };
 

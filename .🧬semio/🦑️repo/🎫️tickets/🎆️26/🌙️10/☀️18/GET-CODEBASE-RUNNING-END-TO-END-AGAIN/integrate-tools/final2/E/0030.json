@@ -1,0 +1,76 @@
+{
+  "name": "@semio-tech/s-flow-composition-rs",
+  "root": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+  "sourceRoot": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:test",
+    "scope:s"
+  ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🔌️port-sides/**/*"
+    ]
+  },
+  "targets": {
+    "source-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "port-sides-test": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": false
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
+    }
+  }
+}

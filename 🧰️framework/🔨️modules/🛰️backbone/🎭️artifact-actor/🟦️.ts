@@ -2,8 +2,8 @@
 
 import { type RetainedCloneGrant } from "@semio-tech/value-ts/retained-clone/wire";
 import type { ArtifactFrontier } from "../../📄️document/🪪️scope/🟦️.ts";
-import type { ArtifactPresencePeer, MutationEnvelope } from "@semio-tech/framework-replication";
-import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
+import type { ArtifactPresencePeer, MutationEnvelope } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
+import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import type { DocumentScope } from "../../📇️directory/🟦️.ts";
 import { replicationPackCodec } from "../../🎁️packs/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, type CommandAckOutcome, commandAckOutcomeOfValueV1, commandBatchIdOfValueV1, decodeDocumentArchiveBytes, DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../🪢️wire-contracts/🟦️.ts";

@@ -1,4 +1,5 @@
 import{createIssuedResourceControlV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import{requireToolingPublicationValueV1}from"../../../../../🧹️retention/📏️headroom/🟦️.ts";
 import{withBuildTestInvocationV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{test,expect}from"bun:test";
@@ -19,7 +20,7 @@ import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 /** 🔬️ Asks independent SQLite connections whether the exact registry and base inodes remain excluded. */
 async function exclusions(workspace:string,store:RepositoryToolingStoreV1,snapshot:string):Promise<{registry:boolean;base:boolean}>{
- const python=Bun.which("python3")??Bun.which("python");if(!python)throw Error("Independent system SQLite oracle required");
+ const python=testPythonV1()??Bun.which("python");if(!python)throw Error("Independent system SQLite oracle required");
  const probe="import sqlite3,sys,json\nresult={}\nfor key,path,statement in [('registry',sys.argv[1],'BEGIN'),('base',sys.argv[2],'BEGIN EXCLUSIVE')]:\n c=sqlite3.connect('file:'+path+'?mode=rw',uri=True,timeout=0)\n try:\n  c.execute(statement);c.execute('SELECT version,resource FROM semio_resource_lease').fetchall();result[key]=False\n except sqlite3.OperationalError as e:\n  if str(e)!='database is locked':raise\n  result[key]=True\n finally:c.close()\nprint(json.dumps(result))";
  const directory=join(workspace,".cache/b/l/m/data");return JSON.parse(await captureOwnedCommandV1(python,["-c",probe,resourceLeasePathV1(directory,"nx-tooling-provision"),resourceLeasePathV1(directory,"nx-sdk-snapshot:"+snapshot)],workspace,{control:store.control,env:store.environment}));
 }

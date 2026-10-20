@@ -21,3 +21,9 @@ test("the same named planner reuses admitted base order for every neutral origin
  for(const row of edits.cases){const original=source(row.base),index=admit(original);const input=source(row.base,row.removed,row.modified,row.added,row.indices);const plain=new NamedEditPlan(input.shape);const accepted=settle(plain,input);if(!index){expect(accepted).toBe(false);continue;}const joined=index.source(input),plan=new NamedEditPlan(joined.shape,index);expect(settle(plan,joined)).toBe(accepted);if(accepted){expect(plan.plan.outputLength).toBe(plain.plan.outputLength);for(let ordinal=0;ordinal<row.modified.length;ordinal++)expect(plan.modifiedIndex(ordinal)).toBe(plain.modifiedIndex(ordinal));}expect(plan.baseAdmissionActions).toBe(0);}
  console.log("[DEBUG] Admitted base key order drives the original named/indexed planner for all neutral sparse edits with zero base admission actions");
 });
+
+test("retirement work bounds scale with every physical original row and retain a separate idle bound",()=>{
+ const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,retirementWork:{...fixture.retirementWork,turnsPerRow:1}})).toBe(false);
+ const db=new Database(":memory:");try{for(const rows of fixture.lengths){const expected=fixture.retirementWork.fixedTurns+rows*fixture.retirementWork.turnsPerRow;expect(Number.isSafeInteger(expected)).toBe(true);expect(db.query("SELECT ? + ? * ? AS turns").get(fixture.retirementWork.fixedTurns,rows,fixture.retirementWork.turnsPerRow)).toEqual({turns:expected});expect(expected).toBeGreaterThan(rows*128);}expect(fixture.retirementWork.maximumIdleTurns).toBeLessThan(fixture.retirementWork.fixedTurns);}finally{db.close();}
+ console.log("[DEBUG] Retirement work scales through all65537 original rows; unchanged public receipt/quote observations retain an independent finite idle bound");
+});

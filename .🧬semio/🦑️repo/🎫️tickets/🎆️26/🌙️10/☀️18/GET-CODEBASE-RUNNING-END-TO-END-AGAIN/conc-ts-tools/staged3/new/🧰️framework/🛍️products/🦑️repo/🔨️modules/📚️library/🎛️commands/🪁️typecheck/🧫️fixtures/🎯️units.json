@@ -1,0 +1,79 @@
+{
+  "accepted": [
+    {
+      "words": [
+        "tsconfig.json"
+      ],
+      "selection": {
+        "project": "tsconfig.json",
+        "only": [],
+        "jobs": 1,
+        "replan": false
+      }
+    },
+    {
+      "words": [
+        "✏️s/tsconfig.json",
+        "--jobs",
+        "4",
+        "--only",
+        "🧰️framework/🔨️modules/🏃️process",
+        "--replan"
+      ],
+      "selection": {
+        "project": "✏️s/tsconfig.json",
+        "only": [
+          "🧰️framework/🔨️modules/🏃️process"
+        ],
+        "jobs": 4,
+        "replan": true
+      }
+    }
+  ],
+  "rejected": [
+    [],
+    [
+      "../outside.json"
+    ],
+    [
+      "C:/outside.json"
+    ],
+    [
+      "/outside.json"
+    ],
+    [
+      "source.ts"
+    ],
+    [
+      "tsconfig.json",
+      "--jobs",
+      "0"
+    ],
+    [
+      "tsconfig.json",
+      "--jobs",
+      "9"
+    ],
+    [
+      "tsconfig.json",
+      "--jobs",
+      "x"
+    ],
+    [
+      "tsconfig.json",
+      "--only"
+    ],
+    [
+      "tsconfig.json",
+      "--only",
+      "a",
+      "--only",
+      "a"
+    ],
+    [
+      "tsconfig.json",
+      "--outDir",
+      "elsewhere"
+    ]
+  ]
+}

@@ -92,7 +92,7 @@ where
         let outcome = <Mutation as super::Mutation<P>>::diff(op, source.snapshot());
         let applicable = outcome.is_applicable(protocol::MergePolicy::default());
         let (diff, _) = outcome.into_parts();
-        let next = applicable.then(|| semio_framework_os_spr::apply_diff(&diff, source.snapshot()).ok()).flatten();
+        let next = applicable.then(|| semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot()).ok()).flatten();
         <<Mutation as super::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
         Ok(next.map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))))
     }
@@ -101,7 +101,7 @@ where
     pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
         let (diff, mut messages) = <Mutation as super::Mutation<P>>::diff(op, source.snapshot()).into_parts();
-        let applied = semio_framework_os_spr::apply_diff(&diff, source.snapshot());
+        let applied = semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot());
         <<Mutation as super::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
         let next = match applied {
             Ok(owner) => Some(self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))),

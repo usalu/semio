@@ -1,0 +1,418 @@
+[
+ {
+  "id": "s01-imports",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "import {withRepositoryCacheStoreV1,requireRepositoryCacheStoreV1,requireRepositoryCacheStoreReadCustodyV1,type RepositoryCacheStoreV1} from ",
+  "oldSha256": "c6773eb028a5ff6c78f0bf457aa29a522243e9d4c326467bfe75eafc6153bd83"
+ },
+ {
+  "id": "s02-concurrent-imports",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "import {acquireConcurrentLeaseV1,concurrentFreeFractionV1",
+  "oldSha256": "44cb02b87f22e5d91e48413857528aa9e94b3456a0d7ad079676a2392ab0b4d1"
+ },
+ {
+  "id": "s02b-rename-import",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "chmodSync,renameSync,type Stats",
+  "oldSha256": "6db699dc0e2461f4a19f145b3e2a2a16c5251f13b927af4c77b63630a0f673bf"
+ },
+ {
+  "id": "s03-frame-type",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "build:ResourceLease;gate:ResourceLease|null;stop:AbortController",
+  "oldSha256": "b7fe773d9e7a139a1edd7046608dc2e7ad54c8e979b8c3c3fc5a0b3aa79d1be0"
+ },
+ {
+  "id": "s04-frame-custody",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "concurrentLeaseResourceV1(\"build\",frame.workspace)",
+  "oldSha256": "fd850b0eff0a3718027f6b4c35cc153823535b328a37bf2e8e44dbc559d5b28c"
+ },
+ {
+  "id": "s05-writer-entries",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "export function withJavascriptDependencyReceiptStorageV1<T>(",
+  "oldSha256": "2ae81d99a1aa49f75e7a1dc93192539f1d1e809fbc7a3bbd14aafbcf3558f627"
+ },
+ {
+  "id": "s06-frame-release",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "for(const lease of [frame.gate,frame.build])if(lease)try{lease.release();}",
+  "oldSha256": "64af7c5b6d3c674533675c0779a71a6e773d52417d9640d44a1339261e28a7bf"
+ },
+ {
+  "id": "s07-generations-entry",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "runJavascriptDependencyStoreGenerationsV1(workspace,store,control,fields as JavascriptDependencyStoreSelectionV1)",
+  "oldSha256": "d6ba89823974eeaa6a2cf78a32b1ead90f14f4a357b308e0ea0d6d6523aea0d3"
+ },
+ {
+  "id": "s08-orchestrator",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "async function runJavascriptDependencyStoreGenerationsV1(",
+  "oldSha256": "33d97aaacb6b930527cc54787ff9c4d91e99b1498afa815373c29372a9ba4d88"
+ },
+ {
+  "id": "s09-producer-signature",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "selection:JavascriptDependencyStoreSelectionV1,phase:\"build\"|\"publish\"):Promise<JavascriptDependencyProducedV1>{",
+  "oldSha256": "3cdd6cc07be24f1c619c835dc02b2ef1ec8926c5cc7364e686166513a8e1885d"
+ },
+ {
+  "id": "s10-sync-gate",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "gateContext=selection.kind===\"all\"&&phase===\"build\"?await",
+  "oldSha256": "2798f8fd97ada40ddffda4fb06904e91c693a9cf7cccafc55bf9ec67421fa1a6"
+ },
+ {
+  "id": "s11-collect-before-build",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "if(phase===\"build\")await collectJavascriptDependencyStoreGenerationsV1(workspace,store,control,Object.freeze({state:\"published\"",
+  "oldSha256": "8fb001e481dd28794e17b123de088d5374e4558acb39e5d8b25b47baec783e16"
+ },
+ {
+  "id": "s12-phase-guards",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "if(phase===\"build\"&&!fresh.length)return;",
+  "oldSha256": "42cb1d570dc7f813e32b7b55239b3157a6a4476fb39f0313d5f80ba59696ab2a"
+ },
+ {
+  "id": "s13-build-stops-before-bindings",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await fence();\n if(phase===\"build\")return;",
+  "oldSha256": "ab3bc0bedd89ca4b1f253ee9f0625935a458df05aae4aee478b732e9ede02c51"
+ },
+ {
+  "id": "s14-pointer-switch",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "produced=Object.freeze({state:\"published\"",
+  "oldSha256": "493937bf56b788de63e61ed65ad020c3339ebeadc764ad46c86cff8139c29c39"
+ },
+ {
+  "id": "s15-producer-returns",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await store.recheck();checkpoint();\n return produced;\n}",
+  "oldSha256": "e32240f52a1be59d47d674afa4a16235a483265a68fdd5990110f7085d6548d1"
+ },
+ {
+  "id": "s16-reader-pins",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "withConcurrentPinsV1(repositoryLeaseDirectoryV1(workspace),resolve(workspace),before.receipts",
+  "oldSha256": "e7a7821b72d41773ebd0484467fe5b0959e4f70940511658f8b7a3d802c45de7"
+ },
+ {
+  "id": "s17-generation-writer-lease",
+  "group": 1,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "concurrentLeasePortsV1(repositoryLeaseDirectoryV1(workspace),control,control.signal,undefined,javascriptDependencyConcurrencyReportV1(control)),concurrentProtocolV1.wait.maximumWriterMilliseconds);if(!writer)throw Error(\"Dependency generation writer lease required\")",
+  "oldSha256": "786fce26ccd8d99684917d65dc52670e6b4c047920086d8892570c81ccd9def6"
+ },
+ {
+  "id": "b01-receipt-storage-import",
+  "group": 1,
+  "target": "bootstrap",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+  "marker": "const {withJavascriptDependencyStorageV1,withJavascriptDependencyReceiptStorageV1,",
+  "oldSha256": "800954611ae84252a69d056d508a82061dafc440e9b5e668b6fac6ffeaef0db1"
+ },
+ {
+  "id": "b02-receipt-storage-use",
+  "group": 1,
+  "target": "bootstrap",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+  "marker": "publishReceipt?withJavascriptDependencyReceiptStorageV1(workspace,invocation,phaseControl,body)",
+  "oldSha256": "d7c4e5ecbb6b2a21a7f9d787082fdd0b7b6afc4b982c64c7bb220653ed9bdba9"
+ },
+ {
+  "id": "b03-ensure-coalesces",
+  "group": 1,
+  "target": "bootstrap",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+  "marker": ".then(()=>undefined),{ready:recheck});",
+  "oldSha256": "9081dabb0d5608d87b5444726f085d89191d68a89a6a85d859ea835d09240162"
+ },
+ {
+  "id": "t01-platform-port",
+  "group": 1,
+  "target": "platform-test",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌐️platform/🟦️.ts",
+  "marker": "withRepositoryCacheStoreV1:async()=>{stores++;}",
+  "oldSha256": "a88849c26fc06dca06962d51c514ada063430002691bba3d014a02031594913d"
+ },
+ {
+  "id": "t02-reading-port",
+  "group": 1,
+  "target": "reading-test",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+  "marker": "withRepositoryCacheStoreV1:(...args:unknown[])=>{storeOpens++;throw Error(\"Source observation port",
+  "oldSha256": "b92924ff785bb926ff8f5d73a187c9b2fc74c0e0120451ce0d8e105addbf53af"
+ },
+ {
+  "id": "t03-reading-no-queued-request",
+  "group": 1,
+  "target": "reading-test",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+  "marker": "expect(storeOpens).toBe(vector.storeOpens);expect(Boolean((db.query(",
+  "oldSha256": "5bbc4fa9fc193def70a4f5898f95d861d7c5afc4505ff3e3c91e561d2d796aa8"
+ },
+ {
+  "id": "t04-reading-queued-variable",
+  "group": 1,
+  "target": "reading-test",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+  "marker": "let storeOpens=0,accepted=true;const ports=",
+  "oldSha256": "c7b279ba20f0c7f2ec36aec3171d47c1c0388abfa0071244f5d03bfd189b8a80"
+ },
+ {
+  "id": "t05-reading-writer-law",
+  "group": 1,
+  "target": "reading-test",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+  "marker": "not.toContain(\"Maintenance\");",
+  "oldSha256": "b475e805c9b73c0427e722a276e5dd13dc210d9dba03c64e8c57c5a50ffd6527"
+ },
+ {
+  "id": "r01-suite-registry",
+  "group": 1,
+  "target": "script-commands",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",
+  "marker": "\"javascript-concurrent-generations\"",
+  "oldSha256": "89f0f74c3ef1a72719ed88a971b217bedacc285cfec0be7eee26917bfb3af639"
+ },
+ {
+  "id": "r02-suite-target",
+  "group": 1,
+  "target": "caching-project",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+  "marker": "\"test-javascript-concurrent-generations\": {",
+  "oldSha256": "6e8ab6cfe707d8427529c019d8572450930c336566d928eb0ccb86394b8b1d5a"
+ },
+ {
+  "id": "g2-01-core-imports",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "import {concurrentAdmissionV1,concurrentCollectionV1",
+  "oldSha256": "b23d088d5f9e3c554472c5f19dc65ff870ab8169ac7d802cb3f9517bdb3d9253"
+ },
+ {
+  "id": "g2-02-glue-imports",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "import {acquireConcurrentLeaseV1,acquireConcurrentPinsV1,",
+  "oldSha256": "4a8ed01412e3e8abd20c95f5a83697e917d8c186874c2f0326ceac06fc6c7749"
+ },
+ {
+  "id": "g2-03-frame-type",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "gate:ResourceLease|null;pins:ResourceLease[];built:Map<string,number>;",
+  "oldSha256": "8457cf213c508da681822abc88b1896373b6bf3ba4d785e487cb6ff8a7209a0b"
+ },
+ {
+  "id": "g2-04-frame-fields",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "build,gate:null,pins:[],built:new Map(),stop,live:true",
+  "oldSha256": "8767e8007cec31100256b057b348b0eb9b6ace10aa470f529e067a75511e0aab"
+ },
+ {
+  "id": "g2-05-frame-release",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "for(const lease of [frame.gate,...frame.pins.reverse(),frame.build])if(lease)",
+  "oldSha256": "e6fab6330d6e35d15d95b2e29029a221b023687da9b90d54682f4fb3fa9ae5f3"
+ },
+ {
+  "id": "g2-06-produced-type",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "type JavascriptDependencyProducedV1=Readonly<{state:\"current\"|\"ready\"|\"published\"}>;",
+  "oldSha256": "56148b8c0768680d61b79f1a309f03829bbf5a17329fcdc30cf800be48258218"
+ },
+ {
+  "id": "g2-07-produced-ready",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "Object.freeze({state:\"ready\"})",
+  "oldSha256": "9179778737434561b45208781b7818506c83b65868048294c467014ab3022377"
+ },
+ {
+  "id": "g2-08-produced-current",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "return Object.freeze({state:\"current\"});",
+  "oldSha256": "19d0c1f1e494a724c099cf84b819a69989f7945943b0a73e394e49cf2a0ebf6b"
+ },
+ {
+  "id": "g2-09-pointer-bytes-and-produced",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "frame.built.get(scope)??previous?.bytes??0);",
+  "oldSha256": "c7a8793309d2867bb8de890ed48a0f5b61ce8b84826a9ba3008e80a6feb4cef1"
+ },
+ {
+  "id": "g2-10-produced-published",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "produced=Object.freeze({state:\"published\"});}",
+  "oldSha256": "230e94e345f56dab17b33933d4f46b9c8502a6e2e9817d0bc5e632d30e641e5e"
+ },
+ {
+  "id": "g2-11-pin-before-anything",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await pinJavascriptDependencyGenerationsV1(frame,selected.map(row=>row.plan.generation));",
+  "oldSha256": "23b157cafe5847eb94221f4ba553716cca365e7ce20d08a78802d85dc7596fb8"
+ },
+ {
+  "id": "g2-12-admit-before-each-install",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await admitJavascriptDependencyGenerationV1(workspace,store,control,row.scope);",
+  "oldSha256": "a81d7037ac4442eda8c2ff5bb4980f78fb09fe201f202b3c48214f7b71f2b789"
+ },
+ {
+  "id": "g2-13-measure-built-bytes",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "frame.built.set(row.scope,Math.max(0,freeBefore-concurrentFreeBytesV1(store.root)));",
+  "oldSha256": "bc10982bc0d856f41ec603b75cec95ea3c3af25968bec45ecc2d0867e82a94ec"
+ },
+ {
+  "id": "g2-14-report-numbers",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "if(event.event===\"refused\")return;",
+  "oldSha256": "302941c411e6aee0d7edd0dfe2d0ef6199bbd178d1a146d1d0fe179b584ceb3d"
+ },
+ {
+  "id": "g2-15-orchestrator-publish",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "try{await runJavascriptDependencyStoreProducerV1(workspace,store,control,selection,\"publish\");}",
+  "oldSha256": "524da352aa0a36288a8db2bb5a6624d742aa71b5b8cd62ec4fc5e97fbad15104"
+ },
+ {
+  "id": "g2-16-orchestrator-locals",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "frame.gate=gate;let failed=false,failure:unknown;",
+  "oldSha256": "e8f5f169a4ee696b6f6df8b4ee1d0d94e76c150e5668c4580479d86e7d7ec9fd"
+ },
+ {
+  "id": "g2-17-orchestrator-collect",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await collectJavascriptDependencyGenerationsV1(workspace,store,control,{});",
+  "oldSha256": "047dcbbb25a8a1fd1fec696125b32498ee128b8df4801a2ca88c4813bba7966e"
+ },
+ {
+  "id": "g2-18-generation-scoped-maintenance",
+  "group": 2,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "async function collectJavascriptDependencyGenerationsV1(",
+  "oldSha256": "fed3165c72ef68b6160af2520a6528ccf4ad1982feb9486b5d1dd9d712fb227e"
+ },
+ {
+  "id": "g3-01-core-import",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "concurrentRequiredImageBytesV1,",
+  "oldSha256": "1fef5a938bfe0ce1a1f3182990112acd7971ec4b3b11ce537e85e21fac315efc"
+ },
+ {
+  "id": "g3-02-glue-import",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "acquireConcurrentPinsV1,sweepConcurrentTemporariesV1,",
+  "oldSha256": "74163f23c5101692c71639a3c38c6f0d68897211335d96266d223678fa4f4587"
+ },
+ {
+  "id": "g3-03-budget-import",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "import {repositoryCacheBudgetV1}from",
+  "oldSha256": "496fd628a82719d8eb66915921309685d8f0b6cc3923287a2beb7af5061f904c"
+ },
+ {
+  "id": "g3-04-budget-function",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "async function requireJavascriptDependencyBudgetV1(",
+  "oldSha256": "59b3117aad5e770131f01a131376354b48aac8bf296f829838bb089a8a04a7ff"
+ },
+ {
+  "id": "g3-05-budget-first",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "await requireJavascriptDependencyBudgetV1(workspace,control);",
+  "oldSha256": "376fe7d60dbd6e75b74f1ab3f0371af3f16f00e923a516c33ef13f8d0f71bddc"
+ },
+ {
+  "id": "g3-06-sweep-scratch",
+  "group": 3,
+  "target": "storage",
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "marker": "sweepConcurrentTemporariesV1(store.root,Date.now()",
+  "oldSha256": "833c01caa4761a4542bb116b745ba6b2bd0df5cd743127aab52b3128eaf78863"
+ }
+]

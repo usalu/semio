@@ -199,7 +199,7 @@ use crate::tests::{check_in_cold_pair, check_in_commit, check_in_fixture, check_
         let _ = authorize_test_admin(&mut state, email).await;
         let admin = issue_test_session(&state, email).await;
         let owner = issue_test_session(&state, "retained-short-owner@example.test").await;
-        let space = create_space_for_test(&state, &owner.user_id, "Retained Short", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let space = create_space_for_test(&state, &owner.user_id, "Retained Short", directory::os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         let scope = DocumentScope::new(&space, "retained-short-document");
         announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
         let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
@@ -689,7 +689,7 @@ use crate::tests::{check_in_cold_pair, check_in_commit, check_in_fixture, check_
                 matches!(
                     &delivered,
                     DirectoryStreamMessage::Event { event }
-                        if matches!(event.body, os_directory::DirectoryEventBody::ArtifactCheckpointPublished { ref checkpoint }
+                        if matches!(event.body, directory::os_directory::DirectoryEventBody::ArtifactCheckpointPublished { ref checkpoint }
                             if checkpoint.scope == DocumentScope::new(STUDIO, &order_document) && checkpoint.checkpoint_id == delivered_checkpoint.checkpoint_id)
                 ),
                 "the admitted scoped send is the exact published checkpoint: {delivered:?}"

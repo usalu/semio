@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated Command Import Scope",
+  "definitions": {
+    "policy": {
+      "const": {
+        "closureRole": "compiled-command-modules",
+        "evidence": "exact-returned-closure-compiledNames",
+        "maximumDiagnosticIdentityCharacters": 256,
+        "selfEdge": "refuse"
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "closure",
+        "compiled",
+        "imports"
+      ],
+      "properties": {
+        "closure": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1024
+        },
+        "compiled": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 1024
+        },
+        "imports": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "producer"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "producer": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "producer"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

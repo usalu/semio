@@ -45,5 +45,42 @@
     64,
     256,
     1024
+  ],
+  "bodyReservations": [
+    {
+      "bodyBytes": 4096,
+      "metadataBytes": 33,
+      "childBytes": 4063
+    },
+    {
+      "bodyBytes": 4063,
+      "metadataBytes": 8,
+      "childBytes": 4055
+    },
+    {
+      "bodyBytes": 40,
+      "metadataBytes": 41,
+      "childBytes": 0
+    },
+    {
+      "bodyBytes": 41,
+      "metadataBytes": 41,
+      "childBytes": 0
+    },
+    {
+      "bodyBytes": 0,
+      "metadataBytes": 0,
+      "childBytes": 0
+    },
+    {
+      "bodyBytes": 512,
+      "metadataBytes": 33,
+      "childBytes": 479
+    },
+    {
+      "bodyBytes": 479,
+      "metadataBytes": 8,
+      "childBytes": 471
+    }
   ]
 }

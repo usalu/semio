@@ -1,0 +1,187 @@
+[
+  {
+    "name": "a none command with a relative closure and builtins is clean",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "none"
+      }
+    ],
+    "seams": [],
+    "files": {
+      "a.ts": "import { readFileSync } from \"node:fs\";\nimport { b } from \"./b.ts\";\nexport const a = [b, readFileSync];\n",
+      "b.ts": "export const b = 1;\n"
+    },
+    "closureFiles": {
+      "command:a": 2
+    },
+    "findings": []
+  },
+  {
+    "name": "a none command refuses an external package and says what to declare",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "none"
+      }
+    ],
+    "seams": [],
+    "files": {
+      "a.ts": "import { z } from \"zod\";\nexport { z };\n"
+    },
+    "closureFiles": {
+      "command:a": 1
+    },
+    "findings": [
+      "command:a|external-package|a.ts|zod"
+    ],
+    "details": {
+      "command:a|external-package|a.ts|zod": "The command declares requires none but reaches the external package zod; declare requires dependencies or remove the import."
+    }
+  },
+  {
+    "name": "a dependencies command may reach external packages",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "dependencies"
+      }
+    ],
+    "seams": [],
+    "files": {
+      "a.ts": "import { z } from \"zod\";\nimport Ajv from \"ajv/dist/2020.js\";\nexport { z, Ajv };\n"
+    },
+    "closureFiles": {
+      "command:a": 1
+    },
+    "findings": []
+  },
+  {
+    "name": "every command refuses a workspace specifier",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "none"
+      },
+      {
+        "id": "b",
+        "module": "b.ts",
+        "requires": "dependencies"
+      }
+    ],
+    "seams": [],
+    "files": {
+      "a.ts": "import { lib } from \"@scope/lib\";\nexport { lib };\n",
+      "b.ts": "import { sub } from \"@scope/lib/sub\";\nexport { sub };\n"
+    },
+    "closureFiles": {
+      "command:a": 1,
+      "command:b": 1
+    },
+    "findings": [
+      "command:a|workspace-specifier|a.ts|@scope/lib",
+      "command:b|workspace-specifier|b.ts|@scope/lib/sub"
+    ],
+    "details": {
+      "command:a|workspace-specifier|a.ts|@scope/lib": "Import the owner module by the relative path to pkg/lib/index.ts.",
+      "command:b|workspace-specifier|b.ts|@scope/lib/sub": "Import the owner module by the relative path to pkg/lib/sub/bun.ts."
+    }
+  },
+  {
+    "name": "a none command loads a seam dynamically and never statically",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "none"
+      },
+      {
+        "id": "c",
+        "module": "c.ts",
+        "requires": "none"
+      }
+    ],
+    "seams": [
+      "s.ts"
+    ],
+    "files": {
+      "a.ts": "export const load = () => import(\"./s.ts\");\n",
+      "c.ts": "import { s } from \"./s.ts\";\nexport { s };\n",
+      "s.ts": "import { z } from \"zod\";\nexport const s = z;\n"
+    },
+    "closureFiles": {
+      "command:a": 1,
+      "command:c": 1
+    },
+    "findings": [
+      "command:c|seam-static|c.ts|./s.ts"
+    ]
+  },
+  {
+    "name": "a dependencies command follows the seam like any other module",
+    "commands": [
+      {
+        "id": "d",
+        "module": "d.ts",
+        "requires": "dependencies"
+      }
+    ],
+    "seams": [
+      "s.ts"
+    ],
+    "files": {
+      "d.ts": "import { s } from \"./s.ts\";\nexport { s };\n",
+      "s.ts": "import { lib } from \"@scope/lib\";\nimport { z } from \"zod\";\nexport const s = [lib, z];\n"
+    },
+    "closureFiles": {
+      "command:d": 2
+    },
+    "findings": [
+      "command:d|workspace-specifier|s.ts|@scope/lib"
+    ]
+  },
+  {
+    "name": "a missing command module is a finding",
+    "commands": [
+      {
+        "id": "m",
+        "module": "m.ts",
+        "requires": "none"
+      }
+    ],
+    "seams": [],
+    "files": {},
+    "closureFiles": {
+      "command:m": 1
+    },
+    "findings": [
+      "command:m|missing-entry|m.ts|m.ts"
+    ]
+  },
+  {
+    "name": "dynamic and require edges are followed",
+    "commands": [
+      {
+        "id": "a",
+        "module": "a.ts",
+        "requires": "none"
+      }
+    ],
+    "seams": [],
+    "files": {
+      "a.ts": "export const load = () => import(\"./b.ts\");\n",
+      "b.ts": "const c = require(\"./c.ts\");\nexport { c };\n",
+      "c.ts": "import { z } from \"zod\";\nexport { z };\n"
+    },
+    "closureFiles": {
+      "command:a": 3
+    },
+    "findings": [
+      "command:a|external-package|c.ts|zod"
+    ]
+  }
+]

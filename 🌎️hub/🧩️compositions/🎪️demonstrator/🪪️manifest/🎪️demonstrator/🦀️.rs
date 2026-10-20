@@ -14,7 +14,8 @@ use semio_framework_plugin::PluginBuilder;
 // `AppDefinition`, not `App` — see `.editor::<…>(…)` below.
 use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
 use semio_s_artifact_gis_gismap::editor::gis2d::{create_gis2d_app, Gis2dPlayApp};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::{create_generation3d_app, Generation3dPlayApp};
+use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
+use semio_s_artifact_procedural_generation3d::Generation3dPlayApp;
 use semio_s_artifact_process_process3d_editor::{create_process3d_app, Process3dPlayApp};
 use semio_s_artifact_process_process3d_viewer::{create_process3d_viewer, Process3dViewer};
 use {semio_s_artifact_puzzle_3d_editor::create_puzzle3d_app, semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp};

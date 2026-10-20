@@ -1,6 +1,6 @@
 /** 🗣️ The app labels overlay, the program and topic contributions, the space index, the manifest examples with their asset names and the plugin manifest type. */
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import { dialectCoordinate, parseDialectCoordinate } from "@semio-tech/framework-io-schema-ts";
+import { dialectCoordinate } from "../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts";
 import type { CommandDefinition } from "../🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 
 // #region 🛂️Manifest
@@ -95,30 +95,6 @@ export type ManifestExample = {
   readonly artifactJson?: string;
   readonly dialect: ArtifactDialect;
 };
-
-/** 🧹️ Stamps `dialect` onto a descriptor example row that still carries the pre-dialect `appId` field. */
-export function dialectFromLegacyExampleAppId(appId: string): ArtifactDialect {
-  const separator = appId.lastIndexOf("#");
-  if (separator < 0) throw new Error("surface id is missing '#'");
-  const role = appId.slice(separator + 1);
-  if (role !== "viewer" && role !== "editor") throw new Error("surface id requires viewer or editor role");
-  return parseDialectCoordinate(appId.slice(0, separator));
-}
-
-/** 🧹️ One manifest example row after admission — drops legacy `appId` once `dialect` is stamped. */
-export function normalizeManifestExampleRow<E extends { readonly id: string; readonly dialect?: ArtifactDialect; readonly appId?: string }>(example: E): E {
-  if (example.dialect) return example;
-  const appId = example.appId;
-  if (!appId) return example;
-  const { appId: _legacy, ...rest } = example;
-  return { ...rest, dialect: dialectFromLegacyExampleAppId(appId) } as E;
-}
-
-/** 🧹️ Descriptor admission — every example row the navbar picker reads must carry `dialect`. */
-export function normalizeManifestExamples<M extends { readonly examples?: readonly { readonly id: string; readonly dialect?: ArtifactDialect; readonly appId?: string }[] }>(manifest: M): M {
-  if (!manifest.examples?.length) return manifest;
-  return { ...manifest, examples: manifest.examples.map((example) => normalizeManifestExampleRow(example)) };
-}
 
 /** 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
  * deduplicated by id. Twinned by Rust `manifest::examples_for_dialect`, both pinned against

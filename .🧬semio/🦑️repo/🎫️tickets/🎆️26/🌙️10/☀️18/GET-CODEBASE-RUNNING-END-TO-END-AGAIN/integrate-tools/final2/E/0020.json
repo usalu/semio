@@ -1,0 +1,53 @@
+{
+  "name": "@semio-tech/raster-js",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏳️operation-progress/🧪️tests/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-renderer-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
+        "{workspaceRoot}/🧰️framework/**/*",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": []
+    }
+  }
+}

@@ -45,7 +45,7 @@ fn sixteen_views_attach_to_one_workspace_and_see_the_same_output() {
     }
     assert!(failures.is_empty(), "{} of 16 views show no output of the running ticker (Ctrl+B s on the freshly attached view):\n{}", failures.len(), failures.join("\n---\n"));
     let listed = tasks(&ws);
-    assert!(listed.iter().all(|task| task["status"] != "interrupted"), "with 16 views attached `semio tasks` reports the live ticker as interrupted (daemon status: {:?}; tasks stderr: {:?}; journal tail: {}): {listed:?}", String::from_utf8_lossy(&ws.cli(&["daemon", "status"]).stdout), String::from_utf8_lossy(&ws.cli(&["tasks"]).stderr), journal_tail(&ws));
+    assert!(listed.iter().all(|task| task["status"] != "interrupted"), "with 16 views attached `repo dashboard tasks` reports the live ticker as interrupted (daemon status: {:?}; tasks stderr: {:?}; journal tail: {}): {listed:?}", String::from_utf8_lossy(&ws.cli(&["daemon", "status"]).stdout), String::from_utf8_lossy(&ws.cli(&["tasks"]).stderr), journal_tail(&ws));
     assert_eq!(listed.iter().filter(|task| task["status"] == "running").count(), 1, "attaching 16 views changed the set of running tasks: {listed:?}");
     let seventeenth = Terminal::spawn(&workspace::binary(), &[], &ws.root, &ws.env(), steps::ROWS, 240);
     let verdict = seventeenth.wait_until("a refusal or an explanation in the status line", Duration::from_secs(30), |screen| screen.lines().rev().find(|line| !line.trim().is_empty()).is_some_and(|status| ["16", "limit", "too many", "views"].iter().any(|word| status.to_lowercase().contains(word))));

@@ -291,7 +291,7 @@
           ]
         },
         "command": {
-          "const": "bun repo dependencies sync --all"
+          "const": "repo dependencies sync --all"
         },
         "cases": {
           "type": "array",

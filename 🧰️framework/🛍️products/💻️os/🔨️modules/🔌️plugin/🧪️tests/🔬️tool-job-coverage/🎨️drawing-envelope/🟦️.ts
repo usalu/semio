@@ -1,5 +1,5 @@
 /** 🎨️ The drawing envelope caller retained sources and their route, semantic digest and mutation checks. */
-import { toolJobDrawingEnvelopeCallerRetainedExact } from "@semio-tech/repo-lib/laws";
+import { toolJobDrawingEnvelopeCallerRetainedExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 🏗 Builds the drawing codec and editor sources. */
 export function drawingEnvelopeSourceFixtures() {

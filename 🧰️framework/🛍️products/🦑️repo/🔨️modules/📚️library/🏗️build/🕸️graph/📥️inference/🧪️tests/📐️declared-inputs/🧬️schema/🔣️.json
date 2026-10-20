@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Declared input closure fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "files",
+    "projectRoot",
+    "command",
+    "modules",
+    "typescript",
+    "mutations"
+  ],
+  "properties": {
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "projectRoot": {
+      "type": "string"
+    },
+    "command": {
+      "type": "string"
+    },
+    "modules": {
+      "$ref": "#/definitions/Scenario"
+    },
+    "typescript": {
+      "$ref": "#/definitions/Scenario"
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "file",
+          "content",
+          "target",
+          "closure",
+          "digest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "target": {
+            "enum": [
+              "modules",
+              "typescript"
+            ]
+          },
+          "closure": {
+            "oneOf": [
+              {
+                "const": "same"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "digest": {
+            "enum": [
+              "same",
+              "changes"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "closure"
+      ],
+      "properties": {
+        "metadata": {
+          "type": "object"
+        },
+        "closure": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "oracleEntries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

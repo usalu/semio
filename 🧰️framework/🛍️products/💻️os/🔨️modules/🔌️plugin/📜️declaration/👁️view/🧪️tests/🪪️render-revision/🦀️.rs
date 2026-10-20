@@ -19,12 +19,11 @@ fn context(base: &serde_json::Value, patch: &serde_json::Value, maximum_items: u
 
 #[test]
 fn mounted_render_revision_matches_complete_portable_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️render-revision/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️render-revision/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let left = context(&fixture["base"], &case["left"], 0);
         let right = context(&fixture["base"], &case["right"], 1);
         assert_eq!(left.matches_revision(right.app_instance_id, right.base_revision, right.generation, &right.canonical_base_revision), case["expected"].as_bool().unwrap(), "{}", case["id"]);
         assert_eq!(right.matches_revision(left.app_instance_id, left.base_revision, left.generation, &left.canonical_base_revision), case["expected"].as_bool().unwrap(), "{}", case["id"]);
     }
-    eprintln!("[DEBUG] mounted render revision matched eight complete portable identities independently of work grants");
 }

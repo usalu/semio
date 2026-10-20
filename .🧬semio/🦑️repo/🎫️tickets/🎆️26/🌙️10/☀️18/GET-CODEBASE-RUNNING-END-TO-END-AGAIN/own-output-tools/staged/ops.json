@@ -1,0 +1,28 @@
+{
+ "version": 1,
+ "ops": [
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+   "preimageSha256": "6d8a92a93943d3d1fa75483b70abd6baf7fbcd95342dd20e7fda611d05ec3c07",
+   "resultSha256": "52d9d83d0bce224618c7b1715f22ec76153cbf816a7b00882a3d459ce337f7b8",
+   "hunks": [
+    {
+     "old": "    \"check\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",",
+     "new": "    \"check\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      },"
+    },
+    {
+     "old": "    \"test\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",",
+     "new": "    \"test\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      },"
+    },
+    {
+     "old": "    \"schema-check\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",",
+     "new": "    \"schema-check\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      },\n      \"dependsOn\": [\n        \"typegen\"\n      ],"
+    },
+    {
+     "old": "    \"preview-generated\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",",
+     "new": "    \"preview-generated\": {\n      \"cache\": true,\n      \"executor\": \"repo:script\",\n      \"metadata\": {\n        \"semio\": {\n          \"sourceInputObservation\": \"freshness\"\n        }\n      },"
+    }
+   ]
+  }
+ ]
+}

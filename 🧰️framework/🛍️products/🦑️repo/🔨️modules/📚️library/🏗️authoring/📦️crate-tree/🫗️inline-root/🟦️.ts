@@ -1,9 +1,9 @@
 /** 📦️ Inline root: module exporting `inlineRootFileModules`. */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { parseRustSourceTree } from "../🌳️module-tree/🟦️.ts";
-import type { TestTransformResult } from "../🧪️test-closure/🟦️.ts";
+import type { TestTransformResult } from "../🧪️test-closure/🟢️shared/🟦️.ts";
 
 /** 🫗️ Brings the file modules that the artifact root mounts and glob-re-exports back into the root as regions, so the planner can host their items like any other root item: a root file module is kept by the facade and no lower crate can reach it. Only plain item files qualify: a `use super::*;` as the only parent reference, no inner attributes, no mounts or path-relative macros. */
 export function inlineRootFileModules(previous: TestTransformResult | null, rootFile: string, originalRootSource: string): TestTransformResult {

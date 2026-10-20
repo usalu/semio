@@ -6,7 +6,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { semanticOwnedInputFileSnapshot, semanticExactOwnedFileProjectionAuthority } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { artifactPathProjectionCatalogRoots, renderArtifactPathProjectionRoot } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
+import { reservedDocumentationBasename } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { basename, dirname, posix } from "node:path";
 import { semanticArtifactEmptyFacetProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 import { semanticPathProjectionAuthority } from "../../🔍️discovery/🪞️path-projection/🟦️.ts";

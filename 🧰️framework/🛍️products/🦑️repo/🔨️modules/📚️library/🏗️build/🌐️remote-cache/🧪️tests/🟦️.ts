@@ -1,4 +1,5 @@
 import {afterAll,expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
 import {spawn,spawnSync} from "node:child_process";
@@ -19,7 +20,7 @@ import {parseRemoteCacheFlagsV1,remoteCacheStatusV1,runRemoteCacheCommandV1,serv
 import {bazelRemoteCacheToolV1} from "../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts";
 import {nxRemoteCacheToolV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
 
-const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),python=Bun.which("python3"),scratch:string[]=[];
+const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),python=testPythonV1(),scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-${label}-`));scratch.push(path);return path;};
 const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
 

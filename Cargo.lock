@@ -221,7 +221,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
  "x11rb",
 ]
 
@@ -725,7 +725,7 @@ dependencies = [
  "cap-primitives",
  "cap-std",
  "io-lifetimes 3.0.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -742,7 +742,7 @@ dependencies = [
  "maybe-owned",
  "rustix 1.1.5",
  "rustix-linux-procfs",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
  "winx",
 ]
 
@@ -1431,7 +1431,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4120,7 +4120,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4332,6 +4332,7 @@ dependencies = [
  "semio-framework-tool-run-actions",
  "semio-framework-trace",
  "semio-framework-ui-declaration",
+ "semio-framework-ui-locale",
  "semio-framework-value",
 ]
 
@@ -5201,6 +5202,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-filesystem-workspace"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
 
 [[package]]
 name = "semio-framework-font-anta-latin-regular"
@@ -6186,6 +6190,7 @@ name = "semio-framework-os-flow"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
+ "semio-framework",
  "semio-framework-canvas",
  "semio-framework-os-flow-drawing",
  "semio-framework-os-flow-extensions",
@@ -6201,7 +6206,9 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-replication",
  "semio-framework-test-typed-input-law",
+ "semio-framework-trace",
  "semio-framework-value",
 ]
 
@@ -6637,6 +6644,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-history-record-decode",
  "semio-framework-os-history-testing-retirement",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-trace-memory-testing",
@@ -7026,6 +7034,7 @@ dependencies = [
 name = "semio-framework-os-infinite-board-normal-model"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async",
  "semio-framework-canvas",
  "semio-framework-graph-drawing",
  "semio-framework-graph-engine",
@@ -7588,6 +7597,7 @@ dependencies = [
  "semio-framework-os-kernel-db-wal",
  "semio-framework-os-kernel-db-wal-log",
  "semio-framework-replication",
+ "serde_json",
 ]
 
 [[package]]
@@ -7663,6 +7673,8 @@ dependencies = [
  "semio-framework-os-kernel-db-storage-memory",
  "semio-framework-os-kernel-db-wal",
  "semio-framework-os-kernel-db-wal-log",
+ "semio-framework-replication",
+ "serde_json",
 ]
 
 [[package]]
@@ -7736,6 +7748,7 @@ dependencies = [
  "semio-framework-os-kernel-db-io-driver",
  "semio-framework-os-kernel-db-observe",
  "semio-framework-os-kernel-db-query",
+ "semio-framework-pack",
  "semio-framework-replication",
  "serde",
  "serde_json",
@@ -7755,6 +7768,7 @@ dependencies = [
  "semio-framework-os-kernel-db-policy",
  "semio-framework-os-kernel-db-storage",
  "semio-framework-os-kernel-db-storage-memory",
+ "serde_json",
 ]
 
 [[package]]
@@ -7804,6 +7818,7 @@ dependencies = [
  "semio-framework-os-kernel-db-policy",
  "semio-framework-os-kernel-db-storage",
  "semio-framework-os-kernel-db-storage-memory",
+ "serde_json",
 ]
 
 [[package]]
@@ -7956,6 +7971,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-os-kernel-db-durability",
  "semio-framework-os-kernel-db-ids",
+ "serde_json",
 ]
 
 [[package]]
@@ -8109,6 +8125,7 @@ dependencies = [
  "semio-framework-os-kernel-db-io-core",
  "semio-framework-os-kernel-db-io-driver",
  "semio-framework-os-kernel-db-io-registry",
+ "serde_json",
 ]
 
 [[package]]
@@ -8125,6 +8142,8 @@ dependencies = [
  "semio-framework-os-kernel-db-io-driver",
  "semio-framework-os-kernel-db-io-registry",
  "semio-framework-os-kernel-db-storage-driver-runtime",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8142,6 +8161,7 @@ dependencies = [
  "semio-framework-os-kernel-db-io-driver",
  "semio-framework-os-kernel-db-io-registry",
  "semio-framework-os-kernel-db-storage-driver-runtime",
+ "serde_json",
  "sqlx",
 ]
 
@@ -8160,6 +8180,7 @@ dependencies = [
  "semio-framework-os-kernel-db-io-core",
  "semio-framework-os-kernel-db-io-driver",
  "semio-framework-os-kernel-db-io-registry",
+ "serde_json",
 ]
 
 [[package]]
@@ -8489,6 +8510,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-hash",
  "semio-framework-os-kernel",
+ "semio-framework-os-mcp-capabilities",
  "semio-framework-os-mcp-catalog",
  "semio-framework-os-mcp-consent",
  "semio-framework-os-mcp-foundation",
@@ -8605,6 +8627,8 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-job-worker",
  "semio-framework-os-kernel",
  "semio-framework-os-mcp-catalog",
  "semio-framework-os-mcp-foundation",
@@ -12298,6 +12322,7 @@ dependencies = [
  "tokio",
  "wasm-bindgen",
  "web-sys",
+ "winit",
 ]
 
 [[package]]
@@ -12310,6 +12335,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-config",
@@ -16419,6 +16445,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-os-kernel",
  "semio-framework-os-services",
  "semio-framework-plugin-host-effects",
  "semio-framework-plugin-host-engine",
@@ -17528,6 +17555,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-job",
+ "semio-framework-os-kernel",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-reactor-lifecycle",
  "semio-framework-plugin-testing-caller",
@@ -17566,6 +17594,7 @@ name = "semio-framework-plugin-reactor-tasks"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-os-kernel",
  "semio-framework-pack-json",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-actor-host",
@@ -19945,6 +19974,7 @@ dependencies = [
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
  "semio-framework-replication-mutation-retained",
+ "semio-framework-replication-mutation-retained-field",
  "semio-framework-replication-presence",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
@@ -20148,8 +20178,18 @@ dependencies = [
  "semio-framework-mutation-diff",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
+ "semio-framework-replication-mutation-retained-field",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-framework-replication-mutation-retained-field"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-mutation-diff",
+ "semio-framework-value",
  "semio-framework-value-persistent",
 ]
 
@@ -20388,6 +20428,7 @@ dependencies = [
 name = "semio-framework-repo-dashboard-labels"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-filesystem-workspace",
  "semio-framework-repo-dashboard-core",
  "semio-framework-repo-dashboard-launch",
  "semio-framework-repo-dashboard-preferences",
@@ -22747,7 +22788,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -23054,7 +23095,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.5",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -23426,7 +23467,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -24581,7 +24622,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

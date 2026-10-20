@@ -18,7 +18,7 @@
   "targets": {
     "prepare-prototype": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -74,14 +74,14 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
         }
       },
       "defaultConfiguration": "prototype"
     },
     "activate-prototype": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
       ],
@@ -140,7 +140,7 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
         }
       },
       "defaultConfiguration": "prototype"
@@ -474,7 +474,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
         }
       },
       "dependsOn": [],
@@ -490,7 +491,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -511,6 +512,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "serve-e2e": {
@@ -540,6 +546,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release-routing",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "test-release": {
@@ -553,6 +564,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "test-e2e-enduser": {
@@ -566,6 +582,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-enduser",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "test-e2e": {
@@ -579,6 +600,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "release-verify": {
@@ -590,6 +616,11 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/📦️site/📜️script.ts verify",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     }
   }

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "files": { "a.ts": "export const a = 1;\n", "b.ts": "export const b = 2;\n", "c 🧵️.ts": "export const c = 3;\n" },
+  "records": [
+    { "name": "p1", "rows": [ { "kind": "file", "file": "a.ts" }, { "kind": "file", "file": "b.ts" }, { "kind": "exists", "file": "a.ts", "fact": true } ] },
+    { "name": "p2", "rows": [ { "kind": "file", "file": "a.ts" }, { "kind": "file", "file": "c 🧵️.ts" }, { "kind": "exists", "file": "a.ts", "fact": true } ] },
+    { "name": "p3", "rows": [ { "kind": "file", "file": "b.ts" }, { "kind": "exists", "file": "missing.ts", "fact": false } ] }
+  ],
+  "receiptRows": [ { "kind": "file", "file": "c 🧵️.ts" }, { "kind": "exists", "file": "missing.ts", "fact": false } ],
+  "expectedDistinct": 5,
+  "scenarios": [
+    { "id": "unchanged", "mutation": { "kind": "none" }, "holds": true },
+    { "id": "observed-file-edited", "mutation": { "kind": "write-file", "file": "b.ts", "content": "export const b = 3;\n" }, "holds": false },
+    { "id": "observed-file-rewritten-identically", "mutation": { "kind": "write-file", "file": "b.ts", "content": "export const b = 2;\n" }, "holds": true },
+    { "id": "inference-record-replaced", "mutation": { "kind": "replace-record", "record": "p2" }, "holds": false },
+    { "id": "fact-table-flipped", "mutation": { "kind": "flip-facts" }, "holds": false },
+    { "id": "fact-table-removed", "mutation": { "kind": "remove-facts" }, "holds": false },
+    { "id": "unobserved-file-edited", "mutation": { "kind": "write-file", "file": "unrelated.ts", "content": "x\n" }, "holds": true }
+  ],
+  "refusals": [
+    { "id": "receipt-digest-differs-from-header", "digestOf": "p1", "recordCorrupt": "p2", "captured": false },
+    { "id": "record-missing", "removeRecord": "p3", "captured": false }
+  ]
+}

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/command-tree.json",
   "title": "🌳️ Dashboard command tree",
-  "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf naming the registry command it starts or the repo-domain action the Rust domain crates answer in process. `semio command-tree --dump-tree` prints exactly this document.",
+  "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf naming the registry command it starts or the repo-domain action the Rust domain crates answer in process. `repo dashboard command-tree --dump-tree` prints exactly this document.",
   "$ref": "#/$defs/CommandNode",
   "$defs": {
     "CommandNode": {
@@ -23,7 +23,7 @@
     },
     "InvocationLeaf": {
       "type": "object",
-      "description": "▶️ A registry command and the parameters the row pins. Resolving it to a launch is the registry's business (`semio run <id> --dry-run`); the tree starts nothing itself.",
+      "description": "▶️ A registry command and the parameters the row pins. Resolving it to a launch is the registry's business (`repo dashboard run <id> --dry-run`); the tree starts nothing itself.",
       "properties": {
         "kind": { "const": "command" },
         "id": { "type": "string", "minLength": 3, "description": "🪪️ The command id of `🧬️schema/🎮️registry/🔣️.json#/$defs/CommandId`." },

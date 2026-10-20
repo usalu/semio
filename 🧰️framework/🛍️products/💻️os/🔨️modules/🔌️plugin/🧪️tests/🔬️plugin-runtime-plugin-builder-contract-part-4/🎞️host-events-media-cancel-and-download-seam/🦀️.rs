@@ -200,7 +200,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
     async fn accepted_remote_prefix_notifies_before_later_refusal() {
         let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
-        let law: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧫️fixtures/📥️remote-prefix/🔣️.json"))).unwrap();
+        let law: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/📥️remote-prefix/🔣️.json"))).unwrap();
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
 
@@ -269,7 +269,6 @@ fn take_test_host_events() -> Vec<HostEvent> {
             if expected > 0 { assert_eq!(base_moved, vec![HostEvent::BaseMoved { window_id: "main-1".into() }, HostEvent::BaseMoved { window_id: "main-2".into() }]); }
 
             close_reserved_app(&mut receiver,mounted_policy,cx);
-            eprintln!("[DEBUG] remote prefix case={} committed={} base_notifications={}", row["name"], row["count"], base_moved.len());
 
         }
 

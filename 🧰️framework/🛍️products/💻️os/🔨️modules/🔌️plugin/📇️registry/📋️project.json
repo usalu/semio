@@ -142,7 +142,12 @@
         "command": "bun ./📜️script.ts rebuild-all",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "guest-framework-check": {
       "executor": "repo:script",
@@ -185,7 +190,12 @@
         "command": "bun ./📜️script.ts surface-schema",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "surface-schema-check": {
       "executor": "repo:script",
@@ -208,7 +218,12 @@
         "command": "bun ./📜️script.ts new",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "rust-taxonomy-mounts-check": {
       "executor": "repo:script",

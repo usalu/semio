@@ -11,8 +11,7 @@ import {
   type DescriptorProgress
 } from "../📇️descriptor/📥️text/🟦️.ts";
 import { readPackageReceiptIdentity, type PackageReceiptIdentity, type PackageReceiptSource } from "../📇️descriptor/📦️package/🟦️.ts";
-import type { PluginManifest } from "@semio-tech/framework-manifest";
-import { normalizeManifestExamples } from "@semio-tech/framework-manifest";
+import type { PluginManifest } from "../../🛂️manifest/🟦️.ts";
 import { readPackageAssetDeclarations, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
 import { SemioFaultError } from "../🚨️fault/🟦️.ts";
 
@@ -82,6 +81,7 @@ export function pluginDescriptorUrl(moduleUrl: string): string {
 }
 
 /** 📇️ Reads and admits one served package descriptor: owner, app roster, bounded size. */
+/** 📥️ Fetches and admits one descriptor document: a JSON object whose manifest names the requested owner and an app roster, and whose example rows all name the dialect they were authored for. */
 async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: DescriptorProgress): Promise<{ readonly descriptor: object; readonly manifest: PluginManifest }> {
   signal?.throwIfAborted();
   const descriptorUrl = pluginDescriptorUrl(moduleUrl);
@@ -111,7 +111,8 @@ async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, sign
     if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
     if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
     if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
-    return { descriptor: descriptor as object, manifest: normalizeManifestExamples(manifest as PluginManifest) as PluginManifest };
+    if ("examples" in manifest && Array.isArray(manifest.examples)) for (const row of manifest.examples) if (!row?.dialect) throw fault("plugin.descriptor-invalid", `example ${String(row?.id ?? "?")} misses its dialect`);
+    return { descriptor: descriptor as object, manifest: manifest as PluginManifest };
   } catch (error) {
     await response.body?.cancel(error).catch(() => {});
     signal?.throwIfAborted();

@@ -27,10 +27,10 @@ fn the_dispatch_table_the_usage_text_and_the_readme_verb_table_name_the_same_ver
     let arms: std::collections::BTreeSet<String> = table.lines().filter_map(|line| line.trim().split(" =>").next().filter(|_| line.contains("=>"))).flat_map(|patterns| patterns.split(" if ").next().unwrap_or_default().split('|').map(|pattern| pattern.trim().trim_matches('"').to_string()).collect::<Vec<_>>()).collect();
     let native: std::collections::BTreeSet<String> = crate::NATIVE_VERBS.iter().map(ToString::to_string).collect();
     assert_eq!(arms, native, "NATIVE_VERBS and the dispatch arms differ");
-    let documented: std::collections::BTreeSet<String> = native.iter().filter(|verb| !crate::INTERNAL_VERBS.contains(&verb.as_str())).cloned().collect();
-    assert_eq!(verbs_named(crate::usage::USAGE, "  semio "), documented, "the usage text and the dispatch table differ");
+    let documented: std::collections::BTreeSet<String> = native.iter().filter(|verb| !crate::INTERNAL_VERBS.contains(&verb.as_str()) && verb.as_str() != "dashboard").cloned().collect();
+    assert_eq!(verbs_named(crate::usage::USAGE, "  repo dashboard "), documented, "the usage text and the dispatch table differ");
     let readme = include_str!("../../README.md");
-    let in_table: std::collections::BTreeSet<String> = readme.lines().filter(|line| line.starts_with("| `semio ")).filter_map(|line| line.strip_prefix("| ")).flat_map(|row| verbs_named(row.trim_start_matches('`'), "semio ")).collect();
+    let in_table: std::collections::BTreeSet<String> = readme.lines().filter(|line| line.starts_with("| `repo dashboard ")).filter_map(|line| line.strip_prefix("| ")).flat_map(|row| verbs_named(row.trim_start_matches('`'), "repo dashboard ")).collect();
     assert_eq!(in_table, documented, "the README verb table and the dispatch table differ");
 }
 
@@ -40,11 +40,11 @@ fn every_flag_a_verb_reads_is_in_the_usage_text_the_readme_verb_row_and_the_argu
     let readme = include_str!("../../README.md");
     let block = |verb: &str| -> String {
         let lines: Vec<&str> = usage.lines().collect();
-        let start = lines.iter().position(|line| line.trim_start().starts_with(&format!("semio {verb}")) || (["stop", "restart", "kill"].contains(&verb) && line.contains("semio stop|restart|kill"))).unwrap_or_else(|| panic!("{verb} has no usage line"));
-        lines[start..].iter().enumerate().take_while(|(offset, line)| *offset == 0 || !line.starts_with("  semio ")).map(|(_, line)| *line).collect::<Vec<_>>().join(" ")
+        let start = lines.iter().position(|line| line.trim_start().starts_with(&if verb == "dashboard" { "repo dashboard [".to_string() } else { format!("repo dashboard {verb}") }) || (["stop", "restart", "kill"].contains(&verb) && line.contains("repo dashboard stop|restart|kill"))).unwrap_or_else(|| panic!("{verb} has no usage line"));
+        lines[start..].iter().enumerate().take_while(|(offset, line)| *offset == 0 || !line.starts_with("  repo dashboard ")).map(|(_, line)| *line).collect::<Vec<_>>().join(" ")
     };
     let row = |verb: &str| -> String {
-        let marker = if ["stop", "restart", "kill"].contains(&verb) { "| `semio stop\\|restart\\|kill".to_string() } else { format!("| `semio {verb}") };
+        let marker = if verb == "dashboard" { "| `repo dashboard [".to_string() } else if ["stop", "restart", "kill"].contains(&verb) { "| `repo dashboard stop\\|restart\\|kill".to_string() } else { format!("| `repo dashboard {verb}") };
         readme.lines().find(|line| line.starts_with(&marker)).unwrap_or_else(|| panic!("{verb} has no README row")).to_string()
     };
     for (verb, flags) in crate::usage::FLAGS {
@@ -62,7 +62,7 @@ fn every_flag_a_verb_reads_is_in_the_usage_text_the_readme_verb_row_and_the_argu
     let listed: std::collections::BTreeSet<String> = crate::usage::FLAGS.iter().filter(|(verb, _)| ["commands", "run", "tasks", "logs", "stop", "restart", "kill", "open"].contains(verb)).flat_map(|(_, flags)| flags.iter().map(ToString::to_string)).collect();
     assert_eq!(read, listed, "the flags the command line reads and the flags FLAGS lists differ");
     let help = crate::usage::USAGE;
-    assert!(help.contains("semio --help"), "{help}");
+    assert!(help.contains("repo dashboard --help"), "{help}");
 }
 
 #[test]

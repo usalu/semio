@@ -1,0 +1,24 @@
+{
+ "roots": [
+  "🧰️framework/🔨️modules/⏱️trace",
+  "🧰️framework/🔨️modules/⏳️async",
+  "🧰️framework/🔨️modules/⚠️diagnostic",
+  "🧰️framework/🔨️modules/🌱️value",
+  "🧰️framework/🔨️modules/🎒️pack/⚠️error",
+  "🧰️framework/🔨️modules/🎒️pack/🔤️json",
+  "🧰️framework/🔨️modules/🎒️pack/🚰️source",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace",
+  "🧰️framework/🔨️modules/📡️replication",
+  "🧰️framework/🔨️modules/🔀️dispatch",
+  "🧰️framework/🔨️modules/🔏️hash",
+  "🧰️framework/🔨️modules/🗣️dsl",
+  "🧰️framework/🔨️modules/🚪️io/⏱️control",
+  "🧰️framework/🔨️modules/🚪️io/🔤️base64",
+  "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader",
+  "🧰️framework/🔨️modules/🧬️schema/📇️registry",
+  "🧰️framework/🔨️modules/🧬️schema/📶️state",
+  "🧰️framework/🛍️products/📚️course",
+  "🧰️framework/🛍️products/🖥️server"
+ ]
+}

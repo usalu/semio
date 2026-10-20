@@ -1,3 +1,5 @@
+/** 📍️ Projects the project-root sentinel to its exact Cargo manifest coordinate. */
+export function cargoManifestInputV1(root:string):string;
 /** 🔒️ Publishes a compact Cargo lock inventory under original graph writer custody. */
 export function cargoLockInput(manifest:string,workspaceRoot:string):{env:string};
 /** 🧵️ Matches portable source globs across admitted native backends. */

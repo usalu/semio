@@ -1,5 +1,6 @@
 /** 🔗️ Contract: a target's command closure follows imports through workspace package specifiers and the literal module inputs it declares, agrees with esbuild and Bun's own bundler on the same fixture, and its content digest moves exactly when an imported module changes. The scenario lives in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
@@ -10,7 +11,7 @@ import Ajv from "ajv";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
-const inference=await import("../../🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference as any,python=Bun.which("python3");
+const inference=await import("../../🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference as any,python=testPythonV1();
 await libraryBootstrap;
 const strip=(paths:readonly string[])=>paths.map(path=>path.replace("{workspaceRoot}/","")).sort();
 const build=(root:string)=>{

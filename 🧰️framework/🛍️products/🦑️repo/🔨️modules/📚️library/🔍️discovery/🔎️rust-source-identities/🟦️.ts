@@ -1,4 +1,4 @@
-import { type RustToken, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
+import { type RustToken, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens, rustVisibility } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { RustStructuralFacts, RustVirtualSourceFact } from "../🦀️rust-fact-contracts/🟦️.ts";
 import { inspectRustStructure } from "../🏛️rust-structure/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";

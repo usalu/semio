@@ -1,0 +1,11 @@
+⚖️laws/🔒️cache-correctness/🧪️tests/🔒️rules ::  5 pass  1 fail 
+🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️closure ::  8 pass  1 skip  0 fail 
+🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint ::  3 pass  0 fail 
+🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests ::  7 pass  1 skip  0 fail 
+🏗️build/📥️inputs/🎯️precision/🧪️tests ::  12 pass  1 skip  0 fail 
+🏗️build/📥️inputs/🦀️resolution/🧪️tests ::  15 pass  0 fail 
+🧪️tests/🏠️nx-workspace-root-file-reference ::  7 pass  0 fail 
+🧪️tests/⚡️workspace-negation-closure ::  1 pass  1 skip  2 fail 
+🧪️tests/🧱️cargo-transaction-command-source ::  6 pass  3 fail 
+🏗️build/🧪️tests/🕸️graph/🌱️native-scope ::  4 pass  0 fail 
+🏗️build/🧪️tests/🕸️graph/🛂️admission ::  0 pass  1 fail 

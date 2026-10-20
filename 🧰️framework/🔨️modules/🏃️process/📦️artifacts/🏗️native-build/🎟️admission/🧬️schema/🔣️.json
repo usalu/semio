@@ -136,6 +136,56 @@
         }
       }
     },
+    "ProvenanceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peakRssBytes", "userMs", "sysMs", "wallMs", "rmetaOffsetMs"],
+      "properties": {
+        "peakRssBytes": {"type": "integer", "minimum": 0},
+        "userMs": {"type": "integer", "minimum": 0},
+        "sysMs": {"type": "integer", "minimum": 0},
+        "wallMs": {"type": "integer", "minimum": 0},
+        "rmetaOffsetMs": {"anyOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]}
+      }
+    },
+    "CachedRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "op", "pass", "pid", "crate", "package", "version", "target", "crateTypes", "outDir", "extraFilename", "source", "manifestDir", "primary", "buildScriptOutDir", "externs", "cacheKey", "provenance"],
+      "properties": {
+        "v": {"const": 1},
+        "op": {"const": "cached"},
+        "pass": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
+        "pid": {"type": "integer", "minimum": 1},
+        "crate": {"type": "string", "pattern": "^[A-Za-z0-9_]{1,128}$"},
+        "package": {"type": "string", "maxLength": 128},
+        "version": {"type": "string", "maxLength": 128},
+        "target": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$"},
+        "crateTypes": {"type": "array", "minItems": 1, "items": {"enum": ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro", "bin"]}},
+        "outDir": {"$ref": "#/definitions/Path"},
+        "extraFilename": {"type": "string", "maxLength": 128},
+        "source": {"$ref": "#/definitions/Path"},
+        "manifestDir": {"$ref": "#/definitions/Path"},
+        "primary": {"type": "boolean"},
+        "buildScriptOutDir": {"anyOf": [{"$ref": "#/definitions/Path"}, {"type": "null"}]},
+        "externs": {"type": "array", "items": {"$ref": "#/definitions/Path"}},
+        "cacheKey": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "provenance": {"anyOf": [{"$ref": "#/definitions/ProvenanceV1"}, {"type": "null"}]}
+      }
+    },
+    "RecallRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "op", "pass", "crate", "outDir", "extraFilename"],
+      "properties": {
+        "v": {"const": 1},
+        "op": {"const": "recall"},
+        "pass": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
+        "crate": {"type": "string", "pattern": "^[A-Za-z0-9_]{1,128}$"},
+        "outDir": {"$ref": "#/definitions/Path"},
+        "extraFilename": {"type": "string", "maxLength": 128}
+      }
+    },
     "VerdictV1": {
       "type": "object",
       "additionalProperties": false,

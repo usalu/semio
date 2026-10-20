@@ -38,7 +38,7 @@ export function declared(declaration: Declaration): LayerRule["value"] {
   return declaration.value.items?.length ?? declaration.property;
 }
 
-/** 🎨️ Every declaration of `.course-home-grid` and `.course-home-cell` with the minimum viewport width it applies from. */
+/** 📚️ Every declaration of `.course-home-grid` and `.course-home-cell` with the minimum viewport width it applies from. */
 export function layerRules(css: string): readonly LayerRule[] {
   const found: LayerRule[] = [];
   const collect = (rules: readonly { readonly type: string; readonly value: never }[], minWidth: number): void => {

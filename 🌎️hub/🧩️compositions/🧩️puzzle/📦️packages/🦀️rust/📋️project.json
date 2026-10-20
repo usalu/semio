@@ -59,7 +59,7 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-architecture"
@@ -71,7 +71,15 @@
             "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
           }
         }
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
     }
   }
 }

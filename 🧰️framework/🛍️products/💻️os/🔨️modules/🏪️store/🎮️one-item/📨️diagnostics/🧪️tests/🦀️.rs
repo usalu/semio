@@ -3,7 +3,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 #[test]
 fn store_diagnostic_stage_preserves_originals_and_independent_report_through_funded_close() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
     let policy = &corpus["grant"];
     let axis = |name: &str| policy[name].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: axis("items"), maximum_copy_bytes: axis("copy"), maximum_capacity_bytes: axis("capacity"), maximum_release_bytes: axis("release"), maximum_depth: axis("depth") };
@@ -45,13 +45,12 @@ fn store_diagnostic_stage_preserves_originals_and_independent_report_through_fun
             turns += 1; assert!(turns < 20000, "diagnostic cancellation must reach terminal ownership");
         }
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(stage)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] Store diagnostic case={} turns={} terminalDrop=0", case["id"], turns);
     }
 }
 
 #[test]
 fn store_diagnostic_stage_applies_final_neutral_bound_before_actual_context_publication() {
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["finalSelection"]["entryBound"],4096);
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["finalSelection"]["entryBound"],4096);
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:32768,maximum_release_bytes:32768,maximum_depth:24};
     for case in law["cases"].as_array().unwrap(){
         if !law["publication"]["copyableCases"].as_array().unwrap().contains(&case["name"]){continue;}
@@ -62,6 +61,5 @@ fn store_diagnostic_stage_applies_final_neutral_bound_before_actual_context_publ
         let durable=record.into_entry();assert_eq!(durable.edit_id,identity);assert_eq!(report.len(),1);assert_eq!(durable,report[0]);assert_eq!(serde_json::to_value(durable.messages.iter().filter(|row|row.code.0!="mutation.cascade").map(|row|row.op_index.unwrap()as usize).collect::<Vec<_>>()).unwrap(),case["expectedKept"]);assert_eq!(worst,durable.messages.iter().map(|row|row.level).max());
         for(original,copy)in durable.messages.iter().zip(&report[0].messages){if !original.message.is_empty(){assert_ne!(original.message.as_ptr(),copy.message.as_ptr());}}
         let mut original=semio_framework_os_spr::command::EditMessageLedgerRetirement::new(vec![durable]);while !original.terminal_is_empty(){original.close_step(grant).unwrap();}let mut report=semio_framework_os_spr::command::EditMessageLedgerRetirement::new(report);while !report.terminal_is_empty(){report.close_step(grant).unwrap();}stage.begin_close();while !stage.terminal_is_empty(){stage.close_step(grant).unwrap();}let(_,heap)=observe_heap_allocations_on_this_thread(||drop(stage));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        println!("[DEBUG] Store final diagnostic selection case={} actualEdit={} measuredBound=4096 independentReport=true terminalDrop=0",case["name"],identity);
     }
 }

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "algorithm": "sha256",
+        "implementation": "first-party-hash-port",
+        "chunkBytes": 16384,
+        "readExtent": "captured-length",
+        "historyTextInspectionBytes": 1048576,
+        "maximumManagedFileBytes": 67108864
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "encoding",
+          "value",
+          "repeat",
+          "bytes",
+          "sha256"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "encoding": {
+            "enum": [
+              "utf8",
+              "hex"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1048576
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2097152
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

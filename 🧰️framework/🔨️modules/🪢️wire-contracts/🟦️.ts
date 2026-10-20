@@ -5,7 +5,7 @@
 
 import type { MutationMessage } from "../🎠️kernel/🔄️merge-outcome/🟦️.ts";
 import type { Severity } from "../🎠️kernel/🚨️fault/🟦️.ts";
-import type { LocalInteractionQueryCommand, LocalInteractionQueryReply, MutationEnvelope } from "@semio-tech/framework-replication";
+import type { LocalInteractionQueryCommand, LocalInteractionQueryReply, MutationEnvelope } from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import {
   readBool,
   readBytes,
@@ -15,7 +15,7 @@ import {
   writeBytes,
   writeStr,
   writeVarintU64
-} from "@semio-tech/framework-replication";
+} from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { isPackInteger, packUIntSafeOrNull, type PackValue } from "../🎁️packs/🟦️.ts";
 
 //#region 🔖️Backbone

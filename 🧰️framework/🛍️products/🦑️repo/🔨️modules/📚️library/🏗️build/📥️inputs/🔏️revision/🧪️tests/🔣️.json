@@ -112,5 +112,51 @@
       "name": "parent-change",
       "primary": "changed"
     }
+  ],
+  "refusals": [
+    {
+      "root": "/workspace",
+      "path": "/workspace/src/中.ts",
+      "sources": 3,
+      "expected": {
+        "version": 1,
+        "scope": "workspace",
+        "path": "src/中.ts",
+        "sourceCount": 3
+      }
+    },
+    {
+      "root": "/workspace",
+      "path": "/workspace-other/private",
+      "sources": 1024,
+      "expected": {
+        "version": 1,
+        "scope": "outside",
+        "path": null,
+        "sourceCount": 1024
+      }
+    },
+    {
+      "root": "/workspace",
+      "path": "/private",
+      "sources": 1,
+      "expected": {
+        "version": 1,
+        "scope": "outside",
+        "path": null,
+        "sourceCount": 1
+      }
+    },
+    {
+      "root": "/workspace",
+      "path": "/workspace",
+      "sources": 1,
+      "expected": {
+        "version": 1,
+        "scope": "workspace",
+        "path": "",
+        "sourceCount": 1
+      }
+    }
   ]
 }

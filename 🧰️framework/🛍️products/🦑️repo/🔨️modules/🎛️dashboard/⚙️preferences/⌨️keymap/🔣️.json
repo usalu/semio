@@ -4,6 +4,34 @@
   "bindings": [
     {
       "scope": "prefix",
+      "action": "create-file",
+      "keys": [
+        "N"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "create-directory",
+      "keys": [
+        "M"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "rename-entry",
+      "keys": [
+        "E"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "retain-entry",
+      "keys": [
+        "X"
+      ]
+    },
+    {
+      "scope": "prefix",
       "action": "show-files",
       "keys": [
         "F"
@@ -458,6 +486,34 @@
       "action": "suggest-cancel",
       "keys": [
         "ctrl+g"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "inspect-history",
+      "keys": [
+        "J"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "reconcile-history",
+      "keys": [
+        "K"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "archive-history",
+      "keys": [
+        "A"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "next-history-page",
+      "keys": [
+        "P"
       ]
     }
   ]

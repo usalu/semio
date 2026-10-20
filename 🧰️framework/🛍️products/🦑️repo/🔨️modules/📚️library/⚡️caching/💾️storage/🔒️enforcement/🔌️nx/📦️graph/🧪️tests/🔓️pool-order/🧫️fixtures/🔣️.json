@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "resources": [
+    "gate",
+    "namespace",
+    "pool",
+    "victim"
+  ],
+  "designs": {
+    "before": {
+      "attach": [
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ]
+      ],
+      "birth": [
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ]
+      ],
+      "evict": [
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "acquire",
+          "victim",
+          "try"
+        ]
+      ],
+      "publish": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ]
+      ],
+      "maintenance": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ]
+      ]
+    },
+    "after": {
+      "attach": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ]
+      ],
+      "birth": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ],
+        [
+          "release",
+          "namespace"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "acquire",
+          "namespace",
+          "try"
+        ],
+        [
+          "release",
+          "pool"
+        ]
+      ],
+      "evict": [
+        [
+          "acquire",
+          "gate",
+          "wait"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "release",
+          "pool"
+        ],
+        [
+          "acquire",
+          "victim",
+          "try"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "release",
+          "pool"
+        ]
+      ],
+      "publish": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ],
+        [
+          "release",
+          "pool"
+        ]
+      ],
+      "maintenance": [
+        [
+          "acquire",
+          "namespace",
+          "wait"
+        ],
+        [
+          "acquire",
+          "pool",
+          "wait"
+        ]
+      ]
+    }
+  },
+  "sourceLaws": {
+    "attachFunction": "async function attachExistingNamespaceV1",
+    "evictFunction": "async function evictIdleNamespacesV1",
+    "acquireFunction": "async function acquireNamespace",
+    "removed": "async function room(",
+    "evictPoolCalls": 1,
+    "evictTryLocks": 1
+  }
+}

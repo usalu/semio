@@ -7,6 +7,7 @@ import emojiRegex from "emoji-regex";
 import { parse, type ParseError } from "jsonc-parser";
 import toArray from "lodash/toArray";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 
 type Split = Readonly<{ emoji: string; rest: string }>;
 type Case = Readonly<{ id: string; input: string; first: string; emoji: string; rest: string; segmentationOracle: boolean; emojiOracle: boolean }>;
@@ -163,14 +164,14 @@ test("registers leading grapheme through its closed canonical route", async () =
   expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
-  const path = join(packageRoot, "📜️script.ts"), syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
-  expect(declarations).toHaveLength(1);
+  const family = readRegisteredTestRoute(repoRoot, registration.command), syntax = ts.createSourceFile(family.path, family.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];
+  const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(syntax) === `segments[0] === "${registration.command}"`) branches.push(node); ts.forEachChild(node, visit); };
+  visit(syntax);
+  expect(branches).toHaveLength(1);
   for (const compiler of compilers) {
     const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
-    class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", compiler.compile(`${declarations[0]!.getText(syntax)}\nreturn new TestScript();`))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Leading grapheme fell through to generic routing"); });
-    await router.run([registration.command]);
+    const route = new Function("join", "process", "runRepositoryTestCommand", compiler.compile(`async function route(context: { repoRoot: string }, segments: string[]) ${branches[0]!.thenStatement.getText(syntax)}\nreturn route;`))(join, { execPath: process.execPath }, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); });
+    await route({ repoRoot }, [registration.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, registration.source)], options: { cwd: repoRoot } }]);
   }
 });

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "maxPathChars": 256,
+  "reservedSuffixChars": 102,
+  "maxTitleChars": 24,
+  "namespace": "e",
+  "maxCases": 32
+}

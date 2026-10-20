@@ -118,6 +118,8 @@ describe("Windows checkout ticket paths", () => {
     expect(inventory.tracked.filter((path) => path.startsWith(`${ticketRoot}/`)).length + [...inventory.untracked].filter((path) => path.startsWith(`${ticketRoot}/`)).length).toBeGreaterThan(0);
     const oversizeByRoot = Object.fromEntries(checkoutRoots.map((checkout) => [checkout.root, oversizeCheckoutPaths(inventory, checkout, ticketRoot, (path) => existsSync(join(root, path)))]));
     expect(oversizeByRoot).toEqual(Object.fromEntries(checkoutRoots.map((checkout) => [checkout.root, []])));
+    const parents = [...new Set(inventory.tracked.filter((path) => existsSync(join(root, path))).map((path) => path.slice(0, path.lastIndexOf("/"))).filter(Boolean))];
+    expect(parents.filter((parent) => win32.join("C:\\git\\semio", parent).length > 247)).toEqual([]);
   }, { timeout: 15_000 });
 
   test("partitioned parallel inventory equals the single-process Git enumeration on a fixture repository", async () => {

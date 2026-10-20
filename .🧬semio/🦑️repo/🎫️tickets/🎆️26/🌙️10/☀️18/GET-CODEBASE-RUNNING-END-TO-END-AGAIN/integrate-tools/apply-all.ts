@@ -3,6 +3,7 @@
  *
  *   bun apply-all.ts                       # dry run of every group (default): verifies every anchor, writes nothing
  *   bun apply-all.ts --yes --group A       # applies group A (A, B, C in order; a later group needs the earlier ones applied)
+ *   options: --series DIR (default final; round 2 is final2)
  *   bun apply-all.ts --undo A              # restores the files of an applied group from its backup
  *   options: --root DIR (default: the checkout this file lives in), --force-while-running (skip the dependency sync guard)
  *
@@ -21,11 +22,23 @@ const root = resolve(flag("--root") ?? join(here, "../../../../../../../.."));
 const yes = args.includes("--yes");
 const undo = flag("--undo");
 const only = flag("--group");
-const manifest = JSON.parse(readFileSync(join(here, "final/manifest.json"), "utf8")) as {
+const series = flag("--series") ?? "final";
+const manifest = JSON.parse(readFileSync(join(here, series, "manifest.json"), "utf8")) as {
   groups: { id: string; title: string; sets: string[]; verify: string[]; commands: string[][]; files: { rel: string; op: "create" | "replace"; baseSha256: string | null; resultSha256: string; file: string }[] }[];
 };
 const sha = (data: Buffer): string => createHash("sha256").update(data).digest("hex");
 const backupDirectory = (id: string): string => join(here, "../🗑️generated/integrate-apply", id);
+
+const chain: { series: string; group: string; rel: string; result: string }[] = [];
+for (const name of ["final", "final2", "final3"]) {
+  const path = join(here, name, "manifest.json");
+  if (!existsSync(path)) continue;
+  for (const group of (JSON.parse(readFileSync(path, "utf8")) as typeof manifest).groups) for (const row of group.files) chain.push({ series: name, group: group.id, rel: row.rel, result: row.resultSha256 });
+}
+const supersededBy = (rel: string, series: string, group: string): Set<string> => {
+  const own = chain.findIndex((row) => row.rel === rel && row.series === series && row.group === group);
+  return new Set(chain.filter((row, index) => row.rel === rel && index > own).map((row) => row.result));
+};
 
 if (!existsSync(join(root, "bunfig.toml"))) throw new Error(`not a repository root: ${root}`);
 
@@ -38,11 +51,11 @@ function running(): string[] {
 function plan(group: (typeof manifest.groups)[number]) {
   const todo: { row: (typeof group.files)[number]; data: Buffer; live: Buffer | undefined }[] = [], skipped: string[] = [], drift: string[] = [];
   for (const row of group.files) {
-    const target = join(root, row.rel), data = readFileSync(join(here, "final", row.file));
+    const target = join(root, row.rel), data = readFileSync(join(here, series, row.file));
     if (sha(data) !== row.resultSha256) throw new Error(`staged copy changed since finalize: ${row.file}`);
     if (target.length > 255 && process.platform === "win32") drift.push(`path too long: ${row.rel}`);
     const live = existsSync(target) ? readFileSync(target) : undefined;
-    if (live !== undefined && sha(live) === row.resultSha256) { skipped.push(row.rel); continue; }
+    if (live !== undefined && (sha(live) === row.resultSha256 || supersededBy(row.rel, series, group.id).has(sha(live)))) { skipped.push(row.rel); continue; }
     if (row.op === "create") { if (live === undefined) todo.push({ row, data, live }); else drift.push(`exists with other content: ${row.rel}`); continue; }
     if (live === undefined) drift.push(`missing: ${row.rel}`);
     else if (sha(live) !== row.baseSha256) drift.push(`DRIFT ${row.rel} live ${sha(live).slice(0, 12)} expected ${row.baseSha256!.slice(0, 12)}`);

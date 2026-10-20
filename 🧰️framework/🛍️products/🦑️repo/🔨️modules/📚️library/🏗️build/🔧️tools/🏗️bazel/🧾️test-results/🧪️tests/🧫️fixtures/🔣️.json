@@ -1,0 +1,219 @@
+{
+ "version": 1,
+ "rootToken": "@ROOT@",
+ "xml": {
+  "pass": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites>\n  <testsuite name=\"pass_one.sh\" tests=\"1\" failures=\"0\" errors=\"0\">\n    <testcase name=\"pass_one.sh\" status=\"run\" duration=\"0\" time=\"0\"></testcase>\n      <system-out>\nGenerated test.log (if the file is not UTF-8, then this may be unreadable):\n<![CDATA[exec ${PAGER:-/usr/bin/less} \"$0\" || exit 1\nExecuting tests from //:pass_one\n-----------------------------------------------------------------------------\nok]]>\n      </system-out>\n    </testsuite>\n</testsuites>\n",
+  "fail": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites>\n  <testsuite name=\"fail_one.sh\" tests=\"1\" failures=\"0\" errors=\"1\">\n    <testcase name=\"fail_one.sh\" status=\"run\" duration=\"0\" time=\"0\"><error message=\"exited with error code 3\"></error></testcase>\n      <system-out>\nGenerated test.log (if the file is not UTF-8, then this may be unreadable):\n<![CDATA[exec ${PAGER:-/usr/bin/less} \"$0\" || exit 1\nExecuting tests from //:fail_one\n-----------------------------------------------------------------------------\nno]]>\n      </system-out>\n    </testsuite>\n</testsuites>\n"
+ },
+ "streams": [
+  {
+   "name": "mixed-fresh-real",
+   "events": "{\"id\":{\"started\":{}},\"children\":[{\"progress\":{}},{\"unstructuredCommandLine\":{}},{\"structuredCommandLine\":{\"commandLineLabel\":\"original\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"canonical\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"tool\"}},{\"buildMetadata\":{}},{\"optionsParsed\":{}},{\"workspaceStatus\":{}},{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:fail_one\",\"//:course/test\"]}},{\"buildFinished\":{}}],\"started\":{\"uuid\":\"043fd5d0-a82f-412d-a5b0-67dd7eadd460\",\"startTimeMillis\":\"1792525546695\",\"buildToolVersion\":\"8.4.2\",\"optionsDescription\":\"--disk_cache\\u003d/private/tmp/ci-bazel/disk --repository_cache\\u003d/private/tmp/ci-bazel/repo-cache --repository_disable_download --lockfile_mode\\u003derror --incompatible_autoload_externally\\u003d\\u0027\\u0027 --experimental_convenience_symlinks\\u003dignore --nobuild_runfile_links --color\\u003dno --curses\\u003dno --local_resources\\u003d\\u0027cpu\\u003d2\\u0027 --local_resources\\u003d\\u0027memory\\u003d1024\\u0027 --jobs\\u003d2 --build_event_json_file\\u003d/private/tmp/ci-bazel/bep.json --test_output\\u003derrors --keep_going\",\"command\":\"test\",\"workingDirectory\":\"/private/tmp/ci-bazel/ws\",\"workspaceDirectory\":\"/private/tmp/ci-bazel/ws\",\"serverPid\":\"38470\",\"startTime\":\"2026-10-20T19:45:46.695Z\"}}\n{\"id\":{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:fail_one\",\"//:course/test\"]}},\"children\":[{\"targetConfigured\":{\"label\":\"//:pass_one\"}},{\"targetConfigured\":{\"label\":\"//:fail_one\"}},{\"targetConfigured\":{\"label\":\"//:course/test\"}}],\"expanded\":{}}\n{\"id\":{\"testResult\":{\"label\":\"//:pass_one\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.xml\"}],\"testAttemptDurationMillis\":\"579\",\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525547278\",\"executionInfo\":{\"strategy\":\"darwin-sandbox\",\"timingBreakdown\":{\"child\":[{\"name\":\"parseTime\",\"time\":\"0s\"},{\"name\":\"fetchTime\",\"time\":\"0s\"},{\"name\":\"queueTime\",\"time\":\"0s\"},{\"name\":\"uploadTime\",\"time\":\"0s\"},{\"name\":\"setupTime\",\"time\":\"0s\"},{\"name\":\"executionWallTime\",\"time\":\"0.579s\"},{\"name\":\"processOutputsTime\",\"time\":\"0s\"},{\"name\":\"networkTime\",\"time\":\"0s\"}],\"name\":\"totalTime\",\"time\":\"0.579s\"}},\"testAttemptStart\":\"2026-10-20T19:45:47.278Z\",\"testAttemptDuration\":\"0.579s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:pass_one\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"}],\"overallStatus\":\"PASSED\",\"firstStartTimeMillis\":\"1792525547278\",\"lastStopTimeMillis\":\"1792525547857\",\"totalRunDurationMillis\":\"579\",\"runCount\":1,\"totalRunDuration\":\"0.579s\",\"firstStartTime\":\"2026-10-20T19:45:47.278Z\",\"lastStopTime\":\"2026-10-20T19:45:47.857Z\",\"attemptCount\":1}}\n{\"id\":{\"testResult\":{\"label\":\"//:course/test\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.xml\"}],\"testAttemptDurationMillis\":\"843\",\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525547278\",\"executionInfo\":{\"strategy\":\"darwin-sandbox\",\"timingBreakdown\":{\"child\":[{\"name\":\"parseTime\",\"time\":\"0s\"},{\"name\":\"fetchTime\",\"time\":\"0s\"},{\"name\":\"queueTime\",\"time\":\"0s\"},{\"name\":\"uploadTime\",\"time\":\"0s\"},{\"name\":\"setupTime\",\"time\":\"0s\"},{\"name\":\"executionWallTime\",\"time\":\"0.843s\"},{\"name\":\"processOutputsTime\",\"time\":\"0s\"},{\"name\":\"networkTime\",\"time\":\"0s\"}],\"name\":\"totalTime\",\"time\":\"0.843s\"}},\"testAttemptStart\":\"2026-10-20T19:45:47.278Z\",\"testAttemptDuration\":\"0.843s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:course/test\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"}],\"overallStatus\":\"PASSED\",\"firstStartTimeMillis\":\"1792525547278\",\"lastStopTimeMillis\":\"1792525548121\",\"totalRunDurationMillis\":\"843\",\"runCount\":1,\"totalRunDuration\":\"0.843s\",\"firstStartTime\":\"2026-10-20T19:45:47.278Z\",\"lastStopTime\":\"2026-10-20T19:45:48.121Z\",\"attemptCount\":1}}\n{\"id\":{\"testResult\":{\"label\":\"//:fail_one\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/fail_one/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/fail_one/test.xml\"}],\"testAttemptDurationMillis\":\"750\",\"status\":\"FAILED\",\"testAttemptStartMillisEpoch\":\"1792525548274\",\"executionInfo\":{\"strategy\":\"darwin-sandbox\",\"timingBreakdown\":{\"child\":[{\"name\":\"parseTime\",\"time\":\"0s\"},{\"name\":\"fetchTime\",\"time\":\"0s\"},{\"name\":\"queueTime\",\"time\":\"0s\"},{\"name\":\"uploadTime\",\"time\":\"0s\"},{\"name\":\"setupTime\",\"time\":\"0s\"},{\"name\":\"executionWallTime\",\"time\":\"0.750s\"},{\"name\":\"processOutputsTime\",\"time\":\"0s\"},{\"name\":\"networkTime\",\"time\":\"0s\"}],\"name\":\"totalTime\",\"time\":\"0.750s\"},\"exitCode\":3},\"testAttemptStart\":\"2026-10-20T19:45:48.274Z\",\"testAttemptDuration\":\"0.750s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:fail_one\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"failed\":[{\"uri\":\"file://@ROOT@/testlogs/fail_one/test.log\"}],\"overallStatus\":\"FAILED\",\"firstStartTimeMillis\":\"1792525548274\",\"lastStopTimeMillis\":\"1792525549024\",\"totalRunDurationMillis\":\"750\",\"runCount\":1,\"totalRunDuration\":\"0.750s\",\"firstStartTime\":\"2026-10-20T19:45:48.274Z\",\"lastStopTime\":\"2026-10-20T19:45:49.024Z\",\"attemptCount\":1}}\n{\"id\":{\"buildFinished\":{}},\"children\":[{\"buildToolLogs\":{}},{\"buildMetrics\":{}}],\"finished\":{\"finishTimeMillis\":\"1792525549881\",\"exitCode\":{\"name\":\"TESTS_FAILED\",\"code\":3},\"finishTime\":\"2026-10-20T19:45:49.881Z\"}}\n",
+   "files": {
+    "testlogs/pass_one/test.xml": "pass",
+    "testlogs/course/test/test.xml": "pass",
+    "testlogs/fail_one/test.xml": "fail"
+   },
+   "expected": [
+    {
+     "label": "//:pass_one",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": false,
+     "durationMillis": 579,
+     "file": "pass_one-af7f47de.xml",
+     "xml": "testlogs/pass_one/test.xml"
+    },
+    {
+     "label": "//:course/test",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": false,
+     "durationMillis": 843,
+     "file": "course_test-0f8dda81.xml",
+     "xml": "testlogs/course/test/test.xml"
+    },
+    {
+     "label": "//:fail_one",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "failed",
+     "cached": false,
+     "durationMillis": 750,
+     "file": "fail_one-6bb48f09.xml",
+     "xml": "testlogs/fail_one/test.xml"
+    }
+   ]
+  },
+  {
+   "name": "mixed-rerun-real-cached",
+   "events": "{\"id\":{\"started\":{}},\"children\":[{\"progress\":{}},{\"unstructuredCommandLine\":{}},{\"structuredCommandLine\":{\"commandLineLabel\":\"original\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"canonical\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"tool\"}},{\"buildMetadata\":{}},{\"optionsParsed\":{}},{\"workspaceStatus\":{}},{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:fail_one\",\"//:course/test\"]}},{\"buildFinished\":{}}],\"started\":{\"uuid\":\"c84bf66a-ad22-4fd3-960d-7424f0ff15d4\",\"startTimeMillis\":\"1792525557117\",\"buildToolVersion\":\"8.4.2\",\"optionsDescription\":\"--disk_cache\\u003d/private/tmp/ci-bazel/disk --repository_cache\\u003d/private/tmp/ci-bazel/repo-cache --repository_disable_download --lockfile_mode\\u003derror --incompatible_autoload_externally\\u003d\\u0027\\u0027 --experimental_convenience_symlinks\\u003dignore --nobuild_runfile_links --color\\u003dno --curses\\u003dno --local_resources\\u003d\\u0027cpu\\u003d2\\u0027 --local_resources\\u003d\\u0027memory\\u003d1024\\u0027 --jobs\\u003d2 --build_event_json_file\\u003d/private/tmp/ci-bazel/bep2.json --test_output\\u003derrors --keep_going\",\"command\":\"test\",\"workingDirectory\":\"/private/tmp/ci-bazel/ws\",\"workspaceDirectory\":\"/private/tmp/ci-bazel/ws\",\"serverPid\":\"38470\",\"startTime\":\"2026-10-20T19:45:57.117Z\"}}\n{\"id\":{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:fail_one\",\"//:course/test\"]}},\"children\":[{\"targetConfigured\":{\"label\":\"//:pass_one\"}},{\"targetConfigured\":{\"label\":\"//:fail_one\"}},{\"targetConfigured\":{\"label\":\"//:course/test\"}}],\"expanded\":{}}\n{\"id\":{\"testResult\":{\"label\":\"//:pass_one\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.xml\"}],\"testAttemptDurationMillis\":\"579\",\"cachedLocally\":true,\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525547278\",\"executionInfo\":{},\"testAttemptStart\":\"2026-10-20T19:45:47.278Z\",\"testAttemptDuration\":\"0.579s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:pass_one\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"}],\"overallStatus\":\"PASSED\",\"totalNumCached\":1,\"firstStartTimeMillis\":\"1792525547278\",\"lastStopTimeMillis\":\"1792525547857\",\"totalRunDurationMillis\":\"579\",\"runCount\":1,\"totalRunDuration\":\"0.579s\",\"firstStartTime\":\"2026-10-20T19:45:47.278Z\",\"lastStopTime\":\"2026-10-20T19:45:47.857Z\",\"attemptCount\":1}}\n{\"id\":{\"testResult\":{\"label\":\"//:course/test\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.xml\"}],\"testAttemptDurationMillis\":\"843\",\"cachedLocally\":true,\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525547278\",\"executionInfo\":{},\"testAttemptStart\":\"2026-10-20T19:45:47.278Z\",\"testAttemptDuration\":\"0.843s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:course/test\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"}],\"overallStatus\":\"PASSED\",\"totalNumCached\":1,\"firstStartTimeMillis\":\"1792525547278\",\"lastStopTimeMillis\":\"1792525548121\",\"totalRunDurationMillis\":\"843\",\"runCount\":1,\"totalRunDuration\":\"0.843s\",\"firstStartTime\":\"2026-10-20T19:45:47.278Z\",\"lastStopTime\":\"2026-10-20T19:45:48.121Z\",\"attemptCount\":1}}\n{\"id\":{\"testResult\":{\"label\":\"//:fail_one\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/fail_one/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/fail_one/test.xml\"}],\"testAttemptDurationMillis\":\"233\",\"status\":\"FAILED\",\"testAttemptStartMillisEpoch\":\"1792525557378\",\"executionInfo\":{\"strategy\":\"darwin-sandbox\",\"timingBreakdown\":{\"child\":[{\"name\":\"parseTime\",\"time\":\"0s\"},{\"name\":\"fetchTime\",\"time\":\"0s\"},{\"name\":\"queueTime\",\"time\":\"0s\"},{\"name\":\"uploadTime\",\"time\":\"0s\"},{\"name\":\"setupTime\",\"time\":\"0s\"},{\"name\":\"executionWallTime\",\"time\":\"0.233s\"},{\"name\":\"processOutputsTime\",\"time\":\"0s\"},{\"name\":\"networkTime\",\"time\":\"0s\"}],\"name\":\"totalTime\",\"time\":\"0.233s\"},\"exitCode\":3},\"testAttemptStart\":\"2026-10-20T19:45:57.378Z\",\"testAttemptDuration\":\"0.233s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:fail_one\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"failed\":[{\"uri\":\"file://@ROOT@/testlogs/fail_one/test.log\"}],\"overallStatus\":\"FAILED\",\"firstStartTimeMillis\":\"1792525557378\",\"lastStopTimeMillis\":\"1792525557611\",\"totalRunDurationMillis\":\"233\",\"runCount\":1,\"totalRunDuration\":\"0.233s\",\"firstStartTime\":\"2026-10-20T19:45:57.378Z\",\"lastStopTime\":\"2026-10-20T19:45:57.611Z\",\"attemptCount\":1}}\n{\"id\":{\"buildFinished\":{}},\"children\":[{\"buildToolLogs\":{}},{\"buildMetrics\":{}}],\"finished\":{\"finishTimeMillis\":\"1792525557666\",\"exitCode\":{\"name\":\"TESTS_FAILED\",\"code\":3},\"finishTime\":\"2026-10-20T19:45:57.666Z\"}}\n",
+   "files": {
+    "testlogs/pass_one/test.xml": "pass",
+    "testlogs/course/test/test.xml": "pass",
+    "testlogs/fail_one/test.xml": "fail"
+   },
+   "expected": [
+    {
+     "label": "//:pass_one",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": true,
+     "durationMillis": 579,
+     "file": "pass_one-af7f47de.xml",
+     "xml": "testlogs/pass_one/test.xml"
+    },
+    {
+     "label": "//:course/test",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": true,
+     "durationMillis": 843,
+     "file": "course_test-0f8dda81.xml",
+     "xml": "testlogs/course/test/test.xml"
+    },
+    {
+     "label": "//:fail_one",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "failed",
+     "cached": false,
+     "durationMillis": 233,
+     "file": "fail_one-6bb48f09.xml",
+     "xml": "testlogs/fail_one/test.xml"
+    }
+   ]
+  },
+  {
+   "name": "pass-cached-real",
+   "events": "{\"id\":{\"started\":{}},\"children\":[{\"progress\":{}},{\"unstructuredCommandLine\":{}},{\"structuredCommandLine\":{\"commandLineLabel\":\"original\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"canonical\"}},{\"structuredCommandLine\":{\"commandLineLabel\":\"tool\"}},{\"buildMetadata\":{}},{\"optionsParsed\":{}},{\"workspaceStatus\":{}},{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:course/test\"]}},{\"buildFinished\":{}}],\"started\":{\"uuid\":\"faec5fa3-6eab-4aae-8205-1827fdb35fa8\",\"startTimeMillis\":\"1792525920308\",\"buildToolVersion\":\"8.4.2\",\"optionsDescription\":\"--disk_cache\\u003d/private/tmp/ci-bazel/disk --repository_cache\\u003d/private/tmp/ci-bazel/repo-cache --repository_disable_download --lockfile_mode\\u003derror --incompatible_autoload_externally\\u003d\\u0027\\u0027 --experimental_convenience_symlinks\\u003dignore --nobuild_runfile_links --color\\u003dno --curses\\u003dno --local_resources\\u003d\\u0027cpu\\u003d2\\u0027 --local_resources\\u003d\\u0027memory\\u003d1024\\u0027 --jobs\\u003d2 --build_event_json_file\\u003d/private/tmp/ci-bazel/bepp2.json --test_output\\u003derrors --keep_going\",\"command\":\"test\",\"workingDirectory\":\"/private/tmp/ci-bazel/ws\",\"workspaceDirectory\":\"/private/tmp/ci-bazel/ws\",\"serverPid\":\"46544\",\"startTime\":\"2026-10-20T19:52:00.308Z\"}}\n{\"id\":{\"pattern\":{\"pattern\":[\"//:pass_one\",\"//:course/test\"]}},\"children\":[{\"targetConfigured\":{\"label\":\"//:pass_one\"}},{\"targetConfigured\":{\"label\":\"//:course/test\"}}],\"expanded\":{}}\n{\"id\":{\"testResult\":{\"label\":\"//:pass_one\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/pass_one/test.xml\"}],\"testAttemptDurationMillis\":\"976\",\"cachedLocally\":true,\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525918155\",\"executionInfo\":{},\"testAttemptStart\":\"2026-10-20T19:51:58.155Z\",\"testAttemptDuration\":\"0.976s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:pass_one\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/pass_one/test.log\"}],\"overallStatus\":\"PASSED\",\"totalNumCached\":1,\"firstStartTimeMillis\":\"1792525918155\",\"lastStopTimeMillis\":\"1792525919131\",\"totalRunDurationMillis\":\"976\",\"runCount\":1,\"totalRunDuration\":\"0.976s\",\"firstStartTime\":\"2026-10-20T19:51:58.155Z\",\"lastStopTime\":\"2026-10-20T19:51:59.131Z\",\"attemptCount\":1}}\n{\"id\":{\"testResult\":{\"label\":\"//:course/test\",\"run\":1,\"shard\":1,\"attempt\":1,\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testResult\":{\"testActionOutput\":[{\"name\":\"test.log\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"},{\"name\":\"test.xml\",\"uri\":\"file://@ROOT@/testlogs/course/test/test.xml\"}],\"testAttemptDurationMillis\":\"987\",\"cachedLocally\":true,\"status\":\"PASSED\",\"testAttemptStartMillisEpoch\":\"1792525918126\",\"executionInfo\":{},\"testAttemptStart\":\"2026-10-20T19:51:58.126Z\",\"testAttemptDuration\":\"0.987s\"}}\n{\"id\":{\"testSummary\":{\"label\":\"//:course/test\",\"configuration\":{\"id\":\"e024797a4ac5becb8e4e68d809883e40b379a16b8d6e2e93a82babd511c26f76\"}}},\"testSummary\":{\"totalRunCount\":1,\"passed\":[{\"uri\":\"file://@ROOT@/testlogs/course/test/test.log\"}],\"overallStatus\":\"PASSED\",\"totalNumCached\":1,\"firstStartTimeMillis\":\"1792525918126\",\"lastStopTimeMillis\":\"1792525919113\",\"totalRunDurationMillis\":\"987\",\"runCount\":1,\"totalRunDuration\":\"0.987s\",\"firstStartTime\":\"2026-10-20T19:51:58.126Z\",\"lastStopTime\":\"2026-10-20T19:51:59.113Z\",\"attemptCount\":1}}\n{\"id\":{\"buildFinished\":{}},\"children\":[{\"buildToolLogs\":{}},{\"buildMetrics\":{}}],\"finished\":{\"overallSuccess\":true,\"finishTimeMillis\":\"1792525921239\",\"exitCode\":{\"name\":\"SUCCESS\"},\"finishTime\":\"2026-10-20T19:52:01.239Z\"}}\n",
+   "files": {
+    "testlogs/pass_one/test.xml": "pass",
+    "testlogs/course/test/test.xml": "pass"
+   },
+   "expected": [
+    {
+     "label": "//:pass_one",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": true,
+     "durationMillis": 976,
+     "file": "pass_one-af7f47de.xml",
+     "xml": "testlogs/pass_one/test.xml"
+    },
+    {
+     "label": "//:course/test",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": true,
+     "durationMillis": 987,
+     "file": "course_test-0f8dda81.xml",
+     "xml": "testlogs/course/test/test.xml"
+    }
+   ]
+  },
+  {
+   "name": "synthetic-shards-remote-missing-unicode",
+   "events": "{\"id\": {\"started\": {}}, \"started\": {\"uuid\": \"x\"}}\n{\"id\": {\"testResult\": {\"label\": \"//pkg:sharded\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"FAILED\", \"testAttemptDurationMillis\": \"100\", \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/pkg/sharded/shard_1_of_2/test_attempts/attempt_1.xml\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//pkg:sharded\", \"run\": 1, \"shard\": 1, \"attempt\": 2}}, \"testResult\": {\"status\": \"PASSED\", \"testAttemptDurationMillis\": \"120\", \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/pkg/sharded/shard_1_of_2/test.xml\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//pkg:sharded\", \"run\": 1, \"shard\": 2, \"attempt\": 1}}, \"testResult\": {\"status\": \"FLAKY\", \"testAttemptDurationMillis\": \"90\", \"cachedLocally\": true, \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/pkg/sharded/shard_2_of_2/test.xml\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//remote:kept\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"PASSED\", \"testAttemptDurationMillis\": \"7\", \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"bytestream://cache.example/blobs/abc/12\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//remote:hit\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"PASSED\", \"testAttemptDurationMillis\": \"3\", \"executionInfo\": {\"cachedRemotely\": true}, \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/remote/hit/test.xml\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//:vanished\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"TIMEOUT\", \"testAttemptDurationMillis\": \"9000\", \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/vanished/test.xml\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//:nostatus\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"NO_STATUS\", \"testActionOutput\": [{\"name\": \"test.log\", \"uri\": \"file://@ROOT@/nostatus/test.log\"}]}}\n{\"id\": {\"testResult\": {\"label\": \"//:\\u00e9moji/\\u6d4b\\u8bd5\", \"run\": 1, \"shard\": 1, \"attempt\": 1}}, \"testResult\": {\"status\": \"PASSED\", \"testAttemptDurationMillis\": \"1\", \"testActionOutput\": [{\"name\": \"test.xml\", \"uri\": \"file://@ROOT@/uni/test.xml\"}]}}\nnot json at all\n",
+   "files": {
+    "pkg/sharded/shard_1_of_2/test.xml": "pass",
+    "pkg/sharded/shard_2_of_2/test.xml": "pass",
+    "remote/hit/test.xml": "pass",
+    "uni/test.xml": "pass"
+   },
+   "expected": [
+    {
+     "label": "//pkg:sharded",
+     "run": 1,
+     "shard": 1,
+     "attempt": 2,
+     "status": "passed",
+     "cached": false,
+     "durationMillis": 120,
+     "file": "pkg_sharded-d2940400.run1.shard1.xml",
+     "xml": "pkg/sharded/shard_1_of_2/test.xml"
+    },
+    {
+     "label": "//pkg:sharded",
+     "run": 1,
+     "shard": 2,
+     "attempt": 1,
+     "status": "flaky",
+     "cached": true,
+     "durationMillis": 90,
+     "file": "pkg_sharded-d2940400.run1.shard2.xml",
+     "xml": "pkg/sharded/shard_2_of_2/test.xml"
+    },
+    {
+     "label": "//remote:kept",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": false,
+     "durationMillis": 7,
+     "file": "remote_kept-b5c08a81.xml",
+     "xml": null
+    },
+    {
+     "label": "//remote:hit",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": true,
+     "durationMillis": 3,
+     "file": "remote_hit-c8ede337.xml",
+     "xml": "remote/hit/test.xml"
+    },
+    {
+     "label": "//:vanished",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "timeout",
+     "cached": false,
+     "durationMillis": 9000,
+     "file": "vanished-8c01bc61.xml",
+     "xml": "vanished/test.xml"
+    },
+    {
+     "label": "//:nostatus",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "error",
+     "cached": false,
+     "durationMillis": 0,
+     "file": "nostatus-b4833a04.xml",
+     "xml": null
+    },
+    {
+     "label": "//:émoji/测试",
+     "run": 1,
+     "shard": 1,
+     "attempt": 1,
+     "status": "passed",
+     "cached": false,
+     "durationMillis": 1,
+     "file": "moji-10dbb136.xml",
+     "xml": "uni/test.xml"
+    }
+   ]
+  }
+ ]
+}

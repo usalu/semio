@@ -1,0 +1,749 @@
+{
+ "version": 2,
+ "operations": [
+  {
+   "rel": ".gitignore",
+   "kind": "edit",
+   "before": "4581e2d7b3574562bda172af09542676a577150be0be3631a59ab9c28b26c4c3",
+   "after": "5a0eab3c30cb496d6a4372367ed7c44031e2a9d970d2d671692c4ecf5e177709",
+   "hunks": [
+    {
+     "old": "**/🧫️fixtures/**/🌐️browser-bundles/**",
+     "new": "**/🌐️browser-bundles/**"
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🗂️catalog/🧾️row-operations/🦀️.rs",
+   "kind": "edit",
+   "before": "cb49e4aa2a6e02232ff46aa05924d74d8e89b504265994357e0d4c7835616bf8",
+   "after": "921b1b474edbc22d5b90f68ffeb7c317b811afe1fa754fd935c6be2395b29893",
+   "hunks": [
+    {
+     "old": "\n/// 🧱️ Replaces the row at `index` of one collection of `base` by `row`: removal and insertion at the same position in one delta.\nmacro_rules! replace_row {\n    ($delta:ident, $field:ident, $base:expr, $index:expr, $row:expr) => {\n        replace_row!($delta, $field, $field, $base, $index, $row)\n    };\n    ($delta:ident, $base_field:ident, $field:ident, $base:expr, $index:expr, $row:expr) => {{\n        let mut delta = $delta::removal(&$base.$base_field, $index);\n        delta.absorb($delta::insertion($index, $row.clone()));\n        ProgramDiff { $field: Some(delta), ..Default::default() }\n    }};\n}",
+     "new": ""
+    },
+    {
+     "old": "            Self::InformationRequirement(row) => replace_row!(ProgramInformationDelta, information, base, index, row),\n            Self::SustainabilityRequirement(row) => replace_row!(ProgramSustainabilityDelta, sustainability, base, index, row),\n            Self::AccessibilityRequirement(row) => replace_row!(ProgramAccessibilityDelta, accessibility, base, index, row),\n            Self::Conflict(row) => replace_row!(ProgramConflictsDelta, conflicts, base, index, row),\n            Self::OptionEvaluation(row) => replace_row!(ProgramOptionsDelta, options, base, index, row),\n            Self::Function(row) => replace_row!(ProgramFunctionsDelta, functions, base, index, row),\n            Self::Risk(row) => replace_row!(ProgramRisksDelta, risks, base, index, row),\n            Self::Decision(row) => replace_row!(ProgramDecisionsDelta, decisions, base, index, row),\n            Self::ValidationRecord(row) => replace_row!(ProgramValidationsDelta, validations, base, index, row),\n            Self::PriorityRecord(row) => replace_row!(ProgramPrioritiesDelta, priorities, base, index, row),\n            Self::FlowRequirement(row) => replace_row!(ProgramFlowsDelta, flows, base, index, row),\n            Self::EnvironmentalRequirement(row) => replace_row!(ProgramEnvironmentalDelta, environmental, base, index, row),\n            Self::Workshop(row) => replace_row!(ProgramWorkshopsDelta, workshops, base, index, row),\n            Self::Scenario(row) => replace_row!(ProgramScenariosDelta, scenarios, base, index, row),\n            Self::BenchmarkRecord(row) => replace_row!(ProgramBenchmarksDelta, benchmarks_payload, benchmarks, base, index, row),\n            Self::Activity(row) => replace_row!(ProgramActivitiesDelta, activities, base, index, row),\n            Self::InfrastructureRequirement(row) => replace_row!(ProgramInfrastructureDelta, infrastructure, base, index, row),\n            Self::OrganizationalRequirement(row) => replace_row!(ProgramOrganizationalDelta, organizational, base, index, row),\n            Self::Issue(row) => replace_row!(ProgramIssuesDelta, issues, base, index, row),\n            Self::ApprovalRecord(row) => replace_row!(ProgramApprovalsDelta, approvals, base, index, row),\n            Self::Stakeholder(row) => replace_row!(ProgramStakeholdersDelta, stakeholders, base, index, row),\n            Self::QualityRecord(row) => replace_row!(ProgramQualityDelta, quality, base, index, row),\n            Self::ResilienceRequirement(row) => replace_row!(ProgramResilienceDelta, resilience, base, index, row),\n            Self::Assumption(row) => replace_row!(ProgramAssumptionsDelta, assumptions, base, index, row),\n            Self::CostRequirement(row) => replace_row!(ProgramCostsDelta, costs, base, index, row),\n            Self::Document(row) => replace_row!(ProgramArtifactsDelta, artifacts, base, index, row),\n            Self::ScheduleRequirement(row) => replace_row!(ProgramSchedulesDelta, schedules, base, index, row),\n            Self::GrowthPlan(row) => replace_row!(ProgramGrowthDelta, growth, base, index, row),\n            Self::PerformanceCriterion(row) => replace_row!(ProgramPerformanceDelta, performance, base, index, row),\n            Self::OperationalRequirement(row) => replace_row!(ProgramOperationsDelta, operations, base, index, row),\n            Self::Requirement(row) => replace_row!(ProgramRequirementsDelta, requirements, base, index, row),\n            Self::SiteContext(row) => replace_row!(ProgramSiteContextDelta, site_context, base, index, row),\n            Self::TemplateRecord(row) => replace_row!(ProgramTemplatesDelta, templates, base, index, row),\n            Self::ReportRecord(row) => replace_row!(ProgramReportsDelta, reports, base, index, row),\n            Self::AuditEvent(row) => replace_row!(ProgramAuditEventsDelta, audit_events, base, index, row),\n            Self::KnowledgeRecord(row) => replace_row!(ProgramKnowledgeDelta, knowledge_payload, knowledge, base, index, row),\n            Self::RegulatoryRequirement(row) => replace_row!(ProgramRegulatoryDelta, regulatory, base, index, row),\n            Self::CommunicationRequirement(row) => replace_row!(ProgramCommunicationDelta, communication, base, index, row),\n            Self::Resource(row) => replace_row!(ProgramResourcesDelta, resources, base, index, row),\n            Self::StatusRecord(row) => replace_row!(ProgramStatusRecordsDelta, status_records, base, index, row),\n            Self::ChangeRecord(row) => replace_row!(ProgramChangesDelta, changes, base, index, row),\n            Self::Process(row) => replace_row!(ProgramProcessesDelta, processes, base, index, row),\n            Self::SearchFilter(row) => replace_row!(ProgramSearchFiltersDelta, search_filters, base, index, row),\n            Self::AccessRule(row) => replace_row!(ProgramAccessRulesDelta, access_rules, base, index, row),\n            Self::PrivacyRequirement(row) => replace_row!(ProgramPrivacyDelta, privacy, base, index, row),\n            Self::QuantityRequirement(row) => replace_row!(ProgramQuantitiesDelta, quantities, base, index, row),\n            Self::AnalysisRecord(row) => replace_row!(ProgramAnalysesDelta, analyses, base, index, row),\n            Self::Relationship(row) => replace_row!(ProgramRelationshipsDelta, relationships, base, index, row),\n            Self::StorageRequirement(row) => replace_row!(ProgramStorageDelta, storage, base, index, row),\n            Self::MeetingRecord(row) => replace_row!(ProgramMeetingsDelta, meetings, base, index, row),\n            Self::Survey(row) => replace_row!(ProgramSurveysDelta, surveys, base, index, row),\n            Self::DeliveryConstraint(row) => replace_row!(ProgramDeliveryDelta, delivery, base, index, row),\n            Self::ConstraintRecord(row) => replace_row!(ProgramConstraintsDelta, constraints, base, index, row),\n            Self::ComplianceRecord(row) => replace_row!(ProgramComplianceRecordsDelta, compliance_records, base, index, row),\n            Self::ServiceRequirement(row) => replace_row!(ProgramServicesDelta, services, base, index, row),\n            Self::Equipment(row) => replace_row!(ProgramEquipmentDelta, equipment, base, index, row),\n            Self::SecurityRequirement(row) => replace_row!(ProgramSecurityDelta, security, base, index, row),\n            Self::CollaborationRecord(row) => replace_row!(ProgramCollaborationDelta, collaboration, base, index, row),\n            Self::SafetyRequirement(row) => replace_row!(ProgramSafetyDelta, safety, base, index, row),\n            Self::UserProfile(row) => replace_row!(ProgramUsersDelta, users, base, index, row),\n            Self::HumanFactorRequirement(row) => replace_row!(ProgramHumanFactorsDelta, human_factors, base, index, row),\n            Self::FlexibilityRequirement(row) => replace_row!(ProgramFlexibilityDelta, flexibility, base, index, row),\n            Self::WayfindingRequirement(row) => replace_row!(ProgramWayfindingDelta, wayfinding, base, index, row),\n            Self::ProgramElement(row) => replace_row!(ProgramElementsDelta, elements, base, index, row),",
+     "new": "            Self::InformationRequirement(row) => {\n                let mut delta = ProgramInformationDelta::removal(&base.information, index);\n                delta.absorb(ProgramInformationDelta::insertion(index, row.clone()));\n                ProgramDiff { information: Some(delta), ..Default::default() }\n            },\n            Self::SustainabilityRequirement(row) => {\n                let mut delta = ProgramSustainabilityDelta::removal(&base.sustainability, index);\n                delta.absorb(ProgramSustainabilityDelta::insertion(index, row.clone()));\n                ProgramDiff { sustainability: Some(delta), ..Default::default() }\n            },\n            Self::AccessibilityRequirement(row) => {\n                let mut delta = ProgramAccessibilityDelta::removal(&base.accessibility, index);\n                delta.absorb(ProgramAccessibilityDelta::insertion(index, row.clone()));\n                ProgramDiff { accessibility: Some(delta), ..Default::default() }\n            },\n            Self::Conflict(row) => {\n                let mut delta = ProgramConflictsDelta::removal(&base.conflicts, index);\n                delta.absorb(ProgramConflictsDelta::insertion(index, row.clone()));\n                ProgramDiff { conflicts: Some(delta), ..Default::default() }\n            },\n            Self::OptionEvaluation(row) => {\n                let mut delta = ProgramOptionsDelta::removal(&base.options, index);\n                delta.absorb(ProgramOptionsDelta::insertion(index, row.clone()));\n                ProgramDiff { options: Some(delta), ..Default::default() }\n            },\n            Self::Function(row) => {\n                let mut delta = ProgramFunctionsDelta::removal(&base.functions, index);\n                delta.absorb(ProgramFunctionsDelta::insertion(index, row.clone()));\n                ProgramDiff { functions: Some(delta), ..Default::default() }\n            },\n            Self::Risk(row) => {\n                let mut delta = ProgramRisksDelta::removal(&base.risks, index);\n                delta.absorb(ProgramRisksDelta::insertion(index, row.clone()));\n                ProgramDiff { risks: Some(delta), ..Default::default() }\n            },\n            Self::Decision(row) => {\n                let mut delta = ProgramDecisionsDelta::removal(&base.decisions, index);\n                delta.absorb(ProgramDecisionsDelta::insertion(index, row.clone()));\n                ProgramDiff { decisions: Some(delta), ..Default::default() }\n            },\n            Self::ValidationRecord(row) => {\n                let mut delta = ProgramValidationsDelta::removal(&base.validations, index);\n                delta.absorb(ProgramValidationsDelta::insertion(index, row.clone()));\n                ProgramDiff { validations: Some(delta), ..Default::default() }\n            },\n            Self::PriorityRecord(row) => {\n                let mut delta = ProgramPrioritiesDelta::removal(&base.priorities, index);\n                delta.absorb(ProgramPrioritiesDelta::insertion(index, row.clone()));\n                ProgramDiff { priorities: Some(delta), ..Default::default() }\n            },\n            Self::FlowRequirement(row) => {\n                let mut delta = ProgramFlowsDelta::removal(&base.flows, index);\n                delta.absorb(ProgramFlowsDelta::insertion(index, row.clone()));\n                ProgramDiff { flows: Some(delta), ..Default::default() }\n            },\n            Self::EnvironmentalRequirement(row) => {\n                let mut delta = ProgramEnvironmentalDelta::removal(&base.environmental, index);\n                delta.absorb(ProgramEnvironmentalDelta::insertion(index, row.clone()));\n                ProgramDiff { environmental: Some(delta), ..Default::default() }\n            },\n            Self::Workshop(row) => {\n                let mut delta = ProgramWorkshopsDelta::removal(&base.workshops, index);\n                delta.absorb(ProgramWorkshopsDelta::insertion(index, row.clone()));\n                ProgramDiff { workshops: Some(delta), ..Default::default() }\n            },\n            Self::Scenario(row) => {\n                let mut delta = ProgramScenariosDelta::removal(&base.scenarios, index);\n                delta.absorb(ProgramScenariosDelta::insertion(index, row.clone()));\n                ProgramDiff { scenarios: Some(delta), ..Default::default() }\n            },\n            Self::BenchmarkRecord(row) => {\n                let mut delta = ProgramBenchmarksDelta::removal(&base.benchmarks_payload, index);\n                delta.absorb(ProgramBenchmarksDelta::insertion(index, row.clone()));\n                ProgramDiff { benchmarks: Some(delta), ..Default::default() }\n            },\n            Self::Activity(row) => {\n                let mut delta = ProgramActivitiesDelta::removal(&base.activities, index);\n                delta.absorb(ProgramActivitiesDelta::insertion(index, row.clone()));\n                ProgramDiff { activities: Some(delta), ..Default::default() }\n            },\n            Self::InfrastructureRequirement(row) => {\n                let mut delta = ProgramInfrastructureDelta::removal(&base.infrastructure, index);\n                delta.absorb(ProgramInfrastructureDelta::insertion(index, row.clone()));\n                ProgramDiff { infrastructure: Some(delta), ..Default::default() }\n            },\n            Self::OrganizationalRequirement(row) => {\n                let mut delta = ProgramOrganizationalDelta::removal(&base.organizational, index);\n                delta.absorb(ProgramOrganizationalDelta::insertion(index, row.clone()));\n                ProgramDiff { organizational: Some(delta), ..Default::default() }\n            },\n            Self::Issue(row) => {\n                let mut delta = ProgramIssuesDelta::removal(&base.issues, index);\n                delta.absorb(ProgramIssuesDelta::insertion(index, row.clone()));\n                ProgramDiff { issues: Some(delta), ..Default::default() }\n            },\n            Self::ApprovalRecord(row) => {\n                let mut delta = ProgramApprovalsDelta::removal(&base.approvals, index);\n                delta.absorb(ProgramApprovalsDelta::insertion(index, row.clone()));\n                ProgramDiff { approvals: Some(delta), ..Default::default() }\n            },\n            Self::Stakeholder(row) => {\n                let mut delta = ProgramStakeholdersDelta::removal(&base.stakeholders, index);\n                delta.absorb(ProgramStakeholdersDelta::insertion(index, row.clone()));\n                ProgramDiff { stakeholders: Some(delta), ..Default::default() }\n            },\n            Self::QualityRecord(row) => {\n                let mut delta = ProgramQualityDelta::removal(&base.quality, index);\n                delta.absorb(ProgramQualityDelta::insertion(index, row.clone()));\n                ProgramDiff { quality: Some(delta), ..Default::default() }\n            },\n            Self::ResilienceRequirement(row) => {\n                let mut delta = ProgramResilienceDelta::removal(&base.resilience, index);\n                delta.absorb(ProgramResilienceDelta::insertion(index, row.clone()));\n                ProgramDiff { resilience: Some(delta), ..Default::default() }\n            },\n            Self::Assumption(row) => {\n                let mut delta = ProgramAssumptionsDelta::removal(&base.assumptions, index);\n                delta.absorb(ProgramAssumptionsDelta::insertion(index, row.clone()));\n                ProgramDiff { assumptions: Some(delta), ..Default::default() }\n            },\n            Self::CostRequirement(row) => {\n                let mut delta = ProgramCostsDelta::removal(&base.costs, index);\n                delta.absorb(ProgramCostsDelta::insertion(index, row.clone()));\n                ProgramDiff { costs: Some(delta), ..Default::default() }\n            },\n            Self::Document(row) => {\n                let mut delta = ProgramArtifactsDelta::removal(&base.artifacts, index);\n                delta.absorb(ProgramArtifactsDelta::insertion(index, row.clone()));\n                ProgramDiff { artifacts: Some(delta), ..Default::default() }\n            },\n            Self::ScheduleRequirement(row) => {\n                let mut delta = ProgramSchedulesDelta::removal(&base.schedules, index);\n                delta.absorb(ProgramSchedulesDelta::insertion(index, row.clone()));\n                ProgramDiff { schedules: Some(delta), ..Default::default() }\n            },\n            Self::GrowthPlan(row) => {\n                let mut delta = ProgramGrowthDelta::removal(&base.growth, index);\n                delta.absorb(ProgramGrowthDelta::insertion(index, row.clone()));\n                ProgramDiff { growth: Some(delta), ..Default::default() }\n            },\n            Self::PerformanceCriterion(row) => {\n                let mut delta = ProgramPerformanceDelta::removal(&base.performance, index);\n                delta.absorb(ProgramPerformanceDelta::insertion(index, row.clone()));\n                ProgramDiff { performance: Some(delta), ..Default::default() }\n            },\n            Self::OperationalRequirement(row) => {\n                let mut delta = ProgramOperationsDelta::removal(&base.operations, index);\n                delta.absorb(ProgramOperationsDelta::insertion(index, row.clone()));\n                ProgramDiff { operations: Some(delta), ..Default::default() }\n            },\n            Self::Requirement(row) => {\n                let mut delta = ProgramRequirementsDelta::removal(&base.requirements, index);\n                delta.absorb(ProgramRequirementsDelta::insertion(index, row.clone()));\n                ProgramDiff { requirements: Some(delta), ..Default::default() }\n            },\n            Self::SiteContext(row) => {\n                let mut delta = ProgramSiteContextDelta::removal(&base.site_context, index);\n                delta.absorb(ProgramSiteContextDelta::insertion(index, row.clone()));\n                ProgramDiff { site_context: Some(delta), ..Default::default() }\n            },\n            Self::TemplateRecord(row) => {\n                let mut delta = ProgramTemplatesDelta::removal(&base.templates, index);\n                delta.absorb(ProgramTemplatesDelta::insertion(index, row.clone()));\n                ProgramDiff { templates: Some(delta), ..Default::default() }\n            },\n            Self::ReportRecord(row) => {\n                let mut delta = ProgramReportsDelta::removal(&base.reports, index);\n                delta.absorb(ProgramReportsDelta::insertion(index, row.clone()));\n                ProgramDiff { reports: Some(delta), ..Default::default() }\n            },\n            Self::AuditEvent(row) => {\n                let mut delta = ProgramAuditEventsDelta::removal(&base.audit_events, index);\n                delta.absorb(ProgramAuditEventsDelta::insertion(index, row.clone()));\n                ProgramDiff { audit_events: Some(delta), ..Default::default() }\n            },\n            Self::KnowledgeRecord(row) => {\n                let mut delta = ProgramKnowledgeDelta::removal(&base.knowledge_payload, index);\n                delta.absorb(ProgramKnowledgeDelta::insertion(index, row.clone()));\n                ProgramDiff { knowledge: Some(delta), ..Default::default() }\n            },\n            Self::RegulatoryRequirement(row) => {\n                let mut delta = ProgramRegulatoryDelta::removal(&base.regulatory, index);\n                delta.absorb(ProgramRegulatoryDelta::insertion(index, row.clone()));\n                ProgramDiff { regulatory: Some(delta), ..Default::default() }\n            },\n            Self::CommunicationRequirement(row) => {\n                let mut delta = ProgramCommunicationDelta::removal(&base.communication, index);\n                delta.absorb(ProgramCommunicationDelta::insertion(index, row.clone()));\n                ProgramDiff { communication: Some(delta), ..Default::default() }\n            },\n            Self::Resource(row) => {\n                let mut delta = ProgramResourcesDelta::removal(&base.resources, index);\n                delta.absorb(ProgramResourcesDelta::insertion(index, row.clone()));\n                ProgramDiff { resources: Some(delta), ..Default::default() }\n            },\n            Self::StatusRecord(row) => {\n                let mut delta = ProgramStatusRecordsDelta::removal(&base.status_records, index);\n                delta.absorb(ProgramStatusRecordsDelta::insertion(index, row.clone()));\n                ProgramDiff { status_records: Some(delta), ..Default::default() }\n            },\n            Self::ChangeRecord(row) => {\n                let mut delta = ProgramChangesDelta::removal(&base.changes, index);\n                delta.absorb(ProgramChangesDelta::insertion(index, row.clone()));\n                ProgramDiff { changes: Some(delta), ..Default::default() }\n            },\n            Self::Process(row) => {\n                let mut delta = ProgramProcessesDelta::removal(&base.processes, index);\n                delta.absorb(ProgramProcessesDelta::insertion(index, row.clone()));\n                ProgramDiff { processes: Some(delta), ..Default::default() }\n            },\n            Self::SearchFilter(row) => {\n                let mut delta = ProgramSearchFiltersDelta::removal(&base.search_filters, index);\n                delta.absorb(ProgramSearchFiltersDelta::insertion(index, row.clone()));\n                ProgramDiff { search_filters: Some(delta), ..Default::default() }\n            },\n            Self::AccessRule(row) => {\n                let mut delta = ProgramAccessRulesDelta::removal(&base.access_rules, index);\n                delta.absorb(ProgramAccessRulesDelta::insertion(index, row.clone()));\n                ProgramDiff { access_rules: Some(delta), ..Default::default() }\n            },\n            Self::PrivacyRequirement(row) => {\n                let mut delta = ProgramPrivacyDelta::removal(&base.privacy, index);\n                delta.absorb(ProgramPrivacyDelta::insertion(index, row.clone()));\n                ProgramDiff { privacy: Some(delta), ..Default::default() }\n            },\n            Self::QuantityRequirement(row) => {\n                let mut delta = ProgramQuantitiesDelta::removal(&base.quantities, index);\n                delta.absorb(ProgramQuantitiesDelta::insertion(index, row.clone()));\n                ProgramDiff { quantities: Some(delta), ..Default::default() }\n            },\n            Self::AnalysisRecord(row) => {\n                let mut delta = ProgramAnalysesDelta::removal(&base.analyses, index);\n                delta.absorb(ProgramAnalysesDelta::insertion(index, row.clone()));\n                ProgramDiff { analyses: Some(delta), ..Default::default() }\n            },\n            Self::Relationship(row) => {\n                let mut delta = ProgramRelationshipsDelta::removal(&base.relationships, index);\n                delta.absorb(ProgramRelationshipsDelta::insertion(index, row.clone()));\n                ProgramDiff { relationships: Some(delta), ..Default::default() }\n            },\n            Self::StorageRequirement(row) => {\n                let mut delta = ProgramStorageDelta::removal(&base.storage, index);\n                delta.absorb(ProgramStorageDelta::insertion(index, row.clone()));\n                ProgramDiff { storage: Some(delta), ..Default::default() }\n            },\n            Self::MeetingRecord(row) => {\n                let mut delta = ProgramMeetingsDelta::removal(&base.meetings, index);\n                delta.absorb(ProgramMeetingsDelta::insertion(index, row.clone()));\n                ProgramDiff { meetings: Some(delta), ..Default::default() }\n            },\n            Self::Survey(row) => {\n                let mut delta = ProgramSurveysDelta::removal(&base.surveys, index);\n                delta.absorb(ProgramSurveysDelta::insertion(index, row.clone()));\n                ProgramDiff { surveys: Some(delta), ..Default::default() }\n            },\n            Self::DeliveryConstraint(row) => {\n                let mut delta = ProgramDeliveryDelta::removal(&base.delivery, index);\n                delta.absorb(ProgramDeliveryDelta::insertion(index, row.clone()));\n                ProgramDiff { delivery: Some(delta), ..Default::default() }\n            },\n            Self::ConstraintRecord(row) => {\n                let mut delta = ProgramConstraintsDelta::removal(&base.constraints, index);\n                delta.absorb(ProgramConstraintsDelta::insertion(index, row.clone()));\n                ProgramDiff { constraints: Some(delta), ..Default::default() }\n            },\n            Self::ComplianceRecord(row) => {\n                let mut delta = ProgramComplianceRecordsDelta::removal(&base.compliance_records, index);\n                delta.absorb(ProgramComplianceRecordsDelta::insertion(index, row.clone()));\n                ProgramDiff { compliance_records: Some(delta), ..Default::default() }\n            },\n            Self::ServiceRequirement(row) => {\n                let mut delta = ProgramServicesDelta::removal(&base.services, index);\n                delta.absorb(ProgramServicesDelta::insertion(index, row.clone()));\n                ProgramDiff { services: Some(delta), ..Default::default() }\n            },\n            Self::Equipment(row) => {\n                let mut delta = ProgramEquipmentDelta::removal(&base.equipment, index);\n                delta.absorb(ProgramEquipmentDelta::insertion(index, row.clone()));\n                ProgramDiff { equipment: Some(delta), ..Default::default() }\n            },\n            Self::SecurityRequirement(row) => {\n                let mut delta = ProgramSecurityDelta::removal(&base.security, index);\n                delta.absorb(ProgramSecurityDelta::insertion(index, row.clone()));\n                ProgramDiff { security: Some(delta), ..Default::default() }\n            },\n            Self::CollaborationRecord(row) => {\n                let mut delta = ProgramCollaborationDelta::removal(&base.collaboration, index);\n                delta.absorb(ProgramCollaborationDelta::insertion(index, row.clone()));\n                ProgramDiff { collaboration: Some(delta), ..Default::default() }\n            },\n            Self::SafetyRequirement(row) => {\n                let mut delta = ProgramSafetyDelta::removal(&base.safety, index);\n                delta.absorb(ProgramSafetyDelta::insertion(index, row.clone()));\n                ProgramDiff { safety: Some(delta), ..Default::default() }\n            },\n            Self::UserProfile(row) => {\n                let mut delta = ProgramUsersDelta::removal(&base.users, index);\n                delta.absorb(ProgramUsersDelta::insertion(index, row.clone()));\n                ProgramDiff { users: Some(delta), ..Default::default() }\n            },\n            Self::HumanFactorRequirement(row) => {\n                let mut delta = ProgramHumanFactorsDelta::removal(&base.human_factors, index);\n                delta.absorb(ProgramHumanFactorsDelta::insertion(index, row.clone()));\n                ProgramDiff { human_factors: Some(delta), ..Default::default() }\n            },\n            Self::FlexibilityRequirement(row) => {\n                let mut delta = ProgramFlexibilityDelta::removal(&base.flexibility, index);\n                delta.absorb(ProgramFlexibilityDelta::insertion(index, row.clone()));\n                ProgramDiff { flexibility: Some(delta), ..Default::default() }\n            },\n            Self::WayfindingRequirement(row) => {\n                let mut delta = ProgramWayfindingDelta::removal(&base.wayfinding, index);\n                delta.absorb(ProgramWayfindingDelta::insertion(index, row.clone()));\n                ProgramDiff { wayfinding: Some(delta), ..Default::default() }\n            },\n            Self::ProgramElement(row) => {\n                let mut delta = ProgramElementsDelta::removal(&base.elements, index);\n                delta.absorb(ProgramElementsDelta::insertion(index, row.clone()));\n                ProgramDiff { elements: Some(delta), ..Default::default() }\n            },"
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-config/🦀️.rs",
+   "kind": "edit",
+   "before": "60b55adf273ca78f7f4b71bc660f22f7f37581d253e614c5358216e821510759",
+   "after": "92caa0dc98b57e3bc2e3c1383406ab1fa142ec42ccf67bd04afeddeebc5807d9",
+   "hunks": [
+    {
+     "old": "            before: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation-settings/✅️change/📸️snapshot/⬅️before/🔣️.json\"),\n            mutation: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation-settings/✅️change/🦠️mutation/🔣️.json\"),\n            after: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation-settings/✅️change/📸️snapshot/➡️after/🔣️.json\"),\n            diff: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation-settings/✅️change/🔺️diff/🔣️.json\"),\n            outcome: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation-settings/✅️change/🎯️outcome/🔣️.json\"),",
+     "new": "            before: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation/✅️change/📸️snapshot/⬅️before/🔣️.json\"),\n            mutation: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation/✅️change/🦠️mutation/🔣️.json\"),\n            after: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation/✅️change/📸️snapshot/➡️after/🔣️.json\"),\n            diff: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation/✅️change/🔺️diff/🔣️.json\"),\n            outcome: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/⏱️change-simulation/✅️change/🎯️outcome/🔣️.json\"),"
+    },
+    {
+     "old": "            before: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result-field/✅️change/📸️snapshot/⬅️before/🔣️.json\"),\n            mutation: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result-field/✅️change/🦠️mutation/🔣️.json\"),\n            after: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result-field/✅️change/📸️snapshot/➡️after/🔣️.json\"),\n            diff: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result-field/✅️change/🔺️diff/🔣️.json\"),\n            outcome: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result-field/✅️change/🎯️outcome/🔣️.json\"),",
+     "new": "            before: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result/✅️change/📸️snapshot/⬅️before/🔣️.json\"),\n            mutation: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result/✅️change/🦠️mutation/🔣️.json\"),\n            after: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result/✅️change/📸️snapshot/➡️after/🔣️.json\"),\n            diff: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result/✅️change/🔺️diff/🔣️.json\"),\n            outcome: include_str!(\"../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🎨️change-result/✅️change/🎯️outcome/🔣️.json\"),"
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "e7512eb273193186bc71794c5651e42cd4433cc166403f4c3204ff93c86037cb",
+   "after": "21f332f4821fcd392a763144620256862ed7e02b9b152b02a39bc90e2b1dce6a",
+   "hunks": [
+    {
+     "old": "test(\"Rewriting committed snapshots use the closed canonical declared JSON scalar schema\",()=>{const root=new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/\",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});for(const url of JSON.parse(readFileSync(new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url),\"utf8\")).schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),\"utf8\")));const validate=ajv.compile(JSON.parse(readFileSync(new URL(\"../../../../🧬️schema/🔣️.json\",import.meta.url),\"utf8\")));const files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith(\"/📸️snapshot/⬅️before/🔣️.json\")||p.endsWith(\"/📸️snapshot/➡️after/🔣️.json\"));expect(files.length).toBe(18);expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json');expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json');for(const path of files)expect(validate(JSON.parse(readFileSync(new URL(path,root),\"utf8\")))).toBe(true);});",
+     "new": "test(\"Rewriting committed snapshots use the closed canonical declared JSON scalar schema\",()=>{const root=new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/\",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});for(const url of JSON.parse(readFileSync(new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url),\"utf8\")).schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),\"utf8\")));const validate=ajv.compile(JSON.parse(readFileSync(new URL(\"../../../../🧬️schema/🔣️.json\",import.meta.url),\"utf8\")));const files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith(\"/📸️snapshot/⬅️before/🔣️.json\")||p.endsWith(\"/📸️snapshot/➡️after/🔣️.json\"));expect(files.length).toBe(18);expect(files).toContain('🫳️drag-rule-nodes/🫳️moves/📸️snapshot/⬅️before/🔣️.json');expect(files).toContain('🫳️drag-rule-nodes/🫳️moves/📸️snapshot/➡️after/🔣️.json');for(const path of files)expect(validate(JSON.parse(readFileSync(new URL(path,root),\"utf8\")))).toBe(true);});"
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/🟦️.ts",
+   "kind": "edit",
+   "before": "40a842ac262fc6441f4c725685098fc649f4c3fc3cfcaaeebe589423bc0329fa",
+   "after": "e2a116589f045a6a15d502898288c89fd0e3d1190eae51e84323e49e5ba5ee67",
+   "hunks": [
+    {
+     "old": "for(const c of corpus.nativeCases)test(\"DAG actual public physical SQLite roundtrip and independent edited reference \"+c.name,async()=>{const{name,...value}=c;expect(publicApi.parseDagSnapshot(value) as unknown).toEqual(value);const database=await publicApi.dagSnapshotToSqliteDatabase(publicApi.parseDagSnapshot(value));expect(database.tables.length).toBe(2);expect(await publicApi.dagSnapshotFromSqliteDatabase(database) as unknown).toEqual(value);const bytes=await exportSqliteDatabase(database),db=Database.deserialize(bytes,{safeIntegers:true});try{expect(db.query(\"PRAGMA foreign_key_check\").all()).toEqual([]);expect(db.query(\"SELECT child_id,artifact_id FROM dag_content_child\").get()).toEqual({child_id:value.content.childId,artifact_id:value.content.target.artifactId});db.run(\"UPDATE dag_document SET id=9\");db.run(\"UPDATE dag_content_child SET id=11,document_id=9,artifact_id=?\",[corpus.nativeCases[2]!.content.target.artifactId]);const edited=await importSqliteDatabase(db.serialize());expect(await publicApi.dagSnapshotFromSqliteDatabase(edited) as unknown).toEqual({...value,content:{...value.content,target:{...value.content.target,artifactId:corpus.nativeCases[2]!.content.target.artifactId}}})}finally{db.close()}});",
+     "new": "for(const c of corpus.nativeCases)test(\"DAG actual public physical SQLite roundtrip and independent edited reference \"+c.name,async()=>{const{name,...value}=c;expect(publicApi.parseDagSnapshot(value) as unknown).toEqual(value);const database=await publicApi.dagSnapshotToSqliteDatabase(publicApi.parseDagSnapshot(value));expect(database.tables.length).toBe(2);expect(await publicApi.dagSnapshotFromSqliteDatabase(database) as unknown).toEqual(value);const bytes=await exportSqliteDatabase(database),db=Database.deserialize(bytes,{safeIntegers:true});try{expect(db.query(\"PRAGMA foreign_key_check\").all()).toEqual([]);expect(db.query(\"SELECT child_id,artifact_id FROM dag_content_child\").get()).toEqual({child_id:value.content.childId,artifact_id:value.content.target.artifactId});db.run(\"UPDATE dag_document SET id=9\");db.run(\"UPDATE dag_content_child SET id=11,document_id=9,child_id=?1,artifact_id=?1\",[corpus.nativeCases[2]!.content.target.artifactId]);const edited=await importSqliteDatabase(db.serialize());expect(await publicApi.dagSnapshotFromSqliteDatabase(edited) as unknown).toEqual({...value,content:{...value.content,childId:corpus.nativeCases[2]!.content.target.artifactId,target:{...value.content.target,artifactId:corpus.nativeCases[2]!.content.target.artifactId}}})}finally{db.close()}});"
+    },
+    {
+     "old": "test(\"DAG actual long literal text reaches known interior projection and reconstruction controls\",async()=>{const{name,...raw}=corpus.nativeCases[1]!,value=publicApi.parseDagSnapshot({...raw,content:{...raw.content,childId:\"😀\".repeat(32768)}});let saw=false;await expect(publicApi.dagSnapshotToSqliteDatabase(value,{onProgress(e){if(e.phase===\"projectSnapshot\"&&e.total>=65536&&e.completed>=16384&&e.completed<e.total){saw=true;throw Error(\"interior\")}}})).rejects.toThrow(\"interior\");expect(saw).toBe(true);const database=await publicApi.dagSnapshotToSqliteDatabase(value);saw=false;await expect(publicApi.dagSnapshotFromSqliteDatabase(database,{onProgress(e){if(e.phase===\"reconstructSnapshot\"&&e.total>=65536&&e.completed>=16384&&e.completed<e.total){saw=true;throw Error(\"interior\")}}})).rejects.toThrow(\"interior\");expect(saw).toBe(true);await expect(publicApi.dagSnapshotToSqliteDatabase(value,{onProgress(){throw Error(\"initial\")}})).rejects.toThrow(\"initial\")});",
+     "new": "test(\"DAG actual long literal text reaches known interior projection and reconstruction controls\",async()=>{const{name,...raw}=corpus.nativeCases[1]!,value=publicApi.parseDagSnapshot({...raw,content:{...raw.content,childId:\"😀\".repeat(32768),target:{...raw.content.target,artifactId:\"😀\".repeat(32768)}}});let saw=false;await expect(publicApi.dagSnapshotToSqliteDatabase(value,{onProgress(e){if(e.phase===\"projectSnapshot\"&&e.total>=65536&&e.completed>=16384&&e.completed<e.total){saw=true;throw Error(\"interior\")}}})).rejects.toThrow(\"interior\");expect(saw).toBe(true);const database=await publicApi.dagSnapshotToSqliteDatabase(value);saw=false;await expect(publicApi.dagSnapshotFromSqliteDatabase(database,{onProgress(e){if(e.phase===\"reconstructSnapshot\"&&e.total>=65536&&e.completed>=16384&&e.completed<e.total){saw=true;throw Error(\"interior\")}}})).rejects.toThrow(\"interior\");expect(saw).toBe(true);await expect(publicApi.dagSnapshotToSqliteDatabase(value,{onProgress(){throw Error(\"initial\")}})).rejects.toThrow(\"initial\")});"
+    },
+    {
+     "old": "  expect(publicContract[\"dialect\"]).toEqual({\"artifactKind\":\"s.dag.dag\",\"standard\":\"1\",\"subset\":\"*\"});expect(publicContract[\"documentSchema\"]).toEqual(\"dag.dag\");expect(publicContract[\"before\"]).toEqual({\"schema\":\"dag.dag\",\"content\":{\"childId\":\"\\u0000!@/引用🌍\",\"target\":{\"artifactId\":\"distinct\\u0000!@/😀\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"graph\"}}}});expect(publicContract[\"edited\"]).toEqual({\"schema\":\"dag.dag\",\"content\":{\"childId\":\"independent child\",\"target\":{\"artifactId\":\"independent target\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"graph\"}}}});expect(publicContract[\"domainTables\"]).toEqual({\"dag_document\":[\"id\",\"schema\"],\"dag_content_child\":[\"id\",\"document_id\",\"child_id\",\"artifact_id\",\"artifact_kind\",\"standard\",\"subset\"]});expect(publicContract[\"domainRowCounts\"]).toEqual({\"dag_document\":1,\"dag_content_child\":1});expect(publicContract[\"editSql\"]).toEqual(\"UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'\");expect(publicContract[\"publicMetadata\"]).toEqual({\"columns\":[\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"],\"rowCount\":1,\"identity\":[1,1,\"s.dag.dag\",\"1\",\"*\"],\"encodings\":[\"binary\",\"text\"]});expect(publicContract[\"routes\"]).toEqual({\"hops\":1,\"fidelity\":\"exact\"});expect(publicContract[\"foreignKeys\"]).toEqual([\"dag_content_child.document_id=dag_document.id\"]);expect(publicContract[\"scope\"]).toEqual(\"Complete real two-field persisted parent and literal child identity; no child graph capture/render/global-frame claim.\");",
+     "new": "  expect(publicContract[\"dialect\"]).toEqual({\"artifactKind\":\"s.dag.dag\",\"standard\":\"1\",\"subset\":\"*\"});expect(publicContract[\"documentSchema\"]).toEqual(\"dag.dag\");expect(publicContract[\"before\"]).toEqual({\"schema\":\"dag.dag\",\"content\":{\"childId\":\"distinct\\u0000!@/😀\",\"target\":{\"artifactId\":\"distinct\\u0000!@/😀\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"graph\"}}}});expect(publicContract[\"edited\"]).toEqual({\"schema\":\"dag.dag\",\"content\":{\"childId\":\"independent target\",\"target\":{\"artifactId\":\"independent target\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"graph\"}}}});expect(publicContract[\"domainTables\"]).toEqual({\"dag_document\":[\"id\",\"schema\"],\"dag_content_child\":[\"id\",\"document_id\",\"child_id\",\"artifact_id\",\"artifact_kind\",\"standard\",\"subset\"]});expect(publicContract[\"domainRowCounts\"]).toEqual({\"dag_document\":1,\"dag_content_child\":1});expect(publicContract[\"editSql\"]).toEqual(\"UPDATE dag_content_child SET child_id='independent target',artifact_id='independent target'\");expect(publicContract[\"publicMetadata\"]).toEqual({\"columns\":[\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"],\"rowCount\":1,\"identity\":[1,1,\"s.dag.dag\",\"1\",\"*\"],\"encodings\":[\"binary\",\"text\"]});expect(publicContract[\"routes\"]).toEqual({\"hops\":1,\"fidelity\":\"exact\"});expect(publicContract[\"foreignKeys\"]).toEqual([\"dag_content_child.document_id=dag_document.id\"]);expect(publicContract[\"scope\"]).toEqual(\"Complete real two-field persisted parent and literal child identity equal to its target artifact id; no child graph capture/render/global-frame claim.\");"
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json",
+   "kind": "edit",
+   "before": "8f104c131d15b49bb52e29a189a541f6a60dc3085097f7e772e4826ac6b37365",
+   "after": "b1275ac7394899e18ab4d23deaf44723be09107f6ea43d1e5579f0e5df875a11",
+   "hunks": [
+    {
+     "old": "      \"name\": \"independent-unresolved-alias\",",
+     "new": "      \"name\": \"unresolved-alias\","
+    },
+    {
+     "old": "        \"childId\": \"local-alias\",",
+     "new": "        \"childId\": \"target\\u0000!@/独立🌍\","
+    },
+    {
+     "old": "        \"childId\": \"\\u0000!@/引用🌍\",",
+     "new": "        \"childId\": \"distinct\\u0000!@/😀\","
+    }
+   ]
+  },
+  {
+   "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json",
+   "kind": "edit",
+   "before": "a2887bad4423af52791b6bd00d8dce866eca585efcf056095c4725f9f2cff4d7",
+   "after": "cb28c14f79c3389d6db5e4d47938b2afdcbe24de345f711ee97b46bd83da3242",
+   "hunks": [
+    {
+     "old": "      \"childId\": \"\\u0000!@/引用🌍\",",
+     "new": "      \"childId\": \"distinct\\u0000!@/😀\","
+    },
+    {
+     "old": "      \"childId\": \"independent child\",",
+     "new": "      \"childId\": \"independent target\","
+    },
+    {
+     "old": "  \"editSql\": \"UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'\",",
+     "new": "  \"editSql\": \"UPDATE dag_content_child SET child_id='independent target',artifact_id='independent target'\","
+    },
+    {
+     "old": "  \"scope\": \"Complete real two-field persisted parent and literal child identity; no child graph capture/render/global-frame claim.\"",
+     "new": "  \"scope\": \"Complete real two-field persisted parent and literal child identity equal to its target artifact id; no child graph capture/render/global-frame claim.\""
+    }
+   ]
+  },
+  {
+   "rel": "🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts",
+   "kind": "edit",
+   "before": "99eaf1c449fdf864a29cee673ac520d9e9e9ab12efe8829194ada4243c2eae40",
+   "after": "77cf2e82ccc901c95a84f6c6f0e3f6ec5b6aef5e14727d9bf53dd36827a37535",
+   "hunks": [
+    {
+     "old": "  { name: \"codex uses the cross-platform repo bootstrap\", path: \".codex/config.toml\", required: ['command = \"bun\"', 'args = [\"./📜️script.ts\", \"dev\", \"mcp\", \"stdio\", \"codex\"]'], forbidden: [\"repo/client/client\"] },\n  { name: \"generic clients use the cross-platform repo bootstrap\", path: \".mcp.json\", required: ['\"command\": \"bun\"', '\"args\": [\"./📜️script.ts\", \"dev\", \"mcp\", \"stdio\", \"client\"]'], forbidden: [\"repo/client/client\"] },",
+     "new": "  { name: \"codex starts the repo MCP server through the repo command\", path: \".codex/config.toml\", required: ['command = \"repo\"', 'args = [\"mcp\"]', 'SEMIO_REPO_MCP_CLIENT = \"codex\"'], forbidden: [\"repo/client/client\", \"./📜️script.ts\"] },\n  { name: \"generic clients start the repo MCP server through the repo command\", path: \".mcp.json\", required: ['\"command\": \"repo\"', '\"args\": [\"mcp\"]', '\"SEMIO_REPO_MCP_CLIENT\": \"client\"'], forbidden: [\"repo/client/client\", \"./📜️script.ts\"] },"
+    },
+    {
+     "old": "  { name: \"native shell bootstrap builds the repo client from its canonical source\", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: [\"bun repo run workspace:setup\", \"bun repo run @semio-tech/repo-client:build\"], forbidden: [\"repo/client/client\", \"./repo/client/mcp/go\", \"💻️client\"] },\n  { name: \"native windows bootstrap builds the repo client from its canonical source\", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@(\"repo\", \"run\", \"workspace:setup\")', '@(\"repo\", \"run\", \"@semio-tech/repo-client:build\")', \"💻️client\\\\🛠️developer-tools\\\\🧬️schema\"], forbidden: [\"repo/client/client.exe\", \"./repo/client/mcp/go\"] },",
+     "new": "  { name: \"native shell bootstrap installs the repo command and runs the workspace setup through it\", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: [\"bun repo run repo-mcp:install\", \"repo run workspace:setup\", \"repo run @semio-tech/repo-developer-tools:setup-debugger\"], forbidden: [\"repo/client/client\", \"./repo/client/mcp/go\", \"💻️client\"] },\n  { name: \"native windows bootstrap installs the repo command and runs the workspace setup through it\", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@(\"repo\", \"run\", \"repo-mcp:install\")', '@(\"run\", \"workspace:setup\")', '@(\"run\", \"@semio-tech/repo-developer-tools:setup-debugger\")'], forbidden: [\"repo/client/client.exe\", \"./repo/client/mcp/go\"] },"
+    },
+    {
+     "old": "test(\"the dev MCP stdio bootstrap answers the initialize handshake\", async () => {\n  const child = Bun.spawn([\"bun\", \"./📜️script.ts\", \"dev\", \"mcp\", \"stdio\", \"codex\"], { cwd: root, stdin: \"pipe\", stdout: \"pipe\", stderr: \"inherit\" });",
+     "new": "test(\"the configured repo MCP server answers the initialize handshake\", async () => {\n  const server = JSON.parse(read(\".mcp.json\")).mcpServers.repo as { command: string; args: string[]; env: Record<string, string> };\n  const child = Bun.spawn([server.command, ...server.args], { cwd: root, env: { ...process.env, ...server.env }, stdin: \"pipe\", stdout: \"pipe\", stderr: \"inherit\" });"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏱️timers/🟦️.ts",
+   "kind": "edit",
+   "before": "e5d117fa42ed2c3e9c03e709ae9c69e91a856a173a5196c32bcbec0dbde5a941",
+   "after": "d5b299af264e34395022d2b8f3108ccf9cab74783d6f98e993daaa61d8286c0c",
+   "hunks": [
+    {
+     "old": "import cleanupSchema from\"../../../🧬️schema/🧹️cleanup.json\";\nimport corpus from\"./🔣️.json\";",
+     "new": "import cleanupSchema from\"../../../🧬️schema/🧹️cleanup.json\";\nimport policySchema from\"../../../../🧬️schema/🔣️.json\";\nimport corpus from\"./🔣️.json\";"
+    },
+    {
+     "old": " for(const maximumElapsedMilliseconds of[2147483647,2147483648,9007199254740991-Date.now()-10000]){",
+     "new": " const maximumPolicyMilliseconds=policySchema.properties.maximumElapsedMilliseconds.maximum;\n for(const maximumElapsedMilliseconds of[maximumPolicyMilliseconds,maximumPolicyMilliseconds-1,3600000]){"
+    },
+    {
+     "old": " expect(()=>createScriptProcessEnvelope({version:1,owner:\"fixture:unrepresentable-timer\",maximumElapsedMilliseconds:9007199254740991},{},Date.now())).toThrow();",
+     "new": " for(const maximumElapsedMilliseconds of[maximumPolicyMilliseconds+1,2147483647,2147483648,9007199254740991])expect(()=>createScriptProcessEnvelope({version:1,owner:\"fixture:unrepresentable-timer\",maximumElapsedMilliseconds},{},Date.now())).toThrow();"
+    },
+    {
+     "old": "  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:\"fixture:retired-body-timer\",maximumElapsedMilliseconds:2147483648},{},Date.now()),invocation=>withAcceptedPhysicalCleanupV1(createIssuedResourceControlV1(invocation,\"fixture:retired-body\",0),{version:1,kind:\"artifact-scratch\",resource:\"fixture:retired-body\",reserveMilliseconds:20},async(token,body)=>{",
+     "new": "  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:\"fixture:retired-body-timer\",maximumElapsedMilliseconds:policySchema.properties.maximumElapsedMilliseconds.maximum},{},Date.now()),invocation=>withAcceptedPhysicalCleanupV1(createIssuedResourceControlV1(invocation,\"fixture:retired-body\",0),{version:1,kind:\"artifact-scratch\",resource:\"fixture:retired-body\",reserveMilliseconds:20},async(token,body)=>{"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📊️profile/🔣️.json",
+   "kind": "edit",
+   "before": "88be6a2f62188929479a40996e533ab1bbdcdac94309e98e66a9492ec30ef348",
+   "after": "978e3398534900091c2418266919226c4d1ad640756aef9899740ebf1490a4e4",
+   "hunks": [
+    {
+     "old": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts\",",
+     "new": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🏛️crate-partition/🔣️.json",
+   "kind": "edit",
+   "before": "674992ab902a4b49a6c910b4bd32944a53b2e05d98293415d24e1ca13e876bd0",
+   "after": "532257d4aa5f37035c2398609dc56d35f16015a6a13379d9112c8250a0c78cee",
+   "hunks": [
+    {
+     "old": "    \"🔗️causal/🔀️transition/🧪️tests/🔬️supersede-fold/🦀️.rs\"",
+     "new": "    \"🔗️causal/🔀️transition/🧪️tests/🔬️supersede-fold/🦀️.rs\",\n    \"🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs\",\n    \"🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs\""
+    },
+    {
+     "old": "      \"level\": 0,\n      \"dependencies\": [],\n      \"devDependencies\": [],\n      \"peerDependencies\": []\n    },\n    {\n      \"package\": \"semio-framework-replication-command-ingress\",",
+     "new": "      \"level\": 0,\n      \"dependencies\": [],\n      \"devDependencies\": [],\n      \"peerDependencies\": [\n        \"semio-framework-replication-error\"\n      ]\n    },\n    {\n      \"package\": \"semio-framework-replication-command-ingress\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+   "kind": "edit",
+   "before": "e1d929439c13c6fae61971701671cfdca5b2c4ca4a646ad0bb84722e44b49795",
+   "after": "a28513de16cd64d4a721cc4019d4db32956928572d02053b0bdfedf348f5f0d0",
+   "hunks": [
+    {
+     "old": "      \"options\": {\n        \"command\": \"bun ./📜️script.ts test text-editor\"",
+     "new": "      \"options\": {\n        \"cwd\": \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust\",\n        \"command\": \"bun ./📜️script.ts test text-editor\""
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
+   "kind": "edit",
+   "before": "e0d48acfe1a0c246771a8b4bc13527a1bdb108b63ca324a7fe92faa4379a03c5",
+   "after": "2e9803f43bcc2980ab3d725cc7b26f29eeead9405b1cb34a9718583460a7d05b",
+   "hunks": [
+    {
+     "old": "            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"integer\",\n              \"minimum\": 0",
+     "new": "            \"type\": \"object\",\n            \"additionalProperties\": false,\n            \"properties\": {\n              \"start\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"length\": {\n                \"type\": \"integer\",\n                \"minimum\": 1\n              },\n              \"coverage\": {\n                \"type\": \"integer\",\n                \"minimum\": 1,\n                \"maximum\": 255\n              }"
+    },
+    {
+     "old": "            \"minItems\": 3,\n            \"maxItems\": 3",
+     "new": "            \"required\": [\n              \"start\",\n              \"length\",\n              \"coverage\"\n            ]"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/📄️catalog-retirement/🟦️.ts",
+   "kind": "edit",
+   "before": "cfc5c29fdbeb589bb289e2123bcf81e3bb0952fbc765687573e0e75e121b2bc2",
+   "after": "87d0f09a1326b3a2e5884aa9854b76a874234e11d60c746bd9bd83de301c13bf",
+   "hunks": [
+    {
+     "old": "  const drive = source.slice(source.indexOf(\"fn drive_active_hydration_retirement\"), source.indexOf(\"/// Admits the selected history\"));",
+     "new": "  const drive = source.slice(source.indexOf(\"fn drive_active_hydration_retirement\"), source.indexOf(\"fn begin_selected_dictionary\"));"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+   "kind": "edit",
+   "before": "4b1374b85fea0a3035b2a450b92625e72d8b8a0510257bb0628d81b55eb1ec3b",
+   "after": "007af8e0de52e8bfd0086649d18152f7eb3f3f713dccd68a78e5fe422f8ef5d7",
+   "hunks": [
+    {
+     "old": "import { runFreshComponentCheckScript } from \"../../🧪️tests/🔬️rust-package-commands/🟦️.ts\";",
+     "new": ""
+    },
+    {
+     "old": "  async run(segments: string[]): Promise<void> {\n    await runFreshComponentCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);",
+     "new": "  async run(segments: string[]): Promise<void> {\n    const { runFreshComponentCheckScript } = await import(\"../../🧪️tests/🔬️rust-package-commands/🟦️.ts\");\n    await runFreshComponentCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/📋️child-group-lock.json",
+   "kind": "edit",
+   "before": "47d7f3302332b1b75d38053ce0ac02591f01770d4fca9f88c386bec8ed3285bd",
+   "after": "866adebf5acf258920b914d3250d5e33164d7f722ed3dac46b532b34562970e2",
+   "hunks": [
+    {
+     "old": "    \"semio-framework-dsl-record-derive\",\n    \"semio-framework-os-kernel\",",
+     "new": "    \"semio-framework-dsl-record-derive\",\n    \"semio-framework-os-command\",\n    \"semio-framework-os-kernel\","
+    },
+    {
+     "old": "    \"semio-framework-plugin-decl-emission\",\n    \"semio-framework-schema-composition\",",
+     "new": "    \"semio-framework-plugin-decl-emission\",\n    \"semio-framework-replication\",\n    \"semio-framework-schema-composition\","
+    },
+    {
+     "old": "    \"semio-framework-test-fixtures\",\n    \"semio-framework-trace\",",
+     "new": "    \"semio-framework-test-fixtures\",\n    \"semio-framework-tool-machine\",\n    \"semio-framework-trace\","
+    },
+    {
+     "old": "    \"semio-framework-value-derive\",\n    \"serde\",",
+     "new": "    \"semio-framework-value-derive\",\n    \"semio-framework-value-native-owned\",\n    \"semio-framework-value-persistent\",\n    \"serde\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/📋️child-group-owner.json",
+   "kind": "edit",
+   "before": "0093abe9fa6dc3126a6664c59c3f8753c238b7497d005ba30b8d58363830ab32",
+   "after": "d2a57578245619098095054d66062c3cda1a3c29eed15b4d45ec8137e3d3fe14",
+   "hunks": [
+    {
+     "old": "    \"semio-framework-dsl-record-derive\",\n    \"semio-framework-os-kernel\",",
+     "new": "    \"semio-framework-dsl-record-derive\",\n    \"semio-framework-os-command\",\n    \"semio-framework-os-kernel\","
+    },
+    {
+     "old": "    \"semio-framework-plugin-decl-emission\",\n    \"semio-framework-schema-composition\",",
+     "new": "    \"semio-framework-plugin-decl-emission\",\n    \"semio-framework-replication\",\n    \"semio-framework-schema-composition\","
+    },
+    {
+     "old": "    \"semio-framework-test-fixtures\",\n    \"semio-framework-trace\",",
+     "new": "    \"semio-framework-test-fixtures\",\n    \"semio-framework-tool-machine\",\n    \"semio-framework-trace\","
+    },
+    {
+     "old": "    \"semio-framework-value-derive\",\n    \"serde\",",
+     "new": "    \"semio-framework-value-derive\",\n    \"semio-framework-value-native-owned\",\n    \"semio-framework-value-persistent\",\n    \"serde\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/🟦️.ts",
+   "kind": "edit",
+   "before": "2d7302ea879c37a115d733ec080c401996d7af7e92545cfc9796f316ccdd98f0",
+   "after": "c0b1c0eae04cf4ba7c788ef1c1886440f27c8d56e6bb051fe5dc557b3cde19de",
+   "hunks": [
+    {
+     "old": " const dir=resolve(dirname(resolve(root,childGroupOwner.target)),\"📦️packages/🦀️rust\"),owner=manifest(resolve(dir,\"Cargo.toml\"));expect(table(owner.package).name).toBe(childGroupOwner.package);expect(table(owner.package).autotests).toBe(false);expect(owner.lib).toBeUndefined();expect(table(owner.dependencies??{})).toEqual({});expect(Object.keys(table(owner[\"dev-dependencies\"])).sort()).toEqual(childGroupOwner.dependencies);expect(table(owner[\"dev-dependencies\"]).serde_json).toBe(\"1.0.140\");expect(table(table(owner[\"dev-dependencies\"])[\"semio-framework-os-kernel\"]).features).toEqual([\"mutation-testing\"]);expect(table(table(table(owner.package).metadata).semio)[\"rust-source-boundary\"]).toEqual({maxSourceBytes:262144,maxSourceFiles:32,maxActiveLines:4000});if(!Array.isArray(owner.test)||owner.test.length!==1)throw Error(\"One actual domain integration-test target required\");expect(resolve(dir,String(table(owner.test[0]).path))).toBe(resolve(root,childGroupOwner.target));for(const[name,value]of Object.entries(table(owner[\"dev-dependencies\"]))){if(typeof value===\"string\")continue;const spec=table(value);if(spec.workspace){expect(name).toBe(\"semio-framework-trace\");continue;}if(!spec.path){expect(name).toBe(\"serde\");expect(spec).toEqual({version:\"1.0.219\",features:[\"derive\"]});continue;}expect(table(manifest(resolve(dir,String(spec.path),\"Cargo.toml\")).package).name).toBe(spec.package??name);}const ws=manifest(resolve(root,\"Cargo.toml\"));expect((table(ws.workspace).members as string[]).filter(m=>resolve(root,m)===dir)).toHaveLength(1);",
+     "new": " const dir=resolve(dirname(resolve(root,childGroupOwner.target)),\"📦️packages/🦀️rust\"),owner=manifest(resolve(dir,\"Cargo.toml\"));expect(table(owner.package).name).toBe(childGroupOwner.package);expect(table(owner.package).autotests).toBe(false);expect(owner.lib).toBeUndefined();expect(table(owner.dependencies??{})).toEqual({});expect(Object.entries(table(owner[\"dev-dependencies\"])).map(([alias,edge])=>String(table(edge).package??alias)).sort()).toEqual(childGroupOwner.dependencies);expect(table(owner[\"dev-dependencies\"]).serde_json).toBe(\"1.0.140\");expect(table(table(owner[\"dev-dependencies\"])[\"semio-framework-os-kernel\"]).features).toEqual([\"mutation-testing\"]);expect(table(table(table(owner.package).metadata).semio)[\"rust-source-boundary\"]).toEqual({maxSourceBytes:262144,maxSourceFiles:32,maxActiveLines:4000});if(!Array.isArray(owner.test)||owner.test.length!==1)throw Error(\"One actual domain integration-test target required\");expect(resolve(dir,String(table(owner.test[0]).path))).toBe(resolve(root,childGroupOwner.target));for(const[name,value]of Object.entries(table(owner[\"dev-dependencies\"]))){if(typeof value===\"string\")continue;const spec=table(value);if(spec.workspace){expect(name).toBe(\"semio-framework-trace\");continue;}if(!spec.path){expect(name).toBe(\"serde\");expect(spec).toEqual({version:\"1.0.219\",features:[\"derive\"]});continue;}expect(table(manifest(resolve(dir,String(spec.path),\"Cargo.toml\")).package).name).toBe(spec.package??name);}const ws=manifest(resolve(root,\"Cargo.toml\"));expect((table(ws.workspace).members as string[]).filter(m=>resolve(root,m)===dir)).toHaveLength(1);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🕹️selection-set.json",
+   "kind": "edit",
+   "before": "67b02840e263805be688c73fe2be7b7fd766356423c5db50b4d7242440ab1e9a",
+   "after": "7c81da7bf6fc13825da31e41d329a6ff01a6d828f92af68999d30244f6fbe2b3",
+   "hunks": [
+    {
+     "old": "        \"file\": \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🦀️.rs\",",
+     "new": "        \"file\": \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🔍️lane-views/🦀️.rs\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json",
+   "kind": "edit",
+   "before": "e2720bedd0f73700b90fb04bd90d0fa6b1111550727b056d27b8a8b446aec4ba",
+   "after": "97f20f25ff78749725456571ad0a614327905ed8ab603c9f7fceec5a0e25f2e1",
+   "hunks": [
+    {
+     "old": "        \"semio-framework-os-kernel-db-wal\",\n        \"semio-framework-os-kernel-db-wal-log\",\n        \"semio-framework-replication\",\n        \"semio-framework-value\",",
+     "new": "        \"semio-framework-os-kernel-db-wal\",\n        \"semio-framework-os-kernel-db-wal-log\",\n        \"semio-framework-pack\",\n        \"semio-framework-replication\",\n        \"semio-framework-value\","
+    },
+    {
+     "old": "        \"semio-framework-trace\"",
+     "new": "        \"semio-framework-trace\",\n        \"serde_json\""
+    },
+    {
+     "old": "        \"semio-framework-os-kernel-db-ids\",\n        \"semio-framework-os-kernel-db-io-core\"\n      ],",
+     "new": "        \"semio-framework-os-kernel-db-ids\",\n        \"semio-framework-os-kernel-db-io-core\",\n        \"semio-framework-pack\"\n      ],"
+    },
+    {
+     "old": "        \"semio-framework-os-kernel-db-io-registry\",\n        \"semio-framework-os-kernel-db-policy\"\n      ],",
+     "new": "        \"semio-framework-os-kernel-db-io-registry\",\n        \"semio-framework-os-kernel-db-policy\",\n        \"semio-framework-pack\"\n      ],"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "35c52b1a3290e0db86b8ed6e0b38e465a9608690817fe869fe7d4e618a11dac1",
+   "after": "b7069d6e53fade6f875de8232c5917c66da0ec35d95e5491e656118132e38fd6",
+   "hunks": [
+    {
+     "old": "test(\"neutral OS development I/O stops transport before joining accepted work\",()=>{const validate=new Ajv({strict:false}).compile(schema.definitions.IoSettlement),db=new Database(\":memory:\");try{for(const row of corpus.ioSchedules){const oracle=db.query(\"SELECT json_extract(?,'$[0]')='admit' AND json_extract(?,'$[1]')='start' AND json_extract(?,'$[2]')='stop-transport' AND json_extract(?,'$[3]')='join' AND json_extract(?,'$[4]')='release' ok\").get(...Array(5).fill(JSON.stringify(row.stages)))as{ok:number};expect(validate(row.stages)).toBe(row.accepted);expect(oracle.ok===1).toBe(row.accepted);}const source=readFileSync(new URL(\"../🟦️.ts\",import.meta.url),\"utf8\"),finalizer=source.slice(source.lastIndexOf(\"finally{accepting=false\"));expect(finalizer.indexOf(\"closeAllConnections()\")).toBeLessThan(finalizer.indexOf(\"while(pending.size)\"));expect(source).toContain(\"acceptDevLocalHubRequestV1(\");expect(source).toContain(\"endDevLocalHubResponseV1(\");expect(source).toContain(\"pending.delete(work);failedRequest(error);\");const broker=readFileSync(join(process.cwd(),\"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts\"),\"utf8\");expect(broker).toContain(\"withDevLocalHubIoV1(invocation,control,\");expect(broker).not.toContain(\"signal:control.signal\");const io=readFileSync(new URL(\"../📥️io/🟦️.ts\",import.meta.url),\"utf8\");expect(io).toContain(\"withRequestedIssuedResourceControlV1(control,devLocalHubSessionPolicyV1().maximumRequestMilliseconds,\");expect(io).not.toContain(\"setTimeout\");expect(io).not.toContain(\"remainingMilliseconds()\");}finally{db.close();}});",
+     "new": "test(\"neutral OS development I/O stops transport before joining accepted work\",()=>{const validate=new Ajv({strict:false}).compile(schema.definitions.IoSettlement),db=new Database(\":memory:\");try{for(const row of corpus.ioSchedules){const oracle=db.query(\"SELECT json_extract(?,'$[0]')='admit' AND json_extract(?,'$[1]')='start' AND json_extract(?,'$[2]')='stop-transport' AND json_extract(?,'$[3]')='join' AND json_extract(?,'$[4]')='release' ok\").get(...Array(5).fill(JSON.stringify(row.stages)))as{ok:number};expect(validate(row.stages)).toBe(row.accepted);expect(oracle.ok===1).toBe(row.accepted);}const source=readFileSync(new URL(\"../🟦️.ts\",import.meta.url),\"utf8\"),finalizer=source.slice(source.lastIndexOf(\"finally{accepting=false\"));expect(finalizer.indexOf(\"closeAllConnections()\")).toBeLessThan(finalizer.indexOf(\"while(pending.size)\"));expect(source).toContain(\"acceptDevLocalHubRequestV1(\");expect(source).toContain(\"endDevLocalHubResponseV1(\");expect(source).toContain(\"pending.delete(work);failedRequest(error);\");const broker=readFileSync(new URL(\"../🗄️broker/🟦️.ts\",import.meta.url),\"utf8\");expect(broker).toContain(\"withDevLocalHubIoV1(invocation,control,\");expect(broker).not.toContain(\"signal:control.signal\");const io=readFileSync(new URL(\"../📥️io/🟦️.ts\",import.meta.url),\"utf8\");expect(io).toContain(\"withRequestedIssuedResourceControlV1(control,devLocalHubSessionPolicyV1().maximumRequestMilliseconds,\");expect(io).not.toContain(\"setTimeout\");expect(io).not.toContain(\"remainingMilliseconds()\");}finally{db.close();}});"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/🟦️.ts",
+   "kind": "edit",
+   "before": "c6311b8b60e8dac6b11429e9b88f78f70509c55a430a95481420720266fec250",
+   "after": "5253fe737ee2212d3f2f5af11826e8e67a898133cdd517be676bce91903e8a5a",
+   "hunks": [
+    {
+     "old": "test(\"neutral actual VSCode compiler publication and package commands retain real factory custody\",()=>{const script=readFileSync(new URL(\"../../📦️packages/🟦️typescript/📜️script.ts\",import.meta.url),\"utf8\");expect(script).toContain(\"buildVscodeExtensionV1\");expect(script).toContain(\"packageVscodeExtensionV1\");expect(script).toContain(\"watchVscodeExtensionV1\");expect(script).not.toContain(\"acquireCompilerCapacityLeaseV1\");expect(script).not.toContain('from \"vite\"');expect(script).not.toContain(\"stageRepositoryArtifacts(\");const path=new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),text=readFileSync(path,\"utf8\"),source=ts.createSourceFile(path.pathname,text,ts.ScriptTarget.Latest,true);for(const owner of[\"withRepositoryToolingStoreV1\",\"withJavascriptDependencyReadStorageV1\",\"withArtifactScratchV1\",\"withArtifactDestinationTaskV1\",\"withCompilerState\",\"withCompilerCapacityConsumptionV1\",\"withVscodeSourceSnapshotV1\",\"withRepositoryArtifactDestinationV1\",\"stageRepositoryArtifacts\",\"withTypeScriptPackageArtifactV1\",\"withTypeScriptPackageArtifactTaskV1\",\"bindTypeScriptPackageArtifactV1\"])expect(text).toContain(owner+\"(\");let publications=0;const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.getText(source)===\"stageRepositoryArtifacts\"){publications++;expect(node.arguments.length).toBe(3);expect(node.arguments[0]?.getText(source)).toBe(\"destination\");}ts.forEachChild(node,walk);};walk(source);expect(publications).toBe(1);expect(text).toContain(\"capacity:null\");expect(text).toContain('request:{kind:\"whole-host\"}');expect(text).not.toContain('SEMIO_COMPILER_CAPACITY_HELD:\"true\"');expect(text).not.toContain('as NativeStorage');expect(text).not.toContain(\"mkdtemp(\");});",
+     "new": "test(\"neutral actual VSCode compiler publication and package commands retain real factory custody\",()=>{const script=[\"../../📦️packages/🟦️typescript/📜️script.ts\",\"../🔬️typescript-package-commands/🟦️.ts\"].map(path=>readFileSync(new URL(path,import.meta.url),\"utf8\")).join(\"\\n\");expect(script).toContain(\"buildVscodeExtensionV1\");expect(script).toContain(\"packageVscodeExtensionV1\");expect(script).toContain(\"watchVscodeExtensionV1\");expect(script).not.toContain(\"acquireCompilerCapacityLeaseV1\");expect(script).not.toContain('from \"vite\"');expect(script).not.toContain(\"stageRepositoryArtifacts(\");const path=new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),text=readFileSync(path,\"utf8\"),source=ts.createSourceFile(path.pathname,text,ts.ScriptTarget.Latest,true);for(const owner of[\"withRepositoryToolingStoreV1\",\"withJavascriptDependencyReadStorageV1\",\"withArtifactScratchV1\",\"withArtifactDestinationTaskV1\",\"withCompilerState\",\"withCompilerCapacityConsumptionV1\",\"withVscodeSourceSnapshotV1\",\"withRepositoryArtifactDestinationV1\",\"stageRepositoryArtifacts\",\"withTypeScriptPackageArtifactV1\",\"withTypeScriptPackageArtifactTaskV1\",\"bindTypeScriptPackageArtifactV1\"])expect(text).toContain(owner+\"(\");let publications=0;const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.getText(source)===\"stageRepositoryArtifacts\"){publications++;expect(node.arguments.length).toBe(3);expect(node.arguments[0]?.getText(source)).toBe(\"destination\");}ts.forEachChild(node,walk);};walk(source);expect(publications).toBe(1);expect(text).toContain(\"capacity:null\");expect(text).toContain('request:{kind:\"whole-host\"}');expect(text).not.toContain('SEMIO_COMPILER_CAPACITY_HELD:\"true\"');expect(text).not.toContain('as NativeStorage');expect(text).not.toContain(\"mkdtemp(\");});"
+    },
+    {
+     "old": "test(\"neutral VSCode production callbacks separate actual compiler CPU from retained publication\",()=>{const path=new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),source=ts.createSourceFile(path.pathname,readFileSync(path,\"utf8\"),ts.ScriptTarget.Latest,true),owners=new Map<string,ts.ArrowFunction>();const walk=(node:ts.Node)=>{if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.initializer&&ts.isArrowFunction(node.initializer))owners.set(node.name.text,node.initializer);ts.forEachChild(node,walk);};walk(source);const compile=owners.get(\"compileExtension\"),consume=owners.get(\"consumeExtension\"),pack=owners.get(\"compilePackage\");if(!compile||!consume||!pack)throw Error(\"Actual VSCode CPU and completed continuation owners required\");const cpu=compile.getText(source),after=consume.getText(source),packCpu=pack.getText(source);expect(cpu).toContain(\"captureOwnedCommandResultV1(\");expect(cpu).toContain(\"control:cpu\");expect(cpu).toContain(\"scriptResourceProcessEnvironmentV1(cpu,\");expect(cpu).toContain(\"return()=>consumeExtension(completed)\");expect(cpu).not.toContain(\"writeFile(\");expect(cpu).not.toContain(\"publishVscodeV1(\");expect(after).toContain(\"withRequestedIssuedResourceControlV1(control,0\");expect(after).toContain(\"readVscodeCompilerFilesV1(\");expect(after).toContain(\"publishVscodeV1(\");expect(packCpu).toContain(\"scriptResourceProcessEnvironmentV1(cpu,\");expect(packCpu).toContain(\"return()=>withRequestedIssuedResourceControlV1(artifact.control,0\");const worker=readFileSync(new URL(\"../../🏗️builder/👷️worker/📜️script.ts\",import.meta.url),\"utf8\");expect(worker.indexOf(\"await receiveScriptProcessInvocation\")).toBeLessThan(worker.indexOf(\"for await(const chunk of process.stdin)\"));expect(worker.indexOf(\"schema.definitions.WorkerRequest\")).toBeLessThan(worker.indexOf('await import(\"vite\")'));expect(worker).toContain(\"write:false\");expect(worker).toContain(\"images.get(path)\");expect(worker).not.toContain(\"acquireCompilerCapacityLeaseV1\");expect(worker).not.toContain(\"withCompilerCapacityScopeV1\");expect(worker).not.toContain(\"NativeStorageReservationV1\");});",
+     "new": "test(\"neutral VSCode production callbacks separate actual compiler CPU from retained publication\",()=>{const path=new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),source=ts.createSourceFile(path.pathname,readFileSync(path,\"utf8\"),ts.ScriptTarget.Latest,true),owners=new Map<string,ts.ArrowFunction>();const walk=(node:ts.Node)=>{if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.initializer&&ts.isArrowFunction(node.initializer))owners.set(node.name.text,node.initializer);ts.forEachChild(node,walk);};walk(source);const compile=owners.get(\"compileExtension\"),consume=owners.get(\"consumeExtension\"),pack=owners.get(\"compilePackage\");if(!compile||!consume||!pack)throw Error(\"Actual VSCode CPU and completed continuation owners required\");const cpu=compile.getText(source),after=consume.getText(source),packCpu=pack.getText(source);expect(cpu).toContain(\"captureOwnedCommandResultV1(\");expect(cpu).toContain(\"control:cpu\");expect(cpu).toContain(\"scriptResourceProcessEnvironmentV1(cpu,\");expect(cpu).toContain(\"return()=>consumeExtension(completed)\");expect(cpu).not.toContain(\"writeFile(\");expect(cpu).not.toContain(\"publishVscodeV1(\");expect(after).toContain(\"withRequestedIssuedResourceControlV1(control,0\");expect(after).toContain(\"readVscodeCompilerFilesV1(\");expect(after).toContain(\"publishVscodeV1(\");expect(packCpu).toContain(\"scriptResourceProcessEnvironmentV1(cpu,\");expect(packCpu).toContain(\"return()=>withRequestedIssuedResourceControlV1(artifact.control,0\");const worker=readFileSync(new URL(\"../../🏗️builder/👷️worker/🟦️.ts\",import.meta.url),\"utf8\");expect(worker.indexOf(\"await receiveScriptProcessInvocation\")).toBeLessThan(worker.indexOf(\"for await(const chunk of process.stdin)\"));expect(worker.indexOf(\"schema.definitions.WorkerRequest\")).toBeLessThan(worker.indexOf('await import(\"vite\")'));expect(worker).toContain(\"write:false\");expect(worker).toContain(\"images.get(path)\");expect(worker).not.toContain(\"acquireCompilerCapacityLeaseV1\");expect(worker).not.toContain(\"withCompilerCapacityScopeV1\");expect(worker).not.toContain(\"NativeStorageReservationV1\");});"
+    },
+    {
+     "old": "test(\"neutral actual VSCode output admission refuses missing and foreign mode maps\",()=>{const db=new Database(\":memory:\");try{for(const row of fixture.outputModes){const mode=readBuildMode(row.mode);expect(new Ajv({strict:true}).validate(schema.definitions.OutputModeCase,row)).toBe(true);const required=row.mode===\"prototype\"?[\"extension.js\",\"test/extension.test.js\",\"extension.js.map\",\"test/extension.test.js.map\"]:[\"extension.js\",\"test/extension.test.js\"],oracle=db.query(\"select ?1=?2 and (select count(*) from json_each(?3))=(select count(*) from json_each(?4)) and not exists(select value from json_each(?3) except select value from json_each(?4)) and not exists(select value from json_each(?4) except select value from json_each(?3)) accepted\").get(row.mode,row.responseMode,JSON.stringify(row.names),JSON.stringify(required))as{accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);const response={version:1,mode:row.responseMode,files:row.names.map(name=>({name,base64:Buffer.from(name).toString(\"base64\"),sha256:digest(name)}))};expect(new Ajv({strict:true}).validate(schema.definitions.WorkerResponse,response)&&row.mode===row.responseMode).toBe(row.accepted);let accepted=true;try{readVscodeCompilerFilesV1(JSON.stringify(response),mode,65536);}catch{accepted=false;}expect(accepted).toBe(row.accepted);}const production=readFileSync(new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),\"utf8\"),worker=readFileSync(new URL(\"../../🏗️builder/👷️worker/📜️script.ts\",import.meta.url),\"utf8\");expect(production).toContain(\"readVscodeCompilerFilesV1(text,context.mode,\");expect(worker).toContain(\"readVscodeCompilerFilesV1(encoded,authority.original.buildMode,\");expect(worker).toContain(\"mode:authority.original.buildMode\");expect(worker).toContain(\"request.mode!==authority.original.buildMode\");}finally{db.close();}});",
+     "new": "test(\"neutral actual VSCode output admission refuses missing and foreign mode maps\",()=>{const db=new Database(\":memory:\");try{for(const row of fixture.outputModes){const mode=readBuildMode(row.mode);expect(new Ajv({strict:true}).validate(schema.definitions.OutputModeCase,row)).toBe(true);const required=row.mode===\"prototype\"?[\"extension.js\",\"test/extension.test.js\",\"extension.js.map\",\"test/extension.test.js.map\"]:[\"extension.js\",\"test/extension.test.js\"],oracle=db.query(\"select ?1=?2 and (select count(*) from json_each(?3))=(select count(*) from json_each(?4)) and not exists(select value from json_each(?3) except select value from json_each(?4)) and not exists(select value from json_each(?4) except select value from json_each(?3)) accepted\").get(row.mode,row.responseMode,JSON.stringify(row.names),JSON.stringify(required))as{accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);const response={version:1,mode:row.responseMode,files:row.names.map(name=>({name,base64:Buffer.from(name).toString(\"base64\"),sha256:digest(name)}))};expect(new Ajv({strict:true}).validate(schema.definitions.WorkerResponse,response)&&row.mode===row.responseMode).toBe(row.accepted);let accepted=true;try{readVscodeCompilerFilesV1(JSON.stringify(response),mode,65536);}catch{accepted=false;}expect(accepted).toBe(row.accepted);}const production=readFileSync(new URL(\"../../🏗️builder/🏃️execution/🟦️.ts\",import.meta.url),\"utf8\"),worker=readFileSync(new URL(\"../../🏗️builder/👷️worker/🟦️.ts\",import.meta.url),\"utf8\");expect(production).toContain(\"readVscodeCompilerFilesV1(text,context.mode,\");expect(worker).toContain(\"readVscodeCompilerFilesV1(encoded,authority.original.buildMode,\");expect(worker).toContain(\"mode:authority.original.buildMode\");expect(worker).toContain(\"request.mode!==authority.original.buildMode\");}finally{db.close();}});"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+   "kind": "edit",
+   "before": "9296d0586b310cd7bcdd35c1692d4a55e55acd1da49bc19a83870f26279484a6",
+   "after": "a6e91a63d5ea057ad1f0aacdaddd18cdd67745db2e01be58644f86023eb2d9bd",
+   "hunks": [
+    {
+     "old": "import { SCRIPT_ROOT, TestScript, LeaseScript } from \"./🧪️tests/🔬️script-commands/🟦️.ts\";",
+     "new": ""
+    },
+    {
+     "old": "\n\n\n/** 🧪️ Loads the artifact package proof only for its explicit verification command. */",
+     "new": "\n\n/** 💤️ Loads the cache test proofs only for their explicit test command. */\nclass CacheTestScript extends BundleScript {\n  async run(args: string[]): Promise<void> {\n    const { TestScript } = await import(\"./🧪️tests/🔬️script-commands/🟦️.ts\");\n    await new TestScript(this.root, this.repoRoot, this.invocation).run(args);\n  }\n}\n\n/** 🔒️ Loads the lease command only for its explicit lease command. */\nclass CacheLeaseScript extends BundleScript {\n  async run(args: string[]): Promise<void> {\n    const { LeaseScript } = await import(\"./🧪️tests/🔬️script-commands/🟦️.ts\");\n    await new LeaseScript(this.root, this.repoRoot, this.invocation).run(args);\n  }\n}\n\n/** 🧪️ Loads the artifact package proof only for its explicit verification command. */"
+    },
+    {
+     "old": "const router = new ScriptRouter(SCRIPT_ROOT)\n  .register(\"test\", TestScript)\n  .register(\"lease\", LeaseScript)",
+     "new": "const router = new ScriptRouter(import.meta.dir)\n  .register(\"test\", CacheTestScript)\n  .register(\"lease\", CacheLeaseScript)"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+   "kind": "edit",
+   "before": "c995fb8b7215fca7dff8637fdde49f73b9c778d05be11a1ed3488bcaa89d8b7b",
+   "after": "31d1034e3d8ade6f0526f6e902172c445b719ee0796c979c6be519021e0a779c",
+   "hunks": [
+    {
+     "old": "import type { ClassDeclaration, ClassElement, FunctionDeclaration, IfStatement, MethodDeclaration, Statement } from \"typescript\";",
+     "new": "import type { FunctionDeclaration, IfStatement, Node, Statement } from \"typescript\";\nimport { readRegisteredTestRoute } from \"../../../../../🧪️tests/🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";"
+    },
+    {
+     "old": "  const script=join(root,\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts\"),source=ts.createSourceFile(script,readFileSync(script,\"utf8\"),ts.ScriptTarget.Latest,true);\n  const testScript=source.statements.find((node:Statement):node is ClassDeclaration=>ts.isClassDeclaration(node)&&node.name?.text===\"TestScript\"),runMethod=testScript?.members.find((node:ClassElement):node is MethodDeclaration=>ts.isMethodDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text===\"run\");\n  const selected=runMethod?.body?.statements.find((node:Statement):node is IfStatement=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === \"native-owner-command-policy\"');",
+     "new": "  const family=readRegisteredTestRoute(root,corpus.artifactEnvironment.route),source=ts.createSourceFile(family.path,family.text,ts.ScriptTarget.Latest,true);\n  const found:IfStatement[]=[];\n  const find=(node:Node):void=>{if(ts.isIfStatement(node)&&node.expression.getText(source)===`segments[0] === \"${corpus.artifactEnvironment.route}\"`)found.push(node);ts.forEachChild(node,find);};\n  find(source);\n  const selected=found[0];"
+    },
+    {
+     "old": "    const run=new Function(\"process\",\"resolveTestLevel\",\"join\",\"repoTestArtifactEnvironment\",\"runRepositoryTestCommand\",compile(`async function execute(segments:string[]){${selected.getText(source)}}`)+\";return execute;\")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,{}),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});\n    await run.call({repoRoot:root},[corpus.artifactEnvironment.route]);",
+     "new": "    const run=new Function(\"process\",\"resolveTestLevel\",\"join\",\"repoTestArtifactEnvironment\",\"runRepositoryTestCommand\",compile(`async function execute(context:{repoRoot:string},segments:string[]){${selected.getText(source)}}`)+\";return execute;\")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,{}),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});\n    await run({repoRoot:root},[corpus.artifactEnvironment.route]);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🧪️tests/🔣️.json",
+   "kind": "edit",
+   "before": "4265e8b9082db7d0306ecedc3ee1f612e6779cdf7cb04bb3a8c5ae1aeb2d9e57",
+   "after": "6f4fa7844c50226b6198ce5189fe41178ebdc6939d66fec307fbc0ed32715db0",
+   "hunks": [
+    {
+     "old": "      \"parameters\": 7,",
+     "new": "      \"parameters\": 9,"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "1b60202471ab06ca9be3d497c650f60f14d8bc8f994cee58766262a0e3695a59",
+   "after": "72dcb3514a7d88b74af918ace5d848a2d907480cc901ebb041c98dd2e8226521",
+   "hunks": [
+    {
+     "old": "  const check=source.split(\"\\n\").find(line=>line.includes(\"typescript/bin/tsc\")&&line.includes(\"suite.budgetMs\"));expect(check).toContain('\"exact-cargo-laws\"');",
+     "new": "  const check=source.split(\"\\n\").find(line=>line.includes(\"resolveTypescriptCompilerV1(this.root)\")&&line.includes(\"suite.budgetMs\"));expect(check).toContain('\"exact-cargo-laws\"');"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/📥️consumption/🟦️.ts",
+   "kind": "edit",
+   "before": "cad0616fc058f501ce6009ee3029077a93b9d033482ac2637757dc611edc3c14",
+   "after": "ac91795d0ce975ba3726121940ffcfc9d4f538ecfafe35776af7139c240e1253",
+   "hunks": [
+    {
+     "old": "import{readCargoProfileConsumptionV1}from\"../../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts\";",
+     "new": "import{readCargoProfileConsumptionV1,wasmPackageCargoConsumptionV1}from\"../../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts\";"
+    },
+    {
+     "old": "  const root=process.cwd(),source=await readFile(new URL(row.kind===\"wasm\"?\"../../../../🕸️wasm/🔣️policy/🟦️.ts\":\"../../../🎟️admission/🟦️.ts\",import.meta.url),\"utf8\"),file=ts.createSourceFile(\"caller.ts\",source,ts.ScriptTarget.Latest,true),name=row.kind===\"wasm\"?\"buildRepositoryWasmWebV1\":\"execute\",node=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);expect(node).toBeDefined();const code=ts.transpileModule(node!.getText(file).replace(\"export async function\",\"async function\"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,storage={recheck:async()=>{}},environment={SEMIO_BUILD_MODE:\"prototype\"};let calls=0,actualPhase:ReturnType<typeof routing.createIssuedResourceControlV1>|undefined;\n  const runCompiler=async(first:any,_policy:unknown,third:any)=>{const options=row.kind===\"wasm\"?first:third,phase=routing.createRequestedIssuedResourceControlV1(options.control,1000),args=[row.operation,\"--locked\",\"--offline\"];expect(typeof options.withCargoInputs).toBe(\"function\");await options.withCargoInputs({manifest:join(root,\"Cargo.toml\"),cwd:root,arguments:args,environment:first.environment,control:phase},async(actual:{arguments:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ReturnType<typeof routing.createIssuedResourceControlV1>})=>{expect(actual.arguments).toEqual([...args,\"--config\",\"profile.prototype.opt-level=1\"]);expect(actual.environment).toEqual({...first.environment,ACTUAL_CONSUMED:\"true\"});expect(actual.control).toBe(actualPhase!);routing.requireIssuedResourceControlRefinementV1(phase,actual.control);calls++;});},bindings={join,relative,resolve,basename,process,checkResourceLeaseControl,createRequestedIssuedResourceControlV1:routing.createRequestedIssuedResourceControlV1,requireIssuedResourceControlRefinementV1:routing.requireIssuedResourceControlRefinementV1,scriptCompilerAdmissionControlV1,scriptInvocationEnvironment:routing.scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1:routing.requireIssuedResourceControlInvocationV1,readNativeCallerAuthorityV1:()=>({repositoryRoot:root,original:{buildMode:\"prototype\"}}),repositoryCargoNetworkV1:()=>({offline:true}),repositoryWasmBuildPolicyV1:()=>({}),withRepositoryCompilerStoreV1:async(_root:string,_mode:string,phase:ReturnType<typeof routing.createIssuedResourceControlV1>,env:unknown,body:Function)=>{routing.requireIssuedResourceControlInvocationV1(phase,original);const actual=routing.createRequestedIssuedResourceControlV1(phase,2000);return body({storage,environment,buildDirectory:root,captureDirectory:root,sourceBoundary:{},recheck:async()=>{}},actual);},withRepositoryCargoInputsV1:async(request:any,body:Function)=>{routing.requireIssuedResourceControlInvocationV1(request.control,original);expect(request.invocation).toBe(original);expect(request.consumption).toEqual({kind:\"compiler\",producer:row.producer,operation:row.operation});expect(request.storage).toBe(storage);actualPhase=routing.createRequestedIssuedResourceControlV1(request.control,500);return body({control:actualPhase,environment:{...request.environment,ACTUAL_CONSUMED:\"true\"},selections:[{arguments:[...request.args,\"--config\",\"profile.prototype.opt-level=1\"]}]});},withCompilerWorkspaceWriteV1:async(_storage:unknown,_directory:string,phase:ReturnType<typeof routing.createIssuedResourceControlV1>,body:Function)=>{expect(phase).toBe(actualPhase!);return body();},runCargoTestsV1:runCompiler,runCargoLintV1:runCompiler,buildWasmWebV1:runCompiler},run=new Function(...Object.keys(bindings),code+\";return \"+name+\";\")(...Object.values(bindings));\n  if(row.kind===\"wasm\")await run({invocation:original,producer:row.producer,control:routing.createIssuedResourceControlV1(original,\"wasm:caller\",0),rsDir:join(root,\"owned\"),consume:async()=>{}});else await run({cwd:root,manifestPath:join(root,\"Cargo.toml\")},{mode:\"prototype\",buildBudgetMs:120000},root,original,routing.createIssuedResourceControlV1(original,\"cargo:caller\",0),row.kind===\"lint\");database.query(\"insert into calls values(?,?)\").run(row.kind,calls);expect((database.query(\"select count=1 accepted from calls where kind=?\").get(row.kind)as{accepted:number}).accepted).toBe(1);routing.requireIssuedScriptInvocationV1(original);",
+     "new": "  const root=process.cwd(),source=await readFile(new URL(row.kind===\"wasm\"?\"../../../../🕸️wasm/🔣️policy/🟦️.ts\":\"../../../🎟️admission/🟦️.ts\",import.meta.url),\"utf8\"),file=ts.createSourceFile(\"caller.ts\",source,ts.ScriptTarget.Latest,true),name=row.kind===\"wasm\"?\"buildRepositoryWasmWebV1\":\"execute\",node=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);expect(node).toBeDefined();const portSource=ts.createSourceFile(\"dependencies.ts\",await readFile(new URL(\"../../🟦️.ts\",import.meta.url),\"utf8\"),ts.ScriptTarget.Latest,true),port=portSource.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===\"repositoryCargoCompilerInputsV1\");expect(port).toBeDefined();const code=ts.transpileModule(node!.getText(file).replace(\"export async function\",\"async function\")+\"\\n\"+port!.getText(portSource).replace(\"export function\",\"function\"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,storage={recheck:async()=>{}},environment={SEMIO_BUILD_MODE:\"prototype\",CARGO_BUILD_BUILD_DIR:root};let calls=0,actualPhase:ReturnType<typeof routing.createIssuedResourceControlV1>|undefined;\n  const runCompiler=async(first:any,_policy:unknown,third:any)=>{const options=row.kind===\"wasm\"?first:third,phase=routing.createRequestedIssuedResourceControlV1(options.control,1000),args=[row.operation,\"--locked\",\"--offline\"];expect(typeof options.withCargoInputs).toBe(\"function\");await options.withCargoInputs({manifest:join(root,\"Cargo.toml\"),cwd:root,arguments:args,environment:first.environment,control:phase},async(actual:{arguments:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ReturnType<typeof routing.createIssuedResourceControlV1>})=>{expect(actual.arguments).toEqual([...args,\"--config\",\"profile.prototype.opt-level=1\"]);expect(actual.environment).toEqual({...first.environment,ACTUAL_CONSUMED:\"true\"});expect(actual.control).toBe(actualPhase!);routing.requireIssuedResourceControlRefinementV1(phase,actual.control);calls++;});},bindings={join,relative,resolve,basename,process,checkResourceLeaseControl,wasmPackageCargoConsumptionV1,requireNativeStorageReservationV1:()=>{},cargoConfigurationArgumentsV1:(args:readonly string[])=>[...args],createRequestedIssuedResourceControlV1:routing.createRequestedIssuedResourceControlV1,requireIssuedResourceControlRefinementV1:routing.requireIssuedResourceControlRefinementV1,scriptCompilerAdmissionControlV1,scriptInvocationEnvironment:routing.scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1:routing.requireIssuedResourceControlInvocationV1,readNativeCallerAuthorityV1:()=>({repositoryRoot:root,original:{buildMode:\"prototype\"}}),repositoryCargoNetworkV1:()=>({offline:true}),repositoryWasmBuildPolicyV1:()=>({}),withRepositoryCompilerStoreV1:async(_root:string,_mode:string,phase:ReturnType<typeof routing.createIssuedResourceControlV1>,env:unknown,body:Function)=>{routing.requireIssuedResourceControlInvocationV1(phase,original);const actual=routing.createRequestedIssuedResourceControlV1(phase,2000);return body({storage,environment,buildDirectory:root,captureDirectory:root,sourceBoundary:{},recheck:async()=>{}},actual);},withRepositoryCargoInputsV1:async(request:any,body:Function)=>{routing.requireIssuedResourceControlInvocationV1(request.control,original);expect(request.invocation).toBe(original);expect(request.consumption).toEqual({kind:\"compiler\",producer:row.producer,operation:row.operation});expect(request.storage).toBe(storage);actualPhase=routing.createRequestedIssuedResourceControlV1(request.control,500);return body({control:actualPhase,environment:{...request.environment,ACTUAL_CONSUMED:\"true\"},recheck:async()=>{},selections:[{manifest:resolve(request.manifest),cwd:resolve(request.cwd),arguments:[...request.args,\"--config\",\"profile.prototype.opt-level=1\"]}]});},withCompilerWorkspaceWriteV1:async(_storage:unknown,_directory:string,phase:ReturnType<typeof routing.createIssuedResourceControlV1>,body:Function)=>{expect(phase).toBe(actualPhase!);return body();},runCargoTestsV1:runCompiler,runCargoLintV1:runCompiler,buildWasmWebV1:runCompiler},run=new Function(...Object.keys(bindings),code+\";return \"+name+\";\")(...Object.values(bindings));\n  if(row.kind===\"wasm\")await run({invocation:original,producer:row.producer,control:routing.createIssuedResourceControlV1(original,\"wasm:caller\",0),rsDir:join(root,\"owned\"),pkg:{files:[]},consume:async()=>{}});else await run({cwd:root,manifestPath:join(root,\"Cargo.toml\")},{mode:\"prototype\",buildBudgetMs:120000},root,original,routing.createIssuedResourceControlV1(original,\"cargo:caller\",0),row.kind===\"lint\");database.query(\"insert into calls values(?,?)\").run(row.kind,calls);expect((database.query(\"select count=1 accepted from calls where kind=?\").get(row.kind)as{accepted:number}).accepted).toBe(1);routing.requireIssuedScriptInvocationV1(original);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "b9593d3fa8593ff43134b53ead16728aecfad01f6c7c34f00209c14e8f34d2b7",
+   "after": "b99b7daccbca66b80a2001f8edd349dd7457b454e7b22b4b0da5953b843385cd",
+   "hunks": [
+    {
+     "old": "import{repositoryExactCargoProfileV1}from\"../../🎯️exact/📋️profile/🟦️.ts\";\nimport corpus from\"./🔣️.json\";",
+     "new": "import{repositoryExactCargoProfileV1}from\"../../🎯️exact/📋️profile/🟦️.ts\";\nimport{renderCargoProfileConfigurationV1}from\"../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts\";\nimport corpus from\"./🔣️.json\";"
+    },
+    {
+     "old": "test(\"neutral Repository actual profile projection follows canonical mode rather than environment DATA\",()=>{const config=Bun.TOML.parse(readFileSync(new URL(\"../../../../../../../../../.cargo/config.toml\",import.meta.url),\"utf8\")),db=new Database(\":memory:\");try{db.exec(\"create table modes(mode text primary key,profile text)\");db.exec(\"insert into modes values('prototype','prototype'),('release','release')\");for(const row of corpus.profiles){if(row.refused)expect(()=>repositoryExactCargoProfileV1(row.caller,[row.override??[]])).toThrow();else{if((row.caller!==\"prototype\"&&row.caller!==\"release\")||row.profile===undefined)throw Error(\"Admitted corpus mode/profile required\");const result=repositoryExactCargoProfileV1(row.caller,[row.override??[]]);expect(result.mode).toBe(row.caller);expect(result.profile).toBe(row.profile);expect(db.query(\"select profile from modes where mode=?\").get(row.caller)).toEqual({profile:result.profile});const profiles:unknown=Reflect.get(config,\"profile\");if(!profiles||typeof profiles!==\"object\")throw Error(\"Actual authored TOML profiles required\");expect(Reflect.get(profiles,result.profile)).toBeDefined();}}}finally{db.close();}});",
+     "new": "test(\"neutral Repository actual profile projection follows canonical mode rather than environment DATA\",()=>{const db=new Database(\":memory:\");try{db.exec(\"create table modes(mode text primary key,profile text)\");db.exec(\"insert into modes values('prototype','prototype'),('release','release')\");for(const row of corpus.profiles){if(row.refused)expect(()=>repositoryExactCargoProfileV1(row.caller,[row.override??[]])).toThrow();else{if((row.caller!==\"prototype\"&&row.caller!==\"release\")||row.profile===undefined)throw Error(\"Admitted corpus mode/profile required\");const result=repositoryExactCargoProfileV1(row.caller,[row.override??[]]);expect(result.mode).toBe(row.caller);expect(result.profile).toBe(row.profile);expect(db.query(\"select profile from modes where mode=?\").get(row.caller)).toEqual({profile:result.profile});const rendered=renderCargoProfileConfigurationV1({version:1,mode:row.caller,target:\"wasm32-wasip2\",producer:\"artifact\",operation:\"build\"},\"Cargo.toml\",\"repository\"),profiles:unknown=Reflect.get(Bun.TOML.parse(rendered.selectors.join(\"\\n\")),\"profile\");if(!profiles||typeof profiles!==\"object\")throw Error(\"Actual rendered Cargo profiles required\");expect(Reflect.get(profiles,result.profile)).toBeDefined();}}}finally{db.close();}});"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "35e791e4c6fd1d04ee662038bd7ecd3cc659c598f416e20d68fa1888df04c4ec",
+   "after": "18b9bfbb2fa8b54c8a3decc3a3151cb3b2d70f9cfa0b10cbc23324faab629a5b",
+   "hunks": [
+    {
+     "old": " const source=readInferenceSourceV1(\"owner-discovery\"),tree=ts.createSourceFile(\"inference.mjs\",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===\"discoverBuildOwnerAdmissionFactsV1\");\n if(!owner||!ts.isFunctionDeclaration(owner)||!owner.body)throw Error(\"Actual selected owner declaration required\");\n const selection=owner.body.statements.find(node=>ts.isIfStatement(node)&&node.expression.getText(tree)===\"targets.length||inputNames.length\");\n if(!selection||!ts.isIfStatement(selection)||!ts.isBlock(selection.thenStatement))throw Error(\"Actual selected Source block required\");\n const statements=selection.thenStatement.statements,start=statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(declaration=>ts.isIdentifier(declaration.name)&&declaration.name.text===\"exclusions\")),end=statements.find(node=>ts.isExpressionStatement(node)&&node.getText(tree).includes('stage(\"source-closure\")'));\n if(!start||!end)throw Error(\"Actual selected pattern loop required\");\n const program=\"(async()=>{\"+source.slice(start.getStart(tree),end.getStart(tree))+\"return [...matched].sort();})()\",validate=new Ajv({strict:true}).compile(fixture.discovery.contract),workspaceRoot=resolve(\"/__source_glob_fixture__\");",
+     "new": " const source=readInferenceSourceV1(\"owner-discovery\"),tree=ts.createSourceFile(\"inference.mjs\",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),declaration=(name:string)=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name&&node.body!==undefined);\n const owner=declaration(\"discoverBuildOwnerAdmissionFactsV1\"),matcher=declaration(\"readBuildSourceInputMatchesV1\");\n if(!owner)throw Error(\"Actual selected owner declaration required\");\n if(!matcher)throw Error(\"Actual selected pattern loop required\");\n expect(owner.getText(tree)).toContain(\"await readBuildSourceInputMatchesV1(scans,workspaceRoot,context)\");\n const program=\"(async()=>{\"+matcher.getText(tree).replace(/^export\\s+/u,\"\")+\"\\nconst {matched}=await readBuildSourceInputMatchesV1([{patterns,compile:false}],workspaceRoot,context);return [...matched].sort();})()\",validate=new Ajv({strict:true}).compile(fixture.discovery.contract),workspaceRoot=resolve(\"/__source_glob_fixture__\");"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🔣️.json",
+   "kind": "edit",
+   "before": "eff86a741ce0eaa06923e414ea31a75f2b8b4d69c3779367cb8f1d76290b1991",
+   "after": "51e52ea74b6ce5e7c62a44dc09fbc51c272435af713cd9de4da00b4d2c6baed7",
+   "hunks": [
+    {
+     "old": "      \"binary\": \"semio-repo\"",
+     "new": "      \"binary\": \"repo\""
+    },
+    {
+     "old": "      \"binary\": \"semio\"",
+     "new": "      \"binary\": \"semio\",\n      \"cacheClass\": \"driver-owned\",\n      \"cacheReason\": \"freshness-owned-by-driver\""
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts",
+   "kind": "edit",
+   "before": "8f228473a4eb76de30510667a878faad1fe3e5b68e42c6f8de2ffde8210675ff",
+   "after": "de54572125b3a5a19bc29bb9d5e4b080adc8d696111d24d7cf6477ccbaca6bf7",
+   "hunks": [
+    {
+     "old": " for(const row of fixture.appRoutes){const declaration=JSON.parse(readFileSync(row.declaration,\"utf8\")),target=declaration.targets[row.target],intent=readRustBuildIntentV1(target?.metadata?.semio?.rustBuildIntent);expect<typeof row.scope>(intent.scope).toBe(row.scope);expect(intent.binary).toBe(\"binary\" in row?row.binary:undefined);expect(target.inputs).toContain(\"cargoToolchain\");expect(target.cache).toBe(true);expect(selectedCargoBuildOwnerV1({execution:{kind:\"command\",command:target.options.command},metadata:target.metadata},process.cwd())).toBe(resolve(intent.manifest));}",
+     "new": " for(const row of fixture.appRoutes){const declaration=JSON.parse(readFileSync(row.declaration,\"utf8\")),target=declaration.targets[row.target],intent=readRustBuildIntentV1(target?.metadata?.semio?.rustBuildIntent);expect<typeof row.scope>(intent.scope).toBe(row.scope);expect(intent.binary).toBe(\"binary\" in row?row.binary:undefined);expect(target.inputs).toContain(\"cargoToolchain\");expect(target.cache).toBe(!(\"cacheClass\" in row));if(\"cacheClass\" in row)expect(target.metadata.semio.cache).toEqual({version:1,class:row.cacheClass,reason:row.cacheReason});expect(selectedCargoBuildOwnerV1({execution:{kind:\"command\",command:target.options.command},metadata:target.metadata},process.cwd())).toBe(resolve(intent.manifest));}"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+   "kind": "edit",
+   "before": "11cb6239b719f9b73c801ebae12e4e1585673c2f97d49ac471f765121472b623",
+   "after": "6c5474c6b7a0e3e4090243169c19400b27a0d906c41e01435f957a5a3a888c85",
+   "hunks": [
+    {
+     "old": "    \"storagePorts\": [\n      \"createBuildGraphOptionalQuotaV1\",",
+     "new": "    \"storagePorts\": [\n      \"requireCurrentRepositoryBuildGraphConsumerV1\",\n      \"createBuildGraphOptionalQuotaV1\","
+    },
+    {
+     "old": "      \"maintainBuildGraphOptionalCachesV1\",\n      \"withBuildGraphOptionalPublicationV1\",",
+     "new": "      \"maintainBuildGraphOptionalCachesV1\",\n      \"buildGraphWriterOptionalQuotaFactsV1\",\n      \"withBuildGraphOptionalPublicationV1\","
+    },
+    {
+     "old": "      \"buildGraphWriterResourceV1\",\n      \"withRepositoryBuildGraphFactStoreV1\",",
+     "new": "      \"buildGraphWriterResourceV1\",\n      \"withRepositoryBuildGraphConsumerV1\",\n      \"withRepositoryBuildGraphFactStoreV1\","
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🧪️tests/🧫️fixtures/🧭️router-ownership/🔣️.json",
+   "kind": "edit",
+   "before": "8d7687a234578ce63586a84d8ae86277cbf1613309366bde9e48c3eea51f0848",
+   "after": "4b369ea87cc4e114cdbc02a27fbe489b404bcc496c697453663c6d764e97156d",
+   "hunks": [
+    {
+     "old": "  \"repoScript\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/📜️script.ts\",\n  \"repoProject\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json\",",
+     "new": "  \"repoScript\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/📜️script.ts\",\n  \"repoOwner\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts\",\n  \"repoProject\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json\","
+    },
+    {
+     "old": "      \"sha256\": \"75b8246dc4a7d094018cab572b6641ffb8db2bda6a86dd143b482972895af034\"",
+     "new": "      \"sha256\": \"0e8e8e52faf80a2073bddfe0b66a7b504f0bfedcf0332ecd2f66699eb81fa81f\",\n      \"runner\": \"runCheckUiPrimitivesScript\",\n      \"runnerBodySha256\": \"b26977ee173217aec22ca9414acd25dc957ef85d04bc117580ac52b090c4024f\""
+    },
+    {
+     "old": "      \"sha256\": \"f8ebcaace8c8bb5a982f175104518d53400bcae008d1b5e6be7ba1980cf31b5e\"",
+     "new": "      \"sha256\": \"be55c116b3a4d044d8dd156e5ed10f1e2d458a7f09b337a3812534eadfe5681d\",\n      \"runner\": \"runCheckChromeI18nScript\",\n      \"runnerBodySha256\": \"82e9448cd0b99ae9ad3d3bf792e22bd70394496927c0a5d53065c801cb506d2c\""
+    },
+    {
+     "old": "      \"declaration\": \"DevScript\",\n      \"arguments\": [",
+     "new": "      \"declaration\": \"DevScript\",\n      \"runner\": \"runDevScript\",\n      \"arguments\": ["
+    },
+    {
+     "old": "      \"declaration\": \"BuildScript\",\n      \"arguments\": [",
+     "new": "      \"declaration\": \"BuildScript\",\n      \"runner\": \"runBuildScript\",\n      \"arguments\": ["
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🧪️tests/🧭️router-ownership/🟦️.ts",
+   "kind": "edit",
+   "before": "10d06d4e74831f9b5fed141900bc95456406d3b2bc4715b79a8cc92b4ce51e60",
+   "after": "36c99b4669fd5baf762fdb5151d0577a59e8a95c8a352491ba9eb128a84f3483",
+   "hunks": [
+    {
+     "old": "test(\"all original workspace census declarations retain their exact TypeScript AST text\", () => {\n  const source = parse(corpus.repoScript);\n  for (const row of corpus.censusDeclarations) {",
+     "new": "test(\"all original workspace census declarations retain their exact TypeScript AST text\", () => {\n  const sources = [parse(corpus.repoScript), parse(corpus.repoOwner)];\n  const declared = (source: ts.SourceFile, name: string) => source.statements.find(node => ((ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.getText(source) === name) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => declaration.name.getText(source) === name)));\n  const lines = (text: string) => text.split(\"\\n\").map(line => line.trim()).join(\"\\n\");\n  for (const row of corpus.censusDeclarations) {"
+    },
+    {
+     "old": "    const statement = source.statements.find(node => ((ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.getText(source) === row.name) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => declaration.name.getText(source) === row.name)));\n    expect(statement, row.name).toBeDefined();\n    expect(createHash(\"sha256\").update(statement!.getText(source)).digest(\"hex\"), row.name).toBe(row.sha256);",
+     "new": "    const owner = sources.find(source => declared(source, row.name));\n    expect(owner, row.name).toBeDefined();\n    expect(createHash(\"sha256\").update(declared(owner!, row.name)!.getText(owner!)).digest(\"hex\"), row.name).toBe(row.sha256);\n    if (!(\"runner\" in row)) continue;\n    const runner = declared(sources[1]!, row.runner) as ts.FunctionDeclaration | undefined;\n    expect(runner?.body, row.runner).toBeDefined();\n    expect(createHash(\"sha256\").update(lines(runner!.body!.getText(sources[1]!).replaceAll(\"context.\", \"this.\"))).digest(\"hex\"), row.runner).toBe(row.runnerBodySha256);"
+    },
+    {
+     "old": "  const source = parse(corpus.repoScript);\n  const declarations = source.statements.filter(node => (ts.isClassDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.declaration)) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(row => row.name.getText(source) === \"storybookEnv\")));\n  expect(declarations).toHaveLength(3);",
+     "new": "  const source = parse(corpus.repoScript), owner = parse(corpus.repoOwner);\n  const declarations = [\n    ...source.statements.filter(node => ts.isClassDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.declaration)).map(node => node.getText(source)),\n    ...owner.statements.filter(node => (ts.isFunctionDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.runner)) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(row => row.name.getText(owner) === \"storybookEnv\"))).map(node => node.getText(owner).replace(/^export /, \"\")),\n  ];\n  expect(declarations).toHaveLength(corpus.storybookCases.length * 2 + 1);"
+    },
+    {
+     "old": "  const executable = ts.transpileModule(declarations.map(row => row.getText(source)).join(\"\\n\") + \"\\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];\", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;",
+     "new": "  const executable = ts.transpileModule(declarations.join(\"\\n\") + \"\\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];\", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎟️reference-coverage-selection/🟦️.ts",
+   "kind": "edit",
+   "before": "6269728b6edf8e067f209837368f42c77856d824aea2331210c9513471fa70fa",
+   "after": "be281b91e623048a003a7a2998a269e3fb4218919509a2a2d6763446fda73f32",
+   "hunks": [
+    {
+     "old": "import ts from \"typescript\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";",
+     "new": "import ts from \"typescript\";\nimport { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";"
+    },
+    {
+     "old": "  const router = readFileSync(join(pkg, \"📜️script.ts\"), \"utf8\");",
+     "new": "  const { path: routePath, text: router } = readRegisteredTestRoute(root, expected.route);"
+    },
+    {
+     "old": "  const routerTree = ts.createSourceFile(\"📜️script.ts\", router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];",
+     "new": "  const routerTree = ts.createSourceFile(routePath, router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];"
+    },
+    {
+     "old": "    const calls: unknown[][] = [], operation = new Function(\"join\", \"process\", \"runRepositoryTestCommand\", compiler.compile(\"async function route(segments: string[]) \" + body) + \"\\nreturn route;\")(join, { execPath: \"exact-bun\" }, (...args: unknown[]) => { calls.push(args); });\n    await operation.call({ repoRoot: root }, [expected.route, \"--test-name-pattern\", \"retained-selector\"]);",
+     "new": "    const calls: unknown[][] = [], operation = new Function(\"join\", \"process\", \"runRepositoryTestCommand\", compiler.compile(\"async function route(context: { repoRoot: string }, segments: string[]) \" + body) + \"\\nreturn route;\")(join, { execPath: \"exact-bun\" }, (...args: unknown[]) => { calls.push(args); });\n    await operation({ repoRoot: root }, [expected.route, \"--test-name-pattern\", \"retained-selector\"]);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress/🟦️.ts",
+   "kind": "edit",
+   "before": "dc236b3e7906c3c3a68c38951ccdf5cd0963f7c8795e50721d6a460f01869744",
+   "after": "9f81e069f8d95ad5522428623d514d44c114893e57a61b992ad1ed9cd8bfaf3b",
+   "hunks": [
+    {
+     "old": "import ts from \"typescript\";\nimport { normalizationSourceDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";",
+     "new": "import ts from \"typescript\";\nimport { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\nimport { normalizationSourceDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";"
+    },
+    {
+     "old": "  const apply = calls(\"applyTaxonomyPlan\", \"capturePreflightReferenceBasis\");",
+     "new": "  const apply = calls(\"capturePreflight\", \"capturePreflightReferenceBasis\");"
+    },
+    {
+     "old": "  const router = input(packageRoot + \"/📜️script.ts\").toString(\"utf8\");",
+     "new": "  const router = input(readRegisteredTestRoute(root, registration.command).path).toString(\"utf8\");"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts",
+   "kind": "edit",
+   "before": "0561abd3553103e4ce286440d8b02c8a5d3ceb92a19efb89742ab0daa5f56d5d",
+   "after": "f3f3eba1e1bece173d9d2d8e8d93a350028b95bed7ec11fcf555dfa155460f02",
+   "hunks": [
+    {
+     "old": "import ts from \"typescript\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";",
+     "new": "import ts from \"typescript\";\nimport { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";"
+    },
+    {
+     "old": "  const router = readFileSync(join(root, library, \"📦️packages/🟦️typescript/📜️script.ts\"), \"utf8\");",
+     "new": "  const router = readRegisteredTestRoute(root, \"json-reference-owner-lookup\").text;"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔤️taxonomy-leading-grapheme/🟦️.ts",
+   "kind": "edit",
+   "before": "a59e20d2116b37da96ae55e0405a65d518b8d66a8a4d717dbc31fc3fab5653c8",
+   "after": "932537f28b3c9f1a272ebca966d763776749b03d61ffa0bbb0ef16aebf81efdb",
+   "hunks": [
+    {
+     "old": "import ts from \"typescript\";\n",
+     "new": "import ts from \"typescript\";\nimport { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\n"
+    },
+    {
+     "old": "  const path = join(packageRoot, \"📜️script.ts\"), syntax = ts.createSourceFile(path, readFileSync(path, \"utf8\"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);\n  const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === \"TestScript\");\n  expect(declarations).toHaveLength(1);",
+     "new": "  const family = readRegisteredTestRoute(repoRoot, registration.command), syntax = ts.createSourceFile(family.path, family.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];\n  const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(syntax) === `segments[0] === \"${registration.command}\"`) branches.push(node); ts.forEachChild(node, visit); };\n  visit(syntax);\n  expect(branches).toHaveLength(1);"
+    },
+    {
+     "old": "    class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }\n    const router = new Function(\"BundleScript\", \"join\", \"runRepositoryTestCommand\", \"resolveTestLevel\", compiler.compile(`${declarations[0]!.getText(syntax)}\\nreturn new TestScript();`))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error(\"Leading grapheme fell through to generic routing\"); });\n    await router.run([registration.command]);",
+     "new": "    const route = new Function(\"join\", \"process\", \"runRepositoryTestCommand\", compiler.compile(`async function route(context: { repoRoot: string }, segments: string[]) ${branches[0]!.thenStatement.getText(syntax)}\\nreturn route;`))(join, { execPath: process.execPath }, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); });\n    await route({ repoRoot }, [registration.command]);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts",
+   "kind": "edit",
+   "before": "1025b5316f6858cf6c2735070824ea123c67a48d80bd5f37c9a8e378980b46f0",
+   "after": "263336e84107964bf54e1940af78f1607ede634b374f94d4e2e8ab27c9c067b4",
+   "hunks": [
+    {
+     "old": "  expect(ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text).toBe(\"bun\");",
+     "new": "  expect(ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text).toBe(\"repo\");"
+    },
+    {
+     "old": "  const expected=[\"repo\",\"run\",target,\"--output=stream\"],command=[\"bun\",...argv].map(value=>JSON.stringify(value)).join(\" \");",
+     "new": "  const expected=[\"run\",target,\"--output=stream\"],command=[\"repo\",...argv].map(value=>JSON.stringify(value)).join(\" \");"
+    },
+    {
+     "old": "  expect(parseArgsStringToArgv(command)).toEqual([\"bun\",...expected]);",
+     "new": "  expect(parseArgsStringToArgv(command)).toEqual([\"repo\",...expected]);"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🧭️route-context/🟦️.ts",
+   "kind": "edit",
+   "before": "52372aeaa4a51082c9d756833de6087077a303c0146185e60203311d8166ef42",
+   "after": "7e1953953d29473d4de2b3960f5328c1a101a3b7180824e7d4069490a8761cfc",
+   "hunks": [
+    {
+     "old": "/** 🧭️ The invocation, roots and re-entry of the test script that its route group functions receive instead of the script instance. */\nimport type { ScriptInvocation } from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "new": "/** 🧭️ The invocation, roots and re-entry of the test script that its route group functions receive instead of the script instance. */\nimport { existsSync, readdirSync, readFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport type { ScriptInvocation } from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";"
+    },
+    {
+     "old": "};\n",
+     "new": "};\n\n/** 🛎️ Reads the one route family source of the test script that registers `route`, with its workspace-relative path. */\nexport function readRegisteredTestRoute(repoRoot: string, route: string): Readonly<{ path: string; text: string }> {\n  const folder = \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands\";\n  const marker = `segments[0] === \"${route}\"`;\n  const families = readdirSync(join(repoRoot, folder), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => `${folder}/${entry.name}/🟦️.ts`).filter((path) => existsSync(join(repoRoot, path)));\n  const matches = families.map((path) => ({ path, text: readFileSync(join(repoRoot, path), \"utf8\") })).filter((family) => family.text.includes(marker));\n  if (matches.length !== 1) throw new Error(`Exactly one test route family must register ${route}`);\n  return matches[0]!;\n}\n"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts",
+   "kind": "edit",
+   "before": "6ee08f4dcbfe09fc86a653649ba6afb1b2ad3a5e54068a1e3ed4feaceb311f34",
+   "after": "de8a3dd5664ae40006509524de0ea1e7f9b84e30f797906e5f9bd1f802b84933",
+   "hunks": [
+    {
+     "old": "import { normalizationSourceDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";",
+     "new": "import { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\nimport { normalizationSourceDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";"
+    },
+    {
+     "old": "  const router = readFileSync(join(root, library, \"📦️packages/🟦️typescript/📜️script.ts\"), \"utf8\");",
+     "new": "  const router = readRegisteredTestRoute(root, \"typescript-path-collection\").text;"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts",
+   "kind": "edit",
+   "before": "cc0ec06b42cab4f84df8e94ad488d97cb984c0e648aa4541e10c8e3f8e12a096",
+   "after": "4c980146fc580b0af89ba47c20fb681f89c89809477f307723e33f34ceda90d4",
+   "hunks": [
+    {
+     "old": "import ts from \"typescript\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";",
+     "new": "import ts from \"typescript\";\nimport { readRegisteredTestRoute } from \"../🔬️typescript-package-commands/🧭️route-context/🟦️.ts\";\nimport { normalizationEngineDeclarations } from \"../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts\";"
+    },
+    {
+     "old": "  const router = readFileSync(join(library, \"📦️packages/🟦️typescript/📜️script.ts\"), \"utf8\");",
+     "new": "  const router = readRegisteredTestRoute(resolve(library, \"../../../../..\"), \"gherkin-description-inline-code\").text;"
+    }
+   ]
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️rust-source-direction/🧫️fixture-ownership/🔣️.json",
+   "kind": "edit",
+   "before": "f4442e53d6b09cb0139e68c9855c3e92c6bd16a6e2c8e8fd2d2b08f2b093d992",
+   "after": "c1a238c91845df9e6d157918779f751ba9ad2fa0f9f69ac9b0324aa9a7ed0307",
+   "hunks": [
+    {
+     "old": "      \"sha256\": \"95c6be9e2e39ba7c9dc9da515ecb5d8a079c88fd88b950cce5e253d91ee17133\",",
+     "new": "      \"sha256\": \"1a1c40b0d1f02e2064771d111d52c98f3ba4705cbd9f647e19645722c7be7324\","
+    }
+   ]
+  }
+ ]
+}

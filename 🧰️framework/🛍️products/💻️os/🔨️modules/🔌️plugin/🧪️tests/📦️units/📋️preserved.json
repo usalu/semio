@@ -79,13 +79,13 @@
     {
       "name": "concurrent_typed_operations_hand_every_presentable_page_to_one_turn",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🛂️continuation-publication-and-host-crossing/🦀️.rs",
-      "sha256": "ff90782eda0fbd2cb945728050d779a1f69f0f449b7f6cc5bc481cbabb352fd6",
-      "assertions": 5
+      "sha256": "273d5d6cf42b6225e5648cd2af3f4cc9ea223f50c2d05179b8b6926cdf73ca26",
+      "assertions": 8
     },
     {
       "name": "a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🛂️continuation-publication-and-host-crossing/🦀️.rs",
-      "sha256": "2df83914c9fed9fe60578dc2c4de155dc5bc04080ccf8eb047f07b634060afec",
+      "sha256": "ae0e3959825644c9555399bb7507f6efe4515fb9682e4af2e65ece3931cf7843",
       "assertions": 6
     },
     {
@@ -97,25 +97,25 @@
     {
       "name": "retained_operation_continues_after_command_admission_until_publication_and_retirement",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
-      "sha256": "56ded0e9271fa60ddcc253c45f9c8c20449cf264833623524c45724f8cdf7f3e",
+      "sha256": "591c7784b6d056d5473639e9d18644268be22f8b8f40ab30bda10c88bb08616f",
       "assertions": 9
     },
     {
       "name": "retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-2/🦀️.rs",
-      "sha256": "d84efe7b296b504ee8c2f8c70565c90150a708dea23337060683cb14f7729e66",
+      "sha256": "bab2f73f7b916b1539e389a60bac8a690eb01f2e2934d95c53313101ef396a9d",
       "assertions": 24
     },
     {
       "name": "activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🏭️tool-factory-keys-and-shared-actions/🦀️.rs",
-      "sha256": "42c25fd79a37bdeed5eb1ac920ff116242d9eb8037a9f48c55efd5e56b745160",
+      "sha256": "bcfeebad924b4a0a273d80f028505e83e15ac7d71d64919c8edcfbb6225e5f5d",
       "assertions": 13
     },
     {
       "name": "shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🏭️tool-factory-keys-and-shared-actions/🦀️.rs",
-      "sha256": "5cf18951ba17ac5822d2391ea9433a52504b85ed6d14fb9e4d09a5789598121e",
+      "sha256": "91a9f25a293f34f98e74c38364526da424617cc264e64615b1db6776e06d00f2",
       "assertions": 9
     },
     {
@@ -202,31 +202,31 @@
     {
       "name": "segmented_download_remains_addressable_until_terminal_none_is_observed",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎡️maintenance-rotation-download-and-ingress/🦀️.rs",
-      "sha256": "45006b397b06eeb8e14d00aa7ca4b0c0a295bbe516f8fe56044600e28e7f35a0",
+      "sha256": "ae90aa12697a70040d2caad5a27fabb833f7615b8c212e9430756065a686b33e",
       "assertions": 8
     },
     {
       "name": "completed_media_cancel_moves_exact_output_to_bounded_cleanup",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🎞️host-events-media-cancel-and-download-seam/🦀️.rs",
-      "sha256": "4922a478bb1bd0abe0ab262c83a8608dcc1947d9091642e1881636a5e987a0e4",
+      "sha256": "9415209cc9913605091a29236761da84b46e79e09d49cf70dc45a57618c79f24",
       "assertions": 14
     },
     {
       "name": "app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
-      "sha256": "f230825af4d798c614430e2f4231c4b6b7f2749a775f2840dfaf6d2a95e09f9b",
+      "sha256": "93cc595b7cdafaa337a91d56e962add938a432d1923fb5e3fcb9846959acc20a",
       "assertions": 6
     },
     {
       "name": "app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
-      "sha256": "b705b72c3a3ef98d2f188d3b8449fc36fbf6b470ca1ee5dc8d322c190dc43985",
+      "sha256": "dee98f854456397541e3eddd7b58aae78eb1e1cfd7a6b04a12f18ef03a54e638",
       "assertions": 8
     },
     {
       "name": "app_close_step_drains_at_most_one_segment_and_one_chunk_budget",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
-      "sha256": "fdd9be760129305fd915afcc80c3fd6731dabad8977395d801878054e9b9d363",
+      "sha256": "c930c68be6622863c744335ac20ccb022098970f9fc536f094612ff3f8baff08",
       "assertions": 14
     },
     {
@@ -244,25 +244,25 @@
     {
       "name": "retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🎞️host-events-media-cancel-and-download-seam/🦀️.rs",
-      "sha256": "cb7bb05e14a5f5e70ce001a3358b4795ee467b1ea450372b12b85e66c778eb2d",
-      "assertions": 17
+      "sha256": "5075144eff0884169b62f6a8489dd15ed7eb92dfcafc485be202336bd788aa42",
+      "assertions": 18
     },
     {
       "name": "shared_retained_command_checkpoint_resumes_exact_cursor_and_cancels_with_bounded_close",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
-      "sha256": "f20db209dc9b091afbeb6c7bb86b7a392718fecb2cdf27115e7b32d49f9ee73b",
+      "sha256": "e53ac3b2de7cb857707a4e5dc3beb048c07d298a45da8663f12aa71eb6c27ece",
       "assertions": 9
     },
     {
       "name": "retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/👶️child-emit-prepublication-and-ephemeral-lanes/🦀️.rs",
-      "sha256": "b70a87ba57a08b48c2dd3c5384174753e781b4a2f0a8f02b74a7438908ae9073",
-      "assertions": 16
+      "sha256": "73f1691bfaa6438cc651e11c0ccda9080883099fc279c704194e7bace37b01e8",
+      "assertions": 19
     },
     {
       "name": "unproved_command_fails_before_an_overrun_reducer_can_start",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
-      "sha256": "e95209158fe476c2f1b4f25acf859c2875c743565d8d1faf1f6afd9376065a7e",
+      "sha256": "fb80e1843c4b68a981712e28cda1f4f63b08cf11733c7da8d6863d7d67fa5d72",
       "assertions": 3
     },
     {
@@ -298,7 +298,7 @@
     {
       "name": "a_long_command_stream_never_pins_the_retained_ingress_authority",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎡️maintenance-rotation-download-and-ingress/🦀️.rs",
-      "sha256": "0ff307dab74f6b3aeef31120cdf2c62b6b7c07017b6aa9723c97198034932b47",
+      "sha256": "6b486a24f883c272a5aef1470ee3c4c0ed95bb298e0eadd652876d19e8eb8202",
       "assertions": 3
     },
     {
@@ -316,103 +316,103 @@
     {
       "name": "plugin_builder_wires_app_factory_for_create_app",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
-      "sha256": "1a3356fffd0b5213581f4c98301e5d0f8adfe32e4e8378f987c28d3e0a0f7e1a",
+      "sha256": "660c9b597dcaa1d61b92b0f3b37944d93e7d36fe475dbae453c4d60f194cd1eb",
       "assertions": 8
     },
     {
       "name": "merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
-      "sha256": "d146d3db384c350ee2a7499e732fd9d2ee1d7cbe4b1d7ef207a90e1c25a66c18",
+      "sha256": "498d7c02ecf869ce551cdb6812f7c23fb1eba54f263d86d1c5adfd4001e3a771",
       "assertions": 15
     },
     {
       "name": "operation_action_emits_kernel_op_with_true_inverse",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
-      "sha256": "3afca549f3170a9c5b2a8175792967b0f8b7b434f865e1e87b3ca591bb413375",
+      "sha256": "4be8c387b9affed9bc4a08d4a7ed2c8e8b2473256aaf032601a57c596288123c",
       "assertions": 5
     },
     {
       "name": "a_command_reaches_both_ephemeral_lanes_without_touching_history",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/👶️child-emit-prepublication-and-ephemeral-lanes/🦀️.rs",
-      "sha256": "b2ebbb1e9888a5e329aa8372c62da152b4e5ca9e9402ca5a8ceb4689578bef64",
+      "sha256": "bc845082db43a5fc80c7189e2921cac9e7679c4487d83af38a83573713416206",
       "assertions": 15
     },
     {
       "name": "a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
-      "sha256": "a468e924660c3a54f7922248537a0b773f95a827e86070e5fbd64c29ff27afe8",
+      "sha256": "a28fda29cf3d63552585577cfbe23fcc75aac6cadd40c4379c8809ca9204a286",
       "assertions": 2
     },
     {
       "name": "ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
-      "sha256": "8ef2de0bdc5259ede37d1d675c9dcfcbcce2bc28de03c7931956a3bc12aec0ac",
+      "sha256": "18761d8bbd644f76825d9d5788fff2d40a6cef84b3d8faa73628a750e9d56738",
       "assertions": 5
     },
     {
       "name": "one_framework_reserved_route_fits_a_bounded_thread_stack",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
-      "sha256": "c4fc2a41333b306207fe3cca4c669d4c228c4da2654a0c98750284e344b5e93f",
+      "sha256": "d70aad1645cfb82e4da5a5728512f14fbdf5e5b7f24ea2d77dd3113b19a2dda7",
       "assertions": 0
     },
     {
       "name": "retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
-      "sha256": "26f4db540972fe2ba6f023866a56a69820533e11dd5f0628df40ea59496a1d62",
+      "sha256": "71ea1857a45f4e7395eb3825ce5d7ce71ff58b80e0038e8185424bd2526c7efe",
       "assertions": 12
     },
     {
       "name": "peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
-      "sha256": "951e63b011e700ad21b8859f9e10e6e0ce6398c59adbef4ddb9141f9285047cb",
+      "sha256": "bc9618cb34c28d5ac4bc3c7b2c83b2b525e66ca9a5207ab8855652dfce3fac94",
       "assertions": 7
     },
     {
       "name": "peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
-      "sha256": "da53045f41c64adcecccb38a90a92481f5bb4cb51aa962f8f81a90947b32fde8",
+      "sha256": "2f96ad06e96050ea27fac7a2bba5addbe4532b15df1f6b2196394fb35cd4e14e",
       "assertions": 11
     },
     {
       "name": "interaction_view_peers_selecting_returns_actor_and_color",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
-      "sha256": "664603f374b739f9bbfe83fb4751c4dbcb866f5b4644e791f8e80c0b23b93804",
+      "sha256": "3c67e2ab62f91f74b58690574cc6977c3b43fb8a5fea5de6369cd3e311422455",
       "assertions": 9
     },
     {
       "name": "member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1/🦀️.rs",
-      "sha256": "ed9a88ffc5c7391de662a2b8f9ab3730dc3d70bbc170c39a2b41bb34d9b6ce22",
+      "sha256": "38afbff9df96dbb6faf22ed2f52193c672df20852e30202c13641f1dfe70d792",
       "assertions": 14
     },
     {
       "name": "member_factory_closed_dialect_register_rejects_pin_without_mutating_member",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
-      "sha256": "f6b0295f373a548987f6718731f843658e79b194f33acdd22394bf197134488a",
+      "sha256": "dca1fb7a0c76fc9c70c47fd2bf94e1caaa52cf33289c8e02b380b799ff6c03dd",
       "assertions": 7
     },
     {
       "name": "member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1/🦀️.rs",
-      "sha256": "f58a8a256fe5dd46e34aafe3abdc2914f233b9e5c9f1db45b0fc328c619f45b7",
+      "sha256": "6b827180f8e6996c154c3d35c46d47c16fc3917973c4baf8a018013c871d6f44",
       "assertions": 7
     },
     {
       "name": "composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
-      "sha256": "54b131e1c08a643b62e49305e49eb63776169b21669baf6745fd7851d65f948b",
+      "sha256": "670f912b71a3acdc4605460e7fb60c78059348da7613f079f894ffbd2118e327",
       "assertions": 12
     },
     {
       "name": "an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
-      "sha256": "ca8c66cd67d3acda7c9485796cc28643e373f005583882d44636a60f95727034",
+      "sha256": "b55ded2c8cdab45c58d601422b967aa0a8e49515d1e4bdcacc6e371dfac61c35",
       "assertions": 18
     },
     {
       "name": "a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
-      "sha256": "04869fff8e844e4b523fc9e413d350e50ef4ed414003baa80416518e43ce264a",
+      "sha256": "31b3c6aa3b04b74b0a908b1822a74aeba6b7598274da9f7a6ce455baec31c7fa",
       "assertions": 9
     },
     {
@@ -430,85 +430,85 @@
     {
       "name": "a_composed_document_crosses_a_media_edge_with_its_children",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "a087294000b1c8f2ffe8ba351ff2d6fd5bdcf51ac6186e0da7264ce16e166f96",
+      "sha256": "dc3843633a50f7a65aece94301cc3233ebda6af78d7d3505a83eed1e5e8ac4a3",
       "assertions": 4
     },
     {
       "name": "a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
-      "sha256": "de6ba650450493a54e9ae4c63ef7d6d664728c2b7b62cf2f36de62c9f2ca48ea",
+      "sha256": "88a5ab137e6eb89daeaa105e73b95770acd4a402f0d8ec14362a56bfc4fb5b6b",
       "assertions": 9
     },
     {
       "name": "a_composed_checkpoint_commit_cancels_between_units",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
-      "sha256": "1dd2ab2e9b2c344f56c9c27b31db23f9b3bf3256315a8aa7707718868ce575e7",
+      "sha256": "938759ca736910bdbb02018bfb0d67c1505af028d39ed0a7859b110a5af6d645",
       "assertions": 6
     },
     {
       "name": "a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
-      "sha256": "4d49994c3d9b25893e7a6f140119e8aab5b9bc95a1941ecea55787fd4931274b",
+      "sha256": "5aa589f82a852b149331be2fea800c56934794c369c0806b39273dc389876c00",
       "assertions": 4
     },
     {
       "name": "child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
-      "sha256": "c92b9b3bf8d77d75a77459722cf7907441a8fe731873347c2b7c6d97624a4746",
+      "sha256": "2909d8bad35fc554767377c269f81e3f9db189bf4d1bba94bda27100f083c3a4",
       "assertions": 6
     },
     {
       "name": "child_snapshot_retirement_rejection_preserves_exact_erased_owner",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "4feec9897e7edd1ad5db8bcf9cbdc350a2fbe17f051de61e6994a107ddec3583",
+      "sha256": "6f394ddc7693939f58a2a74b44667df4a5fb5fa60cc9c4bd1aff16b9c103b183",
       "assertions": 1
     },
     {
       "name": "child_root_maintenance_requires_terminal_empty_before_reclaim",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
-      "sha256": "c10261d92f32304d516ad5b3188fe8fa02be5092e7b2504f7e8bcb0611538d12",
+      "sha256": "34ba738aa78a9fe9065f1dc9f4c54980aa380f44cce9a1624246a114d7a0f9a2",
       "assertions": 5
     },
     {
       "name": "child_root_maintenance_reclaims_completed_owner_for_later_publication",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
-      "sha256": "6d38ae607e2f115e42613e5268a395b0a196137057aebbeef6c8be637ebf0636",
+      "sha256": "5bf32e6ddb5332c79d1690f14b73287ae91c6340a57d94663049773ee852ee68",
       "assertions": 1
     },
     {
       "name": "child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
-      "sha256": "00749bc8cb129f4e10209c35164a5959eb6b84f71580d4c0cca07e4abf823bdc",
+      "sha256": "6caac15734c5174d59b732bc736d6def9c90450c2ca1643fbb790872651f729b",
       "assertions": 4
     },
     {
       "name": "maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
-      "sha256": "ffe0873c1c044c96d4921efa950cbfbe5e25feec6ea17bc8693549dd0ac4aa47",
+      "sha256": "b3488143b98526161cdae24515716bacccea51222a08ad46c11f74f10ca9230b",
       "assertions": 5
     },
     {
       "name": "the_child_content_view_never_goes_stale_across_undo_and_redo",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
-      "sha256": "ad3b4b57d73fd6a56b820d39d4810e2cb6d3195fb8e7d60e791e2ca7885c5cf8",
+      "sha256": "2b8a29c6855a2e9813a4a8cb2fa4fcb13c6073d6e901deee91c2eb175834ff99",
       "assertions": 3
     },
     {
       "name": "group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
-      "sha256": "2ecfb494b1d39f8df9bfdef87d2cd1be2cf3e037e5f818ecc29dfce109276805",
+      "sha256": "a33ee9b0a670237facccab0554acee9b5971d6d302c62317aefa8da6b57a56aa",
       "assertions": 5
     },
     {
       "name": "created_children_survive_absorb_into_the_child_store_map",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
-      "sha256": "282652ace3d993417125a7bc384fc18b1276178697358f477c41304bb27a4d95",
+      "sha256": "60748e2ecb43a279e8e95de8fed55b894c6026108f9bf8120ba7efddc9bd37cf",
       "assertions": 2
     },
     {
       "name": "view_action_emits_no_operations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "7b2a2f1aa5583e8ccd2b50c6ffc4e03481b2519599cf32c4d8d6930d0e6205d9",
+      "sha256": "5b57d877602f64940d6973fedad874ab7a9f893d1e1c93a1dafac614d44a8136",
       "assertions": 3
     },
     {
@@ -520,61 +520,61 @@
     {
       "name": "a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "c3f58c12db06c74172bb7e366c1726a11873c18fe0a45fb37107bf02f8951143",
+      "sha256": "7c52179f24775234b8f3b145d92935fee31c446182b92f921a532075383b3da5",
       "assertions": 4
     },
     {
       "name": "revert_to_command_walks_the_document_lane_and_leaves_config_alone",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
-      "sha256": "9b696295be1e6c1d8fdfef5bb62a7ea70b87f0f1a416676e57790ec6bdb28bdf",
+      "sha256": "1175bb7e56e54047746d107f62321687a596b750f97733e9326dc2ca8f9d031b",
       "assertions": 6
     },
     {
       "name": "shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "a727844718cb848d78dceebd41868b55c963a3ef25a8d41e1f65afbf5b8a6165",
+      "sha256": "12354276cbffe85eb33e0ce47309ef0992cad6ee9afd4a98855b1bfa48b17f91",
       "assertions": 4
     },
     {
       "name": "shell_action_emits_host_effect_without_operations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "42d170574187a86e168295bc99a664da7aa5eddb6513677d7294708485bd7196",
+      "sha256": "db96ac35e5760ee44dca576d99bac25e50435d02308853843b34c026264559dc",
       "assertions": 2
     },
     {
       "name": "copy_emits_clipboard_write_effect_with_no_operations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "e9f81b2dcadb46949d816431749ebde87c9b880b9668d04e209636715cca73e2",
+      "sha256": "fb5329a420b29af5ff75ea587b032434d9a493acb2da53c4f09a2729372ea0f9",
       "assertions": 4
     },
     {
       "name": "copy_on_empty_selection_is_a_benign_no_operation",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "2631937097f6127652fdcac2d394aa4acf77de2a02001ef33ac200a4ef595ec4",
+      "sha256": "9a9908ca9152d3c2bccd000b7d0d6ea62ae4cbf099f3a2bb35c064310b73e5eb",
       "assertions": 2
     },
     {
       "name": "cut_removes_label_and_emits_clipboard_write_as_one_undo_unit",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "05d7ce9cdb209195056e411956a2b8758793ee06a4b5644c201ee82d85d33b4d",
+      "sha256": "8deb330eeb17e3a0bb3e508655ba1d1e48769b1cc0d770722a84b62a889512e4",
       "assertions": 4
     },
     {
       "name": "paste_materializes_fragment_at_original_anchor",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "d7f21adf38d9b35f8a8fade170a96b25b9dc86b2dfba3cfd88476b1911b0db2e",
+      "sha256": "412e0c8be4fb568d50b85178f9d15b3d81a320765cc9d5c063e2ef5803bfc38b",
       "assertions": 1
     },
     {
       "name": "paste_with_non_original_anchor_reaches_the_app_placement",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "ebbb6a27ac5fe205bfc35db928539982826f501eca55ff662d7e517b8a722a97",
+      "sha256": "1b13445332e4e44c2cb82fd80a88c3f213b217c9453a99d8d1f0bea4f7f0cc86",
       "assertions": 1
     },
     {
       "name": "paste_with_no_fragment_arg_is_a_benign_no_operation",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
-      "sha256": "6dd64dc8364726146574dbc13a6ded254fea6de832cc259540b8f544120e731f",
+      "sha256": "aabc4236b001a61cf9afef506c5cb96b85bade15a7a3a5c23bd86b14c6809797",
       "assertions": 2
     },
     {
@@ -586,25 +586,25 @@
     {
       "name": "streamed_ticks_and_their_commit_are_one_undo_step",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
-      "sha256": "f2e696fb7f438c32546635d39bb75adfde3900b92b92cc76192400415a82eb1e",
+      "sha256": "26a3ab9eb65cdd6f4b70fcf18710dcf813d2f16f3f3098fb452e1c58dce96bd0",
       "assertions": 2
     },
     {
       "name": "plain_emissions_never_coalesce",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
-      "sha256": "21d6e9e78563ccc4a6d5f8392534942557e58a63ea6f817e402bcf73ceef8a81",
+      "sha256": "1da34a09f652e1abe5d73d64883f43435c8bef6907d2efddc0302c96184b55ac",
       "assertions": 1
     },
     {
       "name": "history_actions_round_trip_through_the_store",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
-      "sha256": "32edadb3f7ca6f9d95cc79d28ce3a0cc9e4581692b5d187458d92fd9a62d9bb9",
+      "sha256": "77e77b42b75d53edc9bf14748325f6ccbd0924a0a333b5323aa6ec56efeb4af0",
       "assertions": 7
     },
     {
       "name": "reserved_undo_invocation_does_not_require_window_ownership",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
-      "sha256": "5fbe4bde71c2e9a49df3012c78fb290ce5f2be7cc998b1257958f27ce89dd1fd",
+      "sha256": "b0db0d9737b426db5693517a5e40cf1bafec1ff51e5075b5a010088618bee569",
       "assertions": 1
     },
     {
@@ -622,19 +622,19 @@
     {
       "name": "reserved_undo_pops_chrome_top_shell_then_publishes_history_patch",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
-      "sha256": "2aaf94cc528c2b78b2ed78b841addb08eb0180f2379d9698c5e2a0bd59da6d7d",
+      "sha256": "6fabd8d7076b3eaf76c472cb95e3c9e1bac94a10a65152291100e475b8882537",
       "assertions": 24
     },
     {
       "name": "reserved_undo_reaches_done_within_host_drive_contract",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "183544ebcc5316edea796a86e2e122ba287b46ef5b9988fc2ddbe37f015f0599",
+      "sha256": "b89b8345e6f1b88e7751ff4fbb0a0c8dbb3fe8ae8d078f917c6a1cdfa6d09cc7",
       "assertions": 4
     },
     {
       "name": "reserved_undo_pops_shell_then_falls_through_to_document_store",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "8006f14a50c00fac97b8de623a85c5a2d31e22feba0b0e8ef3687e8fa2adb3fb",
+      "sha256": "6aaabd5e18190a1cb7e822af0f903bbb333ebdbbf0d714714a1227c1eb08c5f0",
       "assertions": 10
     },
     {
@@ -646,13 +646,13 @@
     {
       "name": "reserved_undo_browser_note_without_inverse_is_not_an_undo_target",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
-      "sha256": "03fd7aa8cb94f01cad66e0a7be0a0aa6a7088123a6c421c57f6a0e8daab96dad",
+      "sha256": "74a163e2ec7bcf1acfadd3079f464acdd507dce98b2e5d8967e378c3b29787ae",
       "assertions": 12
     },
     {
       "name": "reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "4ccdd84f1ef3c31f458ad469c560ddf72800498435661f3dc99cd8e5339210e9",
+      "sha256": "18e2f9d3f9b61746a49382c1f872d13876f81144331b4206be8c7daa46f06453",
       "assertions": 6
     },
     {
@@ -664,43 +664,43 @@
     {
       "name": "an_operation_action_appends_one_command_log_entry_linked_to_its_edit",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "b1ea80c4191ee8d82e10bcafbc9aa119c9bfaa020332164f1caa6f4d2983d617",
+      "sha256": "b4baf91b9a929315850a5283464e838e0a5d420ef0dfb916ca8e85c06c67f6e8",
       "assertions": 8
     },
     {
       "name": "a_streamed_gesture_appends_exactly_one_command_log_entry",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "a0dc8a25ff14580d8c7152dfaa2822a264aeb73ae89dfb223287120cc94f1ad6",
+      "sha256": "247b2ea21e1a153188f06ee8741f21693f6976fe2de9b794057b162fee729877",
       "assertions": 1
     },
     {
       "name": "a_long_streamed_gesture_previews_its_newest_operations_only",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "9f30baf62ec70e6a237d633ce115561d21c2876ccf6c571c2ada4a0b4e12dd4a",
+      "sha256": "4a3249925066a3f8512d692ba326cc74992ae6b1b803ef2df86a61af2d384f39",
       "assertions": 4
     },
     {
       "name": "undo_and_redo_append_entries_and_never_shrink_the_log",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "95b694ebf7da443e9e423162dff6ae6d30cb19b45336dbdcd594515e6372e789",
+      "sha256": "c88a2c4b88f874f9407cd2319497d05689704e69a5c0432ed2db98d94f6752fb",
       "assertions": 5
     },
     {
       "name": "revert_to_command_restores_the_snapshot_and_appends_one_entry",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "82425569ef5d6421ee1969e537479973f6cfa1fdc7a1e7edcf51de50b26f093f",
+      "sha256": "7c93a61821efc852b7dac4d2f38ee9891237bfd84b9ec8eb4042ca9ce6683ff3",
       "assertions": 5
     },
     {
       "name": "ingested_remote_edits_are_backfilled_into_the_command_log",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "83d569e6c23e95402e32d7818235f38e5420707ec06d2fb2a2a725cb2c9b4c06",
+      "sha256": "3ef318f5cabc592dbe0059cb93358c8e0da546da9720367b32497c464511cf0e",
       "assertions": 3
     },
     {
       "name": "set_history_command_filter_emits_no_operations_and_updates_the_view",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "d51d284da8960d226216dfa48acb3f610bc0a08630803aaf267041e326805d2d",
+      "sha256": "83bb9a35fcbbe52192d260be1e64b142f5a7c2ffd39833034e1f53fe1be062a8",
       "assertions": 2
     },
     {
@@ -736,55 +736,55 @@
     {
       "name": "a_config_only_view_action_is_not_a_history_row",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "58b8f2283abd9265243bb8ed07bc57362aa3e2bcdc1ff97b102566dcc55dccea",
+      "sha256": "b768e871e50154aa6854a324d8c8abfbe7da2f98f074479ab5756003b9f54806",
       "assertions": 2
     },
     {
       "name": "consecutive_config_only_view_dispatches_add_no_history_rows",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "0814b9ac766c53cd3dabe85b7c605a7d86f082619d9956af275f2c13f6615bf5",
+      "sha256": "84058b849dad0abd711b173bc93546b5bafdcfde210c27b5c04498a994677c86",
       "assertions": 2
     },
     {
       "name": "interleaved_config_only_views_leave_only_the_document_row",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "b081ef29d875978e07970fb04692a3b5eac98fee58c780c7a90a4a8b9d439d14",
+      "sha256": "843602eb8cdf61291b482ee92986881ed1a5b6594c4d9fe172f4d39c504325cb",
       "assertions": 1
     },
     {
       "name": "note_shell_command_is_intercepted_before_the_app_and_records_each_repeat",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "f32ce3b76e5ec1d28ee306827df61b1a14f7742e9fbd5eed3db0cf596dcaf364",
+      "sha256": "74a5091167e3065310e1ba58c92fc49155be980c0dc714755d02cf248b826af8",
       "assertions": 8
     },
     {
       "name": "a_shell_noted_row_carries_the_same_text_in_every_locale",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "3c4b02f1bc6eec51e82f377b06884c4be8fadc502abb6b6f2638ab52dd327032",
+      "sha256": "f65ce94a74fb1ca161f74198c670f59732da5726419a4e46bcfdfdd7606d5162",
       "assertions": 1
     },
     {
       "name": "history_delivery_does_not_widen_a_none_ui_scope",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "33bbafe51efb0a5c7c370a6551fb6f6b3cfcdf721656900bb1323b6d3fc2f43d",
+      "sha256": "2884add34bea76198c8e90c8032ca5b0944c966b6a444c409541b646cbc40eef",
       "assertions": 1
     },
     {
       "name": "a_utility_switch_in_a_dispatch_view_delivers_one_host_event_to_its_window",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
-      "sha256": "bdfa7ea79997e30761ea7ea46f2068b1cdbbe23a0bf2f1a287401884860b49b7",
+      "sha256": "e1712c26cd85ba39f88531ed99095a8380aac0338c2b64699adf42a8956c06cc",
       "assertions": 3
     },
     {
       "name": "a_forwarded_host_event_reaches_the_app_and_its_answer_is_never_a_history_row",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
-      "sha256": "ce4d6df2b24576be04ca1a6c6db821f7a14e78be95eefee1fd299e10ad81f5d5",
+      "sha256": "a8421e8502e5e1cdd1cd7a532ba0b38022ff43cf63afbccf77e5121d6466b4a5",
       "assertions": 3
     },
     {
       "name": "a_pure_view_verb_is_no_history_row",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "e93e68c0646b8d15c0bb3af4502b2ac1d27a96cf95fb4c94c11d2975e26c8568",
+      "sha256": "8025243598b2794f7d324f32a657f37792144ffa133cc94c1d997189f41c1627",
       "assertions": 1
     },
     {
@@ -796,61 +796,61 @@
     {
       "name": "history_delivery_preserves_partial_ui_scope",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "4792108cdad3617350b0680820bedcab64632d2150af9fc640582a8684bc5118",
+      "sha256": "7a1367795f01d0d305326fcb98c7675db4d3cfe97fbc04455a83abfc3bb7235e",
       "assertions": 2
     },
     {
       "name": "scope_upgrade_full_stays_full",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "e72dd5c5987cf4ae724caa123e0b3e7eacb6b2ff1a0b61894a44c7615ec82adb",
+      "sha256": "f10721eb56e53b8212d2a3f77503c0fc421f42ab3da8c5870c4a9cb25c3b072e",
       "assertions": 1
     },
     {
       "name": "benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "e08575434464e1fbd6dd34779a18aeb46d112d29bb939174d234f77b999ed92b",
+      "sha256": "6ea05dd6cb4d7a522b8f8e3c38c5f681f91378f7c691c76cb670a9ba8778600f",
       "assertions": 2
     },
     {
       "name": "set_history_command_filter_is_never_logged",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "db5c1e7433581bb1d4e1f2aac19b8931612e8ce50a57fc25c5fca2f4260e06d2",
+      "sha256": "2e076bac223a18836a34f0ba3ae0123fdb693f57068ad41712d7c29b5e0d31df",
       "assertions": 1
     },
     {
       "name": "rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "65097821d8572d20b5fe4d6196839021d8dd9e2b37e6af81ba6a1b173fc76337",
+      "sha256": "ccad5dc5f40640aef4baf25a9926514e04e15196b613937fbed9443afceb3521",
       "assertions": 2
     },
     {
       "name": "an_operation_kind_action_with_zero_operations_still_logs_one_entry",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
-      "sha256": "f59bee7d57f9f5e5d57ecd0ccb144eb0412022d86f0e4f784d47ff4064b12334",
+      "sha256": "97b19cf01093730cd7eac69c9cbd6093f7d5f3b1b68102b85a59f0adf1fe6423",
       "assertions": 5
     },
     {
       "name": "undo_on_empty_history_is_a_benign_no_operation",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "f64c90bf21db0b7cbbd6807cb148ea53161c98602375b191e8cae3a8082ca4d8",
+      "sha256": "c79c76177b39fcf2ccbac723c96c4b431654beecc632a42afdc79f4cc37cce7f",
       "assertions": 2
     },
     {
       "name": "document_round_trips_through_serialization",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "e19b042042af38428199bd7f7e32de5e8687029fdaffabd0d496148da6ecdb0b",
+      "sha256": "df5359ffd987eae99878d6dadb1f56a68c81441340dc065fb6d24d411c5d358c",
       "assertions": 1
     },
     {
       "name": "ingest_operations_is_idempotent",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "67fee46443d480efa0f9420709e24753c9fcf56282da32678fb437854483a87b",
+      "sha256": "a098e2cbcaa2a156c807ea717754cb12e023d400c86e35af456b7ce9e3e4e5ef",
       "assertions": 2
     },
     {
       "name": "attach_detach_reattach_resumes_backbone_convergence",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "1d48cab24f042d71f86635f6eb5fa39b7e5d7fc0fb86ac4a4cf07d790d5357a2",
+      "sha256": "c58c1464ab14731071ddfca518b6b3e0c11632a80708f055cb3b7594d57a279b",
       "assertions": 8
     },
     {
@@ -862,7 +862,7 @@
     {
       "name": "context_menu_resolves_labels_from_the_registry_and_respects_guards",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "3205519cbbc99a17f9d0b2052e1fd88da62026080d3d3ec9d854841bab30d950",
+      "sha256": "90318f7e0ade223cdce99527287eaedb69a8920ea3163dc64fd9e90daa897de0",
       "assertions": 4
     },
     {
@@ -880,7 +880,7 @@
     {
       "name": "context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "9c6e812b3ed8c3ec5e21d386cdec1dc1a36db35440ac0c0dfe510e3fdb70638b",
+      "sha256": "5c1bffb99be42e2dccc846d42fdf302baa2faf2993319b5f3c1e126e3f454ffc",
       "assertions": 3
     },
     {
@@ -898,7 +898,7 @@
     {
       "name": "surface_context_refresh_projects_panels_from_focused_window_state",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
-      "sha256": "163c1a6d43f9997678a246514bd2bf43a2db00dfbbb9f073cc3365f1c45a9656",
+      "sha256": "ec646b8058aa7ea8ad4fc87a06ba71ded1fdec1bd4089246e8d11dfb83f60904",
       "assertions": 3
     },
     {
@@ -964,19 +964,19 @@
     {
       "name": "view_action_emitting_ops_is_rejected",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
-      "sha256": "93e41f0dd236f780db5915a5fb830c8e87cc74f410c0af7b1c58c5eebceffb01",
+      "sha256": "37bf149ce306943603bd1d45a072108a8b6cda85096607057b2ddf31507c9a47",
       "assertions": 2
     },
     {
       "name": "activate_intent_dispatches_through_the_typed_command_path_same_turn",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
-      "sha256": "8b87e53057a2f60fd80d97f5e7e02e685a6b25dc3a3a84d6cc917f42f9886bbc",
+      "sha256": "55d96ffbfbc8f8d0782f52d75ceb2d15d06bb58dedcf65e7b726f24297556471",
       "assertions": 3
     },
     {
       "name": "view_kind_intent_returning_operations_hard_faults",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
-      "sha256": "464868fd591383d99cc18dd1e273a25f99676584fbea88e5ed522cc387081d5e",
+      "sha256": "da83538eaf6ccb42789d96355ace2e9cdc878c7902d6e477a29b3409d655e962",
       "assertions": 2
     },
     {
@@ -988,49 +988,49 @@
     {
       "name": "set_active_utility_carries_its_value_directly_and_emits_no_operations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
-      "sha256": "ae06711fb23439630b6da4dc1d080ea1d91f18edb48f351eaabb2645120416dd",
+      "sha256": "fbeaa6af7c0c811146605483430e4e02c4990f18e22c7f6c1632f2aa9948a5bf",
       "assertions": 2
     },
     {
       "name": "a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "d161a5250811ac648894cc280461e43c706aad1490f01a50a1dbb0a462d5d1d3",
+      "sha256": "58cd582accba0229c284ecbfb9467c8115e8284d121dac308322b01d8b5162cc",
       "assertions": 4
     },
     {
       "name": "a_streamed_tick_reports_only_its_own_new_operation",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
-      "sha256": "eb68ea84e7a7f7d60e141b6b0124fb5412daf444f9df5770fd1a1dd1ab2a0a80",
+      "sha256": "bb591af8926367ddf796a2942922cabbac5f41e693bcdea3068b304925f7da5a",
       "assertions": 7
     },
     {
       "name": "operation_command_emits_kernel_op_with_true_inverse",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "83e58998260b79cbc3bda44481f47a82742a88b067b3c819f3c0e6f8a5dfe9ca",
+      "sha256": "31105df8ff89acc1ef1a0e7ed532bb1d89a9e0e13f0ffea951f984d77b7b9bc6",
       "assertions": 4
     },
     {
       "name": "manifest_command_dispatch_validates_structural_app_ownership",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "b764c167db34d67142e2db646f5fd63cb2864525199a58284d25a693a0b6c297",
+      "sha256": "541d9fd8a68ca0d5aaa1c6b4d9b4f1020acb0048a65828dd862ce512bf61ef06",
       "assertions": 2
     },
     {
       "name": "ui_dispatch_backstop_rejects_every_non_migrated_action_and_command",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
-      "sha256": "e555d0ddf209015b28b5329aeb737b3a8f487963953b77a5c7edd777264e9e9f",
+      "sha256": "2d2c051962aaf4cf9c5c1239dba3f4cc2b03408489a681279f5e303c1b33c4a8",
       "assertions": 6
     },
     {
       "name": "manifest_mode_command_requires_the_active_structural_owner",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "be2dbdb89ea5a8506328a7d25d8cb2bb12657977f3d2d2af9413911a02f5c5be",
+      "sha256": "a7ac8483985f092904f2417b99b06910752baddebf27607dd21b2c49b41bd12b",
       "assertions": 2
     },
     {
       "name": "addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "cef81357870c33cf3909d78df09727ffe405895865fe6245c426701ce70d9983",
+      "sha256": "efd9d5dc41cdcf54f95db46520a016df16af16a5afb4d359aa2e048f36627dc7",
       "assertions": 1
     },
     {
@@ -1042,55 +1042,55 @@
     {
       "name": "command_op_records_history_exactly_like_an_operation_action",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "7a962d88788ed4aafead9072df6a22d4ee46ac6c9ff7d1ce0b6f20d5ea923348",
+      "sha256": "b23bf57bc4704195851ea1821c3ece9fceba2c9a2be0378d3962f3f49a9d4035",
       "assertions": 2
     },
     {
       "name": "registry_less_construction_rejects_before_the_reducer",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
-      "sha256": "c5fd301fc941e21f5da6098aec6072b5ba6a5a763b2b1903ac2a805b5518be0a",
+      "sha256": "c03ffc877ba16a3a8107aa24f0d61709187cb300d65f9683da44ebd7dd1a0527",
       "assertions": 2
     },
     {
       "name": "interaction_select_replace_persists_through_the_interaction_store",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "2c9f684943ad6d32478e0803b1214591ab651ed6791a02134530177147764257",
+      "sha256": "4ad7fec2c10214948dbca5b0c6f2b2b83cfded176d26db3a16692e71b46ef252",
       "assertions": 2
     },
     {
       "name": "interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "95f1ca44b5eaf7fa0b6f2647dea8755bf802834f15c27ef26da297ec8cf5275d",
+      "sha256": "e31a3bb359b4a2b407eefac3a0e33eddda3055f8fa938102a22a7843c3c6a1c6",
       "assertions": 3
     },
     {
       "name": "a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "b81a9a70ccbf193815c2faa3b61097a2643d79f6616592444d90ccbe06f0aab2",
+      "sha256": "89fe9ba056e50d2cd38daec722634d10a81bdbff13d6fa7608a28dd320221f91",
       "assertions": 3
     },
     {
       "name": "set_selection_mode_and_set_interaction_granularity_persist_immediately",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "319ecf1b3cc1c5c77dfd8b4468782d9906dd7718f9f6d685609d979645e32781",
+      "sha256": "fc74600d8b9fc6d59252ab149cbca059dae44c94cd8d428acc2b967ff674897c",
       "assertions": 3
     },
     {
       "name": "clear_selection_and_select_all_apply_across_every_declared_domain",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "32cb014860ed461ca9a6d1d0904b9aff463e1ab40505ed846aa4c1da8ebf9738",
+      "sha256": "ad852488199b3d0fd39d460838d6781945ed173079579911e48280324ca5a328",
       "assertions": 2
     },
     {
       "name": "validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "a373cc65dffd74df09f66dea94595071e985bef843c33e7ed46fe9720dfe09d2",
+      "sha256": "ab7141e2803e27a29724ceb461a5014bde0dcdaec1df98e023e6ceb417ed7fe3",
       "assertions": 2
     },
     {
       "name": "interaction_verbs_never_become_history_rows",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "954d46f5e642e640617e5368ffb6848e46185913ad296c64c16bc0e007493267",
+      "sha256": "b846bff006882693653b5672d4e4dc272f7a464f579dcad0ab04d41a65f4a125",
       "assertions": 1
     },
     {
@@ -1102,49 +1102,49 @@
     {
       "name": "ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
-      "sha256": "c19646b7a41fbe36613b4b1939f2940d41e74210a0ce5525688bc3f479ad2093",
+      "sha256": "5c65cfa21ad9f18a1ed2767e0e49e450db66fd0f876c925f8e7d746120429517",
       "assertions": 14
     },
     {
       "name": "a_dropped_selection_publishes_a_cleared_presence_update",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
-      "sha256": "bc2b683633d92be8b2f7e7e51af2a8b9b4106620c7ad18815d035f371eff5402",
+      "sha256": "4c746ffb421f940fedf1d145d8ad1c11efcf6db50699823dfe6dfb2720f063c9",
       "assertions": 4
     },
     {
       "name": "interaction_select_job_completion_publishes_interaction_view_on_leftover",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "c5f62ce0f6effc5bf0d4c15de754816cced4b2b83033ff1ae7c11fcf0623807b",
+      "sha256": "229083b61e1ab3aa6221c221937a77868cc76451b12e9b241e76433f9c07ec0b",
       "assertions": 4
     },
     {
       "name": "leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "0712275269e69bd5c25ea937b2e86cec02ecc685baa239135b3c0aa8f0d310c9",
+      "sha256": "8bc4b88117e1cc0c4ec1bb41c44fc53a9e475439c2478c8c2ecedb6f0d7de885",
       "assertions": 1
     },
     {
       "name": "interaction_hover_job_completion_publishes_hover_target_on_leftover",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "ce49106e27776f9492343c59cfd6717dc95e016313900423a3bef40fb0eed044",
+      "sha256": "4c104250be068f69edd3649ca9d4f0a7183d2b863b75f10be55839e370432af7",
       "assertions": 2
     },
     {
       "name": "interaction_hover_dirties_only_the_hovering_windows_own_lane",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "7c80450b5e56badb2a88ebd53bd33af6181e069f13a023b6817c2a38bf8a620c",
+      "sha256": "9779dac258c0ad0c2baa3d365e69e3050dd41e4f0cf775252e8facc12d25e317",
       "assertions": 3
     },
     {
       "name": "interaction_select_carries_the_apps_declared_selection_lane",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "62e2712e118172b5f91c5f68b48a3426ac682981d873c88ed45fb8d84691d51c",
+      "sha256": "01c5a98016f20bfa8e12fbcaa18be76415ccf4509d64de11d8d34ff2f7272cb2",
       "assertions": 1
     },
     {
       "name": "an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "0db1a063b30d8ec6462925defee18386dcc7517c97d6185364fd8ebe1b1f57f2",
+      "sha256": "45087b5f9a95567cf5ae7d3043fc6d60e73061bbf100065829e39a3add1083b6",
       "assertions": 1
     },
     {
@@ -1162,55 +1162,55 @@
     {
       "name": "emitted_empty_replace_write_clears_selection_while_hover_remains",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "2d1dca88b8ef8d4b0fc5b99be3dd27a0384e0b5594a9cb401961d7475dbbf8bc",
+      "sha256": "458ce467388b83f627de96f06228bc6697602c8da775b8e2d3369b5c5d9c0711",
       "assertions": 3
     },
     {
       "name": "empty_target_interaction_select_clears_selection_while_hover_remains",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "12a8d0298b4c90685777fbaa28ff6d0fb5f93b184a487a151548a44995704aec",
+      "sha256": "19ad83d3657bca031889d978515fe4bab80bfcb6aa1db753bb119bc9e28e0554",
       "assertions": 2
     },
     {
       "name": "guest_emitted_interaction_select_is_folded_into_the_carrying_turn",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "c10eb6e9ca94bc1d6267e480e12375ce6c480807ce803ec1a5705f751c3ff4da",
+      "sha256": "f101f8201b5021beffa985a5661d86d7f45e3fc5c42f9aacd6ee6c31503dc443",
       "assertions": 6
     },
     {
       "name": "guest_emitted_empty_replace_select_clears_and_unions_the_carrier_scope",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "d1967472ac93aabea0845d7cb25b3acdb239beac559e6070e9fb38b438174878",
+      "sha256": "f6f8faadd60b997fa9bd923734448971c8802d37eb471f464fde8b329388c9ad",
       "assertions": 8
     },
     {
       "name": "guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "5f476e7ce72e96726f6b5fa4299d7d252b2f32318e27c9eb1fdf094e45a41bdd",
+      "sha256": "1d80b456b3ce5089a7aa3eaac7548facbfc3e79438ecb31dbfa8f6a03e98dda6",
       "assertions": 6
     },
     {
       "name": "non_interaction_replay_shell_commands_still_reach_the_host",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "fb533a965e6d5037fb6ba945d52dfd9f25f175345cac46cb12a6c2936dfdd944",
+      "sha256": "5671e2040cd4502a2727e76ce1569dcce6fe06dac0ba1dff0720cad5b89eb1c9",
       "assertions": 3
     },
     {
       "name": "guest_emitted_dispatch_action_interaction_select_is_folded_into_the_carrying_turn",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
-      "sha256": "d4968e34b27603b981d425f6b423cce3c07683a34d1cb52e7ad5b9257b41f6ab",
+      "sha256": "49cb95cb1b6bea5b833d0b2eb7a1df7c91e37ece2d80d3f7c3a610ae93951a4f",
       "assertions": 6
     },
     {
       "name": "non_interaction_dispatch_actions_still_reach_the_host",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
-      "sha256": "71cc8b860d7202d488494c164e147a63935c08a5c27cf53ea8317a871b0f4c50",
+      "sha256": "c1f303419642bbc3657fbbaa093b7d81a5c886fc0c789991c164e915c55f8425",
       "assertions": 4
     },
     {
       "name": "typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-2/🦀️.rs",
-      "sha256": "0ffdfe210baf6821dbe8bbd903e8e2c0b83deec4360a2bccea1d911027a86120",
+      "sha256": "4eacba50ad5d0988f4a34aaff906653cc9894dc5bee33ffe09453da7b48d5fa9",
       "assertions": 0
     },
     {
@@ -1222,49 +1222,49 @@
     {
       "name": "leftover_interaction_view_selected_ids_are_a_set_for_every_merge",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
-      "sha256": "e3d8b25c3bc6c7dac16a28d29735514bad19d84f73f051cc3f08581c3c674334",
+      "sha256": "079a626329aeff9bef17d6c981b49a69907cab979367b43d8fc4425078d20dad",
       "assertions": 5
     },
     {
       "name": "interaction_select_speaks_exactly_the_schema_merge_vocabulary",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
-      "sha256": "ce03156f1ffedf5e0c60e290ae825d9d9bad04381a76147fd1737ffa86cf6d79",
+      "sha256": "73e36ac4bd419750db13ed515438df3975f4971dcfb83b1d8cc3f73fcbce1b5b",
       "assertions": 3
     },
     {
       "name": "a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧵️spawned-task-resume/🦀️.rs",
-      "sha256": "f3645790f21c8dacb08629a0ea89f6815cfdfd909bbaac6ef18b55a65eb50083",
+      "sha256": "ed55a8d13059b7813613608097d9c4ab5c55e6dc70cbeb8dc4c9bd2d96e6b04e",
       "assertions": 18
     },
     {
       "name": "task_admission_defers_the_user_factory_until_actor_execution",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
-      "sha256": "8110d0cf93109a04583074bfe6f3b203e003c672079313dc8581ae14c2a2bb34",
+      "sha256": "b21e551133dd4655da629d4aa284e34bf8c41777572060eeab342c73e524c959",
       "assertions": 4
     },
     {
       "name": "spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
-      "sha256": "e75964c21b6cce12dce9d6e968fe4497247112aaaaa13f3e172b525b6a36d142",
+      "sha256": "5863f71afd7b3e059196f82b18935904df7d699bbe4f25c7b894e37b90ef1ba0",
       "assertions": 4
     },
     {
       "name": "key_dedupe_cancels_the_previously_live_task_under_the_same_key",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
-      "sha256": "0d1fc8f5a1bfccba73b2d6d3af0abb619783f82de0e31813278a1574ae97efd8",
+      "sha256": "247e6c7dc2a406a130eb086793ce3970223380ea541147927270b992000c25d3",
       "assertions": 6
     },
     {
       "name": "instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
-      "sha256": "1c5828075940694d4737b4e700f3e6bff88c4aada66e614dff956a550f167eac",
+      "sha256": "a8b92cdda9b14cf86650bcc16b1bc769d90df3b301ba947750b8e1505f8d7a9f",
       "assertions": 8
     },
     {
       "name": "checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
-      "sha256": "97cca9fca9ff41d058069aa992b88cdd6515b780dea6b403de92f314242fa9e6",
+      "sha256": "446787b47e35f04789695670e2483d13c1d0a70c36127409e0a608966e495d81",
       "assertions": 12
     },
     {
@@ -1296,7 +1296,19 @@
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
       "sha256": "130c80a243d8f2589218008da49e04764557ebac13fd67310e394ca799e43f91",
       "assertions": 26
+    },
+    {
+      "name": "accepted_remote_prefix_notifies_before_later_refusal",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🎞️host-events-media-cancel-and-download-seam/🦀️.rs",
+      "sha256": "246200d3b702ad529a077f6b2b1cf92a6d9763432ffd0616df6e03a9fd577772",
+      "assertions": 5
+    },
+    {
+      "name": "retained_rejected_completion_closes_original_artifact_and_ephemeral_owners",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
+      "sha256": "1082dcc56dc402f0bd111a5b74477c3295e2e9826ade1714e72079514dbd9e6f",
+      "assertions": 0
     }
   ],
-  "addedAssertions": 19
+  "addedAssertions": 35
 }

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "kind": "unsealed-architecture-linux-cohort",
+  "status": "DRAFT; controller rejects this template",
+  "required": "Root binds actual fresh capture, builder, native provisioning receipts after host RED/GREEN; no old identity or fabricated digest",
+  "schema": "schema.json",
+  "source": null,
+  "builder": null,
+  "native": null,
+  "cohort": null,
+  "workload": null,
+  "tag": null,
+  "steps": [
+    "help",
+    "preflight",
+    "tools",
+    "lock",
+    "sync",
+    "suite-1",
+    "suite-2",
+    "suite-3",
+    "suite-4",
+    "suite-5",
+    "suite-6",
+    "suite-7",
+    "suite-8",
+    "suite-9",
+    "typecheck-1",
+    "typecheck-2",
+    "typecheck-3",
+    "material",
+    "browser",
+    "deployment",
+    "bundle"
+  ],
+  "limits": {
+    "milliseconds": 43200000,
+    "commandMilliseconds": 7200000,
+    "outputBytes": 67108864,
+    "outputLines": 262144,
+    "cleanupMilliseconds": 60000
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "host": "demonstrator.entwerfen.mit-bestand.de",
+  "assetsDirectory": "♻️mit-bestand/🧺️demonstrator/🖼️asset",
+  "panes": [
+    {
+      "variant": "generator",
+      "runtimeVariant": "generation3d"
+    },
+    {
+      "variant": "koordinator",
+      "runtimeVariant": "koordinator"
+    },
+    {
+      "variant": "aggregator",
+      "runtimeVariant": "aggregator"
+    },
+    {
+      "variant": "aussuchen",
+      "runtimeVariant": "aussuchen"
+    },
+    {
+      "variant": "bearbeiten",
+      "runtimeVariant": "bearbeiten"
+    },
+    {
+      "variant": "verfolgen",
+      "runtimeVariant": "verfolgen"
+    },
+    {
+      "variant": "energy",
+      "runtimeVariant": "energy"
+    },
+    {
+      "variant": "fem3d",
+      "runtimeVariant": "fem3d"
+    }
+  ],
+  "invalidVariants": [
+    "",
+    "unknown",
+    "generation3d",
+    "energie",
+    "statik"
+  ],
+  "catalogInputs": [
+    "🔨️modules/🧩️runtime/🔣️.json",
+    "🔨️modules/🧩️runtime/📇️catalog/🟦️.ts"
+  ],
+  "brandInputs": [
+    "🪧️brand.ts",
+    "🔨️modules/🧩️runtime/🔣️.json",
+    "🔨️modules/🧩️runtime/📇️catalog/🟦️.ts"
+  ],
+  "brandImports": [
+    "@semio-tech/framework"
+  ],
+  "admission": {
+    "baseUrl": "https://demonstrator.entwerfen.mit-bestand.de/",
+    "authority": {
+      "maxBytes": 2097152,
+      "maxRows": 512,
+      "maxEdges": 4096,
+      "maxWork": 65536,
+      "durationMs": 30000
+    },
+    "expectedCounts": {
+      "targets": 70,
+      "hosts": 1,
+      "playgrounds": 156
+    },
+    "rejectedMaxRows": 128
+  }
+}

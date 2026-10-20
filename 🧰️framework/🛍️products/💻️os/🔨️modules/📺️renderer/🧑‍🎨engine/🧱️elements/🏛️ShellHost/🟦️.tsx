@@ -1,37 +1,8 @@
-// #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/component.tsx
-/** 🏗️ `ShellHost` — the `FrameworkOsShell` orchestrator: boots/hot-swaps plugin wasm modules,
- * owns the window/dock/panel layout, wires the tutorial recorder/player, presence, backbone sync,
- * command/tool/utility ribbons, context menus, and mounts every per-app window via `🟦️Interpreter`.
- * The single largest component in the renderer-react package. */
-// #endregion 🧲️Header
-
-// #region 🔌️Adapters
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
 import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import {
-  type Anchor,
-  ANCHORS,
-  CanvasSkeleton,
-  cn,
-  ContextMenuController,
-  createShellScope,
-  detectShellLocale,
-  disposeShellI18nInstance,
-  Footer,
-  Layout,
-  LevelProvider,
-  Navbar,
-  PanelDockProvider,
-  type ShellScope,
-  ShellScopeProvider,
-  TextSelectionContextMenuHost,
-  TutorialBar,
-  UIIntroduction,
-  UiKeybindingsProvider
-} from "@semio-tech/ui-react";
+import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { PluginSurfaceActionsContext } from "../🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
@@ -44,13 +15,7 @@ import { registerElementHostsV1 } from "../🪢️ElementHosts/🟦️.ts";
 import { pluginInstallBandTextV1, pluginInstallCancelTextV1 } from "../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { checkinAbortText, checkinStatusText } from "../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { renderStagedArgControl, interactionSelectionIdsV1 } from "../🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx";
-import {
-  resolveDialogDefinition,
-  resolveIntroductionDefinition,
-  resolveManifestLabel,
-  shellLabel
-} from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-// #endregion 🔌️Adapters
+import { resolveDialogDefinition, resolveIntroductionDefinition, resolveManifestLabel, shellLabel } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { HistoryReprojectionStatus, TimeTravelBand } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { localFolderNameV1, LocalFolderReconnectBand } from "./📎️local-folders/🟦️.tsx";
 import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
@@ -66,27 +31,8 @@ import { ShellContextMenuFallbackContext, AppKeybindingsContext } from "../🗣�
 import { TutorialCaptionsHost, TutorialGhostPointerHost, TutorialVideoOverlayHost } from "./🎬️tutorial-recorder/🟦️.tsx";
 import { type FrameworkOsShellProps, resolveShellScopeStorage } from "./🔐️identity-binding/🟦️.ts";
 import { commandStallLineV1 } from "./🔌️extension-runtime/🟦️.ts";
-import { useShellCoreState, type FrameworkOsShellInnerProps } from "./🧩️shell-core-state/🟦️.ts";
-import { useIdentityAndDocumentPorts } from "./🔒️identity-document-ports/🟦️.ts";
-import { useBackboneWorker } from "./🧵️backbone-worker/🟦️.ts";
-import { useDirectoryAndRoute } from "./🛂️directory-route/🟦️.ts";
-import { usePluginLifecycle } from "./🚀️plugin-lifecycle/🟦️.ts";
-import { useFocusAndInput } from "./🎮️focus-and-input/🟦️.tsx";
-import { useContributionsAndRefresh } from "./🔁️contributions-refresh/🟦️.ts";
-import { useSpawnedSession } from "./🛫️spawned-session/🟦️.ts";
-import { useApplyHostEffects } from "./⚡️host-effects/🟦️.ts";
-import { useShellUriAndDocuments } from "./🗄️shell-uri-documents/🟦️.ts";
-import { useShellActions } from "./🖱️shell-actions/🟦️.ts";
-import { useTutorialOrchestration } from "./🎥️tutorial-orchestration/🟦️.ts";
-import { useDirectoryLaneAndLayout } from "./📐️layout-hotkeys/🟦️.ts";
-import { useArtifactOpening } from "./📬️artifact-opening/🟦️.ts";
-import { useThemeDriverSettings } from "./🎨️theme-driver-settings/🟦️.tsx";
-import { useDocumentTransferAndTabs } from "./📤️document-transfer-tabs/🟦️.tsx";
-import { useCheckInAndSync } from "./✅️check-in-sync/🟦️.tsx";
-import { useCommandBar } from "./🔎️command-bar/🟦️.tsx";
-import { useDockAssembly } from "./🏗️dock-assembly/🟦️.ts";
-import { usePanelHosting } from "./📋️panel-hosting/🟦️.tsx";
-import { useCanvasAndFooter, type ShellCoreAfterCanvasAndFooter } from "./🖼️canvas-footer/🟦️.tsx";
+import { type FrameworkOsShellInnerProps } from "./🧩️shell-core-state/🟦️.ts";
+import { useCoreState } from "./🔶️core/🟦️.tsx";
 
 export {
   scheduleShellTransientNoticeDismissV1,
@@ -211,59 +157,8 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
     </div>
   );
 }
-//#endregion 🐚️ShellMount
-
-/** 🧷️ The one core object `FrameworkOsShellInner` threads through its hooks: each hook reads the bindings of the hooks before it and its own bag is merged in call order, so the hooks together run the statements the single closure used to run. A binding an earlier hook reads before a later hook declares it travels through `ShellForwardSlots`, assigned the moment its declaration runs. */
-type ShellCore = ShellCoreAfterCanvasAndFooter;
-
 function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
-  const core = {} as ShellCore;
-  Object.assign(core, useShellCoreState(props, core));
-  Object.assign(core, useIdentityAndDocumentPorts(core));
-  Object.assign(core, useBackboneWorker(core));
-  Object.assign(core, useDirectoryAndRoute(core));
-  Object.assign(core, usePluginLifecycle(core));
-  Object.assign(core, useFocusAndInput(core));
-  Object.assign(core, useContributionsAndRefresh(core));
-  Object.assign(core, useSpawnedSession(core));
-  Object.assign(core, useApplyHostEffects(core));
-  Object.assign(core, useShellUriAndDocuments(core));
-  Object.assign(core, useShellActions(core));
-  Object.assign(core, useTutorialOrchestration(core));
-  Object.assign(core, useDirectoryLaneAndLayout(core));
-  Object.assign(core, useArtifactOpening(core));
-  Object.assign(core, useThemeDriverSettings(core));
-  Object.assign(core, useDocumentTransferAndTabs(core));
-  Object.assign(core, useCheckInAndSync(core));
-  Object.assign(core, useCommandBar(core));
-  Object.assign(core, useDockAssembly(core));
-  Object.assign(core, usePanelHosting(core));
-  Object.assign(core, useCanvasAndFooter(core));
-
-  const {
-    documentServices, brand, shellContextMenuTitleLabel, hostMode, mobile, dispatch, localInteraction, loadedPlugins,
-    session, error, localPrograms, uiLocale, uiTerminology, appLabelsOverlay, appCatalogue, searchOpen, findOpen,
-    introductionStepIndex, introductionCompletedInteractions, overlayDialog, transientNotice, tutorialPlaying,
-    tutorialRate, tutorialMuted, tutorialCaptionsOn, tutorialRecording, inferencePortRuntimeKey, inferencePort,
-    shellContextMenu, setShellContextMenu, setWindowTitle, setWindowIcon, openSpaceId, agentBridgeInstances,
-    identityOffline, verifiedSessionAuthority, hubEnv, hubSessionCapability, directoryBootstrapUi,
-    spaceArtifactCreationUi, spaceArtifactCreationCatalogUi, cancelSpaceArtifactCreation, spaceAdministration,
-    hubWorkspaceOpen, setHubWorkspaceOpen, hubConnectionPort, isCurrentDialogOrigin, closeOwnedDialog,
-    bootstrapUiByDocument, executionTargetUiByDocument, cancelDirectoryBootstrap, dispatchSpaceAdministrationIntent,
-    dispatchInferencePortIntent, cancelSessionAuthorityBootstrap, navigateHistory, sessionRouteRef, navigateShellUri,
-    shellPluginCanvasStatus, installingPluginIds, pluginInstallProgress, cancelPluginInstalls, commandStalls,
-    commandStallClockMs, panel, boardSessionFactory, focusedApp, focusedTimeTravel, focusedReprojection,
-    activeIntroduction, tutorialRecorderAvailable, dismissIntroduction, requestContextMenu, closeDocument,
-    forgetLocalFolder, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, onAction, onActionStable,
-    activeTutorial, tutorialClock, seekTutorial, playPauseTutorial, stopTutorial, toggleTutorialRecording,
-    addTutorialChapter, tutorialChapterMarkers, openReadySpaceArtifactCreation, keysByActionId, controlKeybindings,
-    currentDocumentRuntimeKey, selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, rowActionRefusals,
-    timeTravelPeers, openHubWorkspace, routeAdmission, routeAdmissionNotice, hubOnlineUserIds, cancelHubCheckIn,
-    dismissHubCheckIn, currentCheckIn, historyDomRef, onCommand, dock, handleTabDockDrop, handleTreeUnitDockDrop,
-    mobilePanel, initialExampleReady, navbarItems, searchItems, canvas, footerItems, buildPanelProps,
-    buildShellContextMenuItems
-  } = core;
-
+  const { boardSessionFactory, setWindowTitle, setWindowIcon, keysByActionId, appCatalogue, controlKeybindings, timeTravelPeers, rowActionRefusals, requestContextMenu, buildShellContextMenuItems, session, initialExampleReady, error, agentBridgeInstances, historyDomRef, hubEnv, hubSessionCapability, verifiedSessionAuthority, identityOffline, uiLocale, cancelSessionAuthorityBootstrap, bootstrapUiByDocument, closeDocument, executionTargetUiByDocument, spaceArtifactCreationUi, spaceArtifactCreationCatalogUi, cancelSpaceArtifactCreation, openReadySpaceArtifactCreation, inferencePortRuntimeKey, inferencePort, documentServices, dispatchInferencePortIntent, directoryBootstrapUi, cancelDirectoryBootstrap, hubWorkspaceOpen, hubConnectionPort, openSpaceId, hubOnlineUserIds, navigateShellUri, setHubWorkspaceOpen, hostMode, navigateHistory, sessionRouteRef, spaceAdministration, dispatchSpaceAdministrationIntent, routeAdmissionNotice, routeAdmission, openHubWorkspace, transientNotice, dispatch, installingPluginIds, pluginInstallProgress, cancelPluginInstalls, commandStalls, loadedPlugins, panel, uiTerminology, commandStallClockMs, dock, handleTabDockDrop, handleTreeUnitDockDrop, mobile, mobilePanel, navbarItems, onCommand, activeTutorial, tutorialPlaying, tutorialRate, tutorialMuted, tutorialCaptionsOn, tutorialRecording, tutorialRecorderAvailable, tutorialChapterMarkers, tutorialClock, playPauseTutorial, stopTutorial, seekTutorial, toggleTutorialRecording, addTutorialChapter, footerItems, focusedTimeTravel, focusedReprojection, currentCheckIn, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, forgetLocalFolder, focusedApp, onActionStable, currentDocumentRuntimeKey, dismissHubCheckIn, cancelHubCheckIn, buildPanelProps, shellPluginCanvasStatus, canvas, searchItems, searchOpen, findOpen, shellContextMenuTitleLabel, shellContextMenu, setShellContextMenu, activeIntroduction, introductionStepIndex, brand, appLabelsOverlay, introductionCompletedInteractions, dismissIntroduction, overlayDialog, isCurrentDialogOrigin, localPrograms, selectedSpaceArtifactKinds, selectedSpaceArtifactCreationCatalog, localInteraction, closeOwnedDialog, onAction } = useCoreState({ props });
   return (
     <BoardSessionFactoryContext.Provider value={boardSessionFactory}>
     <SetWindowTitleContext.Provider value={setWindowTitle}>
@@ -560,4 +455,3 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
     </BoardSessionFactoryContext.Provider>
   );
 }
-//#endregion FrameworkOsShell

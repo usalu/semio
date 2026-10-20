@@ -1,7 +1,13 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { terminateOwnedProcessTree } from "../../🪓️termination/🟦️.ts";
+import { detachDiskImagesUnderV1 } from "../🏖️sandbox/🖼️images/🟦️.ts";
+import { guardArgumentsV1, testCheckoutRootV1, testSandboxEnvironmentV1 } from "../🏖️sandbox/🟦️.ts";
+import { prepareTestCommandV1, testProtocolMessageV1 } from "../🚦️protocol/🟦️.ts";
+
+export { attachedDiskImagesV1, detachDiskImagesUnderV1 } from "../🏖️sandbox/🖼️images/🟦️.ts";
 
 /** 🎛️ Supplies a test command's complete caller-owned process policy. */
 export type TestCommandOptions = Readonly<{
@@ -20,7 +26,10 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
   if (options.captureStdout && (!Number.isSafeInteger(options.captureStdout.limitBytes) || options.captureStdout.limitBytes < 1)) throw Error("Invalid captured output byte limit");
   if (!options.cwd) throw Error("Missing test command working directory");
   if (options.signal?.aborted) throw Error(`${command} cancelled`);
-  const child = spawn(command, [...args], { stdio: options.captureStdout ? ["inherit", "pipe", "inherit"] : "inherit", cwd: options.cwd, env: options.env ?? process.env, detached: process.platform !== "win32", windowsHide: true });
+  const sandbox = testSandboxEnvironmentV1(options.env ?? process.env, { route: "test-command", checkout: testCheckoutRootV1(options.cwd, options.env ?? process.env) });
+  const prepared = prepareTestCommandV1(command, args, sandbox.environment, sandbox.environment.TMPDIR ?? tmpdir());
+  const started = performance.now();
+  const child = spawn(command, [...guardArgumentsV1(command, prepared.args, sandbox.environment)], { stdio: options.captureStdout ? ["inherit", "pipe", "inherit"] : "inherit", cwd: options.cwd, env: { ...sandbox.environment, ...prepared.environment }, detached: process.platform !== "win32", windowsHide: true });
   let reason: "timeout" | "cancelled" | "interrupted" | "output-limit" | undefined;
   const stop = (next: typeof reason): void => {
     reason ??= next;
@@ -39,6 +48,7 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
       child.once("error", reject);
       child.once("close", (code, signal) => accept({ code, signal }));
     });
+    try { prepared.finish({ code, signal, durationMs: performance.now() - started, ...(reason ? { reason } : {}) }); } catch (error) { console.error(testProtocolMessageV1("reportFailed", { reason: String(error) })); }
     const failure = reason === "timeout" ? `${command} exceeded its ${options.budgetMs}ms budget` : reason ? `${command} ${reason}` : signal ? `${command} was killed by ${signal}` : code !== 0 ? `${command} exited with status ${code}` : undefined;
     if (!failure) return;
     if (reason === "timeout") console.error(`[budget] ${command} ${args.join(" ")} exceeded ${options.budgetMs}ms — killed. ${options.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive)."}`);
@@ -49,41 +59,12 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
     options.signal?.removeEventListener("abort", abort);
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", interrupt);
+    sandbox.release();
   }
 }
 
 const scratchRoots = new Map<string, string>();
 let exitGuard = false;
-
-/** 🧲️ Lists the attached macOS disk images through the system tool, deepest backing file first. */
-export function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string }>[] {
-  if (process.platform !== "darwin") return [];
-  const info = spawnSync("/usr/bin/hdiutil", ["info", "-plist"], { encoding: "utf8" });
-  if (info.status !== 0) return [];
-  const json = spawnSync("/usr/bin/plutil", ["-convert", "json", "-o", "-", "-"], { input: info.stdout, encoding: "utf8" });
-  if (json.status !== 0) return [];
-  const rows = (JSON.parse(json.stdout) as { images?: { "image-path"?: string; "system-entities"?: { "mount-point"?: string; "dev-entry"?: string }[] }[] }).images ?? [];
-  return rows.flatMap((row) => {
-    const entities = row["system-entities"] ?? [], target = entities.find((entity) => entity["mount-point"])?.["mount-point"] ?? entities[0]?.["dev-entry"];
-    if (!row["image-path"] || !target) return [];
-    let image = row["image-path"];
-    try { image = realpathSync(image); } catch {}
-    return [{ image, target }];
-  }).sort((left, right) => right.image.length - left.image.length);
-}
-
-/** 🧲️ Detaches every disk image whose backing file lives under the root, nested images first. */
-export function detachDiskImagesUnderV1(root: string): readonly string[] {
-  let real = resolve(root);
-  try { real = realpathSync(real); } catch {}
-  const prefix = real + sep, detached: string[] = [];
-  for (const { image, target } of attachedDiskImagesV1()) {
-    if (!image.startsWith(prefix)) continue;
-    const plain = spawnSync("/usr/bin/hdiutil", ["detach", target], { encoding: "utf8" });
-    if (plain.status === 0 || spawnSync("/usr/bin/hdiutil", ["detach", "-force", target], { encoding: "utf8" }).status === 0) detached.push(image);
-  }
-  return detached;
-}
 
 /** 🗑️ Detaches every disk image under a scratch root created by this module, then removes the tree. */
 export function disposeTestScratchRootV1(root: string): void {

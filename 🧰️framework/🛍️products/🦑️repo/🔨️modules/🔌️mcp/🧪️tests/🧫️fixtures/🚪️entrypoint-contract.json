@@ -52,8 +52,10 @@
   "buildInstructions": [
     "repo run",
     "repo tools setup",
-    "--tool=bazel",
-    "Nx remains the default"
+    "--tool=nx|bazel",
+    "The build policy chooses the default build tool",
+    "never start the underlying build tools yourself",
+    "Deutsch:"
   ],
   "resourceContents": [
     {

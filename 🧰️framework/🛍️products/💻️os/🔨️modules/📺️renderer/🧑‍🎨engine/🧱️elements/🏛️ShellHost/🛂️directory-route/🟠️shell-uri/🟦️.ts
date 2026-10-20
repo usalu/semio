@@ -76,7 +76,7 @@ export function useShellUriState({ identity, verifiedSessionAuthority, hubEnv, h
   const notFoundPath = shellRoute.kind === "notFound" && shellRoute.path !== SHELL_HUB_ROUTE ? shellRoute.path : null;
   const shellUriRef = useRef(shellUri);
   shellUriRef.current = shellUri;
-  /** 🧭️ A navigation a human or a guest asks for always takes effect: a session-replacing route is invalidated, a new URI
+  /** 🚦️ A navigation a human or a guest asks for always takes effect: a session-replacing route is invalidated, a new URI
    * goes through history (the route effect applies it), and the URI already shown is applied on the spot — back to a
    * space's index from one of its documents, whose URI is the space's own ({@link createShellRouteLedgerV1}). */
   /** 🪟️ The route the session stands at ({@link shellSessionRouteV1}): the shell URI, or the route an open overlay sits

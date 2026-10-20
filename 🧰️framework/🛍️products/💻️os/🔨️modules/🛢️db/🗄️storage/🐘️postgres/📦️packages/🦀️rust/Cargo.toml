@@ -43,3 +43,4 @@ semio-framework-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/�
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+serde_json = { workspace = true }

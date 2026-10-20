@@ -206,3 +206,17 @@ Created ticket inputs `🔬️strace/📜️script.ts` and `🔬️strace/🧫�
 
 
 Strace diagnostic preparation: updated retained inputs `🔬️strace/📜️script.ts`, `🔬️strace/🧫️.json`, and research `2026-10-20-strace-plan.md`; Root added `2026-10-20-strace-parent.md`. Generated handoff and proof logs are evidence only. No product Source changes or guest actions.
+
+
+Diagnostic continuation checkpoint: Root created `2026-10-20-diagnostic-continuation.md` (retained closure-ledger attribution, not worker implementation). Strace inputs are now frozen at helper1b7591773b2debe0eead5a59c5dfc21fb5fbb0bd77edf0588717b32ad736b50d and fixture522ce2b1d47ea184d69df7bf01db890f1828f271334b05a9779581f6ebad6ef3; future fixed-target receipt interface is prepared/reviewed only. Root neutral2 succeeded separately; no actual main-process target or attach was authorized. Source26 and runner/namespace helpers were not edited in this lane.
+
+
+Prepared process inventory third/fourth slots: updated retained inputs `📊️process/📜️script.ts` and `📊️process/🧫️.json`; updated only dependent digest constant in `🔬️strace/📜️script.ts` (Root separately authorized). Reports updated `2026-10-20-process-observation.md`; no product Source, runner, namespace or guest changes. Exact cohort is runtime-process-slots-handoff.json.
+
+
+Neutral inner-diagnostic coexistence preparation: updated retained `🧾️cycle/📜️script.ts` with an isolated oracle branch, created `🧾️cycle/🧫️coexistence.json`, appended `2026-10-20-inner-loader-diagnostic.md`. No Root-helper/Source/private change. Actual predicate proof remains pending.
+
+
+Host inner-loader integration (Root authorized after actual candidate read): updated Root-owned retained `📥️patches/📜️script.ts` with distinct dispatch+3functions; extended `🧾️cycle/📜️script.ts` actual-predicate/host-wiring proofs and `🧾️cycle/🧫️coexistence.json` full install-record vectors (46). Original helper232ad bodies preserved. No private Source/runner/namespace change or managed run. Final handoff runtime-inner-integration-handoff.json; reverse restoration inner→failure→stage remains pending Root.
+
+- Created `🛂️authority/📜️script.ts`: one host-only exact extracted observer authority readiness check; updated `2026-10-20-process-observation.md` with terminal scope and limits. Frozen observer/strace/runner/helper inputs were not edited.

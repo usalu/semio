@@ -1,5 +1,9 @@
+import catalogue from "./🔣️catalog.json" with {type:"json"};
 import {advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+
+/** 🛗️ What an operation needs before it starts: `none` runs on a fresh clone with only Bun, `dependencies` needs the locked dependencies, which the CLI ensures first; an unknown name needs them, so a typo never skips the provisioning. */
+export function buildOperationRequiresV1(name:string):"none"|"dependencies"{return (catalogue.operations as readonly {name:string;requires:"none"|"dependencies"}[]).find(row=>row.name===name)?.requires??"dependencies";}
 
 /** 🛠️ Names the build tools that implement the neutral operations. */
 export type BuildToolNameV1="nx"|"bazel";
@@ -44,7 +48,7 @@ export interface CacheProbeToolV1 {
 /** 🧭️ Runs `cache status|clear` against the tool the caller resolves, so this neutral module never imports an adapter, and returns the portable result. */
 export async function runBuildCacheOperationV1(tool:BuildToolNameV1,args:readonly string[],context:Omit<BuildCacheContextV1,"progress">,resolveImplementation:(tool:BuildToolNameV1)=>Promise<BuildCacheToolV1>):Promise<BuildCacheStatusV1|BuildCacheClearV1>{
  const operation=args[0];
- if(args.length!==1||operation!=="status"&&operation!=="clear")throw Error("Expected repo cache status|clear");
+ if(operation!=="status"&&operation!=="clear"||args.length!==1&&!(operation==="status"&&args.length===2&&args[1]==="--tasks"))throw Error("Expected repo cache status|clear (status accepts --tasks)");
  const progress=async(stage:string)=>{checkResourceLeaseControl(context.phaseControl);await advanceScriptInvocation(context.invocation,"build:cache:"+stage,"running");checkResourceLeaseControl(context.phaseControl);},actual={...context,progress},implementation=await resolveImplementation(tool);
  checkResourceLeaseControl(context.phaseControl);
  if(operation==="status")return implementation.status(actual);

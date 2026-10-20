@@ -4,8 +4,10 @@ import {createRequire} from "node:module";
 import {join} from "node:path";
 import {pathToFileURL} from "node:url";
 import {test} from "bun:test";
+import { testDemonstratorBrowserCatalog } from "../📇️catalog/🧪️tests/🟦️.ts";
 /** 🎪️ Keeps Vite's runtime description independent of build commands and brand implementations. */
 export async function testDemonstratorRuntime(workspace: string): Promise<void> {
+  await testDemonstratorBrowserCatalog(workspace);
   const require = createRequire(import.meta.url), directory = join(workspace, "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime");
   const catalog = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")), fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
@@ -42,8 +44,14 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.equal(project.targets.prepare, undefined, "Only profile-qualified preparation targets exist");
   assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/.🧾️store/build.json"]);
   assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
+  assert.equal(project.targets.build.options.env?.SEMIO_BUILD_MODE, pipeline.site.profile, "Site publication consumes its declared profile, independent of the caller environment");
+  assert.equal(project.targets.build.defaultConfiguration, pipeline.site.profile);
+  assert.equal(project.targets.build.metadata.semio.buildMode.fixed, pipeline.site.profile);
   assert.deepEqual(project.targets["activate-prototype"]?.dependsOn, ["prepare-prototype", pipeline.development.activationTarget]);
   assert.deepEqual(project.targets["activate-prototype"]?.outputs, ["{projectRoot}/dist/♻️activation/prototype"], "Demonstrator union receipt must restore from the build cache");
+  assert.equal(project.targets["activate-prototype"]?.cache, true, "the union receipt is a pure function of the lane receipts");
+  assert.equal(project.targets["activate-lanes-prototype"]?.executor, "repo:noop", "the lane gate is an ordering node without a process");
+  for (const name of ["serve", "dev", "prepare-e2e", "serve-e2e"]) assert.ok(project.targets[name]?.inputs?.some((input: any) => input?.dependentTasksOutputFiles === "**/*" && input.transitive === true), `${name} restores the transitive closure it serves from`);
   for (const name of ["serve", "dev"]) {
     assert.equal(project.targets[name]?.continuous, true);
     assert.equal(project.targets[name]?.cache, false);

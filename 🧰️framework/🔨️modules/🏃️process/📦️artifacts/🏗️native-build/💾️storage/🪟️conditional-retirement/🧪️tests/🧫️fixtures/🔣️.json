@@ -1,0 +1,451 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "complete",
+      "accepted": 3,
+      "removed": 3,
+      "refused": false,
+      "outcome": "complete"
+    },
+    {
+      "id": "preserved-map-pending",
+      "accepted": 3,
+      "removed": 2,
+      "refused": false,
+      "outcome": "pending"
+    },
+    {
+      "id": "foreign-reader",
+      "accepted": 0,
+      "removed": 0,
+      "refused": true,
+      "outcome": "refused"
+    },
+    {
+      "id": "writable-map",
+      "accepted": 0,
+      "removed": 0,
+      "refused": true,
+      "outcome": "refused"
+    },
+    {
+      "id": "image-section",
+      "accepted": 0,
+      "removed": 0,
+      "refused": true,
+      "outcome": "refused"
+    },
+    {
+      "id": "partial-kernel-refusal",
+      "accepted": 2,
+      "removed": 2,
+      "refused": true,
+      "outcome": "partial"
+    },
+    {
+      "id": "cancel-after-first",
+      "accepted": 1,
+      "removed": 1,
+      "refused": true,
+      "outcome": "partial"
+    }
+  ],
+  "refusals": [
+    {
+      "fault": "sharing",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "permission",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "reparse",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "hardlink",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "filesystem",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "disposition",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "identity",
+      "accepted": 0,
+      "settled": true
+    },
+    {
+      "fault": "insert-child",
+      "accepted": 2,
+      "settled": true
+    },
+    {
+      "fault": "close",
+      "accepted": 0,
+      "settled": false
+    },
+    {
+      "fault": "close-acquisition",
+      "accepted": 0,
+      "settled": false
+    },
+    {
+      "fault": "close-named",
+      "accepted": 0,
+      "settled": false
+    },
+    {
+      "fault": "remote-drive",
+      "accepted": 0,
+      "settled": true
+    }
+  ],
+  "settlements": [
+    {
+      "id": "complete",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        },
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        }
+      ],
+      "available": 25,
+      "recordFails": false,
+      "expected": {
+        "units": 2,
+        "logicalBytes": 8,
+        "acceptedEntries": 2,
+        "removedEntries": 2,
+        "acceptedLogicalBytes": 8,
+        "removedLogicalBytes": 8,
+        "unsettledUnits": 0,
+        "handlesSettled": true,
+        "headroomDeficitBytes": 75
+      }
+    },
+    {
+      "id": "readonly-view-pending",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 0,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 0,
+            "handlesSettled": true,
+            "outcome": "pending"
+          },
+          "refused": false
+        },
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        }
+      ],
+      "available": 25,
+      "recordFails": false,
+      "expected": {
+        "units": 1,
+        "logicalBytes": 4,
+        "acceptedEntries": 2,
+        "removedEntries": 1,
+        "acceptedLogicalBytes": 8,
+        "removedLogicalBytes": 4,
+        "unsettledUnits": 1,
+        "handlesSettled": true,
+        "headroomDeficitBytes": 75
+      }
+    },
+    {
+      "id": "partial-second-unit",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        },
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 0,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 0,
+            "handlesSettled": true,
+            "outcome": "partial"
+          },
+          "refused": true
+        }
+      ],
+      "available": 25,
+      "recordFails": false,
+      "expected": {
+        "units": 1,
+        "logicalBytes": 4,
+        "acceptedEntries": 2,
+        "removedEntries": 1,
+        "acceptedLogicalBytes": 8,
+        "removedLogicalBytes": 4,
+        "unsettledUnits": 1,
+        "handlesSettled": true,
+        "headroomDeficitBytes": 75
+      }
+    },
+    {
+      "id": "unsettled-second-unit",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        },
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 0,
+            "removedEntries": 0,
+            "acceptedLogicalBytes": 0,
+            "removedLogicalBytes": 0,
+            "handlesSettled": false,
+            "outcome": "refused"
+          },
+          "refused": true
+        }
+      ],
+      "available": null,
+      "recordFails": false,
+      "expected": {
+        "units": 1,
+        "logicalBytes": 4,
+        "acceptedEntries": 1,
+        "removedEntries": 1,
+        "acceptedLogicalBytes": 4,
+        "removedLogicalBytes": 4,
+        "unsettledUnits": 1,
+        "handlesSettled": false,
+        "headroomDeficitBytes": null
+      }
+    },
+    {
+      "id": "first-unit-refused",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 0,
+            "removedEntries": 0,
+            "acceptedLogicalBytes": 0,
+            "removedLogicalBytes": 0,
+            "handlesSettled": true,
+            "outcome": "refused"
+          },
+          "refused": true
+        }
+      ],
+      "available": 25,
+      "recordFails": false,
+      "expected": {
+        "units": 0,
+        "logicalBytes": 0,
+        "acceptedEntries": 0,
+        "removedEntries": 0,
+        "acceptedLogicalBytes": 0,
+        "removedLogicalBytes": 0,
+        "unsettledUnits": 2,
+        "handlesSettled": true,
+        "headroomDeficitBytes": 75
+      }
+    },
+    {
+      "id": "record-refused-after-first",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        }
+      ],
+      "available": 25,
+      "recordFails": true,
+      "expected": {
+        "units": 1,
+        "logicalBytes": 4,
+        "acceptedEntries": 1,
+        "removedEntries": 1,
+        "acceptedLogicalBytes": 4,
+        "removedLogicalBytes": 4,
+        "unsettledUnits": 1,
+        "handlesSettled": true,
+        "headroomDeficitBytes": 75
+      }
+    },
+    {
+      "id": "physical-observation-refused",
+      "events": [
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        },
+        {
+          "receipt": {
+            "kind": "windows-kernel-conditional",
+            "acceptedEntries": 1,
+            "removedEntries": 1,
+            "acceptedLogicalBytes": 4,
+            "removedLogicalBytes": 4,
+            "handlesSettled": true,
+            "outcome": "complete"
+          },
+          "refused": false
+        }
+      ],
+      "available": null,
+      "recordFails": false,
+      "expected": {
+        "units": 2,
+        "logicalBytes": 8,
+        "acceptedEntries": 2,
+        "removedEntries": 2,
+        "acceptedLogicalBytes": 8,
+        "removedLogicalBytes": 8,
+        "unsettledUnits": 0,
+        "handlesSettled": true,
+        "headroomDeficitBytes": null
+      }
+    }
+  ],
+  "kernelCases": [
+    "reader",
+    "foreign-reader",
+    "readonly-map",
+    "writable-map",
+    "image-section",
+    "hardlink",
+    "reparse",
+    "insert-child",
+    "readonly-attribute",
+    "permission",
+    "complete"
+  ],
+  "physicalExtents": [
+    {
+      "id": "ordinary-build-unit",
+      "reportedSessionBytes": 8,
+      "files": [
+        {
+          "path": "a",
+          "bytes": 4
+        },
+        {
+          "path": "b",
+          "bytes": 4
+        }
+      ],
+      "physicalBytes": 8
+    },
+    {
+      "id": "stale-session-and-locks",
+      "reportedSessionBytes": 4,
+      "files": [
+        {
+          "path": "newest/a",
+          "bytes": 4
+        },
+        {
+          "path": "old/b",
+          "bytes": 7
+        },
+        {
+          "path": "old.lock",
+          "bytes": 2
+        }
+      ],
+      "physicalBytes": 13
+    },
+    {
+      "id": "empty-physical-directory",
+      "reportedSessionBytes": 0,
+      "files": [],
+      "physicalBytes": 0
+    }
+  ],
+  "requestMutations": [
+    {
+      "initialBytes": 7,
+      "replacementBytes": 8,
+      "observedBytes": 8,
+      "accepted": 0
+    }
+  ]
+}

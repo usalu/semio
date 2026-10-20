@@ -56,6 +56,23 @@ export function registerComposeCaddyAndWorkflowTests(): void {
     expect(() => caddySizeBytes("eight")).toThrow();
     expect(() => stackRequestBodyLimit("example.org {\n\treverse_proxy proctor:8791\n}\n")).toThrow("caps no request body");
   });
+  it("provisions the native release frontend before every managed release command", () => {
+    const contract = readiness.release.nativeIngress;
+    const names = Object.keys(contract.ordinaryCommands) as (keyof typeof contract.ordinaryCommands)[];
+    for (const name of names) {
+      const steps = workflow.jobs[name]!.steps as (Job["steps"][number] & { id?: string; shell?: string })[];
+      const setup = steps.findIndex(step => step.id === contract.stepId);
+      const bun = steps.findIndex(step => step.uses?.startsWith("oven-sh/setup-bun@"));
+      expect(setup, `${name} has no native frontend provisioning`).toBeGreaterThanOrEqual(0);
+      expect(bun, `${name} has no pinned recovery runtime`).toBeGreaterThanOrEqual(0);
+      expect(setup).toBeGreaterThan(bun);
+      expect(steps[setup]!.shell).toBe(contract.shell);
+      expect(steps[setup]!.run?.trim().split("\n").map(line => line.trimEnd())).toEqual(contract.recipe);
+      expect(steps.slice(0, setup).filter(step => step.run)).toEqual([]);
+      const ordinary = steps.filter((step, index) => step.run && index !== setup).map(step => step.run);
+      expect(ordinary).toEqual(contract.ordinaryCommands[name].map(argv => `${contract.envelope} repo ${argv.join(" ")}`));
+    }
+  });
   it("releases from the actual repository default branch only, with pinned actions and the least permissions", () => {
     expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
     expect(workflow.permissions).toEqual({ contents: "read" });
@@ -85,7 +102,6 @@ export function registerComposeCaddyAndWorkflowTests(): void {
       expect(job["timeout-minutes"]).toBeGreaterThan(0);
       for (const step of job.steps) if (step.uses) expect(step.uses).toMatch(/^[\w-]+\/[\w-]+@[0-9a-f]{40}$/u);
       for (const step of job.steps) if (step.uses?.startsWith("actions/checkout@")) expect(step.with).toEqual({ "persist-credentials": false });
-      for (const step of job.steps) if (step.run?.includes(" bun repo dependencies sync")) expect(step.run).toBe(readiness.release.commands[1]);
     }
     expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(readiness.release.siteCommands);
     expect(siteJob.steps.at(-1)!.with).toEqual({ path: `🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/${COURSE_PAGES_DIRECTORY}` });

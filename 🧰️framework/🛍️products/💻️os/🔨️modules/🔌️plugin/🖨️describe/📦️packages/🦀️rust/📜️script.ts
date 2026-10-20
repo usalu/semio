@@ -4,11 +4,12 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
-import { runFreshComponentCheckScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */
 class FreshComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { runFreshComponentCheckScript } = await import("../../🧪️tests/🔬️rust-package-commands/🟦️.ts");
     await runFreshComponentCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }

@@ -7,3 +7,8 @@ Feature: Original Named Root Receiving
     And the named root is closed
     Then its projected index still authenticates against the independent reader
     And original row addresses, values and funded closure receipts remain exact
+
+  Scenario: Explicit forward payload funding includes parent metadata
+    Given a4096byte child payload and a4120byte total quote
+    Then forward receiving retains the exact4120byte quote
+    And close selection retains its4096byte body independently

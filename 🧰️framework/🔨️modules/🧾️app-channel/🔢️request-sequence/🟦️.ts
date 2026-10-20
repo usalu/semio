@@ -1,8 +1,8 @@
 /** 🔢️ App channel request sequence: the channel version admission, the handle port, local interaction query ownership, transaction replies and the request sequence. */
 
 import type { Fault, PluginWasmHandle } from "@semio-tech/framework";
-import type { LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryToken } from "@semio-tech/framework-replication";
-import { localInteractionIdentityEquals } from "@semio-tech/framework-replication";
+import type { LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryToken } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
+import { localInteractionIdentityEquals } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { type AppCommandValue, type AppFrameValue } from "../../🪢️wire-contracts/🟦️.ts";
 
 //#region 🔖️AppChannelClient

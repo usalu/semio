@@ -4,7 +4,7 @@
  */
 
 import type { UtilityLeaf } from "@semio-tech/framework";
-import { readVarintU64, writeVarintU64 } from "@semio-tech/framework-replication";
+import { readVarintU64, writeVarintU64 } from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { decodePackValue, encodePackValue } from "../🎁️packs/🟦️.ts";
 
 //#region 🔖️Backbone

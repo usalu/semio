@@ -29,6 +29,9 @@ mod controls;
 #[path = "📂️sources/🦀️.rs"]
 mod sources;
 
+#[path="🌐️language-choice/🦀️.rs"]
+mod language_choice;
+
 use controls::Flow;
 use windows::{Dashboard, Effect};
 
@@ -40,9 +43,10 @@ pub fn run(root: &Path) -> i32 { run_with(root, &dashboard_core::args::ParsedArg
 
 /// 📖️ The usage text in the chosen language, with the keyboard section generated from the keymap.
 pub fn help_text(preferences: &dashboard_preferences::Preferences) -> String {
-    let text = dashboard_labels::labels(preferences.locale());
+    let Some(locale)=preferences.locale() else { return dashboard_preferences::language::declared().choices().iter().map(|choice| { let mut resolved=preferences.clone();resolved.language=Some(choice.language.clone());help_text(&resolved) }).collect::<Vec<_>>().join("\n\n"); };
+    let text = dashboard_labels::labels(locale);
     let (keymap, _) = preferences.keymap();
-    let mut lines = vec!["semio [dashboard] [--root PATH] [--config JOURNAL] [--workspace] [--language en|de] [--appearance dark|light] [--terminology native|reuse] [--renderer react|wgpu-wasm|wgpu-native] [--layout tabs|columns|rows] [--prefix KEY] [--bindings JSON]".to_string()];
+    let mut lines = vec!["repo dashboard [--root PATH] [--config JOURNAL] [--workspace] [--language en|de] [--appearance dark|light] [--terminology native|reuse] [--renderer react|wgpu-wasm|wgpu-native] [--layout tabs|columns|rows] [--prefix KEY] [--bindings JSON]".to_string()];
     for (scope, heading) in [(dashboard_preferences::keymap::Scope::Prefix, text.help_prefix.fill(&[("prefix", &keymap.prefix().label())]).into_string()), (dashboard_preferences::keymap::Scope::Window, text.help_window.as_str().to_string()), (dashboard_preferences::keymap::Scope::View, text.help_view.as_str().to_string())] {
         lines.push(heading);
         for action in keymap.actions(scope) {
@@ -61,13 +65,17 @@ fn present(term: &mut NativeTerminal, tui: &mut Tui, patch: &semio_framework_ui_
 /// ⚙️ Starts a native dashboard with strict optional configuration overrides.
 pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     let root = dashboard_wire::ipc::canonical_path(&parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from));
-    let text = dashboard_labels::labels(dashboard_preferences::cli_locale(&root, parsed));
-    if !parsed.segments.is_empty() { eprintln!("{}", text.cli_dashboard_unexpected_arguments.fill(&[("arguments", &parsed.segments.join(" "))]).into_string()); return 2; }
+    let text = dashboard_preferences::cli_locale(&root, parsed).map(dashboard_labels::labels);
+    if !parsed.segments.is_empty() { for choice in dashboard_preferences::language::declared().choices(){let locale=ui_locale::Locale::parse(&choice.language).expect("validated choice");if dashboard_preferences::cli_locale(&root,parsed).is_none_or(|selected|selected==locale){eprintln!("{}",dashboard_labels::labels(locale).cli_dashboard_unexpected_arguments.fill(&[("arguments",&parsed.segments.join(" "))]).into_string());}} return 2; }
     let loaded = dashboard_preferences::load_lenient(&root, parsed);
     if parsed.has_flag("help") { println!("{}", help_text(&loaded.map(|(preferences, _)| preferences).unwrap_or_default())); return 0; }
-    let (preferences, problems) = match loaded { Ok(loaded) => loaded, Err(error) => { eprintln!("[dashboard] {error}"); return 2; } };
-    let Ok(mut term) = NativeTerminal::new() else { eprintln!("{}", text.cli_dashboard_attach_failed.as_str()); return 1; };
+    let (mut preferences, problems) = match loaded { Ok(loaded) => loaded, Err(error) => { eprintln!("[dashboard] {error}"); return 2; } };
+    let Ok(mut term) = NativeTerminal::new() else { if let Some(text)=text {eprintln!("{}", text.cli_dashboard_attach_failed.as_str());}else{eprintln!("{}",dashboard_preferences::language::declared().message("terminalUnavailable"));} return 1; };
     if term.enter().is_err() { return 1; }
+    if preferences.locale().is_none() {
+        let path=if parsed.has_flag("workspace"){dashboard_preferences::shared_path(&root)}else{dashboard_preferences::local_path(&root,parsed)};
+        match language_choice::run(&mut term,&path,Theme::new(if preferences.appearance=="light"{AppearanceName::Light}else{AppearanceName::Dark})) {Ok(Some(locale))=>preferences.language=Some(locale.as_str().into()),Ok(None)=>{let _=term.leave();return 0;},Err(error)=>{let _=term.leave();eprintln!("[dashboard] {error}");return 1;}}
+    }
     let size = term.size().unwrap_or(Size { width: 100, height: 32 });
     let mut tui = Tui::new(size, Theme::new(if preferences.appearance == "light" { AppearanceName::Light } else { AppearanceName::Dark }));
     tui.set_width_mode(term.width_mode());

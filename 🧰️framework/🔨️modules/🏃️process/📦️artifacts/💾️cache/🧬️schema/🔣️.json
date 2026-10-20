@@ -1225,7 +1225,7 @@
             "$ref": "#/definitions/SelectedDescriptorGuard"
           },
           "minItems": 1,
-          "maxItems": 3
+          "maxItems": 6
         },
         "accepted": {
           "type": "boolean"
@@ -1238,7 +1238,10 @@
         "maximumBytes": 1048576,
         "maximumLines": 16384,
         "maximumGuards": 3,
-        "maximumFieldBytes": 65536
+        "maximumFieldBytes": 65536,
+        "maximumExactFileGuards": 5,
+        "maximumRefusalStderrCodePoints": 256,
+        "maximumRefusalEndingBytes": 8
       }
     },
     "SelectedCensusCase": {
@@ -1459,6 +1462,406 @@
         },
         "pathTruncated": {
           "type": "boolean"
+        }
+      }
+    },
+    "ScopedDescriptorPolicy": {
+      "const": {
+        "version": 1,
+        "maximumRoots": 2,
+        "maximumPathCharacters": 256,
+        "command": "lsof",
+        "prefix": [
+          "-nP",
+          "+w",
+          "-Fpn"
+        ],
+        "selector": "+D",
+        "format": "newline-pn",
+        "filesystem": [
+          "+f",
+          "--"
+        ],
+        "recursive": [
+          "-Q",
+          "-x",
+          "f"
+        ]
+      }
+    },
+    "ScopedDescriptorCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "platform",
+        "roots",
+        "accepted",
+        "args",
+        "filesystemRoot"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "platform": {
+          "type": "string"
+        },
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "args": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "filesystemRoot": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "ScopedDescriptorResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "status",
+        "signal",
+        "reason",
+        "stdoutBytes",
+        "stderrBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          ]
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            null,
+            "exit",
+            "timeout",
+            "cancelled",
+            "output-limit",
+            "spawn-error"
+          ]
+        },
+        "stdoutBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "stderrBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        }
+      }
+    },
+    "ScopedDescriptorWitnessPolicy": {
+      "const": {
+        "version": 1,
+        "mode": "readonly-directory",
+        "maximumRoots": 2,
+        "followSymbolicLinks": false,
+        "retainThroughDeletion": true
+      }
+    },
+    "ScopedDescriptorWitnessCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "rootCount",
+        "failure",
+        "opened",
+        "closed",
+        "body"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "rootCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "failure": {
+          "enum": [
+            "none",
+            "open-first",
+            "open-second",
+            "stat-first",
+            "lstat-second",
+            "identity",
+            "body",
+            "close",
+            "body-close",
+            "undefined-body-close"
+          ]
+        },
+        "opened": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "closed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "body": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CompilerMountPolicy": {
+      "const": {
+        "maximumBytes": 1048576,
+        "maximumLines": 4096,
+        "maximumFieldCharacters": 4096,
+        "command": "mount",
+        "args": []
+      }
+    },
+    "CompilerMountCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "stdout",
+        "root",
+        "directories",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "directories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CompilerDeviceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "rootDevice",
+        "entryDevice",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "rootDevice": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "entryDevice": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CompilerSelectedNameCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedCardinalityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "guards",
+        "accepted"
+      ],
+      "properties": {
+        "selection": {
+          "enum": [
+            "filesystem",
+            "exact-files"
+          ]
+        },
+        "guards": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedObservationRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "selection",
+        "status",
+        "signal",
+        "reason",
+        "stdoutBytes",
+        "stderrBytes",
+        "endingHex",
+        "stderrPreview",
+        "guardCount",
+        "maximumGuards",
+        "expectedPid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "selected-observation"
+        },
+        "selection": {
+          "enum": [
+            "filesystem",
+            "exact-files",
+            "invalid"
+          ]
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 32
+        },
+        "stdoutBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stderrBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endingHex": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^[0-9a-f]*$"
+        },
+        "stderrPreview": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "guardCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumGuards": {
+          "enum": [
+            3,
+            5
+          ]
+        },
+        "expectedPid": {
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       }
     }

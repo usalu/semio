@@ -3,7 +3,7 @@ import { rustSourceTargetProblem, rustSourceTargets, type RustSourceInputInvento
 import { projectCargoProviderManifest, cargoProviderTomlParser, type CargoProviderManifestProjection, type CargoProviderTomlParser } from "../../../../🔍️discovery/🚚️cargo-provider/🟦️.ts";
 import { inspectRustModuleGraphFacts, rustModuleScopeProof, type RustModuleContext, type RustModuleGraph } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { type RustModuleGraphFacts } from "../../../../🔍️discovery/🦀️rust-fact-contracts/🟦️.ts";
-import { rustTokens, rustTokenPairs, rustIdentifierSymbol } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens, rustTokenPairs, rustIdentifierSymbol } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 
 export type RustBindingSpan = Readonly<{ start: number; end: number }>;
 export type RustBindingProblemKind = RustSourceInputProblem | "missing-manifest" | "invalid-manifest" | "missing-workspace-authority" | "unsupported-dependency-authority" | "external-provider-unproven" | "provider-package-mismatch" | "unproven-library-identity" | "provider-source-unproven" | "unknown-extern-root" | "ambiguous-extern-root" | "local-route-unproven" | "unsupported-use-tree" | "unproven-path-namespace" | "unproven-macro-output" | "orphan-context" | "unproven-module-mount" | "unproven-attribute-output" | "unsupported-edition-namespace" | "unproven-generic-scope" | "unsupported-extern-declaration" | "unproven-source-scope";

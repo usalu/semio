@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "environmentOrder": ["LC_ALL", "LC_MESSAGES", "LANG"],
+  "explicitVariable": "SEMIO_LANGUAGE",
+  "preferenceListVariable": "LANGUAGE",
+  "neutralTags": ["c", "posix"],
+  "osLocale": {
+    "darwin": { "command": "defaults", "args": ["read", "-g", "AppleLanguages"], "timeoutMs": 3000 },
+    "win32": { "intl": true }
+  },
+  "refusal": {
+    "en": "No language selected for texts. Pass --lang={choice}, set SEMIO_LANGUAGE={choice}, or run with a locale such as LANG=en_US.UTF-8 (resolution order: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, the operating system language list).",
+    "de": "Keine Sprache für Texte gewählt. Übergib --lang={choice}, setze SEMIO_LANGUAGE={choice} oder starte mit einem Locale wie LANG=de_DE.UTF-8 (Reihenfolge: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, Sprachliste des Betriebssystems).",
+    "unknownFlag": { "en": "Unknown language: {value} ({choice})", "de": "Unbekannte Sprache: {value} ({choice})" },
+    "unknownVariable": { "en": "{name} names a language that is not offered: {value} ({choice})", "de": "{name} nennt eine nicht angebotene Sprache: {value} ({choice})" }
+  }
+}

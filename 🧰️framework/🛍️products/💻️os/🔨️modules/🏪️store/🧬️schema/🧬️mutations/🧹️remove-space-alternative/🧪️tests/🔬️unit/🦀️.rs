@@ -14,10 +14,10 @@ fn inverse_restores_inactive_and_active_alternatives() {
     for active in ["a", "b"] {
         let before = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: Some(active.into()), ..Default::default() };
         let mutation = RemoveSpaceAlternative { alternative_id: "b".into() };
-        let post = semio_framework_os_spr::apply_diff(mutation.diff(&before).diff(), &before).expect("remove applies");
+        let post = semio_framework_os_spr::apply_diff_cold(mutation.diff(&before).diff(), &before).expect("remove applies");
         let mut inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         inverse.reverse();
-        let restored = inverse.into_iter().fold(post, |current, step| semio_framework_os_spr::apply_diff(step.diff(&current).diff(), &current).expect("inverse applies"));
+        let restored = inverse.into_iter().fold(post, |current, step| semio_framework_os_spr::apply_diff_cold(step.diff(&current).diff(), &current).expect("inverse applies"));
         assert_eq!(restored, before, "active {active}");
     }
 }

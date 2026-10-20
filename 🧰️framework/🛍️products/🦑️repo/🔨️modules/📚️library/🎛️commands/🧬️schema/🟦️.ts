@@ -63,9 +63,7 @@ export class SchemaScript extends Script {
       try {
         const parsed = JSON.parse(text) as Record<string, unknown>;
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return { text, parsed };
-      } catch {
-        // a torn read is retried once below
-      }
+      } catch {}
       if (attempt > 0) return { text, parsed: null };
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
     }
@@ -220,8 +218,8 @@ export class SchemaScript extends Script {
     const outIndex=args.indexOf("--out"),name=outIndex>=0?args[outIndex+1]:undefined;if(outIndex>=0&&!name)throw Error("[schema] --out requires a report name");
     const {withRepositoryCacheStoreV1}=await import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
     return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),async store=>{
-      const {requireNativeStoragePathV1}=await import("@semio-tech/process/artifacts/native-build/storage/platform/contract"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
-      const {loadProductionSchemaEntriesV1}=await import("../../🔍️discovery/📤️schema-registry/🟦️.ts"),{runOwnedCommand}=await import("@semio-tech/process/execution"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");let text="";
+      const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
+      const {loadProductionSchemaEntriesV1}=await import("../../🔍️discovery/📤️schema-registry/🟦️.ts"),{runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");let text="";
       try{await store.recheck();const dump=await loadProductionSchemaEntriesV1({produce:async()=>{await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","run","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--bin","schema-export-entries","--","--out",output],this.root,"schema:registry-production",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,store.environment)});await store.recheck();text=readFileSync(output,"utf8");return text;}},JSON.parse(readFileSync(join(module,"🔣️.json"),"utf8")));
         if(name){const {withRepositoryBuildReportV1}=await import("../../🏗️build/📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(this.root,name,JSON.parse(text),this.invocation,async artifact=>{console.log(artifact.path);});}return dump;
       }finally{rmSync(directory,{recursive:true,force:true});}

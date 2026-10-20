@@ -1,0 +1,55 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts",
+ "function": "inspectRustNonRepoJoinBaseSpans",
+ "keep": [
+  12
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of inspectRustNonRepoJoinBaseSpans. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️tokens",
+   "doc": "/** 🔶️ The tokens phase of inspectRustNonRepoJoinBaseSpans. */",
+   "phases": [
+    {
+     "name": "buildTokensState",
+     "emoji": "🔷",
+     "doc": "Builds tokens, pairs, rows, literal of inspectRustNonRepoJoinBaseSpans.",
+     "from": 17,
+     "to": 144
+    }
+   ]
+  },
+  {
+   "dir": "🔸️resolve-qualified-function",
+   "doc": "/** 🔸️ The resolve qualified function phase of inspectRustNonRepoJoinBaseSpans. */",
+   "phases": [
+    {
+     "name": "buildResolveQualifiedFunctionState",
+     "emoji": "🔹",
+     "doc": "Builds resolveQualifiedFunctionBody, tupleTailPositions, tupleCallNonRepoPositions of inspectRustNonRepoJoinBaseSpans.",
+     "from": 173,
+     "to": 270
+    }
+   ]
+  },
+  {
+   "dir": "🟠️visit",
+   "doc": "/** 🟠️ The visit phase of inspectRustNonRepoJoinBaseSpans. */",
+   "phases": [
+    {
+     "name": "buildVisit",
+     "emoji": "🟡",
+     "doc": "Builds visit of inspectRustNonRepoJoinBaseSpans.",
+     "from": 289,
+     "to": 356
+    }
+   ]
+  }
+ ]
+}

@@ -104,3 +104,9 @@ test("installed finite dashboard retains authored capabilities and original dead
   }finally{rmSync(source,{force:true});if(!existing)rmSync(directory,{recursive:true,force:true});}
  }));}finally{await cleanupFixtureRoot(root);}
 },120000);
+
+
+test("source digest document progress vectors have bounded independent SQL poll counts",()=>{
+ const vectors=JSON.parse(readFileSync(new URL("../../🖥️terminal/📂️sources/🧪️tests/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../../🖥️terminal/📂️sources/🧪️tests/🧬️schema/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).compile(schema),sql=new Database(":memory:");
+ try{expect(validate(vectors),JSON.stringify(validate.errors)).toBe(true);for(const row of vectors.cases){const observed=sql.query("SELECT CAST((?1 + ?2) / ?2 AS INTEGER) AS polls").get(row.progress,vectors.limit) as {polls:number};expect(observed.polls,row.name).toBe(row.polls);}}finally{sql.close();}
+});

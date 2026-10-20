@@ -1,0 +1,1227 @@
+{
+  "name": "@semio-tech/framework-os-dev",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/{📇️registry/🔄️refresh,🏗️build,📊️size}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/{📽️projection,📤️publication}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "stagingRootSources": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🏭️build-owners/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/📇️bootstrap-folder-mirror/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔖️source-freshness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗃️sqlite-constructor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗄️backbone-storage/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🏭️runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚧️production-test-boundary/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🧭️repo-root/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🫧️blob-vite-plugin/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️host-handle-policy/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏗️structure/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🖼️pixels/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🔬️probe/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🌐️server-pool/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/📊️report/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔍️freshness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📽️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📏️measured-row/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🌐️.html",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔌️staging-root/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️testing/🚶️journey/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🧪️tests/🧫️fixtures/🚶️shell-interaction/🔣️.json"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "canonical-bootstrap-folder-mirror-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check source"
+      }
+    },
+    "canonical-bootstrap-folder-mirror-process-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check process"
+      }
+    },
+    "browser-host-staging-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick \"--testNamePattern=ticket-owned browser host staging\""
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "stagingRootSources"
+      ]
+    },
+    "closed-browser-component-factory-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts closed-browser-component-factory-check"
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      },
+      "dependsOn": [
+        "build-s-react"
+      ],
+      "cache": false,
+      "outputs": []
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "stagingRootSources"
+      ]
+    },
+    "verify": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify",
+        "forwardAllArgs": true
+      }
+    },
+    "bench": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "plugin": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "dependsOn": [
+        "@semio-tech/os-plugin-describe-rs:build",
+        "@semio-tech/framework-plugin-web:support"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts plugin",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      }
+    },
+    "plugin-size": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": ["{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/reports/size"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts plugin size",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "parity": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts parity",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "index-lint": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts index-lint",
+        "forwardAllArgs": true
+      }
+    },
+    "host-handle-lint": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts host-handle-lint",
+        "forwardAllArgs": true
+      }
+    },
+    "program-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "roles",
+                "kind": "text",
+                "valueFlag": "--roles"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify matrix",
+        "forwardAllArgs": true
+      }
+    },
+    "tool-run-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify tool-run",
+        "forwardAllArgs": true
+      }
+    },
+    "two-human": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "users",
+                "kind": "text",
+                "valueFlag": "--users"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify two-human",
+        "forwardAllArgs": true
+      }
+    },
+    "connection-budget": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify connections",
+        "forwardAllArgs": true
+      }
+    },
+    "idle-budget": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify idle",
+        "forwardAllArgs": true
+      }
+    },
+    "interaction-latency": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify latency",
+        "forwardAllArgs": true
+      }
+    },
+    "memory-soak": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify idle --soak-minutes 30 --windows 10",
+        "forwardAllArgs": true
+      }
+    },
+    "catalog-smoke": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify catalog",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "cold-boot-check-s": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "activate-s-react-prototype"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts cold-boot-check s react dev"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "s-host-foreign-kind-s": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe foreign-kind-s",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "s-host-pinch-diagram-contrast-s": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe pinch-diagram-contrast-s",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "generate-distribution": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution generate",
+        "forwardAllArgs": true
+      }
+    },
+    "preview-distribution": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution preview",
+        "forwardAllArgs": true
+      }
+    },
+    "check-distribution": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts distribution check",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-playground-session": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts playground-session"
+      }
+    },
+    "preview-playground-session": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts playground-session preview"
+      },
+      "dependsOn": []
+    },
+    "check-playground-session": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts playground-session check"
+      }
+    },
+    "generate-scale-fixture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate scale-fixture",
+        "forwardAllArgs": true
+      }
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated",
+        "forwardAllArgs": true
+      }
+    },
+    "scale-fixture-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts scale-fixture check",
+        "forwardAllArgs": true
+      }
+    },
+    "bench-plugins-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-renderer-wgpu:native-build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "bench-plugins-react": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins react",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "bench-plugins-wgpu": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins wgpu",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "build-inputs": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ../../🚚️distribution/📜️script.ts inputs",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "channel-version-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts channel-version check",
+        "forwardAllArgs": true
+      }
+    },
+    "channel-version-generate": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts channel-version generate",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
+    "serve-hold": {
+      "executor": "repo:script",
+      "cache": false,
+      "continuous": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts serve-hold",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-home": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify home",
+        "forwardAllArgs": true
+      }
+    },
+    "two-human-viewer": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify two-human --journey viewer",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "two-human-cross-undo": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify two-human --journey cross-undo",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "boot-budget": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify boot",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "time-travel": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "renderer",
+                "kind": "choice",
+                "default": "react",
+                "values": [
+                  {
+                    "id": "react",
+                    "args": [
+                      "--renderer",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "--renderer",
+                      "wgpu"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "playwright"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify time-travel",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "stagingRootSources"
+      ]
+    },
+    "parity-journey": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "playwright"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts parity journey",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "renderer",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "paired",
+                    "args": [
+                      "--renderer",
+                      "paired"
+                    ]
+                  },
+                  {
+                    "id": "react",
+                    "args": [
+                      "--renderer",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "--renderer",
+                      "wgpu"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Renderer",
+                  "de": "Renderer"
+                },
+                "description": {
+                  "en": "Choose a paired run or one renderer.",
+                  "de": "Gepaarten Lauf oder einzelnen Renderer auswählen."
+                }
+              },
+              {
+                "id": "react-serve",
+                "kind": "text",
+                "valueFlag": "--react-serve",
+                "title": {
+                  "en": "React server",
+                  "de": "React-Server"
+                },
+                "description": {
+                  "en": "Address of the React server.",
+                  "de": "Adresse des React-Servers."
+                }
+              },
+              {
+                "id": "wgpu-serve",
+                "kind": "text",
+                "valueFlag": "--wgpu-serve",
+                "title": {
+                  "en": "WGPU server",
+                  "de": "WGPU-Server"
+                },
+                "description": {
+                  "en": "Address of the WGPU server.",
+                  "de": "Adresse des WGPU-Servers."
+                }
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Language",
+                  "de": "Sprache"
+                },
+                "description": {
+                  "en": "Choose the language explicitly.",
+                  "de": "Sprache ausdrücklich auswählen."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Compare renderer journeys",
+              "de": "Renderer-Abläufe vergleichen"
+            },
+            "description": {
+              "en": "Compare interactive journeys across the selected renderers.",
+              "de": "Interaktive Abläufe der ausgewählten Renderer vergleichen."
+            }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "channel-version-ownership-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts channel-version test-describe-ownership"
+      }
+    },
+    "channel-version-contributions-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts channel-version test-contributions",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
+      }
+    },
+    "distribution-output-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts distribution-output-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "distribution-output-check"
+        ]
+      }
+    },
+    "source-watch-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts source-watch-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "source-watch-check"
+        ]
+      }
+    },
+    "test-publication": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
+        "cwd": "."
+      }
+    },
+    "verify-staged": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify-staged",
+        "forwardAllArgs": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-os-scale-fixture"
+  ]
+}

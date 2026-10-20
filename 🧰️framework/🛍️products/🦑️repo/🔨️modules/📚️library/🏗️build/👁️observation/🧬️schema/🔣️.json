@@ -28,6 +28,13 @@
         "$ref": "#/$defs/observation"
       }
     },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
     "resultSha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -185,6 +192,29 @@
           "items": {
             "$ref": "#/$defs/observation"
           }
+        }
+      }
+    },
+    "observationBlock": {
+      "const": {
+        "directory": "ob",
+        "extension": ".br",
+        "digestPattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "observationBlockCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "accepted"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "accepted": {
+          "type": "boolean"
         }
       }
     }

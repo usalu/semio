@@ -1,0 +1,16 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run|🔶️macro-files,🔸️framework-reserved-exact,🟠️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge|🔶️discovered,🔸️part2,🟠️part3,🟢️shared
+🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev|🔶️actor-return-codecs-load,🔸️actor-return-result-matches,🟠️actor-return-result-framing,🟢️shared
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases|🔶️tokens,🔸️resolve-qualified-function,🟠️visit,🟢️shared
+🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol|🔶️artifact-bootstrap-assembler,🔸️artifact-bootstrap-protocol,🟠️wire-fixtures,🟢️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins|🔶️base,🔸️raw-close,🟠️mutations,🟢️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/✅️check-in-sync|🔶️host-mode,🔸️auto-checkin-scheduler,🟠️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔎️command-bar|🔶️scope,🔸️command,🟠️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost|🔶️core,🔸️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer|🔶️abort-gesture,🔸️handle-pointer-move,🟠️handle-wheel,🟢️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost|🔶️scene,🔸️publish-catalogue-drag,🟠️context-menu,🟢️shared
+🧰️framework/🧪️tests/🧪️docklayoutstore/🧭️playground-actions-and-plugin-sources|🔶️playground-resolution,🔸️plugin-source,🟠️lease-pool-evict-now,🟢️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port|🔶️before,🔸️part2,🟠️part3,🟢️shared
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/👇️hover-and-placement|🔶️active-utility,🔸️handle-component-hover,🟠️shared
+🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te|🔶️actor-instance-close-fault,🔸️actor-arena-handback-fixture,🟠️actor-instance-close-receipts,🟢️shared
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure|🔶️result,🔸️part2,🟠️part3,🟢️shared

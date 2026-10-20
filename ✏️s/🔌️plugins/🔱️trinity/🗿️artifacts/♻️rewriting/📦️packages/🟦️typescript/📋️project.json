@@ -51,7 +51,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",
@@ -60,13 +60,17 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",

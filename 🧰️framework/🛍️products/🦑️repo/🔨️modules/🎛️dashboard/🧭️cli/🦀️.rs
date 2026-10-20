@@ -3,7 +3,7 @@
 //! `logs`, `stop`, `restart`, `kill` and `open`. This module parses arguments and renders results;
 //! what the daemon does lives in `🌀️daemon/🕹️control`.
 //!
-//! Agents start servers with `semio run <id> --detach --wait-ready` and attach previews to the
+//! Human developers start servers with `repo dashboard run <id> --detach --wait-ready` and attach previews to the
 //! printed address; no editor or agent launch file exists.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
@@ -94,7 +94,7 @@ fn registry_of(root: &Path, arguments: &Arguments) -> Registry {
     if arguments.has("refresh") || arguments.has("check") { dashboard_inventory::discover(root, &AtomicBool::new(false)) } else { dashboard_inventory::registry_at(root, &snapshot) }
 }
 
-/// ⌨️ `semio commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]`
+/// ⌨️ `repo dashboard commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]`
 /// lists the registry commands whose label or id contains every word; `--check` proves every
 /// declaration of the workspace and exits non-zero on any problem.
 pub fn commands(root: &Path, argv: &[String]) -> i32 {
@@ -152,7 +152,7 @@ const QUERY: Duration = Duration::from_secs(5);
 static NEVER: AtomicBool = AtomicBool::new(false);
 
 fn connect(root: &Path) -> Result<Connection, String> {
-    Connection::connect(&ipc::canonical_path(root)).map_err(|error| format!("no dashboard daemon answers for this workspace ({error}); `semio run` starts one"))
+    Connection::connect(&ipc::canonical_path(root)).map_err(|error| format!("no dashboard daemon answers for this workspace ({error}); `repo dashboard run` starts one"))
 }
 
 fn connect_or_start(root: &Path) -> Result<Connection, String> {
@@ -195,7 +195,7 @@ fn listed(sessions: &[&SessionInfo]) -> String { sessions.iter().map(|session| f
 
 /// 🧲️ Resolves a handle to sessions; an ambiguous handle is an error that lists the candidates.
 pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>, String> {
-    if needle.is_empty() { return Err("a task handle is empty; `semio tasks` lists them".into()); }
+    if needle.is_empty() { return Err("a task handle is empty; `repo dashboard tasks` lists them".into()); }
     let single = |session: &'a SessionInfo| Ok(Picked { sessions: vec![session], group: None });
     if let Some(exact) = sessions.iter().find(|session| session.session_id == needle) { return single(exact); }
     let members: Vec<&SessionInfo> = sessions.iter().filter(|session| session.group.as_deref() == Some(needle) || session.session_id.strip_prefix(needle).is_some_and(|rest| rest.starts_with('.'))).collect();
@@ -203,7 +203,7 @@ pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>,
     let of_command = |matching: Vec<&'a SessionInfo>| -> Result<Picked<'a>, String> {
         let live: Vec<&SessionInfo> = matching.iter().copied().filter(|session| session.status.live()).collect();
         match live.len() {
-            0 => matching.into_iter().max_by_key(|session| session.started_ms).map_or_else(|| Err(format!("no task matches {needle:?}; `semio tasks` lists them")), |latest| Ok(Picked { sessions: vec![latest], group: None })),
+            0 => matching.into_iter().max_by_key(|session| session.started_ms).map_or_else(|| Err(format!("no task matches {needle:?}; `repo dashboard tasks` lists them")), |latest| Ok(Picked { sessions: vec![latest], group: None })),
             1 => Ok(Picked { sessions: live, group: None }),
             _ => Err(format!("{needle:?} has {} live tasks: {}; name one session id", live.len(), listed(&live))),
         }
@@ -221,7 +221,7 @@ pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>,
     commands.sort_unstable();
     commands.dedup();
     match commands.len() {
-        0 => Err(format!("no task matches {needle:?}; `semio tasks` lists them")),
+        0 => Err(format!("no task matches {needle:?}; `repo dashboard tasks` lists them")),
         1 => of_command(by_part),
         _ => Err(format!("{needle:?} matches several commands: {}; name one", commands.join(", "))),
     }
@@ -298,15 +298,15 @@ impl Write for Output {
 // #endregion 🔖️Output
 
 // #region 🔖️Run
-/// ▶️ `semio run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [--json] [--timeout S] [-- args…]`
+/// ▶️ `repo dashboard run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [--json] [--timeout S] [-- args…]`
 /// resolves a registry command and runs it as a daemon task. Attached, it streams the output of the
 /// launch's last process and exits with that process's exit code (Ctrl-C leaves the task running;
-/// stop it with `semio stop`). `--detach` returns once the daemon accepted the launch; `--wait-ready`
+/// stop it with `repo dashboard stop`). `--detach` returns once the daemon accepted the launch; `--wait-ready`
 /// returns once every process that declares readiness printed its address (the addresses are the
 /// last lines of stdout); `--dry-run` prints the resolved launch as JSON and starts nothing.
 pub fn run(root: &Path, argv: &[String]) -> i32 {
     let arguments = match parse(argv, &["param", "env", "root", "snapshot", "timeout"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [id] = arguments.words.as_slice() else { return refuse("usage: semio run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- args…]") };
+    let [id] = arguments.words.as_slice() else { return refuse("usage: repo dashboard run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- args…]") };
     let root = root_of(root, &arguments);
     let registry = registry_of(&root, &arguments);
     let accepted = registry.find(id).map(|entry| registry.parameters(entry)).unwrap_or_default();
@@ -374,19 +374,19 @@ fn wait_for(connection: &mut Connection, ids: &[String], wait: Wait, timeout: Du
 // #endregion 🔖️Run
 
 // #region 🔖️Tasks
-/// 🗒️ `semio tasks [--json]` lists the tasks of the workspace: the daemon's, or the journal's while none runs.
+/// 🗒️ `repo dashboard tasks [--json]` lists the tasks of the workspace: the daemon's, or the journal's while none runs.
 pub fn tasks(root: &Path, argv: &[String]) -> i32 {
     let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
     print_sessions(&sessions_of(&root_of(root, &arguments)), arguments.has("json"));
     0
 }
 
-/// 📜️ `semio logs <task> [--follow]` prints the output the daemon kept for a task; `--follow` keeps
+/// 📜️ `repo dashboard logs <task> [--follow]` prints the output the daemon kept for a task; `--follow` keeps
 /// streaming until the task ends. A task is chosen by its session id (the handle every verb prints), a group
 /// id, a command id or a unique part of a session id or command id.
 pub fn logs(root: &Path, argv: &[String]) -> i32 {
     let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [needle] = arguments.words.as_slice() else { return refuse("usage: semio logs <task> [--follow]") };
+    let [needle] = arguments.words.as_slice() else { return refuse("usage: repo dashboard logs <task> [--follow]") };
     let root = ipc::canonical_path(&root_of(root, &arguments));
     let sessions = sessions_of(&root);
     let session = match pick(&sessions, needle).and_then(|picked| only(&picked, needle)) { Ok(session) => session, Err(error) => return refuse(&error) };
@@ -398,7 +398,7 @@ pub fn logs(root: &Path, argv: &[String]) -> i32 {
     match result { Ok(()) => 0, Err(error) => refuse(&error.to_string()) }
 }
 
-/// 🛑️ `semio stop|restart|kill <task> [--group] [--timeout S]` asks the daemon and waits until the
+/// 🛑️ `repo dashboard stop|restart|kill <task> [--group] [--timeout S]` asks the daemon and waits until the
 /// task has left the state it was in; `--group` stops or kills every member of the task's compound.
 pub fn act(root: &Path, verb: &str, argv: &[String]) -> i32 {
     let arguments = match parse(argv, &["root", "timeout"]) { Ok(arguments) => arguments, Err(code) => return code };
@@ -433,10 +433,10 @@ pub fn act(root: &Path, verb: &str, argv: &[String]) -> i32 {
     result.unwrap_or_else(|error| refuse(&error))
 }
 
-/// 🌐️ `semio open <task> [--print]` opens the ready address of a task in the system browser.
+/// 🌐️ `repo dashboard open <task> [--print]` opens the ready address of a task in the system browser.
 pub fn open(root: &Path, argv: &[String]) -> i32 {
     let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [needle] = arguments.words.as_slice() else { return refuse("usage: semio open <task> [--print]") };
+    let [needle] = arguments.words.as_slice() else { return refuse("usage: repo dashboard open <task> [--print]") };
     let sessions = sessions_of(&root_of(root, &arguments));
     let session = match pick(&sessions, needle).and_then(|picked| { let ready: Vec<&SessionInfo> = picked.sessions.iter().copied().filter(|session| session.ready_url.is_some()).collect(); only(&Picked { sessions: if ready.len() == 1 { ready } else { picked.sessions }, group: None }, needle) }) { Ok(session) => session, Err(error) => return refuse(&error) };
     let Some(url) = browser::ready_url(session.status, session.ready_url.as_deref()) else { return refuse(&format!("{} has no ready address", label_text(session))) };

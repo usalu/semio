@@ -69,7 +69,9 @@
         "bun",
         "physicalSourceRoot",
         "resolutions",
-        "sources"
+        "sources",
+        "entryRole",
+        "runtimeEntryRole"
       ],
       "properties": {
         "version": {
@@ -93,6 +95,12 @@
           "minLength": 1,
           "maxLength": 256,
           "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+        },
+        "entryRole": {
+          "const": "program"
+        },
+        "runtimeEntryRole": {
+          "const": "module"
         }
       }
     },

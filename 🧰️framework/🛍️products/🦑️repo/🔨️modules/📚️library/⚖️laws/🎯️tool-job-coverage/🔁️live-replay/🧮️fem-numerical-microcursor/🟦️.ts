@@ -1,6 +1,7 @@
+/** 🧮️ The FEM numerical micro-cursor contract of the live replay law. */
 import { toolJobRustBlock } from "../../📋️inventory/🟦️.ts";
 
-/** 🧮️ Phase-6h FEM numerical hot-loop, fixed-owner, identity and hostile-law contract. */
+/** 🔥️ Phase-6h FEM numerical hot-loop, fixed-owner, identity and hostile-law contract. */
 export function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string, runtime: string): boolean {
   const namedBlock = (source: string, signature: string) => {
     const start = source.indexOf(signature);

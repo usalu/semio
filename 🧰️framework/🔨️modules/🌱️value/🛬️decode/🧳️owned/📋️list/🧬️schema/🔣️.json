@@ -11,7 +11,8 @@
     "cuts",
     "invalidRows",
     "interactionQuantum",
-    "ownedWrapperCuts"
+    "ownedWrapperCuts",
+    "bodyReservations"
   ],
   "properties": {
     "version": {
@@ -77,6 +78,37 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      }
+    },
+    "bodyReservations": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bodyBytes",
+          "metadataBytes",
+          "childBytes"
+        ],
+        "properties": {
+          "bodyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "metadataBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "childBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
       }
     }
   }

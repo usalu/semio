@@ -1,0 +1,1 @@
+if(fresh.length&&readNativeCallerAuthorityV1(store.invocation.capabilities).network.offline)throw Error("Original offline producer requires current exact ready generations");if(phase==="build"&&!fresh.length)return;if(phase==="publish"&&fresh.length)throw Error("Built generations required before publication");

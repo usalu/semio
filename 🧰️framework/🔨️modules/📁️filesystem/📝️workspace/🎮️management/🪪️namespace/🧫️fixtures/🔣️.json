@@ -1,0 +1,428 @@
+{
+  "version": 1,
+  "policy": {
+    "identity": "anchored-namespace-continuity",
+    "coordinates": "canonical-u64-text",
+    "liveProofs": "root-journal-entry-nofollow",
+    "volumeMigration": "refused-unless-namespace-chain-preserved"
+  },
+  "cases": [
+    {
+      "id": "crossboot-device-rebase",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": true
+    },
+    {
+      "id": "foreign-root-inode",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "101"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": false
+    },
+    {
+      "id": "foreign-journal-inode",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "201"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": false
+    },
+    {
+      "id": "foreign-entry-inode",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "301"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": false
+    },
+    {
+      "id": "published-device-split",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "11",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": false
+    },
+    {
+      "id": "current-device-split",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "21",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-journal",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": false,
+      "accepted": false
+    },
+    {
+      "id": "malformed-coordinate",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "01",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": false,
+      "accepted": false
+    },
+    {
+      "id": "same-device",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": true
+    },
+    {
+      "id": "full-u64-precision",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "18446744073709551615"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "18446744073709551615"
+          }
+        }
+      },
+      "schemaValid": true,
+      "accepted": true
+    },
+    {
+      "id": "overflow-coordinate",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "18446744073709551616",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300"
+          }
+        }
+      },
+      "schemaValid": false,
+      "accepted": false
+    },
+    {
+      "id": "unknown-coordinate",
+      "input": {
+        "published": {
+          "root": {
+            "device": "10",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "10",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "10",
+            "inode": "300"
+          }
+        },
+        "current": {
+          "root": {
+            "device": "20",
+            "inode": "100"
+          },
+          "journal": {
+            "device": "20",
+            "inode": "200"
+          },
+          "entry": {
+            "device": "20",
+            "inode": "300",
+            "extra": "foreign"
+          }
+        }
+      },
+      "schemaValid": false,
+      "accepted": false
+    }
+  ]
+}

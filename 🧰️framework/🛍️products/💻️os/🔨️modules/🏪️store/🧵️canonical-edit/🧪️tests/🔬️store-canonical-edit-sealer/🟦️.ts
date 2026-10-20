@@ -2,9 +2,9 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
-import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
+import { readStoreSourceText } from "../../../../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 import { canonicalErrorProgressSelfTests, canonicalRustMethodBody } from "../🔬️canonical-error-progress/🟦️.ts";
 
 /** 🔢️ An edit's revision value: its members in declaration order without `sequenceNumber` (design §22.28) — where an edit sits in its history is not part of what it is. */

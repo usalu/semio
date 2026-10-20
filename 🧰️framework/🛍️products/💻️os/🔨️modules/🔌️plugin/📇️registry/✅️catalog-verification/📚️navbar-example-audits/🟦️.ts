@@ -1,6 +1,6 @@
 /** 📚️ Navbar example audits of the catalog verification: the playground owners that ship without an example picker, the picker coverage audit of a published manifest and the example artifact payload audit. */
 import { dialectCoordinate } from "@semio-tech/framework-io-schema-ts";
-import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework";
+import { exampleBodyAssetPrefix, examplesForApp, type PluginManifest } from "@semio-tech/framework";
 
 /** 🎛️ Playground owners that legitimately ship without a navbar example picker (library shells, aggregators, flow hosts). */
 export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "stdio"]);
@@ -8,12 +8,11 @@ export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", 
 /** 📚️ Every editor/viewer dialect in a published manifest must offer at least one example row for `NavbarExampleSelect`. */
 export function auditNavbarExamplePickerCoverage(manifest: PluginManifest): readonly string[] {
   if (NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.has(manifest.pluginId)) return [];
-  const admitted = normalizeManifestExamples(manifest);
   const problems: string[] = [];
-  for (const app of admitted.apps ?? []) {
+  for (const app of manifest.apps ?? []) {
     const row = app as { readonly id?: string; readonly dialect?: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
     if (!row.dialect) continue;
-    if (examplesForApp(admitted.examples ?? [], { dialect: row.dialect }).length === 0) {
+    if (examplesForApp(manifest.examples ?? [], { dialect: row.dialect }).length === 0) {
       problems.push(`${manifest.pluginId}: app ${row.id ?? "?"} (${dialectCoordinate(row.dialect)}) has no manifest examples`);
     }
   }
@@ -27,11 +26,14 @@ export function auditNavbarExamplePickerCoverage(manifest: PluginManifest): read
  * ({@link exampleBodyAssetPrefix}). A row with neither is a dead picker entry. */
 export function auditNavbarExampleArtifactPayload(manifest: PluginManifest, assets: readonly { readonly name?: string }[] = []): readonly string[] {
   if (NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.has(manifest.pluginId)) return [];
-  const admitted = normalizeManifestExamples(manifest);
   const declared = assets.map((asset) => asset.name).filter((name): name is string => typeof name === "string");
   const problems: string[] = [];
-  for (const example of admitted.examples ?? []) {
+  for (const example of manifest.examples ?? []) {
     const row = example as { readonly id?: string; readonly artifactJson?: string; readonly dialect?: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
+    if (!row.dialect) {
+      problems.push(`${manifest.pluginId}: example ${String(row.id ?? "?")} names no dialect, so no navbar picker offers it`);
+      continue;
+    }
     const payload = row.artifactJson;
     if (typeof payload === "string" && payload.trim().length > 0) continue;
     if (row.id && row.dialect) {

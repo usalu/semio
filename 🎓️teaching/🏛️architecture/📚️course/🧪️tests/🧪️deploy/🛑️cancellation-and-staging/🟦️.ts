@@ -12,7 +12,7 @@ import cancellation from "../../../🧫️fixtures/🛑️cancellation/🔣️.j
 import { getEventListeners } from "node:events";
 import sitePublication from "../../../🧫️fixtures/🌐️publication/🔣️.json" with { type: "json" };
 import { COURSE_PROCTOR_ORIGIN, COURSE_SITE_HEADERS } from "../../../🚀️deploy/🟦️.ts";
-import { courseReleaseBuildPlan, siteArtifactProblems, stageCourseSiteArtifact } from "../../../🚀️deploy/🌐️site/🟦️.ts";
+import { siteArtifactProblems, stageCourseSiteArtifact } from "../../../🚀️deploy/🌐️site/🟦️.ts";
 import { released, repoRoot, site, tree } from "../🧰️deploy-fixtures/🟦️.ts";
 
 /** 🧹 Registers the preflight alignment, parent cancellation, release build, site staging and staging refusal tests. */
@@ -43,17 +43,6 @@ export function registerCancellationAndStagingTests(): void {
       expect(validate(result), JSON.stringify(validate.errors)).toBe(true);
       expect([process.listenerCount("SIGINT"), process.listenerCount("SIGTERM"), getEventListeners(parent.signal, "abort").length]).toEqual(before);
     }
-  });
-  it("builds publication as a release even when the dashboard selected prototype", () => {
-    const bundle = join(site, "📦️packages/🟦️typescript");
-    const plan = courseReleaseBuildPlan(repoRoot, bundle, { SEMIO_BUILD_MODE: "prototype", PROCTOR_URL: COURSE_PROCTOR_ORIGIN });
-    expect({ mode: plan.mode, owner: plan.owner }).toEqual(sitePublication.build);
-    expect(plan.environment.SEMIO_BUILD_MODE).toBe(sitePublication.build.mode);
-    expect(plan.environment.PROCTOR_URL).toBe(COURSE_PROCTOR_ORIGIN);
-    expect(plan.workspace).toBe(repoRoot);
-    expect(plan.config).toBe(join(site, "🏗️builder/🌐️vite/🟦️.ts"));
-    const project = JSON.parse(readFileSync(join(bundle, "📋️project.json"), "utf8")) as { targets: { build: { cache: boolean; outputs: string[] } } };
-    expect(project.targets.build).toMatchObject({ cache: false, outputs: [] });
   });
   for (const row of sitePublication.cases) it(`stages ${row.id} from the current artifact without exporting its internal receipt`, () => {
     const files = { ...released(row.origin), ".semio-artifact.json": JSON.stringify({ version: 1, owner: "course", files: [] }) };

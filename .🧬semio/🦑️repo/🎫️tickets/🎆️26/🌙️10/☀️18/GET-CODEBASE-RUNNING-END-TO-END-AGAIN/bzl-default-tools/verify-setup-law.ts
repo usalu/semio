@@ -1,0 +1,15 @@
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+import {createRequire} from "node:module";
+import {expect} from "bun:test";
+const [root,repo]=process.argv.slice(2);
+const require=createRequire(join(repo!,"package.json")),ts=require("typescript"),Ajv=require("ajv").default;
+const tests=join(root!,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests");
+const source=readFileSync(join(tests,"🟦️.ts"),"utf8"),start=source.indexOf("const setupContract="),body=source.slice(start);
+if(start<0)throw Error("setup law absent");
+const fixture=JSON.parse(readFileSync(join(tests,"🧫️fixtures/🔣️.json"),"utf8"));
+let ran=0;const test=(_name:string,run:()=>void)=>{run();ran++;};
+const js=ts.transpileModule(body.replaceAll("import.meta.dir",JSON.stringify(tests)),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const catalogue=JSON.parse(readFileSync(join(tests,"../../../../⚙️operations/🔣️catalog.json"),"utf8"));
+new Function("test","expect","ts","Ajv","fixture","join","readFileSync","catalogue",js)(test,expect,ts,Ajv,fixture,join,readFileSync,catalogue);
+console.log(JSON.stringify({ran,opens:fixture.setup.opens}));

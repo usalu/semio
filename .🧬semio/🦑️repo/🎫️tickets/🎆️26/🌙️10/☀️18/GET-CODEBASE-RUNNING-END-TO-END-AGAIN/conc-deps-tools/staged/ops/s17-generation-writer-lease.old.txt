@@ -1,0 +1,2 @@
+ try{const glue=await import("../🧾️generation/💾️storage/🟦️.ts"),observed=custody.observed();let sealed=true;for(const[index,read]of reads.entries()){checkpoint();const outcome=await glue.publishJavascriptDependencyGenerationReceiptV1(workspace,store,control,checkpoint,read,startedAtMs[index]!,observed);if(outcome!=="published"&&outcome!=="present")sealed=false;}return sealed;}
+ catch(error){if(control.signal.aborted)throw error;await writeOwnedCommandOutputV1(process.stderr,"[DATA] Store dependency generation receipt not published 

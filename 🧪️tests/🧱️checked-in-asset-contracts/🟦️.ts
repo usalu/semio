@@ -13,11 +13,11 @@ const compact = (value: string): string => value.replace(/\s+/gu, "");
 type Asset = { name: string; path: string; required: string[]; forbidden: string[] };
 
 const assets: Asset[] = [
-  { name: "codex uses the cross-platform repo bootstrap", path: ".codex/config.toml", required: ['command = "bun"', 'args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]'], forbidden: ["repo/client/client"] },
-  { name: "generic clients use the cross-platform repo bootstrap", path: ".mcp.json", required: ['"command": "bun"', '"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]'], forbidden: ["repo/client/client"] },
+  { name: "codex starts the repo MCP server through the repo command", path: ".codex/config.toml", required: ['command = "repo"', 'args = ["mcp"]', 'SEMIO_REPO_MCP_CLIENT = "codex"'], forbidden: ["repo/client/client", "./📜️script.ts"] },
+  { name: "generic clients start the repo MCP server through the repo command", path: ".mcp.json", required: ['"command": "repo"', '"args": ["mcp"]', '"SEMIO_REPO_MCP_CLIENT": "client"'], forbidden: ["repo/client/client", "./📜️script.ts"] },
   { name: "devcontainer provisions through the cross-platform workspace setup", path: ".devcontainer/devcontainer.json", required: ['"postCreateCommand": ["bun", "repo", "run", "workspace:setup"]'], forbidden: ["repo/client/client", "./repo/client/mcp/go", "post-create.sh"] },
-  { name: "native shell bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: ["bun repo run workspace:setup", "bun repo run @semio-tech/repo-client:build"], forbidden: ["repo/client/client", "./repo/client/mcp/go", "💻️client"] },
-  { name: "native windows bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@("repo", "run", "workspace:setup")', '@("repo", "run", "@semio-tech/repo-client:build")', "💻️client\\🛠️developer-tools\\🧬️schema"], forbidden: ["repo/client/client.exe", "./repo/client/mcp/go"] },
+  { name: "native shell bootstrap installs the repo command and runs the workspace setup through it", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: ["bun repo run repo-mcp:install", "repo run workspace:setup", "repo run @semio-tech/repo-developer-tools:setup-debugger"], forbidden: ["repo/client/client", "./repo/client/mcp/go", "💻️client"] },
+  { name: "native windows bootstrap installs the repo command and runs the workspace setup through it", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@("repo", "run", "repo-mcp:install")', '@("run", "workspace:setup")', '@("run", "@semio-tech/repo-developer-tools:setup-debugger")'], forbidden: ["repo/client/client.exe", "./repo/client/mcp/go"] },
 ];
 
 for (const asset of assets) {
@@ -78,8 +78,9 @@ test("the post-commit micro-commit hook source resets the commit templates", () 
   }
 });
 
-test("the dev MCP stdio bootstrap answers the initialize handshake", async () => {
-  const child = Bun.spawn(["bun", "./📜️script.ts", "dev", "mcp", "stdio", "codex"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: "inherit" });
+test("the configured repo MCP server answers the initialize handshake", async () => {
+  const server = JSON.parse(read(".mcp.json")).mcpServers.repo as { command: string; args: string[]; env: Record<string, string> };
+  const child = Bun.spawn([server.command, ...server.args], { cwd: root, env: { ...process.env, ...server.env }, stdin: "pipe", stdout: "pipe", stderr: "inherit" });
   try {
     child.stdin.write('{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}\n');
     await child.stdin.flush();

@@ -24,7 +24,25 @@
         "buildOnlyOptions": [
           "--exclude-dependencies",
           "--exclude-dependencies=true"
-        ]
+        ],
+        "maximumOwnerBytes": 65536,
+        "maintenance": {
+          "project": "repo",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+          "targets": {
+            "cache-retire-inactive-preview": "preview",
+            "cache-retire-inactive": "retire"
+          }
+        },
+        "reset": {
+          "project": "repo",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+          "targets": {
+            "cache-reset-nx": "nx"
+          }
+        }
       }
     },
     "Owner": {
@@ -154,6 +172,337 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "MaintenanceOwner": {
+      "type": "object",
+      "required": [
+        "name",
+        "targets"
+      ],
+      "properties": {
+        "name": {
+          "const": "repo"
+        },
+        "targets": {
+          "type": "object",
+          "required": [
+            "cache-retire-inactive-preview",
+            "cache-retire-inactive"
+          ],
+          "properties": {
+            "cache-retire-inactive-preview": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "bun ./📜️script.ts cache-retire-inactive preview"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "cache-retire-inactive": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "bun ./📜️script.ts cache-retire-inactive retire"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "MaintenanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "fault",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "owner",
+            "command",
+            "dependencies",
+            "cwd",
+            "forward",
+            "source",
+            "capture",
+            "spread",
+            "abort",
+            "reject"
+          ]
+        },
+        "target": {
+          "enum": [
+            "preview",
+            "retire",
+            null
+          ]
+        }
+      }
+    },
+    "ResetOwner": {
+      "type": "object",
+      "required": [
+        "name",
+        "targets"
+      ],
+      "properties": {
+        "name": {
+          "const": "repo"
+        },
+        "targets": {
+          "type": "object",
+          "required": [
+            "cache-reset-nx"
+          ],
+          "properties": {
+            "cache-reset-nx": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "bun ./📜️script.ts reset"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ResetCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "fault",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "owner",
+            "command",
+            "dependencies",
+            "outputs",
+            "cache",
+            "cwd",
+            "forward",
+            "source",
+            "capture",
+            "spread",
+            "abort",
+            "reject"
+          ]
+        },
+        "target": {
+          "enum": [
+            "nx",
+            null
+          ]
         }
       }
     }

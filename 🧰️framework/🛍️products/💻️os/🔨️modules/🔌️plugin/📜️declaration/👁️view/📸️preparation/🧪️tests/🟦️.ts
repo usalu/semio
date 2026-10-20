@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import currencies from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
@@ -24,7 +24,6 @@ export function mountedSnapshotPreparationOracle(): number {
       let actualReceipt: typeof step.progress | undefined, fuel = 8, fault = false;
       try { expect(recordMountedSnapshotPreparation(step, grant, { retainedGrant: () => grant, fuelRemaining: () => fuel, consumeRetained: progress => { actualReceipt = progress; }, consumeFuel: items => { fuel -= items; } })).toBe(row.ready); } catch { fault = true; }
       expect(fault).toBe(row.fault); expect(actualReceipt).toEqual(step.progress); expect(fuel).toBe(8 - usedItems!);
-      console.log(`[DEBUG] mounted-snapshot-preparation ${row.name} ready=${row.ready} fault=${row.fault}`);
     }
     return fixture.cases.length;
   } finally { db.close(); }
@@ -32,4 +31,4 @@ export function mountedSnapshotPreparationOracle(): number {
 
 test("mounted preparation receipt corpus agrees with SQLite", () => expect(mountedSnapshotPreparationOracle()).toBe(9));
 
-test("original mounted pending source compares full document revision and provisional authority",()=>{const db=new Database(":memory:");try{for(const row of fixture.sourceVersions){expect(semioSchemaAjvV1().compile({...schema,type:undefined,properties:undefined,required:undefined,additionalProperties:undefined,$ref:"#/$defs/sourceTransition"})(row)).toBe(true);const a=row.before,b=row.after;const oracle=db.query("SELECT (?1=?5 AND ?2=?6 AND ?3=?7 AND ?4=?8) equal").get(a.baseRevision,a.generation,a.canonicalRevision,a.overlay,b.baseRevision,b.generation,b.canonicalRevision,b.overlay)as{equal:number};expect(!oracle.equal).toBe(row.changed);expect(!sameArtifactPendingSourceVersion(a,b)).toBe(row.changed);console.log(`[DEBUG] original poll source ${row.name} changed=${row.changed}`);}}finally{db.close();}});
+test("original mounted pending source compares full document revision and provisional authority",()=>{const db=new Database(":memory:");try{for(const row of fixture.sourceVersions){expect(semioSchemaAjvV1().compile({...schema,type:undefined,properties:undefined,required:undefined,additionalProperties:undefined,$ref:"#/$defs/sourceTransition"})(row)).toBe(true);const a=row.before,b=row.after;const oracle=db.query("SELECT (?1=?5 AND ?2=?6 AND ?3=?7 AND ?4=?8) equal").get(a.baseRevision,a.generation,a.canonicalRevision,a.overlay,b.baseRevision,b.generation,b.canonicalRevision,b.overlay)as{equal:number};expect(!oracle.equal).toBe(row.changed);expect(!sameArtifactPendingSourceVersion(a,b)).toBe(row.changed);}}finally{db.close();}});

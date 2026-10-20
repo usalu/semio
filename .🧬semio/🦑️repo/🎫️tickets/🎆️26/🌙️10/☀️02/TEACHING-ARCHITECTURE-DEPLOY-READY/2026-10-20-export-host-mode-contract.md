@@ -1,0 +1,13 @@
+# Export Host Mode Contract Correction
+
+The user explicitly requires zero-touch native Windows/macOS/Linux and devcontainer compatibility. Existing exact POSIX chmod/stat equality can falsely refuse Windows artifact copies. This known mismatch is in scope; merely stating no Windows physical pass does not repair it. Source logical Unix permissions must stay truthful, while receipt records a separately measured host inventory and actual platform/capability. Current receiver/promotion/verifier will agree on source bytes/roster, exact POSIX modes on POSIX, and independently measured Windows physical modes/read-only semantics. No Unix execute/ACL equivalence or actual Windows pass is implied. Receipt cannot choose a Windows downgrade on a locally observed POSIX host.
+
+Primary [Node filesystem documentation](https://nodejs.org/api/fs.html#fschmodpath-mode-callback) confirms Windows write-permission mapping lacks owner/group distinctions; executable-access flags do not establish Unix execute permissions. Its Windows openflag list also omits O_NOFOLLOW/O_DIRECTORY, so actual ancestor/name/descriptor/realpath/singlelink fences remain mandatory and the code must not claim unavailable kernel behavior. Existing native publisher already has a platform-aware mode comparison; no reusable exported policy was found by Release. No new runtime dependency or generic filesystem framework is required.
+
+Root79873 final56neutral was actualLIVE in Go capacityqueue at2026-10-20T18:06Z,38428B log, no test collection. Root sent Ctrl-C only through its own retained TTY; tool returned authoritative exit1 with^C. This is intentional queued cancellation, not testfailure/pass. Final12 hold is released for coordinated schema-first mode/case correction and a new exact reviewed seal later. Controller12/Git5/combined33/nativehelper4 remain held; their live jobs were not signaled.
+
+Temporary staging remains inside ticketgenerated. Persistent final product delivery is paired dist/redeploy-<cohort12>/{site,proctor}; any EXDEV handling must boundedly verify copy into its exclusively owned FINAL directory and rollback only that owned identity, preserve differingpeer outputs, and be tested. No actualcopy/export/privateeffect occurred in this correction.
+
+## Host Path Admission Cross-Check
+
+Root inspected the current exporter, final verifier, facts observer and capture schemas. Host workspace roots and evidence references are bounded strings; none imposes a Unix-only ^/ host path pattern. Guest /repo and /tmp paths remain Linux-specific by deliberate guest contract. This static schema observation adds no physical Windows execution claim and changes no held input.

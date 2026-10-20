@@ -1,4 +1,5 @@
 import {test,expect} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
@@ -64,7 +65,7 @@ test("dependency endpoint fence is local while the full comparison stays complet
 test("dependency endpoint fence stamps agree with an independent Python lstat",()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original dependency fence artifact root required");const root=mkdtempSync(join(artifacts,"ep-"));
  try{
-  const fixture=layout(root),observation=observe(root,fixture.endpoints),script="import os,sys,json\nout=[]\nfor p in json.loads(sys.argv[1]):\n s=os.lstat(p)\n out.append([json.dumps([str(getattr(s,f)) for f in ['st_dev','st_ino','st_mode','st_nlink','st_size','st_mtime_ns','st_ctime_ns']],separators=(',',':')),os.readlink(p) if os.path.islink(p) else None])\nprint(json.dumps(out))",child=spawnSync("python3",["-c",script,JSON.stringify(fixture.endpoints)],{encoding:"utf8"});
+  const fixture=layout(root),observation=observe(root,fixture.endpoints),script="import os,sys,json\nout=[]\nfor p in json.loads(sys.argv[1]):\n s=os.lstat(p)\n out.append([json.dumps([str(getattr(s,f)) for f in ['st_dev','st_ino','st_mode','st_nlink','st_size','st_mtime_ns','st_ctime_ns']],separators=(',',':')),os.readlink(p) if os.path.islink(p) else None])\nprint(json.dumps(out))",child=spawnSync(testPythonV1()??"python3",["-c",script,JSON.stringify(fixture.endpoints)],{encoding:"utf8"});
   expect(child.status).toBe(0);const oracle=JSON.parse(child.stdout)as [string,string|null][];
   expect(observation.rows.map(row=>[row.stamp,row.target])).toEqual(oracle);
   const before=maps(observation);for(const endpoint of fixture.endpoints)requireJavascriptDependencyEndpointFenceV1(endpoint,before.expected,before.parents,before.ancestors);

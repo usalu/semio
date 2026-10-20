@@ -107,6 +107,8 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
   if let Some(owner)=self.owner_close.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*self.owner_close=None;}return Ok(step);}
   RetainedCloneBinding::close_one(&mut self.lease,grant)
  }
+ /// 📫️ Quotes one exact live alias or final original handback without mixing distinct events.
+ pub fn next_take_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if self.owner_close.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original source authority is already closing"));}let owner=self.owner.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original source authority is absent"))?;if self.lease.is_some(){RetainedCloneBinding::close_demand(&self.lease,body)}else{owner.original_transfer_demand()}}
  pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::copy_demand(&self.lease)}else{self.owner.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original source authority is absent")).and_then(|owner|owner.original_transfer_demand().map(|demand|demand.copy_bytes))}}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::capacity_demand(&self.lease,body)}else{Ok(0)}}
  pub fn next_take_release_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::release_demand(&self.lease)}else{Ok(SealedShared::<A>::birth_bytes())}}

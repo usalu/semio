@@ -90,6 +90,11 @@
         "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts sqlite-oracle",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
       }
     },
     "test-oracle": {

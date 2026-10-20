@@ -1,34 +1,647 @@
 {
   "version": 1,
   "help": [
-    {"args":[],"expected":true},
-    {"args":["--help"],"expected":true},
-    {"args":["-h"],"expected":true},
-    {"args":["run","owner:test","--help"],"expected":true},
-    {"args":["run","owner:test","--","--help"],"expected":false},
-    {"args":["run","owner:test","--","-h"],"expected":false},
-    {"args":["show","projects"],"expected":false}
+    {
+      "args": [],
+      "expected": true
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "-h"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "owner:test",
+        "--help"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "owner:test",
+        "--",
+        "--help"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "run",
+        "owner:test",
+        "--",
+        "-h"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "show",
+        "projects"
+      ],
+      "expected": false
+    }
   ],
   "originalModeCases": [
-    {"id":"default-prototype","args":["run","@fixture/rehearsal:test-e2e"],"authored":null,"inherited":null,"expected":"prototype"},
-    {"id":"explicit-prototype","args":["run","@fixture/rehearsal:test-e2e","--configuration=prototype"],"authored":null,"inherited":null,"expected":"prototype"},
-    {"id":"inherited-release","args":["run","@fixture/rehearsal:test-e2e"],"authored":null,"inherited":"release","expected":"release"},
-    {"id":"explicit-release","args":["run","@fixture/rehearsal:test-e2e","--configuration=release"],"authored":null,"inherited":null,"expected":"release"},
-    {"id":"authored-release","args":["run","@fixture/rehearsal:test-e2e"],"authored":"release","inherited":null,"expected":"release"},
-    {"id":"target-configuration-release","args":["run","@fixture/rehearsal:test-e2e:release"],"authored":null,"inherited":null,"expected":"release"},
-    {"id":"run-many-release","args":["run-many","--targets=test-e2e"],"authored":null,"inherited":"release","expected":"release"},
-    {"id":"affected-release","args":["affected","--target","test-e2e","-c","release"],"authored":null,"inherited":null,"expected":"release"},
-    {"id":"release-agreement","args":["run","@fixture/rehearsal:test-e2e","--configuration=release"],"authored":"release","inherited":"release","expected":"release"},
-    {"id":"conflicting-original","args":["run","@fixture/rehearsal:test-e2e","--configuration=prototype"],"authored":null,"inherited":"release","expected":null}
+    {
+      "id": "default-prototype",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "prototype"
+    },
+    {
+      "id": "explicit-prototype",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e",
+        "--configuration=prototype"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "prototype"
+    },
+    {
+      "id": "inherited-release",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e"
+      ],
+      "authored": null,
+      "inherited": "release",
+      "expected": "release"
+    },
+    {
+      "id": "explicit-release",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e",
+        "--configuration=release"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "release"
+    },
+    {
+      "id": "authored-release",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e"
+      ],
+      "authored": "release",
+      "inherited": null,
+      "expected": "release"
+    },
+    {
+      "id": "target-configuration-release",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e:release"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "release"
+    },
+    {
+      "id": "run-many-release",
+      "args": [
+        "run-many",
+        "--targets=test-e2e"
+      ],
+      "authored": null,
+      "inherited": "release",
+      "expected": "release"
+    },
+    {
+      "id": "affected-release",
+      "args": [
+        "affected",
+        "--target",
+        "test-e2e",
+        "-c",
+        "release"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "release"
+    },
+    {
+      "id": "release-agreement",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e",
+        "--configuration=release"
+      ],
+      "authored": "release",
+      "inherited": "release",
+      "expected": "release"
+    },
+    {
+      "id": "conflicting-original",
+      "args": [
+        "run",
+        "@fixture/rehearsal:test-e2e",
+        "--configuration=prototype"
+      ],
+      "authored": null,
+      "inherited": "release",
+      "expected": null
+    }
   ],
   "fixedTargetCases": [
-    {"name":"test-e2e","mode":null},
-    {"name":"dev","mode":"prototype"},
-    {"name":"serve","mode":"prototype"},
-    {"name":"prepare-e2e","mode":"prototype"},
-    {"name":"serve-e2e","mode":"prototype"},
-    {"name":"build-release","mode":"release"},
-    {"name":"prepare-release","mode":"release"},
-    {"name":"build-prototype","mode":"prototype"}
-  ]
+    {
+      "name": "test-e2e",
+      "mode": null
+    },
+    {
+      "name": "dev",
+      "mode": "prototype"
+    },
+    {
+      "name": "serve",
+      "mode": "prototype"
+    },
+    {
+      "name": "prepare-e2e",
+      "mode": "prototype"
+    },
+    {
+      "name": "serve-e2e",
+      "mode": "prototype"
+    },
+    {
+      "name": "build-release",
+      "mode": "release"
+    },
+    {
+      "name": "prepare-release",
+      "mode": "release"
+    },
+    {
+      "name": "build-prototype",
+      "mode": "prototype"
+    }
+  ],
+  "conflictCases": [
+    {
+      "id": "release-flag-on-fixed-prototype-target",
+      "args": [
+        "run",
+        "@fixture/site:dev",
+        "--configuration=release"
+      ],
+      "authored": null,
+      "inherited": null,
+      "english": [
+        "Conflicting build modes: release, prototype",
+        "fixed by target: dev=prototype",
+        "--configuration"
+      ],
+      "german": [
+        "Widersprüchliche Build-Modi: release, prototype",
+        "fest durch Target: dev=prototype",
+        "wähle genau einen Modus"
+      ]
+    },
+    {
+      "id": "prototype-flag-against-inherited-release",
+      "args": [
+        "run",
+        "@fixture/site:publish",
+        "-c",
+        "prototype"
+      ],
+      "authored": null,
+      "inherited": "release",
+      "english": [
+        "Conflicting build modes: prototype, release",
+        "SEMIO_BUILD_MODE"
+      ],
+      "german": [
+        "Widersprüchliche Build-Modi: prototype, release",
+        "SEMIO_BUILD_MODE"
+      ]
+    },
+    {
+      "id": "suffix-against-authored-mode",
+      "args": [
+        "run",
+        "@fixture/site:publish:release"
+      ],
+      "authored": "prototype",
+      "inherited": null,
+      "english": [
+        "Conflicting build modes: release, prototype",
+        ":<configuration> suffix"
+      ],
+      "german": [
+        "Widersprüchliche Build-Modi: release, prototype",
+        "dem Suffix :<configuration>"
+      ]
+    }
+  ],
+  "targetDeclarations": [
+    {
+      "id": "generic",
+      "name": "build",
+      "target": {
+        "cache": true
+      },
+      "named": null,
+      "fixed": null,
+      "default": null,
+      "expected": "prototype",
+      "schemaAccepted": true
+    },
+    {
+      "id": "authored-release-default",
+      "name": "build",
+      "target": {
+        "defaultConfiguration": "release",
+        "cache": true
+      },
+      "named": null,
+      "fixed": null,
+      "default": "release",
+      "expected": "release",
+      "schemaAccepted": true
+    },
+    {
+      "id": "authored-release-workflow",
+      "name": "build",
+      "target": {
+        "defaultConfiguration": "release",
+        "metadata": {
+          "semio": {
+            "buildMode": {
+              "fixed": "release"
+            }
+          }
+        },
+        "options": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release",
+            "FIXTURE": "retained"
+          }
+        }
+      },
+      "named": null,
+      "fixed": "release",
+      "default": "release",
+      "expected": "release",
+      "schemaAccepted": true
+    },
+    {
+      "id": "fixed-serve-wins-default",
+      "name": "serve",
+      "target": {
+        "defaultConfiguration": "release"
+      },
+      "named": "prototype",
+      "fixed": null,
+      "default": "release",
+      "expected": "prototype",
+      "schemaAccepted": true
+    },
+    {
+      "id": "conflicting-fixed-workflow",
+      "name": "build-release",
+      "target": {
+        "metadata": {
+          "semio": {
+            "buildMode": {
+              "fixed": "prototype"
+            }
+          }
+        }
+      },
+      "named": "release",
+      "fixed": "prototype",
+      "default": null,
+      "expected": null,
+      "schemaAccepted": true
+    },
+    {
+      "id": "invalid-default",
+      "name": "build",
+      "target": {
+        "defaultConfiguration": "dev"
+      },
+      "named": null,
+      "fixed": null,
+      "default": "dev",
+      "expected": null,
+      "schemaAccepted": false
+    },
+    {
+      "id": "invalid-fixed",
+      "name": "build",
+      "target": {
+        "metadata": {
+          "semio": {
+            "buildMode": {
+              "fixed": "dev"
+            }
+          }
+        }
+      },
+      "named": null,
+      "fixed": "dev",
+      "default": null,
+      "expected": null,
+      "schemaAccepted": false
+    }
+  ],
+  "declarationSelections": {
+    "files": {
+      "📋️build-owners.json": "{\"version\":1,\"owners\":[{\"name\":\"site\",\"root\":\"site\",\"manifest\":\"site/📋️project.json\",\"packages\":[]},{\"name\":\"cargo\",\"root\":\"cargo\",\"manifest\":\"cargo/Cargo.toml\",\"packages\":[]},{\"name\":\"prototype-site\",\"root\":\"prototype-site\",\"manifest\":\"prototype-site/📋️project.json\",\"packages\":[]}],\"catalogProviders\":[]}",
+      "site/📋️project.json": "{\"name\":\"site\",\"targets\":{\"build\":{\"defaultConfiguration\":\"release\",\"metadata\":{\"semio\":{\"buildMode\":{\"fixed\":\"release\"}}}},\"check\":{\"defaultConfiguration\":\"release\"},\"serve\":{},\"test\":{}}}",
+      "prototype-site/📋️project.json": "{\"name\":\"prototype-site\",\"targets\":{\"build\":{\"metadata\":{\"semio\":{\"buildMode\":{\"fixed\":\"prototype\"}}}}}}"
+    },
+    "cases": [
+      {
+        "id": "fixed-release-before-authority",
+        "args": [
+          "run",
+          "site:build"
+        ],
+        "inherited": null,
+        "expected": "release",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "default-release-before-authority",
+        "args": [
+          "run",
+          "site:check"
+        ],
+        "inherited": null,
+        "expected": "release",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "inherited-overrides-soft-default",
+        "args": [
+          "run",
+          "site:check"
+        ],
+        "inherited": "prototype",
+        "expected": "prototype",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "inherited-conflicts-fixed",
+        "args": [
+          "run",
+          "site:build"
+        ],
+        "inherited": "prototype",
+        "expected": null,
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "explicit-conflicts-fixed",
+        "args": [
+          "run",
+          "site:build:prototype"
+        ],
+        "inherited": null,
+        "expected": null,
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "explicit-overrides-soft-default",
+        "args": [
+          "run",
+          "site:check",
+          "-c",
+          "prototype"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "named-mode-preserved",
+        "args": [
+          "run",
+          "site:build-release"
+        ],
+        "inherited": null,
+        "expected": "release",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "unknown-owner",
+        "args": [
+          "run",
+          "missing:build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": [
+          "📋️build-owners.json"
+        ]
+      },
+      {
+        "id": "inferred-target",
+        "args": [
+          "run",
+          "site:inferred"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": [
+          "📋️build-owners.json",
+          "site/📋️project.json"
+        ]
+      },
+      {
+        "id": "cargo-owner-does-not-parse-toml",
+        "args": [
+          "run",
+          "cargo:build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": [
+          "📋️build-owners.json"
+        ]
+      },
+      {
+        "id": "unscoped-run-many-does-not-read-owners",
+        "args": [
+          "run-many",
+          "--targets=build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "unscoped-affected-does-not-read-owners",
+        "args": [
+          "affected",
+          "--target=build"
+        ],
+        "inherited": "release",
+        "expected": "release",
+        "reads": []
+      },
+      {
+        "id": "project-list-defers-task-selection",
+        "args": [
+          "run-many",
+          "--projects=site",
+          "--targets=build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "help-never-reads-owners",
+        "args": [
+          "run",
+          "site:build",
+          "--help"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "project-list-does-not-pin-independent-workflows",
+        "args": [
+          "run-many",
+          "--projects=site,prototype-site",
+          "--targets=build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "scoped-affected-defers-task-selection",
+        "args": [
+          "affected",
+          "-p",
+          "site",
+          "-t",
+          "build"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "run-many-excludes-preserve-original-selection",
+        "args": [
+          "run-many",
+          "--projects=site,prototype-site",
+          "--targets=build",
+          "--exclude=site"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "affected-files-preserve-original-selection",
+        "args": [
+          "affected",
+          "--projects=site,prototype-site",
+          "--targets=build",
+          "--files=prototype-site/main.ts"
+        ],
+        "inherited": null,
+        "expected": "prototype",
+        "reads": []
+      },
+      {
+        "id": "project-name-selector-stays-backend-owned",
+        "args": [
+          "run-many",
+          "--projects=name:site",
+          "--targets=build"
+        ],
+        "inherited": "release",
+        "expected": "release",
+        "reads": []
+      },
+      {
+        "id": "project-directory-selector-stays-backend-owned",
+        "args": [
+          "run-many",
+          "--projects=directory:site",
+          "--targets=build"
+        ],
+        "inherited": "release",
+        "expected": "release",
+        "reads": []
+      },
+      {
+        "id": "project-root-selector-stays-backend-owned",
+        "args": [
+          "run-many",
+          "--projects=site",
+          "--targets=build"
+        ],
+        "inherited": "release",
+        "expected": "release",
+        "reads": []
+      },
+      {
+        "id": "project-glob-selector-stays-backend-owned",
+        "args": [
+          "run-many",
+          "--projects=site,*",
+          "--targets=build"
+        ],
+        "inherited": "release",
+        "expected": "release",
+        "reads": []
+      }
+    ]
+  },
+  "ownedWorkflow": {
+    "args": [
+      "run",
+      "@semio-tech/mit-bestand-demonstrator:build"
+    ],
+    "mode": "release"
+  }
 }

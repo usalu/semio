@@ -155,11 +155,14 @@
   "targets": {
     "test-cargo-workspace-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../🗂️workspaces/🦀️cargo/**/*",
-        "{projectRoot}/📜️script.ts"
+        "{projectRoot}/📜️script.ts",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
       ],
       "outputs": [],
       "options": {
@@ -181,7 +184,11 @@
               "en": "Verify nested workspace members exclude foreign-owned packages without changing package ownership.",
               "de": "Fremd zugeordnete Pakete aus verschachtelten Arbeitsbereichen ausschließen und Paketzuordnungen erhalten."
             }
-          }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts"
+          ]
         }
       }
     },
@@ -215,7 +222,16 @@
               "en": "Verify original process limits, compiler preparation and child deadline custody.",
               "de": "Ursprüngliche Prozesslimits, Compiler-Vorbereitung und übergebene Fristen prüfen."
             }
-          }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts"
+          ]
         }
       }
     },
@@ -284,11 +300,18 @@
         }
       },
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-fixture-ownership"
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
     },
     "test-locale-law-ownership": {
       "executor": "repo:script",
@@ -327,7 +350,7 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test canonical-architecture"
@@ -340,8 +363,12 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
-      ]
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "outputs": []
     },
     "test-canonical-execution": {
       "executor": "repo:script",
@@ -405,15 +432,19 @@
     },
     "go-test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts go-test",
         "forwardAllArgs": true
       },
       "inputs": [
-        "libraryGoCommandSources"
-      ]
+        "libraryGoCommandSources",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "outputs": []
     },
     "test-process-budgets": {
       "executor": "repo:script",
@@ -428,7 +459,15 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test process-budgets"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts"
+          ]
+        }
+      }
     },
     "test-exact-cargo-laws": {
       "executor": "repo:script",
@@ -556,6 +595,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cross-platform-bootstrap"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-windows-command-paths": {
@@ -1212,6 +1256,30 @@
       },
       "outputs": []
     },
+    "typecheck-units": {
+      "metadata": {
+        "semio": {
+          "execution": { "version": 1, "kind": "source" },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" },
+          "dashboard": {
+            "title": { "en": "Check TypeScript unit by unit", "de": "TypeScript einheitenweise prüfen" },
+            "description": { "en": "Fast development check: only units whose sources or dependency declarations changed are checked; results are shared between sessions. The monolithic check stays the release gate.", "de": "Schnelle Entwicklungsprüfung: nur Einheiten mit geänderten Quellen oder Abhängigkeitsdeklarationen werden geprüft; Ergebnisse werden zwischen Sitzungen geteilt. Die monolithische Prüfung bleibt das Freigabetor." },
+            "verb": "check",
+            "parameters": [
+              { "id": "config", "title": { "en": "Project configuration", "de": "Projektkonfiguration" }, "description": { "en": "Choose an authored configuration used by the TypeScript compiler.", "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen." }, "kind": "text", "default": "tsconfig.json", "valuePositional": true, "suggestions": { "source": "configs" } }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck units",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "typecheck": {
       "metadata": {
         "semio": {
@@ -1467,6 +1535,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test preflight-reference-basis"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-typescript-path-collection": {
@@ -1535,6 +1608,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-historical-json-source-encoding": {
@@ -2034,7 +2112,12 @@
       "inputs": [
         "workspaceMembershipSources"
       ],
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "test-composition-policy": {
       "executor": "repo:script",
@@ -2540,7 +2623,12 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
         "{workspaceRoot}/.storybook/**/*"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
     },
     "ui-storybook-build": {
       "executor": "repo:script",
@@ -2648,7 +2736,7 @@
     },
     "test-dependency-policy-bootstrap": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test dependency-policy-bootstrap"
@@ -2665,7 +2753,10 @@
         "{workspaceRoot}/📋️project.json",
         "{workspaceRoot}/nx.json",
         "{workspaceRoot}/package.json",
-        "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json"
+        "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
       ]
     },
     "test-rust-binding": {
@@ -3262,6 +3353,11 @@
       "options": {
         "command": "bun ./📜️script.ts test nx-owner-arguments-probe",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-schema-reads": {
@@ -3292,6 +3388,11 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts schema-read-inventory",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-nx-native-child-issuance": {
@@ -3421,7 +3522,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
         }
       }
     },
@@ -3443,7 +3545,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
         }
       }
     },
@@ -3481,6 +3584,33 @@
         "cwd": ".",
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\" owner-command --cwd . -- node --version",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
+    },
+    "test-build-mode": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test build-mode"
+      },
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     },
     "test-build-surfaces": {
@@ -3541,7 +3671,15 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test dashboard-control"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts"
+          ]
+        }
+      }
     }
   }
 }

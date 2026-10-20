@@ -1,0 +1,56 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx",
+ "function": "Canvas2dHost",
+ "keep": [
+  347
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of Canvas2dHost. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️scene",
+   "doc": "/** 🔶️ The scene phase of Canvas2dHost. */",
+   "phases": [
+    {
+     "name": "useSceneState",
+     "emoji": "🔷",
+     "doc": "Builds scene, windowInstanceId, emptySceneLabel, initialCamera of Canvas2dHost.",
+     "from": 39,
+     "to": 149
+    }
+   ]
+  },
+  {
+   "dir": "🔸️publish-catalogue-drag",
+   "doc": "/** 🔸️ The publish catalogue drag phase of Canvas2dHost. */",
+   "phases": [
+    {
+     "name": "usePublishCatalogueDragState",
+     "emoji": "🔹",
+     "doc": "Builds publishCatalogueDragOverAt, handleDragOver, handleDragLeave, publishCatalogueDropAt of Canvas2dHost.",
+     "from": 164,
+     "to": 274
+    }
+   ]
+  },
+  {
+   "dir": "🟠️context-menu",
+   "doc": "/** 🟠️ The context menu phase of Canvas2dHost. */",
+   "phases": [
+    {
+     "name": "useContextMenu",
+     "emoji": "🟡",
+     "doc": "Builds onContextMenu of Canvas2dHost.",
+     "from": 311,
+     "to": 335
+    }
+   ]
+  }
+ ],
+ "allowExportedMoves": true
+}

@@ -1,0 +1,36 @@
+{
+  "title": "Windows Checkout Paths",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Make every tracked path checkoutable on Windows at C:\\git\\semio, including the directory limit and other Windows filename rules.",
+  "summary": "Duplicate of the open Windows Checkout Path Length Fix ticket.",
+  "goal": "zerotouchdevcontainer",
+  "sessions": [
+    "13721575-aeb1-47f0-bea1-85be316acb6c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-21 01:39:33",
+      "author": "",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "",
+      "prompt": "Make every tracked path checkoutable on Windows at C:\\git\\semio, including the directory limit and other Windows filename rules."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-21 02:03:35",
+      "author": "ueli",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "127f9262192ef4d8a8dbe59e84bc09c4c88d69a1",
+      "summary": "Duplicate of the open Windows Checkout Path Length Fix ticket.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️06/WINDOWS-CHECKOUT-PATH-LENGTH-FIX/📓️windows-checkout-path-length-repair-2026-10-21.md"
+        }
+      ]
+    }
+  ]
+}

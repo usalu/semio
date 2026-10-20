@@ -1,0 +1,6787 @@
+{
+  "nxDependencyProjection": {
+    "projectFileMap": {
+      "app": [
+        {
+          "file": "app/main.ts",
+          "hash": "a"
+        }
+      ],
+      "lib": [
+        {
+          "file": "lib/main.ts",
+          "hash": "b"
+        }
+      ]
+    },
+    "nonProjectFiles": [
+      {
+        "file": "shared.ts",
+        "hash": "c"
+      }
+    ],
+    "cases": [
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "static",
+          "sourceFile": "app/main.ts"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "static",
+          "sourceFile": "app/main.ts"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "dynamic",
+          "sourceFile": "app/main.ts"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "dynamic",
+          "sourceFile": "app/main.ts"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "static",
+          "sourceFile": "shared.ts"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "static",
+          "sourceFile": "shared.ts"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "static",
+          "sourceFile": "app/generated/plugin.ts"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "implicit"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "dynamic",
+          "sourceFile": "app/generated/worker.ts"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "implicit"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "static"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "implicit"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "lib",
+          "type": "implicit"
+        },
+        "expected": {
+          "source": "app",
+          "target": "lib",
+          "type": "implicit"
+        }
+      },
+      {
+        "edge": {
+          "source": "npm:a",
+          "target": "npm:b",
+          "type": "static"
+        },
+        "expected": {
+          "source": "npm:a",
+          "target": "npm:b",
+          "type": "static"
+        }
+      },
+      {
+        "edge": {
+          "source": "app",
+          "target": "npm:a",
+          "type": "static"
+        },
+        "expected": {
+          "source": "app",
+          "target": "npm:a",
+          "type": "implicit"
+        }
+      }
+    ],
+    "otherOwner": {
+      "source": "app",
+      "target": "lib",
+      "type": "static",
+      "sourceFile": "lib/main.ts"
+    }
+  },
+  "nestedOptionalMaintenance": {
+    "minimumPressureBytes": 536870913,
+    "maximumOptionalBytes": 1073741824,
+    "imageResourcePrefix": "native-fixed-image:",
+    "cacheDirectory": ".cache/b/g",
+    "cancelReason": "Owned nested optional maintenance wait cancelled",
+    "expectedChildEntered": true
+  },
+  "optionalReaderAdmission": {
+    "namespace": "inference",
+    "expectedInventoryReads": 0,
+    "writerResource": "repository-graph-facts:",
+    "maintenance": "maintainBuildGraphOptionalCachesV1"
+  },
+  "selectedGeneratorProducers": {
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "consumer",
+          "root": "c",
+          "manifest": "c/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "producer",
+          "root": "p",
+          "manifest": "p/📋️project.json",
+          "packages": [],
+          "nativeRoots": [
+            "native"
+          ]
+        }
+      ],
+      "catalogProviders": []
+    },
+    "contracts": {
+      "fixture": {
+        "ownership": "owned",
+        "ownerPath": "c",
+        "target": "consumer:generate",
+        "inputPatterns": [
+          "p/📜️script.ts"
+        ],
+        "outputRoots": [
+          {
+            "path": "p/generated/result.js",
+            "inclusion": "ignored",
+            "producer": {
+              "ownerPath": "p",
+              "target": "producer:generate"
+            }
+          }
+        ],
+        "reason": "Explicit producer ownership remains authored when source execution is selected"
+      }
+    },
+    "projects": {
+      "consumer": {
+        "name": "consumer",
+        "root": "c",
+        "targets": {
+          "test": {
+            "executor": "repo:script",
+            "options": {
+              "command": "bun ./📜️script.ts test",
+              "cwd": "c"
+            }
+          },
+          "generate": {
+            "executor": "repo:script",
+            "options": {
+              "command": "bun ./📜️script.ts generate",
+              "cwd": "c"
+            }
+          }
+        }
+      },
+      "producer": {
+        "name": "producer",
+        "root": "p",
+        "metadata": {
+          "nativeRoot": "native"
+        },
+        "targets": {
+          "test": {
+            "executor": "repo:script",
+            "options": {
+              "command": "bun ./📜️script.ts test",
+              "cwd": "p"
+            }
+          },
+          "generate": {
+            "executor": "repo:script",
+            "options": {
+              "command": "bun ./📜️script.ts generate",
+              "cwd": "p"
+            }
+          }
+        }
+      }
+    },
+    "files": {
+      "c/📜️script.ts": "console.log('consumer');\n",
+      "p/📜️script.ts": "console.log('producer');\n",
+      "native/Cargo.toml": "[package]\nname='fixture-native'\nversion='0.0.0'\n"
+    },
+    "cases": [
+      {
+        "id": "source-only",
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "consumer",
+              "target": "test"
+            }
+          ]
+        },
+        "producer": "absent",
+        "accepted": true
+      },
+      {
+        "id": "pruned-producer",
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "producer",
+              "target": "test"
+            }
+          ]
+        },
+        "producer": "pruned",
+        "accepted": true
+      },
+      {
+        "id": "producer-selected",
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "producer",
+              "target": "generate"
+            }
+          ]
+        },
+        "producer": "full",
+        "accepted": true
+      },
+      {
+        "id": "all",
+        "selection": {
+          "kind": "all"
+        },
+        "producer": "full",
+        "accepted": true
+      },
+      {
+        "id": "all-incomplete",
+        "selection": {
+          "kind": "all"
+        },
+        "producer": "pruned",
+        "accepted": false
+      }
+    ]
+  },
+  "nativeCallerSource": {
+    "manifest": "[package]\nname=\"native-caller-fixture\"\nversion=\"0.0.0\"\nedition=\"2021\"\n",
+    "sha256": "bdee5baa96c4a084be77fea7819044235ef10cb7ce916ed980e82a9fe75efc17",
+    "package": "native-caller-fixture"
+  },
+  "graphCacheQuota": {
+    "retirementCases": [
+      {
+        "usedBytes": 0,
+        "availableBytes": 1073741824,
+        "retire": false
+      },
+      {
+        "usedBytes": 536870912,
+        "availableBytes": 1073741824,
+        "retire": false
+      },
+      {
+        "usedBytes": 536870913,
+        "availableBytes": 1073741824,
+        "retire": true
+      },
+      {
+        "usedBytes": 1073741704,
+        "availableBytes": 2358214656,
+        "retire": true
+      },
+      {
+        "usedBytes": 0,
+        "availableBytes": 1073741823,
+        "retire": true
+      },
+      {
+        "usedBytes": 2147483648,
+        "availableBytes": 2147483648,
+        "retire": true
+      }
+    ],
+    "policy": {
+      "maximumBytes": 1073741824,
+      "lowWaterBytes": 536870912,
+      "minimumAvailableBytes": 1073741824
+    },
+    "cleanupError": "Owned optional cache closer failed",
+    "writerDeadlineMilliseconds": 150,
+    "progressDelayMilliseconds": 2,
+    "optionalPaths": [
+      "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "ip/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "rr/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.pack",
+      "np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.idx",
+      "mr/abc-123-aaaaaaaaaaaaaaaa.pack",
+      "inference/emoji-project-json.json",
+      "inference/test-cases.json"
+    ],
+    "requiredPaths": [
+      "inference/emoji-project-json.receipt.json",
+      "inference/emoji-project-json.publication.json",
+      "inference/p-123/emoji-project-json.publication.json",
+      "authority.json",
+      "canonical.json",
+      "snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "build-input-closures/value.json",
+      "graph.json",
+      "np/../authority.json",
+      "/np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "np\\aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "np/AAAAAAAAAAAAAAAAAAAAAAAA.json"
+    ],
+    "cases": [
+      {
+        "id": "exact-pool-boundary",
+        "state": {
+          "maximumBytes": 100,
+          "usedBytes": 60,
+          "availableBytes": 200,
+          "minimumAvailableBytes": 50
+        },
+        "requests": [
+          {
+            "peakBytes": 40,
+            "retainedDeltaBytes": 40,
+            "accepted": true,
+            "settle": "commit"
+          },
+          {
+            "peakBytes": 1,
+            "retainedDeltaBytes": 1,
+            "accepted": false
+          }
+        ]
+      },
+      {
+        "id": "replacement-peak-before-retirement",
+        "state": {
+          "maximumBytes": 100,
+          "usedBytes": 80,
+          "availableBytes": 200,
+          "minimumAvailableBytes": 50
+        },
+        "requests": [
+          {
+            "peakBytes": 21,
+            "retainedDeltaBytes": -20,
+            "accepted": false
+          },
+          {
+            "peakBytes": 20,
+            "retainedDeltaBytes": -20,
+            "accepted": true,
+            "settle": "commit"
+          },
+          {
+            "peakBytes": 40,
+            "retainedDeltaBytes": 40,
+            "accepted": true,
+            "settle": "release"
+          }
+        ]
+      },
+      {
+        "id": "physical-headroom-boundary",
+        "state": {
+          "maximumBytes": 100,
+          "usedBytes": 0,
+          "availableBytes": 70,
+          "minimumAvailableBytes": 50
+        },
+        "requests": [
+          {
+            "peakBytes": 21,
+            "retainedDeltaBytes": 21,
+            "accepted": false
+          },
+          {
+            "peakBytes": 20,
+            "retainedDeltaBytes": 20,
+            "accepted": true,
+            "settle": "commit"
+          },
+          {
+            "peakBytes": 1,
+            "retainedDeltaBytes": 1,
+            "accepted": false
+          }
+        ]
+      },
+      {
+        "id": "pending-peaks-compete",
+        "state": {
+          "maximumBytes": 100,
+          "usedBytes": 50,
+          "availableBytes": 100,
+          "minimumAvailableBytes": 20
+        },
+        "requests": [
+          {
+            "peakBytes": 30,
+            "retainedDeltaBytes": 10,
+            "accepted": true
+          },
+          {
+            "peakBytes": 21,
+            "retainedDeltaBytes": 21,
+            "accepted": false
+          },
+          {
+            "peakBytes": 20,
+            "retainedDeltaBytes": 20,
+            "accepted": true,
+            "settle": "release"
+          }
+        ],
+        "releasePending": true
+      },
+      {
+        "id": "index-and-temp-count",
+        "state": {
+          "maximumBytes": 100,
+          "usedBytes": 70,
+          "availableBytes": 100,
+          "minimumAvailableBytes": 20
+        },
+        "requests": [
+          {
+            "peakBytes": 31,
+            "retainedDeltaBytes": 20,
+            "accepted": false
+          },
+          {
+            "peakBytes": 30,
+            "retainedDeltaBytes": 20,
+            "accepted": true,
+            "settle": "release"
+          }
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "maximumBytes": -1,
+        "usedBytes": 0,
+        "availableBytes": 1,
+        "minimumAvailableBytes": 0
+      },
+      {
+        "maximumBytes": 1,
+        "usedBytes": 0.5,
+        "availableBytes": 1,
+        "minimumAvailableBytes": 0
+      },
+      {
+        "maximumBytes": 1,
+        "usedBytes": 0,
+        "availableBytes": 1,
+        "minimumAvailableBytes": 0,
+        "foreign": true
+      }
+    ],
+    "records": [
+      {
+        "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "value": "alpha"
+      },
+      {
+        "key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "value": "beta"
+      }
+    ],
+    "contentionCancellation": "Owned writer contention cancelled",
+    "contentionProgress": [
+      "start",
+      "end"
+    ],
+    "observationBlockCases": [
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "np/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "ip/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "rr/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": true
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.1.2.tmp",
+        "accepted": true
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.br",
+        "accepted": false
+      },
+      {
+        "path": "unknown/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/../ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+        "accepted": false
+      },
+      {
+        "path": "inference/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.tmp",
+        "accepted": false
+      },
+      {
+        "path": "inference/ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br.1.tmp",
+        "accepted": false
+      }
+    ]
+  },
+  "nativeAdmissionMemo": {
+    "files": {
+      "Cargo.toml": "[workspace]\nmembers=['a','b','c','d','x','y']\nresolver='2'\n",
+      "a/Cargo.toml": "[package]\nname='a'\nversion='0.0.0'\n[dependencies]\nb={path='../b'}\n[dev-dependencies]\nx={path='../x'}\n",
+      "b/Cargo.toml": "[package]\nname='b'\nversion='0.0.0'\n[dependencies]\nc={path='../c'}\n[dev-dependencies]\ny={path='../y'}\n",
+      "c/Cargo.toml": "[package]\nname='c'\nversion='0.0.0'\n",
+      "d/Cargo.toml": "[package]\nname='d'\nversion='0.0.0'\n",
+      "x/Cargo.toml": "[package]\nname='x'\nversion='0.0.0'\n",
+      "y/Cargo.toml": "[package]\nname='y'\nversion='0.0.0'\n"
+    },
+    "cases": [
+      {
+        "root": "a",
+        "tests": false,
+        "expected": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      {
+        "root": "a",
+        "tests": true,
+        "expected": [
+          "a",
+          "b",
+          "c",
+          "x"
+        ]
+      },
+      {
+        "root": "b",
+        "tests": false,
+        "expected": [
+          "b",
+          "c"
+        ]
+      },
+      {
+        "root": "b",
+        "tests": true,
+        "expected": [
+          "b",
+          "c",
+          "y"
+        ]
+      }
+    ],
+    "mutation": {
+      "path": "b/Cargo.toml",
+      "before": "c={path='../c'}",
+      "after": "d={path='../d'}",
+      "expected": [
+        "a",
+        "b",
+        "d"
+      ]
+    }
+  },
+  "selectedPlaygroundStaging": {
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "plugin",
+          "root": "p",
+          "manifest": "p/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "@semio-tech/framework-os-dev",
+          "root": "d",
+          "manifest": "d/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": []
+    },
+    "selectedFiles": [
+      "p/📋️project.json",
+      "p/Cargo.toml"
+    ],
+    "staging": {
+      "name": "@semio-tech/framework-os-dev",
+      "root": "d",
+      "targets": {
+        "build-alpha-react": {
+          "executor": "repo:script",
+          "options": {
+            "command": "bun ./📜️script.ts build alpha react",
+            "cwd": "d"
+          },
+          "configurations": {
+            "prototype": {
+              "env": {
+                "SEMIO_BUILD_MODE": "prototype"
+              }
+            },
+            "release": {
+              "env": {
+                "SEMIO_BUILD_MODE": "release"
+              }
+            }
+          }
+        }
+      }
+    },
+    "playgrounds": [
+      {
+        "cratePath": "p",
+        "variant": "alpha"
+      }
+    ],
+    "cases": [
+      {
+        "id": "source",
+        "targets": [
+          "test"
+        ],
+        "needsStaging": false
+      },
+      {
+        "id": "native",
+        "targets": [
+          "native-build"
+        ],
+        "needsStaging": false
+      },
+      {
+        "id": "site",
+        "targets": [
+          "build-alpha-site"
+        ],
+        "needsStaging": true
+      }
+    ],
+    "siteDependency": "@semio-tech/framework-os-dev:build-alpha-react",
+    "duplicate": "Duplicate playground release staging producer",
+    "missing": "Playground site output requires the release producer's staging project"
+  },
+  "playgroundPreparation": {
+    "variants": [
+      "alpha",
+      "beta"
+    ],
+    "profiles": [
+      "prototype",
+      "release"
+    ],
+    "owner": "development",
+    "components": [
+      {
+        "id": "a",
+        "dependencies": [
+          "b"
+        ]
+      },
+      {
+        "id": "b",
+        "dependencies": []
+      }
+    ],
+    "generator": {
+      "ownership": "owned",
+      "target": "codegen:build",
+      "nativeConsumers": [
+        "components/b"
+      ]
+    },
+    "publication": {
+      "version": 1,
+      "ownerRoot": "catalog/publication",
+      "outputRoot": "catalog/output",
+      "contributions": [
+        {
+          "ownerRoot": "components",
+          "packageRoots": [
+            "components"
+          ]
+        }
+      ]
+    },
+    "rows": [
+      {
+        "name": "prepare-<%= variant %>-native-<%= profile %>",
+        "outputs": [
+          "{projectRoot}/dist/runtime/native/<%= profile %>/<%= variant %>"
+        ]
+      },
+      {
+        "name": "run-<%= variant %>-native-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "smoke-<%= variant %>-native-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "serve-<%= variant %>-react-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "dev-<%= variant %>-react-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "activate-<%= variant %>-react-<%= profile %>",
+        "outputs": [
+          "{projectRoot}/dist/runtime/react/<%= profile %>/<%= variant %>"
+        ]
+      },
+      {
+        "name": "prepare-<%= variant %>-react-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "serve-<%= variant %>-wgpu-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "dev-<%= variant %>-wgpu-<%= profile %>",
+        "outputs": []
+      },
+      {
+        "name": "activate-<%= variant %>-wgpu-<%= profile %>",
+        "outputs": [
+          "{projectRoot}/dist/runtime/wgpu/<%= profile %>/<%= variant %>"
+        ]
+      },
+      {
+        "name": "prepare-<%= variant %>-wgpu-<%= profile %>",
+        "outputs": []
+      }
+    ],
+    "prerequisites": [
+      "@semio-tech/os-plugin-describe-rs:build",
+      "codegen:build",
+      "workspace:deps-wasm-opt"
+    ],
+    "cancellation": "Original Script process deadline exhausted"
+  },
+  "registryAuthority": {
+    "error": "Original build owner registry changed before source consumption",
+    "mutations": [
+      [
+        {
+          "op": "replace",
+          "path": "/owners/0/packages",
+          "value": [
+            "changed-package"
+          ]
+        }
+      ],
+      [
+        {
+          "op": "add",
+          "path": "/catalogProviders/0",
+          "value": {
+            "ownerRoot": "app",
+            "sourcePath": "app/catalog.mjs",
+            "consumerRoots": [
+              "library"
+            ]
+          }
+        }
+      ],
+      [
+        {
+          "op": "replace",
+          "path": "/owners/0/root",
+          "value": "changed/app"
+        },
+        {
+          "op": "replace",
+          "path": "/owners/0/manifest",
+          "value": "changed/app/📋️project.json"
+        }
+      ]
+    ]
+  },
+  "catalogNativeManifests": {
+    "prefix": "plugins/",
+    "registry": {
+      "version": 1,
+      "catalogProviders": [],
+      "owners": [
+        {
+          "name": "js",
+          "packages": [],
+          "root": "plugins/js",
+          "manifest": "plugins/js/📋️project.json"
+        },
+        {
+          "name": "rust",
+          "packages": [],
+          "root": "plugins/rust",
+          "manifest": "plugins/rust/📋️project.json"
+        },
+        {
+          "name": "facade",
+          "packages": [],
+          "root": "plugins/facade",
+          "manifest": "plugins/facade/📋️project.json",
+          "nativeRoots": [
+            "plugins/native"
+          ]
+        },
+        {
+          "name": "declared",
+          "packages": [],
+          "root": "plugins/declared",
+          "manifest": "plugins/declared/Cargo.toml"
+        },
+        {
+          "name": "outside",
+          "packages": [],
+          "root": "outside",
+          "manifest": "outside/Cargo.toml"
+        }
+      ]
+    },
+    "files": [
+      "plugins/js/📋️project.json",
+      "plugins/rust/📋️project.json",
+      "plugins/rust/Cargo.toml",
+      "plugins/facade/📋️project.json",
+      "plugins/native/Cargo.toml",
+      "plugins/declared/Cargo.toml",
+      "outside/Cargo.toml"
+    ],
+    "expected": [
+      "plugins/declared/Cargo.toml",
+      "plugins/native/Cargo.toml",
+      "plugins/rust/Cargo.toml"
+    ],
+    "missing": "plugins/native/Cargo.toml"
+  },
+  "nestedGraphHandoff": {
+    "expiry": {
+      "maximumElapsedMilliseconds": 40,
+      "progressDelayMilliseconds": 65
+    },
+    "cases": [
+      {
+        "id": "root-same",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:build"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "calls": [
+          "requested:reuse"
+        ]
+      },
+      {
+        "id": "root-foreign-pin",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:build"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "test"
+            }
+          ]
+        },
+        "calls": [
+          "requested:reuse"
+        ],
+        "refused": true
+      },
+      {
+        "id": "same-parent-task",
+        "ancestor": [
+          "run",
+          "app:test"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "test"
+            }
+          ]
+        },
+        "calls": [
+          "requested:reuse"
+        ]
+      },
+      {
+        "id": "different-nested-task",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "calls": [
+          "ancestor:reuse",
+          "requested:fresh"
+        ]
+      },
+      {
+        "id": "all-to-task",
+        "ancestor": [
+          "exec",
+          "--projects=app",
+          "--",
+          "bun",
+          "repo",
+          "run",
+          "app:test"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "all"
+        },
+        "calls": [
+          "ancestor:reuse",
+          "requested:fresh"
+        ]
+      },
+      {
+        "id": "corrupt-ancestor",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "calls": [
+          "ancestor:reuse"
+        ],
+        "corrupt": true,
+        "refused": true
+      },
+      {
+        "id": "foreign-ancestor-admission",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "test"
+            }
+          ]
+        },
+        "calls": [
+          "ancestor:reuse"
+        ],
+        "refused": true
+      },
+      {
+        "id": "missing-authority",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "calls": [
+          "requested:reuse"
+        ],
+        "missingAuthority": true,
+        "refused": true
+      },
+      {
+        "id": "undeclared-selection",
+        "ancestor": [
+          "run",
+          "app:build"
+        ],
+        "request": [
+          "run",
+          "app:test"
+        ],
+        "pin": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "calls": [],
+        "undeclared": true,
+        "refused": true
+      }
+    ]
+  },
+  "relativeImportResources": {
+    "owner": {
+      "name": "resource-owner",
+      "root": "a",
+      "manifest": "a/📋️project.json",
+      "packages": []
+    },
+    "project": {
+      "name": "resource-owner",
+      "targets": {
+        "test": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "inputs": [
+            "{projectRoot}/entry.ts"
+          ],
+          "options": {
+            "command": "bun ./entry.ts",
+            "cwd": "a"
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              }
+            }
+          }
+        }
+      }
+    },
+    "files": {
+      "a/worker.ts": "import child from './child.ts'; export default child;\n",
+      "a/child.ts": "export default 'child';\n",
+      "a/raw.ts": "import './missing-raw-child.ts'; export default 'raw';\n"
+    },
+    "binary": {
+      "path": "a/b.pdf",
+      "hex": "ff00696d706f727420272e2f6d697373696e672d62696e6172792e7473273b"
+    },
+    "cases": [
+      {
+        "id": "query",
+        "specifier": "./b.pdf?url",
+        "files": [
+          "a/b.pdf"
+        ]
+      },
+      {
+        "id": "fragment",
+        "specifier": "./b.pdf#page=2",
+        "files": [
+          "a/b.pdf"
+        ]
+      },
+      {
+        "id": "combined",
+        "specifier": "./b.pdf?url#page=2",
+        "files": [
+          "a/b.pdf"
+        ]
+      },
+      {
+        "id": "binary",
+        "specifier": "./b.pdf",
+        "files": [
+          "a/b.pdf"
+        ]
+      },
+      {
+        "id": "raw-source",
+        "specifier": "./raw.ts?raw",
+        "files": [
+          "a/raw.ts"
+        ]
+      },
+      {
+        "id": "source-url",
+        "specifier": "./raw.ts?url",
+        "files": [
+          "a/raw.ts"
+        ]
+      },
+      {
+        "id": "source-fragment",
+        "specifier": "./worker.ts#mode",
+        "files": [
+          "a/child.ts",
+          "a/worker.ts"
+        ]
+      },
+      {
+        "id": "source-query",
+        "specifier": "./worker.ts?v=1",
+        "files": [
+          "a/child.ts",
+          "a/worker.ts"
+        ]
+      },
+      {
+        "id": "worker-url",
+        "specifier": "./worker.ts?worker&url",
+        "files": [
+          "a/child.ts",
+          "a/worker.ts"
+        ]
+      },
+      {
+        "id": "leaf-then-source",
+        "specifier": "./worker.ts?url",
+        "secondSpecifier": "./worker.ts",
+        "files": [
+          "a/child.ts",
+          "a/worker.ts"
+        ]
+      },
+      {
+        "id": "fragment-is-not-query",
+        "specifier": "./worker.ts#?raw",
+        "files": [
+          "a/child.ts",
+          "a/worker.ts"
+        ]
+      },
+      {
+        "id": "missing",
+        "specifier": "./missing.pdf?url#page=2",
+        "refused": true
+      }
+    ]
+  },
+  "selectedOwnerContract": {
+    "owner": {
+      "name": "fixture-owner",
+      "root": "owner",
+      "manifest": "owner/📋️project.json",
+      "packages": []
+    },
+    "project": {
+      "name": "fixture-owner",
+      "targets": {
+        "test-source": {
+          "options": {
+            "command": "bun ./📜️script.ts",
+            "cwd": "owner"
+          },
+          "cache": true,
+          "inputs": [
+            "{projectRoot}/📜️script.ts"
+          ]
+        },
+        "generate": {
+          "options": {
+            "command": "bun ./missing/📜️script.ts",
+            "cwd": "owner"
+          },
+          "cache": true
+        }
+      }
+    },
+    "contract": {
+      "ownership": "owned",
+      "ownerPath": "owner",
+      "target": "fixture-owner:generate",
+      "inputPatterns": [],
+      "outputRoots": []
+    },
+    "selected": [
+      "test-source"
+    ],
+    "files": [
+      "owner/📋️project.json",
+      "owner/📜️script.ts"
+    ],
+    "script": "export const value = 1;\n",
+    "error": "Generator target has no project owner: fixture-owner:generate"
+  },
+  "pinnedSelection": {
+    "registry": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "closure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "cases": [
+      {
+        "admitted": {
+          "kind": "all"
+        },
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": true
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": true
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": false
+      },
+      {
+        "admitted": {
+          "kind": "all"
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": false
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "lib",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": false
+      },
+      {
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": false
+      }
+    ],
+    "invalid": [
+      {
+        "kind": "all",
+        "extra": true
+      },
+      {
+        "kind": "tasks",
+        "tasks": []
+      },
+      {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build",
+            "extra": true
+          }
+        ]
+      },
+      {
+        "kind": "other"
+      }
+    ]
+  },
+  "inferenceDataset": {
+    "valid": {
+      "version": 1,
+      "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+      "sourceRoot": "fixtures/a"
+    },
+    "refused": [
+      {
+        "version": 2,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "../other",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "directory": "/tmp",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "../other"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a//b"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a/"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "./a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a/../b"
+      }
+    ]
+  },
+  "graphModuleAuthority": {
+    "implementation": "export const build = 1;\n",
+    "publication": "{\"graph\":\"canonical.json\"}\n",
+    "changes": [
+      {
+        "implementation": "export const build = 2;\n"
+      },
+      {
+        "publication": "{\"graph\":\"different.json\"}\n"
+      }
+    ]
+  },
+  "testInferenceLocation": {
+    "namespace": "inference",
+    "relative": ".cache/b/g/m/inference",
+    "override": "owned"
+  },
+  "admissionWalk": {
+    "maximumConcurrentReads": 4,
+    "files": {
+      "a/one.json": "1",
+      "a/deeper/two.json": "2",
+      "b/three.json": "3",
+      "c/four.json": "4",
+      "d/five.json": "5",
+      "e/six.json": "6"
+    },
+    "expected": [
+      "a/deeper/two.json",
+      "a/one.json",
+      "b/three.json",
+      "c/four.json",
+      "d/five.json",
+      "e/six.json"
+    ],
+    "rejected": [
+      0,
+      65,
+      1.5
+    ]
+  },
+  "pinnedPublication": {
+    "invalid": [
+      {},
+      {
+        "path": "absolute"
+      },
+      {
+        "digest": "matching"
+      },
+      {
+        "path": "relative",
+        "digest": "matching"
+      },
+      {
+        "path": "absolute",
+        "digest": "malformed"
+      },
+      {
+        "path": "absolute",
+        "digest": "different"
+      }
+    ]
+  },
+  "pluginReferences": [
+    {
+      "reference": "./plugin.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "../engine/plugin.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "./missing.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "engine-plugin",
+      "lookup": true
+    }
+  ],
+  "graphReset": {
+    "files": [
+      "canonical.json",
+      "authority.json",
+      "canonical.json.aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "authority.json.bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "graph.json",
+      "graphs/pin.json",
+      "inference/fact.json",
+      "build-input-closures/input.json",
+      "build-lock-closures/lock.json",
+      "canonical.json.unowned",
+      "unrelated.json"
+    ],
+    "removed": [
+      "authority.json",
+      "authority.json.bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "canonical.json",
+      "canonical.json.aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    ],
+    "invalid": [
+      {
+        "kind": "symlink"
+      },
+      {
+        "kind": "directory"
+      },
+      {
+        "links": 2
+      },
+      {
+        "bytes": 536870913
+      },
+      {
+        "device": 2
+      }
+    ]
+  },
+  "engineReferences": [
+    {
+      "name": "directory-and-module",
+      "source": "const root = new URL(\"../../../../../\", import.meta.url); import value from \"./dir/\"; require(\"./dir/\");",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "directory-url",
+          "specifier": "../../../../../"
+        }
+      ]
+    },
+    {
+      "name": "same-string-distinct-use",
+      "source": "const directory = new URL(\"./dir/\", import.meta.url); import \"./dir/\"; const data = new URL(\"./data.json\", import.meta.url);",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "directory-url",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "file-url",
+          "specifier": "./data.json"
+        }
+      ]
+    },
+    {
+      "name": "comments-and-data",
+      "source": "// import \"./missing.ts\"\nconst data = \"./other.ts\"; const root = new URL(\"./made-later/\", import.meta.url); const external = new URL(\"https://example.test/\", import.meta.url);",
+      "references": [
+        {
+          "kind": "directory-url",
+          "specifier": "./made-later/"
+        }
+      ]
+    },
+    {
+      "name": "import-forms",
+      "source": "export * from \"./export.ts\"; import(\"./dynamic.ts\"); const dependency = require(\"package/subpath\"); const file = new URL(\"./missing.json\", import.meta.url);",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./export.ts"
+        },
+        {
+          "kind": "module",
+          "specifier": "./dynamic.ts"
+        },
+        {
+          "kind": "module",
+          "specifier": "package/subpath"
+        },
+        {
+          "kind": "file-url",
+          "specifier": "./missing.json"
+        }
+      ]
+    }
+  ],
+  "nxEngineIdentity": {
+    "script": "fixture/📜️script.ts",
+    "engine": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts",
+    "wire": ".🧬semio/🦑️repo/⚡️cache/build/nx-commands/wire.json"
+  },
+  "nxCommandBridge": {
+    "command": "bun ./📜️script.ts probe",
+    "args": [
+      "two words",
+      "",
+      "literal$()",
+      "quote\"value",
+      "single'quote",
+      "--"
+    ],
+    "forwarded": [
+      "caller value",
+      ""
+    ]
+  },
+  "literalArguments": {
+    "rejected": [
+      "--stdio-only",
+      "--journey wasm32",
+      "$SCRIPT",
+      "'owner/📜️script.ts'",
+      [
+        "valid",
+        1
+      ]
+    ],
+    "boundaryArguments": [
+      "two words",
+      "",
+      "literal$()",
+      "quote\"value",
+      "single'quote",
+      "--"
+    ],
+    "converted": [
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "target": "native-openable-catalog-provider-check",
+        "configuration": "stdio-only",
+        "args": [
+          "--stdio-only"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32",
+        "args": [
+          "--journey",
+          "wasm32"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32-react",
+        "args": [
+          "--journey",
+          "wasm32-react"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32-native",
+        "args": [
+          "--journey",
+          "wasm32-native"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "native-react",
+        "args": [
+          "--journey",
+          "native-react"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "native-react-cursors",
+        "args": [
+          "--journey",
+          "native-react-cursors"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "cursors",
+        "args": [
+          "--journey",
+          "cursors"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "agent-pixels",
+        "args": [
+          "--journey",
+          "agent-pixels"
+        ]
+      }
+    ]
+  },
+  "configuredCommandSources": {
+    "files": {
+      "owner/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+      "owner/value.ts": "export const value = 'base';\n",
+      "alternate/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+      "alternate/value.ts": "export const value = 'configured-before';\n",
+      "unrelated/📜️script.ts": "console.log('unrelated');\n"
+    },
+    "expectedSources": [
+      "alternate/value.ts",
+      "alternate/📜️script.ts",
+      "owner/value.ts",
+      "owner/📜️script.ts"
+    ],
+    "cases": [
+      {
+        "name": "commandAndCwd",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts base"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "command": "bun ./📜️script.ts configured"
+          }
+        }
+      },
+      {
+        "name": "cwdOnly",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate"
+          }
+        }
+      },
+      {
+        "name": "commandOnly",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "command": "bun ../alternate/📜️script.ts"
+          }
+        }
+      },
+      {
+        "name": "commandList",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "bun ./📜️script.ts",
+            {
+              "command": "bun ./📜️script.ts",
+              "forwardAllArgs": false
+            }
+          ]
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "commands": [
+              {
+                "command": "bun ./📜️script.ts",
+                "forwardAllArgs": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "literalArgs",
+        "options": {
+          "cwd": ".",
+          "command": "bun",
+          "args": [
+            "owner/📜️script.ts"
+          ]
+        },
+        "configurations": {
+          "release": {
+            "args": [
+              "alternate/📜️script.ts"
+            ]
+          }
+        }
+      },
+      {
+        "name": "placeholders",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "{workspaceRoot}/alternate"
+          }
+        }
+      },
+      {
+        "name": "baseFallback",
+        "options": {
+          "cwd": "owner",
+          "command": "echo base"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "command": "bun ./📜️script.ts"
+          }
+        },
+        "expectedSources": [
+          "alternate/value.ts",
+          "alternate/📜️script.ts"
+        ],
+        "fallback": true
+      },
+      {
+        "name": "listFallback",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "echo base",
+            "bun ./📜️script.ts"
+          ]
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "commands": [
+              "bun ./📜️script.ts"
+            ]
+          }
+        },
+        "fallback": true
+      },
+      {
+        "name": "argumentData",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts",
+          "args": [
+            "../alternate/📜️script.ts"
+          ]
+        },
+        "configurations": {},
+        "expectedSources": [
+          "owner/value.ts",
+          "owner/📜️script.ts"
+        ]
+      },
+      {
+        "name": "disabledArgumentForwarding",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "bun ./📜️script.ts",
+            {
+              "command": "bun",
+              "forwardAllArgs": false
+            }
+          ],
+          "args": [
+            "../alternate/📜️script.ts"
+          ]
+        },
+        "configurations": {},
+        "expectedSources": [
+          "owner/value.ts",
+          "owner/📜️script.ts"
+        ],
+        "fallback": true
+      }
+    ],
+    "mutation": {
+      "path": "alternate/value.ts",
+      "bytes": "export const value = 'configured-after';\n"
+    },
+    "configuredLocks": {
+      "options": {
+        "command": "bun owner/📜️script.ts build"
+      },
+      "configurations": {
+        "release": {
+          "command": "bun alternate/📜️script.ts native cargo metadata --locked"
+        }
+      }
+    },
+    "expectedLocks": [
+      "{workspaceRoot}/**/Cargo.toml",
+      "{workspaceRoot}/**/Cargo.lock"
+    ]
+  },
+  "policyOwnership": [
+    {
+      "name": "@semio-tech/cad-js",
+      "root": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "workspace",
+      "root": "."
+    },
+    {
+      "name": "@semio-tech/repo-cli-go",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
+    },
+    {
+      "name": "@semio-tech/repo-client",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "@semio-tech/repo-coordinator",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "@semio-tech/repo-test-domain",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+    }
+  ],
+  "compactExpansion": {
+    "contracts": {
+      "source": {
+        "version": 1,
+        "files": [
+          "app/a.ts",
+          "lib/b.ts"
+        ]
+      },
+      "lock": {
+        "version": 1,
+        "manifest": "app/Cargo.toml"
+      }
+    },
+    "inputPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ],
+          "groups": [
+            [
+              "preserved",
+              {
+                "env": "$source"
+              }
+            ],
+            [
+              "tail"
+            ]
+          ],
+          "literal": {
+            "env": "$source",
+            "description": "ordinary metadata"
+          },
+          "compact": {
+            "env": "$lock"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/inputs",
+        "value": [
+          "default",
+          {
+            "env": "$source"
+          },
+          {
+            "env": "$source"
+          },
+          {
+            "env": "$lock"
+          },
+          [
+            "retain",
+            [
+              "nested"
+            ]
+          ]
+        ]
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "--literal",
+            "space value"
+          ],
+          [
+            "tail",
+            [
+              "inner"
+            ]
+          ]
+        ]
+      }
+    ],
+    "expectedPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ],
+          "groups": [
+            [
+              "preserved",
+              "{workspaceRoot}/app/a.ts",
+              "{workspaceRoot}/lib/b.ts"
+            ],
+            [
+              "tail"
+            ]
+          ],
+          "literal": {
+            "env": "$source",
+            "description": "ordinary metadata"
+          },
+          "compact": [
+            "{workspaceRoot}/Cargo.lock",
+            "{workspaceRoot}/app/Cargo.toml"
+          ]
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/inputs",
+        "value": [
+          "default",
+          "{workspaceRoot}/app/a.ts",
+          "{workspaceRoot}/lib/b.ts",
+          "{workspaceRoot}/app/a.ts",
+          "{workspaceRoot}/lib/b.ts",
+          "{workspaceRoot}/Cargo.lock",
+          "{workspaceRoot}/app/Cargo.toml",
+          [
+            "retain",
+            [
+              "nested"
+            ]
+          ]
+        ]
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "--literal",
+            "space value"
+          ],
+          [
+            "tail",
+            [
+              "inner"
+            ]
+          ]
+        ]
+      }
+    ],
+    "ordinaryPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "first",
+            "second"
+          ],
+          [
+            "third",
+            [
+              "fourth"
+            ]
+          ]
+        ]
+      }
+    ],
+    "batch": {
+      "count": 21,
+      "maximumReads": 16,
+      "filePrefix": "app/batch-"
+    },
+    "digestError": "Build input closure content differs"
+  },
+  "version": 1,
+  "configuredSourceAdmission": {
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "app",
+          "root": "a",
+          "manifest": "a/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "lib",
+          "root": "l",
+          "manifest": "l/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "prototype-data",
+          "root": "p",
+          "manifest": "p/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "release-data",
+          "root": "r",
+          "manifest": "r/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "dependency-release-data",
+          "root": "t",
+          "manifest": "t/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": []
+    },
+    "projects": {
+      "a": {
+        "name": "app",
+        "targets": {
+          "test": {
+            "executor": "repo:script",
+            "cache": false,
+            "inputs": [],
+            "dependsOn": [
+              "^build"
+            ],
+            "options": {
+              "command": "bun ./📜️script.ts",
+              "cwd": "a/prototype"
+            },
+            "configurations": {
+              "prototype": {
+                "env": {
+                  "SEMIO_BUILD_MODE": "prototype"
+                }
+              },
+              "release": {
+                "command": "bun",
+                "cwd": "a/release",
+                "args": [
+                  "./📜️script.ts",
+                  "two words",
+                  ""
+                ],
+                "env": {
+                  "SEMIO_BUILD_MODE": "release"
+                }
+              }
+            },
+            "metadata": {
+              "semio": {
+                "execution": {
+                  "version": 1,
+                  "kind": "source"
+                }
+              }
+            }
+          }
+        }
+      },
+      "l": {
+        "name": "lib",
+        "targets": {
+          "build": {
+            "executor": "repo:script",
+            "cache": false,
+            "inputs": [],
+            "options": {
+              "command": "bun ./📜️script.ts",
+              "cwd": "l/prototype"
+            },
+            "configurations": {
+              "prototype": {
+                "env": {
+                  "SEMIO_BUILD_MODE": "prototype"
+                }
+              },
+              "release": {
+                "command": "bun run ./📜️script.ts",
+                "cwd": "l/release",
+                "env": {
+                  "SEMIO_BUILD_MODE": "release"
+                }
+              }
+            },
+            "metadata": {
+              "semio": {
+                "execution": {
+                  "version": 1,
+                  "kind": "source"
+                }
+              }
+            }
+          }
+        }
+      },
+      "p": {
+        "name": "prototype-data",
+        "targets": {}
+      },
+      "r": {
+        "name": "release-data",
+        "targets": {}
+      },
+      "t": {
+        "name": "dependency-release-data",
+        "targets": {}
+      }
+    },
+    "files": {
+      "a/prototype/📜️script.ts": "import {p} from '../../p/value.ts'; import {api} from '../../l/api.ts'; console.log(p,api);\n",
+      "a/release/📜️script.ts": "import {r} from '../../r/value.ts'; import {api} from '../../l/api.ts'; console.log(r,api);\n",
+      "l/api.ts": "export const api=1;\n",
+      "l/prototype/📜️script.ts": "import {api} from '../api.ts'; console.log(api);\n",
+      "l/release/📜️script.ts": "import {t} from '../../t/value.ts'; console.log(t);\n",
+      "p/value.ts": "export const p=2;\n",
+      "r/value.ts": "export const r=3;\n",
+      "t/value.ts": "export const t=4;\n"
+    },
+    "entryPoints": [
+      "a/prototype/📜️script.ts",
+      "a/release/📜️script.ts",
+      "l/prototype/📜️script.ts",
+      "l/release/📜️script.ts"
+    ],
+    "owners": [
+      "app",
+      "dependency-release-data",
+      "lib",
+      "prototype-data",
+      "release-data"
+    ],
+    "targets": {
+      "app": [
+        "test"
+      ],
+      "lib": [
+        "build"
+      ]
+    },
+    "configurations": [
+      "prototype",
+      "release"
+    ],
+    "missingConfiguration": "missing"
+  },
+  "graph": {
+    "version": 1,
+    "admission": {
+      "selection": {
+        "kind": "all"
+      },
+      "registry": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "closure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "projects": {
+      "app": {
+        "name": "app",
+        "root": "apps/app",
+        "tags": [
+          "kind:app"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "command",
+              "command": "bun ./📜️script.ts build",
+              "cwd": "apps/app",
+              "env": {
+                "BASE": "yes"
+              }
+            },
+            "cache": true,
+            "outputs": [
+              "{projectRoot}/dist"
+            ],
+            "configurations": {
+              "release": {
+                "execution": {
+                  "env": {
+                    "MODE": "release"
+                  }
+                }
+              }
+            }
+          },
+          "test": {
+            "execution": {
+              "kind": "command",
+              "command": "bun ./📜️script.ts test"
+            },
+            "dependsOn": [
+              "^build"
+            ]
+          }
+        }
+      },
+      "lib": {
+        "name": "lib",
+        "root": "libs/lib",
+        "tags": [
+          "kind:lib"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "app",
+        "target": "lib",
+        "type": "static"
+      }
+    ]
+  },
+  "selectionCases": [
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--configuration=release",
+        "--",
+        "literal arg"
+      ],
+      "tasks": [
+        "app:build:release"
+      ],
+      "forwarded": [
+        "literal arg"
+      ]
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--projects=tag:kind:app"
+      ],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--exclude=lib",
+        "--skip-cache",
+        "--exclude-dependencies"
+      ],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": []
+    }
+  ],
+  "globCases": {
+    "paths": [
+      "src/a.ts",
+      "src/nested/b.ts",
+      "src/a.test.ts",
+      "tests/a.ts",
+      "src/a.rs"
+    ],
+    "patterns": [
+      "src/**/*.ts",
+      "**/*.test.ts",
+      "src/*.{ts,rs}",
+      "src/**/!(*.test).ts",
+      "**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)"
+    ]
+  },
+  "bootstrap": {
+    "manifest": {
+      "name": "isolated-build-bootstrap",
+      "dependencies": {
+        "typescript": "5.9.3",
+        "@iarna/toml": "2.2.5"
+      }
+    },
+    "lock": "isolated-fixture-lock-v1",
+    "changedLock": "isolated-fixture-lock-v2",
+    "dependencies": [
+      "typescript",
+      "@iarna/toml"
+    ],
+    "expectedInstalls": 4,
+    "moduleReceiving": {
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "commandModule": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
+      "operation": "prepareJavascriptDependencies",
+      "scriptHeader": "#!/usr/bin/env bun",
+      "operationExports": [
+        "javascriptDependencyProducerArgumentsV1",
+        "prepareJavascriptDependencies"
+      ],
+      "commands": [
+        "SyncScript",
+        "RefreshLockScript",
+        "ContractCheckScript"
+      ]
+    }
+  },
+  "watch": {
+    "selected": "app",
+    "included": "apps/app/source.txt",
+    "excluded": "libs/lib/source.txt",
+    "expectedChangedProjects": [
+      "app"
+    ]
+  },
+  "cargoWorkspace": {
+    "files": {
+      "Cargo.toml": "[workspace]\nmembers=[]\n",
+      "nested/Cargo.toml": "[workspace]\nmembers=[\"owner\",\"dependency\"]\n[workspace.dependencies.local]\npath=\"dependency\"\n",
+      "nested/owner/Cargo.toml": "[package]\nname=\"fixture-owner\"\nversion=\"0.1.0\"\nworkspace=\"..\"\n[dependencies]\nlocal={workspace=true}\n",
+      "nested/dependency/Cargo.toml": "[package]\nname=\"fixture-dependency\"\nversion=\"0.1.0\"\nworkspace=\"..\"\n"
+    },
+    "expected": [
+      {
+        "source": "owner",
+        "target": "dependency",
+        "sourceFile": "nested/owner/Cargo.toml",
+        "type": "static"
+      }
+    ]
+  },
+  "membership": {
+    "files": {
+      "owner/Cargo.toml": "[package]\nname='owned-source'\nversion='0.1.0'\n",
+      "owner/source.rs": "pub struct Source;\n",
+      "owner/.lake/packages/proofwidgets/widget/package.json": "{\"name\":\"generated-widget\"}\n",
+      "owner/.lake/packages/proofwidgets/widget/src/widget.ts": "export const generated = true;\n"
+    },
+    "excludedPatterns": [
+      "**/.lake/**"
+    ],
+    "expected": [
+      "owner/Cargo.toml",
+      "owner/source.rs"
+    ]
+  },
+  "authority": {
+    "files": {
+      "declaration.json": "{\"target\":\"build\"}\n",
+      "unused.rs": "pub fn first() {}\n"
+    },
+    "consumed": "declaration.json",
+    "cases": [
+      {
+        "name": "unrelated leaf body",
+        "kind": "write",
+        "path": "unused.rs",
+        "content": "pub fn second() {}\n",
+        "membership": true,
+        "facts": true
+      },
+      {
+        "name": "identical declaration rewrite",
+        "kind": "write",
+        "path": "declaration.json",
+        "content": "{\"target\":\"build\"}\n",
+        "membership": true,
+        "facts": true
+      },
+      {
+        "name": "consumed declaration change",
+        "kind": "write",
+        "path": "declaration.json",
+        "content": "{\"target\":\"test\"}\n",
+        "membership": true,
+        "facts": false
+      },
+      {
+        "name": "new physical owner",
+        "kind": "write",
+        "path": "owner.json",
+        "content": "{}\n",
+        "membership": false,
+        "facts": false
+      },
+      {
+        "name": "physical owner removal",
+        "kind": "remove",
+        "path": "owner.json",
+        "membership": true,
+        "facts": false
+      }
+    ],
+    "replacedAncestor": {
+      "directory": "owner",
+      "file": "owner/source.json",
+      "content": "{}"
+    }
+  },
+  "inferenceControl": {
+    "owners": 17,
+    "manifest": "[package]\nname = \"owner-{{index}}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "phase": "build:cargo-owners",
+    "continuations": 1
+  },
+  "configurationRefusals": [
+    {
+      "name": "kind",
+      "configuration": {
+        "kind": "noop"
+      }
+    },
+    {
+      "name": "ownerArguments",
+      "configuration": {
+        "ownerArguments": true
+      }
+    },
+    {
+      "name": "nativeOwnerCommand",
+      "configuration": {
+        "nativeOwnerCommand": {}
+      }
+    },
+    {
+      "name": "outputs",
+      "configuration": {
+        "outputs": [
+          "dist/changed"
+        ]
+      }
+    },
+    {
+      "name": "inputs",
+      "configuration": {
+        "inputs": []
+      }
+    },
+    {
+      "name": "dependsOn",
+      "configuration": {
+        "dependsOn": [
+          "prepare"
+        ]
+      }
+    },
+    {
+      "name": "cache",
+      "configuration": {
+        "cache": false
+      }
+    },
+    {
+      "name": "continuous",
+      "configuration": {
+        "continuous": true
+      }
+    },
+    {
+      "name": "commands",
+      "configuration": {
+        "commands": [
+          "other"
+        ]
+      }
+    }
+  ],
+  "scriptRequirements": [
+    {
+      "source": "export const value=1;",
+      "go": false,
+      "wasm": false
+    },
+    {
+      "source": "export const value=2;",
+      "go": false,
+      "wasm": false
+    },
+    {
+      "source": "runGoTests();",
+      "go": true,
+      "wasm": false
+    },
+    {
+      "source": "buildWasmWebV1({});",
+      "go": false,
+      "wasm": true
+    }
+  ],
+  "catalogReload": {
+    "provider": {
+      "ownerRoot": "applications/design",
+      "sourcePath": "applications/design/catalog/port.ts"
+    },
+    "contribution": {
+      "version": 1,
+      "publication": {
+        "version": 1,
+        "ownerRoot": "applications/design/catalog",
+        "outputRoot": "applications/design/catalog/generated",
+        "contributions": [
+          {
+            "ownerRoot": "applications/design",
+            "packageRoots": [
+              "applications/design/plugins"
+            ]
+          }
+        ]
+      },
+      "projectRoot": "applications/design",
+      "project": "design-one",
+      "generateTarget": "generate",
+      "inputs": [
+        "applications/design/catalog/request.json"
+      ]
+    },
+    "nextProject": "design-two",
+    "source": "export function catalogBuildContributionV1(){return @@CONTRIBUTION@@;}"
+  },
+  "topCommand": {
+    "target": {
+      "command": "bun ./📜️script.ts build",
+      "options": {
+        "cwd": "app",
+        "env": {
+          "BASE": "yes"
+        }
+      },
+      "configurations": {
+        "release": {
+          "command": "bun ./📜️script.ts build release"
+        }
+      }
+    },
+    "invalid": [
+      {
+        "command": "one",
+        "options": {
+          "command": "two"
+        }
+      },
+      {
+        "command": "one",
+        "options": {
+          "commands": [
+            "two"
+          ]
+        }
+      },
+      {
+        "command": "one",
+        "configurations": {
+          "release": {
+            "commands": [
+              "two"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "rustAggregate": {
+    "mode": "release",
+    "manifest": "app/Cargo.toml",
+    "roots": [
+      "producer"
+    ],
+    "original": {
+      "execution": {
+        "kind": "command",
+        "command": "bun ./📜️script.ts build"
+      },
+      "cache": true,
+      "inputs": [
+        "production"
+      ],
+      "outputs": [
+        "dist/app"
+      ],
+      "dependsOn": [
+        "lib:build"
+      ],
+      "configurations": {
+        "prototype": {
+          "execution": {
+            "env": {
+              "MODE": "prototype"
+            }
+          }
+        },
+        "release": {
+          "execution": {
+            "env": {
+              "MODE": "release"
+            }
+          }
+        }
+      }
+    },
+    "tasks": [
+      "app:build:release",
+      "lib:build",
+      "producer:compile:release"
+    ]
+  },
+  "initialAuthoring": {
+    "bootstrap": [
+      {
+        "tool": "nx",
+        "arguments": [
+          "tools",
+          "setup",
+          "nx"
+        ],
+        "launches": [
+          [
+            "repo",
+            "tools",
+            "setup",
+            "nx"
+          ],
+          [
+            "nx",
+            "--version"
+          ]
+        ]
+      },
+      {
+        "tool": "nx",
+        "arguments": [
+          "reset"
+        ],
+        "launches": [
+          [
+            "repo",
+            "reset"
+          ],
+          [
+            "nx",
+            "reset"
+          ]
+        ]
+      },
+      {
+        "tool": "nx",
+        "arguments": [
+          "run",
+          "app:build",
+          "--skip-cache"
+        ],
+        "launches": [
+          [
+            "repo",
+            "run",
+            "app:build",
+            "--skip-cache"
+          ],
+          [
+            "nx",
+            "run",
+            "app:build",
+            "--skip-nx-cache"
+          ],
+          [
+            "nx",
+            "run",
+            "workspace:deps-javascript",
+            "--output-style=stream"
+          ]
+        ]
+      },
+      {
+        "tool": "bazel",
+        "arguments": [
+          "run",
+          "app:build",
+          "--skip-cache"
+        ],
+        "launches": [
+          [
+            "repo",
+            "run",
+            "app:build",
+            "--skip-cache"
+          ]
+        ]
+      }
+    ],
+    "storagePorts": [
+      "requireCurrentRepositoryBuildGraphConsumerV1",
+      "createBuildGraphOptionalQuotaV1",
+      "isBuildGraphOptionalCachePathV1",
+      "buildGraphWriterDirectoryAdmittedV1",
+      "buildGraphWriterOptionalPathAdmittedV1",
+      "buildGraphOptionalRetirementDueV1",
+      "buildGraphWriterMaintenanceDueV1",
+      "prepareBuildGraphOptionalHeadroomV1",
+      "maintainBuildGraphOptionalCachesV1",
+      "buildGraphWriterOptionalQuotaFactsV1",
+      "withBuildGraphOptionalPublicationV1",
+      "registerBuildGraphOptionalHandleV1",
+      "repositoryBuildGraphDataDirectoryV1",
+      "buildGraphWriterResourceV1",
+      "withRepositoryBuildGraphConsumerV1",
+      "withRepositoryBuildGraphFactStoreV1",
+      "requireRepositoryBuildGraphWriterV1",
+      "repositoryBuildGraphWriterDirectoryV1",
+      "withRepositoryBuildGraphSelectionV1",
+      "readBuildInferenceDatasetV1",
+      "withRepositoryBuildInferenceDatasetV1"
+    ],
+    "missingLaunches": {
+      "omit": "launches",
+      "valid": false,
+      "error": "Build authoring capabilities refused"
+    },
+    "cases": [
+      {
+        "name": "DSL Receiving Source",
+        "launchName": "🫴️ Record · Original Receiving Source",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 180000
+          }
+        }
+      },
+      {
+        "name": "DSL Receiving Native",
+        "launchName": "🫴️ Record · Original Receiving Native",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 180000
+          }
+        }
+      },
+      {
+        "name": "Jack Composition",
+        "launchName": "⚖️verify-jack-native-composition🦀️",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1200000
+          }
+        }
+      }
+    ],
+    "parent": {
+      "version": 1,
+      "owner": "build:relative-initial-declaration",
+      "maximumElapsedMilliseconds": 30000
+    },
+    "task": {
+      "kind": "command",
+      "ownerArguments": true,
+      "nativeOwnerCommand": {
+        "kind": "native-owner-command",
+        "manifest": "app/Cargo.toml",
+        "workingDirectory": "app",
+        "program": "bun",
+        "arguments": [
+          "./📜️script.ts",
+          "native"
+        ]
+      }
+    },
+    "taskArguments": [
+      "literal space",
+      "quote\"value",
+      "$literal"
+    ],
+    "paths": [
+      {
+        "platform": "posix",
+        "root": "/work/semio",
+        "artifact": "/work/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
+      },
+      {
+        "platform": "win32",
+        "root": "C:\\work\\semio",
+        "artifact": "C:\\work\\semio\\.🧬semio\\🦑️repo\\⚡️cache\\rust\\fixed\\m\\cargo\\shared\\target"
+      }
+    ]
+  },
+  "dependencyInvocations": {
+    "cases": [
+      {
+        "name": "root sync",
+        "args": [
+          "dependencies",
+          "sync",
+          "--scope",
+          "."
+        ],
+        "value": {
+          "mode": "sync",
+          "selection": {
+            "kind": "scope",
+            "owner": "."
+          }
+        },
+        "forwarded": [
+          "--scope",
+          "."
+        ]
+      },
+      {
+        "name": "whole authored lock",
+        "args": [
+          "dependencies",
+          "lock",
+          "--all"
+        ],
+        "value": {
+          "mode": "lock",
+          "selection": {
+            "kind": "all"
+          }
+        },
+        "forwarded": [
+          "--all"
+        ]
+      },
+      {
+        "name": "whole authored sync",
+        "args": [
+          "dependencies",
+          "sync",
+          "--all"
+        ],
+        "value": {
+          "mode": "sync",
+          "selection": {
+            "kind": "all"
+          }
+        },
+        "forwarded": [
+          "--all"
+        ]
+      },
+      {
+        "name": "nested lock",
+        "args": [
+          "dependencies",
+          "lock",
+          "--scope",
+          "apps/owner"
+        ],
+        "value": {
+          "mode": "lock",
+          "selection": {
+            "kind": "scope",
+            "owner": "apps/owner"
+          }
+        },
+        "forwarded": [
+          "--scope",
+          "apps/owner"
+        ]
+      }
+    ],
+    "refused": [
+      [],
+      [
+        "dependencies"
+      ],
+      [
+        "dependencies",
+        "sync"
+      ],
+      [
+        "dependencies",
+        "unknown",
+        "--all"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        ""
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        "\u0000"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--all",
+        "--scope",
+        "."
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "--all"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--all",
+        "--offline=false"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        ".",
+        "--frozen-lockfile=false"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "--"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "extra"
+      ],
+      [
+        "other",
+        "lock",
+        "--all"
+      ]
+    ],
+    "launches": [
+      {
+        "name": "📥️deps javascript",
+        "command": "bun repo dependencies sync --all",
+        "policy": {
+          "version": 1,
+          "owner": "repo:dependencies:javascript:sync",
+          "maximumElapsedMilliseconds": 600000
+        }
+      },
+      {
+        "name": "📥️deps javascript lock",
+        "command": "bun repo dependencies lock --all",
+        "policy": {
+          "version": 1,
+          "owner": "repo:dependencies:javascript:lock",
+          "maximumElapsedMilliseconds": 600000
+        }
+      }
+    ]
+  },
+  "reportPaths": [
+    {
+      "requested": "graph.json",
+      "valid": true
+    },
+    {
+      "requested": "../graph.json",
+      "valid": false
+    },
+    {
+      "requested": "/tmp/graph.json",
+      "valid": false
+    },
+    {
+      "requested": "folder/graph.json",
+      "valid": false
+    },
+    {
+      "requested": "graph.txt",
+      "valid": false
+    }
+  ],
+  "reportValue": {
+    "version": 1,
+    "projects": [
+      "a",
+      "b"
+    ],
+    "bytes": [
+      0,
+      127,
+      255
+    ]
+  },
+  "compilerCompanions": {
+    "registry": {
+      "version": 1,
+      "catalogProviders": [],
+      "owners": [
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": []
+        }
+      ]
+    },
+    "selection": {
+      "kind": "tasks",
+      "tasks": [
+        {
+          "project": "app",
+          "target": "test"
+        }
+      ]
+    },
+    "files": {
+      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[],\"options\":{\"cwd\":\"app\",\"command\":\"bun ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📜️script.ts": "import type {Thing} from '../library/api.mjs'; export const current:Thing={value:1};\n",
+      "library/📋️project.json": "{\"name\":\"lib\",\"targets\":{}}",
+      "library/api.mjs": "export const runtime=1;\n",
+      "library/api.d.mts": "export type {Thing} from './definition.ts';\n",
+      "library/definition.ts": "export interface Thing {value:number}\n"
+    },
+    "expected": [
+      "app/📋️project.json",
+      "app/📜️script.ts",
+      "library/api.d.mts",
+      "library/api.mjs",
+      "library/definition.ts",
+      "library/📋️project.json"
+    ]
+  },
+  "commandSourceCancellation": {
+    "version": 1,
+    "owner": {
+      "name": "bounded-owner",
+      "root": "owner",
+      "manifest": "owner/📋️project.json",
+      "packages": []
+    },
+    "entry": "owner/📜️script.ts",
+    "source": "export {value as a} from './a.ts'; export {value as b} from './b.ts'; export {value as c} from './c.ts'; export {value as d} from './d.ts'; export {value as e} from './e.ts'; export {value as f} from './f.ts'; export {value as g} from './g.ts'; export {value as h} from './h.ts'; export {value as i} from './i.ts'; export {value as j} from './j.ts'; export {value as k} from './k.ts'; export {value as l} from './l.ts'; export {value as m} from './m.ts'; export {value as n} from './n.ts'; export {value as o} from './o.ts'; export {value as p} from './p.ts'; export {value as q} from './q.ts'; export {value as r} from './r.ts'; export {value as s} from './s.ts'; export {value as t} from './t.ts'; export {value as u} from './u.ts'; export {value as v} from './v.ts'; export {value as w} from './w.ts'; export {value as x} from './x.ts';\n",
+    "files": [
+      "owner/a.ts",
+      "owner/b.ts",
+      "owner/c.ts",
+      "owner/d.ts",
+      "owner/e.ts",
+      "owner/f.ts",
+      "owner/g.ts",
+      "owner/h.ts",
+      "owner/i.ts",
+      "owner/j.ts",
+      "owner/k.ts",
+      "owner/l.ts",
+      "owner/m.ts",
+      "owner/n.ts",
+      "owner/o.ts",
+      "owner/p.ts",
+      "owner/q.ts",
+      "owner/r.ts",
+      "owner/s.ts",
+      "owner/t.ts",
+      "owner/u.ts",
+      "owner/v.ts",
+      "owner/w.ts",
+      "owner/x.ts"
+    ],
+    "leaf": "export const value=1;\n",
+    "expectedContinuationsAfterAbort": 1,
+    "maximumModulesBeforeFirstInnerContinuation": 1
+  },
+  "resourceOwnerAdmission": {
+    "registry": {
+      "version": 1,
+      "catalogProviders": [
+        {
+          "ownerRoot": "specific",
+          "sourcePath": "specific/catalog.mjs",
+          "consumerRoots": [
+            "specific"
+          ]
+        }
+      ],
+      "owners": [
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "workspace",
+          "root": ".",
+          "manifest": "📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "specific",
+          "root": "specific",
+          "manifest": "specific/📋️project.json",
+          "packages": []
+        }
+      ]
+    },
+    "selection": {
+      "kind": "tasks",
+      "tasks": [
+        {
+          "project": "app",
+          "target": "test"
+        }
+      ]
+    },
+    "files": {
+      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"dependsOn\":[\"^build\"],\"inputs\":[\"{workspaceRoot}/Cargo.toml\",\"^api\",{\"input\":\"types\",\"projects\":[\"lib\"]}],\"options\":{\"command\":\"bun ./📜️script.ts test\",\"cwd\":\"app\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📜️script.ts": "import type {Thing} from '../library/api.ts'; import raw from '../raw/data.ts?raw'; export const current:Thing = {value:1};\n",
+      "raw/data.ts": "import './missing.ts'; export default 'raw';\n",
+      "library/📋️project.json": "{\"name\":\"lib\",\"namedInputs\":{\"api\":[\"{projectRoot}/api-data/**/*\"],\"types\":[\"{projectRoot}/types/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\",\"cache\":false,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "library/api.ts": "export interface Thing {value:number}\n",
+      "library/api-data/data.json": "{\"version\":1}\n",
+      "library/types/data.json": "{\"version\":2}\n",
+      "📋️project.json": "{\"name\":\"workspace\",\"namedInputs\":{\"api\":[\"{projectRoot}/specific/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\"}}}",
+      "Cargo.toml": "[workspace]\nmembers = []\n",
+      "specific/📋️project.json": "{ malformed independent source",
+      "specific/poison.ts": "throw Error('unrelated Source admitted');\n"
+    },
+    "expectedOwners": [
+      "app",
+      "lib",
+      "workspace"
+    ],
+    "expectedInputs": {
+      "lib": [
+        "api",
+        "types"
+      ]
+    },
+    "expectedTargets": {
+      "app": [
+        "test"
+      ],
+      "lib": [
+        "build"
+      ]
+    },
+    "expectedDependencies": [
+      "lib"
+    ]
+  },
+  "ownerAdmission": {
+    "physicalInputs": {},
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": [
+            "@fixture/app"
+          ]
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": [
+            "@fixture/lib"
+          ]
+        },
+        {
+          "name": "types",
+          "root": "schema",
+          "manifest": "schema/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "specific",
+          "root": "specific",
+          "manifest": "specific/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": [
+        {
+          "ownerRoot": "specific",
+          "sourcePath": "specific/provider.ts",
+          "consumerRoots": [
+            "specific"
+          ]
+        }
+      ]
+    },
+    "facts": {
+      "app": {
+        "project": {
+          "name": "app",
+          "targets": {
+            "test": {
+              "dependsOn": [
+                "^build",
+                "types:generate"
+              ]
+            }
+          }
+        },
+        "files": [
+          "app/entry.ts",
+          "library/api.ts"
+        ],
+        "dependencies": [
+          "lib"
+        ]
+      },
+      "lib": {
+        "project": {
+          "name": "lib",
+          "targets": {
+            "build": {
+              "dependsOn": []
+            }
+          }
+        },
+        "files": [
+          "library/api.ts"
+        ],
+        "dependencies": []
+      },
+      "types": {
+        "project": {
+          "name": "types",
+          "targets": {
+            "generate": {
+              "dependsOn": []
+            }
+          }
+        },
+        "files": [
+          "schema/types.json"
+        ],
+        "dependencies": []
+      }
+    },
+    "selection": {
+      "kind": "tasks",
+      "tasks": [
+        {
+          "project": "app",
+          "target": "test"
+        }
+      ]
+    },
+    "expected": {
+      "owners": [
+        "app",
+        "lib",
+        "types"
+      ],
+      "files": [
+        "app/entry.ts",
+        "app/📋️project.json",
+        "library/api.ts",
+        "library/📋️project.json",
+        "schema/types.json",
+        "schema/📋️project.json"
+      ],
+      "targets": {
+        "app": [
+          "test"
+        ],
+        "lib": [
+          "build"
+        ],
+        "types": [
+          "generate"
+        ]
+      },
+      "catalogProviders": [],
+      "inputs": {}
+    }
+  },
+  "sameReceiverReplay": {
+    "version": 1,
+    "files": {
+      "entry.json": "{\"imports\":[\"./leaf.json\"],\"value\":1}\n",
+      "leaf.json": "{\"value\":2}\n"
+    },
+    "provider": {
+      "id": "same-receiver-replay-fixture",
+      "firstRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "secondRevision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "tuple": [
+      "cacheEntry",
+      "parentMap",
+      "sourceCaptureMap",
+      "validationMap"
+    ],
+    "scenarios": [
+      {
+        "name": "cold-compute",
+        "entry": "E1",
+        "parent": "P1",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "compute-and-retain",
+        "markSuccessfulHit": false
+      },
+      {
+        "name": "first-validated-hit",
+        "entry": "E1",
+        "parent": "P1",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "validate-and-full-replay",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "repeated-same-receiver",
+        "entry": "E1",
+        "parent": "P1",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "original-checkpoint-and-existing-facts",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "new-parent-same-capture-validation",
+        "entry": "E1",
+        "parent": "P2",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "validate-and-full-replay",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "new-capture-same-parent-validation",
+        "entry": "E1",
+        "parent": "P1",
+        "capture": "C2",
+        "validation": "V1",
+        "expected": "validate-and-full-replay",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "fresh-validation",
+        "entry": "E1",
+        "parent": "P3",
+        "capture": "C3",
+        "validation": "V2",
+        "expected": "validate-and-full-replay",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "replacement-entry-same-receivers",
+        "entry": "E2",
+        "parent": "P1",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "validate-and-full-replay",
+        "markSuccessfulHit": true
+      },
+      {
+        "name": "physical-change-fresh-attempt",
+        "entry": "E1",
+        "parent": "P4",
+        "capture": "C4",
+        "validation": "V3",
+        "expected": "invalidate-recompute-and-current-facts",
+        "markSuccessfulHit": false
+      },
+      {
+        "name": "provider-revision-fresh-attempt",
+        "entry": "E1",
+        "parent": "P5",
+        "capture": "C5",
+        "validation": "V4",
+        "expected": "invalidate-and-use-new-registered-provider",
+        "markSuccessfulHit": false
+      },
+      {
+        "name": "cancel-first-validation",
+        "entry": "E1",
+        "parent": "P6",
+        "capture": "C6",
+        "validation": "V5",
+        "expected": "original-cancel-no-success-mark",
+        "markSuccessfulHit": false
+      },
+      {
+        "name": "validation-failure",
+        "entry": "E1",
+        "parent": "P7",
+        "capture": "C7",
+        "validation": "V6",
+        "expected": "failure-no-success-mark",
+        "markSuccessfulHit": false
+      },
+      {
+        "name": "cancel-repeated-receiver",
+        "entry": "E1",
+        "parent": "P1",
+        "capture": "C1",
+        "validation": "V1",
+        "expected": "await-original-checkpoint-and-reject",
+        "markSuccessfulHit": true
+      }
+    ],
+    "sqliteOracle": {
+      "schema": "CREATE TABLE facts(receiver TEXT NOT NULL,kind TEXT NOT NULL,path TEXT NOT NULL,fact TEXT NOT NULL,PRIMARY KEY(receiver,kind,path,fact)) WITHOUT ROWID",
+      "missing": "SELECT kind,path,fact FROM facts WHERE receiver=? EXCEPT SELECT kind,path,fact FROM facts WHERE receiver=?",
+      "extra": "SELECT kind,path,fact FROM facts WHERE receiver=? EXCEPT SELECT kind,path,fact FROM facts WHERE receiver=?",
+      "duplicateMeaning": "SELECT kind,path,count(DISTINCT fact) FROM facts WHERE receiver=? GROUP BY kind,path HAVING count(DISTINCT fact)>1"
+    },
+    "mutation": {
+      "path": "leaf.json",
+      "before": "{\"value\":2}\n",
+      "after": "{\"value\":3}\n"
+    },
+    "cancelReason": "original same-receiver replay cancelled",
+    "expectedFastCheckpoints": 1,
+    "minimumFullCheckpoints": 3
+  },
+  "nxImplementationAuthority": {
+    "arguments": [
+      "🏗️build/📤️arguments/🟨️.mjs",
+      "🏗️build/📤️arguments/🧬️schema/🔣️.json",
+      "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json"
+    ],
+    "projection": [
+      "🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs",
+      "🏗️build/🧬️schema/📥️pin.json",
+      "🏗️build/🧬️schema/📥️engine.json"
+    ],
+    "mutation": "\n",
+    "privateTasks": [
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json",
+      "🏗️build/📥️caller/📤️orchestration/🟨️.mjs",
+      "🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+      "🏗️build/🧬️schema/📥️caller.json"
+    ]
+  },
+  "nxEngineNamedInput": {
+    "name": "__semioPrivateEngine",
+    "cases": [
+      {
+        "name": "explicit",
+        "inputs": [
+          "{projectRoot}/index.ts"
+        ]
+      },
+      {
+        "name": "default"
+      },
+      {
+        "name": "configured",
+        "inputs": [
+          "{projectRoot}/index.ts"
+        ],
+        "configurations": {
+          "release": {
+            "inputs": [
+              "{projectRoot}/release.ts"
+            ],
+            "execution": {
+              "kind": "command",
+              "command": "bun build.ts release"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "generatedCompileOutputs": {
+    "demandedPackage": {
+      "specifier": "@fixture/peer",
+      "manifest": {
+        "name": "@fixture/peer",
+        "exports": {
+          ".": {
+            "types": "./index.d.ts",
+            "import": "./index.ts"
+          }
+        }
+      },
+      "files": {
+        "src/entry.ts": "import '@fixture/peer';",
+        "peer/index.ts": "export * from '../gen/api.ts';",
+        "peer/index.d.ts": "export * from './leaf.d.ts';",
+        "peer/leaf.d.ts": "export type Value=string;"
+      },
+      "generated": "gen/api.ts",
+      "producer": "fixture-generator:build",
+      "missing": [
+        "declaration",
+        "export"
+      ]
+    },
+    "sourceObservationRoles": [
+      {
+        "selected": false,
+        "declared": false,
+        "role": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "role": "compile"
+      },
+      {
+        "selected": false,
+        "declared": true,
+        "role": "compile"
+      },
+      {
+        "selected": true,
+        "declared": true,
+        "role": "compile"
+      }
+    ],
+    "relativeOwnership": {
+      "caseSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "physical",
+          "project"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "physical": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "owners": [
+        {
+          "name": "workspace",
+          "root": "."
+        },
+        {
+          "name": "consumer-ts",
+          "root": "domain/packages/typescript"
+        },
+        {
+          "name": "consumer-rs",
+          "root": "domain/packages/rust"
+        },
+        {
+          "name": "peer",
+          "root": "peer"
+        },
+        {
+          "name": "native-peer",
+          "root": "peer/native"
+        }
+      ],
+      "cases": [
+        {
+          "path": "domain/schema/model.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/modules/model.rs",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/schema/model.json",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "workspace.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "peer/model.ts",
+          "physical": "peer",
+          "project": "peer"
+        },
+        {
+          "path": "peer/native/model.rs",
+          "physical": "native-peer",
+          "project": "native-peer"
+        },
+        {
+          "path": "peer-sibling/model.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/packages/typescript/glue.ts",
+          "physical": "consumer-ts",
+          "project": "consumer-ts"
+        }
+      ]
+    },
+    "extensionlessSchema": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "outputs",
+        "accepted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "extensionless": [
+      {
+        "id": "exact-extensionless-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "ambiguous-json-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api.json"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-index-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api/index.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "typescript-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "tsx-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.tsx"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "javascript-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "jsx-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.jsx"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "no-directory-inference",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api/index.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "stem-sibling",
+        "path": "gen/api",
+        "outputs": [
+          "gen/apis.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "unsupported-extension",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.mts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "declaration-only",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.d.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "explicit-js-not-typescript",
+        "path": "gen/api.js",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous-file-kinds",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous-file-index",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api/index.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-source-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-extensionless-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-declaration-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "source": [
+          "gen/api.d.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-json-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.json"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-node-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.node"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-mts-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.mts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-package-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "source": [
+          "gen/api/package.json"
+        ],
+        "accepted": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "cold",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "warm",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "exact-file",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "prefix-sibling",
+        "path": "generator/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "unknown",
+        "path": "missing/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen",
+          "gen/api.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "malformed",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen/../gen"
+        ],
+        "accepted": false
+      }
+    ],
+    "project": {
+      "name": "fixture-app",
+      "targets": {
+        "test": {
+          "inputs": [
+            "source"
+          ],
+          "dependsOn": [
+            "existing"
+          ]
+        },
+        "generate": {
+          "inputs": [
+            "generatorSource"
+          ]
+        }
+      }
+    },
+    "dependencies": {
+      "test": [
+        "fixture-app:generate"
+      ]
+    },
+    "invalidDependencies": [
+      null,
+      {
+        "test": [
+          "missing-colon"
+        ]
+      },
+      {
+        "test": [
+          "a:b:c"
+        ]
+      },
+      {
+        "bad:consumer": [
+          "a:b"
+        ]
+      },
+      {
+        "test": [
+          "a\u0000:b"
+        ]
+      }
+    ],
+    "caseSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "outputs",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sourceObservationRoots": [
+      {
+        "selected": false,
+        "declared": true,
+        "resource": true,
+        "compiled": false,
+        "include": true
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "resource": true,
+        "compiled": false,
+        "include": false
+      },
+      {
+        "selected": false,
+        "declared": false,
+        "resource": true,
+        "compiled": false,
+        "include": false
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "resource": true,
+        "compiled": true,
+        "include": true
+      }
+    ],
+    "sourceObservationScopes": [
+      {
+        "id": "peer-module-does-not-promote-resource",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": true,
+            "resource": true,
+            "module": false,
+            "declared": false
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": false,
+            "module": true,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "generate": [],
+          "check": [
+            "payload.ts"
+          ]
+        }
+      },
+      {
+        "id": "peer-resource-does-not-suppress-compile",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": false,
+            "resource": true,
+            "module": false,
+            "declared": false
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": false,
+            "module": false,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "check": [
+            "payload.ts"
+          ]
+        }
+      },
+      {
+        "id": "declared-entry-overrides-own-resource",
+        "file": "payload.ts",
+        "scopes": [
+          {
+            "target": "generate",
+            "matched": false,
+            "resource": true,
+            "module": false,
+            "declared": true
+          },
+          {
+            "target": "check",
+            "matched": true,
+            "resource": true,
+            "module": false,
+            "declared": false
+          }
+        ],
+        "expected": {
+          "generate": [
+            "payload.ts"
+          ],
+          "check": []
+        }
+      }
+    ],
+    "selfCycleDiagnosticSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "producer"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "selfCycleDiagnostics": [
+      {
+        "id": "actual-consumer-producer",
+        "project": "fixture-app",
+        "target": "generate",
+        "expected": {
+          "project": "fixture-app",
+          "target": "generate",
+          "producer": "fixture-app:generate"
+        }
+      },
+      {
+        "id": "json-escaped-unicode-identity",
+        "project": "fixture-🧪️-\"quoted\"",
+        "target": "generate",
+        "expected": {
+          "project": "fixture-🧪️-\"quoted\"",
+          "target": "generate",
+          "producer": "fixture-🧪️-\"quoted\":generate"
+        }
+      }
+    ],
+    "commandGeneratedImportScope": {
+      "version": 1,
+      "workspace": "/fixture",
+      "cases": [
+        {
+          "id": "compiled-command-import",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "resource-only-global-import",
+          "observation": {
+            "closure": [
+              "resource.ts"
+            ],
+            "compiled": [],
+            "imports": [
+              {
+                "source": "resource.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true
+        },
+        {
+          "id": "same-target-module-and-resource",
+          "observation": {
+            "closure": [
+              "module.ts",
+              "resource.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              },
+              {
+                "source": "resource.ts",
+                "producer": "unrelated:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "unrelated-module-not-in-closure",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "compiled": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "unrelated.ts",
+                "producer": "unrelated:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true
+        },
+        {
+          "id": "real-self-module-keeps-edge",
+          "observation": {
+            "closure": [
+              "producer.ts"
+            ],
+            "compiled": [
+              "producer.ts"
+            ],
+            "imports": [
+              {
+                "source": "producer.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true,
+          "selfConsumer": "generator:build"
+        },
+        {
+          "id": "resource-self-edge-is-not-module-demand",
+          "observation": {
+            "closure": [
+              "producer.ts"
+            ],
+            "compiled": [],
+            "imports": [
+              {
+                "source": "producer.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": true,
+          "selfConsumer": "generator:build"
+        },
+        {
+          "id": "duplicate-producer-union",
+          "observation": {
+            "closure": [
+              "a.ts",
+              "b.ts"
+            ],
+            "compiled": [
+              "a.ts",
+              "b.ts"
+            ],
+            "imports": [
+              {
+                "source": "a.ts",
+                "producer": "generator:build"
+              },
+              {
+                "source": "b.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [
+            "generator:build"
+          ],
+          "accepted": true
+        },
+        {
+          "id": "missing-exact-compiled-evidence",
+          "observation": {
+            "closure": [
+              "module.ts"
+            ],
+            "imports": [
+              {
+                "source": "module.ts",
+                "producer": "generator:build"
+              }
+            ]
+          },
+          "expected": [],
+          "accepted": false
+        }
+      ],
+      "warm": {
+        "closure": [
+          "module.ts",
+          "resource.ts"
+        ],
+        "compiled": [
+          "module.ts"
+        ],
+        "initial": [
+          {
+            "source": "module.ts",
+            "producer": "generator:build"
+          }
+        ],
+        "later": {
+          "source": "resource.ts",
+          "producer": "unrelated:build"
+        },
+        "expected": [
+          "generator:build"
+        ]
+      },
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "closure",
+          "compiled",
+          "imports"
+        ],
+        "properties": {
+          "closure": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1024
+          },
+          "compiled": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1024
+          },
+          "imports": {
+            "type": "array",
+            "maxItems": 1024,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "producer"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "producer": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "declaredProjectScope": {
+      "version": 1,
+      "files": {
+        "tsconfig.base.json": "{\"compilerOptions\":{\"target\":\"ES2022\",\"module\":\"ESNext\",\"moduleResolution\":\"Bundler\",\"strict\":true,\"noEmit\":true,\"noLib\":true,\"allowImportingTsExtensions\":true,\"resolveJsonModule\":true,\"types\":[]}}\n",
+        "tsconfig.a.json": "{\"extends\":\"./tsconfig.base.json\",\"files\":[\"./program-a.ts\",\"./shape.d.ts\"]}\n",
+        "tsconfig.b.json": "{\"extends\":\"./tsconfig.base.json\",\"files\":[\"./program-b.ts\"]}\n",
+        "entry-a.ts": "import \"./module-a.ts\";import payload from \"./resource.ts?raw\";export const a=payload;\n",
+        "entry-b.ts": "import \"./module-b.ts\";export const b=1;\n",
+        "entry-plain.ts": "export const plain=1;\n",
+        "module-a.ts": "import \"./command-output.ts\";export const a=1;\n",
+        "module-b.ts": "import \"./other-command-output.ts\";export const b=1;\n",
+        "resource.ts": "import \"./resource-output.ts\";export const resource=1;\n",
+        "program-a.ts": "import \"./typed-output.ts\";import data from \"./data.json\";import type {Shape} from \"./shape.d.ts\";export const typed:Shape=data;\n",
+        "program-b.ts": "import \"./other-output.ts\";export const other=1;\n",
+        "shape.d.ts": "export interface Shape{value:number}\n",
+        "data.json": "{\"value\":1}\n",
+        "typed-output.ts": "export const generated=1;\n",
+        "other-output.ts": "export const generated=2;\n",
+        "unrelated.ts": "export const unrelated=1;\n"
+      },
+      "commands": {
+        "a": {
+          "entry": "entry-a.ts",
+          "closure": [
+            "entry-a.ts",
+            "module-a.ts",
+            "resource.ts"
+          ],
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ]
+        },
+        "b": {
+          "entry": "entry-b.ts",
+          "closure": [
+            "entry-b.ts",
+            "module-b.ts"
+          ],
+          "compiled": [
+            "entry-b.ts",
+            "module-b.ts"
+          ]
+        },
+        "plain": {
+          "entry": "entry-plain.ts",
+          "closure": [
+            "entry-plain.ts"
+          ],
+          "compiled": [
+            "entry-plain.ts"
+          ]
+        }
+      },
+      "produced": [
+        {
+          "path": "command-output.ts",
+          "target": "command:generate",
+          "output": "command-output.ts"
+        },
+        {
+          "path": "other-command-output.ts",
+          "target": "other-command:generate",
+          "output": "other-command-output.ts"
+        },
+        {
+          "path": "typed-output.ts",
+          "target": "typed:generate",
+          "output": "typed-output.ts"
+        },
+        {
+          "path": "other-output.ts",
+          "target": "other:generate",
+          "output": "other-output.ts"
+        }
+      ],
+      "programs": {
+        "a": [
+          "data.json",
+          "program-a.ts",
+          "shape.d.ts",
+          "tsconfig.a.json",
+          "tsconfig.base.json",
+          "typed-output.ts"
+        ],
+        "both": [
+          "data.json",
+          "other-output.ts",
+          "program-a.ts",
+          "program-b.ts",
+          "shape.d.ts",
+          "tsconfig.a.json",
+          "tsconfig.b.json",
+          "tsconfig.base.json",
+          "typed-output.ts"
+        ]
+      },
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "command",
+          "configs",
+          "pollution",
+          "readFailure",
+          "self",
+          "accepted",
+          "compiled",
+          "dependencies",
+          "allProduced"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "enum": [
+              "a",
+              "b",
+              "plain",
+              null
+            ]
+          },
+          "configs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "maxItems": 2
+          },
+          "pollution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "target",
+                "output"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "readFailure": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "self": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "compiled": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "allProduced": {
+            "type": "boolean"
+          }
+        }
+      },
+      "cases": [
+        {
+          "id": "mixed-compiler-inputs-retain-command-roles",
+          "command": "a",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate",
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "generated-only-initially-empty-imports",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "all-compiler-files-produced-keeps-empty-name-union",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "tsconfig.a.json",
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "all-program:generate"
+          ],
+          "allProduced": true
+        },
+        {
+          "id": "multiple-configs-keep-each-producer",
+          "command": "a",
+          "configs": [
+            "tsconfig.a.json",
+            "tsconfig.b.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate",
+            "other:generate",
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "same-config-pollution-does-not-become-project-demand",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            },
+            {
+              "source": "tsconfig.a.json",
+              "target": "poison:generate",
+              "output": "poison.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "produced-file-bypasses-ordinary-read",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "typed-output.ts",
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "typed:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "ordinary-compiler-input-read-remains-fail-closed",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": "data.json",
+          "self": false,
+          "accepted": false,
+          "compiled": [],
+          "dependencies": [],
+          "allProduced": false
+        },
+        {
+          "id": "no-declaration-keeps-original-command",
+          "command": "a",
+          "configs": [],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [
+            "entry-a.ts",
+            "module-a.ts"
+          ],
+          "dependencies": [
+            "command:generate"
+          ],
+          "allProduced": false
+        },
+        {
+          "id": "no-command-closure-does-not-open-compiler-project",
+          "command": null,
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [
+            {
+              "source": "resource.ts",
+              "target": "resource:generate",
+              "output": "resource-output.ts"
+            },
+            {
+              "source": "unrelated.ts",
+              "target": "unrelated:generate",
+              "output": "unrelated-output.ts"
+            }
+          ],
+          "readFailure": null,
+          "self": false,
+          "accepted": true,
+          "compiled": [],
+          "dependencies": [],
+          "allProduced": false
+        },
+        {
+          "id": "real-compiler-self-producer-remains-strict",
+          "command": "plain",
+          "configs": [
+            "tsconfig.a.json"
+          ],
+          "pollution": [],
+          "readFailure": null,
+          "self": true,
+          "accepted": true,
+          "compiled": [
+            "entry-plain.ts"
+          ],
+          "dependencies": [
+            "fixture:check"
+          ],
+          "allProduced": false
+        }
+      ]
+    }
+  },
+  "libraryScriptSurface": {
+    "package": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+    "entry": "./script",
+    "symbol": "proveWireValueMaterializationFixture",
+    "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+    "neutral": {
+      "entry": "/fixture/domain/📦️packages/🟦️typescript/📜️script.ts",
+      "files": [
+        "/fixture/domain/🟦️.ts"
+      ],
+      "cases": [
+        {
+          "specifier": "../../📜️script.ts",
+          "expected": null
+        },
+        {
+          "specifier": "../../🟦️.ts",
+          "expected": "/fixture/domain/🟦️.ts"
+        }
+      ]
+    }
+  },
+  "targetInputRoles": {
+    "cases": [
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [],
+        "expected": "compile"
+      },
+      {
+        "selected": false,
+        "declared": false,
+        "observations": [],
+        "expected": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [
+          "freshness"
+        ],
+        "expected": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "observations": [
+          "freshness",
+          "compile"
+        ],
+        "expected": "compile"
+      },
+      {
+        "selected": true,
+        "declared": true,
+        "observations": [
+          "freshness"
+        ],
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      null,
+      "data",
+      {},
+      [
+        "freshness"
+      ],
+      1
+    ],
+    "configurations": [
+      {
+        "value": {
+          "env": {
+            "FIXTURE": "value"
+          }
+        },
+        "accepted": true
+      },
+      {
+        "value": {
+          "metadata": {
+            "semio": {
+              "sourceInputObservation": "freshness"
+            }
+          }
+        },
+        "accepted": false
+      },
+      {
+        "value": {
+          "metadata": {
+            "semio": {
+              "sourceInputObservation": "compile"
+            }
+          }
+        },
+        "accepted": false
+      }
+    ],
+    "groups": [
+      {
+        "id": "fresh-broad-compile-narrow",
+        "files": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/**/*.ts"
+            ],
+            "compile": false
+          },
+          {
+            "patterns": [
+              "domain/source.ts"
+            ],
+            "compile": true,
+            "target": "compile1"
+          }
+        ],
+        "matched": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/source.ts"
+        ],
+        "compileByTarget": {
+          "compile1": [
+            "domain/source.ts"
+          ]
+        }
+      },
+      {
+        "id": "scoped-exclusions",
+        "files": [
+          "domain/narrow/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/**/*.ts",
+              "!domain/narrow/source.ts"
+            ],
+            "compile": false
+          },
+          {
+            "patterns": [
+              "domain/narrow/**/*.ts"
+            ],
+            "compile": true,
+            "target": "compile1"
+          }
+        ],
+        "matched": [
+          "domain/narrow/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/narrow/source.ts"
+        ],
+        "compileByTarget": {
+          "compile1": [
+            "domain/narrow/source.ts"
+          ]
+        }
+      },
+      {
+        "id": "requested-input-freshness",
+        "files": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "scans": [
+          {
+            "patterns": [
+              "domain/source.ts"
+            ],
+            "compile": true,
+            "target": "compile0"
+          },
+          {
+            "patterns": [
+              "domain/**/*.ts"
+            ],
+            "compile": false
+          }
+        ],
+        "matched": [
+          "domain/source.ts",
+          "domain/unrelated.ts"
+        ],
+        "compileMatched": [
+          "domain/source.ts"
+        ],
+        "compileByTarget": {
+          "compile0": [
+            "domain/source.ts"
+          ]
+        }
+      }
+    ]
+  },
+  "semanticTypeImports": {
+    "importer": "🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+    "bindings": [
+      {
+        "symbol": "MutationMessage",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      },
+      {
+        "symbol": "Severity",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts"
+      }
+    ],
+    "neutral": {
+      "entry": "/fixture/consumer.ts",
+      "files": {
+        "/fixture/consumer.ts": "import type { RecordValue } from \"./domain/outcome.ts\"; import type { Level } from \"./domain/fault.ts\";",
+        "/fixture/domain/outcome.ts": "import type { Level } from \"./fault.ts\"; export type RecordValue={readonly level:Level};",
+        "/fixture/domain/fault.ts": "export type Level=\"info\"|\"error\";"
+      },
+      "closure": [
+        "/fixture/consumer.ts",
+        "/fixture/domain/fault.ts",
+        "/fixture/domain/outcome.ts"
+      ],
+      "bindings": [
+        {
+          "symbol": "RecordValue",
+          "source": "/fixture/domain/outcome.ts"
+        },
+        {
+          "symbol": "Level",
+          "source": "/fixture/domain/fault.ts"
+        }
+      ],
+      "missing": "/fixture/domain/outcome.ts",
+      "unknown": "UnknownValue"
+    }
+  },
+  "sourceDemand": {
+    "cases": [
+      {
+        "previous": null,
+        "requested": "runtime",
+        "expected": "runtime"
+      },
+      {
+        "previous": null,
+        "requested": "compile",
+        "expected": "compile"
+      },
+      {
+        "previous": "runtime",
+        "requested": "runtime",
+        "expected": "runtime"
+      },
+      {
+        "previous": "runtime",
+        "requested": "compile",
+        "expected": "compile"
+      },
+      {
+        "previous": "compile",
+        "requested": "runtime",
+        "expected": "compile"
+      },
+      {
+        "previous": "compile",
+        "requested": "compile",
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      "freshness",
+      "all",
+      "",
+      null,
+      {},
+      []
+    ],
+    "imports": [
+      {
+        "id": "bare-erasure",
+        "path": "entry.ts",
+        "source": "import type { T } from \"@fixture/types\"; import { value, type V } from \"@fixture/runtime\"; export { value };",
+        "runtime": [
+          "@fixture/runtime"
+        ],
+        "compile": [
+          "@fixture/types",
+          "@fixture/runtime"
+        ]
+      },
+      {
+        "id": "type-reexport",
+        "path": "entry.ts",
+        "source": "export type { T } from \"./types.ts\"; export { value } from \"./value.ts\";",
+        "runtime": [
+          "./value.ts"
+        ],
+        "compile": [
+          "./types.ts",
+          "./value.ts"
+        ]
+      },
+      {
+        "id": "declaration",
+        "path": "entry.d.ts",
+        "source": "export type { T } from \"./types.ts\";",
+        "runtime": [],
+        "compile": [
+          "./types.ts"
+        ]
+      },
+      {
+        "id": "optional-tests",
+        "path": "entry.ts",
+        "source": "export { value } from \"@fixture/runtime\"; if(import.meta.vitest){const x=await import(\"./tests.ts\");}",
+        "runtime": [
+          "@fixture/runtime"
+        ],
+        "compile": [
+          "@fixture/runtime",
+          "./tests.ts"
+        ]
+      },
+      {
+        "id": "type-import-expression",
+        "path": "entry.ts",
+        "source": "export type T=import(\"@fixture/types\").T; export const value=1;",
+        "runtime": [],
+        "compile": [
+          "@fixture/types"
+        ]
+      }
+    ],
+    "traversal": {
+      "files": {
+        "command.ts": "import { value } from \"fixture-peer\";",
+        "compiler.ts": "import { value } from \"./peer.ts\";",
+        "peer.ts": "export type { Shape } from \"./generated.ts\"; export const value=1;",
+        "unrequested.ts": "import \"./absent.ts\";"
+      },
+      "cases": [
+        {
+          "id": "runtime-type-erasure",
+          "expected": [
+            [
+              "generate",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "runtime"
+            ]
+          ],
+          "refusal": null,
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expectedDependencies": {}
+        },
+        {
+          "id": "typed-self-output",
+          "expected": [
+            [
+              "generate",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            }
+          ],
+          "expectedDependencies": {}
+        },
+        {
+          "id": "runtime-self-output",
+          "peer": "import \"./generated.ts\"; export const value=1;",
+          "expected": [
+            [
+              "generate",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "runtime"
+            ]
+          ],
+          "refusal": "runtime",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expectedDependencies": {}
+        },
+        {
+          "id": "runtime-to-compiler-upgrade",
+          "expected": [
+            [
+              "generate",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "compiler.ts",
+              "compile"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": [
+                "compiler.ts"
+              ]
+            }
+          ],
+          "expectedDependencies": {}
+        },
+        {
+          "id": "fresh-generator-and-typed-consumer",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            },
+            {
+              "target": "check",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            }
+          ],
+          "expected": [
+            [
+              "generate",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "check",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": null,
+          "expectedDependencies": {
+            "check": [
+              "fixture-app:generate"
+            ]
+          }
+        },
+        {
+          "id": "typed-generator-and-runtime-consumer",
+          "roots": [
+            {
+              "target": "generate",
+              "runtime": [],
+              "compile": [
+                "peer.ts"
+              ]
+            },
+            {
+              "target": "check",
+              "runtime": [
+                "command.ts"
+              ],
+              "compile": []
+            }
+          ],
+          "expected": [
+            [
+              "check",
+              "command.ts",
+              "runtime"
+            ],
+            [
+              "check",
+              "peer.ts",
+              "runtime"
+            ],
+            [
+              "generate",
+              "peer.ts",
+              "compile"
+            ]
+          ],
+          "refusal": "compile",
+          "expectedDependencies": {}
+        }
+      ]
+    },
+    "commandScopes": [
+      {
+        "target": "generate",
+        "modules": [
+          "command.ts",
+          "peer.ts"
+        ],
+        "resources": [
+          "payload.ts",
+          "schema.json",
+          "Cargo.toml"
+        ]
+      },
+      {
+        "target": "check",
+        "modules": [
+          "compiler.ts",
+          "payload.ts"
+        ],
+        "resources": [
+          "schema.json",
+          "payload.ts"
+        ]
+      }
+    ]
+  },
+  "dataProducerInputRoles": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+      "target": "build",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+      "target": "test-dispatch-contract",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "target": "typegen",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+      "target": "generate",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+      "target": "typegen",
+      "expected": "freshness"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+      "target": "test",
+      "expected": "compile"
+    }
+  ],
+  "semanticValueImports": {
+    "bindings": [
+      {
+        "importer": "🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+        "symbol": "viewContextWithIntegerCarriers",
+        "source": "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "specifier": "../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "dialectCoordinate",
+        "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "parseDialectCoordinate",
+        "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "parseSurfaceAppId",
+        "source": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+        "specifier": "../../🛂️manifest/🧬️schema/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "symbol": "resolveOpeningApp",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+        "specifier": "../../🎠️kernel/📖️opening-resolver/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "symbol": "fetchWithTimeout",
+        "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "specifier": "../../🚪️io/🌐️fetch-timeout/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "symbol": "retryWithJitteredBackoff",
+        "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "specifier": "../../⏳️async/🔁️jittered-backoff/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "symbol": "fetchWithTimeout",
+        "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "specifier": "../🚪️io/🌐️fetch-timeout/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "symbol": "retryWithJitteredBackoff",
+        "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "specifier": "../⏳️async/🔁️jittered-backoff/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "symbol": "conflictResolutionAsU8",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      },
+      {
+        "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "symbol": "mergePolicyAsU8",
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+      }
+    ],
+    "neutral": {
+      "entry": "/fixture/consumer.ts",
+      "source": "/fixture/domain/view.ts",
+      "symbol": "viewContext",
+      "unknown": "missingView",
+      "old": "import { viewContext } from \"./facade.ts\"; export const value=viewContext({id:1});",
+      "files": {
+        "/fixture/consumer.ts": "import { viewContext } from \"./domain/view.ts\"; export const value=viewContext({id:1});",
+        "/fixture/domain/view.ts": "export function viewContext(value:unknown){return value;}",
+        "/fixture/facade.ts": "export { viewContext } from \"./domain/view.ts\"; export * from \"./generated.ts\";"
+      },
+      "closure": [
+        "/fixture/consumer.ts",
+        "/fixture/domain/view.ts"
+      ]
+    }
+  },
+  "sourceContractScope": {
+    "project": {
+      "name": "app",
+      "namedInputs": {
+        "default": [
+          "{projectRoot}/**/*"
+        ],
+        "nested": [
+          "browser"
+        ],
+        "recursive": [
+          "recursive"
+        ]
+      },
+      "metadata": {
+        "sourceInputs": {
+          "browser": "bad.json",
+          "codec": "good.json"
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "inactive-contract",
+        "targetInputs": null,
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "selected-nested-contract",
+        "targetInputs": [
+          "nested"
+        ],
+        "requested": [],
+        "expected": [
+          "browser"
+        ],
+        "refusal": true
+      },
+      {
+        "id": "selected-good-contract",
+        "targetInputs": [
+          "codec"
+        ],
+        "requested": [],
+        "expected": [
+          "codec"
+        ]
+      },
+      {
+        "id": "input-only-good-contract",
+        "targetInputs": null,
+        "requested": [
+          "codec"
+        ],
+        "expected": [
+          "codec"
+        ]
+      },
+      {
+        "id": "peer-project-is-not-own-contract",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "projects": [
+              "peer"
+            ]
+          }
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "self-project-contract",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "projects": [
+              "app"
+            ]
+          }
+        ],
+        "requested": [],
+        "expected": [
+          "browser"
+        ],
+        "refusal": true
+      },
+      {
+        "id": "caret-is-peer-demand",
+        "targetInputs": [
+          "^browser"
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "dependency-object-is-peer-demand",
+        "targetInputs": [
+          {
+            "input": "browser",
+            "dependencies": true
+          }
+        ],
+        "requested": [],
+        "expected": []
+      },
+      {
+        "id": "fileset-is-not-group",
+        "targetInputs": [
+          {
+            "fileset": "{workspaceRoot}/entry.ts"
+          }
+        ],
+        "requested": [],
+        "expected": []
+      }
+    ],
+    "invalid": [
+      [
+        "recursive"
+      ],
+      [
+        "unknown"
+      ],
+      [
+        {
+          "input": "browser",
+          "projects": "app"
+        }
+      ],
+      [
+        {
+          "input": "browser",
+          "unexpected": true
+        }
+      ]
+    ],
+    "oracleEdges": [
+      [
+        "nested",
+        "browser"
+      ]
+    ],
+    "namespaceContract": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+    "requiredNamespaces": [
+      "@semio-tech/framework",
+      "@semio-tech/framework-canvas-ts",
+      "@semio-tech/framework-os",
+      "@semio-tech/plugin-registry",
+      "@semio-tech/ui-locale-rs"
+    ],
+    "revisionFiles": [
+      "🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+      "🏗️build/🧬️schema/🚪️admission.json",
+      "🏗️build/🔣️policy.json"
+    ],
+    "workspacePolicy": {
+      "workspace": "🏗️build/🔣️policy.json",
+      "caching": "⚡️caching/🔣️policy.json",
+      "groups": [
+        "default",
+        "sharedGlobals",
+        "schemaSources",
+        "production",
+        "cargoToolchain",
+        "go",
+        "uv",
+        "dotnet",
+        "nativeSources",
+        "nativeTestSources"
+      ],
+      "project": {
+        "name": "fixture-app",
+        "metadata": {
+          "sourceInputs": {
+            "selectedContract": "contracts/selected.json"
+          }
+        }
+      },
+      "override": {
+        "sharedGlobals": [
+          "selectedContract"
+        ]
+      },
+      "unknown": "unregisteredSourceGroup",
+      "contract": "selectedContract"
+    }
+  },
+  "nativeScope": {
+    "cases": [
+      {
+        "id": "base-declaration",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "source-own-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-test",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "mixed-selected-tasks",
+        "selectedSource": true,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "named-source-inputs",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "source-caret-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "expected": "source",
+        "inputRole": "compile"
+      },
+      {
+        "id": "source-named-inputs",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "source",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-caret-inputs",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "native-named-inputs",
+        "selectedSource": false,
+        "selectedNative": true,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "expected": "compile",
+        "inputRole": "compile"
+      },
+      {
+        "id": "input-only-caret",
+        "selectedSource": false,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "expected": "none",
+        "inputRole": "freshness"
+      },
+      {
+        "id": "pure-freshness-caret",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "pure-freshness-named",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": false,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "pure-freshness-both",
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "none"
+      },
+      {
+        "id": "native-upgrade-wins-over-freshness",
+        "selectedSource": true,
+        "selectedNative": true,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "freshness",
+        "expected": "compile"
+      }
+    ],
+    "invalid": [
+      {
+        "inputRole": "freshness"
+      },
+      null,
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "writer": true,
+        "inputRole": "freshness"
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": "native",
+        "requestedInputs": false,
+        "dependencyInputs": false,
+        "inputRole": "freshness"
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true
+      },
+      {
+        "selectedSource": true,
+        "selectedNative": false,
+        "requestedInputs": true,
+        "dependencyInputs": true,
+        "inputRole": "default"
+      }
+    ],
+    "discovery": [
+      {
+        "id": "base-root-cargo",
+        "targets": [],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "source-root-cargo",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "source-explicit-caret",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "nativeCalls": 1,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        },
+        "observation": "compile"
+      },
+      {
+        "id": "selected-native-test",
+        "targets": [
+          "test"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "named-input-only",
+        "targets": [],
+        "inputNames": [
+          "default"
+        ],
+        "caret": false,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "mixed-source-native",
+        "targets": [
+          "source",
+          "test"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {},
+        "observation": "compile"
+      },
+      {
+        "id": "base-package-is-declaration-only",
+        "targets": [],
+        "inputNames": [],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "named-data-package-stays-freshness",
+        "targets": [],
+        "inputNames": [
+          "default"
+        ],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "source-freshness-package-stays-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "observation": "freshness",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "source-freshness-caret-stays-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-retains-all-matched-data",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [
+          "default"
+        ],
+        "caret": true,
+        "observation": "freshness",
+        "matchedData": [
+          "facts.txt"
+        ],
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-preserves-runtime-owner-and-caret",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "runtimeImport": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        }
+      },
+      {
+        "id": "freshness-still-refuses-self-generated-output",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "runtimeImport": true,
+        "rejectSelfGenerated": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [],
+        "inputGroups": {}
+      },
+      {
+        "id": "freshness-upgrades-to-native-before-reobservation",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": true,
+        "observation": "freshness",
+        "upgradeNative": true,
+        "nativeCalls": 1,
+        "preparation": [
+          "test"
+        ],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {
+          "fixture-dependency": [
+            "default"
+          ]
+        }
+      },
+      {
+        "id": "compile-source-preserves-package-declarations",
+        "targets": [
+          "source"
+        ],
+        "inputNames": [],
+        "caret": false,
+        "observation": "compile",
+        "packageDependency": true,
+        "nativeCalls": 0,
+        "preparation": [],
+        "dependencies": [
+          "fixture-dependency"
+        ],
+        "inputGroups": {}
+      }
+    ],
+    "assembly": [
+      {
+        "id": "selected-base",
+        "selected": true,
+        "targets": [],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-source",
+        "selected": true,
+        "targets": [
+          "source"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-named-input",
+        "selected": true,
+        "targets": [],
+        "inputs": [
+          "default"
+        ],
+        "rootDiscovery": 0,
+        "preparation": [],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-native",
+        "selected": true,
+        "targets": [
+          "test"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "test"
+        ],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-mixed",
+        "selected": true,
+        "targets": [
+          "source",
+          "test"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "test"
+        ],
+        "release": [],
+        "commandExpansion": 0
+      },
+      {
+        "id": "selected-release",
+        "selected": true,
+        "targets": [
+          "release"
+        ],
+        "inputs": [],
+        "rootDiscovery": 0,
+        "preparation": [
+          "release"
+        ],
+        "release": [
+          "release"
+        ],
+        "commandExpansion": 0
+      },
+      {
+        "id": "all-owners",
+        "selected": false,
+        "targets": [],
+        "inputs": [],
+        "rootDiscovery": 1,
+        "preparation": [
+          "source",
+          "test",
+          "release",
+          "generator"
+        ],
+        "release": [
+          "release"
+        ],
+        "commandExpansion": 1
+      }
+    ],
+    "route": {
+      "target": "test-native-image-observation",
+      "suite": "native-image-observation",
+      "execution": "source",
+      "observation": "freshness",
+      "typechecks": false,
+      "entry": "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
+    }
+  },
+  "commandInputRoles": {
+    "files": {
+      "entry.ts": "export const value = 1;",
+      "facade.ts": "export {token} from \"./generated.ts\";"
+    },
+    "cases": [
+      {
+        "id": "freshness-data-facade",
+        "role": "freshness",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts"
+        ],
+        "generated": []
+      },
+      {
+        "id": "default-compile-facade",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "explicit-compile-facade",
+        "role": "compile",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "explicit-runtime-freshness-facade",
+        "role": "freshness",
+        "runtime": [
+          "{projectRoot}/facade.ts"
+        ],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      },
+      {
+        "id": "actual-command-import-retained",
+        "role": "freshness",
+        "runtime": [],
+        "inputs": [
+          "{projectRoot}/facade.ts"
+        ],
+        "entry": "export {token} from \"./facade.ts\";",
+        "expected": [
+          "entry.ts",
+          "facade.ts"
+        ],
+        "generated": [
+          "fixture:generate"
+        ]
+      }
+    ],
+    "invalid": [
+      [],
+      null,
+      "facade.ts",
+      [
+        "{projectRoot}/../facade.ts"
+      ],
+      [
+        "{projectRoot}/facade.d.ts"
+      ],
+      [
+        "{projectRoot}/**/facade.ts"
+      ],
+      [
+        "{projectRoot}/facade.ts",
+        "{projectRoot}/facade.ts"
+      ],
+      [
+        "{projectRoot}/facade\\bad.ts"
+      ],
+      [
+        "{projectRoot}/facade\u0000.ts"
+      ],
+      [
+        "{projectRoot}/missing.ts"
+      ]
+    ],
+    "longAbsolute": "{projectRoot}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.ts",
+    "generatorPromotionSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "manifest",
+        "entry",
+        "barrel",
+        "producer",
+        "cases"
+      ],
+      "properties": {
+        "contract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "barrel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "role",
+              "commandImportsBarrel",
+              "includesBarrel"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "freshness",
+                  "compile",
+                  null
+                ]
+              },
+              "commandImportsBarrel": {
+                "type": "boolean"
+              },
+              "includesBarrel": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "generatorPromotion": {
+      "contract": "styling-tokens",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+      "entry": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "barrel": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+      "producer": "@semio-tech/ui-styling-tokens:generate",
+      "cases": [
+        {
+          "id": "actual-styling-freshness-enrichment",
+          "role": "freshness",
+          "commandImportsBarrel": false,
+          "includesBarrel": false
+        },
+        {
+          "id": "default-compile-enrichment",
+          "role": null,
+          "commandImportsBarrel": false,
+          "includesBarrel": true
+        },
+        {
+          "id": "explicit-compile-enrichment",
+          "role": "compile",
+          "commandImportsBarrel": false,
+          "includesBarrel": true
+        },
+        {
+          "id": "actual-command-selfedge-survives-freshness",
+          "role": "freshness",
+          "commandImportsBarrel": true,
+          "includesBarrel": true
+        }
+      ]
+    }
+  }
+}

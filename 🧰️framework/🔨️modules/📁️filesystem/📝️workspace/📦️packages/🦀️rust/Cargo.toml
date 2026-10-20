@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-hash = { path = "../../../../🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

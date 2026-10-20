@@ -79,7 +79,7 @@ mod tests{
  /// 🧫️ The neutral variant roster expands into valid required leaf ports and physically quoted custody.
  #[test]
  fn retained_dispatch_requires_each_leaf_and_parses_as_rust(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
   let variants=fixture["variants"].as_array().unwrap().iter().map(|v|v.as_str().unwrap()).collect::<Vec<_>>();
   let roster=variants.iter().map(|variant|format!("{variant}({variant})")).collect::<Vec<_>>().join(",");
   let input:syn::DeriveInput=syn::parse_str(&format!("enum Operation {{{roster}}}")).unwrap();

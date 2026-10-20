@@ -1,4 +1,4 @@
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { type SemanticDirectoryMemberKindSpec, canonicalTaxonomyEmoji } from "../📜️taxonomy-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 

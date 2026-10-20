@@ -7,7 +7,7 @@ fn source_launcher() -> Harness {
     let registry = Arc::new(Registry::build(std::path::Path::new("workspace"), &facts));
     assert!(registry.problems().is_empty(), "{:?}", registry.problems());
     let entry = registry.entries().iter().position(|entry| entry.id == "tool:workspace/source").unwrap();
-    let mut state = LauncherState::new(Preferences::default(), Locale::En);
+    let mut state = LauncherState::new(Preferences {language:Some("en".into()),..Default::default()}, Locale::En);
     state.set_registry(registry); state.set_page(40); state.open_form(entry); state.edited("app".into());
     let widget = WidgetState::Tree(state.rebuild_tree(None));
     Harness { state, widget }
@@ -42,7 +42,7 @@ fn registry() -> Arc<Registry> {
 struct Harness { state: LauncherState, widget: WidgetState }
 
 fn launcher() -> Harness {
-    let mut state = LauncherState::new(Preferences::default(), Locale::En);
+    let mut state = LauncherState::new(Preferences {language:Some("en".into()),..Default::default()}, Locale::En);
     state.set_registry(registry());
     state.set_page(40);
     let widget = WidgetState::Tree(state.rebuild_tree(None));
@@ -121,7 +121,7 @@ fn selection_search_and_open_groups_survive_a_registry_update() {
 
 #[test]
 fn the_verbs_are_filed_in_the_language_of_the_dashboard() {
-    let mut german = LauncherState::new(Preferences::default(), Locale::De);
+    let mut german = LauncherState::new(Preferences {language:Some("de".into()),..Default::default()}, Locale::De);
     german.set_registry(registry());
     let rows = german.rows(&german.rebuild_tree(None)).join("\n");
     assert!(rows.contains("testen") && rows.contains("bauen"), "{rows}");
@@ -155,7 +155,7 @@ fn localized_metadata_is_visible_in_command_search_and_parameter_forms() {
     let registry = Arc::new(Registry::build(std::path::Path::new("workspace"), &facts));
     for row in fixture["display"].as_array().unwrap() {
         let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };
-        let mut state = LauncherState::new(Preferences::default(), locale);
+        let mut state = LauncherState::new(Preferences {language:Some(locale.as_str().into()),..Default::default()}, locale);
         state.set_registry(registry.clone());
         state.set_page(40);
         let mut harness = Harness { widget: WidgetState::Tree(state.rebuild_tree(None)), state };
@@ -206,7 +206,7 @@ fn launcher_pointer_rows_follow_localized_description_layout() {
     let facts: Facts = serde_json::from_value(metadata["workspace"].clone()).unwrap();
     for row in vectors["pointerCases"].as_array().unwrap() {
         let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };
-        let mut state = LauncherState::new(Preferences::default(), locale);
+        let mut state = LauncherState::new(Preferences {language:Some(locale.as_str().into()),..Default::default()}, locale);
         state.set_registry(Arc::new(Registry::build(std::path::Path::new("workspace"), &facts)));
         state.set_page(40);
         let mut harness = Harness { widget:WidgetState::Tree(state.rebuild_tree(None)), state };

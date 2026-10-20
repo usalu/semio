@@ -111,21 +111,24 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     [dispose]() { this.retire(); }
   }
   class WasiIoError extends Resource {
-    constructor(token: symbol, private readonly message: string) { super(token); }
-    toDebugString() { this.check(); return this.message; }
+    readonly #message: string;
+    constructor(token: symbol, message: string) { super(token); this.#message = message; }
+    toDebugString() { this.check(); return this.#message; }
   }
   class Pollable extends Resource {
     failure: unknown;
-    constructor(token: symbol, parent?: Resource, private readonly deadline?: bigint) {
+    readonly #deadline?: bigint;
+    constructor(token: symbol, parent?: Resource, deadline?: bigint) {
       super(token, parent);
+      this.#deadline = deadline;
       if (deadline !== undefined) {
         try { this.arm(); } catch (error) { this.retire(); throw error; }
       }
     }
     arm() {
       this.check();
-      if (this.deadline === undefined) return;
-      const remaining = this.deadline - now();
+      if (this.#deadline === undefined) return;
+      const remaining = this.#deadline - now();
       this.check();
       if (remaining <= 0n) return;
       const delay = (remaining + 999999n) / 1000000n;
@@ -139,10 +142,10 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     ready() {
       this.check();
       if (this.failure !== undefined) throw this.failure;
-      if (this.deadline === undefined) return true;
+      if (this.#deadline === undefined) return true;
       const current = now();
       this.check();
-      return this.deadline <= current;
+      return this.#deadline <= current;
     }
     async block() { await poll([this]); }
     override retire(force = false) {
@@ -177,51 +180,53 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     subscribe() { this.check(); return new Pollable(admission, this); }
   }
   class OutputStream extends Resource {
-    private permit = 0;
-    private failed = false;
-    private errorCredit = true;
-    constructor(token: symbol, private readonly channel: "stdout" | "stderr") {
+    #permit = 0;
+    #failed = false;
+    #errorCredit = true;
+    readonly #channel: "stdout" | "stderr";
+    constructor(token: symbol, channel: "stdout" | "stderr") {
       if (resources.size + errorReservations + 2 > 256) throw new Error("browser wasi: resource capacity");
       super(token);
+      this.#channel = channel;
       errorReservations++;
     }
     override retire(force = false) {
       super.retire(force);
-      if (this.errorCredit) { this.errorCredit = false; errorReservations--; }
+      if (this.#errorCredit) { this.#errorCredit = false; errorReservations--; }
     }
-    private writable() { this.check(); if (this.failed || outputBytes >= 1048576) throw { tag: "closed" }; }
-    checkWrite() { this.writable(); this.permit = Math.min(65536, 1048576 - outputBytes); return BigInt(this.permit); }
+    #writable() { this.check(); if (this.#failed || outputBytes >= 1048576) throw { tag: "closed" }; }
+    checkWrite() { this.#writable(); this.#permit = Math.min(65536, 1048576 - outputBytes); return BigInt(this.#permit); }
     write(bytes: Uint8Array) {
-      this.writable();
-      if (!(bytes instanceof Uint8Array) || bytes.byteLength > this.permit || bytes.byteLength > 65536 || bytes.byteLength > 1048576 - outputBytes) throw new Error("browser wasi: write permit exceeded");
-      this.permit = 0;
+      this.#writable();
+      if (!(bytes instanceof Uint8Array) || bytes.byteLength > this.#permit || bytes.byteLength > 65536 || bytes.byteLength > 1048576 - outputBytes) throw new Error("browser wasi: write permit exceeded");
+      this.#permit = 0;
       const owned = bytes.slice();
       outputBytes += owned.byteLength;
-      try { port.write(this.channel, owned); }
+      try { port.write(this.#channel, owned); }
       catch (error) {
-        this.failed = true;
-        if (closed || !resources.has(this) || !this.errorCredit) throw { tag: "closed" };
+        this.#failed = true;
+        if (closed || !resources.has(this) || !this.#errorCredit) throw { tag: "closed" };
         let message = "output sink failed";
         try {
           const detail = typeof error === "string" ? error : error instanceof Error ? Object.getOwnPropertyDescriptor(error, "message")?.value : undefined;
           if (typeof detail === "string") message = detail.slice(0, 1024);
         } catch {}
-        if (closed || !resources.has(this) || !this.errorCredit) throw { tag: "closed" };
-        this.errorCredit = false;
+        if (closed || !resources.has(this) || !this.#errorCredit) throw { tag: "closed" };
+        this.#errorCredit = false;
         errorReservations--;
         throw { tag: "last-operation-failed", val: new WasiIoError(admission, message) };
       } finally { owned.fill(0); }
     }
-    flush() { this.writable(); this.permit = 0; }
+    flush() { this.#writable(); this.#permit = 0; }
     async blockingFlush() { this.flush(); }
     async blockingWriteAndFlush(bytes: Uint8Array) {
-      this.writable();
+      this.#writable();
       if (!(bytes instanceof Uint8Array) || bytes.byteLength > 4096) throw new Error("browser wasi: blocking write byte capacity");
       this.checkWrite(); this.write(bytes); this.flush();
     }
     writeZeroes(length: bigint) {
       const count = u64(length);
-      if (count > BigInt(this.permit) || count > 65536n) throw new Error("browser wasi: write permit exceeded");
+      if (count > BigInt(this.#permit) || count > 65536n) throw new Error("browser wasi: write permit exceeded");
       this.write(new Uint8Array(Number(count)));
     }
     async blockingWriteZeroesAndFlush(length: bigint) {
@@ -230,7 +235,7 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
       await this.blockingWriteAndFlush(new Uint8Array(Number(count)));
     }
     splice(input: InputStream, length: bigint) {
-      this.writable();
+      this.#writable();
       if (!(input instanceof InputStream)) throw new Error("browser wasi: foreign input stream");
       const count = u64(length), permit = this.checkWrite();
       const bytes = input.read(count < permit ? count : permit);

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:laws/direct-tool-spawn/ledger",
+  "title": "Direct tool spawn ledger",
+  "description": "The spawns of registered tools that still bypass the tool registry. The ledger may only shrink: a new or larger entry is a breach, a smaller truth is pruned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "entries", "declared"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "tool", "form", "scope", "count"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "tool": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "form": {"enum": ["spawn", "shell"]},
+          "scope": {"enum": ["prod", "test"]},
+          "count": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "declared": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool", "scope", "count"],
+        "properties": {
+          "tool": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "scope": {"enum": ["prod", "test"]},
+          "count": {"type": "integer", "minimum": 1}
+        }
+      }
+    }
+  }
+}

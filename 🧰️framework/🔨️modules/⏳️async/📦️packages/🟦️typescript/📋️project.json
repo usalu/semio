@@ -74,9 +74,15 @@
         "command": "bun ./📜️script.ts twin",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
-      "description": "Checks live event-loop deadlines and measures chained scheduling on the current host."
+      "description": "Checks live event-loop deadlines and measures chained scheduling on the current host.",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
     },
     "test-api-contract": {
       "executor": "repo:script",

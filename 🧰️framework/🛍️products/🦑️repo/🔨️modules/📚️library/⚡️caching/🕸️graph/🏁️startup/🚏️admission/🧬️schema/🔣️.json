@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-daemon-admission/v1",
+  "title": "Nx daemon admission",
+  "description": "Bounded Nx daemons for many concurrent sessions in one checkout. Finite (non-watch) daemons are capped by a memory share of the host and by an authored maximum, watch daemons by their own maximum; a namespace that already has a live daemon is always reused; a daemon holds one numbered slot lease for its whole life, so the cap is enforced by the daemons themselves; finite daemons shut down after an idle period.",
+  "definitions": {
+    "Policy": {
+      "const": {"version": 1, "finite": 2, "watch": 6, "maximumSlots": 16, "idleMilliseconds": 600000, "checkMilliseconds": 30000, "megabytesPerDaemon": 2048, "memoryShareDenominator": 4}
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "reason"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "reason": {"enum": ["explicit", "reuse", "admitted", "saturated", "disabled", "refused"]}
+      }
+    }
+  }
+}

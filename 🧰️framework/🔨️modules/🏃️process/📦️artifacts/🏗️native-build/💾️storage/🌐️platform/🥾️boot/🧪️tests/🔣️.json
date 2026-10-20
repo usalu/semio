@@ -1,0 +1,315 @@
+[
+  {
+    "name": "same boot stable ancestry",
+    "observation": {
+      "published": [
+        "81",
+        "22",
+        "2"
+      ],
+      "current": [
+        "81",
+        "22",
+        "2"
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "name": "host restart retains stable ancestry",
+    "observation": {
+      "published": [
+        "422334220",
+        "198",
+        "2"
+      ],
+      "current": [
+        "422334220",
+        "198",
+        "2"
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "name": "parent image remount retains inode chain",
+    "observation": {
+      "published": [
+        "47",
+        "3",
+        "2"
+      ],
+      "current": [
+        "47",
+        "3",
+        "2"
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "name": "exact twenty digit inode identity",
+    "observation": {
+      "published": [
+        "18446744073709551615",
+        "2"
+      ],
+      "current": [
+        "18446744073709551615",
+        "2"
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "name": "different ancestor refuses",
+    "observation": {
+      "published": [
+        "81",
+        "22",
+        "2"
+      ],
+      "current": [
+        "82",
+        "22",
+        "2"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "reordered chain refuses",
+    "observation": {
+      "published": [
+        "81",
+        "22",
+        "2"
+      ],
+      "current": [
+        "22",
+        "81",
+        "2"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "different chain length refuses",
+    "observation": {
+      "published": [
+        "81",
+        "22",
+        "2"
+      ],
+      "current": [
+        "81",
+        "22"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "missing publication refuses",
+    "observation": {
+      "current": [
+        "2"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "null ancestry refuses",
+    "observation": {
+      "published": null,
+      "current": [
+        "2"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "empty chain refuses",
+    "observation": {
+      "published": [],
+      "current": []
+    },
+    "accepted": false
+  },
+  {
+    "name": "noncanonical inode refuses",
+    "observation": {
+      "published": [
+        "02"
+      ],
+      "current": [
+        "02"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "oversized inode refuses",
+    "observation": {
+      "published": [
+        "111111111111111111111"
+      ],
+      "current": [
+        "111111111111111111111"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "too many ancestors refuses",
+    "observation": {
+      "published": [
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ],
+      "current": [
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "name": "foreign authority refuses",
+    "observation": {
+      "published": [
+        "2"
+      ],
+      "current": [
+        "2"
+      ],
+      "write": true
+    },
+    "accepted": false
+  }
+]

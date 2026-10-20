@@ -34,32 +34,50 @@
     }
   },
   "workspaceFolder": "/workspaces/semio",
-  "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache", "/workspaces/semio/.cache"],
-  "postCreateCommand": ["bun", "repo", "run", "workspace:setup"],
-  "postStartCommand": ["repo", "run", "workspace:setup-devcontainer-start"],
-  "postAttachCommand": ["repo", "run", "workspace:setup-devcontainer-attach"],
+  "onCreateCommand": [
+    "sudo",
+    "chown",
+    "vscode:vscode",
+    "/workspaces/semio/node_modules",
+    "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
+    "/workspaces/semio/.cache"
+  ],
+  "postCreateCommand": [
+    "bash",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "setup"
+  ],
+  "postStartCommand": [
+    "repo",
+    "run",
+    "workspace:setup-devcontainer-start"
+  ],
+  "postAttachCommand": [
+    "repo",
+    "run",
+    "workspace:setup-devcontainer-attach"
+  ],
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
     "storage": "128gb"
   },
-  "forwardPorts": [8787, 6070, 6072, 6073, 6066, 6067, 6068, 6010, 6274, 6277],
+  "forwardPorts": [
+    8787,
+    6070,
+    6072,
+    6073,
+    6066,
+    6067,
+    6068,
+    6010,
+    6274,
+    6277
+  ],
   "portsAttributes": {
-    "8787": {
-      "label": "os-hub",
+    "6010": {
+      "label": "Storybook",
       "onAutoForward": "notify"
-    },
-    "6070": {
-      "label": "s React",
-      "onAutoForward": "notify"
-    },
-    "6072": {
-      "label": "s React user 1",
-      "onAutoForward": "silent"
-    },
-    "6073": {
-      "label": "s React user 2",
-      "onAutoForward": "silent"
     },
     "6066": {
       "label": "s wgpu",
@@ -73,9 +91,17 @@
       "label": "s wgpu user 2",
       "onAutoForward": "silent"
     },
-    "6010": {
-      "label": "Storybook",
+    "6070": {
+      "label": "s React",
       "onAutoForward": "notify"
+    },
+    "6072": {
+      "label": "s React user 1",
+      "onAutoForward": "silent"
+    },
+    "6073": {
+      "label": "s React user 2",
+      "onAutoForward": "silent"
     },
     "6274": {
       "label": "MCP Inspector",
@@ -84,6 +110,10 @@
     "6277": {
       "label": "MCP Inspector Proxy",
       "onAutoForward": "silent"
+    },
+    "8787": {
+      "label": "os-hub",
+      "onAutoForward": "notify"
     }
   },
   "mounts": [
@@ -92,9 +122,6 @@
     "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
     "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
-    "source=${localWorkspaceFolderBasename}-gitkraken-desktop,target=/home/vscode/.gitkraken,type=volume",
-    "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
-    "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
     "source=${localWorkspaceFolderBasename}-f3d,target=/home/vscode/.config/F3D,type=volume",
     "source=semio-cache-${devcontainerId},target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume",
     "source=semio-native-cache-${devcontainerId},target=${containerWorkspaceFolder}/.cache,type=volume"
@@ -104,7 +131,6 @@
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
-    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
     "LC_CTYPE": "en_US.UTF-8",

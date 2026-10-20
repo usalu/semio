@@ -12,7 +12,13 @@
     "cache",
     "preflight",
     "show",
-    "graph"
+    "graph",
+    "inputs",
+    "incremental",
+    "concurrency",
+    "capacity",
+    "leases",
+    "remote-execution"
   ],
   "dashboardArguments": [
     "run",
@@ -174,6 +180,78 @@
       "kind": "build",
       "arguments": [
         "graph",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "inputs",
+      "argv": [
+        "inputs",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "inputs",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "incremental",
+      "argv": [
+        "incremental",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "incremental",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "concurrency",
+      "argv": [
+        "concurrency",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "concurrency",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "capacity",
+      "argv": [
+        "capacity",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "capacity",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "leases",
+      "argv": [
+        "leases",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "leases",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "remote-execution",
+      "argv": [
+        "remote-execution",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "remote-execution",
         "--opaque=value"
       ]
     },

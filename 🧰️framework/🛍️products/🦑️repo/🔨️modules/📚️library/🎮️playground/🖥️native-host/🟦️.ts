@@ -1,5 +1,6 @@
 import {lstatSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import {parseStoreReceiptV1,storeReceiptOutputV1} from "../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { admitPlaygroundNativeHostV1 as admit, parsePlaygroundNativeHostV1 as parse, nativeHostSourceFactsV1 as facts,nativeHostArtifactPathV1 as artifact, declaredPlaygroundHostInputPathsV1 as inputs,nativeHostScriptAdmissionV1 } from "./🟨️.mjs";
 
 import type { PlaygroundNativeHostV1, NativeHostSourceViewV1 } from "./🟨️.mjs";
@@ -26,8 +27,8 @@ export function nativeHostFilesystemViewV1(repoRoot:string):NativeHostSourceView
   return nativeHostTextSourceViewV1({kind:(path)=>{try {const stat=lstatSync(resolve(repoRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return null;throw error;}},readText:(path)=>new TextDecoder("utf-8",{fatal:true}).decode(readFileSync(resolve(repoRoot,path)))});
 }
 
-/** 🚀 Selects the declared producer artifact from its actual project publication contract. */
+/** 🚀 Selects the declared producer artifact through the store receipt its last build recorded; a producer that was not built has no receipt and is refused. */
 export function playgroundNativeHostArtifactV1(repoRoot:string,value:unknown,profile:"prototype"|"release",platform:NodeJS.Platform=process.platform):string|undefined {
   const view=nativeHostFilesystemViewV1(repoRoot),host=admitPlaygroundNativeHostV1(value,view);
-  return host?resolve(repoRoot,artifact(host,profile,facts(host.cratePath,view),platform)):undefined;
+  return host?resolve(repoRoot,artifact(host,profile,facts(host.cratePath,view),platform,parseStoreReceiptV1(view.readText(`${host.cratePath}/${storeReceiptOutputV1(host.target).slice("{projectRoot}/".length)}`)))):undefined;
 }

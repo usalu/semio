@@ -88,7 +88,6 @@ function Refresh-CurrentProcessPath {
     $extraPaths = @(
         (Join-HomePath @(".cargo", "bin")),
         (Join-HomePath @(".local", "bin")),
-        (Join-Path $env:LOCALAPPDATA "GitKrakenCLI"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links")
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
     $segments = @($machinePath, $userPath) + $extraPaths + @($env:Path)
@@ -424,52 +423,6 @@ function Write-WindowsReadinessFacts {
     Write-Step ("[readiness] LongPathsEnabled={0} core.longpaths={1} elevated={2} rootLength={3}" -f (Test-WindowsLongPathsEnabled), $gitLongPaths, (Test-ElevatedSession), $RepoRoot.Length)
 }
 
-function Configure-GitKrakenWorkspace {
-    param([string]$RepoRoot)
-
-    $gkPath = Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "GitKrakenCLI\gk.exe"), "gk.exe", "gk")
-    if (-not $gkPath) {
-        Write-Step "GitKraken CLI not on PATH yet; skipping workspace bootstrap."
-        return
-    }
-
-    & $gkPath auth status *> $null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Step "GitKraken CLI is not authenticated; skipping workspace bootstrap."
-        return
-    }
-
-    $workspaceName = $env:SEMIO_GITKRAKEN_WORKSPACE_NAME
-    $repos = [System.Collections.Generic.List[string]]::new()
-    $repos.Add($RepoRoot)
-
-    $gitmodulesPath = Join-Path $RepoRoot ".gitmodules"
-    if (Test-Path -LiteralPath $gitmodulesPath) {
-        $submodulePaths = & git config -f $gitmodulesPath --get-regexp '^submodule\..*\.path$' 2>$null
-        foreach ($line in $submodulePaths) {
-            $parts = $line -split "\s+", 2
-            if ($parts.Count -eq 2 -and $parts[1]) {
-                $repos.Add((Join-Path $RepoRoot $parts[1]))
-            }
-        }
-    }
-
-    $repoCsv = ($repos | Select-Object -Unique) -join ","
-    $infoOutput = & $gkPath ws info $workspaceName 2>$null | Out-String
-    if ($LASTEXITCODE -eq 0 -and $infoOutput -and -not ($infoOutput -match "no workspace with name")) {
-        $missing = @($repos | Where-Object { $infoOutput -notmatch [Regex]::Escape($_) })
-        if ($missing.Count -gt 0) {
-            & $gkPath ws update $workspaceName --add-repos (($missing | Select-Object -Unique) -join ",") | Out-Null
-            & $gkPath ws refresh $workspaceName | Out-Null
-        }
-    } else {
-        & $gkPath ws create $workspaceName --add-repos $repoCsv | Out-Null
-        & $gkPath ws refresh $workspaceName | Out-Null
-    }
-    & $gkPath ws set $workspaceName | Out-Null
-    Write-Step "GitKraken workspace ready: $workspaceName."
-}
-
 function Stop-RepoPythonProcesses {
     param([string]$RepoRoot, [switch]$Consent)
 
@@ -536,15 +489,12 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
     $msvcCppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
     Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Microsoft C++ Build Tools" -AdditionalArguments $msvcCppOverride
-    Sync-WingetPackage -Id "Axosoft.GitKraken" -Label "GitKraken Desktop"
-    Sync-WingetPackage -Id "GitKraken.cli" -Label "GitKraken CLI"
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
     $pinnedPaths = Install-PinnedToolchain -RepoRoot $repoRoot
     Set-UserPathPriority -PreferredEntries (@($pinnedPaths) + @(
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Launcher"),
-        (Join-Path $env:LOCALAPPDATA "GitKrakenCLI"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"),
         (Join-HomePath @(".local", "bin")),
         (Join-HomePath @(".cargo", "bin"))
@@ -560,9 +510,6 @@ if (-not $SkipMachineInstall) {
     (Join-HomePath @(".codex")),
     (Join-HomePath @(".config", "gh")),
     (Join-HomePath @(".config", "openai")),
-    (Join-HomePath @(".gitkraken")),
-    (Join-HomePath @(".local", "share", "GitKrakenCLI")),
-    (Join-HomePath @(".local", "share", "gk")),
     (Join-HomePath @(".cargo")),
     (Join-HomePath @(".config", "F3D"))
 ) | ForEach-Object { Ensure-Directory -Path $_ }
@@ -574,7 +521,6 @@ Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".�
 Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
-Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
 #endregion 🗂️UserState
 
 #region 🌐️GlobalCliInstall
@@ -606,7 +552,6 @@ if (-not $SkipRepoBootstrap) {
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("--help") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "workspace:setup") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot
-    Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱️RepoBootstrap
 

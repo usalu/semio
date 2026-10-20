@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "complete",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "missing-coordinate",
+      "fault": "missing",
+      "accepted": false
+    },
+    {
+      "id": "invalid-coordinate",
+      "fault": "not-function",
+      "accepted": false
+    },
+    {
+      "id": "accessor-coordinate",
+      "fault": "accessor",
+      "accepted": false
+    }
+  ]
+}

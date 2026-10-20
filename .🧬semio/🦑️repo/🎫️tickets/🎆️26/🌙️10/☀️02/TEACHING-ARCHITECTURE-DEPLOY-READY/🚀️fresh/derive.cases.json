@@ -1,0 +1,254 @@
+[
+  {
+    "id": "create-actual-prefix",
+    "stage": "create",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "create-missing-terminal",
+    "stage": "create",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "source-actual-prefix",
+    "stage": "source",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "source-missing-terminal",
+    "stage": "source",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "gitCapture-actual-prefix",
+    "stage": "gitCapture",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "gitCapture-missing-terminal",
+    "stage": "gitCapture",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "gitArchive-actual-prefix",
+    "stage": "gitArchive",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "gitArchive-missing-terminal",
+    "stage": "gitArchive",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "gitTransfer-actual-prefix",
+    "stage": "gitTransfer",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "gitTransfer-missing-terminal",
+    "stage": "gitTransfer",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "provision-actual-prefix",
+    "stage": "provision",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "provision-missing-terminal",
+    "stage": "provision",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "controller-actual-prefix",
+    "stage": "controller",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "controller-missing-terminal",
+    "stage": "controller",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "facts-actual-prefix",
+    "stage": "facts",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "facts-missing-terminal",
+    "stage": "facts",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "export-actual-prefix",
+    "stage": "export",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "export-missing-terminal",
+    "stage": "export",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "final-actual-prefix",
+    "stage": "final",
+    "change": "none",
+    "accepted": true
+  },
+  {
+    "id": "final-missing-terminal",
+    "stage": "final",
+    "change": "missing-terminal",
+    "accepted": false
+  },
+  {
+    "id": "create-future-policy-field",
+    "stage": "create",
+    "change": "future-policy-field",
+    "accepted": false
+  },
+  {
+    "id": "source-creation-id",
+    "stage": "source",
+    "change": "creation-id",
+    "accepted": false
+  },
+  {
+    "id": "source-creation-compact-binding",
+    "stage": "source",
+    "change": "creation-compact-binding",
+    "accepted": false
+  },
+  {
+    "id": "gitCapture-source-wrapper-digest",
+    "stage": "gitCapture",
+    "change": "source-wrapper-digest",
+    "accepted": false
+  },
+  {
+    "id": "gitArchive-git-head",
+    "stage": "gitArchive",
+    "change": "git-head",
+    "accepted": false
+  },
+  {
+    "id": "gitTransfer-archive-digest",
+    "stage": "gitTransfer",
+    "change": "archive-digest",
+    "accepted": false
+  },
+  {
+    "id": "provision-wrapper-for-inner",
+    "stage": "provision",
+    "change": "wrapper-for-inner",
+    "accepted": false
+  },
+  {
+    "id": "controller-native-help",
+    "stage": "controller",
+    "change": "native-help",
+    "accepted": false
+  },
+  {
+    "id": "facts-step-argv",
+    "stage": "facts",
+    "change": "step-argv",
+    "accepted": false
+  },
+  {
+    "id": "export-facts-source",
+    "stage": "export",
+    "change": "facts-source",
+    "accepted": false
+  },
+  {
+    "id": "final-image-revision",
+    "stage": "final",
+    "change": "image-revision",
+    "accepted": false
+  },
+  {
+    "id": "final-export-source",
+    "stage": "final",
+    "change": "export-source",
+    "accepted": false
+  },
+  {
+    "id": "final-dirty-revision",
+    "stage": "final",
+    "change": "dirty-revision",
+    "accepted": true
+  },
+  {
+    "id": "final-result-accepted",
+    "stage": "final",
+    "change": "final-result",
+    "accepted": true
+  },
+  {
+    "id": "final-result-missing-check",
+    "stage": "final",
+    "change": "final-missing-check",
+    "accepted": false
+  },
+  {
+    "id": "final-result-refused",
+    "stage": "final",
+    "change": "final-refused",
+    "accepted": false
+  },
+  {
+    "id": "source-authored-pin",
+    "stage": "gitCapture",
+    "change": "authored-source",
+    "accepted": false
+  },
+  {
+    "id": "forged-future-file",
+    "stage": "create",
+    "change": "future-file",
+    "accepted": false
+  },
+  {
+    "id": "actual-git-observed-identities",
+    "stage": "gitArchive",
+    "change": "git-identities",
+    "accepted": true
+  },
+  {
+    "id": "critical93-missing-current-input",
+    "stage": "create",
+    "change": "critical-missing",
+    "accepted": false
+  },
+  {
+    "id": "critical93-extra-input",
+    "stage": "create",
+    "change": "critical-extra",
+    "accepted": false
+  },
+  {
+    "id": "critical93-reject-old-roster",
+    "stage": "create",
+    "change": "critical-old-roster",
+    "accepted": false
+  }
+]

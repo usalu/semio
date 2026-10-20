@@ -1,9 +1,9 @@
 //! 📋️ Composite immutable projection fields retain original child candidates through paid handoff and cancellation.
-use super::{SnapshotProjection,SnapshotProjectionCursor};
+use super::{SnapshotProjection,SnapshotProjectionCursor,ProjectionOutput};
 use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits,admit_retained_clone_progress,admit_retained_clone_close}};
-use std::mem::{size_of,ManuallyDrop};
+use std::mem::{size_of,ManuallyDrop,MaybeUninit};
 /// 🧺️ Every lazy original child, returned value and retirement cursor keeps explicit custody.
-pub struct ProjectionField<T:SnapshotProjection>{cursor:ManuallyDrop<Option<T::Projection>>,value:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,ready:bool,closing:bool}
+pub struct ProjectionField<T:SnapshotProjection>{cursor:ManuallyDrop<Option<T::Projection>>,value:ManuallyDrop<Option<T::Output>>,retirement:RetainedCloneClose,ready:bool,closing:bool}
 impl<T:SnapshotProjection> Default for ProjectionField<T>{fn default()->Self{Self{cursor:ManuallyDrop::new(None),value:ManuallyDrop::new(None),retirement:Default::default(),ready:false,closing:false}}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable field projection is closing, moved or missing its original child")}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"immutable field nested depth overflow"))?;Ok(demand)}
@@ -28,13 +28,13 @@ impl<T:SnapshotProjection> ProjectionField<T>{
   if cursor.terminal_is_empty(){*self.cursor=None;self.ready=true;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
   let step=cursor.close_step(child)?;Ok(RetainedCloneStep::Progress(admit_retained_clone_close(child,step,cursor.terminal_is_empty(),"immutable original field projection close")?.progress()))
  }
- pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}Ok(RetirementDemand{copy_bytes:size_of::<T>()*2,depth:1,..Default::default()})}
- pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(T,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let value=self.value.take().ok_or_else(invalid)?;Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
+ pub fn place_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}Ok(<T::Output as ProjectionOutput<T>>::placement_demand())}
+ pub fn place(&mut self,target:&mut MaybeUninit<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let d=self.place_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let value=self.value.take().ok_or_else(invalid)?;match value.place(target,grant){Ok(progress)=>Ok(Some(progress)),Err((error,value))=>{*self.value=Some(value);Err(error)}}}
  pub fn begin_close(&mut self){self.closing=true;if let Some(cursor)=self.cursor.as_mut(){cursor.begin_close();}}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
   if let Some(cursor)=self.cursor.as_ref(){return if cursor.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<T::Projection>(),depth:1,..Default::default()})}else{nested(cursor.close_demands(body)?)};}
-  self.retirement.next_owner_demands::<T>(self.value.is_some(),&None,body)
+  self.retirement.next_owner_demands::<T::Output>(self.value.is_some(),&None,body)
  }
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}

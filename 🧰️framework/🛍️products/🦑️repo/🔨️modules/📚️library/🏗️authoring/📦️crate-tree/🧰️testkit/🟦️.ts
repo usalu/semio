@@ -1,4 +1,4 @@
-import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { useLeafNames } from "../🌳️module-tree/🟦️.ts";
 
 /** 🧰️ A feature of a carved crate with the entries it enables. */

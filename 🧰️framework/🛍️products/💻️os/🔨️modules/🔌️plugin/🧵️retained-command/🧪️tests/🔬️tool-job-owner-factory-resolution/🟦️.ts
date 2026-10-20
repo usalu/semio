@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobProofs, toolJobStaticRows, toolJobDispositions, toolJobProofCatalogFailures } from "@semio-tech/repo-lib/laws";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobProofs, toolJobStaticRows, toolJobDispositions, toolJobProofCatalogFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 🧪️ Runs strict language-neutral cross-file factory laws and hostile module substitutions. */
 export function toolJobOwnerFactoryResolutionSelfTests(): number {

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumRows",
+    "fixedTurns",
+    "turnsPerRow",
+    "maximumIdleTurns",
+    "cases",
+    "rowLimits",
+    "selectedClose"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumRows": {
+      "const": 65537
+    },
+    "fixedTurns": {
+      "const": 1024
+    },
+    "turnsPerRow": {
+      "const": 256
+    },
+    "maximumIdleTurns": {
+      "const": 16
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rows",
+          "turns",
+          "idle",
+          "accepted"
+        ],
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65537
+          },
+          "turns": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "idle": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "rowLimits": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rows",
+          "maximum"
+        ],
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maximum": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "selectedClose": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "copyBytes",
+          "capacityBytes",
+          "releaseBytes",
+          "depth"
+        ],
+        "properties": {
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "capacityBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "releaseBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "version": 1,
+  "tool": "bazel",
+  "thresholds": {
+    "minFreeDiskGbCold": 60,
+    "minFreeDiskGbWarm": 15,
+    "abortFreeDiskGb": 20,
+    "minAvailableMemoryGb": 6,
+    "loadWarnPerCore": 2,
+    "loadFailPerCore": 10,
+    "heartbeatSeconds": 60,
+    "snapshotSeconds": 1800,
+    "snapshotTimeoutSeconds": 900,
+    "staggerSeconds": 20,
+    "terminateGraceSeconds": 30,
+    "deadlineHours": 14,
+    "cliProbeSeconds": 120
+  },
+  "playwright": {
+    "expectedChromium": "1248",
+    "expectedFfmpeg": "1013"
+  },
+  "tectonic": {
+    "version": "0.16.9"
+  },
+  "phases": [
+    "cold",
+    "warm",
+    "e2e",
+    "probe"
+  ],
+  "products": {
+    "play": {
+      "label": "Semio Tech Play",
+      "package": "@semio-tech/semio-tech-play",
+      "order": 1,
+      "cargoLane": "eplay",
+      "ports": [
+        6033
+      ],
+      "needs": [
+        "playwright",
+        "bazel"
+      ],
+      "appliedMarkers": [
+        {
+          "id": "play-bzl E1: activate-prototype cached",
+          "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
+          "target": "activate-prototype",
+          "cache": true
+        },
+        {
+          "id": "pg-chain: component cache test",
+          "exists": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧩️component-cache"
+        }
+      ],
+      "steps": {
+        "cold": [
+          {
+            "id": "activate",
+            "group": "activate",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@semio-tech/semio-tech-play:activate-prototype"
+            ],
+            "timeoutSeconds": 21600,
+            "warm": {
+              "mode": "allow",
+              "allow": 2,
+              "maxSeconds": 900
+            }
+          }
+        ],
+        "warm": "cold",
+        "e2e": [
+          {
+            "id": "test-e2e",
+            "group": "e2e",
+            "kind": "ticket-script",
+            "script": "e2e-tools/run-e2e.sh",
+            "args": [
+              "play",
+              "--tool=bazel",
+              "--skip-activate"
+            ],
+            "needs": [
+              "activate"
+            ],
+            "ports": [
+              6033
+            ],
+            "timeoutSeconds": 7200
+          }
+        ],
+        "probe": [
+          {
+            "id": "probe-comment",
+            "group": "probe",
+            "kind": "ticket-script",
+            "script": "play-bzl-tools/cold-run.sh",
+            "args": [
+              "probe",
+              "comment"
+            ],
+            "needs": [
+              "activate"
+            ],
+            "env": {
+              "PLAY_BZL_GO": "1"
+            },
+            "timeoutSeconds": 10800
+          }
+        ]
+      }
+    },
+    "demo": {
+      "label": "Mit Bestand Demonstrator",
+      "package": "@semio-tech/mit-bestand-demonstrator",
+      "order": 2,
+      "cargoLane": "edemo",
+      "ports": [
+        6029
+      ],
+      "needs": [
+        "playwright",
+        "bazel",
+        "tectonic"
+      ],
+      "appliedMarkers": [
+        {
+          "id": "demo-bzl: activate-prototype cached",
+          "manifest": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+          "target": "activate-prototype",
+          "cache": true
+        }
+      ],
+      "steps": {
+        "cold": [
+          {
+            "id": "activate",
+            "group": "activate",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@semio-tech/mit-bestand-demonstrator:activate-prototype"
+            ],
+            "timeoutSeconds": 14400,
+            "warm": {
+              "mode": "allow",
+              "allow": 2,
+              "maxSeconds": 900
+            }
+          },
+          {
+            "id": "report-compact",
+            "group": "print",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@semio-tech/mit-bestand-bericht:build-kompaktbericht"
+            ],
+            "timeoutSeconds": 5400,
+            "warm": {
+              "mode": "allow",
+              "allow": 3,
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "report-all",
+            "group": "print",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@semio-tech/mit-bestand-bericht:build"
+            ],
+            "timeoutSeconds": 7200,
+            "warm": {
+              "mode": "allow",
+              "allow": 3,
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "deck",
+            "group": "print",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@semio-tech/mit-bestand-praesentation-projektetage:build"
+            ],
+            "timeoutSeconds": 5400,
+            "warm": {
+              "mode": "allow",
+              "allow": 3,
+              "maxSeconds": 600
+            }
+          }
+        ],
+        "warm": "cold",
+        "e2e": [
+          {
+            "id": "test-e2e",
+            "group": "e2e",
+            "kind": "ticket-script",
+            "script": "e2e-tools/run-e2e.sh",
+            "args": [
+              "demonstrator",
+              "--tool=bazel",
+              "--skip-activate"
+            ],
+            "needs": [
+              "activate"
+            ],
+            "ports": [
+              6029
+            ],
+            "timeoutSeconds": 5400
+          }
+        ],
+        "probe": [
+          {
+            "id": "probe-comment",
+            "group": "probe",
+            "kind": "ticket-script",
+            "script": "demo-bzl-tools/cold-run.sh",
+            "args": [
+              "probe",
+              "comment"
+            ],
+            "needs": [
+              "activate"
+            ],
+            "env": {
+              "DEMO_BZL_GO": "1"
+            },
+            "timeoutSeconds": 7200
+          },
+          {
+            "id": "probe-brand",
+            "group": "probe",
+            "kind": "ticket-script",
+            "script": "demo-bzl-tools/cold-run.sh",
+            "args": [
+              "probe",
+              "brand"
+            ],
+            "needs": [
+              "activate"
+            ],
+            "env": {
+              "DEMO_BZL_GO": "1"
+            },
+            "timeoutSeconds": 3600
+          }
+        ]
+      }
+    },
+    "course": {
+      "label": "Architecture Course",
+      "package": "@teaching/architecture-course",
+      "order": 3,
+      "cargoLane": "ecourse",
+      "ports": [
+        6061,
+        6063,
+        8791,
+        8793
+      ],
+      "needs": [
+        "playwright",
+        "bazel",
+        "node"
+      ],
+      "appliedMarkers": [
+        {
+          "id": "x-site: course build cached",
+          "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+          "target": "build",
+          "cache": true
+        }
+      ],
+      "steps": {
+        "cold": [
+          {
+            "id": "proctor-build",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/proctor:build",
+              "--configuration={courseMode}"
+            ],
+            "timeoutSeconds": 7200,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "typecheck",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/architecture-course:typecheck"
+            ],
+            "timeoutSeconds": 3600,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "test",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/architecture-course:test",
+              "--",
+              "quick"
+            ],
+            "timeoutSeconds": 5400,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "build",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/architecture-course:build",
+              "--configuration={courseMode}"
+            ],
+            "timeoutSeconds": 5400,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "check",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/architecture-course:check"
+            ],
+            "timeoutSeconds": 3600,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          },
+          {
+            "id": "proctor-test",
+            "group": "core",
+            "kind": "repo",
+            "args": [
+              "run",
+              "@teaching/proctor:test"
+            ],
+            "timeoutSeconds": 5400,
+            "warm": {
+              "mode": "zero",
+              "maxSeconds": 600
+            }
+          }
+        ],
+        "warm": "cold",
+        "e2e": [
+          {
+            "id": "test-e2e",
+            "group": "e2e",
+            "kind": "ticket-script",
+            "script": "e2e-tools/run-e2e.sh",
+            "args": [
+              "course",
+              "--tool=bazel",
+              "--topology={courseTopology}"
+            ],
+            "needs": [
+              "core"
+            ],
+            "ports": [
+              6061
+            ],
+            "timeoutSeconds": 7200
+          }
+        ],
+        "probe": []
+      }
+    }
+  }
+}

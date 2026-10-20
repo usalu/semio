@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 /** 🖥️ `@semio-tech/framework` — element ids, presence, dock/pane persistence, and inspector helpers. */
 import type { IconName } from "@semio-tech/assets";
-import { type ActionDescriptor, type NamedLayout, type UiPresence, type UiStatus, type Component, type LayoutSpec, type StyleSpec, type AccessibilitySpec, type BuiltNode, UI_INSPECTOR_MIXED_PLACEHOLDER } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
+import { type ActionDescriptor, type NamedLayout, type UiPresence, type UiStatus, type Component, type LayoutSpec, type StyleSpec, type AccessibilitySpec, type BuiltNode, UI_INSPECTOR_MIXED_PLACEHOLDER } from "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { WindowLayout, WindowLayoutWindowNode } from "@semio-tech/framework-onboarding/window-layout";
 import type { DockSkeleton, PersistedAnchor } from "@semio-tech/ui/modules/dock-skeleton";
 import type { StoragePort } from "@semio-tech/ui/modules/storage-port";

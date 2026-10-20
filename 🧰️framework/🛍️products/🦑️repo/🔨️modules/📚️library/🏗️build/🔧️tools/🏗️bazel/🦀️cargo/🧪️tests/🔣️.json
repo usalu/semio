@@ -28,6 +28,36 @@
    }
   },
   {
+   "name": "component driver",
+   "kind": "orchestration",
+   "command": "bun \"🧰️x/🏗️build/🧩️driver-stages/📜️script.ts\" component --manifest \"🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml\"",
+   "expected": { "subcommand": "build", "manifest": "🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml" }
+  },
+  {
+   "name": "component driver unquoted",
+   "kind": "orchestration",
+   "command": "bun a/script.ts component --manifest p/Cargo.toml",
+   "expected": { "subcommand": "build", "manifest": "p/Cargo.toml" }
+  },
+  {
+   "name": "component command of a native task is no cargo task",
+   "kind": "native",
+   "command": "bun \"a/script.ts\" component --manifest \"p/Cargo.toml\"",
+   "expected": null
+  },
+  {
+   "name": "native cargo command of an orchestration is no cargo task",
+   "kind": "orchestration",
+   "command": "bun \"a/script.ts\" native cargo build --manifest \"p/Cargo.toml\"",
+   "expected": null
+  },
+  {
+   "name": "component command with a flag is no cargo task",
+   "kind": "orchestration",
+   "command": "bun \"a/script.ts\" component --manifest \"p/Cargo.toml\" --release",
+   "expected": null
+  },
+  {
    "name": "source kind is no cargo task",
    "kind": "source",
    "command": "bun \"a/script.ts\" native cargo check --manifest \"p/Cargo.toml\"",

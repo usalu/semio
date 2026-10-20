@@ -20,42 +20,26 @@
     {
       "arch": "x64",
       "debian": "amd64",
-      "f3d": "x86_64",
-      "gk": "amd64"
+      "f3d": "x86_64"
     },
     {
       "arch": "arm64",
       "debian": "arm64",
-      "f3d": "arm64",
-      "gk": "arm64"
+      "f3d": "arm64"
     },
     {
       "arch": "ia32",
       "debian": null,
-      "f3d": null,
-      "gk": "386"
+      "f3d": null
     },
     {
       "arch": "s390x",
       "debian": null,
-      "f3d": null,
-      "gk": null
+      "f3d": null
     }
   ],
   "release": {
     "assets": [
-      {
-        "name": "gk_3.1.40_darwin_arm64.zip",
-        "browser_download_url": "https://example.test/gk_darwin_arm64.zip"
-      },
-      {
-        "name": "gk_3.1.40_linux_amd64.zip",
-        "browser_download_url": "https://example.test/gk_linux_amd64.zip"
-      },
-      {
-        "name": "gk_3.1.40_linux_arm64.zip",
-        "browser_download_url": "https://example.test/gk_linux_arm64.zip"
-      },
       {
         "name": "F3D-3.5.0-Linux-x86_64.deb",
         "browser_download_url": "https://example.test/F3D-Linux-x86_64.deb"
@@ -64,38 +48,12 @@
   },
   "releaseCases": [
     {
-      "suffix": "linux_amd64.zip",
-      "url": "https://example.test/gk_linux_amd64.zip"
-    },
-    {
-      "suffix": "linux_arm64.zip",
-      "url": "https://example.test/gk_linux_arm64.zip"
-    },
-    {
       "suffix": "Linux-x86_64.deb",
       "url": "https://example.test/F3D-Linux-x86_64.deb"
     },
     {
-      "suffix": "linux_riscv64.zip",
+      "suffix": "Linux-arm64.deb",
       "url": null
-    }
-  ],
-  "gitKrakenInfo": [
-    {
-      "info": "",
-      "state": "absent"
-    },
-    {
-      "info": "you do not have any workspaces",
-      "state": "absent"
-    },
-    {
-      "info": "Error: no workspace with name semio",
-      "state": "absent"
-    },
-    {
-      "info": "Workspace: semio\n  /workspaces/semio\n",
-      "state": "present"
     }
   ],
   "safeDirectories": {
@@ -152,49 +110,6 @@
       "expected": {}
     }
   ],
-  "gitKrakenWorkspace": {
-    "submodule": "metabolism",
-    "cases": [
-      {
-        "id": "absent-creates-from-root-and-submodules",
-        "name": "Compose Test Workspace",
-        "authenticated": true,
-        "info": "",
-        "expected": [
-          "ws create Compose Test Workspace --add-repos {workspace},{workspace}/metabolism",
-          "ws refresh Compose Test Workspace",
-          "ws set Compose Test Workspace"
-        ]
-      },
-      {
-        "id": "present-adds-only-missing-repos",
-        "name": "Compose Existing Workspace",
-        "authenticated": true,
-        "info": "NAME | DESCRIPTION | TYPE | # OF REPOS | SHARED WITH | ACTIVE\n{workspace}\n",
-        "expected": [
-          "ws update Compose Existing Workspace --add-repos {workspace}/metabolism",
-          "ws refresh Compose Existing Workspace",
-          "ws set Compose Existing Workspace"
-        ]
-      },
-      {
-        "id": "present-complete-only-sets-default",
-        "name": "Compose Existing Workspace",
-        "authenticated": true,
-        "info": "{workspace}\n{workspace}/metabolism\n",
-        "expected": [
-          "ws set Compose Existing Workspace"
-        ]
-      },
-      {
-        "id": "unauthenticated-skips",
-        "name": "Compose Test Workspace",
-        "authenticated": false,
-        "info": "",
-        "expected": []
-      }
-    ]
-  },
   "forbiddenCommands": [
     "git reset",
     "git clean",
@@ -221,7 +136,9 @@
       "code-insiders",
       "cursor",
       "windsurf",
-      "antigravity"
+      "antigravity",
+      "gitkraken",
+      "gk"
     ],
     "forbiddenArgs": [
       "--install-extension",
@@ -237,8 +154,26 @@
         ".codeium",
         "Join-HomePath @(\".config\", \"cursor\")",
         "Join-HomePath @(\".config\", \"antigravity\")",
-        "code --wait"
+        "code --wait",
+        "GitKraken",
+        "SEMIO_GITKRAKEN",
+        "gk.exe"
       ]
-    }
+    },
+    "attachModes": [
+      {
+        "id": "ordinary-attach",
+        "skipTools": false
+      },
+      {
+        "id": "skip-optional-tools",
+        "skipTools": true
+      }
+    ],
+    "forbiddenState": [
+      ".gitkraken",
+      ".local/share/GitKrakenCLI",
+      ".local/share/gk"
+    ]
   }
 }

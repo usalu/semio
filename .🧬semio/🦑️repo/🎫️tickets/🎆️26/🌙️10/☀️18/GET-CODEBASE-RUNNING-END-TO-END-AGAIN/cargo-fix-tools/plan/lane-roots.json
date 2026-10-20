@@ -1,0 +1,274 @@
+{
+ "hubRoots": [
+  {
+   "name": "semio-hub-demonstrator-component",
+   "dir": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "demonstrator",
+    "aggregator",
+    "aussuchen",
+    "bearbeiten",
+    "generator",
+    "koordinator",
+    "verfolgen"
+   ]
+  },
+  {
+   "name": "semio-hub-imperative-component",
+   "dir": "🌎️hub/🧩️compositions/📜️imperative/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "imperative"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-image-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-png"
+   ]
+  },
+  {
+   "name": "semio-hub-lowpoly-component",
+   "dir": "🌎️hub/🧩️compositions/💠️lowpoly/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "lowpoly"
+   ]
+  },
+  {
+   "name": "semio-hub-remodel-component",
+   "dir": "🌎️hub/🧩️compositions/📸️remodel/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "remodel"
+   ]
+  },
+  {
+   "name": "semio-hub-draw-component",
+   "dir": "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "draw"
+   ]
+  },
+  {
+   "name": "semio-hub-raster-component",
+   "dir": "🌎️hub/🧩️compositions/🖨️raster/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "raster"
+   ]
+  },
+  {
+   "name": "semio-hub-layout-component",
+   "dir": "🌎️hub/🧩️compositions/📏️layout/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "layout"
+   ]
+  },
+  {
+   "name": "semio-hub-shooting-component",
+   "dir": "🌎️hub/🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "shooting"
+   ]
+  },
+  {
+   "name": "semio-hub-block-component",
+   "dir": "🌎️hub/🧩️compositions/🧱️block/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "block2d"
+   ]
+  },
+  {
+   "name": "semio-hub-wfc-component",
+   "dir": "🌎️hub/🧩️compositions/🀄️wfc/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "wfc2d"
+   ]
+  },
+  {
+   "name": "semio-hub-fem-component",
+   "dir": "🌎️hub/🧩️compositions/🏗️fem/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "fem2d",
+    "fem3d"
+   ]
+  },
+  {
+   "name": "semio-hub-energy-component",
+   "dir": "🌎️hub/🧩️compositions/🔋️energy/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "energy"
+   ]
+  },
+  {
+   "name": "semio-hub-architect-component",
+   "dir": "🌎️hub/🧩️compositions/🏛️architect/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "architect"
+   ]
+  },
+  {
+   "name": "semio-hub-norm-component",
+   "dir": "🌎️hub/🧩️compositions/📕️norm/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "din4108"
+   ]
+  },
+  {
+   "name": "semio-hub-note-component",
+   "dir": "🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "note"
+   ]
+  },
+  {
+   "name": "semio-hub-writer-component",
+   "dir": "🌎️hub/🧩️compositions/✒️writer/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "writer"
+   ]
+  },
+  {
+   "name": "semio-hub-forms-component",
+   "dir": "🌎️hub/🧩️compositions/📋️forms/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "forms"
+   ]
+  },
+  {
+   "name": "semio-hub-mathematical-component",
+   "dir": "🌎️hub/🧩️compositions/➗️mathematical/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "mathematical"
+   ]
+  },
+  {
+   "name": "semio-hub-reasoning-component",
+   "dir": "🌎️hub/🧩️compositions/💡️reasoning/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "reasoning-wires"
+   ]
+  },
+  {
+   "name": "semio-hub-dag-component",
+   "dir": "🌎️hub/🧩️compositions/🕸️dag/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "dag"
+   ]
+  },
+  {
+   "name": "semio-hub-trinity-component",
+   "dir": "🌎️hub/🧩️compositions/🔱️trinity/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "trinity-jack"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-media-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-mp4"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-cad-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-step"
+   ]
+  },
+  {
+   "name": "semio-hub-bim-component",
+   "dir": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "bim"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-bim-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-ifc-2x3"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-mesh-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-gltf"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-pdf-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-pdf-1-4-a"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-office-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-docx"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-semio-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-semio-brep"
+   ]
+  },
+  {
+   "name": "semio-hub-stdio-binary-component",
+   "dir": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "stdio-binary"
+   ]
+  },
+  {
+   "name": "semio-hub-animate-component",
+   "dir": "🌎️hub/🧩️compositions/🎞️animate/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "animate"
+   ]
+  },
+  {
+   "name": "semio-hub-sequence-component",
+   "dir": "🌎️hub/🧩️compositions/🎬️sequence/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "sequence"
+   ]
+  },
+  {
+   "name": "semio-hub-vcs-component",
+   "dir": "🌎️hub/🧩️compositions/🌿️vcs/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "vcs"
+   ]
+  },
+  {
+   "name": "semio-hub-space-component",
+   "dir": "🌎️hub/🧩️compositions/🪐️space/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "home"
+   ]
+  },
+  {
+   "name": "semio-hub-procedural-component",
+   "dir": "🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust",
+   "variants": [
+    "generation3d"
+   ]
+  }
+ ],
+ "extraRoots": [
+  "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+  "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+ ]
+}

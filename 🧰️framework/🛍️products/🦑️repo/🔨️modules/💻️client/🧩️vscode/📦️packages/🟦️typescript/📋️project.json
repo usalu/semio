@@ -55,33 +55,14 @@
       ]
     },
     "build": {
-      "executor": "repo:script",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
-      },
+      "executor": "repo:noop",
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
         }
       },
-      "cache": false,
-      "outputs": [
-        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        },
-        "generate-graphql-types"
+        "compile-extension"
       ]
     },
     "lint": {
@@ -106,7 +87,7 @@
         { "dependentTasksOutputFiles": "**/*" }
       ],
       "dependsOn": [
-        "build"
+        "compile-extension"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",

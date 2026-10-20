@@ -11,7 +11,8 @@
     "mode": {
       "enum": [
         "sync",
-        "lock"
+        "lock",
+        "ensure"
       ]
     },
     "selection": {

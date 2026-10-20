@@ -1,0 +1,25 @@
+/** 🎚 Reads the authored policy and renders its bilingual texts; the schema file is the single authority. */
+import schema from "../schema/schema.json" with {type:"json"};
+import {compileSchemaV1} from "./frames.mjs";
+
+/** 🎚 The policy constants of the schema. */
+export const POLICY_V1=Object.freeze(schema.definitions.Policy.const);
+/** 📜 The whole schema document. */
+export const SCHEMA_V1=schema;
+
+/** 🧪 Compiled validator of one definition. */
+export function validatorV1(name){return compileSchemaV1(schema,name);}
+
+const SUPPORTED=Object.freeze(["en","de"]);
+
+function fill(template,fields){return template.replace(/\{([A-Za-z]+)\}/gu,(_,key)=>String(fields[key]??"?"));}
+
+/** 🌐 Renders a message in each requested language that exists; returns undefined when none of them does. */
+export function renderTextV1(key,fields,languages){
+ const out={};
+ for(const language of languages)if(SUPPORTED.includes(language)){const template=POLICY_V1.messages[language][key];if(template===undefined)throw new Error("Unknown message key "+key);out[language]=fill(template,fields??{});}
+ return Object.keys(out).length?out:undefined;
+}
+
+/** 🌐 Renders a message in every supported language (refusals and notices that precede the language handshake). */
+export function renderBothV1(key,fields){return renderTextV1(key,fields,SUPPORTED);}

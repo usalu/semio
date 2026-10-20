@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "path": "a/x.ts",
+   "text": "import { spawnSync } from \"node:child_process\";\n// spawnSync(\"cargo\", [\"x\"]) in a comment\nconst BUN = \"bun\";\nspawnSync(\"git\", [\"status\"]);\nspawnSync(BUN, [\"repo\", \"run\", \"x\"]);\nawait runOwnedCommand(process.execPath, [\"test\", f], root, \"l\", 1);\nBun.spawn([\"cargo\", \"build\"]);\nBun.spawn({ cmd: [\"go\", \"test\"] });\nexecSync(\"nx run x && cargo check\");\nspawn(\"sh\", [\"-c\", \"uv sync\"]);\nconst s = `spawnSync(\"hdiutil\")`;\nawait $`docker ps`;\nspawn(unknownThing, []);\nconst re = /spawn\\(\"npm\"/;\n",
+   "expected": [
+    "4 spawn git",
+    "5 spawn repo",
+    "7 spawn cargo",
+    "8 spawn go",
+    "9 shell nx",
+    "9 shell cargo",
+    "10 shell uv",
+    "12 shell docker"
+   ]
+  },
+  {
+   "path": "a/x.rs",
+   "text": "fn main(){ Command::new(\"cargo\").arg(\"x\"); // Command::new(\"bun\")\n let x = \"Command::new(\\\"go\\\")\"; }",
+   "expected": [
+    "1 spawn cargo"
+   ]
+  },
+  {
+   "path": "a/x.go",
+   "text": "package x\nfunc f(){ exec.Command(\"gh\", \"repo\"); exec.CommandContext(ctx, \"git\", \"log\"); workspace.ExecCommand(\"go\", args, dir) }",
+   "expected": [
+    "2 spawn gh",
+    "2 spawn git"
+   ]
+  },
+  {
+   "path": "a/x.py",
+   "text": "import subprocess\nsubprocess.run([\"uv\", \"sync\"]); # subprocess.run([\"bun\"])\n\"\"\"subprocess.run([\"docker\"])\"\"\"\nsubprocess.run([\"python3\", \"-c\", \"x\"])",
+   "expected": [
+    "2 spawn uv",
+    "4 spawn python"
+   ]
+  },
+  {
+   "path": "a/x.sh",
+   "text": "#!/bin/sh\necho \"cargo build\"\n# bun test\nsudo apt-get install -y cmake\ncd x && bun install\nif ! command -v git >/dev/null; then echo; fi\ncargo build --release",
+   "expected": [
+    "5 shell bun",
+    "7 shell cargo"
+   ]
+  },
+  {
+   "path": "a/package.json",
+   "text": "{\"scripts\":{\"repo\":\"bun ./x.ts repo\",\"t\":\"nx run a\"},\"dependencies\":{\"bun\":\"1\"}}",
+   "expected": [
+    "0 declared bun",
+    "0 declared nx"
+   ]
+  },
+  {
+   "path": "a/📋️project.json",
+   "text": "{\"targets\":{\"a\":{\"options\":{\"command\":\"bun ./📜️script.ts test\"}}}}",
+   "expected": [
+    "0 declared bun"
+   ]
+  },
+  {
+   "path": "a/🧪️tests/y.ts",
+   "text": "spawnSync(\"git\", []);",
+   "expected": [
+    "1 spawn git"
+   ],
+   "scope": "test"
+  },
+  {
+   "path": "a/z.md",
+   "text": "spawnSync(\"git\", [])",
+   "expected": []
+  }
+ ]
+}

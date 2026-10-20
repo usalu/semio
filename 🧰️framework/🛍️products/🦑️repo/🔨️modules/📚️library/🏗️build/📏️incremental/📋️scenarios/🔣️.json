@@ -1,0 +1,628 @@
+{
+ "version": 1,
+ "labels": {
+  "scenario": {
+   "en": "scenario",
+   "de": "Szenario"
+  },
+  "tool": {
+   "en": "tool",
+   "de": "Werkzeug"
+  },
+  "phase": {
+   "en": "phase",
+   "de": "Phase"
+  },
+  "must": {
+   "en": "must",
+   "de": "muss"
+  },
+  "may": {
+   "en": "may",
+   "de": "darf"
+  },
+  "executed": {
+   "en": "executed",
+   "de": "ausgeführt"
+  },
+  "restored": {
+   "en": "restored",
+   "de": "wiederhergestellt"
+  },
+  "cutoff": {
+   "en": "cutoff",
+   "de": "abgeschnitten"
+  },
+  "verdict": {
+   "en": "verdict",
+   "de": "Urteil"
+  },
+  "milliseconds": {
+   "en": "time (ms)",
+   "de": "Zeit (ms)"
+  },
+  "stale": {
+   "en": "stale",
+   "de": "veraltet"
+  },
+  "excess": {
+   "en": "excess",
+   "de": "überzählig"
+  },
+  "pass": {
+   "en": "pass",
+   "de": "bestanden"
+  },
+  "failed": {
+   "en": "failed",
+   "de": "fehlgeschlagen"
+  },
+  "skipped": {
+   "en": "skipped",
+   "de": "übersprungen"
+  },
+  "summary": {
+   "en": "summary",
+   "de": "Zusammenfassung"
+  },
+  "area": {
+   "en": "area",
+   "de": "Bereich"
+  },
+  "kind": {
+   "en": "edit",
+   "de": "Änderung"
+  },
+  "target": {
+   "en": "target",
+   "de": "Ziel"
+  },
+  "progress": {
+   "en": "ready",
+   "de": "bereit"
+  },
+  "cancelled": {
+   "en": "cancelled",
+   "de": "abgebrochen"
+  },
+  "title": {
+   "en": "Incremental build conformance",
+   "de": "Konformität inkrementeller Builds"
+  },
+  "exact": {
+   "en": "exact",
+   "de": "exakt"
+  },
+  "bounded": {
+   "en": "bounded",
+   "de": "begrenzt"
+  },
+  "comparison": {
+   "en": "comparison of the implementations",
+   "de": "Vergleich der Implementierungen"
+  },
+  "agree": {
+   "en": "same tasks",
+   "de": "gleiche Tasks"
+  },
+  "differ": {
+   "en": "different tasks",
+   "de": "verschiedene Tasks"
+  },
+  "only": {
+   "en": "only",
+   "de": "nur"
+  },
+  "warm": {
+   "en": "warm run",
+   "de": "Warmlauf"
+  },
+  "edit": {
+   "en": "edit",
+   "de": "Änderung"
+  },
+  "revert": {
+   "en": "revert",
+   "de": "Rücknahme"
+  }
+ },
+ "sensitivity": [
+  {
+   "family": "bun-script",
+   "kind": "comment-only",
+   "effect": "unknown"
+  },
+  {
+   "family": "tsc",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "vitest",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "comment-only",
+   "effect": "unknown"
+  },
+  {
+   "family": "cargo",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "wasm",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "aggregate",
+   "kind": "comment-only",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-script",
+   "kind": "body-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "tsc",
+   "kind": "body-change",
+   "effect": "identical"
+  },
+  {
+   "family": "vitest",
+   "kind": "body-change",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "body-change",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "body-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "cargo",
+   "kind": "body-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "wasm",
+   "kind": "body-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "aggregate",
+   "kind": "body-change",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-script",
+   "kind": "signature-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "tsc",
+   "kind": "signature-change",
+   "effect": "changed"
+  },
+  {
+   "family": "vitest",
+   "kind": "signature-change",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "signature-change",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "signature-change",
+   "effect": "unknown"
+  },
+  {
+   "family": "cargo",
+   "kind": "signature-change",
+   "effect": "changed"
+  },
+  {
+   "family": "wasm",
+   "kind": "signature-change",
+   "effect": "changed"
+  },
+  {
+   "family": "aggregate",
+   "kind": "signature-change",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-script",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "tsc",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "vitest",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "cargo",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "wasm",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "aggregate",
+   "kind": "lockfile",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-script",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "tsc",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "vitest",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "cargo",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "wasm",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "aggregate",
+   "kind": "config",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-script",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "tsc",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "vitest",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "bun-test",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "vite",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "cargo",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "wasm",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  },
+  {
+   "family": "aggregate",
+   "kind": "unrelated-sibling",
+   "effect": "identical"
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "fw-ts-comment",
+   "title": {
+    "en": "Comment appended to a framework TypeScript generator",
+    "de": "Kommentar am Ende eines TypeScript-Generators des Frameworks"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-graph:test",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts"
+   }
+  },
+  {
+   "id": "fw-ts-body",
+   "title": {
+    "en": "Dead statement added to a framework TypeScript generator",
+    "de": "Wirkungslose Anweisung in einem TypeScript-Generator des Frameworks"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-graph:test",
+   "kind": "body-change",
+   "mutation": {
+    "op": "private-body",
+    "language": "ts",
+    "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts"
+   }
+  },
+  {
+   "id": "fw-ts-signature",
+   "title": {
+    "en": "Public export added to a framework TypeScript generator",
+    "de": "Öffentlicher Export in einem TypeScript-Generator des Frameworks"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-graph:test",
+   "kind": "signature-change",
+   "mutation": {
+    "op": "public-api",
+    "language": "ts",
+    "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts"
+   }
+  },
+  {
+   "id": "fw-ts-config",
+   "title": {
+    "en": "Whitespace in the project manifest of a framework library",
+    "de": "Leerraum im Projektmanifest einer Framework-Bibliothek"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-graph:test",
+   "kind": "config",
+   "mutation": {
+    "op": "whitespace",
+    "language": "text",
+    "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json"
+   }
+  },
+  {
+   "id": "fw-ts-unrelated",
+   "title": {
+    "en": "Comment in a sibling project outside the closure",
+    "de": "Kommentar in einem Geschwisterprojekt außerhalb des Abschlusses"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-graph:test",
+   "kind": "unrelated-sibling",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📜️script.ts"
+   }
+  },
+  {
+   "id": "rust-crate-comment",
+   "title": {
+    "en": "Comment appended to a Rust crate root",
+    "de": "Kommentar am Ende einer Rust-Crate-Wurzel"
+   },
+   "area": "rust-crate",
+   "target": "@teaching/proctor:build",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "rs",
+    "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs"
+   }
+  },
+  {
+   "id": "rust-crate-signature",
+   "title": {
+    "en": "Public constant added to a Rust crate root",
+    "de": "Öffentliche Konstante in einer Rust-Crate-Wurzel"
+   },
+   "area": "rust-crate",
+   "target": "@teaching/proctor:test",
+   "kind": "signature-change",
+   "mutation": {
+    "op": "public-api",
+    "language": "rs",
+    "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs"
+   }
+  },
+  {
+   "id": "wasm-comment",
+   "title": {
+    "en": "Comment appended to a wasm component crate root",
+    "de": "Kommentar am Ende einer Wasm-Komponenten-Crate"
+   },
+   "area": "wasm-component",
+   "target": "@semio-tech/framework-surface-rs:wasm",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "rs",
+    "file": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🦀️.rs"
+   }
+  },
+  {
+   "id": "wasm-body",
+   "title": {
+    "en": "Private constant added to a wasm component crate root",
+    "de": "Private Konstante in einer Wasm-Komponenten-Crate"
+   },
+   "area": "wasm-component",
+   "target": "@semio-tech/framework-surface-rs:wasm",
+   "kind": "body-change",
+   "mutation": {
+    "op": "private-body",
+    "language": "rs",
+    "file": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🦀️.rs"
+   }
+  },
+  {
+   "id": "vite-comment",
+   "title": {
+    "en": "Comment appended to a Vite builder module",
+    "de": "Kommentar am Ende eines Vite-Builder-Moduls"
+   },
+   "area": "vite-app",
+   "target": "@teaching/architecture-course:build",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/🟦️.ts"
+   }
+  },
+  {
+   "id": "vite-config",
+   "title": {
+    "en": "Whitespace in the TypeScript configuration of a Vite app",
+    "de": "Leerraum in der TypeScript-Konfiguration einer Vite-App"
+   },
+   "area": "vite-app",
+   "target": "@teaching/architecture-course:build",
+   "kind": "config",
+   "mutation": {
+    "op": "whitespace",
+    "language": "text",
+    "file": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json"
+   }
+  },
+  {
+   "id": "test-body",
+   "title": {
+    "en": "Dead statement added to a course module under test",
+    "de": "Wirkungslose Anweisung in einem getesteten Kursmodul"
+   },
+   "area": "test-target",
+   "target": "@teaching/architecture-course:test",
+   "kind": "body-change",
+   "mutation": {
+    "op": "private-body",
+    "language": "ts",
+    "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts"
+   }
+  },
+  {
+   "id": "test-comment",
+   "title": {
+    "en": "Comment appended to a course module under test",
+    "de": "Kommentar am Ende eines getesteten Kursmoduls"
+   },
+   "area": "test-target",
+   "target": "@teaching/architecture-course:test",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts"
+   }
+  },
+  {
+   "id": "lockfile-typecheck",
+   "title": {
+    "en": "Whitespace in the dependency lock before a type check",
+    "de": "Leerraum in der Abhängigkeitssperre vor einer Typprüfung"
+   },
+   "area": "test-target",
+   "target": "@teaching/architecture-course:typecheck",
+   "kind": "lockfile",
+   "mutation": {
+    "op": "whitespace",
+    "language": "text",
+    "file": "bun.lock"
+   }
+  },
+  {
+   "id": "activation-comment",
+   "title": {
+    "en": "Comment appended to a product activation script",
+    "de": "Kommentar am Ende eines Aktivierungsskripts eines Produkts"
+   },
+   "area": "product-activation",
+   "target": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts"
+   }
+  },
+  {
+   "id": "activation-body",
+   "title": {
+    "en": "Dead statement added to a product activation script",
+    "de": "Wirkungslose Anweisung in einem Aktivierungsskript eines Produkts"
+   },
+   "area": "product-activation",
+   "target": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
+   "kind": "body-change",
+   "mutation": {
+    "op": "private-body",
+    "language": "ts",
+    "file": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts"
+   }
+  },
+  {
+   "id": "activation-unrelated",
+   "title": {
+    "en": "Comment in a sibling project outside the activation closure",
+    "de": "Kommentar in einem Geschwisterprojekt außerhalb des Aktivierungsabschlusses"
+   },
+   "area": "product-activation",
+   "target": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
+   "kind": "unrelated-sibling",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📜️script.ts"
+   }
+  }
+ ]
+}

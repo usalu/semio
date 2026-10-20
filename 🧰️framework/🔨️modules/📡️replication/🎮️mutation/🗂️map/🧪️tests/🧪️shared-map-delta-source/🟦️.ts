@@ -4,9 +4,9 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
-import { valueSchema } from "@semio-tech/value-ts/schema";
+import { valueSchema } from "../../../../../🌱️value/📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import { applyMapDelta, inverseMapDelta, composeMapDelta, parseMapDelta, MapDeltaApplyError, type MapEntryDelta } from "../../🧬️schema/🟦️.ts";
-import type { DslValue } from "@semio-tech/value-ts/schema";
+import type { DslValue } from "../../../../../🌱️value/📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 
 function patch(entry: MapEntryDelta<DslValue> & { key: string }, base: Record<string, DslValue>): Record<string, DslValue> {
   const present = Object.hasOwn(base, entry.key);
@@ -76,5 +76,4 @@ export function testSharedMapDeltaOracle(): void {
     }
   }
   assert.throws(() => parseMapDelta({ entries: [] }));
-  console.log("[DEBUG] shared map oracle: Ajv field sets, neutral sparse maps and independent JSON Patch composition");
 }

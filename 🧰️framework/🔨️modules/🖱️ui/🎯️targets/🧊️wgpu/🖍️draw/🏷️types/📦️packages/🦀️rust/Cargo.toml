@@ -33,3 +33,6 @@ ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️r
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }

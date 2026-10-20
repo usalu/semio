@@ -49,7 +49,7 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
    * plugin's own status so an excluded plugin is visible instead of silently unroutable. */
   const routerFaultByPluginId = useMemo(() => new Map(appRouter.pluginFaults().map((fault) => [fault.scope.pluginId ?? "", fault] as const)), [appRouter]);
   const pluginLabelById = useMemo(() => new Map(localPrograms.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [localPrograms]);
-  /** 👁️✏️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
+  /** 🔤️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
    * (contract freeze §1), never inferred from a surface id string. Feeds the Settings
    * `SettingsDefaultApps` table; `appRouter` itself has no public "every registered dialect"
    * accessor (by design — it's addressed one `(dialect, role)` pair at a time). */
@@ -158,7 +158,7 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
     [pendingAppChannelFor, session?.pluginId],
   );
 
-  /** ⚖️ Persists `os.config.merge-policy` through the `🛡️change-merge-policy` config triad's own
+  /** 💾️ Persists `os.config.merge-policy` through the `🛡️change-merge-policy` config triad's own
    * event-sourced fold (local, always works), then genuinely forwards `AppCommand::SetMergePolicy`
    * (contract freeze §C8) through `PluginWasmHandle.setMergePolicy` — a real handle member now (see
    * {@link pluginHandleFor}'s doc), so a session-less/plugin-not-loaded guard is the only thing
@@ -175,7 +175,7 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
     [pluginHandleFor, session],
   );
 
-  /** ⚖️ `📌️ChromePanels`' Conflicts panel Accept/Discard — forwards `AppCommand::ResolveConflict`
+  /** 🤝️ `📌️ChromePanels`' Conflicts panel Accept/Discard — forwards `AppCommand::ResolveConflict`
    * (contract freeze §C6/§C8/§C9) through `PluginWasmHandle.resolveConflict`; the local roster is
    * replaced from the `Conflicts` frame the reply itself batches (contract freeze §C6
    * `resolve_conflict`: "Returns the authoritative `MergeReport` + `Conflicts` frames"), never

@@ -820,16 +820,6 @@
     "PlatformRules": {
       "const": {
         "version": 1,
-        "limits": {
-          "posix": 4095,
-          "windows": 259,
-          "windowsExtended": 32766
-        },
-        "trackedPathUnits": 256,
-        "execroot": {
-          "posix": "/execroot/_main/s/",
-          "win32": "\\execroot\\_main\\s\\"
-        },
         "platforms": {
           "darwin": {
             "separator": "/",
@@ -873,6 +863,207 @@
         }
       }
     },
+    "PathBudget": {
+      "const": {
+        "version": 1,
+        "repositoryUnits": 256,
+        "task": "t_0000000000000000",
+        "file": "00000000000000000000000000000000",
+        "sandboxDigits": 6,
+        "platforms": {
+          "darwin": {
+            "unit": "utf8",
+            "pathMax": 1024,
+            "sandboxes": [
+              "darwin-sandbox",
+              "processwrapper-sandbox"
+            ],
+            "configuration": {
+              "arm64": "darwin_arm64-fastbuild",
+              "x64": "darwin_x86_64-fastbuild"
+            }
+          },
+          "linux": {
+            "unit": "utf8",
+            "pathMax": 4096,
+            "sandboxes": [
+              "linux-sandbox",
+              "processwrapper-sandbox"
+            ],
+            "configuration": {
+              "arm64": "aarch64-fastbuild",
+              "x64": "k8-fastbuild"
+            }
+          },
+          "win32": {
+            "unit": "utf16",
+            "pathMax": 260,
+            "extendedMax": 32767,
+            "sandboxes": [],
+            "configuration": {
+              "arm64": "arm64_windows-fastbuild",
+              "x64": "x64_windows-fastbuild"
+            }
+          }
+        },
+        "families": [
+          {
+            "name": "source",
+            "template": "execroot/_main/{source}",
+            "view": "alias"
+          },
+          {
+            "name": "runfiles-source",
+            "template": "execroot/_main/bazel-out/{configuration}/bin/{task}.runfiles/_main/{source}",
+            "view": "alias",
+            "needs": "runfiles"
+          },
+          {
+            "name": "snapshot",
+            "template": "execroot/_main/bazel-out/{configuration}/bin/{task}.snapshot/files/{file}"
+          },
+          {
+            "name": "runfiles-snapshot",
+            "template": "execroot/_main/bazel-out/{configuration}/bin/{task}.runfiles/_main/{task}.snapshot/files/{file}",
+            "needs": "runfiles"
+          },
+          {
+            "name": "sandbox-source",
+            "template": "sandbox/{sandbox}/{sandboxId}/execroot/_main/{source}",
+            "view": "real",
+            "needs": "sandbox"
+          }
+        ]
+      }
+    },
+    "PathSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "bytes"
+      ],
+      "properties": {
+        "units": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4194304
+        }
+      }
+    },
+    "PathClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alias",
+        "real"
+      ],
+      "properties": {
+        "alias": {
+          "$ref": "#/definitions/PathSize"
+        },
+        "real": {
+          "$ref": "#/definitions/PathSize"
+        }
+      }
+    },
+    "PathMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "closure"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "closure": {
+          "$ref": "#/definitions/PathClosure"
+        }
+      }
+    },
+    "PathBudgetReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outputBase",
+        "families",
+        "limitUnits",
+        "limitBytes",
+        "slackUnits",
+        "slackBytes",
+        "fits"
+      ],
+      "properties": {
+        "outputBase": {
+          "$ref": "#/definitions/PathSize"
+        },
+        "families": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "units",
+              "bytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "units": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "limitUnits": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "limitBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slackUnits": {
+          "type": "integer"
+        },
+        "slackBytes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fits": {
+          "type": "boolean"
+        }
+      }
+    },
     "PlatformInput": {
       "type": "object",
       "additionalProperties": false,
@@ -882,7 +1073,8 @@
         "container",
         "outputBase",
         "bun",
-        "longPaths"
+        "longPaths",
+        "closure"
       ],
       "properties": {
         "platform": {
@@ -917,6 +1109,9 @@
             "disabled",
             "unprobed"
           ]
+        },
+        "closure": {
+          "$ref": "#/definitions/PathClosure"
         }
       }
     },
@@ -1000,41 +1195,7 @@
           ]
         },
         "pathBudget": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "outputBase",
-            "execroot",
-            "tracked",
-            "total",
-            "limit",
-            "fits"
-          ],
-          "properties": {
-            "outputBase": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "execroot": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "tracked": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "total": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "limit": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "fits": {
-              "type": "boolean"
-            }
-          }
+          "$ref": "#/definitions/PathBudgetReport"
         },
         "refusals": {
           "type": "array",
@@ -1147,7 +1308,11 @@
           "bundled": [
             "bun.lock",
             "package.json"
-          ]
+          ],
+          "alias": {
+            "link": "a",
+            "hexLength": 10
+          }
         },
         "kinds": {
           "task": {
@@ -1160,6 +1325,10 @@
           },
           "noop": {
             "sandbox": true
+          },
+          "test": {
+            "sandbox": false,
+            "reason": "The test process runs in the real checkout like a task: its working directory, the declared source-tree reads, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks; the result is cached as a Bazel test result and as a remote cache entry."
           }
         },
         "uncached": {
@@ -1191,7 +1360,8 @@
             "link",
             "label",
             "boundaries",
-            "bundled"
+            "bundled",
+            "alias"
           ],
           "properties": {
             "link": {
@@ -1218,6 +1388,25 @@
                 "type": "string",
                 "minLength": 1
               }
+            },
+            "alias": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "link",
+                "hexLength"
+              ],
+              "properties": {
+                "link": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "hexLength": {
+                  "type": "integer",
+                  "minimum": 8,
+                  "maximum": 32
+                }
+              }
             }
           }
         },
@@ -1226,11 +1415,45 @@
           "additionalProperties": false,
           "required": [
             "task",
+            "test",
             "launcher",
             "noop"
           ],
           "properties": {
             "task": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox",
+                    "reason"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": false
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 16
+                    }
+                  }
+                }
+              ]
+            },
+            "test": {
               "oneOf": [
                 {
                   "type": "object",

@@ -3,7 +3,7 @@ import type { BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.
 import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, type RustModuleGraph, type RustModuleContext, type RustModuleParticipation, type RustModuleParticipationReason } from "../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { inspectRustStructure } from "../../../🔍️discovery/🏛️rust-structure/🟦️.ts";
-import { inspectRustCompileReferences } from "@semio-tech/compiler-syntax-rust-ts";
+import { inspectRustCompileReferences } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyArtifactRootOfMutationsDir, policyStripEmoji } from "../🪪️identity/🟦️.ts";
 import { mutationTaxonomyCancelled, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyAssignmentRow, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex, mutationTaxonomySourceSnapshot, type MutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";

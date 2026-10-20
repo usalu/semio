@@ -2,7 +2,7 @@
 /** 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
 // #endregion 🧲️Header
 
-import { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant } from "./🔨️modules/🧩️runtime/🟦️.ts";
+import { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant } from "./🔨️modules/🧩️runtime/📇️catalog/🟦️.ts";
 export { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant };
 import {
   panelTabElementId,
@@ -571,7 +571,7 @@ export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
   shortWindowTitle: "EmB · Koord",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
-  defaults: { exampleId: "hexagonal-cut-concrete-forest-left" },
+  defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
@@ -626,7 +626,7 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
   shortWindowTitle: "EmB · Aus",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
-  defaults: { exampleId: "demo-stock" },
+  defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
@@ -671,7 +671,7 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
   shortWindowTitle: "EmB · Bearb",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
-  defaults: { exampleId: "timber-beam-joinery" },
+  defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
@@ -996,6 +996,8 @@ export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts");
   await registerTests1(import.meta.vitest, { demonstratorPaneBootVariants });
+  const { registerTests1: registerExampleTests } = await import("./🧪️tests/🧪️demonstratorexamples/🟦️.ts");
+  await registerExampleTests(import.meta.vitest, { panes: DEMONSTRATOR_PANES });
 }
 
 /** 🏷️ Complete owner catalog of the eight standalone shell identities. */

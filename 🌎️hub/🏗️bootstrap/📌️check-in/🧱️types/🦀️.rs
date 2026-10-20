@@ -81,7 +81,7 @@ impl VerifiedCheckpointPublisher for GisMapApprovalVerifiedPublisherV1 {
         HubVerifiedCheckpointPublisher::new(self.directory_service.clone(), self.artifact_cas.clone(), "system:gis-map-approval").reserve(plan, context).await
     }
 
-    async fn publish_reserved(&self, checkpoint: &os_directory::ArtifactCheckpoint, reservation: &semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+    async fn publish_reserved(&self, checkpoint: &directory::os_directory::ArtifactCheckpoint, reservation: &semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         if !self.authority_is_current().await?
             || checkpoint.scope != self.scope
@@ -196,7 +196,7 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
 pub fn publish_gis_map_checkpoint_change(fanout: &ShardedMap<String, broadcast::Sender<ServerFrame>>, fanout_capacity: usize, checkpoint: &PublishedArtifactCheckpoint) {
     let key = document_scope_key_v1(&checkpoint.scope);
     let sender = fanout.get_or_insert_with_cloned(key, || broadcast::channel(fanout_capacity).0);
-    let control = os_directory::RebootstrapRequired { scope: checkpoint.scope.clone(), checkpoint_id: checkpoint.checkpoint_id, descriptor_digest_v1: checkpoint.descriptor_digest_v1, baseline_frontier: checkpoint.baseline_frontier.clone() };
+    let control = directory::os_directory::RebootstrapRequired { scope: checkpoint.scope.clone(), checkpoint_id: checkpoint.checkpoint_id, descriptor_digest_v1: checkpoint.descriptor_digest_v1, baseline_frontier: checkpoint.baseline_frontier.clone() };
     let _ = sender.send(ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) });
 }
 //#endregion 📣️CheckpointPublication

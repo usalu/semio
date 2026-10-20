@@ -13,10 +13,9 @@
     "headroomPercent": 20
   },
   "postCreateCommand": [
-    "bun",
-    "repo",
-    "run",
-    "workspace:setup"
+    "bash",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "setup"
   ],
   "postCreateDependsOn": [
     "deps-build-tools",
@@ -31,7 +30,7 @@
     "deps-tools",
     "setup-git",
     "prepare",
-    "repo-mcp:build",
+    "repo-mcp:install",
     "@semio-tech/framework-os-mcp-rs:build"
   ],
   "retiredScripts": [
@@ -129,6 +128,77 @@
     {
       "label": "MCP Inspector Proxy",
       "port": 6277
+    }
+  ],
+  "setupTarget": "setup",
+  "bootstrapCases": [
+    {
+      "id": "cold",
+      "nativePresent": false,
+      "failAt": null,
+      "expectedStatus": 0,
+      "expectedCalls": [
+        "installer",
+        "help",
+        "setup",
+        "debugger",
+        "browser"
+      ]
+    },
+    {
+      "id": "warm",
+      "nativePresent": true,
+      "failAt": null,
+      "expectedStatus": 0,
+      "expectedCalls": [
+        "installer",
+        "help",
+        "setup",
+        "debugger",
+        "browser"
+      ]
+    },
+    {
+      "id": "installer-refused",
+      "nativePresent": false,
+      "failAt": "installer",
+      "expectedStatus": 1,
+      "expectedCalls": [
+        "installer"
+      ]
+    },
+    {
+      "id": "native-probe-refused",
+      "nativePresent": false,
+      "failAt": "help",
+      "expectedStatus": 1,
+      "expectedCalls": [
+        "installer",
+        "help"
+      ]
+    },
+    {
+      "id": "setup-refused",
+      "nativePresent": false,
+      "failAt": "setup",
+      "expectedStatus": 1,
+      "expectedCalls": [
+        "installer",
+        "help",
+        "setup"
+      ]
+    },
+    {
+      "id": "debugger-refused",
+      "nativePresent": false,
+      "failAt": "debugger",
+      "expectedStatus": 1,
+      "expectedCalls": [
+        "installer",
+        "help",
+        "setup",
+        "debugger"
+      ]
     }
   ]
 }

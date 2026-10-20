@@ -103,7 +103,7 @@ test("original lane corpus agrees with SQLite byte order and JSONPatch interacti
 });
 
 test("original scalar varints preserve u64 values and exact consumed prefixes against protobuf",()=>{
- const corpus=read("../../../📡️spr/📜️history/👁️source/🧫️fixtures/🔣️.json") as {varints:{bytes:number[];value:string|null;position:number;refusal:null|"truncated"|"overflow"}[]};
+ const corpus=read("../../../📡️spr/📜️history/👁️source/🧪️tests/🧫️fixtures/🔣️.json") as {varints:{bytes:number[];value:string|null;position:number;refusal:null|"truncated"|"overflow"}[]};
  for(const row of corpus.varints){
   for(const body of [1,7,4096])for(const word of [4,8]){
    let position=0,value=0n,refusal:null|"truncated"|"overflow"=null,copied=0;
@@ -130,7 +130,7 @@ test("original scalar varints preserve u64 values and exact consumed prefixes ag
 });
 
 test("original UTF8 scalar custody agrees with independent streaming decoders",()=>{
- const corpus=read("../../../📡️spr/📜️history/👁️source/🧫️fixtures/🔣️.json") as {utf8:{bytes:number[];text:string|null;position:number;offset:number;refusal:string|null}[]};
+ const corpus=read("../../../📡️spr/📜️history/👁️source/🧪️tests/🧫️fixtures/🔣️.json") as {utf8:{bytes:number[];text:string|null;position:number;offset:number;refusal:string|null}[]};
  for(const row of corpus.utf8){
   const bytes=Uint8Array.from(row.bytes);
   if(row.text===null){expect(()=>new TextDecoder("utf-8",{fatal:true}).decode(bytes)).toThrow();expect(row.refusal).not.toBeNull();}
@@ -146,7 +146,7 @@ test("original UTF8 scalar custody agrees with independent streaming decoders",(
 });
 
 test("original normalized operation identities retain exact Unicode and full unsigned indexes",()=>{
- const corpus=read("../../../📡️spr/📜️history/👁️source/🧫️fixtures/🔣️.json") as {identities:{edit:string;index:string;expected:string}[]};
+ const corpus=read("../../../📡️spr/📜️history/👁️source/🧪️tests/🧫️fixtures/🔣️.json") as {identities:{edit:string;index:string;expected:string}[]};
  const independent=new Database(":memory:");
  try{for(const row of corpus.identities){
   let index=BigInt(row.index),digits="";

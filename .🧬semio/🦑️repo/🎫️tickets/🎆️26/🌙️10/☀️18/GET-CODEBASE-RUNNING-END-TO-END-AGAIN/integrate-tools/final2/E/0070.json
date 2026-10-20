@@ -1,0 +1,1603 @@
+{
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "$schema": "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
+  "projectType": "library",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
+      "nativeAssets",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔣️.svg"
+    ],
+    "nativeSources": [
+      "nativeAssets",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️component/**/*"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ],
+    "frameWorkerSources": [
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/*/🟦️.ts",
+      {
+        "runtime": "bun --version"
+      },
+      {
+        "runtime": "node -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "env": "NODE_ENV"
+      },
+      {
+        "env": "BUN_ENV"
+      },
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🎓️first-run/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🏘️spaces/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🔐️sign-in/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🚪️io/📝️text/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📇️directory/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/📞️directory-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🧾️app-channel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🪢️wire-contracts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🕹️actions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏪️time-travel/🕹️actions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/🏷️actions-labels/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/🕹️actions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/🚦️lifecycle/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🎟️lease-pool/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔔️event-wait/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🥇️latest-wins/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🪃️continuation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌐️browser-bundle/🪟️view-context/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📝️text/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🧬️retained-clone/🌐️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🧬️schema/🌳️intrinsic/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎓️onboarding/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📥️text/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📥️text/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📦️package/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📦️package/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📍️instance-directory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🕰️history/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🕸️plugin-graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🗂️plugin-registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚦️activation-reason/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧮️invocation-response/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧯️memory-pressure/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧲️artifact-routers/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧵️video-render-job/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧾️contributions-json/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/💓️heartbeat/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/📜️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🩹️ui-patch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🩺️diagnostics/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/↩️captured-return/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/⏱️watchdog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🌉️host-effect-bridge/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/💾️resident-bootstrap/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📥️ui-acknowledgement/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📨️messages/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📬️request-transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚪️instance-lifecycle/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🪪️exact-activation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/💡️inference/🔌️service/🌐️document-http/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/💡️inference/🔌️service/🛂️worker-host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/📌️check-in/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/🪪️scope/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🎫️command/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🎯️execution-target/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/📂️document-open/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/📄️event-page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/📋️admin-page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/📜️event/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🧊️artifact-checkpoints/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🪢️checkpoint-pair/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/🌍️world/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🔖️sync-protocol/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/👥️presence/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📡️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/📥️bootstrap/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🌐️host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🎬️runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/💾️persist/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🔁️step/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🔎️inspect/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🧠️kernel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/🧭️testing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌐️locale/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📄️documents/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/📋️context-menu/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖐️gestures/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🚚️lane-contract/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🛤️lanes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🪪️resident-scope/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔒️transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧮️tables/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/⚙️job/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/📊️job-types/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/📜️wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/📢️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🗃️paged-store/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/◻️2d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/🧊️3d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🌐️published-page/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🥽️mesh/📇️catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🥽️mesh/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/💾️renderer-resident/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🧵️renderer-work/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🔣️stock.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🎬️action-types-and-semantics/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/📥️mutation-input-schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔁️host-effects-choices-and-fault-notices/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🎭️artifact-actor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🔀️message/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🔑️persistence-binding/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🔗️binding/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🔬️worker-parsers/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🗺️workflow-planner/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧱️worker-wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🪟️desktop-window/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/🗿️artifact-reference/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/🧾️record/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🎚️interaction-commands/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🎛️command-codec/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🎞️frame-codec/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🎫️transaction-commands/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🎬️media-commands/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🏠️local-interaction-query/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🏷️codec-primitives/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/📋️report-decoders/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/📣️unsolicited-feed/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/📦️document-pack-cache/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/📮️reply-ledger/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🔁️outcome-pump/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🔌️channel-lifecycle/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🗃️archive-load-host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🧯️reply-faults/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🧳️archive-transfer/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🪪️document-reads/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🫧️transient/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🚚️lifecycle/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/⏱️steps-and-reporting/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎞️frame-and-introspection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📦️assets-and-host-io/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📨️receive/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🖼️page-image-decode/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧯️close-and-fault/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧵️state/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🧩️selection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🍽️ui-intake-and-route/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🧵️shard-and-actor-calls/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🧾️typed-operations-and-handle/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/📋️contract/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🖱️dom-events/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🛂️admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️receipt/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📥️receipt/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🕸️node-graph/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎯️picking/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️testing/🎨️paint-policy/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "test-socket-snapshot-sqlite-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite source",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/**/*"
+      ]
+    },
+    "test-socket-snapshot-sqlite-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite native",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/**/*"
+      ]
+    },
+    "test-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "test-wgpu-unit": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-wgpu-unit",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "test-media-slots": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test-media-slots",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "directory-retained-home-bootstrap-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-source-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "directory-retained-home-bootstrap-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-native-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "normalized-presence-rows-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts normalized-presence-rows-source-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "normalized-presence-rows-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts normalized-presence-rows-native-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "browser-dock-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "ajv",
+            "playwright"
+          ]
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🧫️fixtures/🌐️browser-acceptance/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧬️schema/🌐️browser-acceptance/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts browser-dock-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "mode",
+                "kind": "choice",
+                "default": "test",
+                "values": [
+                  {
+                    "id": "test",
+                    "args": [
+                      "test"
+                    ]
+                  },
+                  {
+                    "id": "react",
+                    "args": [
+                      "run",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "run",
+                      "wgpu"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Run mode",
+                  "de": "Ausführungsmodus"
+                },
+                "description": {
+                  "en": "Choose tests or a renderer session.",
+                  "de": "Tests oder eine Renderer-Sitzung auswählen."
+                }
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "valuePositional": true,
+                "title": {
+                  "en": "Server address",
+                  "de": "Serveradresse"
+                },
+                "description": {
+                  "en": "Address of the server to verify.",
+                  "de": "Adresse des zu prüfenden Servers."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              },
+              {
+                "id": "suite",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "docking",
+                    "args": [
+                      "--suite",
+                      "docking"
+                    ]
+                  },
+                  {
+                    "id": "widgets",
+                    "args": [
+                      "--suite",
+                      "widgets"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Test suite",
+                  "de": "Testsuite"
+                },
+                "description": {
+                  "en": "Choose docking or widget checks.",
+                  "de": "Andock- oder Widget-Prüfungen auswählen."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify browser docking",
+              "de": "Browser-Andocken prüfen"
+            },
+            "description": {
+              "en": "Choose docking tests or a renderer session.",
+              "de": "Andocktests oder eine Renderer-Sitzung auswählen."
+            }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "browser-media-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts browser-media-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--serve",
+                "title": {
+                  "en": "Server address",
+                  "de": "Serveradresse"
+                },
+                "description": {
+                  "en": "Address of the server to verify.",
+                  "de": "Adresse des zu prüfenden Servers."
+                }
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Language",
+                  "de": "Sprache"
+                },
+                "description": {
+                  "en": "Choose the language explicitly.",
+                  "de": "Sprache ausdrücklich auswählen."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify browser media",
+              "de": "Browser-Medien prüfen"
+            },
+            "description": {
+              "en": "Run media checks with an explicit server and language.",
+              "de": "Medienprüfungen mit explizitem Server und Sprache ausführen."
+            }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "test-browser": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "browserBootSources",
+        "frameWorkerSources",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-browser",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
+    "test-browser-worker": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "test-preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
+    },
+    "check-browser-worker": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts check-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "generate-browser-boot",
+        "generate-renderer-boot",
+        "generate-frame-worker"
+      ],
+      "inputs": [
+        "default",
+        "browserBootSources",
+        "frameWorkerSources"
+      ]
+    },
+    "generate-browser-boot": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "browserBootSources",
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "BUN_ENV"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/📋️project.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js"
+      ],
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "options": {
+        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-browser-boot",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": false
+      }
+    },
+    "generate-frame-worker": {
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "cache": true,
+      "inputs": [
+        "frameWorkerSources",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        {
+          "dependentTasksOutputFiles": "**/🎚️ui-axes/🟦️.ts"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🧩️plugins/🟦️.ts"
+        },
+        "{workspaceRoot}/📋️project.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts generate-frame-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate",
+        "@semio-tech/ui-rs:generate"
+      ]
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "lockfile-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo metadata --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml\"",
+        "cwd": ".",
+        "forwardAllArgs": false
+      }
+    },
+    "check-frame-worker": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts check-frame-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
+    "check-wasm": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "nativeSources",
+        "^nativeSources"
+      ],
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/framework-graph:generate"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts check-wasm",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
+    },
+    "wasm": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "nativeSources",
+        "^nativeSources"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/wasm.json"
+      ],
+      "dependsOn": [
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ],
+      "options": {
+        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "native-environment-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts native-environment-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "native-build": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-{options.env.SEMIO_BUILD_MODE}"
+      ],
+      "options": {
+        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "lint": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts lint",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
+    "native-scale": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "native-build",
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype",
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "generate-renderer-boot": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "browserBootSources",
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "BUN_ENV"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/📋️project.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🤖️generated/🟨️.js"
+      ],
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "options": {
+        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-renderer-boot",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": false
+      }
+    },
+    "browser-embedded-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "browserBootSources",
+        "frameWorkerSources",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🪆️embedded-browser/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts browser-embedded-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "configuration",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--configuration",
+                "title": {
+                  "en": "Configuration file",
+                  "de": "Konfigurationsdatei"
+                },
+                "description": {
+                  "en": "Path to the browser verification configuration.",
+                  "de": "Pfad zur Browser-Prüfkonfiguration."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify embedded browser",
+              "de": "Eingebetteten Browser prüfen"
+            },
+            "description": {
+              "en": "Run embedded browser checks with a selected configuration.",
+              "de": "Prüfungen des eingebetteten Browsers mit ausgewählter Konfiguration ausführen."
+            }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "check-boot-cache-inputs": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-boot-cache-inputs"
+      }
+    },
+    "test-worker-cell": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test worker-cell",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated"
+        }
+      }
+    },
+    "test-worker-receiving-source": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-worker-receiving-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ],
+      "cache": true
+    },
+    "test-original-frame-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-original-frame-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "cache": true
+    },
+    "test-original-io-invocation-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-original-io-invocation-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "cache": true
+    },
+    "test-native-entrypoint-catalog": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-native-entrypoint-catalog"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-original-browser-output-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-original-browser-output-source"
+      }
+    },
+    "test-original-browser-output-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-original-browser-output-native"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework",
+    "type:renderer"
+  ],
+  "metadata": {
+    "sourceInputs": {
+      "browserBootSources": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json"
+    },
+    "nativeRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+  }
+}

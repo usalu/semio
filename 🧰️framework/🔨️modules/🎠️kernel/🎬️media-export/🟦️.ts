@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { base64StandardDecode } from "@semio-tech/framework-io-base64-ts";
+import { base64StandardDecode } from "../../🚪️io/🔤️base64/📦️packages/🟦️typescript/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

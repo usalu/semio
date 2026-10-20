@@ -1,0 +1,381 @@
+{
+  "version": 1,
+  "protocol": {
+    "prefixes": {
+      "inner": "[DEBUG] Inner immutable authorizer loader ",
+      "sdk-stage": "[DEBUG] SDK reader stage ",
+      "sdk-failure": "[DEBUG] SDK reader body failure "
+    },
+    "maximumRecordBytes": {
+      "inner": 256,
+      "sdk-stage": 256,
+      "sdk-failure": 4096
+    },
+    "maximumLineBytes": 8192,
+    "maximumScanBytes": 16777216,
+    "chunkBytes": 65536,
+    "maximumTraces": 128,
+    "sdkStages": [
+      "namespace-before",
+      "namespace-after",
+      "initial-recheck-before",
+      "initial-recheck-after",
+      "body-before",
+      "body-returned",
+      "body-rejected",
+      "final-recheck-before",
+      "final-recheck-after"
+    ]
+  },
+  "innerSchema": {
+    "type": "object",
+    "oneOf": [
+      {
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "call",
+          "stage"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "call": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "stage": {
+            "const": "before"
+          }
+        }
+      },
+      {
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "call",
+          "stage",
+          "returnedNull",
+          "identityMatches"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "call": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "stage": {
+            "const": "after"
+          },
+          "returnedNull": {
+            "type": "boolean"
+          },
+          "identityMatches": {
+            "type": "boolean"
+          }
+        },
+        "not": {
+          "required": [
+            "returnedNull",
+            "identityMatches"
+          ],
+          "properties": {
+            "returnedNull": {
+              "const": true
+            },
+            "identityMatches": {
+              "const": true
+            }
+          }
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "interleaved",
+      "records": [
+        {
+          "call": 1,
+          "stage": "before"
+        },
+        {
+          "call": 2,
+          "stage": "before"
+        },
+        {
+          "call": 2,
+          "stage": "after",
+          "returnedNull": false,
+          "identityMatches": true
+        },
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": true,
+          "identityMatches": false
+        }
+      ],
+      "valid": 4,
+      "malformed": 0,
+      "omitted": 0
+    },
+    {
+      "id": "before-only",
+      "records": [
+        {
+          "call": 3,
+          "stage": "before"
+        }
+      ],
+      "valid": 1,
+      "malformed": 0,
+      "omitted": 0
+    },
+    {
+      "id": "null-and-mismatch",
+      "records": [
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": true,
+          "identityMatches": false
+        },
+        {
+          "call": 2,
+          "stage": "after",
+          "returnedNull": false,
+          "identityMatches": false
+        }
+      ],
+      "valid": 2,
+      "malformed": 0,
+      "omitted": 0
+    },
+    {
+      "id": "reused-module-local-id",
+      "records": [
+        {
+          "call": 1,
+          "stage": "before"
+        },
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": false,
+          "identityMatches": true
+        },
+        {
+          "call": 1,
+          "stage": "before"
+        },
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": false,
+          "identityMatches": false
+        }
+      ],
+      "valid": 4,
+      "malformed": 0,
+      "omitted": 0
+    },
+    {
+      "id": "malformed-json",
+      "raw": "{",
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "invalid-call-zero",
+      "records": [
+        {
+          "call": 0,
+          "stage": "before"
+        }
+      ],
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "missing-boolean",
+      "records": [
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": false
+        }
+      ],
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "impossible-booleans",
+      "records": [
+        {
+          "call": 1,
+          "stage": "after",
+          "returnedNull": true,
+          "identityMatches": true
+        }
+      ],
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "unknown-field",
+      "records": [
+        {
+          "call": 1,
+          "stage": "before",
+          "extra": true
+        }
+      ],
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "exact-record-boundary",
+      "records": [
+        {
+          "call": 1,
+          "stage": "before"
+        }
+      ],
+      "targetBytesIncludingLf": 256,
+      "valid": 1,
+      "malformed": 0,
+      "omitted": 0
+    },
+    {
+      "id": "oversized-record",
+      "records": [
+        {
+          "call": 1,
+          "stage": "before"
+        }
+      ],
+      "targetBytesIncludingLf": 257,
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "oversized-line",
+      "oversizedLineBytes": 9000,
+      "valid": 0,
+      "malformed": 0,
+      "omitted": 0,
+      "oversized": 1
+    },
+    {
+      "id": "trace-cap",
+      "repeat": 129,
+      "valid": 129,
+      "malformed": 0,
+      "omitted": 1
+    },
+    {
+      "id": "failure-after-cap",
+      "repeat": 129,
+      "failureAfter": true,
+      "valid": 130,
+      "malformed": 0,
+      "omitted": 2,
+      "critical": 1
+    },
+    {
+      "id": "chunk-boundary",
+      "leadingBytes": 65520,
+      "records": [
+        {
+          "call": 4,
+          "stage": "before"
+        }
+      ],
+      "valid": 1,
+      "malformed": 0,
+      "omitted": 0,
+      "oversized": 1
+    },
+    {
+      "id": "invalid-utf8",
+      "invalidUtf8": true,
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "sdk-outer-boundaries",
+      "entries": [
+        {
+          "kind": "sdk-stage",
+          "value": {
+            "version": 1,
+            "call": 3,
+            "stage": "body-before"
+          }
+        },
+        {
+          "kind": "sdk-stage",
+          "value": {
+            "version": 1,
+            "call": 3,
+            "stage": "body-rejected"
+          }
+        },
+        {
+          "kind": "sdk-failure",
+          "value": {
+            "version": 1,
+            "call": 3,
+            "thrownType": "object",
+            "name": "Error",
+            "message": "neutral",
+            "stack": [
+              "Error: neutral"
+            ]
+          }
+        }
+      ],
+      "valid": 3,
+      "malformed": 0,
+      "omitted": 0,
+      "critical": 1
+    },
+    {
+      "id": "sdk-invalid-stage",
+      "entries": [
+        {
+          "kind": "sdk-stage",
+          "value": {
+            "version": 1,
+            "call": 1,
+            "stage": "unknown"
+          }
+        }
+      ],
+      "valid": 0,
+      "malformed": 1,
+      "omitted": 0
+    },
+    {
+      "id": "exhausted-oversized-partial-refuses",
+      "unterminatedBytes": 16777217,
+      "refused": true,
+      "valid": 0,
+      "malformed": 0,
+      "omitted": 0
+    }
+  ]
+}

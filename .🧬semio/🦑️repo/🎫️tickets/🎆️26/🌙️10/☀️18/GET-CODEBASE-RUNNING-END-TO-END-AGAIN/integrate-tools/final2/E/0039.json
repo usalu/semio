@@ -1,0 +1,504 @@
+{
+  "name": "os-hub-ts",
+  "$schema": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🎚️config/🟦️.ts"
+    ]
+  },
+  "targets": {
+    "test-build-freshness": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test build-freshness"
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/tsconfig.json",
+        {"externalDependencies":["typescript"]}
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "two-client-e2e": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "sqlite",
+                    "args": [
+                      "sqlite"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts two-client-e2e",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "document-growth-e2e": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "sqlite",
+                    "args": [
+                      "sqlite"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts document-growth-e2e",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-up": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "default": "all",
+                "values": [
+                  {
+                    "id": "all",
+                    "args": [
+                      "all"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend up",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-down": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "default": "all",
+                "values": [
+                  {
+                    "id": "all",
+                    "args": [
+                      "all"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend down",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-status": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "default": "all",
+                "values": [
+                  {
+                    "id": "all",
+                    "args": [
+                      "all"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend status",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-run": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "backend",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend run",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backup-restore-drill": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backup-restore-drill",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "residency-watch": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts residency-watch",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "continuous": true
+    },
+    "boot-watch": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts boot-watch",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
+    },
+    "hub-freshness": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts hub-freshness",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "agent-ceiling-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts agent-ceiling-check",
+        "forwardAllArgs": true
+      }
+    },
+    "shutdown-drill": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts shutdown-drill",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "docker-image-build": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "workspace:prepare"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-image-build",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "docker-image-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-image-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    }
+  }
+}

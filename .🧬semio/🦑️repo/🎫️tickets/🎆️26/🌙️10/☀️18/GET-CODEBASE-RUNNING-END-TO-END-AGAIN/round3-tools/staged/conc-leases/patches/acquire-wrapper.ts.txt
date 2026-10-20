@@ -1,0 +1,21 @@
+const trackedAcquisition=new AsyncLocalStorage<{readonly guard:LeaseOrderGuardV1;readonly directory:string;readonly resource:string}>();
+const untrackedTask:object={};
+const internalLeaseResource=(resource:string):boolean=>resource===admissionResource||resource===retentionSchema.properties.resource.const||resource.startsWith(custodySchema.properties.resourcePrefix.const)||resource==="resource-retirement";
+function leaseTaskOf(options:Pick<LeaseOptions,"control"|"signal">):number{
+ let key:object=options.signal!==null&&typeof options.signal==="object"?options.signal:untrackedTask;
+ if(options.control)try{const capabilities=readIssuedResourceControlCapabilitiesV1(options.control);if(capabilities!==null&&typeof capabilities==="object")key=capabilities;}catch{}
+ return leaseTaskIdV1(key);
+}
+/** 🧭️ Begins the order bookkeeping of one public acquisition; internal queue, claim and admission leases are not tracked. */
+function orderGuard(options:LeaseOptions,queued:boolean):LeaseOrderGuardV1|undefined{
+ if(typeof options.resource!=="string"||!options.resource.length||internalLeaseResource(options.resource))return undefined;
+ return beginLeaseOrderV1({directory:resolve(options.directory),resource:options.resource,mode:options.mode,nonblocking:options.timeoutMs===0,bounded:options.timeoutMs!==undefined,task:leaseTaskOf(options),queued});
+}
+/** 🚪️ Fences every opener until actual identity SELECT or failed connection close settles; a request that breaks the declared lock order or would wait while holding fails fast with a diagnostic. */
+export async function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{
+ const guard=orderGuard(options,false);
+ if(!guard)return acquireResourceLeaseBody(options);
+ let lease:ResourceLease;
+ try{lease=await trackedAcquisition.run({guard,directory:resolve(options.directory),resource:options.resource},()=>acquireResourceLeaseBody(options));}catch(error){guard.finish();throw error;}
+ guard.hold(lease);return lease;
+}

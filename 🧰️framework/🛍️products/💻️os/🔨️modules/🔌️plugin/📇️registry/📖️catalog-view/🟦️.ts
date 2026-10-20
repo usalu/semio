@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
+import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.mjs";
 import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import {parsePluginBuildTargetV1, parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";

@@ -1,0 +1,25 @@
+/owners[1425] <object>
+/ownerEvidence/vscode-extension-owner-documentation
+/ownerEvidence/bun-public-package-repo-vscode
+/referenceOwners/vscode-package-ignore
+/entries[25] <object>
+/entries[35] <object>
+/entries[36] <object>
+/ownerEvidence/vscode-extension-owner-documentation
+/ownerEvidence/bun-public-package-repo-vscode
+/referenceOwners/vscode-package-ignore
+/publisherVerifications[0] <object>
+/publisherVerifications[1] <object>
+/cases[25] <object>
+/cases[35] <object>
+/cases[36] <object>
+/owners[10] <object>
+/fixedContractIds[5] vscode-test-cli-config
+/consumers[14] <object>
+/projectInputs[7] <object>
+/entries[2] <object>
+/entries[3] <object>
+/callers[31] 🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts
+/callers[53] roducts/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts
+/census/rows[31] <object>
+/census/rows[53] <object>

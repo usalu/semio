@@ -1,0 +1,28 @@
+{
+  "buildDirectoryPath": "/worker/build",
+  "global": {
+    "diagnosticsHttpServer": {
+      "httpServers": [
+        {
+          "listenAddresses": [
+            ":80"
+          ],
+          "authenticationPolicy": {
+            "allow": {}
+          }
+        }
+      ],
+      "enablePrometheus": true
+    }
+  },
+  "grpcServers": [
+    {
+      "listenPaths": [
+        "/worker/runner"
+      ],
+      "authenticationPolicy": {
+        "allow": {}
+      }
+    }
+  ]
+}

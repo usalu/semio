@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "errors": {
+    "missing": {
+      "en": "The {mode} proctor has not been built: {path} does not exist. Build it with `{command}` and run this command again. Nothing is rebuilt implicitly.",
+      "de": "Der Proctor ({mode}) ist nicht gebaut: {path} existiert nicht. Baue ihn mit `{command}` und starte diesen Befehl erneut. Es wird nichts stillschweigend neu gebaut."
+    },
+    "stale": {
+      "en": "The built {mode} proctor cannot be used ({reason}). Rebuild it with `{command}` and run this command again. Nothing is rebuilt implicitly.",
+      "de": "Der gebaute Proctor ({mode}) ist nicht verwendbar ({reason}). Baue ihn mit `{command}` neu und starte diesen Befehl erneut. Es wird nichts stillschweigend neu gebaut."
+    },
+    "uncovered": {
+      "en": "The proctor build read {count} Rust source files that the inputs of @teaching/proctor:build do not declare (first: {example}). Regenerate the inputs from the Cargo closure so that no edit can replay a stale build.",
+      "de": "Der Proctor-Build hat {count} Rust-Quelldateien gelesen, die die Eingaben von @teaching/proctor:build nicht deklarieren (erste: {example}). Erzeuge die Eingaben aus dem Cargo-Abschluss neu, damit keine Änderung einen veralteten Build wiederholen kann."
+    }
+  },
+  "reasons": {
+    "unreadable": { "en": "the receipt {path} cannot be read: {detail}", "de": "der Beleg {path} ist nicht lesbar: {detail}" },
+    "invalid": { "en": "the receipt {path} is not a valid proctor receipt", "de": "der Beleg {path} ist kein gültiger Proctor-Beleg" },
+    "mode": { "en": "the receipt is for the {actual} mode, not {mode}", "de": "der Beleg gehört zum Modus {actual}, nicht zu {mode}" },
+    "platform": { "en": "the receipt is for {actual}, this host is {host}", "de": "der Beleg gehört zu {actual}, dieser Rechner ist {host}" },
+    "executable": { "en": "the executable {path} named by the receipt is missing", "de": "die im Beleg genannte Programmdatei {path} fehlt" },
+    "size": { "en": "the executable {path} has {actual} bytes, the receipt names {expected}", "de": "die Programmdatei {path} hat {actual} Bytes, der Beleg nennt {expected}" },
+    "hash": { "en": "the executable {path} does not match the SHA-256 of the receipt", "de": "die Programmdatei {path} entspricht nicht dem SHA-256 des Belegs" }
+  }
+}

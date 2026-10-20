@@ -1,0 +1,149 @@
+{
+  "name": "@semio-tech/energy-oracle-py",
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🛠️toolchain/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json"
+    ]
+  },
+  "targets": {
+    "oracle-setup": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts setup",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "oracle-status": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts status",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
+    },
+    "oracle-run": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts run",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
+    },
+    "oracle-native": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts native",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
+    },
+    "oracle-epjson": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts epjson",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
+    },
+    "oracle-emit": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts emit",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "deps"
+      ]
+    },
+    "deps": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    }
+  }
+}

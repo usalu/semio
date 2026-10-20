@@ -1,9 +1,9 @@
 /** 📦️ Lift kids: module exporting `matchesLift`, `absolutizeBeyond`, `liftModuleKids`. */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode } from "../🌳️module-tree/🟦️.ts";
-import { declaredNames, hostPrivate, prependAfterInner, widenHostItems, type TestTransformResult } from "../🧪️test-closure/🟦️.ts";
+import { declaredNames, hostPrivate, prependAfterInner, widenHostItems, type TestTransformResult } from "../🧪️test-closure/🟢️shared/🟦️.ts";
 
 /** 🪜️ A file module mounted from a host file, with the chain of module names that encloses its declaration. */
 type LibMount = { readonly hostFile: string; readonly node: RustModuleNode; readonly file: string; readonly trail: readonly string[]; readonly hostIsRoot: boolean; readonly inFileScope: boolean };

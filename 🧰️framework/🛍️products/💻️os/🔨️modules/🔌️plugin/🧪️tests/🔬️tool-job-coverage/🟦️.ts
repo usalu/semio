@@ -12,25 +12,25 @@ import persistentFoundationFixture from "./🧫️fixtures/🧾️persistent-fou
 
 import contractExpressionFixture from "./🧫️fixtures/🧾️contract-expression.json";
 
-import { toolJobContractSource, toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobProofCatalogFailures } from "@semio-tech/repo-lib/laws";
+import { toolJobContractSource, toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobProofCatalogFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobRasterEnvelopeSourceEvidence, toolJobRasterEnvelopeCallerFailures, toolJobRasterEnvelopeCallerRetainedExact, toolJobStoreBatchPublicationBounded, toolJobTypedPersistentFoundation, toolJobPluginInstanceSource, toolJobStoreSource } from "@semio-tech/repo-lib/laws";
-import { toolJobMemberStoreProducerExact } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
-import { memberStoreProducerSourceSelfTests } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source/testing";
+import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobRasterEnvelopeSourceEvidence, toolJobRasterEnvelopeCallerFailures, toolJobRasterEnvelopeCallerRetainedExact, toolJobStoreBatchPublicationBounded, toolJobTypedPersistentFoundation, toolJobPluginInstanceSource, toolJobStoreSource } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
+import { toolJobMemberStoreProducerExact } from "../../../../📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
+import { memberStoreProducerSourceSelfTests } from "../../../../📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️testing/🟦️.ts";
 import { toolJobCheckpointSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts";
 import { toolJobScalarConfigCohortSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts";
-import { storeCanonicalEditSealerSelfTests } from "@semio-tech/framework-os/modules/store/canonical-edit/testing/store-canonical-edit-sealer";
+import { storeCanonicalEditSealerSelfTests } from "../../../../📦️packages/🟦️typescript/🔨️modules/🏪️store/🧵️canonical-edit/🧪️testing/🔬️store-canonical-edit-sealer/🟦️.ts";
 import { toolJobOwnerFactoryResolutionSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
 import { toolJobFactoryProofJoinSelfTests } from "../🔬️tool-job-factory-proof-join/🟦️.ts";
 import { toolJobLatestWinsSelfTests } from "../🔬️tool-job-latest-wins/🟦️.ts";
-import { toolJobMicrosecondBudgetSelfTests } from "@semio-tech/framework/job/budget/testing/tool-job-microsecond-budget";
-import { toolJobMicrosecondWorkerBindingSelfTests } from "@semio-tech/repo-lib/laws";
-import { toolJobTelemetryContentionSelfTests } from "@semio-tech/framework-trace/clock/testing/tool-job-telemetry-contention";
-import { toolJobCooperativeMaintenanceSelfTests } from "@semio-tech/framework-async/cooperative/testing/tool-job-cooperative-maintenance";
-import { proceduralGenerationRootSelfTests } from "@semio-tech/framework-os/modules/playbook/artifacts/playbook/generation/testing/procedural-generation-root";
-import { flowTypedRetirementSelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/testing/flow-typed-retirement";
-import { flowSelectedCopySelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/copy/testing/flow-selected-copy";
+import { toolJobMicrosecondBudgetSelfTests } from "../../../../../../📦️packages/🟦️typescript/🧵️job/⏱️budget/🧪️testing/🔬️tool-job-microsecond-budget/🟦️.ts";
+import { toolJobMicrosecondWorkerBindingSelfTests } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
+import { toolJobTelemetryContentionSelfTests } from "../../../../../../🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
+import { toolJobCooperativeMaintenanceSelfTests } from "../../../../../../🔨️modules/⏳️async/📦️packages/🟦️typescript/🤝️cooperative/🧪️testing/🔬️tool-job-cooperative-maintenance/🟦️.ts";
+import { proceduralGenerationRootSelfTests } from "../../../../📦️packages/🟦️typescript/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️testing/🔬️procedural-generation-root/🟦️.ts";
+import { flowTypedRetirementSelfTests } from "../../../../📦️packages/🟦️typescript/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️testing/🔬️flow-typed-retirement/🟦️.ts";
+import { flowSelectedCopySelfTests } from "../../../../📦️packages/🟦️typescript/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️testing/🔬️flow-selected-copy/🟦️.ts";
 import { admissionOrderAndBoundedPreparationChecks, interactiveJobEvaluationFixtures, proofCatalogEvaluationChecks } from "./🧾️proof-catalog-and-admission/🟦️.ts";
 import { actorProgressOverlayChecks, fem2dMountedSessionChecks, globalPayloadStoreInventoryChecks } from "./🧯️payload-store-progress-and-mounted-session/🟦️.ts";
 import { ephemeralPublicationChecks, freshTurnAndHostOnlyPublicationChecks, retainedPublicationChecks } from "./📤️publication-contracts/🟦️.ts";
@@ -101,7 +101,6 @@ export function toolJobRasterSourceSelfTests(): number {
     if (oracle(row.id) !== row.accepted || (failures.length === 0) !== row.accepted || toolJobRasterEnvelopeCallerRetainedExact(candidate.store,candidate.raster,candidate.editor,candidate.plugin,candidate.laws) !== row.accepted) throw new Error("Raster authority " + row.id + ": " + failures.join(", "));
   }
   for (const obligation of fixture.obligations) if (!observedObligations.has(obligation)) throw new Error("Raster source obligation lacks a rejecting hostile: " + obligation);
-  console.log("[DEBUG] Raster actual production owners=" + evidence.productionPaths.length + " mounted test owners=" + evidence.testPaths.length + " neutral authority cases=" + fixture.cases.length);
   return fixture.cases.length;
 }
 
@@ -117,7 +116,6 @@ export function toolJobRustProductionEvidenceSelfTests(): number {
     const parsed = spawnSync(executable,["--edition","2021","--config","skip_children=true","--emit","stdout"],{input:production,encoding:"utf8",timeout:10000,stdio:["pipe","ignore","pipe"]});
     if (parsed.error || parsed.status !== 0) throw new Error("independent Rust production parser " + row.id + ": " + (parsed.error?.message ?? parsed.stderr));
   }
-  console.log("[DEBUG] Rust production exclusion neutral cases=" + fixture.scrubberCases.length + " independently parsed");
   return fixture.scrubberCases.length;
 }
 

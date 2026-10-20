@@ -227,11 +227,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             RetirementStep::ProcessedBytes(_) => return Err(refusal("retirement body exceeded its admitted work grant")),
             RetirementStep::Complete if self.cursors.get(index).unwrap().terminal_is_empty() => (0, 0, true),
             RetirementStep::Complete => return Err(refusal("retirement body has no terminal-empty witness")),
-            RetirementStep::BudgetExhausted => {
-                std::thread_local!{static DIAGNOSTICS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
-                DIAGNOSTICS.with(|count|{if count.get()<8{count.set(count.get()+1);eprintln!("[DEBUG] fully selected retirement refused owner={} demand={demand:?} grant={grant:?} child={cursor_grant:?}",std::any::type_name::<T>());}});
-                (0, 0, false)
-            },
+            RetirementStep::BudgetExhausted => (0, 0, false),
         };
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: usize::from(progressed), copied_bytes: processed, retained_capacity_bytes: if progressed { birth } else { 0 }, released_bytes: bytes }))
     }

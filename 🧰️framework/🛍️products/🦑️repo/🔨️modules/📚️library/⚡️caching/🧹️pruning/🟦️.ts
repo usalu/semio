@@ -314,11 +314,11 @@ export async function scanDirectoryUnits(areaRoot: string, control: ResourceLeas
 export async function deleteUnit(areaRoot: string, unit: CacheUnit, control: ResourceLeaseControl): Promise<void> {
   const walk=new CacheWalk(control,"cache-delete:"+resolve(areaRoot),"exclusive"),root=resolve(areaRoot),parts=unit.path.split("/");
   if(!unit.path||isAbsolute(unit.path)||parts.some(part=>!part||part==="."||part===".."||part.includes("\\")||part.includes("\0")))throw Error("Cache unit must remain inside its area");
-  const absolute=join(root,...parts);let ancestor=root;
-  for(const part of ["",...parts.slice(0,-1)]){ancestor=part?join(ancestor,part):ancestor;const stat=await walk.stat(ancestor);if(!stat)return;if(!stat.isDirectory()||stat.isSymbolicLink())throw Error("Cache unit parent must remain a physical directory");}
+  const rootStat=await walk.stat(root);if(!rootStat)return;const device=rootStat.dev;requireCacheFilesystemDeviceV1(device,device);const absolute=join(root,...parts);let ancestor=root;
+  for(const part of ["",...parts.slice(0,-1)]){ancestor=part?join(ancestor,part):ancestor;const stat=await walk.stat(ancestor);if(!stat)return;requireCacheFilesystemDeviceV1(device,stat.dev);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error("Cache unit parent must remain a physical directory");}
   const removeFile=async(path:string):Promise<void>=>{await walk.checkpoint();try{await unlink(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}checkResourceLeaseControl(control);};
   if (unit.kind === "cargo-target-file") {
-    const stat=await walk.stat(absolute);if(!stat)return;if(!stat.isFile()||stat.isSymbolicLink())throw Error("Cargo target unit must remain a physical file");await removeFile(absolute);
+    const stat=await walk.stat(absolute);if(!stat)return;requireCacheFilesystemDeviceV1(device,stat.dev);if(!stat.isFile()||stat.isSymbolicLink())throw Error("Cargo target unit must remain a physical file");await removeFile(absolute);
     let parent = dirname(absolute);
     for (;;) {
       if (parent === root || relative(root, parent).startsWith("..")) break;
@@ -330,7 +330,7 @@ export async function deleteUnit(areaRoot: string, unit: CacheUnit, control: Res
   }
   const pending:{path:string;visited:boolean}[]=[{path:absolute,visited:false}];
   while(pending.length){
-    const {path,visited}=pending.pop()!,stat=await walk.stat(path);if(!stat)continue;
+    const {path,visited}=pending.pop()!,stat=await walk.stat(path);if(!stat)continue;requireCacheFilesystemDeviceV1(device,stat.dev);
     if(stat.isSymbolicLink()){if(path===absolute)throw Error("Cache unit must remain a physical directory");await removeFile(path);continue;}
     if(!stat.isDirectory()){await removeFile(path);continue;}
     if(visited){await walk.checkpoint();try{await rmdir(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}checkResourceLeaseControl(control);continue;}
@@ -338,3 +338,5 @@ export async function deleteUnit(areaRoot: string, unit: CacheUnit, control: Res
   }
   if(unit.kind==="cargo-incremental-session")await removeFile(join(dirname(absolute),sessionLockName(basename(absolute))));
 }
+
+function requireCacheFilesystemDeviceV1(root:number,entry:number):void{if(!Number.isSafeInteger(root)||root<0||!Number.isSafeInteger(entry)||entry<0||entry!==root)throw Error("Cache deletion must remain on its original filesystem");}

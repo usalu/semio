@@ -63,7 +63,7 @@ test("the synchronous framework wrappers reach the repository implementation and
     completeCargoPreparationObservationV1();
     issueRepositoryScriptProvidersV1(environment);
     expect(getRepoMetaDir("/repository")).toBe(repositoryMetaDirectory("/repository"));
-    expect(repoCacheDirectory("/repository", "a", "b")).toBe(join(repositoryMetaDirectory("/repository"), "⚡️cache", "a", "b"));
+    expect(repoCacheDirectory("/repository", "go", "b")).toBe(join(repositoryMetaDirectory("/repository"), "⚡️cache", "go", "b"));
     expect(cargoTargetDirectory(process.cwd(), { CARGO_TARGET_DIR: "/cargo-target" })).toBe(repositoryCargoTargetDirectory(process.cwd(), { CARGO_TARGET_DIR: "/cargo-target" }));
     expect(devToolingEnv({ SEMIO_PROBE: "1" }).SEMIO_PROBE).toBe("1");
     expect(() => runCmd(process.execPath, ["-e", "process.exit(3)"])).toThrow("exited with status 3");

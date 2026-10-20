@@ -1,0 +1,464 @@
+[
+ {
+  "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+  "op": "modify",
+  "old": "ba0bb9fa29ccf4bd1736d999b644e09bf84b0563c3768479bc73b3e969b5f87a",
+  "new": "490ef7654597a684d3f0c130d452a36726f618835bcaac8b92ef3f4658dede48"
+ },
+ {
+  "path": "🌎️hub/🏗️bootstrap/📌️check-in/🧱️types/🦀️.rs",
+  "op": "modify",
+  "old": "fc1535a0c6f3857fe63794cb46c13d66ff2bfce3c915a098800c42edfb93bf4c",
+  "new": "4e738c671d589d3cb413fe857363ce2752eac58f41aea5a661263fba1335d2d2"
+ },
+ {
+  "path": "🌎️hub/🏗️bootstrap/🔌️document-socket/🧱️types/🦀️.rs",
+  "op": "modify",
+  "old": "a9a213db3379e7a4bcb580e9a810b3ad9dc5d363bfe36ecc02606567a3a604b5",
+  "new": "8cc1ec3a907355a8052c476900e30075ac67c2dea6816baaaa257cc35df163ce"
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "f469e50fec09747c1c4827acfbacd1a1e734c6978109899883e45d3b3a956181",
+  "new": "d1161db23e277bc141a173972536382ab9610e801304d1203e2bc86c7a0c137b"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🎭️fixture-builders/🦀️.rs",
+  "op": "modify",
+  "old": "4ebb40061e2b9ae7b4637e4e44900ea0e756fec49d7207f558213dd0993ab2d6",
+  "new": "30d25520dd0f1e8778622423dce9e3a7072c3a9f6ff0443f268ca549e8b690d4"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🎭️fixture-harness/🦀️.rs",
+  "op": "modify",
+  "old": "99e55c02e2a91320e22eb5f891fcb9b27065ea5a3ac53acf8836a23b8b4196aa",
+  "new": "858b0a45ce08d32e45f8ba906a458edc64ec7ed13c5b9753bac2f67943bae8f1"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🎯️open-target-laws/🦀️.rs",
+  "op": "modify",
+  "old": "cf68732432a7d840a5a710a00fd70b08fbb0569a5ffcfe2c620c06f7c74b8289",
+  "new": "4364a86118b84659e6d34bceef9263a6311554cee2f1896e544f188291fc5fef"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/📮️publication-laws/🦀️.rs",
+  "op": "modify",
+  "old": "2e29474bb8000c91e8412f45b36959795e249109ba8394461d99c1b6de68fca7",
+  "new": "04dd8261288e46a6b611234bd8b3a6eaa8b0988b7b2651d89a97fb2e275ddef7"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🛡️loader-trust-laws/🦀️.rs",
+  "op": "modify",
+  "old": "adbc89ce5e1149173e55884cfc191a85a7375a609cf40d0b871b4950f0205a92",
+  "new": "cf72f430e4a66061f36b0c60b19fb2958d5143c3aec374c5c3e862d1a8351663"
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧾️descriptor/🔍️descriptor-validation/🦀️.rs",
+  "op": "modify",
+  "old": "b664d6d33611f4172f682c50ada200186f9e711121434c3383381a50fa02d2f4",
+  "new": "720c129c10bf6b58efe5abd37cb8f54a3443b0d7a71ea7cddca8754caad71d29"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "cef81d46db979182bb9230675531e0420ae81ac9035f9a428e6a965f2a4a71fa",
+  "new": "d59ca1a35711d2bdf569a304280e6a2ed0ebe275a73bf4be3d9c8b99b606d3f6"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🦀️.rs",
+  "op": "modify",
+  "old": "d020987c2736e14e038478dcde42f2f412305eb1fdd937b8256f87853eed7287",
+  "new": "a628a5477ac4a40e9f01dbdd77c522f65e3ed1669832740f9460c4555ac541aa"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "8694ad958ab6c518cf85413617451a5e004504b8bcee634235fd616f61da7eb9",
+  "new": "d5803d738b21ab0c2c76c72522b03cd65cfe690a94161bdcf729a32fdb374655"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/🦀️.rs",
+  "op": "modify",
+  "old": "756d2f9a659a215ac376a6e7601c7f4a27b49047890df0437b26b4510f93626d",
+  "new": "e22e829851b298bc6a67b36c2ac56fceb5f2d70747271cd1374117276fcaff2b"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/📏️layout/🦀️.rs",
+  "op": "modify",
+  "old": "a127640eae537a84dbb92f0d026c4ff0b156a86ffe99c9e8ff3a8a555b7c8ad7",
+  "new": "3affb68c3f337f767f6d34b9289b5251bb60893906251d2687a8029a65e75be6"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/📏️layout/🧪️tests/🔬️surface/🦀️.rs",
+  "op": "modify",
+  "old": "2edb2e175a495ab3fa547a538f6422688257f46d0f8de17ad94194a1ffaebf69",
+  "new": "b90aaaf0e774562e160fb9c443e2244925a433e88aa193a2e25f6d7f004ea2c7"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "e9861b9134c1d7d43e4ded8ec9c6e0f0c647fe20b3fd4a2d37862b113efc49c4",
+  "new": "4246777a8facd4da33d61b129117d6cbce801db3b2884aa46232eefb4792e5a4"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🖼️media/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "91b75e32929c83650fe56edad2f938d6fe33b5af7e5cce88e9ae38c6545a8639",
+  "new": "94bcb41e399d09f7baf85b40d7fbbb79c6e5b37e991ed7382be99f4ce3d29a85"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🛠️authoring/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "8f88fb95d81d9080606e0023299697fbdea5b116e0a29d24d6e5af54e2e936f9",
+  "new": "f84c6d2e23f3e7f194a7f0059667dba2d08f2fb668d4855221e4563b2b4c51c4"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "4a291a7980da66a9d68a489443545dcc3e802d33bdc5c2d938d9285314b39e47",
+  "new": "192c1a575b730ee3310044b83b8526d0fa1a2eb1070b43f9b77a02df87d4b01c"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "0699c949d4295e10c5f776893a303cf5ca313f7494a102590c1af5d6e99ed3f1",
+  "new": "50436bb35ac3339127ed140417a40db7ece49861320654f983d57c75653d9f94"
+ },
+ {
+  "path": "🌎️hub/🧩️compositions/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+  "op": "modify",
+  "old": "60c5799e65df1a188456b2bad0d12d931a7cd44513278d1199d10cc4498d972d",
+  "new": "96bc8d112765ea8bf19d8e023976c5f022840bf1a5473476e105496a853e04c5"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🎲️hostile-generative/🦀️.rs",
+  "op": "modify",
+  "old": "e8162c90420dff22507f7b2605126245a6cd2e131518cb71da46532fe35c104b",
+  "new": "a88aeab76c294924651fa27e0b51e967379788a72a00f4184c6932041bb3b9c6"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs",
+  "op": "modify",
+  "old": "613fd582c37f26d15012381168d8bbbb9792d6ea4fbd1bc73fe565b830504ff6",
+  "new": "4dacdd3d38328c34fc95b8a6ccdf65bbee6a19322acb75ed426a4402ad67bcaa"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs",
+  "op": "modify",
+  "old": "b89672ef363d8c390ca11417af876d0ee07639877505f39c5f20a5675e92076d",
+  "new": "6bbe9ed13138648640302f3ace7a139f71d42ae43228962e3dcae3288d20e508"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "30fc5aa9ee32f2742972a1304ecf76c51f7f3060e46e15f96b8254753b7885ec",
+  "new": "cf4d57f441f93f1524e031615658088cef9f0496a983fc71a4de2b8890de55be"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/⚡️quick-hostile-laws/🦀️.rs",
+  "op": "modify",
+  "old": "6b521ef69cd3d0531a639c0787f9bb766b13d7464db9a93182aa51e5480dcdb9",
+  "new": "ba3e78d047eee07a8108afc385f5b62a83b76b46e3c329f1197cbacf935273e0"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🐢️long-hostile-laws/🦀️.rs",
+  "op": "modify",
+  "old": "51ca52a47122da13065f00bdb473d3b971e0b1cbdc71daf1ab34dc00d1ea565d",
+  "new": "f0b5f5481163cc5fccbbabc750d9c42293ac99d5d681a0e1da408bc922168d6a"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/📇️directory/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "5c6c1819aaaa04333ff1e0ffc51e237e127cba9d2f461bac4ffaf7059985dd98",
+  "new": "2ff7253407413048a15ef61cbf806e4dbdd08c8e5b1ea3e7e6dc0192962c117a"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🔐️session/🔬️unit/🤖️agent-delegation-laws/🦀️.rs",
+  "op": "modify",
+  "old": "f002e37cbb7a978a7d5b85a10f1971f463668c5fe2ebab0d807bc1ee26245751",
+  "new": "de84556aa529e3794da28fe588fa186a263854e88791e904bad40d03786de5ff"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🚀️boot/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "94e17075a3777811e5a41b19836e2e48949f51844c63e68778ebf2d4a905d269",
+  "new": "f937197834ea7e8cebc18244ae8b0a6471f8964d55b97fb35d4b88fb19d38d7e"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "3907cf80ab22d6c42cbf8cef3f41a31b3ab0c74904618b94562657a87fab57d2",
+  "new": "bae5f4aa19e8361a62bc02768d2c22834f7e3a1576b486ada999ee6dfede5da5"
+ },
+ {
+  "path": "🌎️hub/🧪️tests/🔬️bin-unit/🪶️count-lease/🦀️.rs",
+  "op": "modify",
+  "old": "1bc98ea4fe4044dd565029b3cd83be5f7f493f6eb728f72a69676626eb354754",
+  "new": "5e0f7c0d7325d90db87959d4fc9bb456800e642016d0386dc283b78638bc3865"
+ },
+ {
+  "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "ad94b048e7e48ca22ec70abd972d43648b96e035851b9af78a647e36345a8ebb",
+  "new": "170da54bd2a94b8ccf943d28cdac710e4e13f5bac38049e91cec6706b98d28db"
+ },
+ {
+  "path": "🧰️framework/📦️packages/🦀️rust/🦀️.rs",
+  "op": "modify",
+  "old": "85c0de3608e5c5e5742cf288a444208e448339b98020bee87e77a3b460388885",
+  "new": "e95e2c8dc2b895a05a4db0b3da3c84bdb67dd8457d18d4268a071eab961ad58b"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "78b7620f28968445120361f7e0bc8662f10b5a1ff303dd386b1c38b0c224a4e0",
+  "new": "069eb9ab4d547c6bd59158cc09a08a72f451e591d8c9730b74cc5c5aca30a0ce"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "a86193926a33576f56a57169cffebe3809f32a2da22c7647cec860365dc49064",
+  "new": "f9e354034712a3de9ee5c9676f823ac6f6ef2a21c925594cf6eb2465c0ec846a"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "0d52c142a3d4246454a060bd6a3ab718754880178ee3da0da06c9b29d15b3f34",
+  "new": "ff8d1c75a4209a721a72c41ffaeacfd28fc378deee68eaefe1d869a9528cfe80"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "2c252198a320d8be9fcad5ca0cc413627653997c57929b7cff40d893686d2495",
+  "new": "65323047a4afebdced9f985f9f10116dbe95c505f060cb4252f167c12e301025"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "d5102bafdfed68e2517fbd15d344abeff58d610cbeebc4173fc268bcdc1ad530",
+  "new": "4e17205ddeb0d9c3d50b5537ef93a0f53baca6134aed5257ece14f333ccb360b"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "2d60edabc46d674c7ef23378f1f6d3b9577b6918b2e9ce2fa2aec282afa54f9a",
+  "new": "ffd1b879b8297a3b53d761c6cc5e28af86deeab61485fb0e1112a3733e8a1512"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "9b96d6813971075aaacb6ce992f4233ac3c655afb010e2a7b06a39426c7e5ad3",
+  "new": "3c7d9b5b7ed9fd6bfd81ce0608a7875f18dd59e1d7344492d9dbc6900cc3f28d"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "b52e1797e800dcbad02dc532178cdc6749c48b707fe5305e08c113aa79d7dac0",
+  "new": "b417539b3a1b73498d5e4778f6bfdb620b2a37a8d17ed73870a41585866ab367"
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+  "op": "modify",
+  "old": "c78c4ba728d45180ea1427f6e3fe33b2820dae5ccee00f7e799315aa56e78303",
+  "new": "24a4027b9dd5e8c5ba0439fd74af6c38a3fec79c9b1c14b37d9f9ca605fcabf9"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+  "op": "modify",
+  "old": "b6450186cc3f8692d08b9efd868247fb513de0fdb03d551917d3c2523334c689",
+  "new": "059f78651e001c5fb3a17e2028ddd1ee2fd65066a15cf137c01b36b71fb08b3f"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "a65fceb31511b54797dcba91982a2259dfed55bca527dd47467039c9115f6422",
+  "new": "90b677d82060d5ed593a7fbeddea611b6e0b90bc30a1d7ee4bc586ade9112545"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "92efec05517f97d8b72e2d9133a5314a467d8a31ff56b78c49a583316b355dc0",
+  "new": "2708252487c322da929d43016ded139fd0521e6f5d1545b627a9242ceec8d4a9"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧰️capabilities/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "85b9fffc24ee0efe5b9dc4a8c5be204f9f8fad60fa86e5b330deaaa4aeaa5aba",
+  "new": "ec5d3aeff3ee53fbc6bf9e705a13d4bf3cfc0e4f6f8593a4707dcf4c95878c1f"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧳️gateway-tools/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "639c4799ede143ab3dc3abd20d12e9219f379d598d1ff877ca61e4e149ccbd51",
+  "new": "078c0431207cdc2b9250cafbb1d646cab4db51f4f5bd1c348e18b6dba36a9878"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🪝️action-dispatch/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "0ec2e09d1b1e8a41c62323db8429a431e680453c188e768ec8acebbbe4f42ee2",
+  "new": "ceef67a2ac53119daf12264f2dd73c2c3f76b27feac8c5fa9b88b9af92f9c460"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "e5a5d8e6a6f74ba6458f2a72047009fa7f133db19c26c39d8f58e7e677fb9000",
+  "new": "859f8a3550b10d8a0cf60ee01182ebea459a7881822316ad416f7638d7f2bef2"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+  "op": "modify",
+  "old": "d3e8560220d9cb0d6c7b7aec917b020753e2674dfadf2873bb8282993d22259d",
+  "new": "d3f59b08f1f4637453fdb725f1360b224e302705a514fd79b1c3e477f3effd6d"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🔬️unit/👻️ghost-selection-and-drag-laws/🦀️.rs",
+  "op": "modify",
+  "old": "e733a708f30e08b9bc1a68d85aaa68d96a4968f3a3303c75ad9f6f2b21332c03",
+  "new": "09ef442b9281c0deb6f3bdacc97b04c353e460d8e8e9b40e2ce88fe65b41b1ec"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/⚖️laws/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "92af5dd1818c9f6dce5e915aac4d1cdbc43570646cd68aff538e11dcec71cc77",
+  "new": "05ec0bca27982dc38b2eee1711c5ddc8b0980af3e5f67c51927dc2c0e7c255f6"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs",
+  "op": "modify",
+  "old": "e9abce409b0abef5452ceb955561f6badd395bd9ed74c65a31f9f185edf508c5",
+  "new": "3388741c72cbbea923b556f890998334baa7869c0e8a21850830a76d3f98fad1"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🦀️.rs",
+  "op": "modify",
+  "old": "a80612d9e5bd59c27a8a881bcffdd6c8c18dfc371e67ca8e13f809d372a3e452",
+  "new": "a5c9c30b63b1afe7e125dfefdba2af1212a3d80e92339b3c9df16ba94bfe6cf6"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs",
+  "op": "modify",
+  "old": "7d102b2802c9eb4a27c4827d0a74f3d6de3b5be1ba0c1fa77e8f767381305002",
+  "new": "c2b5bfc3554225f78653ba658c8d076bdd361e0769f283f717d3492a7bec3e5e"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+  "op": "modify",
+  "old": "df9332a3766fa661a6e7f6d30d9fd698c9630976d5ce75614d61f9ff43e3802b",
+  "new": "c6fe04b1a39ab501f4717e062abb85b20a6c08f732f48eb5b4a26d82ff72ed26"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "56099050f3039defb003679160afb751142da24b229f513c9f7c88c7a69939e8",
+  "new": "aaade6800e1c43270f1bc80fe26fa2431344dbdaa815be48bd82c57f6aba3386"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+  "op": "modify",
+  "old": "820d35822c01ab2646f9fb48cf646840efd2752a13b5129d7f0c4a07ff3ce78c",
+  "new": "a1218a6d5c32c632213df91c94fd6cb08f319364bd960e4a16d1bcb9941f5982"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍎️shell-tests-input-1/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "eca7d6b6a00d1d4988b2b6f658c961cbcc6c8909f96e004b6a82d218bba16c00",
+  "new": "85555169dc618ab9f4955cc8bb58d9e1f1fe2fae2d77cfe215983c63320a6d68"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍯️shell-tests-input-2/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "2b300dc37adf74dde6bb3a307ab828d11f5c0ff4f1f59e9b89031f3a04444f38",
+  "new": "c54c465e4886499bd34f6e197b41dab82be1378f5d3f734d660eafea87ac066e"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🪟️panel/🖼️sections/🦀️.rs",
+  "op": "modify",
+  "old": "6581d7d67e4e1561d28a95c532d4cede8974843920837cd66df68a1177ce8ebd",
+  "new": "8122f8791b6c6bac38e444fc1d54dbddaa4a864d9cdb77894d6d4f253ba25aaa"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/⏲️tasks/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "475cd78da392eec0448ad1a5222b08307ac5b90360adf7483143793e84a88910",
+  "new": "0834fda8966f2ea8b6ca2477b3aff6ee70f09b4317e94c8596faf2e122caeb8f"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "11adfd8c5303a20a02120c6e93469308ce5c705662e47b7128709027545b1df7",
+  "new": "d84d70f31ae5eec408c2e1b6bef4432bf84b46b2f0829a37812c1fcfa871a1dc"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️imports/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "b494aebd5e4a96e6541252057124fb36a06f99bae40977fcadfd64c038a87989",
+  "new": "cb6d99313ed6a20c65ed0ea1ec5601ffe4732ed04aa3b5bac40da96711f73cc4"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+  "op": "modify",
+  "old": "91d5be4508f41f63cf7c96e379749bc494e749500120ec8ce5974b434089aacb",
+  "new": "bda0c04b8754a41e1da0491168db789b99841000f36d371b1516f51928aa8065"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/📖️catalog-read/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "b08b6219a25ec60a940721707763d327ad570855876102c3c91677373e56e2b8",
+  "new": "d6ae19c192b10d0853010413efbb45f18e5eff2ba381d2f7fe5793405d6efb40"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "30b4af03c498db90217335a71fbc37fed71de137f512cf9d70bd2c7faa81d278",
+  "new": "186368c7f5c7d63fda0396f36f3b02392aa402c076913e2b487590b542d3516b"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "79461853d140a555842f7cf010562e57d0a44a843fc3e09d2c48272841da6444",
+  "new": "642a39b20c49d838e95616c91c41f25becb7027d5d12501ca35868422a59ef8b"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎚️policy/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "fbd35db21d2d2c89772886b13e6c321f2c0dc874165cc2e09a435ee5910d2ea3",
+  "new": "e7d41d7451500802567cc76e5d8cf25507681149ce7cd76e82456b51cfc3d2af"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "e381b9f5a7285503010db8359e5d469dcc1ebb5dc3af8a04a0af95b590fa5834",
+  "new": "34dfaadda912a3b83b3d1540dd88e85ca3501f4e4e80407e05f9e13cb3dda2c0"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "b359c9eef2b4d026cacd7b04177bc705a10d4be052af2f4f6f032605d3d9a808",
+  "new": "f4f2680eaacc725031743b817dcb8cfdaf0cbb2498e2e2773374981fc6eeb3b6"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🗃️memory/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "842f648172a7b7d2e7194d22cdbee551a5533f95ee77576cf9aef705015e0209",
+  "new": "1901c6271f92ae01558ce0cebd36cde09cfc0ee1a3fe04f625f0e62b530783f2"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "ea0f2a73f03fd3d50e4cb388f47f84a173baa85b3a70fdebfb17c0f7d47ef996",
+  "new": "2420e146bb2cfe69fe7d9772b7c3b07a237efac1ec1d899ab1ab36ca1c2c6c0e"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "cf273232db5c137aa301d560ba09589a60e4616b3abbaf0ecc6b359e1fe91262",
+  "new": "e299a757b4cb652ae77c3cda317477220859c503cba574f4daa1f3bd57711e25"
+ },
+ {
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/📜️history/📦️packages/🦀️rust/Cargo.toml",
+  "op": "modify",
+  "old": "fb782881510018ea1f750294e6bc96fe027f7c2b61a2bd1054f6c1651c35e9cc",
+  "new": "f246f8407a39aaac016fcbe565dd120928f392ee37aff44a476f73f7e5867e96"
+ }
+]

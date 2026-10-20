@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "maximumCopyBytes": 4096,
+  "inlineBytes": 2560,
+  "fieldBytes": [
+    1280,
+    1280
+  ],
+  "fieldMoves": 2,
+  "denialRetainsPointer": true,
+  "constructorFailureRetainsOriginal": true,
+  "concurrentLastAliases": {
+    "aliases": 2,
+    "aliasReleases": 1,
+    "originalOwners": 1
+  },
+  "cases": [
+    {
+      "id": "live-alias",
+      "aliases": 2,
+      "physicalHandles": 2,
+      "remainingFields": 2,
+      "event": "alias",
+      "payloadOwners": 0,
+      "release": false
+    },
+    {
+      "id": "unique-owner",
+      "aliases": 1,
+      "physicalHandles": 1,
+      "remainingFields": 2,
+      "event": "owner",
+      "payloadOwners": 1,
+      "release": false
+    },
+    {
+      "id": "delayed-peer-close",
+      "aliases": 0,
+      "physicalHandles": 2,
+      "remainingFields": 0,
+      "event": "wait",
+      "payloadOwners": 1,
+      "release": false
+    },
+    {
+      "id": "first-field",
+      "aliases": 0,
+      "physicalHandles": 1,
+      "remainingFields": 2,
+      "event": "field",
+      "payloadOwners": 1,
+      "release": false
+    },
+    {
+      "id": "last-field",
+      "aliases": 0,
+      "physicalHandles": 1,
+      "remainingFields": 1,
+      "event": "field",
+      "payloadOwners": 1,
+      "release": false
+    },
+    {
+      "id": "release-empty",
+      "aliases": 0,
+      "physicalHandles": 1,
+      "remainingFields": 0,
+      "event": "release",
+      "payloadOwners": 1,
+      "release": true
+    }
+  ],
+  "admission": [
+    {
+      "supported": false,
+      "birthKnown": true,
+      "customDrop": false,
+      "items": 1,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": false,
+      "customDrop": false,
+      "items": 1,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "customDrop": true,
+      "items": 1,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "customDrop": false,
+      "items": 0,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "customDrop": false,
+      "items": 1,
+      "capacity": 23,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "customDrop": false,
+      "items": 1,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 0,
+      "accepted": false
+    },
+    {
+      "supported": true,
+      "birthKnown": true,
+      "customDrop": false,
+      "items": 1,
+      "capacity": 24,
+      "requiredCapacity": 24,
+      "depth": 1,
+      "accepted": true
+    }
+  ],
+  "fieldConstructorPanic": {
+    "transferredFields": [
+      0
+    ],
+    "nextField": 1,
+    "originalAllocationRetained": true
+  },
+  "selectionInterleaving": {
+    "quotedAliases": 2,
+    "electedAliases": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "structuralItems": 1,
+    "originalEffects": 0
+  }
+}

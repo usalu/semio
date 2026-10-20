@@ -1,0 +1,3 @@
+export interface ForwardResultV1{handled:boolean;reason?:string;exit?:number;served?:"memo"|"executed"|"query"|"delegated";refused?:string;lost?:boolean;serviceTiming?:Record<string,number>;timing:Record<string,number>}
+export function launcherCapabilityV1(key:Uint8Array,now?:number):string;
+export function forwardCommandV1(options:{root:string;command:string;args:readonly string[];cwd:string;languages:readonly string[];lane?:string;client?:string;env?:Record<string,string>;cap?:string;stdout?:{write(text:string|Uint8Array):unknown};stderr?:{write(text:string|Uint8Array):unknown};environment?:Readonly<Record<string,string|undefined>>;platform?:string;deadlineMs?:number;signal?:AbortSignal;progress?:boolean}):Promise<ForwardResultV1>;

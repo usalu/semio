@@ -1,19 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
-import { dialectFromLegacyExampleAppId, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework-manifest";
+import { examplesForApp, type PluginManifest } from "@semio-tech/framework-manifest";
 import fixture from "../🧫️fixtures/🔬️scope-contributions/🔣️.json";
 
-describe("normalizeManifestExamples", () => {
-  it("stamps dialect from a legacy appId so the navbar picker can resolve the row", () => {
-    const legacy = { id: "demo", appId: "s.sourcing.curation@1/*#editor", artifactJson: "semio …" };
-    const normalized = normalizeManifestExampleRow(legacy);
-    expect(normalized.appId).toBeUndefined();
-    expect(examplesForApp([normalized], { dialect: dialectFromLegacyExampleAppId("s.sourcing.curation@1/*#editor") }).map((row) => row.id)).toEqual(["demo"]);
-  });
-  it("leaves rows that already carry dialect unchanged", () => {
-    const dialect = { artifactKind: "s.draw.drawing", standard: "1", subset: "*" };
-    const row = { id: "demo", dialect, artifactJson: "…" };
-    expect(normalizeManifestExamples({ examples: [row] }).examples?.[0]).toEqual(row);
+describe("examplesForApp", () => {
+  it("offers a surface exactly the rows authored for its dialect and none to a surface without one", () => {
+    const dialect = { artifactKind: "s.sourcing.curation", standard: "1", subset: "*" };
+    const rows = [{ id: "demo", dialect, artifactJson: "semio …" }, { id: "draw", dialect: { ...dialect, artifactKind: "s.draw.drawing" }, artifactJson: "…" }, { id: "undialected", artifactJson: "…" }];
+    expect(examplesForApp(rows, { dialect }).map((row) => row.id)).toEqual(["demo"]);
+    expect(examplesForApp(rows, {})).toEqual([]);
   });
 });
 

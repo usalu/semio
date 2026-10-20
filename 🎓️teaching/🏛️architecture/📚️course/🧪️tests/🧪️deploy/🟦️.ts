@@ -12,7 +12,7 @@
  * @see ../../🚀️deploy/🧬️schema/🔣️.json — their contract
  * @see ../../🚀️deploy/🟦️.ts — the operator verbs under test */
 import { createHash } from "node:crypto";
-import { mkdtempSync, realpathSync, mkdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdtempSync, realpathSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -23,11 +23,11 @@ import { registerCancellationAndStagingTests } from "./🛑️cancellation-and-s
 import { registerDockerContextAndImageTests } from "./🐳️docker-context-and-image/🟦️.ts";
 import { registerComposeCaddyAndWorkflowTests } from "./🧩️compose-caddy-and-workflow/🟦️.ts";
 import { registerSealedPublicationAndBundleTests } from "./🌐️sealed-publication-and-bundle/🟦️.ts";
+import { registerSiteBuildTests } from "./🏗️site-build/🟦️.ts";
+import { registerSiteGraphTests } from "./🕸️site-graph/🟦️.ts";
 
 for (const row of publication.cases) it(`publishes ${row.id} assets without rewriting unchanged files`, () => {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "nx", "asset-publication") : join(realpathSync(tmpdir()), "asset-publication");
-  mkdirSync(parent, { recursive: true });
-  const root = mkdtempSync(join(parent, "run-"));
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "course-asset-publication-"));
   scratch.push(root);
   const file = join(root, "asset.txt");
   const before = new Date("2000-01-01T00:00:00Z");
@@ -46,4 +46,6 @@ describe("architecture course deployment", () => {
   registerDockerContextAndImageTests();
   registerComposeCaddyAndWorkflowTests();
   registerSealedPublicationAndBundleTests();
+  registerSiteBuildTests();
+  registerSiteGraphTests();
 });

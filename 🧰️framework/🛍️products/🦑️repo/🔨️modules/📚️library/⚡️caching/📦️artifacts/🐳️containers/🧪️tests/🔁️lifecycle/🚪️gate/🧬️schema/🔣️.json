@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "Arguments": {
+      "type": "array",
+      "items": {
+        "const": "devcontainer-lifecycle"
+      },
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "Target": {
+      "const": {
+        "executor": "repo:script",
+        "cache": false,
+        "dependsOn": [],
+        "inputs": [
+          "{projectRoot}/📦️artifacts/🐳️containers/{🔁️lifecycle,🧪️tests/{🔁️lifecycle,🧫️fixtures/🔁️lifecycle}}/**/*"
+        ],
+        "outputs": [],
+        "options": {
+          "command": "bun ./📜️script.ts test devcontainer-lifecycle",
+          "forwardAllArgs": false
+        },
+        "metadata": {
+          "semio": {
+            "sourceInputObservation": "freshness",
+            "runtimeSourceEntries": [
+              "{projectRoot}/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts"
+            ]
+          }
+        }
+      }
+    },
+    "RuntimeBootstrap": {
+      "const": {
+        "selector": "runtime-bootstrap",
+        "command": "bun ./📜️script.ts test runtime-bootstrap",
+        "sourceInputObservation": "freshness",
+        "runtimeSourceEntries": [
+          "{projectRoot}/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts"
+        ]
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "accepted"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

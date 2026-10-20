@@ -1,3 +1,8 @@
+import "../🎮️management/🕰️history/🧪️tests/🟦️.ts";
+import "../🎮️management/🔏️fingerprint/🧪️tests/🟦️.ts";
+import "../📬️commands/🧪️tests/🟦️.ts";
+import "../🎮️management/🪪️namespace/🧪️tests/🟦️.ts";
+import "../🎮️management/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020";

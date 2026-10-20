@@ -8,7 +8,8 @@ import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from 
 import { rootAliasModules } from "../../../🏗️authoring/📦️crate-tree/🗺️plan/🧭️module-chains/🟦️.ts";
 import { rewriteMountPaths } from "../../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
 import { verifyAppliedLayout } from "../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
-import { absolutizeSuperPaths, transformTestClosure } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { transformTestClosure } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { absolutizeSuperPaths } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
 import { tiny, weaveFiles } from "../🏗️virtual-crate/🟦️.ts";
 
 describe("artifact crate carve", () => {

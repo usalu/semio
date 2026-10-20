@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "index": 0,
+      "project": "workspace",
+      "target": "test-workspace-build",
+      "command": "repo run workspace:test-workspace-build --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null,
+      "log": "🗑️generated/e2e-source-00-fresh-statfs.log",
+      "artifacts": "🗑️generated/s00i",
+      "attempts": [
+        {
+          "sessionId": 17577,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00.log",
+          "outcome": "strictcensuscap3vsactual4;0effects"
+        },
+        {
+          "sessionId": 98946,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-descriptor.log",
+          "outcome": "censuspassed;intentpublished;stale-frameproofrejected;0retired"
+        },
+        {
+          "sessionId": 3862,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-proof.log",
+          "outcome": "NxSDKauthorizeroutputmissing;noresetevent;sharedcapsulereplacedunattributed"
+        },
+        {
+          "sessionId": 43980,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-sdk.log",
+          "outcome": "sealed-stage-advanced;dangling-nx-installation-realpath-ENOENT;no-Source-body-pass"
+        },
+        {
+          "sessionId": 84179,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-registration.log",
+          "outcome": "Optional observation-block leaf rejected before bodies; actual loader registration passed"
+        },
+        {
+          "sessionId": 86615,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-coordinate.log",
+          "outcome": "Exact owned PTY interrupted during dependency shared-lease wait; no test body"
+        },
+        {
+          "sessionId": 56088,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-block-cache.log",
+          "outcome": "Genuine sealed compiler child undeclared physical Source read refused; no test body"
+        },
+        {
+          "sessionId": 80709,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-capture-diagnostic.log",
+          "outcome": "Parser544512 then nativeStatfsSyncV1 export not found; no sealed diagnostic or Source body"
+        },
+        {
+          "sessionId": 74500,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-00-fresh-statfs.log",
+          "outcome": "Exact owned PTY interrupted after dependency-build wait; no captured-read diagnostic or test body; no red/pass claim"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "project": "workspace",
+      "target": "verify-zero-touch",
+      "command": "repo run workspace:verify-zero-touch --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 2,
+      "project": "@semio-tech/repo-lib",
+      "target": "test-build-caller-birth",
+      "command": "repo run @semio-tech/repo-lib:test-build-caller-birth --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 3,
+      "project": "@semio-tech/repo-lib",
+      "target": "test-cargo-workspace-ownership",
+      "command": "repo run @semio-tech/repo-lib:test-cargo-workspace-ownership --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 4,
+      "project": "@semio-tech/repo-lib",
+      "target": "test-process-budgets",
+      "command": "repo run @semio-tech/repo-lib:test-process-budgets --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 5,
+      "project": "@semio-tech/value-rs",
+      "target": "test-borrowed-observations-source",
+      "command": "repo run @semio-tech/value-rs:test-borrowed-observations-source --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 6,
+      "project": "@semio-tech/ui-rs",
+      "target": "test-crate-boundaries",
+      "command": "repo run @semio-tech/ui-rs:test-crate-boundaries --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 7,
+      "project": "@semio-tech/ui-rs",
+      "target": "test-text-editor-source",
+      "command": "repo run @semio-tech/ui-rs:test-text-editor-source --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 8,
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "test-source-freshness",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-source-freshness --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 9,
+      "project": "repo-mcp",
+      "target": "test-install",
+      "command": "repo run repo-mcp:test-install --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 10,
+      "project": "@semio-tech/repo-cli-go",
+      "target": "test-entrypoint-source",
+      "command": "repo run @semio-tech/repo-cli-go:test-entrypoint-source --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 11,
+      "project": "@semio-tech/framework-os-mcp",
+      "target": "test-native-staging",
+      "command": "repo run @semio-tech/framework-os-mcp:test-native-staging --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 12,
+      "project": "@semio-tech/framework-source-workspace",
+      "target": "test-source",
+      "command": "repo run @semio-tech/framework-source-workspace:test-source --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 13,
+      "project": "@semio-tech/value-rs",
+      "target": "test-owned-projection-source",
+      "command": "repo run @semio-tech/value-rs:test-owned-projection-source --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 14,
+      "project": "@semio-tech/value-rs",
+      "target": "test-immutable-projection",
+      "command": "repo run @semio-tech/value-rs:test-immutable-projection --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 15,
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "test-dispatch",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-dispatch --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 16,
+      "project": "@semio-tech/repo-lib",
+      "target": "test-dashboard-control",
+      "command": "repo run @semio-tech/repo-lib:test-dashboard-control --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 17,
+      "project": "repo",
+      "target": "test-workspace-ownership",
+      "command": "repo run repo:test-workspace-ownership --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 18,
+      "project": "@semio-tech/framework-process",
+      "target": "test-runtime-environment",
+      "command": "repo run @semio-tech/framework-process:test-runtime-environment --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 19,
+      "project": "@semio-tech/framework-process",
+      "target": "test-native-image-observation",
+      "command": "repo run @semio-tech/framework-process:test-native-image-observation --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null,
+      "lastAttempt": {
+        "sessionId": 18482,
+        "outcome": "interrupted; no pass",
+        "evidence": "🗑️generated/e2e-source-native-image-scoped.log; exact old PTY no longer exists"
+      }
+    },
+    {
+      "index": 20,
+      "project": "@semio-tech/framework-process",
+      "target": "test-cargo-source-admission",
+      "command": "repo run @semio-tech/framework-process:test-cargo-source-admission --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 21,
+      "project": "@semio-tech/framework-process",
+      "target": "test-process-progress",
+      "command": "repo run @semio-tech/framework-process:test-process-progress --skip-cache --output=stream",
+      "state": "pending",
+      "log": "🗑️generated/e2e-source-21-current.log",
+      "artifacts": "🗑️generated/p21a",
+      "purpose": "Schema-first tooling presentation implementation; all prior red attempts were prebody, current actual acceptance pending.",
+      "lastAttempt": {
+        "sessionId": 53440,
+        "exitCode": 1,
+        "log": "🗑️generated/e2e-tooling-progress-red.log",
+        "outcome": "whole1-loaded-build-graph-implementation-changed;no-testbody;stop-request-issued-after-runtime-refusal"
+      },
+      "attempts": [
+        {
+          "sessionId": 73748,
+          "exitCode": 1,
+          "outcome": "Root reports exact owned cancellation while dependency-build waiter; no body/red/pass; see oct20-tooling-progress.md."
+        },
+        {
+          "sessionId": 52059,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-tooling-progress-green.log",
+          "outcome": "Exact own PTY Ctrl+C while entirely capacity queued110s, no Original/test body; no red/pass."
+        },
+        {
+          "sessionId": 57784,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-current.log",
+          "outcome": "Exact owned PTY Ctrl+C at parent-authorized quiet boundary; capacity-only wait, no Original/test body, no red/pass."
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "project": "@semio-tech/framework-process",
+      "target": "test-execution-budget",
+      "command": "repo run @semio-tech/framework-process:test-execution-budget --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 23,
+      "project": "@semio-tech/framework-process",
+      "target": "test-native-cache-descriptors",
+      "command": "repo run @semio-tech/framework-process:test-native-cache-descriptors --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 24,
+      "project": "@semio-tech/framework-process",
+      "target": "test-descriptor-lifetime",
+      "command": "repo run @semio-tech/framework-process:test-descriptor-lifetime --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    },
+    {
+      "index": 25,
+      "project": "repo",
+      "target": "test-cargo-retirement",
+      "command": "repo run repo:test-cargo-retirement --skip-cache --output=stream",
+      "state": "pending",
+      "sessionId": null
+    }
+  ],
+  "reason": "Existing run selects exact tasks; run-many currently requests all graph",
+  "nativePrerequisites": "Must confirm final inferred graph/runtime, no explicit manifest dependencies"
+}

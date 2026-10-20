@@ -47,9 +47,10 @@
       "languages": [
         { "environment": { "SEMIO_LANGUAGE": "de", "LANG": "en_US.UTF-8" }, "language": "de" },
         { "environment": { "LANG": "de_DE.UTF-8" }, "language": "de" },
-        { "environment": { "SEMIO_LANGUAGE": "fr", "LC_ALL": "de_CH" }, "language": "de" },
-        { "environment": { "LANG": "C" }, "language": "en" },
-        { "environment": {}, "language": "en" }
+        { "environment": { "SEMIO_LANGUAGE": "fr", "LC_ALL": "de_CH" }, "refusal": "names a language that is not offered" },
+        { "environment": { "LC_ALL": "de_CH" }, "language": "de" },
+        { "environment": { "LANG": "C" }, "refusal": "No language selected" },
+        { "environment": {}, "refusal": "No language selected" }
       ]
     }
   }

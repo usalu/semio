@@ -1,0 +1,53 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+ "function": "registerTests1",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of registerTests1. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️actor-instance-close-fault",
+   "doc": "/** 🔶️ The actor instance close fault phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorInstanceCloseFaultTests",
+     "emoji": "🔷",
+     "doc": "Registers the actor instance close fault tests of registerTests1.",
+     "from": 6,
+     "to": 86
+    }
+   ]
+  },
+  {
+   "dir": "🔸️actor-arena-handback-fixture",
+   "doc": "/** 🔸️ The actor arena handback fixture phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorArenaHandbackFixtureTests",
+     "emoji": "🔹",
+     "doc": "Registers the actor arena handback fixture tests of registerTests1.",
+     "from": 139,
+     "to": 211
+    }
+   ]
+  },
+  {
+   "dir": "🟠️actor-instance-close-receipts",
+   "doc": "/** 🟠️ The actor instance close receipts phase of registerTests1. */",
+   "phases": [
+    {
+     "name": "registerActorInstanceCloseReceiptsTests",
+     "emoji": "🟡",
+     "doc": "Registers the actor instance close receipts tests of registerTests1.",
+     "from": 279,
+     "to": 279
+    }
+   ]
+  }
+ ]
+}

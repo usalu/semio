@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# Generates staged/samples.json and staged/rules.json from one table each (hand-authored data, validated against the schema by the tests).
+import json, os
+HERE = os.path.dirname(os.path.abspath(__file__))
+T = lambda en, de: {"en": en, "de": de}
+S = []
+def s(id, area, target, en, de, **extra): S.append({"id": id, "area": area, "target": target, **extra, "note": T(en, de)})
+s("fw-graph-generate", "framework", "@semio-tech/framework-graph:generate", "Cheap generator with declared outputs.", "Günstiger Generator mit deklarierten Ausgaben.", phases=["fresh", "restored"])
+s("fw-graph-test", "framework", "@semio-tech/framework-graph:test", "Test task with a dependency closure.", "Testaufgabe mit Abhängigkeitsabschluss.")
+s("fw-styling-generate", "framework", "@semio-tech/ui-styling:generate", "Generator whose outputs are tracked fixtures.", "Generator, dessen Ausgaben versionierte Fixtures sind.")
+s("fw-async-typegen", "framework", "@semio-tech/framework-async-rs:typegen", "Type generation into a generated tree.", "Typgenerierung in einen generierten Baum.")
+s("fw-plugin-registry-check", "framework", "@semio-tech/plugin-registry:plugin-root-ownership-check", "Check writing a report directory.", "Prüfung, die ein Berichtsverzeichnis schreibt.")
+s("fw-actor-import-check", "framework", "@semio-tech/browser-actor-import-test:runtime-check", "Check writing a report directory.", "Prüfung, die ein Berichtsverzeichnis schreibt.")
+s("fw-playground-session", "framework", "@semio-tech/framework-os-dev:generate-playground-session", "Generator writing one tracked TypeScript file.", "Generator, der eine versionierte TypeScript-Datei schreibt.")
+s("sp-layout-media-adoption", "s-plugins", "@semio-tech/layout-layout-rs:test-media-adoption-source", "Source-level test of a plugin.", "Quellebenen-Test eines Plugins.")
+s("sp-writer-graph", "s-plugins", "@semio-tech/writer-writer-rs:graph-generate", "Plugin graph generator.", "Graph-Generator eines Plugins.")
+s("sp-writer-test", "s-plugins", "@semio-tech/writer-writer-rs:test", "Plugin test with a dependency closure.", "Plugin-Test mit Abhängigkeitsabschluss.")
+s("sp-gismap-build", "s-plugins", "@semio-tech/gis-gismap-js:build", "JavaScript build into a dist directory.", "JavaScript-Build in ein dist-Verzeichnis.", phases=["fresh", "restored"])
+s("sp-norm-taxonomy", "s-plugins", "@semio-tech/norm-plugin:mutation-leaf-taxonomy-generate", "Fixture generator with a tracked output.", "Fixture-Generator mit versionierter Ausgabe.")
+s("hub-ts-test", "hub", "os-hub-ts:test", "Hub unit tests.", "Hub-Unit-Tests.")
+s("hub-ts-typecheck", "hub", "os-hub-ts:typecheck", "Largest declared input set of any sample.", "Größte deklarierte Eingabemenge aller Stichproben.", phases=["fresh"], checks=["graph", "closure", "results", "inputs"])
+s("hub-flow-graph", "hub", "@semio-tech/flow-plugin:graph-generate", "Composition graph generator.", "Kompositions-Graph-Generator.")
+s("hub-gis-codecs", "hub", "@semio-tech/gis-plugin:native-codec-projection", "Projection into a tracked JSON file.", "Projektion in eine versionierte JSON-Datei.")
+s("hub-stdio-codecs", "hub", "@semio-tech/stdio-plugin:native-codec-projection", "Projection into two tracked JSON files.", "Projektion in zwei versionierte JSON-Dateien.")
+s("teach-course-test", "teaching", "@teaching/architecture-course:test", "Course unit tests.", "Unit-Tests des Kurses.")
+s("teach-course-typecheck", "teaching", "@teaching/architecture-course:typecheck", "Course type check with a seven-task closure.", "Typprüfung des Kurses mit sieben Aufgaben im Abschluss.")
+s("teach-course-build", "teaching", "@teaching/architecture-course:build", "Course build, uncached by declaration.", "Kurs-Build, per Deklaration ungecacht.", phases=["fresh"])
+s("teach-proctor-test", "teaching", "@teaching/proctor:test", "Proctor unit tests.", "Proctor-Unit-Tests.")
+s("teach-proctor-check", "teaching", "@teaching/proctor:check", "Proctor static check.", "Statische Prüfung des Proctors.")
+s("mb-actor-network", "mit-bestand", "@semio-tech/mit-bestand-bericht:generate-actor-network", "Generator writing two tracked LaTeX files.", "Generator, der zwei versionierte LaTeX-Dateien schreibt.", phases=["fresh", "restored"])
+s("mb-actor-validate", "mit-bestand", "@semio-tech/mit-bestand-bericht:akteursnetz-validate", "Validation without outputs.", "Validierung ohne Ausgaben.")
+s("mb-demonstrator-test", "mit-bestand", "@semio-tech/mit-bestand-demonstrator:test", "Demonstrator unit tests.", "Unit-Tests des Demonstrators.")
+s("st-play-test", "semio-tech", "@semio-tech/semio-tech-play:test", "Play unit tests.", "Unit-Tests von Play.")
+s("st-play-release-verify", "semio-tech", "@semio-tech/semio-tech-play:release-verify", "Release verification of the site.", "Release-Prüfung der Seite.")
+samples = {"version": 1, "defaults": {"phases": ["fresh"], "checks": ["graph", "closure", "outputs", "results", "inputs", "restore"], "expectExit": 0, "timeoutSeconds": 1200, "maximumOutputBytes": 268435456}, "samples": S}
+json.dump(samples, open(HERE + "/staged/samples.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False); open(HERE + "/staged/samples.json", "a").write("\n")
+
+R = []
+def r(id, kind, surface, en, de, evidence, **f): R.append({"id": id, "kind": kind, "surface": surface, **f, "justification": T(en, de), "evidence": evidence})
+r("bazel-source-link", "strip-prefix", "input-bazel", "Bazel names every source file under its link directory in the generated workspace; the repository path is what follows the prefix.", "Bazel nennt jede Quelldatei im erzeugten Workspace unter ihrem Link-Verzeichnis; der Repository-Pfad ist das, was dem Präfix folgt.", "Bazel adapter schema actions.sources.link = s", prefix="s/")
+r("bazel-build-file", "ignore-glob", "input-bazel", "The generated BUILD file is the Bazel rendering of the task graph, not an input of the task.", "Die erzeugte BUILD-Datei ist Bazels Darstellung des Aufgabengraphen, keine Eingabe der Aufgabe.", "renderBazelBuildV1 writes BUILD.bazel at the workspace root", glob="BUILD.bazel")
+r("bazel-module-files", "ignore-glob", "input-bazel", "MODULE.bazel and its lock pin Bazel's own module graph, which Nx has no counterpart for.", "MODULE.bazel und die Sperre legen Bazels eigenen Modulgraphen fest, für den Nx keine Entsprechung hat.", "prepareBazelModulesV1 writes MODULE.bazel.lock", glob="MODULE.bazel*")
+r("bazel-task-manifest", "ignore-glob", "input-bazel", "The task manifest carries the declared command, working directory and environment of the task; it is how Bazel keys them, while Nx hashes them as part of the target.", "Das Aufgabenmanifest trägt Befehl, Arbeitsverzeichnis und Umgebung der Aufgabe; so bildet Bazel deren Schlüssel, während Nx sie als Teil des Ziels hasht.", "bazelManifestV1 renders <label>.json", glob="t_*.json")
+r("bazel-task-launcher", "ignore-glob", "input-bazel", "The launcher script starts the shared task runner; Nx starts the same runner through its own executor.", "Das Startskript startet den gemeinsamen Aufgabenläufer; Nx startet denselben Läufer über seinen eigenen Executor.", "STARLARK_RULES launcher attribute", glob="t_*.sh")
+r("bazel-products", "ignore-glob", "input-bazel", "Products of other Bazel actions (dependency snapshots, the captured runner implementation) stand for what Nx reports as dependency outputs; their content is compared by the outputs check.", "Produkte anderer Bazel-Aktionen (Abhängigkeits-Schnappschüsse, die erfasste Läufer-Implementierung) entsprechen dem, was Nx als Abhängigkeitsausgaben meldet; ihr Inhalt wird von der Ausgabenprüfung verglichen.", "bazelActionsV1 restore edges", glob="bazel-out/**")
+r("bazel-external", "ignore-glob", "input-bazel", "External repositories hold the pinned Bun toolchain and Bazel's own rules.", "Externe Repositories enthalten die festgelegte Bun-Toolchain und Bazels eigene Regeln.", "prepareBazelBunV1 toolchain repository", glob="external/**")
+r("lock-covers-external", "covered-by", "input-nx", "Nx hashes the resolved external packages; Bazel receives the lock file those packages are resolved from.", "Nx hasht die aufgelösten externen Pakete; Bazel erhält die Sperrdatei, aus der diese aufgelöst werden.", "Bazel adapter schema actions.sources.bundled = bun.lock, package.json", category="external", anyOf=["bun.lock", "s/bun.lock"])
+rules = {"version": 1, "extractors": {"failedTasksHeading": "^\\s*(?:NX\\s+)?Failed tasks:?\\s*$", "failedTask": "^\\s*-\\s+(\\S+:\\S+)\\s*$", "testTarget": "^test(?:-.+)?$"}, "rules": R}
+json.dump(rules, open(HERE + "/staged/rules.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False); open(HERE + "/staged/rules.json", "a").write("\n")
+print(len(S), "samples", len(R), "rules")

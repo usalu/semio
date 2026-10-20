@@ -34,7 +34,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes+d.capacity
 fn close_typed<T:RetireOwned>(value:T){let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();for _ in 0..10000{if owner.terminal_is_empty(){return;}let g=grant(owner.next_demand(4096).unwrap());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(g).unwrap());assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}panic!("typed semantic output did not close");}
 #[test]
 fn original_semantic_factory_matches_neutral_outputs_and_exact_physical_turns(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🌱️derived/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🌱️derived/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in law["cases"].as_array().unwrap().iter().filter(|case|case["accepted"]==true){for cancel_at in [None,Some(0),Some(1),Some(2),Some(8),Some(16)]{
   let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<u64>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<u64>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<u64>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<u64>::default());
   let factory=RetainedClonePreparationFactory::new(Arc::new(ScalarEdit),Arc::clone(&mutations),Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<u64>::default()),64).unwrap();
@@ -54,5 +54,4 @@ fn original_semantic_factory_matches_neutral_outputs_and_exact_physical_turns(){
   source.begin_close();for _ in 0..10000{if source.terminal_is_empty(){break;}let g=grant(source.close_demand(4096).unwrap());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(source.terminal_is_empty());assert!(!address.is_null());close_typed(root);
  }
  }
- eprintln!("[DEBUG] Actual metadata-free original native factory matched neutral scalar patches with independently paid physical semantic/output/cancellation turns");
 }

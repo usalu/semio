@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "build": {
+    "cache": true,
+    "outputs": [
+      "{projectRoot}/.🧾️store/build.json"
+    ],
+    "forbiddenDecisionClasses": [
+      "managed-output"
+    ],
+    "inputEnvironment": [
+      "PROCTOR_URL"
+    ],
+    "externalDependencies": [
+      "@dnd-kit/core",
+      "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
+      "@tailwindcss/vite",
+      "@vitejs/plugin-react",
+      "ajv",
+      "i18next",
+      "immer",
+      "react",
+      "react-dom",
+      "react-i18next",
+      "tailwindcss",
+      "vite"
+    ],
+    "coveredSamples": [
+      "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json",
+      "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🌐️delivery/🟦️.ts"
+    ],
+    "closureTypescript": [
+      "{projectRoot}/tsconfig.site.json"
+    ]
+  },
+  "publish": {
+    "cache": false,
+    "dependsOn": [
+      "@teaching/architecture-course:build"
+    ],
+    "inputEnvironment": [
+      "PROCTOR_URL"
+    ],
+    "outputs": [
+      "{projectRoot}/dist/release/pages/course"
+    ]
+  },
+  "deployCheck": {
+    "dependsOn": [
+      "@teaching/architecture-course:typecheck",
+      "@teaching/architecture-course:publish"
+    ]
+  },
+  "plan": {
+    "owner": "architecture-course:site",
+    "cases": [
+      {
+        "id": "prototype-default-origin",
+        "mode": "prototype",
+        "environment": {},
+        "expected": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "PROCTOR_URL": "<deployment-origin>"
+        }
+      },
+      {
+        "id": "release-rehearsal-origin",
+        "mode": "release",
+        "environment": {
+          "PROCTOR_URL": "https://staging.example"
+        },
+        "expected": {
+          "SEMIO_BUILD_MODE": "release",
+          "PROCTOR_URL": "https://staging.example"
+        }
+      },
+      {
+        "id": "ambient-mode-revision-and-cache-directory-do-not-leak",
+        "mode": "release",
+        "environment": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "SOURCE_REVISION": "abc-dirty",
+          "GIT_COMMIT": "abc",
+          "SEMIO_VITE_CACHE_DIRECTORY": "/ambient"
+        },
+        "expected": {
+          "SEMIO_BUILD_MODE": "release",
+          "PROCTOR_URL": "<deployment-origin>"
+        }
+      }
+    ]
+  }
+}

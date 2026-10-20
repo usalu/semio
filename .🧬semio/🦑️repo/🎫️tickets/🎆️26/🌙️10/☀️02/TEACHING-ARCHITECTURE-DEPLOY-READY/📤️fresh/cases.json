@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "group": "admission",
+      "id": "fresh-binding",
+      "accepted": true
+    },
+    {
+      "group": "admission",
+      "id": "old-plan",
+      "accepted": false
+    },
+    {
+      "group": "admission",
+      "id": "missing-terminal",
+      "accepted": false
+    },
+    {
+      "group": "admission",
+      "id": "wrong-source",
+      "accepted": false
+    },
+    {
+      "group": "admission",
+      "id": "wrong-git",
+      "accepted": false
+    },
+    {
+      "group": "admission",
+      "id": "wrong-native",
+      "accepted": false
+    },
+    {
+      "group": "custody",
+      "id": "exact-fresh-builder",
+      "accepted": true
+    },
+    {
+      "group": "custody",
+      "id": "wrong-engine",
+      "accepted": false
+    },
+    {
+      "group": "custody",
+      "id": "wrong-created",
+      "accepted": false
+    },
+    {
+      "group": "custody",
+      "id": "wrong-token",
+      "accepted": false
+    },
+    {
+      "group": "custody",
+      "id": "extra-mount",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "valid-unicode-and-empty-certs",
+      "accepted": true
+    },
+    {
+      "group": "frame",
+      "id": "corrupt-bytes",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "truncated",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "trailing",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "symlink",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "traversal",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "reserved-name",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "missing-member",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "standalone-native",
+      "accepted": false
+    },
+    {
+      "group": "frame",
+      "id": "path-bound",
+      "accepted": false
+    },
+    {
+      "group": "promotion",
+      "id": "fresh-paired",
+      "accepted": true
+    },
+    {
+      "group": "promotion",
+      "id": "idempotent",
+      "accepted": true
+    },
+    {
+      "group": "promotion",
+      "id": "different-peer",
+      "accepted": false
+    },
+    {
+      "group": "promotion",
+      "id": "cancel-before-rename",
+      "accepted": false
+    },
+    {
+      "group": "settlement",
+      "id": "actual-terminal",
+      "accepted": true
+    },
+    {
+      "group": "settlement",
+      "id": "client-nonzero",
+      "accepted": false
+    },
+    {
+      "group": "settlement",
+      "id": "cancelled-joined",
+      "accepted": false
+    },
+    {
+      "group": "settlement",
+      "id": "cleanup-unknown",
+      "accepted": false
+    },
+    {
+      "group": "settlement",
+      "id": "primary-and-join",
+      "accepted": false
+    },
+    {
+      "group": "admission",
+      "id": "pure-import-no-old-plan",
+      "accepted": true
+    },
+    {
+      "group": "settlement",
+      "id": "primary-and-host-cleanup",
+      "accepted": false
+    },
+    {
+      "id": "posix-mode-equality",
+      "group": "frame",
+      "accepted": true
+    },
+    {
+      "id": "posix-mode-mismatch",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "windows-physical-modes",
+      "group": "frame",
+      "accepted": true
+    },
+    {
+      "id": "windows-content-mismatch",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "windows-platform-lie",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "physical-junction-refusal",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "physical-hardlink-refusal",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "cross-device-verified-copy",
+      "group": "promotion",
+      "accepted": true
+    },
+    {
+      "id": "copy-failure-rollback",
+      "group": "promotion",
+      "accepted": false
+    },
+    {
+      "id": "copy-cancel-rollback",
+      "group": "promotion",
+      "accepted": false
+    },
+    {
+      "id": "partial-write-loop",
+      "group": "frame",
+      "accepted": true
+    },
+    {
+      "id": "zero-write-refusal",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "cancelled-before-acceptance",
+      "group": "settlement",
+      "accepted": false
+    },
+    {
+      "id": "primary-and-dispose",
+      "group": "settlement",
+      "accepted": false
+    },
+    {
+      "id": "readonly-file-preserved",
+      "group": "frame",
+      "accepted": true
+    },
+    {
+      "id": "empty-certificates-required",
+      "group": "frame",
+      "accepted": false
+    },
+    {
+      "id": "transport-join-timeout",
+      "group": "settlement",
+      "accepted": false
+    },
+    {
+      "id": "peer-empty-directory-race",
+      "group": "promotion",
+      "accepted": false
+    }
+  ]
+}

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { runProbe } from "@semio-tech/repo-lib/process";
+import { runProbe } from "../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { canonicalize } from "../🟰️comparison/🟦️.ts";
 import { isQualifiedProbe, type ProbeEntry, type ProbeReport, probeReportProblems } from "../🔬️probes/🟦️.ts";
 import { type TestResult } from "../📤️results/🟦️.ts";

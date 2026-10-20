@@ -148,6 +148,11 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts composition prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "verify-physical-codecs": {

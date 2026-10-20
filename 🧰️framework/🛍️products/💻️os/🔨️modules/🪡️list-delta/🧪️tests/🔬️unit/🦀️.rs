@@ -278,7 +278,7 @@ struct IdentityVectors { vectors: Vec<IdentityVector> }
 /// 🪪️ Whole-row replay uses immutable identities and refuses the entire diff before publishing a partial projection.
 #[test]
 fn stable_identity_replay_matches_portable_vectors() {
-    let fixtures: IdentityVectors = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪪️stable-identity/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable identity vectors");
+    let fixtures: IdentityVectors = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🪪️stable-identity/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable identity vectors");
     for vector in fixtures.vectors {
         let original = vector.base.clone();
         let delta = Parts::<IdentityRow, IdentityRow> { modified: vector.patches.into_iter().map(|patch| (patch.target, patch.row)).collect(), ..Default::default() };
@@ -303,7 +303,7 @@ struct NestedInverseVectors { vectors: Vec<NestedInverseVector> }
 /// 🪆️ Ordered patches of one nested row are composed before their inverse reads original positions.
 #[test]
 fn nested_inverse_replay_matches_portable_vectors() {
-    let fixtures: NestedInverseVectors = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪆️nested-inverse/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable nested inverse vectors");
+    let fixtures: NestedInverseVectors = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🪆️nested-inverse/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable nested inverse vectors");
     for vector in fixtures.vectors {
         let delta = ItemDelta { modified: vector.patches, ..Default::default() };
         let next = commit(&delta, &vector.base).expect("ordered nested patches apply");

@@ -1,0 +1,356 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-kind",
+      "accepted": false
+    },
+    {
+      "id": "missing-file",
+      "accepted": false
+    },
+    {
+      "id": "extra-file",
+      "accepted": false
+    },
+    {
+      "id": "wrong-hash",
+      "accepted": false
+    },
+    {
+      "id": "oversized",
+      "accepted": false
+    },
+    {
+      "id": "missing-source",
+      "accepted": false
+    },
+    {
+      "id": "extra-source",
+      "accepted": false
+    }
+  ],
+  "settlements": [
+    {
+      "id": "undefined",
+      "accepted": false
+    },
+    {
+      "id": "null",
+      "accepted": false
+    },
+    {
+      "id": "false",
+      "accepted": false
+    },
+    {
+      "id": "zero",
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "accepted": false
+    },
+    {
+      "id": "error",
+      "accepted": false
+    }
+  ],
+  "phases": [
+    {
+      "id": "source",
+      "path": "📦️fresh/tests.ts",
+      "milliseconds": 180000,
+      "marker": "[DEBUG] fresh capture neutral "
+    },
+    {
+      "id": "git-producer",
+      "path": "📦️fresh/git.tests.ts",
+      "milliseconds": 180000,
+      "marker": "[DEBUG] genuine Git reuse neutral "
+    },
+    {
+      "id": "git-format",
+      "path": "📦️fresh/git-format.tests.ts",
+      "milliseconds": 60000,
+      "marker": "[DEBUG] genuine Git format neutral "
+    },
+    {
+      "id": "git-transfer",
+      "path": "🌱️linux/git.tests.ts",
+      "milliseconds": 60000,
+      "marker": "[DEBUG] Fresh genuine Git neutral cases "
+    },
+    {
+      "id": "native-helper",
+      "path": "🧰️native/tests.ts",
+      "milliseconds": 120000,
+      "marker": "[DEBUG] neutral provisioning cases "
+    },
+    {
+      "id": "controller",
+      "path": "🌱️linux/verify.ts",
+      "milliseconds": 180000,
+      "marker": "[DEBUG] fresh Linux neutral cases "
+    },
+    {
+      "id": "final-verifier",
+      "path": "🔬️final/tests.ts",
+      "milliseconds": 90000,
+      "marker": "[DEBUG] Final verifier neutral prepared suite "
+    },
+    {
+      "id": "fresh-exporter",
+      "path": "📤️fresh/tests.ts",
+      "milliseconds": 180000,
+      "marker": "[DEBUG] Fresh exporter neutral "
+    },
+    {
+      "id": "facts-observer",
+      "path": "👁️facts/tests.ts",
+      "milliseconds": 120000,
+      "marker": "[DEBUG] Fresh facts neutral "
+    },
+    {
+      "id": "cache-descriptors",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 90000,
+      "source": true,
+      "titles": [
+        "neutral Core cache descriptor wire agrees with independent Python and SQLite",
+        "neutral Core selected descriptor census binds every exact readonly guard",
+        "neutral Core exact selected capsule cardinality and refusal metadata remain bounded"
+      ]
+    },
+    {
+      "id": "reset-boundaries",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "actual inactive Nx reset owner retains Original and refuses mutations before exact retirement",
+        "actual inactive capsule reader selects four initial and five durable-intent witnesses",
+        "inactive Nx intent publication retains the original rooted receiver authority"
+      ]
+    },
+    {
+      "id": "emitted-entry",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+      "milliseconds": 150000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "captured entry roles execute only the explicit program and retain inert imported guards"
+      ]
+    },
+    {
+      "id": "nx-pointer",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts",
+      "milliseconds": 90000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "managed Nx activation paths match closed vectors and independent SQLite namespace grammar",
+        "actual Nx activation replaces only qualified absent or valid managed projections"
+      ]
+    },
+    {
+      "id": "production-parent",
+      "path": "🚀️fresh/tests.ts",
+      "milliseconds": 180000,
+      "marker": "[DEBUG] Fresh production parent neutral "
+    },
+    {
+      "id": "cargo-inference",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+      "milliseconds": 150000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "Cargo manifest inference projects the workspace sentinel before strict Source inventory admission",
+        "live inference bootstrap publishes the same closed project helper exports at cold and revised loads"
+      ]
+    },
+    {
+      "id": "declared-project",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+      "milliseconds": 150000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "declared TypeScript projects preserve exact command roles and generated producer dependencies"
+      ]
+    },
+    {
+      "id": "dependency-progress",
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts",
+      "milliseconds": 150000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "process progress uses neutral long-activity words and preserves the actual structured publisher",
+        "provider presentation follows neutral monotonic clock rows and independent SQLite scheduling",
+        "provider actual Original publisher preserves every checkpoint and flushes before failure settlement",
+        "provider counters use bounded localized actual writer messages",
+        "source admission work has localized bounded counters and keeps actual progress authority",
+        "parser source work has localized bounded operation counters at the actual writer",
+        "queue wait names the head request and position in the selected language at the actual writer",
+        "cache scan presentation follows neutral monotonic rows and independent SQLite scheduling",
+        "cache scan formatter uses bounded localized typed paths and independent SQLite messages",
+        "cache scan actual Original retains all checkpoints and primary failure if final presentation fails",
+        "cache deletion presentation keeps unit elapsed resets inside one paced original stream",
+        "cache deletion formatter names actual work without inventing aggregate seconds",
+        "cache deletion actual Original preserves every checkpoint across unit resets and exact primary error",
+        "build tool presentation follows neutral unit clocks and independent SQLite scheduling",
+        "build tool formatter uses closed localized activities and independent SQLite messages",
+        "build tool actual Original preserves every checkpoint, cancellation and primary error",
+        "dependency work presentation follows bounded interleaved frames and independent SQLite scheduling",
+        "dependency work actual Original preserves checkpoints cancellation and exact failure settlement"
+      ]
+    }
+  ],
+  "budget": {
+    "parentMilliseconds": 2430000,
+    "phaseMilliseconds": 2340000,
+    "reserveMilliseconds": 90000
+  },
+  "collections": [
+    {
+      "id": "prepared-one",
+      "phase": "source",
+      "stdout": "[DEBUG] fresh capture neutral done\n",
+      "stderr": "",
+      "accepted": true
+    },
+    {
+      "id": "prepared-missing",
+      "phase": "source",
+      "stdout": "",
+      "stderr": "",
+      "accepted": false
+    },
+    {
+      "id": "prepared-duplicate",
+      "phase": "source",
+      "stdout": "[DEBUG] fresh capture neutral one\n[DEBUG] fresh capture neutral two\n",
+      "stderr": "",
+      "accepted": false
+    },
+    {
+      "id": "bun-exact",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "bun-wrong-pass",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bun-failure",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n3 pass\n1 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bun-missing-title",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bun-duplicate-summary",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n3 pass\n0 fail\n3 pass\n",
+      "accepted": false
+    },
+    {
+      "id": "bun-no-summary",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n",
+      "accepted": false
+    },
+    {
+      "id": "bun-ansi",
+      "phase": "cache-descriptors",
+      "stdout": "",
+      "stderr": "\u001b[32m(pass) neutral Core cache descriptor wire agrees with independent Python and SQLite [1.00ms]\n(pass) neutral Core selected descriptor census binds every exact readonly guard [1.00ms]\n(pass) neutral Core exact selected capsule cardinality and refusal metadata remain bounded [1.00ms]\n3 pass\n0 fail\n\u001b[0m",
+      "accepted": true
+    },
+    {
+      "id": "declared-project-exact",
+      "phase": "declared-project",
+      "stdout": "",
+      "stderr": "(pass) declared TypeScript projects preserve exact command roles and generated producer dependencies [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "declared-project-uncollected",
+      "phase": "declared-project",
+      "stdout": "",
+      "stderr": "0 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "declared-project-wrong-count",
+      "phase": "declared-project",
+      "stdout": "",
+      "stderr": "(pass) declared TypeScript projects preserve exact command roles and generated producer dependencies [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "dependency-progress-exact",
+      "phase": "dependency-progress",
+      "stdout": "",
+      "stderr": "(pass) process progress uses neutral long-activity words and preserves the actual structured publisher [1.00ms]\n(pass) provider presentation follows neutral monotonic clock rows and independent SQLite scheduling [1.00ms]\n(pass) provider actual Original publisher preserves every checkpoint and flushes before failure settlement [1.00ms]\n(pass) provider counters use bounded localized actual writer messages [1.00ms]\n(pass) source admission work has localized bounded counters and keeps actual progress authority [1.00ms]\n(pass) parser source work has localized bounded operation counters at the actual writer [1.00ms]\n(pass) queue wait names the head request and position in the selected language at the actual writer [1.00ms]\n(pass) cache scan presentation follows neutral monotonic rows and independent SQLite scheduling [1.00ms]\n(pass) cache scan formatter uses bounded localized typed paths and independent SQLite messages [1.00ms]\n(pass) cache scan actual Original retains all checkpoints and primary failure if final presentation fails [1.00ms]\n(pass) cache deletion presentation keeps unit elapsed resets inside one paced original stream [1.00ms]\n(pass) cache deletion formatter names actual work without inventing aggregate seconds [1.00ms]\n(pass) cache deletion actual Original preserves every checkpoint across unit resets and exact primary error [1.00ms]\n(pass) build tool presentation follows neutral unit clocks and independent SQLite scheduling [1.00ms]\n(pass) build tool formatter uses closed localized activities and independent SQLite messages [1.00ms]\n(pass) build tool actual Original preserves every checkpoint, cancellation and primary error [1.00ms]\n(pass) dependency work presentation follows bounded interleaved frames and independent SQLite scheduling [1.00ms]\n(pass) dependency work actual Original preserves checkpoints cancellation and exact failure settlement [1.00ms]\n18 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "dependency-progress-missing-existing",
+      "phase": "dependency-progress",
+      "stdout": "",
+      "stderr": "(pass) provider presentation follows neutral monotonic clock rows and independent SQLite scheduling [1.00ms]\n(pass) provider actual Original publisher preserves every checkpoint and flushes before failure settlement [1.00ms]\n(pass) provider counters use bounded localized actual writer messages [1.00ms]\n(pass) source admission work has localized bounded counters and keeps actual progress authority [1.00ms]\n(pass) parser source work has localized bounded operation counters at the actual writer [1.00ms]\n(pass) queue wait names the head request and position in the selected language at the actual writer [1.00ms]\n(pass) cache scan presentation follows neutral monotonic rows and independent SQLite scheduling [1.00ms]\n(pass) cache scan formatter uses bounded localized typed paths and independent SQLite messages [1.00ms]\n(pass) cache scan actual Original retains all checkpoints and primary failure if final presentation fails [1.00ms]\n(pass) cache deletion presentation keeps unit elapsed resets inside one paced original stream [1.00ms]\n(pass) cache deletion formatter names actual work without inventing aggregate seconds [1.00ms]\n(pass) cache deletion actual Original preserves every checkpoint across unit resets and exact primary error [1.00ms]\n(pass) build tool presentation follows neutral unit clocks and independent SQLite scheduling [1.00ms]\n(pass) build tool formatter uses closed localized activities and independent SQLite messages [1.00ms]\n(pass) build tool actual Original preserves every checkpoint, cancellation and primary error [1.00ms]\n(pass) dependency work presentation follows bounded interleaved frames and independent SQLite scheduling [1.00ms]\n(pass) dependency work actual Original preserves checkpoints cancellation and exact failure settlement [1.00ms]\n18 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "dependency-progress-missing-new",
+      "phase": "dependency-progress",
+      "stdout": "",
+      "stderr": "(pass) process progress uses neutral long-activity words and preserves the actual structured publisher [1.00ms]\n(pass) provider presentation follows neutral monotonic clock rows and independent SQLite scheduling [1.00ms]\n(pass) provider actual Original publisher preserves every checkpoint and flushes before failure settlement [1.00ms]\n(pass) provider counters use bounded localized actual writer messages [1.00ms]\n(pass) source admission work has localized bounded counters and keeps actual progress authority [1.00ms]\n(pass) parser source work has localized bounded operation counters at the actual writer [1.00ms]\n(pass) queue wait names the head request and position in the selected language at the actual writer [1.00ms]\n(pass) cache scan presentation follows neutral monotonic rows and independent SQLite scheduling [1.00ms]\n(pass) cache scan formatter uses bounded localized typed paths and independent SQLite messages [1.00ms]\n(pass) cache scan actual Original retains all checkpoints and primary failure if final presentation fails [1.00ms]\n(pass) cache deletion presentation keeps unit elapsed resets inside one paced original stream [1.00ms]\n(pass) cache deletion formatter names actual work without inventing aggregate seconds [1.00ms]\n(pass) cache deletion actual Original preserves every checkpoint across unit resets and exact primary error [1.00ms]\n(pass) build tool presentation follows neutral unit clocks and independent SQLite scheduling [1.00ms]\n(pass) build tool formatter uses closed localized activities and independent SQLite messages [1.00ms]\n(pass) build tool actual Original preserves every checkpoint, cancellation and primary error [1.00ms]\n(pass) dependency work presentation follows bounded interleaved frames and independent SQLite scheduling [1.00ms]\n18 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "dependency-progress-wrong-count",
+      "phase": "dependency-progress",
+      "stdout": "",
+      "stderr": "(pass) process progress uses neutral long-activity words and preserves the actual structured publisher [1.00ms]\n(pass) provider presentation follows neutral monotonic clock rows and independent SQLite scheduling [1.00ms]\n(pass) provider actual Original publisher preserves every checkpoint and flushes before failure settlement [1.00ms]\n(pass) provider counters use bounded localized actual writer messages [1.00ms]\n(pass) source admission work has localized bounded counters and keeps actual progress authority [1.00ms]\n(pass) parser source work has localized bounded operation counters at the actual writer [1.00ms]\n(pass) queue wait names the head request and position in the selected language at the actual writer [1.00ms]\n(pass) cache scan presentation follows neutral monotonic rows and independent SQLite scheduling [1.00ms]\n(pass) cache scan formatter uses bounded localized typed paths and independent SQLite messages [1.00ms]\n(pass) cache scan actual Original retains all checkpoints and primary failure if final presentation fails [1.00ms]\n(pass) cache deletion presentation keeps unit elapsed resets inside one paced original stream [1.00ms]\n(pass) cache deletion formatter names actual work without inventing aggregate seconds [1.00ms]\n(pass) cache deletion actual Original preserves every checkpoint across unit resets and exact primary error [1.00ms]\n(pass) build tool presentation follows neutral unit clocks and independent SQLite scheduling [1.00ms]\n(pass) build tool formatter uses closed localized activities and independent SQLite messages [1.00ms]\n(pass) build tool actual Original preserves every checkpoint, cancellation and primary error [1.00ms]\n(pass) dependency work presentation follows bounded interleaved frames and independent SQLite scheduling [1.00ms]\n(pass) dependency work actual Original preserves checkpoints cancellation and exact failure settlement [1.00ms]\n17 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "dependency-progress-duplicate-title",
+      "phase": "dependency-progress",
+      "stdout": "",
+      "stderr": "(pass) process progress uses neutral long-activity words and preserves the actual structured publisher [1.00ms]\n(pass) provider presentation follows neutral monotonic clock rows and independent SQLite scheduling [1.00ms]\n(pass) provider actual Original publisher preserves every checkpoint and flushes before failure settlement [1.00ms]\n(pass) provider counters use bounded localized actual writer messages [1.00ms]\n(pass) source admission work has localized bounded counters and keeps actual progress authority [1.00ms]\n(pass) parser source work has localized bounded operation counters at the actual writer [1.00ms]\n(pass) queue wait names the head request and position in the selected language at the actual writer [1.00ms]\n(pass) cache scan presentation follows neutral monotonic rows and independent SQLite scheduling [1.00ms]\n(pass) cache scan formatter uses bounded localized typed paths and independent SQLite messages [1.00ms]\n(pass) cache scan actual Original retains all checkpoints and primary failure if final presentation fails [1.00ms]\n(pass) cache deletion presentation keeps unit elapsed resets inside one paced original stream [1.00ms]\n(pass) cache deletion formatter names actual work without inventing aggregate seconds [1.00ms]\n(pass) cache deletion actual Original preserves every checkpoint across unit resets and exact primary error [1.00ms]\n(pass) build tool presentation follows neutral unit clocks and independent SQLite scheduling [1.00ms]\n(pass) build tool formatter uses closed localized activities and independent SQLite messages [1.00ms]\n(pass) build tool actual Original preserves every checkpoint, cancellation and primary error [1.00ms]\n(pass) dependency work presentation follows bounded interleaved frames and independent SQLite scheduling [1.00ms]\n(pass) dependency work actual Original preserves checkpoints cancellation and exact failure settlement [1.00ms]\n(pass) dependency work actual Original preserves checkpoints cancellation and exact failure settlement [1.00ms]\n18 pass\n0 fail\n",
+      "accepted": false
+    }
+  ],
+  "outputPolicy": {
+    "prefix": "n-",
+    "artifactPrefix": "p",
+    "maximumPathUnits": 256
+  }
+}

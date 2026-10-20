@@ -73,10 +73,16 @@ export function captureSourcePreparationV1<T>(compute:()=>T|PromiseLike<T>,contr
 export function receiveSourcePreparationV1(original:readonly SourceObservationV1[],control:SourcePreparationControlV1):Promise<readonly SourceObservationV1[]>;
 /** 📜️ Reads the exact persisted header without consuming its result image. */
 export function inferenceHeaderLine(path:string):string|null;
+/** 🧾️ A persisted record header with its fact blocks expanded. */
+export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
 export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;
+/** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */
+export function projectInferenceObservationsV1(cachePath:string):readonly SourceObservationV1[]|undefined;
+/** 🪨️ Runs a partial inference in project scope without an all-or-nothing round. */
+export function observeInferenceSnapshotV1<T>(compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 📈️ Reports original Source and memo bookkeeping without exposing or discarding facts. */
 export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
 

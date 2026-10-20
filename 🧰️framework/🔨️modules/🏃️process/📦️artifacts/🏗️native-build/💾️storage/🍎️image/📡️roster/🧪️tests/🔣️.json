@@ -1,0 +1,269 @@
+{
+ "policy": {
+  "attempts": 4,
+  "backoffMilliseconds": 0
+ },
+ "cases": [
+  {
+   "name": "sequential strict reads each capture once",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "b"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "c"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 3,
+   "served": {
+    "a": 1,
+    "b": 2,
+    "c": 3
+   }
+  },
+  {
+   "name": "a snapshot inside the age bound is reused",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "advance",
+     "ms": 450
+    },
+    {
+     "op": "call",
+     "id": "c",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 1,
+    "c": 2
+   }
+  },
+  {
+   "name": "arrivals during a capture share the next one",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a"
+    },
+    {
+     "op": "call",
+     "id": "b"
+    },
+    {
+     "op": "call",
+     "id": "c"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 2,
+    "c": 2
+   }
+  },
+  {
+   "name": "after forces a newer capture inside the age bound",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500,
+     "after": 1
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 2
+   }
+  },
+  {
+   "name": "a rejected snapshot is dropped and recaptured",
+   "rejectSerials": [
+    1
+   ],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 2,
+    "b": 2
+   }
+  },
+  {
+   "name": "a stale snapshot is never served to a strict reader",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 0
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 2
+   }
+  }
+ ],
+ "gate": [
+  {
+   "name": "reuse inside the window, full again after it",
+   "window": 500,
+   "runs": [
+    0,
+    100,
+    499,
+    501,
+    700,
+    1300
+   ],
+   "fulls": 3
+  },
+  {
+   "name": "window zero is always full",
+   "window": 0,
+   "runs": [
+    0,
+    1,
+    2
+   ],
+   "fulls": 3
+  }
+ ],
+ "real": {
+  "imageMegabytes": 4,
+  "churners": 3,
+  "readers": 8,
+  "reads": 48,
+  "attempts": 8,
+  "backoffMilliseconds": 75,
+  "windowMilliseconds": 50
+ }
+}

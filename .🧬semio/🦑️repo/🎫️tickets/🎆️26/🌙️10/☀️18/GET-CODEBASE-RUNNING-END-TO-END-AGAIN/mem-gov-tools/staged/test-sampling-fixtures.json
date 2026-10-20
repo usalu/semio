@@ -1,0 +1,296 @@
+{
+ "darwin": [
+  {
+   "name": "raised-pressure-with-swap",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    18078.\nPages active:                                 783944.\nPages inactive:                               778846.\nPages speculative:                              3800.\nPages throttled:                                   0.\nPages wired down:                             170347.\nPages purgeable:                                5079.\n\"Translation faults\":                      173837719.\nPages copy-on-write:                         6326963.\nPages zero filled:                         246594066.\nPages reactivated:                           4639012.\nPages purged:                                  59548.\nFile-backed pages:                            388587.\nAnonymous pages:                             1178003.\nPages stored in compressor:                   625878.\nPages occupied by compressor:                 293529.\nDecompressions:                              1403850.\nCompressions:                                2545359.\nPageins:                                    14533076.\nPageouts:                                        148.\nSwapins:                                           0.\nSwapouts:                                      12345.\n",
+   "swapUsage": "total = 2048.00M  used = 1365.25M  free = 682.75M  (encrypted)\n",
+   "pressureLevel": "2\n",
+   "expect": {
+    "availableBytes": 13119062016,
+    "constrainedBytes": null,
+    "swapUsedBytes": 1431568384,
+    "swappedOutBytes": 202260480,
+    "pressureLevel": "warn",
+    "stallPercent": null,
+    "openFiles": 8112,
+    "openFilesMaximum": 245760,
+    "attachedImages": 2
+   },
+   "filesTable": "kern.num_files: 8112\nkern.maxfiles: 245760\n",
+   "imageInfo": "framework       : 704\ndriver          : 704\nimages          : 2\n================================================\nimage-path      : /Users/x/.cache/b/l/fixed.dmg\nimage-alias     : /Users/x/.cache/b/l/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/l/m\n================================================\nimage-path      : /Users/x/.cache/b/o/fixed.dmg\nimage-alias     : /Users/x/.cache/b/o/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/o/m\n================================================\n"
+  },
+  {
+   "name": "quiet-no-swap",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    18078.\nPages active:                                 783944.\nPages inactive:                               778846.\nPages speculative:                              3800.\nPages throttled:                                   0.\nPages wired down:                             170347.\nPages purgeable:                                5079.\n\"Translation faults\":                      173837719.\nPages copy-on-write:                         6326963.\nPages zero filled:                         246594066.\nPages reactivated:                           4639012.\nPages purged:                                  59548.\nFile-backed pages:                            388587.\nAnonymous pages:                             1178003.\nPages stored in compressor:                   625878.\nPages occupied by compressor:                 293529.\nDecompressions:                              1403850.\nCompressions:                                2545359.\nPageins:                                    14533076.\nPageouts:                                        148.\nSwapins:                                           0.\nSwapouts:                                          0.\n",
+   "swapUsage": "total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)\n",
+   "pressureLevel": "1\n",
+   "expect": {
+    "availableBytes": 13119062016,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": 0,
+    "pressureLevel": "normal",
+    "stallPercent": null,
+    "openFiles": 200000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 0
+   },
+   "filesTable": "kern.num_files: 200000\nkern.maxfiles: 245760\nkern.maxfilesperproc: 122880\n",
+   "imageInfo": "framework       : 704\ndriver          : 704\nimages          : 0\n================================================\n"
+  },
+  {
+   "name": "critical-pressure-gigabyte-swap",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    18078.\nPages active:                                 783944.\nPages inactive:                               778846.\nPages speculative:                              3800.\nPages throttled:                                   0.\nPages wired down:                             170347.\nPages purgeable:                                5079.\n\"Translation faults\":                      173837719.\nPages copy-on-write:                         6326963.\nPages zero filled:                         246594066.\nPages reactivated:                           4639012.\nPages purged:                                  59548.\nFile-backed pages:                            388587.\nAnonymous pages:                             1178003.\nPages stored in compressor:                   625878.\nPages occupied by compressor:                 293529.\nDecompressions:                              1403850.\nCompressions:                                2545359.\nPageins:                                    14533076.\nPageouts:                                        148.\nSwapins:                                           0.\nSwapouts:                                          0.\n",
+   "swapUsage": "total = 12.00G  used = 9.50G  free = 2.50G  (encrypted)\n",
+   "pressureLevel": "4\n",
+   "expect": {
+    "availableBytes": 13119062016,
+    "constrainedBytes": null,
+    "swapUsedBytes": 10200547328,
+    "swappedOutBytes": 0,
+    "pressureLevel": "critical",
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "filesTable": "",
+   "imageInfo": null
+  },
+  {
+   "name": "telemetry-fixture-small-counts",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free: 10.\nPages inactive: 20.\nPages speculative: 3.\nSwapouts: 4.\n",
+   "swapUsage": "total = 2.00G used = 1.50M free = 1.99G",
+   "pressureLevel": "",
+   "expect": {
+    "availableBytes": 540672,
+    "constrainedBytes": null,
+    "swapUsedBytes": 1572864,
+    "swappedOutBytes": 65536,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": 99,
+    "openFilesMaximum": null,
+    "attachedImages": 3
+   },
+   "filesTable": "kern.num_files: 99\n",
+   "imageInfo": "image-path      : /Users/x/.cache/b/a/fixed.dmg\nimage-alias     : /Users/x/.cache/b/a/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/a/m\n================================================\nimage-path      : /Users/x/.cache/b/b/fixed.dmg\nimage-alias     : /Users/x/.cache/b/b/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/b/m\n================================================\nimage-path      : /Users/x/.cache/b/c/fixed.dmg\nimage-alias     : /Users/x/.cache/b/c/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/c/m\n================================================\n"
+  }
+ ],
+ "linux": [
+  {
+   "name": "psi-warn-with-container-limit",
+   "meminfo": "MemTotal:       32768000 kB\nMemFree:         1048576 kB\nMemAvailable:   20971520 kB\nBuffers:          524288 kB\nCached:          8388608 kB\nSwapCached:            0 kB\nSwapTotal:       8388608 kB\nSwapFree:        6291456 kB\n",
+   "vmstat": "nr_free_pages 262144\npgpgin 1000\npswpin 10\npswpout 524288\npgfault 99\n",
+   "pressure": "some avg10=12.50 avg60=3.00 avg300=1.00 total=123456\nfull avg10=0.50 avg60=0.10 avg300=0.00 total=1234\n",
+   "cgroupMaximum": "17179869184\n",
+   "cgroupCurrent": "6442450944\n",
+   "expect": {
+    "availableBytes": 10737418240,
+    "constrainedBytes": 17179869184,
+    "swapUsedBytes": 2147483648,
+    "swappedOutBytes": 2147483648,
+    "pressureLevel": null,
+    "stallPercent": 12.5,
+    "openFiles": 19968,
+    "openFilesMaximum": 1048576,
+    "attachedImages": null
+   },
+   "fileNr": "20480\t512\t1048576\n"
+  },
+  {
+   "name": "no-container-limit-no-psi",
+   "meminfo": "MemTotal:       32768000 kB\nMemFree:         1048576 kB\nMemAvailable:   20971520 kB\nBuffers:          524288 kB\nCached:          8388608 kB\nSwapCached:            0 kB\nSwapTotal:       8388608 kB\nSwapFree:        6291456 kB\n",
+   "vmstat": "nr_free_pages 262144\npgpgin 1000\npswpin 10\npswpout 524288\npgfault 99\n",
+   "pressure": null,
+   "cgroupMaximum": "max\n",
+   "cgroupCurrent": null,
+   "expect": {
+    "availableBytes": 21474836480,
+    "constrainedBytes": null,
+    "swapUsedBytes": 2147483648,
+    "swappedOutBytes": 2147483648,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": 1000,
+    "openFilesMaximum": 2000,
+    "attachedImages": null
+   },
+   "fileNr": "1000 0 2000\n"
+  },
+  {
+   "name": "telemetry-fixture-small-counts",
+   "meminfo": "MemAvailable: 33 kB\nSwapTotal: 100 kB\nSwapFree: 40 kB\n",
+   "vmstat": "pswpout 4\n",
+   "pressure": null,
+   "cgroupMaximum": null,
+   "cgroupCurrent": null,
+   "expect": {
+    "availableBytes": 33792,
+    "constrainedBytes": null,
+    "swapUsedBytes": 61440,
+    "swappedOutBytes": 16384,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "fileNr": null
+  }
+ ],
+ "reduce": [
+  {
+   "name": "linux-warn-from-psi-with-swap-rate",
+   "platform": "linux",
+   "cores": 8,
+   "totalMegabytes": 32768,
+   "atMs": 10000,
+   "load": 3.5,
+   "counters": {
+    "availableBytes": 10737418240,
+    "constrainedBytes": 17179869184,
+    "swapUsedBytes": 2147483648,
+    "swappedOutBytes": 2147483648,
+    "pressureLevel": null,
+    "stallPercent": 12.5,
+    "openFiles": 5000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 4
+   },
+   "previous": {
+    "atMs": 0,
+    "swappedOutMegabytes": 1024
+   },
+   "expect": {
+    "version": 1,
+    "atMs": 10000,
+    "platform": "linux",
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 10240,
+    "pressure": "warn",
+    "swapUsedMegabytes": 2048,
+    "swapOutMegabytesPerSecond": 102.4,
+    "load": 3.5,
+    "openFiles": 5000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 4
+   }
+  },
+  {
+   "name": "darwin-level-wins-over-plenty-of-memory",
+   "platform": "darwin",
+   "cores": 10,
+   "totalMegabytes": 32768,
+   "atMs": 5000,
+   "load": 1,
+   "counters": {
+    "availableBytes": 20971520000,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": 104857600,
+    "pressureLevel": "critical",
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 5000,
+    "platform": "darwin",
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 20000,
+    "pressure": "critical",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": null,
+    "load": 1,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  },
+  {
+   "name": "windows-pressure-derived-from-available-share",
+   "platform": "win32",
+   "cores": 8,
+   "totalMegabytes": 32768,
+   "atMs": 5000,
+   "load": null,
+   "counters": {
+    "availableBytes": 1048576000,
+    "constrainedBytes": null,
+    "swapUsedBytes": null,
+    "swappedOutBytes": null,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": 240000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 40
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 5000,
+    "platform": "win32",
+    "cores": 8,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 1000,
+    "pressure": "critical",
+    "swapUsedMegabytes": null,
+    "swapOutMegabytesPerSecond": null,
+    "load": null,
+    "openFiles": 240000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 40
+   }
+  },
+  {
+   "name": "windows-warn-band",
+   "platform": "win32",
+   "cores": 8,
+   "totalMegabytes": 32768,
+   "atMs": 5000,
+   "load": 2,
+   "counters": {
+    "availableBytes": 3145728000,
+    "constrainedBytes": null,
+    "swapUsedBytes": null,
+    "swappedOutBytes": null,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 5000,
+    "platform": "win32",
+    "cores": 8,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 3000,
+    "pressure": "warn",
+    "swapUsedMegabytes": null,
+    "swapOutMegabytesPerSecond": null,
+    "load": 2,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  }
+ ],
+ "tree": {
+  "table": "    1     0  16032\n  102     1  20320\n  104   102   2048\n  105   104   1024\n  200     1   4096\n  201   200   8192\n",
+  "expect": {
+   "1": 50,
+   "102": 22,
+   "200": 12,
+   "999": null
+  }
+ }
+}

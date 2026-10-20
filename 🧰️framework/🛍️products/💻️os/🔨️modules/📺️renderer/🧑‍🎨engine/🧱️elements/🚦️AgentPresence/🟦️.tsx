@@ -9,7 +9,8 @@
 // #region 🔌️Adapters
 import { type ReactElement } from "react";
 import { useLabel } from "@semio-tech/ui-react";
-import { agentUiLabel, type AgentBridgePresence, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../🔗️AgentBridge/🟦️.tsx";
+import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";
+import { type AgentBridgePresence, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️AgentPresence

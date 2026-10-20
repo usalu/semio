@@ -25,7 +25,9 @@
   "unmounted": [
     "🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/📄️paged-digest/🦀️.rs",
     "🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
-    "🔗️causal/🔀️transition/🧪️tests/🔬️supersede-fold/🦀️.rs"
+    "🔗️causal/🔀️transition/🧪️tests/🔬️supersede-fold/🦀️.rs",
+    "🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs",
+    "🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs"
   ],
   "crates": [
     {
@@ -64,7 +66,9 @@
       "level": 0,
       "dependencies": [],
       "devDependencies": [],
-      "peerDependencies": []
+      "peerDependencies": [
+        "semio-framework-replication-error"
+      ]
     },
     {
       "package": "semio-framework-replication-command-ingress",
@@ -251,11 +255,23 @@
       "level": 7,
       "dependencies": [
         "semio-framework-replication-mutation",
-        "semio-framework-replication-mutation-messages"
+        "semio-framework-replication-mutation-messages",
+        "semio-framework-replication-mutation-retained-field"
       ],
       "devDependencies": [
         "semio-framework-replication-ids"
       ],
+      "peerDependencies": [
+        "semio-framework-mutation-diff"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-mutation-retained-field",
+      "manifest": "🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
       "peerDependencies": [
         "semio-framework-mutation-diff"
       ]

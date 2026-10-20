@@ -1,4 +1,4 @@
-import { requireRecord, requireStringArray, requireString } from "@semio-tech/schema-validator-ts";
+import { requireRecord, requireStringArray, requireString } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { type SemanticDescendantKindNode } from "../🔣️taxonomy/🌳️descendants/🟦️.ts";
 import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type SemanticProjectionCaptureField } from "../🔣️taxonomy/🧭️path-projection/🟦️.ts";
@@ -9,7 +9,7 @@ import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts
 import { subsetIdForDirectoryName } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
 import { mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/👥️mutation-owner-rules/🟦️.ts";
-import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
+import { pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { basename, dirname } from "node:path";
 import { pathBudgetCodes, pathBudgetFitsWithReserve, pathBudgetStatement, pathUtf16Units, type PathBudgetPolicy } from "../../🔍️discovery/📏️path-budget/🟦️.ts";
 import { mutationFixturesDeclaredByFeature } from "../../🔍️discovery/🥒️mutation-fixture-coverage/🟦️.ts";

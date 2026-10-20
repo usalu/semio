@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MEDIA_VIDEO_RENDER_CAPABILITY } from "@semio-tech/framework-effect/video-render-program";
+import { MEDIA_VIDEO_RENDER_CAPABILITY } from "../../⚡️effect/🎥️video-render-program/🟦️.ts";
 import { type VideoRenderJobEvent, VideoRenderJobLedger, type VideoRenderJobRow } from "../../🧵️video-render-job/🟦️.ts";
 
 /** 🧵️ TypeScript twin of `🧪️tests/🧵️video-render-job/🦀️.rs`, folding the SAME fixture (`🧫️fixtures/🧵️video-render-job/🔣️.json`):

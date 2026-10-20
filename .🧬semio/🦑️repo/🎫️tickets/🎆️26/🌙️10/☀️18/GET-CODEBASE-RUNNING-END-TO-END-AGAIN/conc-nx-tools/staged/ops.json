@@ -1,0 +1,201 @@
+{
+ "root": "/Users/ueli/Documents/semio",
+ "ops": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "async function room(store:NxGraphCacheStoreV1,current:string,extra:number,additional:number):Promise<void>{let rows=await inventory(store);const fits=()=>capacity(store,rows,extra+additional*(nativePolicy.maximumPhysicalBytes+policy.namespaceMetadataBytes));if(fits())return;for(const row of rows){if(row.directory===current)continue;check(store);const resource=nxGraphNamespaceResourceV1(row.directory);let lease:ResourceLease;try{lease=await acquireResourceLease({directory:join(readNativeCallerAuthorityV1(store.invocation.capabilities).repositoryRoot,\".cache/b/l/m/data\"),resource,mode:\"exclusive\",signal:nxGraphOperationControlV1(store.storage,store.control).signal,control:nxGraphOperationControlV1(store.storage,store.control),timeoutMs:0});}catch(error){check(store);if(error instanceof Error&&error.message===\"Resource lease timed out: \"+resource)continue;throw error;}try{check(store);await store.recheck();if(stamp(join(row.directory,\".namespace.json\"))!==row.stamp)throw Error(\"Original retired Nx namespace identity changed\");await bytes(row.directory,store);await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,row.identity));rmSync(requireNativeStoragePathV1(store.root,row.directory),{recursive:true});}finally{lease.release();}rows=await inventory(store);await nxGraphOperationControlV1(store.storage,store.control).publish({resource,mode:\"exclusive\",elapsedMs:0});await nxGraphOperationControlV1(store.storage,store.control).yieldContinuation();if(fits())return;}throw Error(\"Funded Nx graph cache capacity exhausted\");}",
+   "replacement": "/** 🧮️ Thrown inside one pool pass that finds no capacity for its demand; `poolWithRoom` then leaves the pool, evicts idle namespaces without holding it and runs the pass again. */\nclass NxGraphRoomNeededV1 extends Error{readonly current:string;readonly extra:number;readonly additional:number;constructor(current:string,extra:number,additional:number){super(\"Funded Nx graph cache capacity required\");this.current=current;this.extra=extra;this.additional=additional;}}\n/** 🧮️ Refuses inside a pool pass, before any mutation, when the roster cannot take the demand. */\nfunction requireRoom(store:NxGraphCacheStoreV1,rows:readonly NamespaceRow[],current:string,extra:number,additional:number):void{if(!capacity(store,rows,extra+additional*(nativePolicy.maximumPhysicalBytes+policy.namespaceMetadataBytes)))throw new NxGraphRoomNeededV1(current,extra,additional);}\n/** 🧮️ Thrown inside a pool pass whose namespace lease is held exclusively elsewhere; the pass is left, the lease awaited without holding the pool, and the pass run again. */\nclass NxGraphNamespaceBusyV1 extends Error{readonly resource:string;constructor(resource:string){super(\"Nx graph namespace busy\");this.resource=resource;}}\n/** 🔒️ Takes the shared lease of one namespace inside a pool pass without ever waiting for it. */\nasync function tryNamespaceLeaseV1(store:NxGraphCacheStoreV1,directory:string):Promise<ResourceLease>{\n const resource=nxGraphNamespaceResourceV1(directory),control=nxGraphOperationControlV1(store.storage,store.control);\n try{return await acquireResourceLease({directory:poolPolicies.get(store)!.leaseDirectory,resource,mode:\"shared\",signal:control.signal,control,timeoutMs:0});}catch(error){check(store);if(error instanceof Error&&error.message===\"Resource lease timed out: \"+resource)throw new NxGraphNamespaceBusyV1(resource);throw error;}\n}\n/** 🚪️ Runs one short roster pass under the exclusive pool. A pass that needs room is retried (at most three times) after the idle namespaces were evicted outside the pool; a pass that met a busy namespace is retried (at most sixteen times) after that lease was awaited while holding nothing. */\nasync function poolWithRoom<T>(store:NxGraphCacheStoreV1,body:()=>Promise<T>):Promise<T>{\n for(let evictions=0,busy=0;;){\n  try{return await pool(store,body);}catch(error){\n   if(error instanceof NxGraphNamespaceBusyV1){\n    if(++busy>16)throw Error(\"Nx graph namespace stayed busy\");\n    const control=nxGraphOperationControlV1(store.storage,store.control),waited=await acquireResourceLease({directory:poolPolicies.get(store)!.leaseDirectory,resource:error.resource,mode:\"shared\",signal:control.signal,control});waited.release();continue;\n   }\n   if(!(error instanceof NxGraphRoomNeededV1))throw error;\n   if(evictions++>=3)throw Error(\"Funded Nx graph cache capacity exhausted\");\n   await evictIdleNamespacesV1(store,error);\n  }\n }\n}\n/** ♻️ Evicts idle namespaces until the demand fits. It holds only the queued `nx:graph-evict` gate and, one at a time, a victim's exclusive namespace lease taken without waiting (a busy namespace is skipped); the pool is held only for the two short roster reads, never across retirement or deletion, so no pool holder ever waits on another namespace's readers. */\nasync function evictIdleNamespacesV1(store:NxGraphCacheStoreV1,need:NxGraphRoomNeededV1):Promise<void>{\n const control=nxGraphOperationControlV1(store.storage,store.control),leaseDirectory=poolPolicies.get(store)!.leaseDirectory,demand=need.extra+need.additional*(nativePolicy.maximumPhysicalBytes+policy.namespaceMetadataBytes);\n const gate=await acquireQueuedResourceLease({directory:leaseDirectory,resource:\"nx:graph-evict:\"+createHash(\"sha256\").update(store.root).digest(\"hex\"),mode:\"exclusive\",owner:randomBytes(8).toString(\"hex\"),signal:control.signal,control});\n try{\n  const roster=()=>pool(store,()=>inventory(store));let rows=await roster();\n  if(capacity(store,rows,demand))return;\n  for(const row of rows){\n   if(row.directory===need.current)continue;\n   check(store);const resource=nxGraphNamespaceResourceV1(row.directory);let lease:ResourceLease;\n   try{lease=await acquireResourceLease({directory:leaseDirectory,resource,mode:\"exclusive\",signal:control.signal,control,timeoutMs:0});}catch(error){check(store);if(error instanceof Error&&error.message===\"Resource lease timed out: \"+resource)continue;throw error;}\n   try{\n    await store.recheck();let current:string;try{current=stamp(join(row.directory,\".namespace.json\"));}catch{continue;}\n    if(current!==row.stamp)continue;\n    await bytes(row.directory,store);await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,row.identity));rmSync(requireNativeStoragePathV1(store.root,row.directory),{recursive:true,force:true});\n   }finally{lease.release();}\n   await control.publish({resource,mode:\"exclusive\",elapsedMs:0});await control.yieldContinuation();\n   rows=await roster();if(capacity(store,rows,demand))return;\n  }\n  throw Error(\"Funded Nx graph cache capacity exhausted\");\n }finally{gate.release();}\n}\n/** 🔌️ Attaches an existing namespace without the pool: the shared namespace lease the caller holds keeps eviction away, the registered descriptor and a committed funded native shard must already exist (births only happen in a pool pass), and a namespace that is missing or only half born releases the lease through `releaseLease` and answers `undefined` so the caller takes the pool pass that births it while holding nothing. */\nasync function attachExistingNamespaceV1(store:NxGraphCacheStoreV1,value:NxGraphNamespaceV1,directory:string,releaseLease:()=>void):Promise<Awaited<ReturnType<typeof retainNxGraphChildV1>>|undefined>{\n const miss=()=>{releaseLease();return undefined;};\n const file=join(directory,\".namespace.json\"),options={directory:nxGraphNativeImageDirectoryV1(store.root,value),leaseDirectory:poolPolicies.get(store)!.leaseDirectory,filesystemBytes:nativePolicy.filesystemBytes,maximumPhysicalBytes:nativePolicy.maximumPhysicalBytes,control:nxGraphOperationLifetimeControlV1(store.storage,store.control)};\n try{const row=lstatSync(file);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size>2048||JSON.stringify(JSON.parse(readFileSync(file,\"utf8\")))!==JSON.stringify(value))return miss();}catch{return miss();}\n if(!existsSync(dirname(options.directory)))return miss();\n const funded=(await observeNativeStorageStateV1({policy:poolPolicies.get(store)!,control:options.control,port:store.image.port})).allocations.filter(row=>row.child?.directory===options.directory);\n if(funded.length!==1||funded[0]!.owner!==nativePolicy.fundingOwner||funded[0]!.phase!==\"committed\")return miss();\n const child=await retainNxGraphChildV1(store,options);\n try{const backing=lstatSync(child.image.image);if(backing.blocks*512<backing.size)throw Error(\"Fully allocated native graph backing required\");check(store);}catch(error){await child.close().catch(()=>undefined);throw error;}\n return child;\n}",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "const directory=requireNativeStoragePathV1(store.root,join(sdkRoot,key)),entry=lstatSync(directory);",
+   "replacement": "try{const directory=requireNativeStoragePathV1(store.root,join(sdkRoot,key)),entry=lstatSync(directory);",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "stamp:before});}}return result;}",
+   "replacement": "stamp:before});}catch(error){if((error as NodeJS.ErrnoException).code!==\"ENOENT\")throw error;}}}return result;}",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "try{await pool(store,async()=>{const rows=await inventory(store),existing=rows.find(row=>row.directory===directory);if(existing&&JSON.stringify(existing.identity)!==JSON.stringify(value))throw Error(\"Nx graph namespace identity collision\");await room(store,directory,0,existing?0:1);lease=await acquireResourceLease({directory:join(readNativeCallerAuthorityV1(store.invocation.capabilities).repositoryRoot,\".cache/b/l/m/data\"),resource:nxGraphNamespaceResourceV1(directory),mode:\"shared\",signal:nxGraphOperationControlV1(store.storage,store.control).signal,control:nxGraphOperationControlV1(store.storage,store.control)});",
+   "replacement": "try{lease=await acquireResourceLease({directory:join(readNativeCallerAuthorityV1(store.invocation.capabilities).repositoryRoot,\".cache/b/l/m/data\"),resource:nxGraphNamespaceResourceV1(directory),mode:\"shared\",signal:nxGraphOperationControlV1(store.storage,store.control).signal,control:nxGraphOperationControlV1(store.storage,store.control)});const attached=await attachExistingNamespaceV1(store,value,directory,()=>{lease!.release();lease=undefined;});if(attached){child=attached;native=attached.image;}else await poolWithRoom(store,async()=>{const rows=await inventory(store),existing=rows.find(row=>row.directory===directory);if(existing&&JSON.stringify(existing.identity)!==JSON.stringify(value))throw Error(\"Nx graph namespace identity collision\");requireRoom(store,rows,directory,0,existing?0:1);lease=await tryNamespaceLeaseV1(store,directory);",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "return pool(store,async()=>{const rows=await inventory(store);const row=rows.find(row=>row.directory===base);",
+   "replacement": "return poolWithRoom(store,async()=>{const rows=await inventory(store);const row=rows.find(row=>row.directory===base);",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "await room(store,base,nextBytes+priorBytes,0);",
+   "replacement": "requireRoom(store,rows,base,nextBytes+priorBytes,0);",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "return pool(store,async()=>{requireNxGraphNativeDirectoryV1(workspace,environment);const rows=await inventory(store),row=rows.find(",
+   "replacement": "return poolWithRoom(store,async()=>{requireNxGraphNativeDirectoryV1(workspace,environment);const rows=await inventory(store),row=rows.find(",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "anchor": "await room(store,base,request.extraBytes,0);",
+   "replacement": "requireRoom(store,rows,base,request.extraBytes,0);",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "anchor": "/** 🔒️ Revalidates the actual fixed image and original cache reader or writer through the native SDK operation. */\n",
+   "replacement": "/** 🔒️ Revalidates the actual fixed image and original cache reader or writer through the native SDK operation. Every user holds the image resource shared: Nx's own cache is content addressed and concurrent writers are safe (proved against stock Nx), and per-output leases keep restores and promotions of one output exclusive, so a put no longer blocks restores. */\n",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "anchor": "resources:[{resource:\"nx:fixed-cache:\"+image.root,mode}]",
+   "replacement": "resources:[{resource:\"nx:fixed-cache:\"+image.root,mode:\"shared\"}]",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "anchor": "    let sourceHandoff:Readonly<{environment:string;close():Promise<void>}>|undefined;\n",
+   "replacement": "    let sourceHandoff:Readonly<{environment:string;close():Promise<void>}>|undefined;\n    let pendingGeneration:import(\"../🕸️graph/🔏️seal/📌️generation/🟦️.ts\").NxGenerationClaimV1|undefined;\n",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "anchor": "const graphSeal = await import(\"../🕸️graph/🔏️seal/🟦️.ts\"), workspaceData =",
+   "replacement": "const generationOwner = await import(\"../🕸️graph/🔏️seal/📌️generation/🟦️.ts\"), graphSeal = await import(\"../🕸️graph/🔏️seal/🟦️.ts\"), workspaceData =",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "anchor": "        const sealed=selected||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!==\"true\"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);\n",
+   "replacement": "        const generationClaim=!selected&&env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch?await generationOwner.nxGenerationClaimV1(this.root,env).catch(()=>undefined):undefined,generation=generationClaim!==undefined&&await generationOwner.nxGenerationHoldsV1(this.root,workspaceData,generationClaim,actualPhase.signal).catch(()=>false);\n        pendingGeneration=generationClaim!==undefined&&!generation?generationClaim:undefined;\n        const sealed=selected||generation||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!==\"true\"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);\n",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "anchor": "        await Promise.all(spooling);\n",
+   "replacement": "        if(pendingGeneration!==undefined&&code===0&&!cancelled&&!invocation.watch){\n          const{withNxGraphAuxiliaryCapacityV1}=await import(\"../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts\"),generationOwner=await import(\"../🕸️graph/🔏️seal/📌️generation/🟦️.ts\"),claim=pendingGeneration;\n          const written=await withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes:8192},()=>generationOwner.writeNxGenerationReceiptV1(this.root,env.NX_WORKSPACE_DATA_DIRECTORY!,claim,actualPhase.signal)).catch(error=>{if(profileBootstrap)console.log(`[nx] Generation receipt refused: ${error instanceof Error?error.message:String(error)}`);return false;});\n          if(profileBootstrap)console.log(`[nx] Generation receipt written=${written}`);\n        }\n        await Promise.all(spooling);\n",
+   "group": "1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "anchor": "import{withCompilerInitialHeadroomV1}from\"../🏗️compiler/📏️capacity/🟦️.ts\";",
+   "replacement": "import{withCompilerSharedHeadroomV1}from\"../🏗️compiler/📏️capacity/🟦️.ts\";\nimport{nxPutSlotCountV1,withNxPutSlotV1}from\"./🎟️put-slots/🟦️.ts\";\nimport{statfs}from\"node:fs/promises\";",
+   "group": "2-put"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "anchor": " return withCompilerInitialHeadroomV1({root:scope.root,maximumPhysicalBytes:repositoryStrictStorageV1(scope.repositoryRoot).capacityBytes,recheck:scope.recheck},scope.leaseDirectory,scope.control,requiredBytes,{version:1,wait:true},body);",
+   "replacement": " return withNxPutSlotV1({root:scope.root,leaseDirectory:scope.leaseDirectory,control:scope.control,slots:nxPutSlotCountV1(scope.environment)},async slot=>{const measure=async()=>{const space=await statfs(scope.root,{bigint:true});return Math.max(0,Number(space.bavail*space.bsize)-await slot.others()*maximum);};return withCompilerSharedHeadroomV1({root:scope.root,maximumPhysicalBytes:repositoryStrictStorageV1(scope.repositoryRoot).capacityBytes,recheck:scope.recheck},scope.leaseDirectory,scope.control,requiredBytes,{version:1,wait:true},body,undefined,measure);});",
+   "group": "2-put"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "anchor": "/** 📏️ Measures native cache-copy demand under exact output readers before queueing for its serialized writer behind concurrent invocations. */\n",
+   "replacement": "/** 📏️ Measures native cache-copy demand under exact output readers, then runs the physical copy in one of a few put slots under the shared compiler writer custody: headroom is the free space minus the maximum artifact charge of every other slot in use, so concurrent puts and compiles of other agents no longer queue behind one another. */\n",
+   "group": "2-put"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "export const NX_DAEMON_SERVICE_BIRTH_ENV_V1=\"SEMIO_NX_DAEMON_SERVICE_BIRTH\";",
+   "replacement": "import {acquireNxDaemonSlotV1,nxDaemonIdleV1,nxDaemonLimitsV1} from \"../🚏️admission/🟦️.ts\";\nexport const NX_DAEMON_SERVICE_BIRTH_ENV_V1=\"SEMIO_NX_DAEMON_SERVICE_BIRTH\";",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "let release!:()=>void;const released=new Promise<void>(accept=>{release=accept;});",
+   "replacement": "const limits=nxDaemonLimitsV1(process.env),kind=birth.watcherIdentity===null?\"finite\" as const:\"watch\" as const,slot=await acquireNxDaemonSlotV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),birth.repositoryRoot,kind,limits[kind],new AbortController().signal);\n let release!:()=>void;const released=new Promise<void>(accept=>{release=accept;});",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "}));}finally{release();}\n}",
+   "replacement": "}));}finally{release();slot.release();}\n}",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "closing:Promise<void>|undefined,stopped=false;\n",
+   "replacement": "closing:Promise<void>|undefined,stopped=false;\n    const activity={open:0,last:Date.now()};\n",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "async request(run){if(!context.live)throw Error(\"Original daemon root released\");const id=randomBytes(16).toString(\"hex\");lifetime.record({type:\"request-open\",id});try{return await run();}finally{lifetime.record({type:\"request-close\",id});finish();}}",
+   "replacement": "async request(run){if(!context.live)throw Error(\"Original daemon root released\");const id=randomBytes(16).toString(\"hex\");lifetime.record({type:\"request-open\",id});activity.open++;activity.last=Date.now();try{return await run();}finally{activity.open--;activity.last=Date.now();lifetime.record({type:\"request-close\",id});finish();}}",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "const cancel=()=>drain(\"Original daemon service interrupted\");original.control.signal.addEventListener(\"abort\",cancel,{once:true});",
+   "replacement": "const cancel=()=>drain(\"Original daemon service interrupted\");original.control.signal.addEventListener(\"abort\",cancel,{once:true});\n    const idleTimer=setInterval(()=>{if(nxDaemonIdleV1({kind,openRequests:activity.open,lastActivity:activity.last,now:Date.now(),idleMilliseconds:limits.idleMilliseconds}))drain(`Idle for ${limits.idleMilliseconds}ms`);},limits.checkMilliseconds);idleTimer.unref();",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "anchor": "finally{context.live=false;ownedDaemon=undefined;original.control.signal.removeEventListener(\"abort\",cancel);}",
+   "replacement": "finally{clearInterval(idleTimer);context.live=false;ownedDaemon=undefined;original.control.signal.removeEventListener(\"abort\",cancel);}",
+   "group": "2-daemon"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "anchor": "    if(bind)Object.assign(env,(await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity)).environment);\n",
+   "replacement": "    if(bind)Object.assign(env,(await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity)).environment);\n    if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!==\"watch\"){const admission=await import(\"../🕸️graph/🏁️startup/🚏️admission/🟦️.ts\").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:\"refused\"}));env.NX_DAEMON=admission.enabled?\"true\":\"false\";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?\"enabled\":\"off\"} (${admission.reason})`);}\n",
+   "group": "2-daemon"
+  }
+ ],
+ "bases": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": "354b890f97621f1a314340350a218aacd76e0e7f976bccd815b386ea42a13f0d",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts": "9a7253d709b90e8585190e4d871bab364e8df9210c1ce1fc36d9ad79c5573d26",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts": "a562ca2da2873627abcfc3c1a864b6f65b33364f224e61769fcf4a93eaac108f",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": "07654f50fab1c7966f42b7bc026edd9d80ced33dec9b92eacb8bf6caaedb4623"
+ },
+ "new": {
+  "generation/module.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🟦️.ts",
+  "generation/schema/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🧬️schema/🔣️.json",
+  "generation/tests/tests.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🧪️tests/🟦️.ts",
+  "generation/tests/fixtures_data.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🧪️tests/🧫️fixtures/🔣️.json",
+  "generation/tests/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🧪️tests/🐍️oracle.py",
+  "putslots/module.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🟦️.ts",
+  "putslots/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧬️schema/🔣️.json",
+  "putslots/tests.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts",
+  "putslots/fixtures_data.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🧫️fixtures/🔣️.json",
+  "putslots/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🐍️oracle.py",
+  "daemon/module.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🟦️.ts",
+  "daemon/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧬️schema/🔣️.json",
+  "daemon/tests.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🟦️.ts",
+  "daemon/fixtures_data.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🧫️fixtures/🔣️.json",
+  "daemon/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🐍️oracle.py",
+  "poolorder/tests.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🟦️.ts",
+  "poolorder/fixtures_data.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🧫️fixtures/🔣️.json",
+  "poolorder/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🐍️oracle.py"
+ },
+ "groups": {
+  "generation/module.ts": "1",
+  "generation/schema/schema.json": "1",
+  "generation/tests/tests.ts": "1",
+  "generation/tests/fixtures_data.json": "1",
+  "generation/tests/oracle.py": "1",
+  "putslots/module.ts": "2-put",
+  "putslots/schema.json": "2-put",
+  "putslots/tests.ts": "2-put",
+  "putslots/fixtures_data.json": "2-put",
+  "putslots/oracle.py": "2-put",
+  "daemon/module.ts": "2-daemon",
+  "daemon/schema.json": "2-daemon",
+  "daemon/tests.ts": "2-daemon",
+  "daemon/fixtures_data.json": "2-daemon",
+  "daemon/oracle.py": "2-daemon",
+  "poolorder/tests.ts": "1",
+  "poolorder/fixtures_data.json": "1",
+  "poolorder/oracle.py": "1"
+ }
+}

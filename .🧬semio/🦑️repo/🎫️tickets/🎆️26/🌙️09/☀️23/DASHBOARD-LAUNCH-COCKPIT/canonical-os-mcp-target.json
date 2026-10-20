@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "status": "inert-input-pending-registration",
+  "project": "@semio-tech/framework-os-mcp",
+  "target": "test-canonical-stdio",
+  "definition": {
+    "executor": "repo:script",
+    "inputs": [
+      "default",
+      "^default",
+      "testEnv",
+      "reads"
+    ],
+    "outputs": [],
+    "cache": false,
+    "dependsOn": [
+      {
+        "target": "build",
+        "projects": [
+          "@semio-tech/framework-os-mcp-rs"
+        ]
+      },
+      {
+        "target": "install",
+        "projects": [
+          "repo-mcp"
+        ]
+      }
+    ],
+    "options": {
+      "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+      "command": "bun ./📜️script.ts test-canonical-stdio",
+      "forwardAllArgs": false
+    },
+    "metadata": {
+      "semio": {
+        "sourceInputObservation": "freshness",
+        "runtimeSourceEntries": [
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚪️canonical/🟦️.ts"
+        ],
+        "dashboard": {
+          "verb": "test",
+          "title": {
+            "en": "Probe Installed OS MCP",
+            "de": "Installiertes OS-MCP prüfen"
+          },
+          "description": {
+            "en": "Verify the installed native frontend and real OS protocol with bounded owned shutdown.",
+            "de": "Installierte native Oberfläche und echtes OS-Protokoll mit begrenztem eigenem Beenden prüfen."
+          }
+        }
+      }
+    }
+  }
+}

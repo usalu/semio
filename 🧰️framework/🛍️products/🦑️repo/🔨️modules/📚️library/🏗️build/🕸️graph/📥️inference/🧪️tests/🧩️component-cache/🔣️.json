@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "crates": [
+    {
+      "id": "plugin",
+      "root": "owner/🧩️component/📦️packages/🦀️rust",
+      "kind": "plugin",
+      "crateTypes": ["cdylib"],
+      "expect": {
+        "descriptorOwner": "owner/🧩️component",
+        "descriptorFiles": ["🛂️.descriptor.semio", "🔣️.json"]
+      }
+    },
+    {
+      "id": "extension",
+      "root": "🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust",
+      "kind": "extension",
+      "crateTypes": ["cdylib"],
+      "expect": {
+        "descriptorOwner": "🌎️hub/🧩️compositions/🗒️note/🧩️component",
+        "descriptorFiles": ["🛂️.descriptor.semio", "🔣️.json"]
+      }
+    },
+    { "id": "library", "root": "owner/📦️packages/🦀️rust", "kind": "library", "crateTypes": ["rlib"], "expect": null },
+    { "id": "not-cdylib", "root": "owner/🧩️component/📦️packages/🦀️rust", "kind": "plugin", "crateTypes": ["rlib"], "expect": "refused" }
+  ],
+  "dependsOn": ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
+  "named": ["nativeSources", "^nativeSources"],
+  "externalDependencies": ["@bytecodealliance/jco", "@bytecodealliance/preview2-shim"],
+  "binaryenManifest": "⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",
+  "cache": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+  "target": "component"
+}

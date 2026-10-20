@@ -50,7 +50,7 @@ impl Dashboard {
                 let scope = if self.shared_preferences { text.scope_workspace } else { text.scope_local };
                 let setting = |name: &str, value: &str, action: RowAction| (format!("{name}: {value}"), action);
                 vec![
-                    setting(text.setting_language.as_str(), &self.preferences.language, RowAction::Language),
+                    setting(text.setting_language.as_str(), self.preferences.language.as_deref().expect("resolved dashboard language"), RowAction::Language),
                     setting(text.setting_appearance.as_str(), &self.preferences.appearance, RowAction::Appearance),
                     setting(text.setting_terminology.as_str(), &self.preferences.terminology, RowAction::Terminology),
                     setting(text.setting_renderer.as_str(), &self.preferences.renderer, RowAction::Renderer),
@@ -144,7 +144,7 @@ impl Dashboard {
             RowAction::Session(id) => self.reveal_session(tui, &id),
             RowAction::OpenReady(id) => self.request_open_ready(&id),
             RowAction::CancelOpenReady => self.cancel_open_ready(),
-            RowAction::Language => self.queue_preference(Change { language: Some(if self.preferences.language == "en" { "de" } else { "en" }.into()), ..Default::default() }),
+            RowAction::Language => self.queue_preference(Change { language: Some(if self.preferences.language.as_deref() == Some("en") { "de" } else { "en" }.into()), ..Default::default() }),
             RowAction::Appearance => self.queue_preference(Change { appearance: Some(if self.light { "dark" } else { "light" }.into()), ..Default::default() }),
             RowAction::Terminology => self.queue_preference(Change { terminology: Some(if self.preferences.terminology == "native" { "reuse" } else { "native" }.into()), ..Default::default() }),
             RowAction::Renderer => self.queue_preference(Change { renderer: Some(match self.preferences.renderer.as_str() { "react" => "wgpu-wasm", "wgpu-wasm" => "wgpu-native", _ => "react" }.into()), ..Default::default() }),
@@ -169,7 +169,7 @@ impl Dashboard {
     /// 📥️ Folds a durable preference event into the live view: language, appearance, keymap and launchers.
     pub fn adopt_preference(&mut self, tui: &mut Tui, change: &Change) {
         self.preferences.apply(change);
-        self.locale = self.preferences.locale();
+        self.locale = self.preferences.locale().expect("resolved preference language");
         self.set_appearance(tui, self.preferences.appearance == "light");
         let (keymap, problems) = self.preferences.keymap();
         self.keymap = keymap;

@@ -1,0 +1,234 @@
+{
+ "root": "repository",
+ "ops": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "anchor": "const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;\n",
+   "replacement": "const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;\n\n/** 🔌️ Packs keep at most this many read descriptors open across every store of the process: the least recently read one is closed first, so a graph that visits thousands of project stores never exhausts the descriptor table. */\nexport const RECORD_STORE_DESCRIPTOR_LIMIT = 32;\nconst openDescriptors = new Map<string, () => void>();\n\n/** 📊️ Counts the pack descriptors this process currently keeps open (tests and diagnostics). */\nexport function openRecordStoreDescriptorCount(): number { return openDescriptors.size; }\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "anchor": "  const descriptor = (pack: string): number | null => {\n    if (!descriptors.has(pack)) { try { descriptors.set(pack, openSync(join(root, `${pack}.pack`), \"r\")); } catch { descriptors.set(pack, null); } }\n    return descriptors.get(pack)!;\n  };\n",
+   "replacement": "  const release = (pack: string): void => {\n    const fd = descriptors.get(pack);\n    openDescriptors.delete(`${root}\\0${pack}`);\n    descriptors.delete(pack);\n    if (typeof fd === \"number\") { try { closeSync(fd); } catch {} }\n  };\n  const descriptor = (pack: string): number | null => {\n    const key = `${root}\\0${pack}`, held = descriptors.get(pack);\n    if (typeof held === \"number\") { openDescriptors.delete(key); openDescriptors.set(key, () => release(pack)); return held; }\n    if (held === null) return null;\n    while (openDescriptors.size >= RECORD_STORE_DESCRIPTOR_LIMIT) { const [oldest, evict] = openDescriptors.entries().next().value!; openDescriptors.delete(oldest); evict(); }\n    try { const fd = openSync(join(root, `${pack}.pack`), \"r\"); descriptors.set(pack, fd); openDescriptors.set(key, () => release(pack)); return fd; }\n    catch { descriptors.set(pack, null); return null; }\n  };\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "anchor": "const fd=descriptors.get(pack);if(typeof fd===\"number\")closeSync(fd);descriptors.delete(pack);for(const suffix of[\"idx\",\"pack\"])",
+   "replacement": "release(pack);for(const suffix of[\"idx\",\"pack\"])"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "anchor": "      for (const fd of descriptors.values()) if (typeof fd === \"number\") closeSync(fd);\n      descriptors.clear();}",
+   "replacement": "      for (const pack of [...descriptors.keys()]) release(pack);\n      descriptors.clear();}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "export function registerBuildGraphOptionalHandleV1(close){const scope=writers.getStore();if(scope)scope.handles.add(close);}",
+   "replacement": "export function registerBuildGraphOptionalHandleV1(close){const scope=writers.getStore();if(!scope)return()=>{};scope.handles.add(close);return()=>{scope.handles.delete(close);};}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.d.mts",
+   "anchor": "export function registerBuildGraphOptionalHandleV1(close:()=>void):void;",
+   "replacement": "export function registerBuildGraphOptionalHandleV1(close:()=>void):()=>void;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "const recordStores = new Map();\n",
+   "replacement": "const recordStores = new Map();\nconst recordStoreHandles = new Map();\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "function observedRecordStoreV1(path){\n let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,\"0-0-0000000000000000.pack\"),plan,write)});recordStores.set(path,records);const original=records;registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original)recordStores.delete(path);}});}return records;\n}\n",
+   "replacement": "function observedRecordStoreV1(path){\n let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,\"0-0-0000000000000000.pack\"),plan,write)});recordStores.set(path,records);const original=records;recordStoreHandles.set(path,registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original){recordStores.delete(path);recordStoreHandles.delete(path);}}}));}return records;\n}\n\n/** 🔌️ Closes one project's pack store once its inference is persisted: its descriptors and location index are not kept for the remaining projects of the graph. */\nfunction releaseObservedRecordStoreV1(path){\n const records=recordStores.get(path);if(!records)return;\n recordStores.delete(path);const unregister=recordStoreHandles.get(path);recordStoreHandles.delete(path);\n try{records.close();}finally{unregister?.();}\n}\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "  if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();\n  const rows = [...authority, ...observations.values()];",
+   "replacement": "  if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();\n  releaseObservedRecordStoreV1(`${cachePath}.records`);\n  const rows = [...authority, ...observations.values()];"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "anchor": "import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from\"../../📥️inputs/🧮️digest/📥️read/🟨️.mjs\";",
+   "replacement": "import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1}from\"../../📥️inputs/🪶️lean-inventory/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "anchor": "await verifyInventoryCohortsV1(root,actual,all,false,store.root);",
+   "replacement": "await verifyInventoryCohortsV1(root,actual,all,false,store.root,store);"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "anchor": "verifyInventoryCohortsV1(root,actual,names,true,store.root));",
+   "replacement": "verifyInventoryCohortsV1(root,actual,names,true,store.root,store));"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "anchor": "async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot){",
+   "replacement": "async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot,store){"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "anchor": " for(const members of cohorts){\n  checkResourceLeaseControl(control);\n  let holds=false;\n  try{holds=await withManagedGraphSourceReadBatchV1(root,control,async batch=>{for(const name of members){const source=name.startsWith(\"SEMIO_SOURCE_CLOSURE_\"),key=name.slice(source?\"SEMIO_SOURCE_CLOSURE_\".length:\"SEMIO_CARGO_LOCK_\".length),file=await readExactSourceInventoryV1(batch,source?\"build-input-closures\":\"build-lock-closures\",key);if(!inferenceInventoryRecordHoldsV1(root,name,file))return false;}return true;});}\n  catch(error){if(strict)throw error;}\n  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();\n  if(!holds){if(strict)return false;continue;}\n  const verified=Date.now();if(validInventoryRecords.size>262144)validInventoryRecords.clear();for(const name of members)validInventoryRecords.set(root+\"\\0\"+name,verified);\n }\n checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return true;\n}\n",
+   "replacement": " let done=0;const phase=async()=>{if(++done%128===0){await store.recheck();await control.yieldContinuation();checkResourceLeaseControl(control);}};\n for(const members of cohorts){\n  checkResourceLeaseControl(control);await store.recheck();\n  for(const name of members){\n   const source=name.startsWith(\"SEMIO_SOURCE_CLOSURE_\"),directory=resolve(storeRoot,source?\"build-input-closures\":\"build-lock-closures\"),key=name.slice(source?\"SEMIO_SOURCE_CLOSURE_\".length:\"SEMIO_CARGO_LOCK_\".length);\n   try{\n    if(!inventoryRecordStillHoldsV1(root,directory,key)){\n     const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);\n     if(!inferenceInventoryRecordHoldsV1(root,name,file)){if(strict)return false;continue;}\n     rememberInventoryRecordV1(root,directory,key,file.stamp);\n    }\n   }catch(error){if(strict)throw error;continue;}\n   if(validInventoryRecords.size>262144)validInventoryRecords.clear();validInventoryRecords.set(root+\"\\0\"+name,Date.now());\n   await phase();\n  }\n  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();\n }\n checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return true;\n}\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from\"../📥️inputs/🧮️digest/📥️read/🟨️.mjs\";",
+   "replacement": "import{readInventoryRecordLeanV1,rememberInventoryRecordV1}from\"../📥️inputs/🪶️lean-inventory/🟨️.mjs\";\nimport{createGraphPhaseClockV1,writeGraphPhaseRowV1}from\"./⏱️phases/🟨️.mjs\";\nimport{createProjectFileIndexV1}from\"./🧭️file-owner/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "import{captureInferenceInventoryReferencesV1,admitInferenceInventoryCohortV1,planInferenceInventoryCohortsV1}from\"../👁️observation/📥️reuse/🟨️.mjs\";",
+   "replacement": "import{captureInferenceInventoryReferencesV1}from\"../👁️observation/📥️reuse/🟨️.mjs\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "import type {RepositoryCacheStoreV1} from \"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts\";",
+   "replacement": "import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from \"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts\";"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "    await withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{\n      const extents:number[]=[];let bytes=0,readRecords=0;\n      const cadence=exactSourceReadPolicyV1.maximumInventoryRecordsPerYield;\n      await store.recheck();checkResourceLeaseControl(actual);\n      if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");\n      for(const compact of entries){\n        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n        const path=join(store.root,compact.directory,compact.digest+\".json\"),row=await lstat(path);\n        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n        if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||!Number.isSafeInteger(row.size)||row.size<0||row.size>exactSourceReadPolicyV1.maximumClosureBytes)throw Error(\"Single-link bounded regular inventory extent required\");\n        extents.push(Math.max(1,row.size));\n        if(extents.length%cadence===0){await store.recheck();await actual.yieldContinuation();checkScriptInvocation(invocation);checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");}\n      }\n      await store.recheck();checkResourceLeaseControl(actual);\n      for(const cohort of planInferenceInventoryCohortsV1(extents)){\n        admitInferenceInventoryCohortV1(bytes,cohort.records,cohort.maximumBytes);\n        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n        await withPortableInputCohortV1(()=>store.recheck(),()=>withManagedGraphSourceReadBatchV1(root,actual,async batch=>{for(const compact of entries.slice(cohort.offset,cohort.offset+cohort.records)){\n          checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n          const file=await readExactSourceInventoryV1(batch,compact.directory as \"build-input-closures\"|\"build-lock-closures\",compact.digest,cohort.maximumBytes);\n          checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n          if(!file||file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);\n          bytes+=file.byteLength;const contract=file.value;expanded.set(compact.key,compact.directory===\"build-input-closures\"?captureSourceInputInventoryV1(contract,root).value.files.map(file=>\"{workspaceRoot}/\"+file):[\"{workspaceRoot}/Cargo.lock\",\"{workspaceRoot}/\"+captureCargoLockInventoryV1(contract,root).value.manifest]);\n          if(++readRecords%cadence===0){await actual.yieldContinuation();checkScriptInvocation(invocation);checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");}\n        }}));\n        checkResourceLeaseControl(actual);if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");\n      }\n",
+   "replacement": "    await withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{\n      const clock=createGraphPhaseClockV1({publish:resource=>actual.publish({resource,mode:\"shared\",elapsedMs:0}),write:writeGraphPhaseRowV1});\n      let bytes=0,readRecords=0;const cadence=exactSourceReadPolicyV1.maximumInventoryRecordsPerYield;\n      await store.recheck();checkResourceLeaseControl(actual);\n      if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");\n      await clock.begin(\"expansion\",entries.length);\n      for(const compact of entries){\n        checkScriptInvocation(invocation);checkResourceLeaseControl(actual);\n        const directory=join(store.root,compact.directory),file=readInventoryRecordLeanV1(directory,compact.digest,exactSourceReadPolicyV1.maximumClosureBytes);\n        if(file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);\n        bytes+=file.byteLength;if(bytes>exactSourceReadPolicyV1.maximumSourceBytes)throw Error(\"Build input closure bytes exceeded\");\n        expanded.set(compact.key,compact.directory===\"build-input-closures\"?captureSourceInputInventoryV1(file.value,root).value.files.map(file=>\"{workspaceRoot}/\"+file):[\"{workspaceRoot}/Cargo.lock\",\"{workspaceRoot}/\"+captureCargoLockInventoryV1(file.value,root).value.manifest]);\n        rememberInventoryRecordV1(root,directory,compact.digest,file.stamp);\n        if(++readRecords%cadence===0){await store.recheck();await actual.yieldContinuation();checkScriptInvocation(invocation);checkResourceLeaseControl(actual);await clock.advance(\"expansion\",readRecords);if(invocation)await advanceScriptInvocation(invocation,\"build:portable-inputs\",\"running\");}\n      }\n      await store.recheck();checkResourceLeaseControl(actual);await clock.advance(\"expansion\",readRecords);await clock.end(\"expansion\",{records:readRecords,bytes});\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1):Promise<BuildGraphV1> {",
+   "replacement": "export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1,compact=false):Promise<BuildGraphV1> {"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "return readBuildGraphV1({version:1,projects:await portableInputs(root,neutral,invocation,phaseControl),dependencies,",
+   "replacement": "const compactGraph=({version:1,projects:neutral,dependencies,"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "closure:createHash(\"sha256\").update(JSON.stringify(admission??files)).digest(\"hex\")}});\n}",
+   "replacement": "closure:createHash(\"sha256\").update(JSON.stringify(admission??files)).digest(\"hex\")}});\n  return compact?compactGraph as unknown as BuildGraphV1:readBuildGraphV1({...compactGraph,projects:await portableInputs(root,neutral,invocation,phaseControl)});\n}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean}",
+   "replacement": "async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "const profile=process.env.SEMIO_BUILD_PROFILE_INPUTS===\"1\",timing=(phase:string,started:number,details:Record<string,unknown>={})=>{if(profile){}};",
+   "replacement": "const phaseRows:{phase:string;milliseconds:number}[]=[],timing=(phase:string,started:number,details:Record<string,unknown>={})=>{const row={phase,milliseconds:Math.round(performance.now()-started),...details};phaseRows.push(row);if(process.env.SEMIO_BUILD_PROFILE_INPUTS===\"1\"||process.env.SEMIO_GRAPH_PHASES===\"1\")process.stderr.write(\"[graph-phase] \"+JSON.stringify(row)+\"\\n\");};"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  const observation=observationV1,[producer]=await Promise.all([import(\"./📥️inference/🟨️.mjs\"),import(\"../../../🧪️test/🟨️.mjs\"),import(\"./📥️inference/🛡️policy/🟨️.mjs\")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();\n",
+   "replacement": "  if(options.sealedOnly){if(selected)return undefined;try{if(!buildGraphProducerAuthorityV1(JSON.parse(await readFile(authorityPath,\"utf8\")),loadedGraphModuleAuthorityV1))return undefined;}catch(error){if((error as NodeJS.ErrnoException).code===\"ENOENT\"||error instanceof SyntaxError)return undefined;throw error;}}\n  const observation=observationV1,[producer]=await Promise.all([import(\"./📥️inference/🟨️.mjs\"),import(\"../../../🧪️test/🟨️.mjs\"),import(\"./📥️inference/🛡️policy/🟨️.mjs\")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  let captured:{value:BuildGraphV1|OwnerRegistryInvalidationV1;",
+   "replacement": "  if(options.sealedOnly)return undefined;\n  let captured:{value:BuildGraphV1|OwnerRegistryInvalidationV1;"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,files,initial.admission);",
+   "replacement": "return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,files,initial.admission,true);"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  const graph=captured.value,source=JSON.stringify(graph),digest=createHash(\"sha256\").update(source).digest(\"hex\"),authority=JSON.stringify({version:3,module:loadedGraphModuleAuthorityV1,membership:after,graph:digest,observations:captured.observations});if(Buffer.byteLength(source)>536870912||Buffer.byteLength(authority)>536870912)throw Error(\"Build graph cache exceeds its finite publication limit\");await mkdir(dirname(path),{recursive:true});",
+   "replacement": "  const publishStarted=performance.now(),compact=captured.value as BuildGraphV1,source=JSON.stringify(compact),digest=createHash(\"sha256\").update(source).digest(\"hex\"),authority=JSON.stringify({version:3,module:loadedGraphModuleAuthorityV1,membership:after,graph:digest,observations:captured.observations});timing(\"graph-serialize\",publishStarted,{graphBytes:Buffer.byteLength(source),authorityBytes:Buffer.byteLength(authority)});if(Buffer.byteLength(source)>536870912||Buffer.byteLength(authority)>536870912)throw Error(\"Build graph cache exceeds its finite publication limit: \"+Buffer.byteLength(source)+\" graph bytes, \"+Buffer.byteLength(authority)+\" authority bytes, 536870912 allowed\");await mkdir(dirname(path),{recursive:true});const expandStarted=performance.now(),graph=readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl));timing(\"graph-expansion\",expandStarted);"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "await rename(temporary,path);await rename(receipt,authorityPath);}",
+   "replacement": "timing(\"graph-publication\",publishStarted);process.stderr.write(\"[graph-phase] \"+JSON.stringify({summary:phaseRows.map(row=>[row.phase,row.milliseconds])})+\"\\n\");await rename(temporary,path);await rename(receipt,authorityPath);}"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "/** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */",
+   "replacement": "/** 🔓️ Serves a current sealed graph to any number of shared readers: only a cache-store reader is held, the graph writer and its exclusive lease are never requested, so readers never queue behind a builder that is still inferring. */\nasync function readSealedBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean},registry:BuildOwnerRegistryV1):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {\n  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);\n  return withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl,async(store,actualControl)=>{await store.recheck();checkResourceLeaseControl(actualControl);return loadBuildGraphAttemptV1(root,invocation,actualControl,{...options,sealedOnly:true},registry,undefined);});\n}\n\n/** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  const ordered=Object.entries(projects).sort(([,a],[,b])=>b.root.length-a.root.length),projectFileMap:Record<string,{file:string}[]>=Object.fromEntries(Object.keys(projects).map(name=>[name,[]]));\n  const withheld=[...unavailable.keys()];\n  for(const file of files){const match=ordered.find(([,project])=>project.root===\".\"||file.startsWith(project.root+\"/\"));if(match&&!withheld.some(root=>file.startsWith(root+\"/\")&&root.length>match[1].root.length)){const entries=projectFileMap[match[0]];if(!entries)throw Error(\"Discovered project file owner is missing\");entries.push({file});}}\n",
+   "replacement": "  const ownerOf=createProjectFileIndexV1(projects),projectFileMap:Record<string,{file:string}[]>=Object.fromEntries(Object.keys(projects).map(name=>[name,[]]));\n  const withheld=[...unavailable.keys()];\n  for(const file of files){const owner=ownerOf(file);if(owner!==undefined&&!withheld.some(root=>file.startsWith(root+\"/\")&&root.length>projects[owner]!.root.length)){const entries=projectFileMap[owner];if(!entries)throw Error(\"Discovered project file owner is missing\");entries.push({file});}}\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "  const dependencies=[...new Map(edges.map(edge=>[JSON.stringify(edge),edge])).values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));\n",
+   "replacement": "  const dependencies=[...new Map(edges.map(edge=>[JSON.stringify(edge),edge])).entries()].sort(([a],[b])=>a.localeCompare(b)).map(([,edge])=>edge);\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "anchor": "    const graph=await withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{",
+   "replacement": "    if(scope===undefined){const sealed=await readSealedBuildGraphV1(root,invocation,phaseControl,options,registry);if(sealed&&!isOwnerRegistryInvalidationV1(sealed)){checkScriptInvocation(invocation);return sealed;}}\n    const graph=await withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length)await inferProject(jobs[cursor++]);});\n  await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});\n",
+   "replacement": "  const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:\"build:projects\",stage:\"running\",activity:{resource,mode:\"shared\",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;\n  await phases?.begin(\"inference\",jobs.length);\n  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){await inferProject(jobs[cursor++]);await phases?.advance(\"inference\",++finished);}});\n  await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});\n  await phases?.end(\"inference\",{projects:jobs.length});\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "\nlet inferenceCandidates",
+   "replacement": "\nimport { createGraphPhaseClockV1, writeGraphPhaseRowV1 } from \"../../⏱️phases/🟨️.mjs\";\nlet inferenceCandidates"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+   "anchor": "    \"cacheScan\": {\n      \"resourcePrefix\": \"cache-scan:\",",
+   "replacement": "    \"graphPhase\": {\n      \"resourcePrefix\": \"build:graph-phase:\",\n      \"maximumResourceCharacters\": 128,\n      \"maximumCommandCharacters\": 256,\n      \"commandPattern\": \"^[A-Za-z0-9:_/.-]+$\",\n      \"countPattern\": \"^(?:0|[1-9][0-9]{0,15})$\",\n      \"labels\": {\n        \"en\": {\n          \"template\": \"{command} · {phase}: {done} of {total} {units}\",\n          \"phases\": {\n            \"inference\": {\n              \"label\": \"Inferring projects\",\n              \"units\": \"projects\"\n            },\n            \"verification\": {\n              \"label\": \"Verifying input closures\",\n              \"units\": \"closures\"\n            },\n            \"expansion\": {\n              \"label\": \"Expanding input closures\",\n              \"units\": \"closures\"\n            }\n          }\n        },\n        \"de\": {\n          \"template\": \"{command} · {phase}: {done} von {total} {units}\",\n          \"phases\": {\n            \"inference\": {\n              \"label\": \"Projekte ableiten\",\n              \"units\": \"Projekte\"\n            },\n            \"verification\": {\n              \"label\": \"Eingabehüllen prüfen\",\n              \"units\": \"Hüllen\"\n            },\n            \"expansion\": {\n              \"label\": \"Eingabehüllen auflösen\",\n              \"units\": \"Hüllen\"\n            }\n          }\n        }\n      }\n    },\n    \"cacheScan\": {\n      \"resourcePrefix\": \"cache-scan:\","
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+   "anchor": " const queue=progressSchema.const.queueWait;\n",
+   "replacement": " const phase=progressSchema.const.graphPhase;\n if(activity.resource.startsWith(phase.resourcePrefix)){\n  if(activity.elapsedMs!==0||activity.mode!==\"shared\"||activity.resource.length>phase.maximumResourceCharacters||progress.command.length>phase.maximumCommandCharacters||!new RegExp(phase.commandPattern,\"u\").test(progress.command))return null;\n  const parts=activity.resource.slice(phase.resourcePrefix.length).split(\":\"),name=parts[0]??\"\";if(parts.length!==3||!Object.hasOwn(phase.labels.en.phases,name)||!parts.slice(1).every(part=>new RegExp(phase.countPattern,\"u\").test(part)))return null;\n  const done=Number(parts[1]),total=Number(parts[2]);if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return null;\n  const labels=phase.labels[progressLanguage(environment)],row=labels.phases[name as keyof typeof labels.phases],fields:Record<string,string>={command:progress.command,phase:row.label,units:row.units,done:String(done),total:String(total)};\n  return labels.template.replace(/\\{([A-Za-z]+)\\}/gu,(_token,key:string)=>fields[key]!);\n }\n const queue=progressSchema.const.queueWait;\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts",
+   "anchor": "import corpus from\"./🔣️.json\";\n",
+   "replacement": "import corpus from\"./🔣️.json\";\nimport{createGraphPhaseClockV1}from\"../../../🕸️graph/⏱️phases/🟨️.mjs\";\n"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts",
+   "anchor": "test(\"neutral portable expansion shares capped cohorts and retains refined control\",async()=>{\n const path=new URL(\"../../../🕸️graph/🟦️.ts\",import.meta.url),text=readFileSync(path,\"utf8\"),tree=ts.createSourceFile(\"graph.ts\",text,ts.ScriptTarget.Latest,true),node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===\"portableInputs\");if(!node)throw Error(\"Actual portable expansion required\");const code=ts.transpileModule(node.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,readPolicy=JSON.parse(readFileSync(new URL(\"../../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json\",import.meta.url),\"utf8\")).definitions.Policy.const,data=createSourceInventoryDataV1(readPolicy),valid=new Ajv({strict:true}).compile(schema.definitions.PortableInventoryCase);\n for(const row of corpus.adaptivePortable){expect(valid(row)).toBe(true);const records=new Map<string,{value:unknown;sha256:string;byteLength:number}>(),inputs:unknown[]=[],expected:string[]=[];for(let index=0;index<row.count;index++){const file=\"f\"+index+\".ts\",value={version:1,files:[file]},body=JSON.stringify(value),sha256=hash(body);records.set(sha256,{value,sha256,byteLength:Buffer.byteLength(body)});inputs.push({env:\"SEMIO_SOURCE_CLOSURE_\"+sha256});expected.push(\"{workspaceRoot}/\"+file);}let outer=false,inner=false,batches=0,yields=0,rechecks=0;const root=resolve(\"/__adaptive_inventory__\"),actual={yieldContinuation:async()=>{expect(outer).toBe(true);yields++;}},ports={join,exactSourceReadPolicyV1:readPolicy,captureInferenceInventoryReferencesV1:reuse.captureInferenceInventoryReferencesV1,admitInferenceInventoryCohortV1:reuse.admitInferenceInventoryCohortV1,planInferenceInventoryCohortsV1:reuse.planInferenceInventoryCohortsV1,checkScriptInvocation:()=>{},checkResourceLeaseControl:(control:unknown)=>{expect(control).toBe(actual);expect(outer).toBe(true);},advanceScriptInvocation:async()=>{},withRepositoryBuildGraphConsumerV1:async(_root:string,_control:unknown,body:(store:unknown,control:unknown)=>Promise<unknown>)=>{outer=true;try{return await body({root:join(root,\"graph\"),recheck:async()=>{expect(outer).toBe(true);rechecks++;}},actual);}finally{outer=false;}},lstat:async(path:string)=>{expect(outer).toBe(true);const value=records.get(path.slice(-69,-5));if(!value)throw Error(\"Finite inventory required\");return{isFile:()=>true,isSymbolicLink:()=>false,nlink:1,size:value.byteLength};},withManagedGraphSourceReadBatchV1:async(_root:string,control:unknown,body:(batch:unknown)=>Promise<unknown>)=>{expect(control).toBe(actual);expect(outer).toBe(true);inner=true;batches++;try{return await body({});}finally{inner=false;}},readExactSourceInventoryV1:async(_batch:unknown,_namespace:string,key:string,cap:number)=>{expect(outer&&inner).toBe(true);const value=records.get(key);if(!value)throw Error(\"Finite inventory required\");expect(typeof cap).toBe(\"number\");expect(value.byteLength<=cap).toBe(true);return value;},captureSourceInputInventoryV1:data.captureSourceInputInventoryV1,captureCargoLockInventoryV1:data.captureCargoLockInventoryV1},run=new Function(...Object.keys(ports),code+\";return portableInputs;\")(...Object.values(ports));expect((await run(root,{inputs},{},{})).inputs).toEqual(expected);expect(batches).toBe(row.batches);expect(outer).toBe(false);expect(inner).toBe(false);expect(yields).toBe(2*Math.floor(row.count/readPolicy.maximumInventoryRecordsPerYield));expect(rechecks).toBe(row.count?3+Math.floor(row.count/readPolicy.maximumInventoryRecordsPerYield):0);}\n});\n",
+   "replacement": "test(\"neutral portable expansion reads each compact leaf once through the lean reader and retains refined control\",async()=>{\n const path=new URL(\"../../../🕸️graph/🟦️.ts\",import.meta.url),text=readFileSync(path,\"utf8\"),tree=ts.createSourceFile(\"graph.ts\",text,ts.ScriptTarget.Latest,true),node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===\"portableInputs\");if(!node)throw Error(\"Actual portable expansion required\");const code=ts.transpileModule(node.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,readPolicy=JSON.parse(readFileSync(new URL(\"../../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json\",import.meta.url),\"utf8\")).definitions.Policy.const,data=createSourceInventoryDataV1(readPolicy),valid=new Ajv({strict:true}).compile(schema.definitions.PortableInventoryCase);\n for(const row of corpus.adaptivePortable){expect(valid(row)).toBe(true);const records=new Map<string,{value:unknown;sha256:string;byteLength:number;stamp:string}>(),inputs:unknown[]=[],expected:string[]=[];for(let index=0;index<row.count;index++){const file=\"f\"+index+\".ts\",value={version:1,files:[file]},body=JSON.stringify(value),sha256=hash(body);records.set(sha256,{value,sha256,byteLength:Buffer.byteLength(body),stamp:\"s\"+index});inputs.push({env:\"SEMIO_SOURCE_CLOSURE_\"+sha256});expected.push(\"{workspaceRoot}/\"+file);}let outer=false,reads=0,remembered=0,yields=0,rechecks=0;const published:string[]=[];const root=resolve(\"/__adaptive_inventory__\"),actual={publish:async(row:{resource:string})=>{published.push(row.resource);},yieldContinuation:async()=>{expect(outer).toBe(true);yields++;}},ports={join,exactSourceReadPolicyV1:readPolicy,captureInferenceInventoryReferencesV1:reuse.captureInferenceInventoryReferencesV1,createGraphPhaseClockV1,writeGraphPhaseRowV1:()=>{},checkScriptInvocation:()=>{},checkResourceLeaseControl:(control:unknown)=>{expect(control).toBe(actual);expect(outer).toBe(true);},advanceScriptInvocation:async()=>{},withRepositoryBuildGraphConsumerV1:async(_root:string,_control:unknown,body:(store:unknown,control:unknown)=>Promise<unknown>)=>{outer=true;try{return await body({root:join(root,\"graph\"),recheck:async()=>{expect(outer).toBe(true);rechecks++;}},actual);}finally{outer=false;}},readInventoryRecordLeanV1:(directory:string,key:string,cap:number)=>{expect(outer).toBe(true);expect(directory).toBe(join(root,\"graph\",\"build-input-closures\"));const value=records.get(key);if(!value)throw Error(\"Finite inventory required\");expect(value.byteLength<=cap).toBe(true);reads++;return value;},rememberInventoryRecordV1:()=>{remembered++;},captureSourceInputInventoryV1:data.captureSourceInputInventoryV1,captureCargoLockInventoryV1:data.captureCargoLockInventoryV1},run=new Function(...Object.keys(ports),code+\";return portableInputs;\")(...Object.values(ports));expect((await run(root,{inputs},{},{})).inputs).toEqual(expected);expect(reads).toBe(row.count);expect(remembered).toBe(row.count);expect(outer).toBe(false);expect(yields).toBe(Math.floor(row.count/readPolicy.maximumInventoryRecordsPerYield));expect(rechecks).toBe(row.count?2+Math.floor(row.count/readPolicy.maximumInventoryRecordsPerYield):0);expect(published.at(-1)).toBe(row.count?`build:graph-phase:expansion:${row.count}:${row.count}`:undefined);if(row.count)expect(published[0]).toBe(`build:graph-phase:expansion:0:${row.count}`);}\n});\n"
+  }
+ ],
+ "bases": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts": "fcd3af70ca6f745503b233292cf15c6b39d19c22101fe79e8bdfe46c0cf1c6c6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": "147cb734b60766889c7d8e3a098b1bab3a59a433a4de7dbcece5bf70580dae8b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.d.mts": "3cfa64618d3a62bde07ed3809e2f4206e4ab2bc274a3733b023c16454fafca0f",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": "3726ceedc9bacf3f0e4a46c2f35acf9b1c7e8c15ec9ddfc40be263ef8359d693",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs": "2e90ef3bdc751984594bf129e915e83005ccb1959d4d6603f02e3d2cb1fd588b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": "c34368a27e733bed5ea72f49d740bff97e16069e17d30d86706c106cec30243b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": "ab5a2345b20e723e1b0351ed73014763d99f025d5bfb09e85907d3f00b31bef8",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json": "4aa5c4eef6a69eca104659f7212519492693caa9c4b88a8a16bd88ae702e6bf3",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts": "6c79779b7d747206ba248ea425cad5e7b969324f7eea3bc7c656cf9ecfdc98c4",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts": "14125543b6a2ba2fdf9833cd5557b40f7ea9b84afe0561383306a3876ee05c72"
+ },
+ "new": {
+  "lean/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs",
+  "lean/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.d.mts",
+  "lean/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🧪️tests/🟦️.ts",
+  "lean/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🧪️tests/🔣️.json",
+  "lean/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🧪️tests/🧬️schema/🔣️.json",
+  "phases/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🟨️.mjs",
+  "phases/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🟨️.d.mts",
+  "phases/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🧪️tests/🟦️.ts",
+  "phases/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🧪️tests/🔣️.json",
+  "phases/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🧪️tests/🧬️schema/🔣️.json",
+  "records/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts",
+  "records/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔌️descriptor-limit/🔣️.json",
+  "records/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔌️descriptor-limit/🧬️schema/🔣️.json",
+  "owner/module.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🟨️.mjs",
+  "owner/module.d.mts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🟨️.d.mts",
+  "owner/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🧪️tests/🟦️.ts",
+  "owner/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🧪️tests/🔣️.json",
+  "owner/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🧪️tests/🧬️schema/🔣️.json",
+  "sealed/test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔓️sealed-reuse/🟦️.ts",
+  "sealed/fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔓️sealed-reuse/🔣️.json",
+  "sealed/fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔓️sealed-reuse/🧬️schema/🔣️.json",
+  "sealed/oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔓️sealed-reuse/🐍️oracle.py",
+  "progress/test.ts": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🟦️.ts",
+  "progress/fixture.json": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json",
+  "progress/fixture-schema.json": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🧬️schema/🔣️.json"
+ }
+}

@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "throttled-counter-publishes-first-last-and-every-250-ms",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 6,
+          "at": 0
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 1,
+          "at": 100
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 2,
+          "at": 200
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 3,
+          "at": 300
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 4,
+          "at": 400
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 5,
+          "at": 500
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 6,
+          "at": 600
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 605
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:6",
+        "build:graph-phase:inference:3:6",
+        "build:graph-phase:inference:6:6"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 605,
+          "done": 6,
+          "total": 6
+        }
+      ]
+    },
+    {
+      "name": "zero-total-publishes-once-and-times-the-phase",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "expansion",
+          "total": 0,
+          "at": 10
+        },
+        {
+          "op": "end",
+          "phase": "expansion",
+          "at": 1010
+        }
+      ],
+      "published": [
+        "build:graph-phase:expansion:0:0"
+      ],
+      "rows": [
+        {
+          "phase": "expansion",
+          "milliseconds": 1000,
+          "done": 0,
+          "total": 0
+        }
+      ]
+    },
+    {
+      "name": "two-interleaved-phases-keep-independent-throttles",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "verification",
+          "total": 3,
+          "at": 0
+        },
+        {
+          "op": "begin",
+          "phase": "expansion",
+          "total": 2,
+          "at": 50
+        },
+        {
+          "op": "advance",
+          "phase": "verification",
+          "done": 1,
+          "at": 100
+        },
+        {
+          "op": "advance",
+          "phase": "expansion",
+          "done": 1,
+          "at": 120
+        },
+        {
+          "op": "advance",
+          "phase": "verification",
+          "done": 2,
+          "at": 400
+        },
+        {
+          "op": "advance",
+          "phase": "expansion",
+          "done": 2,
+          "at": 410
+        },
+        {
+          "op": "advance",
+          "phase": "verification",
+          "done": 3,
+          "at": 420
+        },
+        {
+          "op": "end",
+          "phase": "expansion",
+          "at": 430
+        },
+        {
+          "op": "end",
+          "phase": "verification",
+          "at": 440
+        }
+      ],
+      "published": [
+        "build:graph-phase:verification:0:3",
+        "build:graph-phase:expansion:0:2",
+        "build:graph-phase:verification:2:3",
+        "build:graph-phase:expansion:2:2",
+        "build:graph-phase:verification:3:3"
+      ],
+      "rows": [
+        {
+          "phase": "expansion",
+          "milliseconds": 380,
+          "done": 2,
+          "total": 2
+        },
+        {
+          "phase": "verification",
+          "milliseconds": 440,
+          "done": 3,
+          "total": 3
+        }
+      ]
+    },
+    {
+      "name": "end-publishes-an-unpublished-final-state",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 10,
+          "at": 0
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 4,
+          "at": 10
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 20
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:10",
+        "build:graph-phase:inference:4:10"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 20,
+          "done": 4,
+          "total": 10
+        }
+      ]
+    },
+    {
+      "name": "wide-window-publishes-every-advance",
+      "minimumMilliseconds": 0,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 3,
+          "at": 0
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 1,
+          "at": 1
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 2,
+          "at": 2
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 3,
+          "at": 3
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 4
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:3",
+        "build:graph-phase:inference:1:3",
+        "build:graph-phase:inference:2:3",
+        "build:graph-phase:inference:3:3"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 4,
+          "done": 3,
+          "total": 3
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "name": "advance-before-begin",
+      "steps": [
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 1,
+          "at": 0
+        }
+      ]
+    },
+    {
+      "name": "regressing-counter",
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 5,
+          "at": 0
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 3,
+          "at": 1
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 2,
+          "at": 2
+        }
+      ]
+    },
+    {
+      "name": "begun-twice",
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 5,
+          "at": 0
+        },
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 5,
+          "at": 1
+        }
+      ]
+    },
+    {
+      "name": "phase-name-with-separator",
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "in:ference",
+          "total": 5,
+          "at": 0
+        }
+      ]
+    },
+    {
+      "name": "negative-total",
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": -1,
+          "at": 0
+        }
+      ]
+    }
+  ]
+}

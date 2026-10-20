@@ -10,7 +10,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
-import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, useDiscoveredAgentBridgeConfig, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer } from "../../🟦️.tsx";
+import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer } from "../../🟦️.tsx";
+import { useDiscoveredAgentBridgeConfig } from "../../🟢️shared/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));

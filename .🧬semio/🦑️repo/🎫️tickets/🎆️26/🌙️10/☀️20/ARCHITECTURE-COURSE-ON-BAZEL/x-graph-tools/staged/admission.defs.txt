@@ -1,0 +1,48 @@
+    "admissionCache": {
+      "const": {
+        "recordVersion": 1,
+        "recordNamespace": "owner-admission",
+        "recordDirectory": "np",
+        "recordLeafDigits": 24,
+        "receiptVersion": 1,
+        "receiptSuffix": ".admission.json",
+        "racyMilliseconds": 2000,
+        "progressStage": "build:selected-records",
+        "chainLimit": 12,
+        "maximumReceiptBytes": 536870912
+      }
+    },
+    "observationRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "fact"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["file", "exists", "stat", "lstat", "readdir", "realpath", "realpathNative", "resolve", "readdirNames", "fileExists", "directoryExists", "directories", "typescriptText", "typescriptRealpath", "analysis"]
+        },
+        "path": {"type": "string", "minLength": 1},
+        "fact": {}
+      }
+    },
+    "admissionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scope", "module", "startedAt", "admission", "observations"],
+      "properties": {
+        "version": {"const": 1},
+        "scope": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "module": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["implementation", "publication"],
+          "properties": {
+            "implementation": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "publication": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          }
+        },
+        "startedAt": {"type": "integer", "minimum": 0},
+        "admission": {"type": "object"},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/observationRow"}}
+      }
+    },

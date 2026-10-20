@@ -33,7 +33,12 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "artifact-directory-wiring-check": {
       "executor": "repo:script",
@@ -53,7 +58,12 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "subset-directory-wiring-check": {
       "executor": "repo:script",
@@ -109,7 +119,12 @@
         "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
         "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "catalog-root": {
       "executor": "repo:script",
@@ -118,7 +133,12 @@
         "command": "bun ./📜️script.ts catalog-root",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "home-io-surface-check": {
       "executor": "repo:script",
@@ -133,7 +153,12 @@
         "stdioSurfaceReads"
       ],
       "outputs": [],
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "home-io-surface-native-check": {
       "executor": "repo:script",
@@ -157,7 +182,12 @@
         "command": "bun ./📜️script.ts editor-component-check",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "test-snapshot-sqlite-census-all": {
       "executor": "repo:script",
@@ -571,6 +601,11 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts composition prepare",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "composition-contribution-check": {
@@ -595,6 +630,11 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts composition removal-test-check",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "parent-removal-check": {
@@ -604,6 +644,11 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts composition removal-check",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "mutation-inventory": {

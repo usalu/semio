@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:graph-membership:v1",
+  "title": "Graph source membership protocol",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "readDeadlineMilliseconds": 180000,
+        "maximumInventoryBytes": 67108864
+      }
+    }
+  }
+}

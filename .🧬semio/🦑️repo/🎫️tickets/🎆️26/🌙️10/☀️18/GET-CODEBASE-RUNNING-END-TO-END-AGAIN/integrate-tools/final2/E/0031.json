@@ -1,0 +1,463 @@
+{
+  "name": "@semio-tech/s-gis-services-native",
+  "root": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+  "projectType": "application",
+  "tags": [
+    "lang:rust",
+    "role:tool"
+  ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/**/*"
+    ]
+  },
+  "targets": {
+    "source-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts native-check",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native-build": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/.🧾️store/native-build.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build native",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "mcp-build": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/.🧾️store/mcp-build.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build mcp",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "mcp-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "live-agent-loop-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "valueEnv": "S_OS_MCP_LIVE_SHELL_URL"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "en"
+                    }
+                  },
+                  {
+                    "id": "de",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "de"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts live-agent-loop-check"
+      },
+      "outputs": []
+    },
+    "hub-agent-participant-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-agent-participant-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "plugin-coverage-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts plugin-coverage-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "user-path-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev",
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "valueEnv": "S_OS_MCP_LIVE_SHELL_URL"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "en"
+                    }
+                  },
+                  {
+                    "id": "de",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "de"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts user-path-check"
+      },
+      "outputs": []
+    },
+    "inference-quartet-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-quartet-check"
+      },
+      "outputs": []
+    },
+    "security-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              },
+              {
+                "id": "admin-capability",
+                "kind": "text",
+                "required": true,
+                "valueEnv": "OS_HUB_ADMIN_CAPABILITY_FILE"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts security-check"
+      },
+      "outputs": []
+    },
+    "agent-reply-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts agent-reply-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "untrusted-content-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts untrusted-content-check",
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "mcp-composition-source-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts mcp-composition-source-check",
+        "forwardAllArgs": true
+      }
+    },
+    "fixture-ownership-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts fixture-ownership-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
+    },
+    "canonical-pair-composition-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-pair-composition-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
+    }
+  }
+}

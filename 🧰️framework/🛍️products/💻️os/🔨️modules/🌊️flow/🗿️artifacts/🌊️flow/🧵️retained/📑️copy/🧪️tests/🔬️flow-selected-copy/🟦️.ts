@@ -3,9 +3,9 @@ import Ajv from "ajv";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
-import { jobSnapshotSchemaUrl } from "@semio-tech/framework/job/testing/fixtures";
+import { WORKSPACE_ROOT } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🧪️testing/🧫️fixtures/🟦️.ts";
+import { jobSnapshotSchemaUrl } from "../../../../../../../../../../📦️packages/🟦️typescript/🧵️job/🧪️testing/🧫️fixtures/🟦️.ts";
 
 /** 🧪️ Executes flow selected copy policy assertions. */
 export function flowSelectedCopySelfTests(): number {

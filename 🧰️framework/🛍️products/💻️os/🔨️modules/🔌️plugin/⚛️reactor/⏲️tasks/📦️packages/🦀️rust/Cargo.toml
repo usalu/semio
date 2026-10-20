@@ -32,5 +32,6 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]

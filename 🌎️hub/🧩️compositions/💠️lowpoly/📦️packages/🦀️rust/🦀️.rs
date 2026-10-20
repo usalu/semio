@@ -16,19 +16,22 @@
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
 mod artifacts {
-    pub use semio_s_artifact_lowpoly_lowpoly as lowpoly;
+    pub mod lowpoly {
+        pub use semio_s_artifact_lowpoly_lowpoly::*;
+        pub use semio_s_artifact_lowpoly_lowpoly_model::snapshot::artifact_kind;
+    }
 }
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
 mod editor {
-    pub use semio_s_artifact_lowpoly_lowpoly::editor::*;
+    pub use semio_s_artifact_lowpoly_lowpoly_editor as lowpoly;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_lowpoly_lowpoly_viewer::viewer::*;
+    pub use semio_s_artifact_lowpoly_lowpoly_viewer as lowpoly;
 }
 //#endregion 👁️Viewer
 

@@ -10,7 +10,7 @@ import { jsonDocumentDuplicateKeys } from "../../../🧬️schema/🔣️json-do
 import { mutationOwnerIdentity } from "../../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
 import { mutationPayloadSchemaProblems } from "../../../🔍️discovery/📄️implementation-findings/🟦️.ts";
 import { mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyStructuralSourceView } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";
 import { POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "../🪪️identity/🟦️.ts";
@@ -208,7 +208,7 @@ export function policyMutationDescriptorView(view: MutationTaxonomyStructuralSou
  * 🧬️ Structural identity of one `🧬️mutations/🔣️.json` aggregate: every `oneOf` `$ref` must resolve to a
  * direct leaf's payload schema (by relative path or by that document's `$id`) and every leaf whose descriptor
  * requires the JSON Schema surface must be referenced. This replaces reading the leaf's semantic kind out of
- * the aggregate's `x-semio-mutationKinds` string list, which no consumer reads.
+ * the aggregate's `x-semio-mutationKinds` string list, which no consumer reads. A leaf payload that cannot be read as JSON is not an error here: it is already a schema-parity breach on the leaf.
  */
 export function policyMutationAggregateMembers(view: MutationTaxonomyStructuralSourceView, mutationsRel: string, aggregateRel: string, leafNames: readonly string[], taxonomy: ReturnType<typeof loadTaxonomy>): { readonly referenced: ReadonlySet<string>; readonly breaches: BreachRecord[] } {
   const solution = "Make the aggregate a pure $ref union over exactly the direct leaves' payload schemas; the union is the identity, no restated kind list.";
@@ -236,7 +236,7 @@ export function policyMutationAggregateMembers(view: MutationTaxonomyStructuralS
     try {
       const id = (JSON.parse(payloadSource) as { $id?: unknown }).$id;
       if (typeof id === "string" && id) byId.set(id, leafName);
-    } catch { /* an unreadable payload is already a schema-parity breach on the leaf */ }
+    } catch {}
   }
   const breaches: BreachRecord[] = [];
   const referenced = new Set<string>();

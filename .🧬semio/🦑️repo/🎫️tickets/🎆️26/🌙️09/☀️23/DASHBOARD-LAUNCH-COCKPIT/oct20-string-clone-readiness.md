@@ -1,0 +1,29 @@
+# Complete String Clone Output Custody
+
+Owned TTY62328 settled whole exit101 after real native compilation (0.38s). Both indexed_collection_commit laws ran and failed, with0passed2failed12filtered in0.01s. Their exact failure was record ready field omitted owner at the actual advance call; earlier cancellation cuts completed. This is a new concrete production frontier, not the old finite-step refusal.
+
+StringCursor advertised readiness whenever its reserved output allocation existed, including partial-copy phase1. Its take method required phase2. Generated record receivers trust readiness before taking each owned field, so the two contracts contradicted one another and the actual record invariant refused. The repair requires completed phase2, owned output and no closing transition for both readiness and transfer. Reservation, partial copies, accounting, grants and cancellation stay unchanged.
+
+The closed schema and neutral fixture were authored before implementation. Seven states cover initial/reserved/partial/complete/taken/closing/closed; the portable TypeScript query is compared with independent SQLite output and Ajv validation. The actual native StringCursor law drives empty, ASCII, mixed Unicode and65,537-byte original payloads through bounded copies, seven cancellation cuts, transfer versus close-before-take, and exact per-turn physical allocation receipts. Actual typed original source constructor and closure admissions are retained. The existing close-demand Source owner imports this oracle; the physical native law at the String owner mounts through the public companion integration owner. No Cargo declaration or lock changed.
+
+Independent bounded source review accepted the production correction, actual native lifecycle law and TS/SQLite oracle; new Source/native regression bodies remain unrun. Existing two native law failures are observed red evidence. No pass is claimed until managed native rerun.
+
+## Strict Source Admission and Public Integration Ownership
+
+Owned TTY29145 settled whole exit1 before compilation/body. The new 2,989-byte public lifecycle law pushed the core retained-clone test closure above its unchanged262,144-byte limit: the existing contract close test file had11,736 observed bytes with8,780 remaining and8 files remaining. No guard was raised.
+
+The lifecycle test uses public String cursor, existing FixtureSourceBirth and allocator APIs, so its physical source remains at the String semantic owner while its sole native mount moves to the existing public companion retained-clone integration wrapper. The fixture macro now resolves from the actual companion Cargo manifest. No test source was copied, no Cargo declaration or lock changed, and the core String owner now contains only the two production predicate changes. The supplemental actual selector is retained_clone::string_output_tests::string_clone_output_waits_for_complete_owned_payload_and_closes_each_cut in semio-framework-value-tests. The69advertised triples remain unchanged.
+
+## Actual Supplemental Body and Downstream Pass
+
+Companion retry25210 settled whole101 after strict Source admission50/50 and compilation26.17s. The supplemental lifecycle body ran:0passed1failed67filtered in0.08s. No readiness or String cursor closure assertion was reported; the existing FixtureSource Drop exhausted its100,000-turn source-drain helper. This is a distinct test-fixture closure frontier and does not establish a String retirement production defect. The helper quotes separate minimum axes; the local lifecycle regression will explicitly admit and close its raw original source using one complete4096-body quote, exact receipts and a finite idle guard.
+
+Downstream repaired commit retry91760 settled whole exit0. Both exact indexed_collection_commit laws passed,0failed12filtered in0.04s, compilation2.63s. DEBUG records preserve every original/authored custody and exact physical receipt through complete and cancellation cuts, including the65,537-byte authored field. The observed62328 production readiness failure is therefore repaired in both original reproducing bodies. The supplemental lifecycle gate still requires a successful rerun. The native slot was released directly to the sibling terminal gate after both whole results.
+
+## Local Supplemental Fixture Closure Repair
+
+The new lifecycle test now explicitly admits its raw RetainedCloneSource<String> using the actual typed birth quote and constructor copy extent, observes the admitted receipt against physical heap events, and preserves the original pointer checks. After the clone cursor closes, source closure uses one complete4096-body next_close_demand and the same issued copy budget, exact other currencies, receipt.fits and physical heap checks. A separate schema-authored16-turn unchanged-public-quote/default-receipt guard diagnoses genuine empty progress; the existing1024-turn whole-close bound remains finite. Actual String retirement delegates to Bytes, whose payload closure is constant truncate, allocation release and terminal stages; wrapper/source frames are also finite and independent of payload length. This change touches only the supplemental integration test and its closed neutral policy, leaving the shared fixture helper and production retirement unchanged. Independent source review accepted this correction, including the distinct source BirthDemand constructor type. No successful supplemental runtime is claimed yet.
+
+## Explicit Source Closure Acceptance
+
+Owned TTY session 75394 settled whole exit 0. The exact companion String lifecycle law passed with its authentic explicitly admitted raw Source and complete bounded retirement. Full output is retained in generated/e2e-string-lifecycle-explicit-close.log. This supplemental law remains separate from the 69 advertised-law inventory.

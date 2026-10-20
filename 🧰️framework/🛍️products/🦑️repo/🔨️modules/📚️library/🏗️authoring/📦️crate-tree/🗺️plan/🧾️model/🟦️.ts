@@ -3,7 +3,7 @@ import type { CarveSlice, ModuleDecl } from "../../🧱️decl-tree/🟦️.ts";
 import type { MirrorImport } from "../../📝️render/🟦️.ts";
 import type { RustModuleNode, RustSourceTree } from "../../🌳️module-tree/🟦️.ts";
 import type { CrateBudget } from "../💰️budget/🟦️.ts";
-import type { TestTransformOptions } from "../../🧪️test-closure/🟦️.ts";
+import type { TestTransformOptions } from "../../🧪️test-closure/🟢️shared/🟦️.ts";
 
 /** 📐️ Measured closure of one crate in one cfg. */
 export type CrateMeasure = Readonly<{ files: number; bytes: number; lines: number; embedded: number; paths: readonly string[]; sourcePaths: readonly string[]; entries: ReadonlyMap<string, FileMeasure> }>;

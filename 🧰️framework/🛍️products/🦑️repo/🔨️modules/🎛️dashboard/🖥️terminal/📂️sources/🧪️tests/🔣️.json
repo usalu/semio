@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "limit": 32,
+  "cases": [
+    {
+      "name": "empty",
+      "progress": 0,
+      "cancelled": false,
+      "polls": 1
+    },
+    {
+      "name": "single",
+      "progress": 1,
+      "cancelled": false,
+      "polls": 1
+    },
+    {
+      "name": "terminal-at-boundary",
+      "progress": 31,
+      "cancelled": false,
+      "polls": 1
+    },
+    {
+      "name": "terminal-after-boundary",
+      "progress": 32,
+      "cancelled": false,
+      "polls": 2
+    },
+    {
+      "name": "progress-after-boundary",
+      "progress": 33,
+      "cancelled": false,
+      "polls": 2
+    },
+    {
+      "name": "two-boundaries",
+      "progress": 63,
+      "cancelled": false,
+      "polls": 2
+    },
+    {
+      "name": "terminal-after-two-boundaries",
+      "progress": 64,
+      "cancelled": false,
+      "polls": 3
+    },
+    {
+      "name": "three-polls",
+      "progress": 65,
+      "cancelled": false,
+      "polls": 3
+    },
+    {
+      "name": "cancelled-at-boundary",
+      "progress": 31,
+      "cancelled": true,
+      "polls": 1
+    },
+    {
+      "name": "cancelled-after-two-boundaries",
+      "progress": 64,
+      "cancelled": true,
+      "polls": 3
+    }
+  ]
+}

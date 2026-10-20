@@ -1,7 +1,7 @@
 /** 📤️ Tool-job coverage: import preparation, dispatch, publication freshness and bounded publication laws.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
-import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readSourceFamilySource } from "../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { toolJobProductionSource, toolJobRustBlock } from "../📋️inventory/🟦️.ts";
 

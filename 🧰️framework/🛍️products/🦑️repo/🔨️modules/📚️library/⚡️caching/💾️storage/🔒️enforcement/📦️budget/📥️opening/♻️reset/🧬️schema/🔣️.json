@@ -1,0 +1,397 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Inactive Recomputable Nx Namespace Reset",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "partition": "nx",
+        "platforms": [
+          "darwin"
+        ],
+        "maximumMilliseconds": 600000,
+        "maximumAncestors": 64,
+        "maximumReceiptBytes": 4096,
+        "maximumInformationBytes": 4194304,
+        "maximumInformationLines": 65536,
+        "maximumMountBytes": 1048576,
+        "maximumMountLines": 16384,
+        "entries": [
+          "fixed.dmg",
+          "image.json",
+          "m"
+        ],
+        "receipt": "image.json",
+        "backing": "fixed.dmg",
+        "root": "m",
+        "intent": ".reset.json",
+        "maximumIntentBytes": 16384
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link"
+          ]
+        },
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "Capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "entries",
+        "rootNames",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "directory": {
+          "$ref": "#/$defs/Entry"
+        },
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Entry"
+          },
+          "maxProperties": 4
+        },
+        "rootNames": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "partition",
+        "operation",
+        "retiredFiles",
+        "logicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partition": {
+          "const": "nx"
+        },
+        "operation": {
+          "const": "reset-inactive"
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "RecordedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link"
+          ]
+        },
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "partition",
+        "namespace",
+        "ancestry",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "inactive-nx-reset-intent"
+        },
+        "partition": {
+          "const": "nx"
+        },
+        "namespace": {
+          "$ref": "#/$defs/RecordedEntry"
+        },
+        "ancestry": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          }
+        },
+        "entries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixed.dmg",
+            "image.json",
+            "m"
+          ],
+          "properties": {
+            "fixed.dmg": {
+              "$ref": "#/$defs/RecordedEntry"
+            },
+            "image.json": {
+              "$ref": "#/$defs/RecordedEntry"
+            },
+            "m": {
+              "$ref": "#/$defs/RecordedEntry"
+            }
+          }
+        }
+      }
+    },
+    "RecoveryObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "directory",
+        "receiptStamp",
+        "receiptSha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "current-reset-intent",
+            "unsupported-receipt-shape"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "receiptStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "version": {
+          "const": 1
+        }
+      }
+    },
+    "PublicationReceiverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nested",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "original-capsule-root",
+            "nested-capsule-receiver"
+          ]
+        },
+        "nested": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RemovalReceiverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "scope",
+        "copied",
+        "accepted",
+        "count"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "current",
+            "closed"
+          ]
+        },
+        "copied": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      }
+    },
+    "PlannedProvenanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initialIntent",
+        "publishedIntent",
+        "resuming"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "initialIntent": {
+          "type": "boolean"
+        },
+        "publishedIntent": {
+          "type": "boolean"
+        },
+        "resuming": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FinalRemovalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "foreignReplacement",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "final-post-remove",
+            "final-peer-replacement"
+          ]
+        },
+        "foreignReplacement": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,755 @@
+project	root	target	family	disposition	bazelKind	cached	uncachedReason	exclusive	declaredFilesStatic	closureTasks	uncachedAncestors
+@semio-tech/hub-runtime-rs	🌎hub/🏗bootstrap/⚙runtime/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-runtime-rs	🌎hub/🏗bootstrap/⚙runtime/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-runtime-rs	🌎hub/🏗bootstrap/⚙runtime/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-ledgers-rs	🌎hub/🏗bootstrap/📒ledgers/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-ledgers-rs	🌎hub/🏗bootstrap/📒ledgers/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-ledgers-rs	🌎hub/🏗bootstrap/📒ledgers/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-document-routes-rs	🌎hub/🏗bootstrap/📨document-routes/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-document-routes-rs	🌎hub/🏗bootstrap/📨document-routes/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-document-routes-rs	🌎hub/🏗bootstrap/📨document-routes/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-routes-rs	🌎hub/🏗bootstrap/🛣routes/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-routes-rs	🌎hub/🏗bootstrap/🛣routes/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-routes-rs	🌎hub/🏗bootstrap/🛣routes/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-session-routes-rs	🌎hub/🏗bootstrap/🛰session-routes/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-session-routes-rs	🌎hub/🏗bootstrap/🛰session-routes/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-session-routes-rs	🌎hub/🏗bootstrap/🛰session-routes/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-state-rs	🌎hub/🏗bootstrap/🧠state/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-state-rs	🌎hub/🏗bootstrap/🧠state/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-state-rs	🌎hub/🏗bootstrap/🧠state/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-route-models-rs	🌎hub/🏗bootstrap/🧱models/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-route-models-rs	🌎hub/🏗bootstrap/🧱models/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-route-models-rs	🌎hub/🏗bootstrap/🧱models/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-contract-rs	🌎hub/💡inference/🏃runtime/📜contract/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-contract-rs	🌎hub/💡inference/🏃runtime/📜contract/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-contract-rs	🌎hub/💡inference/🏃runtime/📜contract/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-rs	🌎hub/💡inference/🏃runtime/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-rs	🌎hub/💡inference/🏃runtime/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-runtime-rs	🌎hub/💡inference/🏃runtime/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-committer-rs	🌎hub/💡inference/🏃runtime/🔐committer/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-committer-rs	🌎hub/💡inference/🏃runtime/🔐committer/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-committer-rs	🌎hub/💡inference/🏃runtime/🔐committer/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-laws-rs	🌎hub/💡inference/🏃runtime/🧪tests/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-laws-rs	🌎hub/💡inference/🏃runtime/🧪tests/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-laws-rs	🌎hub/💡inference/🏃runtime/🧪tests/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-catalog-rs	🌎hub/💡inference/📇catalog/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-catalog-rs	🌎hub/💡inference/📇catalog/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-catalog-rs	🌎hub/💡inference/📇catalog/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-rs	🌎hub/💡inference/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-rs	🌎hub/💡inference/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-rs	🌎hub/💡inference/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-binding-rs	🌎hub/💡inference/🔗binding/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-binding-rs	🌎hub/💡inference/🔗binding/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-binding-rs	🌎hub/💡inference/🔗binding/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-contract-laws-rs	🌎hub/💡inference/🧪tests/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-contract-laws-rs	🌎hub/💡inference/🧪tests/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-contract-laws-rs	🌎hub/💡inference/🧪tests/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-inference-ledger-rs	🌎hub/💡inference/🪶sqlite/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-ledger-rs	🌎hub/💡inference/🪶sqlite/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-inference-ledger-rs	🌎hub/💡inference/🪶sqlite/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rs	🌎hub/📇directory/🌐neo4j/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rs	🌎hub/📇directory/🌐neo4j/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rs	🌎hub/📇directory/🌐neo4j/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rows-rs	🌎hub/📇directory/🌐neo4j/🧰rows/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rows-rs	🌎hub/📇directory/🌐neo4j/🧰rows/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-neo4j-rows-rs	🌎hub/📇directory/🌐neo4j/🧰rows/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-postgres-rs	🌎hub/📇directory/🐘postgres/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-postgres-rs	🌎hub/📇directory/🐘postgres/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-postgres-rs	🌎hub/📇directory/🐘postgres/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-contract-rs	🌎hub/📇directory/📜contract/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-contract-rs	🌎hub/📇directory/📜contract/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-contract-rs	🌎hub/📇directory/📜contract/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-rs	🌎hub/📇directory/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-rs	🌎hub/📇directory/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-rs	🌎hub/📇directory/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-dispatch-rs	🌎hub/📇directory/🔀dispatch/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-dispatch-rs	🌎hub/📇directory/🔀dispatch/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-dispatch-rs	🌎hub/📇directory/🔀dispatch/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-service-rs	🌎hub/📇directory/🛠service/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-service-rs	🌎hub/📇directory/🛠service/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-service-rs	🌎hub/📇directory/🛠service/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-backend-laws-rs	🌎hub/📇directory/🧪tests/🏛backend-laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-backend-laws-rs	🌎hub/📇directory/🧪tests/🏛backend-laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-backend-laws-rs	🌎hub/📇directory/🧪tests/🏛backend-laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-rs	🌎hub/📇directory/🧪tests/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-rs	🌎hub/📇directory/🧪tests/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-rs	🌎hub/📇directory/🧪tests/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-2-rs	🌎hub/📇directory/🧪tests/🪜laws-2/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-2-rs	🌎hub/📇directory/🧪tests/🪜laws-2/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-laws-2-rs	🌎hub/📇directory/🧪tests/🪜laws-2/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-sqlite-rs	🌎hub/📇directory/🪶sqlite/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-sqlite-rs	🌎hub/📇directory/🪶sqlite/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-sqlite-rs	🌎hub/📇directory/🪶sqlite/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-observability-rs	🌎hub/📊observability/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-observability-rs	🌎hub/📊observability/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-observability-rs	🌎hub/📊observability/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	agent-ceiling-check	bun-script	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	backend-down	bun-script	uncached	task	no	side-effecting		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	backend-run	bun-script	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	backend-status	bun-script	uncached	task	no	diagnostic		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	backend-up	bun-script	uncached	task	no	side-effecting		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	backup-restore-drill	bun-script	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	boot-watch	bun-script	interactive	launch	no	continuous		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	docker-image-build	docker	uncached	task	no	side-effecting		9	8	@semio-tech/plugin-registry:generate;workspace:prepare
+os-hub-ts	🌎hub/📦packages/🟦typescript	docker-image-check	docker	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	document-growth-e2e	playwright	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	hub-freshness	bun-script	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	residency-watch	bun-script	interactive	launch	no	continuous		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	shutdown-drill	bun-script	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	test	bun-test	test	test	yes			7398	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	test-build-freshness	bun-test	test	test	yes			9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	two-client-e2e	playwright	uncached	task	no	live		9	1	
+os-hub-ts	🌎hub/📦packages/🟦typescript	typecheck	tsc	action	task	yes			63891	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-backend-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-directory-authority-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-directory-authority-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-live-journey-check	cargo	uncached	task	no	live		660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-presence-target-recovery-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-presence-target-recovery-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	admin-relay-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	artifact-cas-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	browser-actor-child-worker-containment-check	cargo	uncached	task	no	live		660	1	
+os-hub	🌎hub/📦packages/🦀rust	browser-actor-document-reservation-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	browser-actor-gis-describe-check	cargo	uncached	task	no	live		660	1	
+os-hub	🌎hub/📦packages/🦀rust	browser-broker-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	browser-document-open-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	build	cargo	action	task	yes			5	2	
+os-hub	🌎hub/📦packages/🦀rust	build-dev	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	canonical-architecture	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	canonical-pair-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	check	cargo	action	task	yes		yes	5	1	
+os-hub	🌎hub/📦packages/🦀rust	check-in-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	check-in-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	check-in-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	component-codec-budget-check	wasm	action	task	yes			664	5	@semio-tech/framework-plugin-web:support;semio-hub-gis-component:component;workspace:deps-wasm-opt
+os-hub	🌎hub/📦packages/🦀rust	component-codec-check	wasm	action	task	yes			664	7	@semio-tech/framework-plugin-web:support;semio-hub-gis-component:component;semio-hub-note-component:component;semio-hub-stdio-component:component;workspace:deps-wasm-opt
+os-hub	🌎hub/📦packages/🦀rust	dev	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-collaboration	cargo	interactive	launch	no	continuous		660	1	
+os-hub	🌎hub/📦packages/🦀rust	dev-neo4j	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-postgres	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-secure-admin	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-secure-mcp	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-secure-native	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	dev-secure-suite	cargo	interactive	launch	no	continuous		660	3	
+os-hub	🌎hub/📦packages/🦀rust	directory-command-authority-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-command-receipt-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-command-receipt-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-command-receipt-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-event-page-v1-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-event-page-v1-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-event-page-v1-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-home-browser-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-home-browser-process-runtime-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-home-browser-process-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-invite-authority-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-live-lanes	cargo	uncached	task	no	live		660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-message-authority-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-message-authority-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-ordered-publication-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	directory-ordered-publication-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	document-browser-actor-identity-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	document-browser-actor-identity-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	execution-target-lease-browser-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	execution-target-lease-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	execution-target-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	execution-target-relay-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	foundation-source-check	cargo	action	task	yes			159	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-inference-ledger-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-inference-ledger-oracle	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-map-frozen-binding-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-map-frozen-binding-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-map-proposal-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-map-proposal-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	gis-map-proposal-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	hostile-input-check	cargo	uncached	task	no	side-effecting		660	1	
+os-hub	🌎hub/📦packages/🦀rust	hub-document-sweep	cargo	uncached	task	no	live		660	1	
+os-hub	🌎hub/📦packages/🦀rust	inference-relay-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	invite-redemption-transaction-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	invite-redemption-transaction-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	invite-redemption-transaction-neo4j-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	invite-redemption-transaction-postgres-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	io-matrix	cargo	uncached	task	no	side-effecting		660	1	
+os-hub	🌎hub/📦packages/🦀rust	live-sign-in-check	cargo	uncached	task	no	live		660	2	
+os-hub	🌎hub/📦packages/🦀rust	local-bootstrap-launch-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	local-hub-owner	cargo	interactive	launch	no	continuous		660	1	
+os-hub	🌎hub/📦packages/🦀rust	local-relay-routing-check	cargo	action	task	yes			3	1	
+os-hub	🌎hub/📦packages/🦀rust	native-catalog-selection-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	native-document-open-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	native-openable-catalog-provider-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	open-plan-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	open-plan-server-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	open-plan-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	presence-lease-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	presence-lease-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	presence-lease-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	presence-normalization-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	presence-normalization-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	publish	cargo	uncached	task	no	side-effecting		660	3	
+os-hub	🌎hub/📦packages/🦀rust	retained-short-admin-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	retained-short-admin-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	runtime-fixture-graph	cargo	uncached	task	no	aggregate		660	1	
+os-hub	🌎hub/📦packages/🦀rust	scoped-directory-socket-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	scoped-directory-socket-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	scoped-directory-socket-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	scoped-presence-browser-serve	cargo	interactive	launch	no	continuous		660	1	
+os-hub	🌎hub/📦packages/🦀rust	secure-local-smoke	cargo	uncached	task	no	live		660	2	
+os-hub	🌎hub/📦packages/🦀rust	setup	cargo	uncached	task	no	side-effecting		660	1	
+os-hub	🌎hub/📦packages/🦀rust	share-issuance-atomicity-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	share-issuance-atomicity-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	socket-grant-check	cargo	action	task	yes			169	1	
+os-hub	🌎hub/📦packages/🦀rust	socket-grant-command-source-check	cargo	action	task	yes			169	1	
+os-hub	🌎hub/📦packages/🦀rust	space-administration-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-administration-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-artifact-creation-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-artifact-creation-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-artifact-creation-neo4j-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-artifact-creation-postgres-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-artifact-creation-sqlite-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-journey-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-journey-source-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	space-public-boundary-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	test	cargo	test	test	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	test-all-features	cargo	test	test	yes			660	5	@semio-tech/framework-plugin-web:support;semio-hub-gis-component:component;workspace:deps-wasm-opt
+os-hub	🌎hub/📦packages/🦀rust	test-inference-client-contract	cargo	test	test	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-browser-actor-catalog-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-catalog-bootstrap	cargo	uncached	task	no	side-effecting		660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-catalog-opened-root-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-catalog-opened-root-native-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-catalog-preflight	cargo	uncached	task	no	aggregate		660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-stdio-gis-bundle-browser-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-stdio-gis-bundle-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	trusted-stdio-gis-bundle-process-check	cargo	action	task	yes			660	1	
+os-hub	🌎hub/📦packages/🦀rust	unit-census-check	cargo	action	task	yes			4411	1	
+@semio-tech/hub-auth-rs	🌎hub/🔐auth/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-auth-rs	🌎hub/🔐auth/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-auth-rs	🌎hub/🔐auth/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-auth-client-rs	🌎hub/🔐auth/🔌client/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/hub-auth-client-rs	🌎hub/🔐auth/🔌client/📦packages/🦀rust	check	cargo	action	task	yes			4	1	
+@semio-tech/hub-auth-client-rs	🌎hub/🔐auth/🔌client/📦packages/🦀rust	test	cargo	test	test	yes			4	1	
+@semio-tech/hub-auth-client-rs	🌎hub/🔐auth/🔌client/📦packages/🦀rust	test-source	cargo	test	test	yes			34	1	
+os-hub-admin	🌎hub/🔨modules/🛡admin/📦packages/🟦typescript	build	bun-script	action	task	yes			925	1	
+os-hub-admin	🌎hub/🔨modules/🛡admin/📦packages/🟦typescript	dev	bun-script	interactive	launch	no	continuous		20	1	
+os-hub-admin	🌎hub/🔨modules/🛡admin/📦packages/🟦typescript	test	bun-test	test	test	yes			7418	1	
+@semio-tech/hub-stores-rs	🌎hub/🗄stores/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-stores-rs	🌎hub/🗄stores/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-stores-rs	🌎hub/🗄stores/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-rs	🌎hub/🗿artifact-authority/🌱creation/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-rs	🌎hub/🗿artifact-authority/🌱creation/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-rs	🌎hub/🗿artifact-authority/🌱creation/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-service-rs	🌎hub/🗿artifact-authority/🌱creation/🧑‍🏭service-v1/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-service-rs	🌎hub/🗿artifact-authority/🌱creation/🧑‍🏭service-v1/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-creation-service-rs	🌎hub/🗿artifact-authority/🌱creation/🧑‍🏭service-v1/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-native-openable-rs	🌎hub/🗿artifact-authority/📇native-openable-provider/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-native-openable-rs	🌎hub/🗿artifact-authority/📇native-openable-provider/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-native-openable-rs	🌎hub/🗿artifact-authority/📇native-openable-provider/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-artifact-checkin-rs	🌎hub/🗿artifact-authority/📌check-in/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-checkin-rs	🌎hub/🗿artifact-authority/📌check-in/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-checkin-rs	🌎hub/🗿artifact-authority/📌check-in/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-artifact-authority-rs	🌎hub/🗿artifact-authority/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-authority-rs	🌎hub/🗿artifact-authority/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-artifact-authority-rs	🌎hub/🗿artifact-authority/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📜contract/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📜contract/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📜contract/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛contract-laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛contract-laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-contract-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛contract-laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-laws-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧪tests/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-descriptor-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧾descriptor/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-descriptor-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧾descriptor/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-descriptor-rs	🌎hub/🗿artifact-authority/🔏trusted-catalog/🧾descriptor/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-local-bootstrap-rs	🌎hub/🚀local-bootstrap/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-local-bootstrap-rs	🌎hub/🚀local-bootstrap/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-local-bootstrap-rs	🌎hub/🚀local-bootstrap/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-refusal-rs	🌎hub/🚧refusal/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-refusal-rs	🌎hub/🚧refusal/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-refusal-rs	🌎hub/🚧refusal/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-lag-rebootstrap-rs	🌎hub/🛰lag-rebootstrap/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-lag-rebootstrap-rs	🌎hub/🛰lag-rebootstrap/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-lag-rebootstrap-rs	🌎hub/🛰lag-rebootstrap/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-compositions	🌎hub/🧩compositions	native	bun-script	action	task	yes			39376	1	
+@semio-tech/hub-compositions	🌎hub/🧩compositions	ownership	bun-script	action	task	yes			729	1	
+@semio-tech/hub-compositions	🌎hub/🧩compositions	typescript	bun-script	action	task	yes			729	1	
+@semio-tech/writer-plugin	🌎hub/🧩compositions/✒writer/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/writer-plugin	🌎hub/🧩compositions/✒writer/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/writer-plugin	🌎hub/🧩compositions/✒writer/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-writer-component	🌎hub/🧩compositions/✒writer/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-writer-component	🌎hub/🧩compositions/✒writer/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-writer-component	🌎hub/🧩compositions/✒writer/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-writer-component	🌎hub/🧩compositions/✒writer/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/mathematical-plugin	🌎hub/🧩compositions/➗mathematical/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/mathematical-plugin	🌎hub/🧩compositions/➗mathematical/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/mathematical-plugin	🌎hub/🧩compositions/➗mathematical/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-mathematical-component	🌎hub/🧩compositions/➗mathematical/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-mathematical-component	🌎hub/🧩compositions/➗mathematical/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-mathematical-component	🌎hub/🧩compositions/➗mathematical/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-mathematical-component	🌎hub/🧩compositions/➗mathematical/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/wfc-plugin	🌎hub/🧩compositions/🀄wfc/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/wfc-plugin	🌎hub/🧩compositions/🀄wfc/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/wfc-plugin	🌎hub/🧩compositions/🀄wfc/📦packages/🦀rust	test	cargo	test	test	yes			9	1	
+semio-hub-wfc-component	🌎hub/🧩compositions/🀄wfc/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-wfc-component	🌎hub/🧩compositions/🀄wfc/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-wfc-component	🌎hub/🧩compositions/🀄wfc/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-wfc-component	🌎hub/🧩compositions/🀄wfc/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/procedural-plugin	🌎hub/🧩compositions/🌀procedural/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/procedural-plugin	🌎hub/🧩compositions/🌀procedural/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/procedural-plugin	🌎hub/🧩compositions/🌀procedural/📦packages/🦀rust	test	cargo	test	test	yes			11	1	
+semio-hub-procedural-component	🌎hub/🧩compositions/🌀procedural/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-procedural-component	🌎hub/🧩compositions/🌀procedural/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-procedural-component	🌎hub/🧩compositions/🌀procedural/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-procedural-component	🌎hub/🧩compositions/🌀procedural/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	add-widget-retained-check	cargo	action	task	yes			11	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	check	cargo	action	task	yes			11	2	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	child-edit-check	cargo	action	task	yes			11	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	child-identity-check	cargo	action	task	yes			11	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	graph-generate	cargo	action	task	yes			138	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	graph-wire-check	cargo	action	task	yes			11	2	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	preview-generated	cargo	action	task	yes			138	1	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	test	cargo	test	test	yes			11	2	
+@semio-tech/flow-plugin	🌎hub/🧩compositions/🌊flow/📦packages/🦀rust	test-source	cargo	test	test	yes			11	1	
+semio-hub-flow-component	🌎hub/🧩compositions/🌊flow/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-flow-component	🌎hub/🧩compositions/🌊flow/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-flow-component	🌎hub/🧩compositions/🌊flow/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-flow-component	🌎hub/🧩compositions/🌊flow/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	component-cold-map-patch-check	wasm	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	component-cold-map-patch-native-check	wasm	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	durable-three-store-assembly-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	durable-three-store-assembly-native-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	hub-edit-durability-check	cargo	uncached	task	no	live		828	2	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	inference-discovery-check	cargo	action	task	yes			1055	5	@semio-tech/framework-plugin-web:support;semio-hub-gis-component:component;workspace:deps-wasm-opt
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	inference-discovery-oracle	cargo	action	task	yes			1055	5	@semio-tech/framework-plugin-web:support;semio-hub-gis-component:component;workspace:deps-wasm-opt
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	inference-transport-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	installed-service-source	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	map-create-region-group-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	map-create-region-group-native-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	native-codec-check	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	native-codec-oracle	cargo	action	task	yes			1055	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	native-codec-projection	cargo	action	task	yes			828	1	
+@semio-tech/gis-plugin	🌎hub/🧩compositions/🌍gis/📦packages/🦀rust	test	cargo	test	test	yes			1055	1	
+semio-hub-gis-component	🌎hub/🧩compositions/🌍gis/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-gis-component	🌎hub/🧩compositions/🌍gis/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-gis-component	🌎hub/🧩compositions/🌍gis/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-gis-component	🌎hub/🧩compositions/🌍gis/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	native-codec-check	cargo	action	task	yes			251	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	native-codec-oracle	cargo	action	task	yes			251	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	native-openable-identity-check	cargo	action	task	yes			251	1	
+@semio-tech/vcs-plugin	🌎hub/🧩compositions/🌿vcs/📦packages/🦀rust	test	cargo	test	test	yes			251	1	
+semio-hub-vcs-component	🌎hub/🧩compositions/🌿vcs/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-vcs-component	🌎hub/🧩compositions/🌿vcs/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-vcs-component	🌎hub/🧩compositions/🌿vcs/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-vcs-component	🌎hub/🧩compositions/🌿vcs/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/animate-plugin	🌎hub/🧩compositions/🎞animate/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/animate-plugin	🌎hub/🧩compositions/🎞animate/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/animate-plugin	🌎hub/🧩compositions/🎞animate/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-animate-component	🌎hub/🧩compositions/🎞animate/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-animate-component	🌎hub/🧩compositions/🎞animate/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-animate-component	🌎hub/🧩compositions/🎞animate/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-animate-component	🌎hub/🧩compositions/🎞animate/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/shooting-plugin	🌎hub/🧩compositions/🎥shooting/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/shooting-plugin	🌎hub/🧩compositions/🎥shooting/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/shooting-plugin	🌎hub/🧩compositions/🎥shooting/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-shooting-component	🌎hub/🧩compositions/🎥shooting/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-shooting-component	🌎hub/🧩compositions/🎥shooting/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-shooting-component	🌎hub/🧩compositions/🎥shooting/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-shooting-component	🌎hub/🧩compositions/🎥shooting/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/demonstrator-plugin	🌎hub/🧩compositions/🎪demonstrator/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/demonstrator-plugin	🌎hub/🧩compositions/🎪demonstrator/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/demonstrator-plugin	🌎hub/🧩compositions/🎪demonstrator/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-demonstrator-component	🌎hub/🧩compositions/🎪demonstrator/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-demonstrator-component	🌎hub/🧩compositions/🎪demonstrator/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-demonstrator-component	🌎hub/🧩compositions/🎪demonstrator/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-demonstrator-component	🌎hub/🧩compositions/🎪demonstrator/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/sequence-plugin	🌎hub/🧩compositions/🎬sequence/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/sequence-plugin	🌎hub/🧩compositions/🎬sequence/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/sequence-plugin	🌎hub/🧩compositions/🎬sequence/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-sequence-component	🌎hub/🧩compositions/🎬sequence/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-sequence-component	🌎hub/🧩compositions/🎬sequence/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-sequence-component	🌎hub/🧩compositions/🎬sequence/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-sequence-component	🌎hub/🧩compositions/🎬sequence/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/fem-plugin	🌎hub/🧩compositions/🏗fem/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/fem-plugin	🌎hub/🧩compositions/🏗fem/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/fem-plugin	🌎hub/🧩compositions/🏗fem/📦packages/🦀rust	test	cargo	test	test	yes			6	1	
+semio-hub-fem-component	🌎hub/🧩compositions/🏗fem/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-fem-component	🌎hub/🧩compositions/🏗fem/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-fem-component	🌎hub/🧩compositions/🏗fem/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-fem-component	🌎hub/🧩compositions/🏗fem/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/bim-plugin	🌎hub/🧩compositions/🏙bim/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/bim-plugin	🌎hub/🧩compositions/🏙bim/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/bim-plugin	🌎hub/🧩compositions/🏙bim/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-bim-component	🌎hub/🧩compositions/🏙bim/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-bim-component	🌎hub/🧩compositions/🏙bim/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-bim-component	🌎hub/🧩compositions/🏙bim/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-bim-component	🌎hub/🧩compositions/🏙bim/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/architect-plugin	🌎hub/🧩compositions/🏛architect/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/architect-plugin	🌎hub/🧩compositions/🏛architect/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/architect-plugin	🌎hub/🧩compositions/🏛architect/📦packages/🦀rust	test	cargo	test	test	yes			10	1	
+semio-hub-architect-component	🌎hub/🧩compositions/🏛architect/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-architect-component	🌎hub/🧩compositions/🏛architect/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-architect-component	🌎hub/🧩compositions/🏛architect/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-architect-component	🌎hub/🧩compositions/🏛architect/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/process-plugin	🌎hub/🧩compositions/🏭process/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/process-plugin	🌎hub/🧩compositions/🏭process/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/process-plugin	🌎hub/🧩compositions/🏭process/📦packages/🦀rust	test	cargo	test	test	yes			9	1	
+semio-hub-process-component	🌎hub/🧩compositions/🏭process/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-process-component	🌎hub/🧩compositions/🏭process/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-process-component	🌎hub/🧩compositions/🏭process/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-process-component	🌎hub/🧩compositions/🏭process/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/lowpoly-plugin	🌎hub/🧩compositions/💠lowpoly/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/lowpoly-plugin	🌎hub/🧩compositions/💠lowpoly/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/lowpoly-plugin	🌎hub/🧩compositions/💠lowpoly/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-lowpoly-component	🌎hub/🧩compositions/💠lowpoly/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-lowpoly-component	🌎hub/🧩compositions/💠lowpoly/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-lowpoly-component	🌎hub/🧩compositions/💠lowpoly/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-lowpoly-component	🌎hub/🧩compositions/💠lowpoly/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/reasoning-plugin	🌎hub/🧩compositions/💡reasoning/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/reasoning-plugin	🌎hub/🧩compositions/💡reasoning/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/reasoning-plugin	🌎hub/🧩compositions/💡reasoning/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-reasoning-component	🌎hub/🧩compositions/💡reasoning/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-reasoning-component	🌎hub/🧩compositions/💡reasoning/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-reasoning-component	🌎hub/🧩compositions/💡reasoning/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-reasoning-component	🌎hub/🧩compositions/💡reasoning/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/forms-plugin	🌎hub/🧩compositions/📋forms/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/forms-plugin	🌎hub/🧩compositions/📋forms/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/forms-plugin	🌎hub/🧩compositions/📋forms/📦packages/🦀rust	test	cargo	test	test	yes			6	1	
+semio-hub-forms-component	🌎hub/🧩compositions/📋forms/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-forms-component	🌎hub/🧩compositions/📋forms/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-forms-component	🌎hub/🧩compositions/📋forms/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-forms-component	🌎hub/🧩compositions/📋forms/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/layout-plugin	🌎hub/🧩compositions/📏layout/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/layout-plugin	🌎hub/🧩compositions/📏layout/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/layout-plugin	🌎hub/🧩compositions/📏layout/📦packages/🦀rust	test	cargo	test	test	yes			13	1	
+@semio-tech/hub-layout-drawing-rs	🌎hub/🧩compositions/📏layout/🖊drawing/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-layout-drawing-rs	🌎hub/🧩compositions/📏layout/🖊drawing/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-layout-drawing-rs	🌎hub/🧩compositions/📏layout/🖊drawing/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+semio-hub-layout-component	🌎hub/🧩compositions/📏layout/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-layout-component	🌎hub/🧩compositions/📏layout/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-layout-component	🌎hub/🧩compositions/📏layout/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-layout-component	🌎hub/🧩compositions/📏layout/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/cad-plugin	🌎hub/🧩compositions/📐cad/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/cad-plugin	🌎hub/🧩compositions/📐cad/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/cad-plugin	🌎hub/🧩compositions/📐cad/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-cad-component	🌎hub/🧩compositions/📐cad/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-cad-component	🌎hub/🧩compositions/📐cad/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-cad-component	🌎hub/🧩compositions/📐cad/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-cad-component	🌎hub/🧩compositions/📐cad/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	check	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	component-budget-check	wasm	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	mutation-leaf-taxonomy-check	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	mutation-leaf-taxonomy-generate	cargo	action	task	yes			11056	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	results-window-config-source	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	results-window-config-test	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	surface-render-source	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	surface-render-test	cargo	action	task	yes			11166	1	
+@semio-tech/norm-plugin	🌎hub/🧩compositions/📕norm/📦packages/🦀rust	test	cargo	test	test	yes			11166	1	
+semio-hub-norm-component	🌎hub/🧩compositions/📕norm/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-norm-component	🌎hub/🧩compositions/📕norm/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-norm-component	🌎hub/🧩compositions/📕norm/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-norm-component	🌎hub/🧩compositions/📕norm/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/playbook-plugin	🌎hub/🧩compositions/📖playbook/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/playbook-plugin	🌎hub/🧩compositions/📖playbook/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/playbook-plugin	🌎hub/🧩compositions/📖playbook/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-playbook-component	🌎hub/🧩compositions/📖playbook/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-playbook-component	🌎hub/🧩compositions/📖playbook/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-playbook-component	🌎hub/🧩compositions/📖playbook/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-playbook-component	🌎hub/🧩compositions/📖playbook/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/imperative-plugin	🌎hub/🧩compositions/📜imperative/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/imperative-plugin	🌎hub/🧩compositions/📜imperative/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/imperative-plugin	🌎hub/🧩compositions/📜imperative/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-imperative-component	🌎hub/🧩compositions/📜imperative/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-imperative-component	🌎hub/🧩compositions/📜imperative/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-imperative-component	🌎hub/🧩compositions/📜imperative/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-imperative-component	🌎hub/🧩compositions/📜imperative/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/remodel-plugin	🌎hub/🧩compositions/📸remodel/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/remodel-plugin	🌎hub/🧩compositions/📸remodel/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/remodel-plugin	🌎hub/🧩compositions/📸remodel/📦packages/🦀rust	regenerate-example	cargo	uncached	task	no	side-effecting		7	1	
+@semio-tech/remodel-plugin	🌎hub/🧩compositions/📸remodel/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-remodel-component	🌎hub/🧩compositions/📸remodel/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-remodel-component	🌎hub/🧩compositions/📸remodel/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-remodel-component	🌎hub/🧩compositions/📸remodel/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-remodel-component	🌎hub/🧩compositions/📸remodel/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/energy-plugin	🌎hub/🧩compositions/🔋energy/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/energy-plugin	🌎hub/🧩compositions/🔋energy/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/energy-plugin	🌎hub/🧩compositions/🔋energy/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-energy-component	🌎hub/🧩compositions/🔋energy/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-energy-component	🌎hub/🧩compositions/🔋energy/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-energy-component	🌎hub/🧩compositions/🔋energy/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-energy-component	🌎hub/🧩compositions/🔋energy/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/trinity-plugin	🌎hub/🧩compositions/🔱trinity/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/trinity-plugin	🌎hub/🧩compositions/🔱trinity/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/trinity-plugin	🌎hub/🧩compositions/🔱trinity/📦packages/🦀rust	test	cargo	test	test	yes			6	1	
+semio-hub-trinity-component	🌎hub/🧩compositions/🔱trinity/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-trinity-component	🌎hub/🧩compositions/🔱trinity/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-trinity-component	🌎hub/🧩compositions/🔱trinity/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-trinity-component	🌎hub/🧩compositions/🔱trinity/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/dag-plugin	🌎hub/🧩compositions/🕸dag/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/dag-plugin	🌎hub/🧩compositions/🕸dag/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/dag-plugin	🌎hub/🧩compositions/🕸dag/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-dag-component	🌎hub/🧩compositions/🕸dag/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-dag-component	🌎hub/🧩compositions/🕸dag/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-dag-component	🌎hub/🧩compositions/🕸dag/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-dag-component	🌎hub/🧩compositions/🕸dag/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/draw-plugin	🌎hub/🧩compositions/🖍draw/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/draw-plugin	🌎hub/🧩compositions/🖍draw/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/draw-plugin	🌎hub/🧩compositions/🖍draw/📦packages/🦀rust	guest-instance-check	cargo	action	task	yes			8	5	@semio-tech/framework-plugin-web:support;semio-hub-draw-component:component;workspace:deps-wasm-opt
+@semio-tech/draw-plugin	🌎hub/🧩compositions/🖍draw/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-draw-component	🌎hub/🧩compositions/🖍draw/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-draw-component	🌎hub/🧩compositions/🖍draw/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-draw-component	🌎hub/🧩compositions/🖍draw/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-draw-component	🌎hub/🧩compositions/🖍draw/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/raster-plugin	🌎hub/🧩compositions/🖨raster/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/raster-plugin	🌎hub/🧩compositions/🖨raster/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/raster-plugin	🌎hub/🧩compositions/🖨raster/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-raster-component	🌎hub/🧩compositions/🖨raster/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-raster-component	🌎hub/🧩compositions/🖨raster/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-raster-component	🌎hub/🧩compositions/🖨raster/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-raster-component	🌎hub/🧩compositions/🖨raster/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+semio-hub-stdio-mutation-bridge	🌎hub/🧩compositions/🗄stdio/🏭bridge/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-mutation-bridge	🌎hub/🧩compositions/🗄stdio/🏭bridge/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-mutation-bridge	🌎hub/🧩compositions/🗄stdio/🏭bridge/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-stdio-publication	🌎hub/🧩compositions/🗄stdio/📇publication	publish	bun-script	uncached	task	no	side-effecting		15	1	
+@semio-tech/hub-stdio-publication	🌎hub/🧩compositions/🗄stdio/📇publication	test	bun-test	test	test	yes			15	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	artifact-directory-wiring-check	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	artifact-directory-wiring-generate	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	build	cargo	action	task	yes		yes	11	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	catalog-root	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	check	cargo	action	task	yes		yes	11	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	check-snapshot-sqlite-census-source	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	composition-contribution-check	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	composition-prepare	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	editor-component-check	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	flow-retained-decode-check	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	home-io-surface-check	cargo	uncached	task	no	side-effecting		77235	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	home-io-surface-native-check	cargo	action	task	yes			77235	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	mutation-inventory	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	native-codec-projection	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	parent-removal-check	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	parent-removal-test-check	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	subset-directory-wiring-check	cargo	action	task	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	subset-directory-wiring-generate	cargo	uncached	task	no	side-effecting		8194	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-archives	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-archives-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-catalog	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-catalog-contract	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-census	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-census-all	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-census-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-foundation	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-geometry	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-gif	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-gif-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-images	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-images-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-jpg	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-jpg-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-md	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-md-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-mp3	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-mp3-native	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-mp3-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-semio	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-semio-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-tiff	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-tiff-source	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-wav	cargo	test	test	yes			28114	1	
+@semio-tech/stdio-plugin	🌎hub/🧩compositions/🗄stdio/📦packages/🦀rust	test-snapshot-sqlite-wav-source	cargo	test	test	yes			28114	1	
+semio-hub-stdio-catalog	🌎hub/🧩compositions/🗄stdio/🔌plugin/📇catalog/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-catalog	🌎hub/🧩compositions/🗄stdio/🔌plugin/📇catalog/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-catalog	🌎hub/🧩compositions/🗄stdio/🔌plugin/📇catalog/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-composition	bun-test	test	test	yes			89058	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-drawing-reader	bun-test	test	test	yes			89058	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-native-drawing-reader	bun-test	test	test	yes			99361	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-native-oracles	bun-test	test	test	yes			99361	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-private-reader	bun-test	test	test	yes			89058	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-production-preparation	bun-test	test	test	yes			89058	1	
+@semio-tech/hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles	test-type-ownership	bun-test	test	test	yes			89058	1	
+semio-hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-test-oracle	🌎hub/🧩compositions/🗄stdio/🔮oracles/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+semio-hub-stdio-component	🌎hub/🧩compositions/🗄stdio/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-component	🌎hub/🧩compositions/🗄stdio/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-component	🌎hub/🧩compositions/🗄stdio/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-component	🌎hub/🧩compositions/🗄stdio/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-media-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-media-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-media-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-media-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-media-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-media-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-media-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🎵media/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-bim-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-bim-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-bim-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-bim-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-bim-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-bim-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-bim-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🏠bim/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-office-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-office-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-office-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-office-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-office-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-office-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-office-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/💼office/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-pdf-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-pdf-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-pdf-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-pdf-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-pdf-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-pdf-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-pdf-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/📘pdf/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-binary-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-binary-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-binary-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-binary-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-binary-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-binary-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-binary-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔢binary/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-mesh-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-mesh-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-mesh-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-mesh-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-mesh-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-mesh-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-mesh-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🔺mesh/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-image-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-image-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-image-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-image-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-image-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-image-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-image-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🖼image/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-cad-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-cad-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-cad-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-cad-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-cad-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-cad-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-cad-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🛠cad/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/stdio-semio-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-semio-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/stdio-semio-plugin	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/📦packages/🦀rust	test	cargo	test	test	yes			5	1	
+semio-hub-stdio-semio-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-semio-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-stdio-semio-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-stdio-semio-component	🌎hub/🧩compositions/🗄stdio/🧩extensions/🧿semio/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/note-plugin	🌎hub/🧩compositions/🗒note/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/note-plugin	🌎hub/🧩compositions/🗒note/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/note-plugin	🌎hub/🧩compositions/🗒note/📦packages/🦀rust	test	cargo	test	test	yes			8	1	
+semio-hub-note-component	🌎hub/🧩compositions/🗒note/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-note-component	🌎hub/🧩compositions/🗒note/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-note-component	🌎hub/🧩compositions/🗒note/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-note-component	🌎hub/🧩compositions/🗒note/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	build	cargo	action	task	yes		yes	40	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	canonical-architecture	cargo	action	task	yes			43	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	check	cargo	action	task	yes		yes	40	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	fixtures-lint	cargo	action	task	yes			36	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	test	cargo	test	test	yes			43	1	
+@semio-tech/puzzle-plugin	🌎hub/🧩compositions/🧩puzzle/📦packages/🦀rust	wasm	wasm	action	task	yes			11	1	
+semio-hub-puzzle-component	🌎hub/🧩compositions/🧩puzzle/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-puzzle-component	🌎hub/🧩compositions/🧩puzzle/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-puzzle-component	🌎hub/🧩compositions/🧩puzzle/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-puzzle-component	🌎hub/🧩compositions/🧩puzzle/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-puzzle-retained-test	🌎hub/🧩compositions/🧩puzzle/🧵retained	test-native	bun-test	uncached	task	no	aggregate		5	1	
+@semio-tech/hub-puzzle-retained-test	🌎hub/🧩compositions/🧩puzzle/🧵retained	test-ownership	bun-test	test	test	yes			3726	1	
+@semio-tech/block-plugin	🌎hub/🧩compositions/🧱block/📦packages/🦀rust	build	cargo	action	task	yes		yes	3	1	
+@semio-tech/block-plugin	🌎hub/🧩compositions/🧱block/📦packages/🦀rust	check	cargo	action	task	yes		yes	3	1	
+@semio-tech/block-plugin	🌎hub/🧩compositions/🧱block/📦packages/🦀rust	test	cargo	test	test	yes			6	1	
+semio-hub-block-component	🌎hub/🧩compositions/🧱block/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-block-component	🌎hub/🧩compositions/🧱block/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-block-component	🌎hub/🧩compositions/🧱block/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-block-component	🌎hub/🧩compositions/🧱block/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-space-operations-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/⚙engine/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-operations-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/⚙engine/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-operations-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/⚙engine/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-media-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🖼media/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-media-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🖼media/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-media-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🖼media/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-authoring-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🛠authoring/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-authoring-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🛠authoring/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-commands-authoring-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🎮commands/🛠authoring/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-space-app-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-app-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-app-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-space-laws-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧪tests/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-laws-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧪tests/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-laws-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧪tests/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-space-foundation-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧱foundation/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-foundation-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧱foundation/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-space-foundation-rs	🌎hub/🧩compositions/🪐space/⚙engine/🪐space/🧱foundation/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/space-plugin-compute-ownership	🌎hub/🧩compositions/🪐space/🏛ownership/🧮compute	test	bun-test	test	test	yes			17	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-event-page-owner-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-event-page-owner-native-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-identity-rows-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-identity-rows-native-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-projection-persistence-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	home-directory-projection-persistence-native-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	interactive-job-catalog-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	interactive-job-catalog-native-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	persistence-data-class-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	plugin-identity-check	cargo	action	task	yes			210	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	snapshot-owner-census-native	cargo	action	task	yes			213	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	snapshot-owner-census-source	cargo	action	task	yes			213	1	
+@semio-tech/space-plugin	🌎hub/🧩compositions/🪐space/📦packages/🦀rust	test	cargo	test	test	yes			210	1	
+semio-hub-space-component	🌎hub/🧩compositions/🪐space/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-space-component	🌎hub/🧩compositions/🪐space/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-space-component	🌎hub/🧩compositions/🪐space/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-space-component	🌎hub/🧩compositions/🪐space/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-space-document-sources-test	🌎hub/🧩compositions/🪐space/🧪testing	test-native	bun-test	uncached	task	no	aggregate		7	1	
+@semio-tech/hub-space-document-sources-test	🌎hub/🧩compositions/🪐space/🧪testing	test-ownership	bun-test	test	test	yes			1890	1	
+@semio-tech/sourcing-plugin	🌎hub/🧩compositions/🪵sourcing/📦packages/🦀rust	build	cargo	action	task	yes		yes	4	1	
+@semio-tech/sourcing-plugin	🌎hub/🧩compositions/🪵sourcing/📦packages/🦀rust	check	cargo	action	task	yes		yes	4	1	
+@semio-tech/sourcing-plugin	🌎hub/🧩compositions/🪵sourcing/📦packages/🦀rust	test	cargo	test	test	yes			7	1	
+semio-hub-sourcing-component	🌎hub/🧩compositions/🪵sourcing/🧩component/📦packages/🦀rust	build	cargo	action	task	yes		yes	1	1	
+semio-hub-sourcing-component	🌎hub/🧩compositions/🪵sourcing/🧩component/📦packages/🦀rust	check	cargo	action	task	yes		yes	1	1	
+semio-hub-sourcing-component	🌎hub/🧩compositions/🪵sourcing/🧩component/📦packages/🦀rust	component	wasm	uncached	task	no	driver-owned		1	4	@semio-tech/framework-plugin-web:support;workspace:deps-wasm-opt
+semio-hub-sourcing-component	🌎hub/🧩compositions/🪵sourcing/🧩component/📦packages/🦀rust	test	cargo	test	task	yes		yes	1	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	collaboration-acceptance	bun-script	uncached	task	no	live		11	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	collaboration-check	bun-script	uncached	task	no	live		11	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	creation-check	bun-script	uncached	task	no	live		11	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	journey-check	bun-script	uncached	task	no	live		11	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	native-guest-journey-check	bun-script	uncached	task	no	live		11	1	
+@semio-tech/hub-renderer-wgpu	🌎hub/🧪tests/📺renderer/🧊wgpu	test	bun-test	test	test	yes			55	1	
+@semio-tech/hub-trusted-catalog-fixtures-rs	🌎hub/🧪tests/🔏trusted-catalog-profile/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-fixtures-rs	🌎hub/🧪tests/🔏trusted-catalog-profile/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-trusted-catalog-fixtures-rs	🌎hub/🧪tests/🔏trusted-catalog-profile/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-hostile-input-laws-rs	🌎hub/🧪tests/🔬bin-unit/🎲hostile-input/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-hostile-input-laws-rs	🌎hub/🧪tests/🔬bin-unit/🎲hostile-input/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-hostile-input-laws-rs	🌎hub/🧪tests/🔬bin-unit/🎲hostile-input/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-presence-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/👥presence/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-presence-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/👥presence/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-presence-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/👥presence/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-directory-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/📇directory/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/📇directory/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-directory-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/📇directory/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-session-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/🔐session/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-session-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/🔐session/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-session-route-laws-rs	🌎hub/🧪tests/🔬bin-unit/🔐session/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-boot-laws-rs	🌎hub/🧪tests/🔬bin-unit/🚀boot/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-boot-laws-rs	🌎hub/🧪tests/🔬bin-unit/🚀boot/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-boot-laws-rs	🌎hub/🧪tests/🔬bin-unit/🚀boot/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-open-plan-laws-rs	🌎hub/🧪tests/🔬bin-unit/🧭open-plan/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-open-plan-laws-rs	🌎hub/🧪tests/🔬bin-unit/🧭open-plan/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-open-plan-laws-rs	🌎hub/🧪tests/🔬bin-unit/🧭open-plan/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-route-testkit-rs	🌎hub/🧪tests/🔬bin-unit/🧰testkit/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-route-testkit-rs	🌎hub/🧪tests/🔬bin-unit/🧰testkit/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-route-testkit-rs	🌎hub/🧪tests/🔬bin-unit/🧰testkit/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-testing-rs	🌎hub/🧪tests/🗂artifact-root/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-testing-rs	🌎hub/🧪tests/🗂artifact-root/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-testing-rs	🌎hub/🧪tests/🗂artifact-root/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	
+@semio-tech/hub-component-codec-laws-rs	🌎hub/🧪tests/🧩component-codecs/🏛laws/📦packages/🦀rust	build	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-component-codec-laws-rs	🌎hub/🧪tests/🧩component-codecs/🏛laws/📦packages/🦀rust	check	cargo	action	task	yes		yes	2	1	
+@semio-tech/hub-component-codec-laws-rs	🌎hub/🧪tests/🧩component-codecs/🏛laws/📦packages/🦀rust	test	cargo	test	task	yes		yes	2	1	

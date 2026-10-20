@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -58,7 +59,7 @@ async function testPlanCachePrune(control:ResourceLeaseControl): Promise<{ planC
   }]));
   const expected = Object.fromEntries(Object.entries(fixture.expected).map(([name, row]: [string, any]) => [name, { ...row, ageDeletions: [...row.ageDeletions].sort(), budgetDeletions: [...row.budgetDeletions].sort() }]));
   assert.deepEqual(projected, expected);
-  const python = Bun.which("python3") ?? Bun.which("python");
+  const python = testPythonV1() ?? Bun.which("python");
   assert.ok(python, "Native Python eviction oracle is required");
   const oracle = await captureOwnedCommandV1(python,["-c", PYTHON_PLAN_ORACLE, JSON.stringify(fixture.areas), JSON.stringify(fixture.nowMs), JSON.stringify(fixture.guardAgeMs)],process.cwd(),{control});
   const oracleProjected = Object.fromEntries((JSON.parse(oracle) as any[]).map(({ name, ...row }) => [name, { ...row, ageDeletions: [...row.ageDeletions].sort(), budgetDeletions: [...row.budgetDeletions].sort() }]));
@@ -128,7 +129,7 @@ async function testCargoDiskScan(output: string,control:ResourceLeaseControl): P
   assert.deepEqual(viteUnits.map((unit) => unit.path).sort(), ["consumer-a", "consumer-b"]);
   const agentUnits = await pruning.scanDirectoryUnits(agentsRoot, control, new Set(["resource-leases"]));
   assert.deepEqual(agentUnits.map((unit) => unit.path), ["stray-session"]);
-  const python = Bun.which("python3") ?? Bun.which("python");
+  const python = testPythonV1() ?? Bun.which("python");
   assert.ok(python, "Native Python byte oracle is required");
   for (const [scanned, path] of [[buildUnits, join(buildDir, "debug/build")], [targetUnits, targetDir]] as const) {
     const oracle=await captureOwnedCommandV1(python,["-c", PYTHON_BYTES_ORACLE, path],process.cwd(),{control});

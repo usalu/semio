@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "wireCases",
+    "readyCases",
+    "exchangeCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "wireCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "line",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "readyCases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "object"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "exchangeCases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pendingId",
+          "completedIds",
+          "serverIds",
+          "messages",
+          "notifications",
+          "nowMs",
+          "deadlineMs",
+          "message",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pendingId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "completedIds": {
+            "type": "array",
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "serverIds": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          "messages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "notifications": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "nowMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 600000
+          },
+          "deadlineMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600000
+          },
+          "message": {
+            "type": "object"
+          },
+          "action": {
+            "enum": [
+              "response",
+              "roots",
+              "method-not-found",
+              "notification",
+              "reject"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "args": [
+          "dev",
+          "mcp",
+          "stdio",
+          "os"
+        ],
+        "protocolVersion": "2025-11-25",
+        "nativeMethod": "server/discover",
+        "nativeProtocolVersion": "2026-07-28",
+        "serverName": "semio",
+        "maximumMilliseconds": 600000,
+        "maximumMessages": 128,
+        "output": {
+          "maximumBytes": 16777216,
+          "maximumLines": 1024
+        },
+        "client": {
+          "name": "repo-canonical-os-mcp-probe",
+          "version": "1"
+        },
+        "maximumDiscoverAttempts": 1,
+        "maximumNotifications": 128,
+        "maximumServerRequests": 64,
+        "metaKey": "io.modelcontextprotocol/protocolVersion",
+        "requiredTools": [
+          "capabilities_search",
+          "action_prepare"
+        ]
+      }
+    },
+    "NativeReady": {
+      "type": "object",
+      "required": [
+        "protocolVersion",
+        "capabilities",
+        "serverInfo"
+      ],
+      "properties": {
+        "protocolVersion": {
+          "const": "2026-07-28"
+        },
+        "capabilities": {
+          "type": "object",
+          "required": [
+            "tools"
+          ],
+          "properties": {
+            "tools": {
+              "type": "object"
+            }
+          }
+        },
+        "serverInfo": {
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "const": "semio"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!warming$)[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

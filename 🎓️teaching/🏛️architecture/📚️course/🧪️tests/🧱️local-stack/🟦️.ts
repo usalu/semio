@@ -25,7 +25,7 @@ import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { connect, createServer as createNetServer, type AddressInfo, type Socket } from "node:net";
-import { dirname, join, resolve, sep } from "node:path";
+import { dirname, join, posix, resolve, sep, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer, preview } from "vite";
 import { destroySoon, semioServeUpgradeVitePlugin } from "@semio-tech/ui-styling/builder/vite/status-serve";
@@ -35,13 +35,17 @@ import portCases from "../../🧫️fixtures/🔌️port/🔣️.json" with { ty
 import capacityCases from "../../🧫️fixtures/🏋️capacity/🔣️.json" with { type: "json" };
 import runtimeCases from "../../🧫️fixtures/🪁️runtime/🔣️.json" with { type: "json" };
 import outputCases from "../../🧫️fixtures/🎭️e2e-output/🔣️.json" with { type: "json" };
+import proctorPathCases from "../../🧫️fixtures/🎭️e2e-proctor/🔣️.json" with { type: "json" };
+import proctorPathSchema from "../../🧫️fixtures/🎭️e2e-proctor/🧬️schema/🔣️.json" with { type: "json" };
 import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import { viteDevInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
 import { closeProxiedSocketWithBrowser, type ProxiedUpgradeProxy } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { bootOrder, endToEndPlan, endToEndPorts, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";
+import { bootOrder, endToEndPlan, endToEndPorts, endToEndProctorPath, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";
 import { SITE_MEDIA_TYPES, awaitReady, courseFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
 import { cargoPackageClosure } from "../../../../🛂️proctor/🏗️bootstrap/🕸️manifest-closure/🟦️.ts";
-import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorBuildLaunch, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { proctorCargoArguments } from "../../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
+import { readRepositoryCargoLaunchV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 import { capacityWorkDirectory, hallViolations, type PhaseReport } from "../../../../🛂️proctor/🧪️tests/🏋️capacity/🟦️.ts";
 import { CapacityWire } from "../../../../🛂️proctor/🧪️tests/🏋️capacity/🎭️abusive-script/🟦️.ts";
 
@@ -118,9 +122,7 @@ it("runs the same installed Vite CLI under each declared runtime", () => {
 
 /** 📂️ A throw-away directory with `files` (relative path → content). */
 function directory(files: Record<string, string>): string {
-  const base = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : realpathSync(tmpdir());
-  mkdirSync(base, { recursive: true });
-  const root = mkdtempSync(join(base, "course-stack-"));
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "course-stack-"));
   scratch.push(root);
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -195,6 +197,14 @@ describe("the command line of the end-to-end gate", () => {
     expect(endToEndPlan(["--topology", "rehearsal", "--"]).topologies).toEqual(["rehearsal"]);
     expect(endToEndPlan(["--topology", "both", "--"]).topologies).toEqual(["dev", "rehearsal"]);
     expect(endToEndPlan(["--serial", "--keep", "--"])).toMatchObject({ serial: true, keep: true, playwright: [] });
+  });
+
+  it("resolves --proctor against the repository root on every path flavour", () => {
+    const validate = new Ajv({ strict: false }).compile(proctorPathSchema);
+    expect(validate(proctorPathCases), JSON.stringify(validate.errors)).toBe(true);
+    for (const [paths, rows] of [[posix, proctorPathCases.posix], [win32, proctorPathCases.win32]] as const) {
+      for (const row of rows) expect(endToEndProctorPath(row.root, row.value, paths), row.id).toBe(row.expected);
+    }
   });
 
   it("boots the rehearsal before the dev site, which holds the whole host once it is up", () => {
@@ -354,22 +364,19 @@ describe("the crates the proctor is built from", () => {
 describe("the build of the proctor", () => {
   const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
 
-  it("runs through the repository's issued Cargo launcher in the teaching workspace and never through a bare cargo, whose compiler the ingress gate of `.cargo/config.toml` refuses", () => {
-    const launch = proctorBuildLaunch(repository, { PATH: "bin", SEMIO_BUILD_MODE: "release" });
-    expect(launch.command).toBe(process.execPath);
-    expect(existsSync(launch.args[0]!)).toBe(true);
-    expect(launch.args.slice(1, 6)).toEqual(["repo", "cargo", "--store=shared", "--configuration=prototype", "--"]);
-    expect(launch.args.slice(6)).toEqual(["build", "--locked", "--package", "teaching-proctor", "--bin", "proctor", "--message-format=json-render-diagnostics"]);
-    expect(launch.cwd).toBe(join(repository, "🎓️teaching"));
-    expect(existsSync(join(launch.cwd, "Cargo.toml"))).toBe(true);
-    expect(launch.env).toEqual({ PATH: "bin", SEMIO_BUILD_MODE: "prototype" });
+  it("runs through the repository's issued Cargo launcher of the shared store and never through a bare cargo, whose compiler the ingress gate of `.cargo/config.toml` refuses", () => {
+    for (const mode of ["prototype", "release"] as const) {
+      const request = readRepositoryCargoLaunchV1(proctorCargoArguments(mode), { PATH: "bin", SEMIO_BUILD_MODE: mode });
+      expect(request).toMatchObject({ store: "shared", configuration: mode, kind: "compile" });
+      expect(request.cargo).toEqual(["build", "--locked", "--package", "teaching-proctor", "--bin", "proctor", "--message-format=json-render-diagnostics"]);
+    }
+    expect(existsSync(join(repository, "🎓️teaching", "Cargo.toml"))).toBe(true);
   });
 
-  it("selects the release configuration, and the same mode in the environment the launcher compares it with, for the deployed build", () => {
-    const launch = proctorBuildLaunch(repository, { SEMIO_BUILD_MODE: "prototype" }, "release");
-    expect(launch.args).toContain("--configuration=release");
-    expect(launch.args).not.toContain("--release");
-    expect(launch.env.SEMIO_BUILD_MODE).toBe("release");
+  it("selects the release configuration explicitly and refuses a mode that disagrees with the environment", () => {
+    expect(proctorCargoArguments("release")).toContain("--configuration=release");
+    expect(proctorCargoArguments("release")).not.toContain("--release");
+    expect(() => readRepositoryCargoLaunchV1(proctorCargoArguments("release"), { SEMIO_BUILD_MODE: "prototype" })).toThrow("conflicts with SEMIO_BUILD_MODE");
   });
 });
 

@@ -114,3 +114,16 @@ Framework69841 and Root42441 both completed whole-command0 through the actual in
 Exact owned exec session80860 accepted Ctrl-C through the session-control tool and settled whole1 in0.62seconds; no lease PID was inferred or signalled. It produced110MB before test bodies and later waited as a shared reader behind an exclusive27900 request, without proof of that participant’s ownership. Read-only source audit found no demonstrated nested-reader cycle; all other participants were preserved. New Source67665 uses recordedTTY control and combines25 exact declared targets across11owners under parallel1; no test-body result yet.
 
 Core84066 now passed the actual focused docking law,1passed/0failed/57filtered,0.00seconds and whole-command0 after pureRows/Tree owner repair. Widget28710 failed two stale test constant paths before bodies; both references were corrected to the already imported actualCore attr owner, with a justified fresh whole8-law retry. Value60945 and85051 reached real bodies: facade4 and derive4 passed, while edit callers exposed selected-demand/grant mismatches and finite guard failures. Owned interrupted partial matrices are not whole-matrix passes.
+
+## Exact Guarded-Maintenance Reachability
+
+Preview66474 entered through installed repo and exact advertised current-domain preview target. It queued shared D admission before the owner body and was canceled only through its recorded TTY, settling1. No preview or artifact retirement occurred. This exposes a real recovery circularity; the existing authenticated early bootstrap recovery path is being extended for only the two declared current-domain maintenance targets, retaining Original/manifest/schema/writer/custody and closed arguments.
+
+## Source26 Runtime Admission
+
+Exact26task/allrepo:script/no-dependency batch was launched through installed repo and settled1 in0.1866s before any testbody. The failure is Exact canonical persistent Native publication required for .cache/b/l: schema[], exact filesystem/maxbyte/size/inode/nlink all match, but persistedbacking device16777232 differs fromcurrent16777229 on the same inode422334229/66060288byte file. No receipt/cache/lease was edited. Root is diagnosing the actual persistent identity/publication owner. Source26 is not active.
+
+
+## Current Post-Restart Admission
+
+Source26 retry90750 advanced through actual persistent lease image admission and parser discovery after the namespace-binding repair. It remains an active, serial genuine repo run-many invocation, queued for repository-graph-facts exclusive admission behind request15549 and17446; queue records are read-only observations, not proof of ownership. No selected test body has run and no peer process was signalled. Read-only opening of the exact graph SQLite database also reports database locked.

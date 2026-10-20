@@ -1,0 +1,80 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Project retention law fixture / Gesetz der Aufbewahrung von Projektergebnissen",
+ "description": "EN: The serialized image of recently inferred projects is retained up to a declared byte bound so a repeated round in the process reuses it without recomputation; a result larger than the bound is never retained: a persisted one is read back from its record on a repeat, one that could not be persisted because a source was modified within the racy window is recomputed. Every result equals the freshly computed JSON byte for byte and equal long strings are shared. DE: Das serialisierte Abbild kürzlich abgeleiteter Projekte wird bis zu einer deklarierten Byte-Grenze gehalten, damit eine Wiederholung im Prozess es ohne Neuberechnung wiederverwendet; ein größeres Ergebnis wird nie gehalten: ein gespeichertes wird bei einer Wiederholung aus seinem Protokoll gelesen, eines, das wegen einer im Zeitfenster geänderten Quelle nicht gespeichert werden konnte, wird neu berechnet. Jedes Ergebnis entspricht dem frisch berechneten JSON byteweise und gleiche lange Zeichenketten werden geteilt.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "file",
+  "result",
+  "persisted",
+  "racy",
+  "oversize"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "file": {
+   "type": "string"
+  },
+  "result": {
+   "type": "object"
+  },
+  "persisted": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ageMilliseconds",
+    "computations"
+   ],
+   "properties": {
+    "ageMilliseconds": {
+     "type": "integer",
+     "minimum": 2100
+    },
+    "computations": {
+     "const": 1
+    }
+   }
+  },
+  "racy": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ageMilliseconds",
+    "computations"
+   ],
+   "properties": {
+    "ageMilliseconds": {
+     "const": 0
+    },
+    "computations": {
+     "const": 1
+    }
+   }
+  },
+  "oversize": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "extraBytes",
+    "persistedComputations",
+    "racyComputations"
+   ],
+   "properties": {
+    "extraBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "persistedComputations": {
+     "const": 1
+    },
+    "racyComputations": {
+     "const": 2
+    }
+   }
+  }
+ }
+}

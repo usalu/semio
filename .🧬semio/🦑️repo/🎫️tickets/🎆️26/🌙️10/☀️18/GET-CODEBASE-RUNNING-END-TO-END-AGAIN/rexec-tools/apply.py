@@ -7,6 +7,8 @@ from adapter_edits import patch
 ROOT = os.environ.get("REXEC_ROOT", "/Users/ueli/Documents/semio")
 HERE = os.path.dirname(os.path.abspath(__file__))
 STAGED = os.path.join(HERE, "staged")
+sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..")))
+from winpath import resolve
 L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 BZ = f"{L}/🏗️build/🔧️tools/🏗️bazel"
 NEW = [
@@ -30,7 +32,7 @@ def read(path):
 def plan():
     rows, refusals = [], []
     for rel in NEW:
-        staged, live = os.path.join(STAGED, rel), os.path.join(ROOT, rel)
+        staged, live = resolve(STAGED, rel), os.path.join(ROOT, rel)
         if not os.path.exists(staged):
             refusals.append(f"staged file missing: {rel}"); continue
         want = read(staged)

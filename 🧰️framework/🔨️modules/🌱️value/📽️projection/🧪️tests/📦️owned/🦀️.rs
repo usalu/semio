@@ -39,7 +39,7 @@ fn project_owned(count:usize,schema:&str,octet:u8,optional:bool,cut:Option<usize
  }
  assert!(cursor.terminal_is_empty());assert_eq!(source.borrow().get().bytes.as_ptr(),pointer);assert_eq!(source.borrow().get().bytes.len(),count);assert_eq!(source.borrow().get().dictionary.as_ref().map(Vec::as_ptr),optional_pointer);
  assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
- for _ in 0..256usize.saturating_add(schema.len()).saturating_add(count.saturating_mul(if optional{32}else{16})){if source.terminal_is_empty(){break;}let d=RetirementDemand{copy_bytes:source.next_close_copy_byte_demand().unwrap(),capacity_bytes:source.next_close_capacity_byte_demand(4096).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()};source.close_step(funded(d)).unwrap();}
+ for _ in 0..256usize.saturating_add(schema.len()).saturating_add(count.saturating_mul(if optional{32}else{16})){if source.terminal_is_empty(){break;}let d=source.next_close_demand(4096).unwrap();let g=funded(d);assert_eq!(source.next_close_demand(g.maximum_copy_bytes).unwrap(),d);source.close_step(g).unwrap();}
  assert!(source.terminal_is_empty());
  eprintln!("[DEBUG] owned projection bytes={count} cut={cut:?} turns={turns} original stable, exact heap receipts, zero whole-record clones, terminal closure");
 }

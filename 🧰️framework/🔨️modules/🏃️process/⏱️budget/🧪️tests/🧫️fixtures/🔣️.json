@@ -242,5 +242,67 @@
       ],
       "expectedExpirations": 0
     }
+  ],
+  "timerInputs": [
+    {
+      "name": "zero-unbounded",
+      "budget": 0,
+      "callback": true,
+      "accepted": true
+    },
+    {
+      "name": "native-limit",
+      "budget": 2147483647,
+      "callback": true,
+      "accepted": true
+    },
+    {
+      "name": "above-native-limit",
+      "budget": 2147483648,
+      "callback": true,
+      "accepted": true
+    },
+    {
+      "name": "safe-integer-maximum",
+      "budget": 9007199254740991,
+      "callback": true,
+      "accepted": true
+    },
+    {
+      "name": "negative",
+      "budget": -1,
+      "callback": true,
+      "accepted": false
+    },
+    {
+      "name": "fractional",
+      "budget": 0.5,
+      "callback": true,
+      "accepted": false
+    },
+    {
+      "name": "unsafe-integer",
+      "budget": 9007199254740992,
+      "callback": true,
+      "accepted": false
+    },
+    {
+      "name": "string",
+      "budget": "1",
+      "callback": true,
+      "accepted": false
+    },
+    {
+      "name": "null",
+      "budget": null,
+      "callback": true,
+      "accepted": false
+    },
+    {
+      "name": "missing-callback",
+      "budget": 1,
+      "callback": false,
+      "accepted": false
+    }
   ]
 }

@@ -1,0 +1,1 @@
+for(const lease of [frame.gate,frame.build])if(lease)

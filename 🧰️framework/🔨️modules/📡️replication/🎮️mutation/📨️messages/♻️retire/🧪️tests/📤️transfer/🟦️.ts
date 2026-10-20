@@ -57,7 +57,7 @@ export function testDiagnosticTransferOracle(): void {
     assert.deepEqual(copied.durable, source); assert.deepEqual(copied.report, source);
     assert.notEqual(copied.durable, copied.committed); assert.notEqual(copied.report, copied.durable);
   }
-  const stage = JSON.parse(readFileSync(new URL("../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📨️diagnostics/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const stage = JSON.parse(readFileSync(new URL("../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📨️diagnostics/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const severity = ["info", "warning", "error", "fatal"];
   for (const row of stage.cases) {
     const original = { editId: row.editId, messages: row.rows };
@@ -86,6 +86,5 @@ export function testDiagnosticTransferOracle(): void {
   const bound = applyPatch(structuredClone(original), [{ op: "add", path: "/edit/mutationMeta/0/groupId", value: "group" }, { op: "replace", path: "/authority", value: "group-authority" }], true, false).newDocument;
   for (const piece of custody.originalPieces.filter((piece: string) => !["edit", "authority"].includes(piece))) assert.deepEqual(bound[piece as keyof typeof bound], original[piece as keyof typeof original]);
   assert.deepEqual(bound.edit.forwards, original.edit.forwards); assert.deepEqual(bound.edit.inverses, original.edit.inverses);
-  console.log("[DEBUG] Prepared group-binding custody: Ajv neutral contract and RFC6902 seven refusal restorations preserve all eight original pieces; successful binding changes only group/seal authority");
 
 }

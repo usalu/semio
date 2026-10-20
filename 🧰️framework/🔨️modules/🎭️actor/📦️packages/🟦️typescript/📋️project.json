@@ -71,7 +71,7 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
@@ -85,7 +85,14 @@
             "kind": "source"
           }
         }
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
     }
   },
   "namedInputs": {

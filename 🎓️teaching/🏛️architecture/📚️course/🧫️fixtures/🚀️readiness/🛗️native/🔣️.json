@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "scope": "architecture-course-native-ci-ingress",
+  "workflow": ".github/workflows/architecture-course.yml",
+  "mode": "release",
+  "jobs": [
+    "check",
+    "site",
+    "proctor"
+  ],
+  "provision": {
+    "id": "native-repo",
+    "shell": "bash",
+    "nativeDirectory": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo",
+    "nativeExecutable": "repo",
+    "recipe": [
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"",
+      "native_repo_bin=\"$native_repo_dir/repo\"",
+      "if ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then",
+      "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache",
+      "fi",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help",
+      "printf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\""
+    ],
+    "usableNativeAction": "retain",
+    "absentOrUnusableAction": "one-owned-recovery",
+    "recoveryOwner": "repo-mcp:build",
+    "recoveryConfiguration": "release",
+    "recoveryArguments": [
+      "run",
+      "repo-mcp:build",
+      "--skip-cache"
+    ],
+    "requiredAfterRecovery": [
+      "native-help-success",
+      "github-path-publication"
+    ],
+    "pathVisibleFrom": "next-step",
+    "maximumRecoveryAttempts": 1
+  },
+  "envelope": {
+    "prefix": "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true",
+    "required": [
+      "PATH",
+      "HOME",
+      "SEMIO_BUILD_MODE",
+      "CI"
+    ],
+    "nativeOrdinaryExecutable": "repo"
+  },
+  "ordinaryCommands": {
+    "check": [
+      [
+        "preflight"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--all"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:test"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:typecheck"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:ci-browser-prepare"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:test-e2e",
+        "--",
+        "--topology",
+        "rehearsal",
+        "--"
+      ]
+    ],
+    "site": [
+      [
+        "preflight"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--all"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:publish",
+        "--configuration=release"
+      ]
+    ],
+    "proctor": [
+      [
+        "preflight"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--all"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:docker-image-build"
+      ],
+      [
+        "run",
+        "@teaching/architecture-course:docker-image-publish"
+      ]
+    ]
+  },
+  "preserve": {
+    "dispatchOnly": true,
+    "defaultBranchOnly": true,
+    "runnerVariable": "ARCHITECTURE_COURSE_RUNNER",
+    "jobNames": [
+      "configuration",
+      "check",
+      "site",
+      "pages",
+      "proctor"
+    ],
+    "pinnedActions": true,
+    "checkoutCredentials": false,
+    "proctorPublishAfterLogin": true,
+    "siteArtifact": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/pages/course",
+    "outwardActionsUnchanged": true
+  },
+  "cases": [
+    {
+      "id": "fresh-linux-owned-recovery",
+      "initialNative": "absent",
+      "recoveryStatus": 0,
+      "finalNativeHelp": 0,
+      "expected": "accept",
+      "recoveryCalls": 1
+    },
+    {
+      "id": "usable-native-no-recovery",
+      "initialNativeHelp": 0,
+      "expected": "accept",
+      "recoveryCalls": 0
+    },
+    {
+      "id": "stale-mcp-native-rebuilt",
+      "initialNativeHelp": 1,
+      "recoveryStatus": 0,
+      "finalNativeHelp": 0,
+      "expected": "accept",
+      "recoveryCalls": 1
+    },
+    {
+      "id": "missing-provision",
+      "change": "remove-native-repo-step",
+      "expected": "refuse"
+    },
+    {
+      "id": "docs-only-rename",
+      "change": "replace-bun-repo-with-repo-without-provision",
+      "expected": "refuse"
+    },
+    {
+      "id": "late-provision",
+      "change": "move-native-repo-after-first-ordinary-command",
+      "expected": "refuse"
+    },
+    {
+      "id": "stale-mcp-after-recovery",
+      "initialNativeMagic": "ELF",
+      "receiptPresent": true,
+      "initialNativeHelp": 1,
+      "recoveryStatus": 0,
+      "finalNativeHelp": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "missing-binary-after-recovery",
+      "initialNative": "absent",
+      "recoveryStatus": 0,
+      "finalNative": "absent",
+      "expected": "refuse"
+    },
+    {
+      "id": "failed-owned-recovery",
+      "initialNativeHelp": 1,
+      "recoveryStatus": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "wrong-profile-output",
+      "change": "publish-prototype-path-with-release-build",
+      "expected": "refuse"
+    },
+    {
+      "id": "path-only-current-step",
+      "change": "use-bare-repo-probe-before-github-path-takes-effect",
+      "expected": "refuse"
+    },
+    {
+      "id": "unconditional-recovery",
+      "change": "rebuild-native-even-if-initial-probe-succeeds",
+      "expected": "refuse"
+    },
+    {
+      "id": "raw-compiler",
+      "change": "replace-owned-recovery-with-go-build-or-cargo",
+      "expected": "refuse"
+    },
+    {
+      "id": "ordinary-bun-ingress",
+      "change": "keep-one-bun-repo-product-command",
+      "expected": "refuse"
+    },
+    {
+      "id": "release-envelope-loss",
+      "change": "remove-mode-path-home-or-ci-from-command-envelope",
+      "expected": "refuse"
+    },
+    {
+      "id": "secret-before-build",
+      "change": "move-registry-login-before-image-build",
+      "expected": "refuse"
+    },
+    {
+      "id": "publish-scope-expansion",
+      "change": "add-trigger-push-registry-or-deploy-step",
+      "expected": "refuse"
+    }
+  ],
+  "$schema": "./🧬️schema/🔣️.json"
+}

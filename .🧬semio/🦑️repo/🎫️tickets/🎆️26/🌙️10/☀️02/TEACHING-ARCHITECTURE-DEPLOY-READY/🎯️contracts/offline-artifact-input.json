@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "status": "prepared-not-executed",
+  "platform": {
+    "os": "linux",
+    "architecture": "x64",
+    "buildMode": "release",
+    "nativeRepo": "bind to the actually authenticated native frontend before execution"
+  },
+  "project": "@teaching/architecture-course",
+  "imageTag": "architecture-20261020-native-release1",
+  "bundleOutput": "${workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY/🗑️generated/offline-bundle",
+  "commands": [
+    [
+      "run",
+      "@teaching/architecture-course:test",
+      "--configuration=release",
+      "--",
+      "quick"
+    ],
+    [
+      "run",
+      "@teaching/architecture-course:deploy-check",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "architecture-20261020-native-release1"
+    ],
+    [
+      "run",
+      "@teaching/architecture-course:docker-stack-bundle",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "architecture-20261020-native-release1",
+      "--out",
+      "${workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY/🗑️generated/offline-bundle"
+    ]
+  ],
+  "expected": {
+    "files": [
+      "compose.yaml",
+      "Caddyfile",
+      ".env",
+      "README.txt",
+      "proctor-image.tar"
+    ],
+    "directories": [
+      "certificates"
+    ],
+    "proctorImage": "ghcr.io/usalu/architecture-course-proctor:architecture-20261020-native-release1",
+    "caddySource": "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52",
+    "caddyLocal": "caddy:sha256-0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52",
+    "pullPolicies": {
+      "proctor": "never",
+      "caddy": "never"
+    },
+    "archiveUniqueImageConfigs": 2,
+    "operatorState": [
+      "retain existing .env and override only PROCTOR_TAG",
+      "retain existing certificates/",
+      "retain original compose project name/directory and named volumes"
+    ],
+    "requiredProof": [
+      "actual native Linux x64 original release producer and retained executable checks",
+      "all eight deploy-check stages including serial dev/rehearsal E2E pass",
+      "actual bundle file SHA256/bytes and Docker archive manifest/config/layer hashes",
+      "proctor config linux/amd64 and original version/revision/created labels",
+      "staged YAML images resolve to exact same proctor tag and bundled Caddy local tag",
+      "local Caddy tag config matches the authored digest-resolved image identity",
+      "archive load followed by isolated compose up --detach --wait on a separately authorized disposable Docker host",
+      "current-tree nine suite roster plus extra typechecks remain separately required"
+    ]
+  },
+  "prohibited": [
+    "production stack changes",
+    "registry push",
+    "site upload",
+    "overwriting operator env/certificates",
+    "docker compose down --volumes on an operator stack"
+  ]
+}

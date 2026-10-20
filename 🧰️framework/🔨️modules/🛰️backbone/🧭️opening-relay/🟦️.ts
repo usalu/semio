@@ -2,7 +2,7 @@
 
 import type { AppRef, AppRole, AppRouter, ArtifactDialect, OpeningPreferences } from "@semio-tech/framework";
 import { dialectCoordinate, parseDialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
-import { parseSurfaceAppId } from "@semio-tech/framework-manifest/schema";
+import { parseSurfaceAppId } from "../../🛂️manifest/🧬️schema/🟦️.ts";
 import { resolveOpeningApp } from "../../🎠️kernel/📖️opening-resolver/🟦️.ts";
 
 //#region 🔖️ArtifactOpeningRelay

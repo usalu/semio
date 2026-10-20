@@ -1,0 +1,28 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "targets": {
+    "@teaching/architecture-course:dev": { "ready": { "port": 6061, "portEnv": "TEACHING_ARCHITECTURE_COURSE_PORT" }, "stack": true },
+    "@teaching/architecture-course:dev-site": { "ready": { "port": 6061, "portEnv": "TEACHING_ARCHITECTURE_COURSE_PORT" }, "stack": false },
+    "@teaching/proctor:dev": { "ready": { "port": 8791, "portEnv": "PROCTOR_PORT" }, "stack": false }
+  },
+  "parameters": {
+    "@teaching/architecture-course:dev": ["steady", "stack"],
+    "@teaching/architecture-course:dev-site": ["stack"],
+    "@teaching/proctor:dev": ["stack"]
+  },
+  "cases": [
+    { "id": "default", "choices": {}, "environment": {}, "ports": { "@teaching/architecture-course:dev": 6061, "@teaching/architecture-course:dev-site": 6061, "@teaching/proctor:dev": 8791 }, "follows": true, "proctor": "http://127.0.0.1:8791" },
+    { "id": "steady", "choices": { "steady": "" }, "environment": { "TEACHING_ARCHITECTURE_COURSE_WATCH": "off" }, "ports": { "@teaching/architecture-course:dev": 6061 }, "follows": false, "proctor": "http://127.0.0.1:8791" },
+    { "id": "beside", "choices": { "stack": "beside" }, "environment": { "TEACHING_ARCHITECTURE_COURSE_PORT": "6063", "PROCTOR_PORT": "8793", "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside" }, "ports": { "@teaching/architecture-course:dev": 6063, "@teaching/architecture-course:dev-site": 6063, "@teaching/proctor:dev": 8793 }, "follows": true, "proctor": "http://127.0.0.1:8793" },
+    { "id": "steady-beside", "choices": { "steady": "", "stack": "beside" }, "environment": { "TEACHING_ARCHITECTURE_COURSE_WATCH": "off", "TEACHING_ARCHITECTURE_COURSE_PORT": "6063", "PROCTOR_PORT": "8793", "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside" }, "ports": { "@teaching/architecture-course:dev": 6063 }, "follows": false, "proctor": "http://127.0.0.1:8793" }
+  ],
+  "refused": [
+    { "id": "port-not-a-number", "ready": { "port": 6061, "portEnv": "P" }, "environment": { "P": "sixty" } },
+    { "id": "port-out-of-range", "ready": { "port": 6061, "portEnv": "P" }, "environment": { "P": "70000" } },
+    { "id": "no-port-at-all", "ready": { "portEnv": "P" }, "environment": {} }
+  ],
+  "announcement": {
+    "listenAfterMilliseconds": [0, 400],
+    "line": "is ready after"
+  }
+}

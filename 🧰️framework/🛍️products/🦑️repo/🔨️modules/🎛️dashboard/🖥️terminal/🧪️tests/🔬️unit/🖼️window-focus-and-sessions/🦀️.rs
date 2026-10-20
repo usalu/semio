@@ -138,10 +138,14 @@ fn copying_a_selection_asks_the_terminal_to_copy() {
 
 #[test]
 fn the_usage_text_is_generated_from_the_keymap_in_both_languages() {
-    let english = super::help_text(&Preferences::default());
+    let english = super::help_text(&Preferences { language: Some("en".into()), ..Default::default() });
     assert!(english.contains("split right") && english.contains("Ctrl+B"));
-    let german = super::help_text(&Preferences { language: "de".into(), ..Default::default() });
+    let german = super::help_text(&Preferences { language: Some("de".into()), ..Default::default() });
     assert!(german.contains("rechts teilen") && german.contains("Nach der Präfixtaste"));
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../⌨️usage/🧪️tests/🔣️.json")).unwrap();
+    let expected = fixture["terminalHeader"].as_str().unwrap();
+    assert_eq!(english.lines().next(), Some(expected));
+    assert_eq!(german.lines().next(), Some(expected));
 }
 
 #[test]
@@ -182,7 +186,7 @@ fn window_controls_are_named_in_the_language_of_the_dashboard_and_stay_quiet_whe
     let read = |dashboard: &Dashboard, tui: &mut Tui| match tui.scene.node_mut(dashboard.windows[0].chrome).chrome() { Some(ChromeState::Window(window)) => (window.labels.close.clone(), window.new_tab), _ => panic!("window expected") };
     let (dashboard, mut tui) = view();
     assert_eq!(read(&dashboard, &mut tui), ("Close tab".to_string(), true));
-    let (dashboard, mut tui) = dashboard_with(Preferences { language: "de".into(), ..Default::default() });
+    let (dashboard, mut tui) = dashboard_with(Preferences { language: Some("de".into()), ..Default::default() });
     assert_eq!(read(&dashboard, &mut tui), ("Tab schließen".to_string(), true));
     let _ = tui.render();
     let mut dashboard = dashboard;
@@ -211,7 +215,7 @@ fn daemon_errors_reach_the_user_in_their_language_and_never_the_terminal() {
     let (mut dashboard, mut tui) = view();
     dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "no such task".into(), code: Some(dashboard_wire::ipc::ErrorCode::UnknownSession), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("that task no longer exists"));
-    let (mut dashboard, mut tui) = dashboard_with(Preferences { language: "de".into(), ..Default::default() });
+    let (mut dashboard, mut tui) = dashboard_with(Preferences { language: Some("de".into()), ..Default::default() });
     dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "x".into(), code: Some(dashboard_wire::ipc::ErrorCode::NotRunning), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("Diese Aufgabe läuft nicht"));
 }
@@ -222,7 +226,7 @@ fn a_refused_view_says_so_in_its_language_and_retries_instead_of_showing_an_empt
     dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16 views".into(), code: Some(dashboard_wire::ipc::ErrorCode::ViewLimit), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("the daemon serves as many views as it allows; close another view and try again"));
     assert!(dashboard.link.connection.is_none() && matches!(dashboard.state, LinkState::Failed(_)), "the refused connection is dropped so that the retry loop runs");
-    let (mut dashboard, mut tui) = dashboard_with(Preferences { language: "de".into(), ..Default::default() });
+    let (mut dashboard, mut tui) = dashboard_with(Preferences { language: Some("de".into()), ..Default::default() });
     dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16".into(), code: Some(dashboard_wire::ipc::ErrorCode::ViewLimit), session_id: None }));
     assert!(dashboard.notice.as_deref().is_some_and(|text| text.contains("Ansichten")));
 }

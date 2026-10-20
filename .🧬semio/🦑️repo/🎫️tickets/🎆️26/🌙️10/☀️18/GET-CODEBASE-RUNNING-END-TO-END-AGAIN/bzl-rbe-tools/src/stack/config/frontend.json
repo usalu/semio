@@ -1,0 +1,76 @@
+{
+  "grpcServers": [
+    {
+      "listenAddresses": [
+        ":8980"
+      ],
+      "authenticationPolicy": {
+        "allow": {}
+      }
+    }
+  ],
+  "schedulers": {
+    "": {
+      "endpoint": {
+        "address": "scheduler:8982"
+      }
+    }
+  },
+  "maximumMessageSizeBytes": 16777216,
+  "global": {
+    "diagnosticsHttpServer": {
+      "httpServers": [
+        {
+          "listenAddresses": [
+            ":80"
+          ],
+          "authenticationPolicy": {
+            "allow": {}
+          }
+        }
+      ],
+      "enablePrometheus": true
+    }
+  },
+  "contentAddressableStorage": {
+    "backend": {
+      "grpc": {
+        "client": {
+          "address": "storage:8981"
+        }
+      }
+    },
+    "getAuthorizer": {
+      "allow": {}
+    },
+    "putAuthorizer": {
+      "allow": {}
+    },
+    "findMissingAuthorizer": {
+      "allow": {}
+    }
+  },
+  "actionCache": {
+    "backend": {
+      "completenessChecking": {
+        "backend": {
+          "grpc": {
+            "client": {
+              "address": "storage:8981"
+            }
+          }
+        },
+        "maximumTotalTreeSizeBytes": 67108864
+      }
+    },
+    "getAuthorizer": {
+      "allow": {}
+    },
+    "putAuthorizer": {
+      "allow": {}
+    }
+  },
+  "executeAuthorizer": {
+    "allow": {}
+  }
+}

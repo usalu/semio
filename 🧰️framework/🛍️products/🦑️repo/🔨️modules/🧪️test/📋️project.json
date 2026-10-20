@@ -118,6 +118,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-dependency": {
@@ -140,6 +145,11 @@
       "options": {
         "command": "bun ./📜️script.ts doctor",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-inventory": {
@@ -148,6 +158,11 @@
       "options": {
         "command": "bun ./📜️script.ts inventory",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-schema": {
@@ -398,6 +413,11 @@
       "options": {
         "command": "bun ./📜️script.ts fixture reproduce",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-fixture-generate": {
@@ -406,6 +426,11 @@
       "options": {
         "command": "bun ./📜️script.ts fixture generate",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-probe": {
@@ -414,6 +439,11 @@
       "options": {
         "command": "bun ./📜️script.ts probe",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-matrix": {
@@ -436,6 +466,11 @@
       "options": {
         "command": "bun ./📜️script.ts gc",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test": {

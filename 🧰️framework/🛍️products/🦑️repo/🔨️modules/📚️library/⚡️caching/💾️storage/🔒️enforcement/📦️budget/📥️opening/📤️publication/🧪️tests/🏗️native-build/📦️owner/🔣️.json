@@ -533,7 +533,7 @@
       "initialState": "mounted",
       "fault": "none",
       "admit": true,
-      "count": 8
+      "count": 5
     },
     {
       "id": "win32-mounted-reorder",
@@ -549,7 +549,7 @@
       "initialState": "mounted",
       "fault": "exhausted",
       "admit": false,
-      "count": 8
+      "count": 5
     },
     {
       "id": "win32-mounted-pending",
@@ -565,7 +565,7 @@
       "initialState": "inactive",
       "fault": "none",
       "admit": true,
-      "count": 6
+      "count": 3
     },
     {
       "id": "win32-inactive-reorder",
@@ -581,7 +581,7 @@
       "initialState": "inactive",
       "fault": "exhausted",
       "admit": false,
-      "count": 6
+      "count": 3
     },
     {
       "id": "win32-inactive-pending",

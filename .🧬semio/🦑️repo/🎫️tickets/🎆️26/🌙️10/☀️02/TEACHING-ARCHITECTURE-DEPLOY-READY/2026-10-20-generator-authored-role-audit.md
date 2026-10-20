@@ -1,0 +1,13 @@
+# Authored Generator Input Role Audit
+
+Read-only bounded registry/fixture scope; no command or Source edit. Examined exact shell+actor owners and4architecture generation prerequisites, plus existing14dataProducerInputRoles rows.
+
+Shell owner @semio-tech/framework-os-shell-rs manifest SHA0626522cfa748215be1725d1f4fc04d03357d195b3779e67a62751fee610e4c0 typegen.inputs=[schemaModule], but metadata.semio.sourceInputObservation is absent. schemaModule includes schema directory (TypeScript face included),Cargo.toml,Rust entry and script. Default matched-input role is compile. Current runTypegenScript asserts schema presence then invokes Rust typegen export and writes the generated mirror; it does not evaluate the TypeScript face/mirror as a runtime consumer. The TSface is producer freshness data here. This is a concrete authored role omission; adding freshness to this exact producer and neutral roster is consistent with existing design, rather than weakening generated-output guards.
+
+Actor typegen explicitly freshness. All existing14roster rows agree with authored role semantics: assets build,actor typegen,styling generate,schema generate,UI contract generate,UI generate,graph generate are freshness; each paired test/test-dispatch-contract remains compile by default. Framework-rs generate also explicitly freshness; its architecture prerequisite peers UI contract/UI are already freshness. No additional inconsistency was found in this bounded set. No broad target-name heuristic or repository-wide rewrite follows from this audit.
+
+The existing source-demand test reads actual manifests, invokes actual buildInputSourceRoleV1 and compares neutral expected DATA; Ajv validates authored role and SQLite coalesce independently checks defaultcompile/freshness. A shell producer row plus paired real consumer test/schema-check role would pin the missing declaration meaningfully. Compiler/runtime consumers must remain compile, even when same owner also has freshness generator.
+
+Runtime reports a separate generated-input reduction bug: union modules assigned to all active targets can fabricate producer selfedge when same-owner consumer legitimately imports generated output. That is an inference association defect, distinct from shell metadata omission. Its repair needs per-target producer-versus-consumer evidence and unchanged real compile/runtime selfcycle refusals; this auditor has not reviewed the proposed implementation yet.
+
+Exact shell output points to authored framework/🔨️modules/🐚️shell/🤖️generated tree, matching router/export implementation despite source owner living under products/os/🖥️shell. No output relocation is justified. Findings sent to Runtime and Root; no actual graph/typegen pass claimed.

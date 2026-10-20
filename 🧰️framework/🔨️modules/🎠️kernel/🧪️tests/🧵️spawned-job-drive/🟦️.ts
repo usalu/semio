@@ -14,8 +14,8 @@ import {
   SPAWNED_JOB_STEP_CEILING,
   type SpawnedJobCompletion,
   type SpawnedJobStep
-} from "@semio-tech/framework-effect/spawned-job";
-import { driveSpawnedJob, spawnedJobCompletedEvent, wireEffectToFriendly, wireJobStep, wireSpawnedJobs, type SpawnedJobPort, type WireVariant } from "@semio-tech/framework-actor/wire-turn";
+} from "../../⚡️effect/🛠️spawned-job/🟦️.ts";
+import { driveSpawnedJob, spawnedJobCompletedEvent, wireEffectToFriendly, wireJobStep, wireSpawnedJobs, type SpawnedJobPort, type WireVariant } from "../../../🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts";
 
 /** 🧵 TypeScript twin of `🧪️tests/🧵️spawned-job-drive/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/🧵️spawned-job-drive/🔣️.json`): a `spawn-job` effect obliges its host to start the job,

@@ -80,8 +80,8 @@ pub mod proc {
         match status {
             Ok(s) => s.code().unwrap_or(1),
             Err(e) => {
-                let text = dashboard_labels::labels(dashboard_preferences::cli_locale(cwd, &dashboard_core::args::ParsedArgs::default()));
-                eprintln!("{}", text.cli_run_failed.fill(&[("command", cmd), ("error", &e.to_string())]).into_string());
+                let selected=dashboard_preferences::cli_locale(cwd,&dashboard_core::args::ParsedArgs::default());
+                for choice in dashboard_preferences::language::declared().choices(){let locale=dashboard_preferences::language::negotiate(&choice.language).expect("validated choice");if selected.is_none_or(|selected|selected==locale){let text=dashboard_labels::labels(locale);eprintln!("{}",text.cli_run_failed.fill(&[("command",cmd),("error",&e.to_string())]).into_string());}}
                 1
             }
         }

@@ -24,6 +24,8 @@ impl super::NativeDecodeConstructionRecipient for OriginalConstructionFixture{
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
 
+fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
+
 /// 🏭️ Native construction declares a required receiving owner independently of synchronous wire decoding.
 pub trait NativeReceive<I>:RetireOwned+Sized{
  type Receiver:NativeReceiver<I,Self>;

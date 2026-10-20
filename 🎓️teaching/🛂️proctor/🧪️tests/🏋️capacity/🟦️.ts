@@ -46,7 +46,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
-import { PROCTOR_DEV_COURSE, buildProctor, launchProctor, type ProctorArtifact, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
+import { PROCTOR_DEV_COURSE, launchProctor, type ProctorArtifact, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
+import { acquireProctor } from "../../🏗️bootstrap/🧾️product/🟦️.ts";
 import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
 
@@ -231,7 +232,7 @@ function table(title: string, phase: PhaseReport): string {
  * the hall alone and beside the script, stop the proctor, count its roster and return the report; `violations` is empty
  * exactly when the gate holds. */
 export async function runCapacity(repoRoot: string, invocation: ScriptInvocation, options: CapacityOptions = CAPACITY_DEFAULTS): Promise<CapacityReport> {
-  const artifact = options.executable === undefined ? await buildProctor(repoRoot, invocation, process.env, undefined, "release") : undefined;
+  const artifact = options.executable === undefined ? await acquireProctor(repoRoot, invocation, process.env, undefined, "release") : undefined;
   const launcher = artifact ?? { launch: (args: readonly string[], env?: NodeJS.ProcessEnv, log?: string) => launchProctor(resolve(options.executable!), repoRoot, args, env, log) };
   try { return await measureCapacity(repoRoot, launcher, options); } finally { await artifact?.close(); }
 }

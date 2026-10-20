@@ -1,0 +1,31 @@
+package workspace
+
+import (
+	"encoding/json"
+	"os"
+	"testing"
+)
+
+func TestIdeFreeAuthorityFixture(t *testing.T) {
+	raw, err := os.ReadFile(os.Getenv("IDE_FREE_FIXTURE"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		PathCases []struct {
+			Path     string `json:"path"`
+			Accepted bool   `json:"accepted"`
+		} `json:"pathCases"`
+	}
+	if err := json.Unmarshal(raw, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if len(fixture.PathCases) < 40 {
+		t.Fatalf("fixture rows: %d", len(fixture.PathCases))
+	}
+	for _, row := range fixture.PathCases {
+		if got := IsIdeConfigurationPath(row.Path); got == row.Accepted {
+			t.Errorf("%s: IsIdeConfigurationPath=%v but accepted=%v", row.Path, got, row.Accepted)
+		}
+	}
+}

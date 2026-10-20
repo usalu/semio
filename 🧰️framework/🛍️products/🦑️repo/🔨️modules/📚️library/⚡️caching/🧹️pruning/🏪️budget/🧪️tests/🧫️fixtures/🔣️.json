@@ -1,1 +1,188 @@
-{"policy":{"version":1,"retainedBytes":100,"targetAvailableBytes":50,"maximumDeletionBytes":200},"units":[{"path":"old","bytes":60,"recencyMs":1,"lockHeld":false,"kind":"cargo-build"},{"path":"recent","bytes":60,"recencyMs":999,"lockHeld":false,"kind":"cargo-build"},{"path":"live","bytes":60,"recencyMs":0,"lockHeld":true,"kind":"cargo-build"}],"availableBytes":40,"selected":["old","recent"],"bytes":120,"boundedSelected":["old"],"maximumDeletionBytes":100}
+{
+  "policy": {
+    "version": 1,
+    "retainedBytes": 100,
+    "targetAvailableBytes": 50,
+    "maximumDeletionBytes": 200
+  },
+  "units": [
+    {
+      "path": "old",
+      "bytes": 60,
+      "recencyMs": 1,
+      "lockHeld": false,
+      "kind": "cargo-build"
+    },
+    {
+      "path": "recent",
+      "bytes": 60,
+      "recencyMs": 999,
+      "lockHeld": false,
+      "kind": "cargo-build"
+    },
+    {
+      "path": "live",
+      "bytes": 60,
+      "recencyMs": 0,
+      "lockHeld": true,
+      "kind": "cargo-build"
+    }
+  ],
+  "availableBytes": 40,
+  "selected": [
+    "old",
+    "recent"
+  ],
+  "bytes": 120,
+  "boundedSelected": [
+    "old"
+  ],
+  "maximumDeletionBytes": 100,
+  "commands": [
+    {
+      "args": [
+        "preview"
+      ],
+      "accepted": true,
+      "operation": "preview"
+    },
+    {
+      "args": [
+        "retire"
+      ],
+      "accepted": true,
+      "operation": "retire"
+    },
+    {
+      "args": [
+        "preview-historical"
+      ],
+      "accepted": true,
+      "operation": "preview-historical"
+    },
+    {
+      "args": [
+        "retire-historical"
+      ],
+      "accepted": true,
+      "operation": "retire-historical"
+    },
+    {
+      "args": [],
+      "accepted": false
+    },
+    {
+      "args": [
+        "preview",
+        "/foreign"
+      ],
+      "accepted": false
+    },
+    {
+      "args": [
+        "retire",
+        "--force"
+      ],
+      "accepted": false
+    },
+    {
+      "args": [
+        "clean"
+      ],
+      "accepted": false
+    },
+    {
+      "args": [
+        "retire",
+        "--capacity=999999999999"
+      ],
+      "accepted": false
+    }
+  ],
+  "targets": [
+    {
+      "target": "cache-retire-inactive-preview",
+      "operation": "preview",
+      "verb": "clean"
+    },
+    {
+      "target": "cache-retire-inactive",
+      "operation": "retire",
+      "verb": "clean"
+    }
+  ],
+  "results": [
+    {
+      "name": "preview-plans-but-does-not-retire",
+      "preview": true,
+      "maximumDeletionBytes": 200,
+      "expected": {
+        "units": 0,
+        "logicalBytes": 0,
+        "plannedUnits": 2,
+        "plannedLogicalBytes": 120,
+        "unmetBytes": 0
+      }
+    },
+    {
+      "name": "retirement-plans-and-retires",
+      "preview": false,
+      "maximumDeletionBytes": 200,
+      "expected": {
+        "units": 2,
+        "logicalBytes": 120,
+        "plannedUnits": 2,
+        "plannedLogicalBytes": 120,
+        "unmetBytes": 0
+      }
+    },
+    {
+      "name": "bounded-plan-reports-unmet",
+      "preview": true,
+      "maximumDeletionBytes": 60,
+      "expected": {
+        "units": 0,
+        "logicalBytes": 0,
+        "plannedUnits": 1,
+        "plannedLogicalBytes": 60,
+        "unmetBytes": 20
+      }
+    }
+  ],
+  "observations": [
+    {
+      "platform": "darwin",
+      "accepted": true,
+      "command": "ps",
+      "args": [
+        "-axo",
+        "pid,comm"
+      ]
+    },
+    {
+      "platform": "linux",
+      "accepted": true,
+      "command": "ps",
+      "args": [
+        "-axo",
+        "pid,comm"
+      ]
+    },
+    {
+      "platform": "win32",
+      "accepted": true,
+      "command": "tasklist.exe",
+      "args": [
+        "/FO",
+        "CSV",
+        "/NH"
+      ]
+    },
+    {
+      "platform": "freebsd",
+      "accepted": false,
+      "command": null,
+      "args": []
+    }
+  ]
+}

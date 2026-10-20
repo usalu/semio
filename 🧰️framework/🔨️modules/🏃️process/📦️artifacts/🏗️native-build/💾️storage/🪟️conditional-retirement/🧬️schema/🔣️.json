@@ -1,0 +1,473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Policy": {
+      "const": {
+        "kind": "windows-kernel-conditional",
+        "maximumEntries": 200000,
+        "maximumDepth": 128,
+        "maximumPathLength": 256,
+        "maximumFilesPerYield": 64,
+        "createFile": {
+          "deleteAccess": 65536,
+          "readAttributes": 128,
+          "share": 0,
+          "openExisting": 3,
+          "openReparsePoint": 2097152,
+          "backupSemantics": 33554432,
+          "ancestorShare": 3,
+          "invalidHandle": "18446744073709551615"
+        },
+        "information": {
+          "basic": 0,
+          "standard": 1,
+          "attributeTag": 9,
+          "fileId": 18,
+          "dispositionEx": 21,
+          "basicBytes": 40,
+          "standardBytes": 24,
+          "attributeTagBytes": 8,
+          "fileIdBytes": 24,
+          "dispositionBytes": 4
+        },
+        "flags": {
+          "delete": 1,
+          "forceImageSectionCheck": 4,
+          "reparse": 1024,
+          "directory": 16,
+          "readonly": 1
+        },
+        "errors": {
+          "notFound": [
+            2,
+            3
+          ],
+          "sharing": 32,
+          "accessDenied": 5,
+          "directoryNotEmpty": 145,
+          "unsupported": [
+            1,
+            50,
+            87
+          ]
+        },
+        "filesystem": "NTFS",
+        "fileTypeDisk": 1,
+        "observationKind": "windows-physical-unit-observation",
+        "driveTypeFixed": 3
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "accepted",
+        "removed",
+        "refused",
+        "outcome"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refused": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "complete",
+            "pending",
+            "refused",
+            "partial"
+          ]
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "unit",
+        "maximumLogicalBytes"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z]:\\\\"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "maximumLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "acceptedEntries",
+        "removedEntries",
+        "acceptedLogicalBytes",
+        "removedLogicalBytes",
+        "outcome",
+        "handlesSettled"
+      ],
+      "properties": {
+        "kind": {
+          "const": "windows-kernel-conditional"
+        },
+        "acceptedEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200000
+        },
+        "removedEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200000
+        },
+        "acceptedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "removedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "outcome": {
+          "enum": [
+            "complete",
+            "pending",
+            "refused",
+            "partial"
+          ]
+        },
+        "handlesSettled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "events",
+        "available",
+        "recordFails",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "receipt",
+              "refused"
+            ],
+            "properties": {
+              "receipt": {
+                "$ref": "#/$defs/Receipt"
+              },
+              "refused": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "available": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "recordFails": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "units",
+            "logicalBytes",
+            "acceptedEntries",
+            "removedEntries",
+            "acceptedLogicalBytes",
+            "removedLogicalBytes",
+            "unsettledUnits",
+            "handlesSettled",
+            "headroomDeficitBytes"
+          ],
+          "properties": {
+            "units": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "logicalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "acceptedEntries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "removedEntries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "acceptedLogicalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "removedLogicalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unsettledUnits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "handlesSettled": {
+              "type": "boolean"
+            },
+            "headroomDeficitBytes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "logicalBytes",
+        "entries",
+        "recencyMs"
+      ],
+      "properties": {
+        "kind": {
+          "const": "windows-physical-unit-observation"
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        },
+        "recencyMs": {
+          "type": "number",
+          "minimum": -11644473600000,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "refusals",
+    "settlements",
+    "kernelCases",
+    "physicalExtents",
+    "requestMutations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "accepted",
+          "settled"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "sharing",
+              "permission",
+              "reparse",
+              "hardlink",
+              "filesystem",
+              "disposition",
+              "identity",
+              "insert-child",
+              "close",
+              "close-acquisition",
+              "close-named",
+              "remote-drive"
+            ]
+          },
+          "accepted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "settled": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "settlements": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "$ref": "#/$defs/Settlement"
+      }
+    },
+    "kernelCases": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "reader",
+          "foreign-reader",
+          "readonly-map",
+          "writable-map",
+          "image-section",
+          "hardlink",
+          "reparse",
+          "insert-child",
+          "readonly-attribute",
+          "permission",
+          "complete"
+        ]
+      }
+    },
+    "physicalExtents": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "reportedSessionBytes",
+          "files",
+          "physicalBytes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reportedSessionBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "bytes"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "physicalBytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "requestMutations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "initialBytes",
+          "replacementBytes",
+          "observedBytes",
+          "accepted"
+        ],
+        "properties": {
+          "initialBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "replacementBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "observedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "accepted": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "version": 1,
+  "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard",
+  "testRoot": "🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+  "features": [
+    {
+      "path": "🧪️tests/🪟️windows/🥒️.feature",
+      "cases": [
+        {
+          "scenario": "Tabs and titles come from the task label",
+          "tests": [
+            "tabs_and_titles_come_from_the_task_label_with_status_as_a_glyph"
+          ]
+        },
+        {
+          "scenario": "Terminals follow the rectangle of their widget",
+          "tests": [
+            "terminal_sizes_follow_their_widget_rectangles_through_every_layout_change"
+          ]
+        },
+        {
+          "scenario": "Clicking a window moves the keyboard focus there",
+          "tests": [
+            "clicking_a_window_moves_the_keyboard_focus_there"
+          ]
+        },
+        {
+          "scenario": "Prefix actions split, zoom, cycle and close windows",
+          "tests": [
+            "prefix_actions_split_zoom_cycle_and_close_windows"
+          ]
+        },
+        {
+          "scenario": "Closing a window focuses its neighbour",
+          "tests": [
+            "p1_6_closing_a_window_focuses_its_neighbour_and_typing_q_never_quits"
+          ]
+        },
+        {
+          "scenario": "The right button opens a context menu whose rows act on the window",
+          "tests": [
+            "the_right_button_opens_a_context_menu_whose_rows_act_on_the_window"
+          ]
+        },
+        {
+          "scenario": "Window controls are named in the language of the dashboard",
+          "tests": [
+            "window_controls_are_named_in_the_language_of_the_dashboard_and_stay_quiet_when_unchanged"
+          ]
+        },
+        {
+          "scenario": "A compound opens one tab per member",
+          "tests": [
+            "a_compound_opens_one_tab_per_member_each_with_its_own_task_label"
+          ]
+        },
+        {
+          "scenario": "An unchanged screen is neither dirty nor repainted",
+          "tests": [
+            "p1_7_an_unchanged_screen_is_neither_dirty_nor_repainted",
+            "repainting_is_incremental_and_follows_typing"
+          ]
+        },
+        {
+          "scenario": "Every docking zone previews the committed geometry",
+          "tests": [
+            "docking_preview_matches_the_committed_split_geometry_in_every_zone"
+          ]
+        },
+        {
+          "scenario": "Docking preserves identities and collapses empty groups",
+          "tests": [
+            "docking_commands_preserve_windows_prune_empty_groups_and_reject_invalid_targets",
+            "nested_splits_preserve_the_weight_of_their_existing_sibling_slot"
+          ]
+        },
+        {
+          "scenario": "Pointer docking preserves window bodies and focus",
+          "tests": [
+            "real_pointer_drags_preview_every_split_then_join_tabs_without_recreating_their_bodies",
+            "docking_a_live_terminal_preserves_its_session_output_and_reports_the_new_pty_size"
+          ]
+        },
+        {
+          "scenario": "Interrupted docking leaves the layout unchanged",
+          "tests": [
+            "escape_focus_loss_resize_and_an_outside_release_cancel_docking",
+            "docking_survives_zoom_and_removing_the_held_window_cancels_its_preview"
+          ]
+        },
+        {
+          "scenario": "Keyboard users can dock, join and reorder tabs",
+          "tests": [
+            "keyboard_docking_and_tab_reordering_have_localized_customizable_actions",
+            "docking_changes_keyboard_focus_order_to_match_the_visible_layout"
+          ]
+        },
+        {
+          "scenario": "Tabs dock into every corner with stable identities",
+          "tests": [
+            "docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls",
+            "docking_corner_contract_covers_cross_group_and_sole_tab_moves",
+            "docking_interleaved_layout_events_keep_the_held_tab_identity"
+          ]
+        },
+        {
+          "scenario": "Every tab owns its fullscreen and close controls",
+          "tests": [
+            "docking_fullscreen_and_close_on_an_inactive_tab_target_its_identity"
+          ]
+        },
+        {
+          "scenario": "Keyboard users can place tabs in every corner",
+          "tests": [
+            "keyboard_docking_places_tabs_in_all_corners_and_localizes_every_action"
+          ]
+        },
+        {
+          "scenario": "Divider dragging continues across layout frames",
+          "tests": [
+            "splitter_drag_keeps_its_capture_across_each_layout_remount"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧪️tests/📡️sessions/🥒️.feature",
+      "cases": [
+        {
+          "scenario": "A selection before the connection is an owned, cancellable start",
+          "tests": [
+            "selection_before_connection_retains_an_owned_cancellable_start"
+          ]
+        },
+        {
+          "scenario": "The limit is checked before a window exists and a failed send is kept",
+          "tests": [
+            "p2_7_the_limit_is_checked_before_a_window_exists_and_a_failed_send_is_kept_for_the_reconnect"
+          ]
+        },
+        {
+          "scenario": "Reconnecting backs off and starts over after a success",
+          "tests": [
+            "p2_7_reconnecting_backs_off_and_starts_over_after_a_success"
+          ]
+        },
+        {
+          "scenario": "Restored output and exit status render without stealing the focus",
+          "tests": [
+            "restored_process_output_and_exit_status_render_without_stealing_focus"
+          ]
+        },
+        {
+          "scenario": "A replay clears only the terminal it replays",
+          "tests": [
+            "a_replay_clears_only_the_terminal_it_replays"
+          ]
+        },
+        {
+          "scenario": "Daemon errors reach the user in their language and never the terminal",
+          "tests": [
+            "daemon_errors_reach_the_user_in_their_language_and_never_the_terminal"
+          ]
+        },
+        {
+          "scenario": "Shutdown waits for the confirmation of the daemon",
+          "tests": [
+            "shutdown_waits_for_the_daemons_confirmation"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧪️tests/📋️panes/🥒️.feature",
+      "cases": [
+        {
+          "scenario": "The tasks list keeps its selection on the same task and shows status per row",
+          "tests": [
+            "p1_6_the_tasks_list_keeps_its_selection_on_the_same_task_and_shows_status_per_row"
+          ]
+        },
+        {
+          "scenario": "The keyboard help lists every binding of the effective keymap",
+          "tests": [
+            "the_keyboard_help_lists_every_binding_of_the_effective_keymap"
+          ]
+        },
+        {
+          "scenario": "The usage text is generated from the keymap in both languages",
+          "tests": [
+            "the_usage_text_is_generated_from_the_keymap_in_both_languages"
+          ]
+        },
+        {
+          "scenario": "Hints fit whole at eighty columns in both languages",
+          "tests": [
+            "p1_11_hints_fit_whole_at_eighty_columns_in_both_languages"
+          ]
+        },
+        {
+          "scenario": "The launcher gives text editors a visible cursor",
+          "tests": [
+            "the_launcher_gives_text_editors_a_visible_cursor"
+          ]
+        },
+        {
+          "scenario": "Launcher text editing follows the shared input caret",
+          "tests": [
+            "launcher_text_editing_follows_the_shared_input_caret"
+          ]
+        },
+        {
+          "scenario": "Confirmation is operable with the mouse",
+          "tests": [
+            "confirmation_is_operable_with_the_mouse"
+          ]
+        },
+        {
+          "scenario": "The configured start action needs one click",
+          "tests": [
+            "the_configured_start_action_needs_one_click"
+          ]
+        },
+        {
+          "scenario": "Glyph capabilities preserve the framework width policy",
+          "tests": [
+            "glyph_capabilities_preserve_the_framework_width_policy"
+          ]
+        },
+        {
+          "scenario": "A pending action is visible before routine footer status",
+          "tests": [
+            "an_armed_prefix_notice_precedes_routine_footer_status"
+          ]
+        },
+        {
+          "scenario": "Restore requested before the first snapshot raises the replayed task",
+          "tests": [
+            "restoring_before_the_first_snapshot_focuses_the_replayed_task"
+          ]
+        }
+      ]
+    }
+  ],
+  "silentSources": [
+    "🖥️terminal/📡️sessions/🦀️.rs",
+    "🖥️terminal/⌨️controls/🦀️.rs",
+    "🖥️terminal/🪟️windows/🦀️.rs",
+    "🖥️terminal/📋️panes/🦀️.rs"
+  ],
+  "forbidden": [
+    "println!",
+    "eprintln!",
+    "print!(",
+    "start_detached"
+  ]
+}

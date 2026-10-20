@@ -14,6 +14,7 @@ use std::{
 pub struct PagedListCursorState<T: RetainedClone, const N: usize> {
     values: PagedList<T, N>,
     child: Option<T::Cursor>,
+    child_closing: bool,
     child_value: Option<T>,
     index: usize,
     source: Option<RetainedCloneBinding>,
@@ -43,14 +44,14 @@ impl<T: RetainedClone, const N: usize> DerefMut for PagedListCursor<T, N> {
 
 impl<T: RetainedClone, const N: usize> Default for PagedListCursor<T, N> {
     fn default() -> Self {
-        Self { state: ManuallyDrop::new(PagedListCursorState { values: PagedList::default(), child: None, child_value: None, index: 0, source: None, phase: 0, output: None, closing: false, close: RetainedCloneClose::default() }) }
+        Self { state: ManuallyDrop::new(PagedListCursorState { values: PagedList::default(), child: None, child_closing:false, child_value: None, index: 0, source: None, phase: 0, output: None, closing: false, close: RetainedCloneClose::default() }) }
     }
 }
 
 impl<T: RetainedClone, const N: usize> PagedListCursor<T, N> {
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if !self.closing{return Ok(Default::default());}
-        if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(crate::RetirementDemand {copy_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{super::nested_retained_clone_close_demands::<T>(child,body)};}
+        if let Some(child)=self.child.as_ref(){return if !self.child_closing{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else if child.terminal_is_empty(){Ok(crate::RetirementDemand {copy_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{super::nested_retained_clone_close_demands::<T>(child,body)};}
         if self.child_value.is_some(){return self.close.next_owner_demands::<T>(true,&self.source,body);}
         self.close.next_owner_demands::<PagedList<T,N>>(self.output.is_some()||!self.values.terminal_is_empty(),&self.source,body)
     }
@@ -112,13 +113,13 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                 }
                 let progress = state.values.adopt_reserved(&mut state.child_value)?;
                 if !progress.progressed { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list lost its reserved adoption slot")); }
-                state.child = None;
+                state.child = None;state.child_closing=false;
                 state.index += 1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
             if child.output_ready() {
                 state.child_value = Some(child.take().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list ready child omitted owner"))?);
-                child.begin_close();
+                child.begin_close();state.child_closing=true;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
             let nested = super::nested_retained_clone_grant(grant)?;
@@ -157,9 +158,9 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedList<T,N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         let state = &mut *self.state;
         if let Some(child) = state.child.as_mut() {
-            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !state.child_closing {child.begin_close();state.child_closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));}
             if !child.terminal_is_empty() { let step = child.close_step(super::nested_retained_clone_grant(grant)?)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
-            state.child = None;
+            state.child = None;state.child_closing=false;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:size_of::<T::Cursor>(), ..Default::default() }));
         }
         if !state.close.is_empty() { return state.close.step_granted(grant); }

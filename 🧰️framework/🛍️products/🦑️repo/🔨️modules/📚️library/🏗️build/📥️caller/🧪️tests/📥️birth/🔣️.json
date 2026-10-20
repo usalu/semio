@@ -4,6 +4,7 @@
     {
       "name": "alias-release",
       "args": [
+        "--tool=nx",
         "run",
         "app:build",
         "--output=stream",
@@ -22,6 +23,7 @@
     {
       "name": "opaque-tail",
       "args": [
+        "--tool=nx",
         "run",
         "app:test",
         "--",
@@ -71,6 +73,7 @@
     {
       "name": "reset",
       "args": [
+        "--tool=nx",
         "reset"
       ],
       "mode": "release",
@@ -83,6 +86,7 @@
     {
       "name": "watch",
       "args": [
+        "--tool=nx",
         "run",
         "@semio-tech/framework-os-dev:dev-studio-react-release"
       ],
@@ -114,6 +118,52 @@
         "--all"
       ],
       "mode": "release",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "nx-tools-setup",
+      "args": [
+        "--tool=nx",
+        "tools",
+        "setup"
+      ],
+      "mode": "prototype",
+      "main": [
+        "nx",
+        "--version"
+      ],
+      "javascript": false
+    },
+    {
+      "name": "bazel-tools-setup",
+      "args": [
+        "--tool=bazel",
+        "tools",
+        "setup"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "bazel-tools-setup-bazel",
+      "args": [
+        "tools",
+        "setup",
+        "bazel"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "bazel-reset",
+      "args": [
+        "--tool=bazel",
+        "reset"
+      ],
+      "mode": "prototype",
       "main": null,
       "javascript": false
     }

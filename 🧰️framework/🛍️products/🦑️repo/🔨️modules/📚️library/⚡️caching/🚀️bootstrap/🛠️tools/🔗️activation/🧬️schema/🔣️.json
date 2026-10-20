@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Managed Nx Activation Target",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "root",
+    "target",
+    "style"
+  ],
+  "properties": {
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "style": {
+      "enum": [
+        "posix",
+        "windows"
+      ]
+    }
+  },
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "store": [
+          ".cache",
+          "b",
+          "t",
+          "m",
+          "nx"
+        ],
+        "digest": "^[a-f0-9]{64}$",
+        "maximumMarkerBytes": 1048576
+      }
+    },
+    "TargetCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "target",
+        "style",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "style": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ActivationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "kind": {
+          "enum": [
+            "missing",
+            "dangling",
+            "valid",
+            "current",
+            "foreign",
+            "file",
+            "invalid-receipt",
+            "mutation",
+            "cancel"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "activationCases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "$ref": "#/$defs/TargetCase"
+          }
+        },
+        "activationCases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "$ref": "#/$defs/ActivationCase"
+          }
+        }
+      }
+    }
+  }
+}

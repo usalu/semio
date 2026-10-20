@@ -56,6 +56,7 @@ semio-framework-plugin-host-effects = { path = "../../../⚡️effects/📦️pa
 semio-framework-plugin-host-engine = { path = "../../../🔧️engine/📦️packages/🦀️rust" }
 semio-framework-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦️packages/🦀️rust" }
 semio-framework-plugin-host-wit = { path = "../../../🔗️wit-bindings/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin-host-engine = { path = "../../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }

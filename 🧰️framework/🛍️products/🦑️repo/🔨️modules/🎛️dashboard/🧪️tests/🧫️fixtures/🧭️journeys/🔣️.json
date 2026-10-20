@@ -385,6 +385,19 @@
         "conflict": "Datei wurde andernorts geändert",
         "discard": "Ungespeicherte Änderungen bleiben erhalten"
       }
+    },
+    "performance": {
+      "bytes": 1048576,
+      "entries": 4096,
+      "directory": "native-max",
+      "file": "max.txt",
+      "prefix": "START_OF_MAXIMUM\n",
+      "line": "row é中\n",
+      "tail": "DOCUMENT_END_",
+      "removedAscii": 24,
+      "insert": "終👩‍💻",
+      "loadMilliseconds": 5000,
+      "interactionMilliseconds": 1000
     }
   }
 }

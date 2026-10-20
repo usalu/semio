@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "states": [
+    {
+      "id": "initial",
+      "complete": false,
+      "closing": false,
+      "output": false,
+      "ready": false
+    },
+    {
+      "id": "reserved",
+      "complete": false,
+      "closing": false,
+      "output": true,
+      "ready": false
+    },
+    {
+      "id": "partial",
+      "complete": false,
+      "closing": false,
+      "output": true,
+      "ready": false
+    },
+    {
+      "id": "complete",
+      "complete": true,
+      "closing": false,
+      "output": true,
+      "ready": true
+    },
+    {
+      "id": "taken",
+      "complete": true,
+      "closing": false,
+      "output": false,
+      "ready": false
+    },
+    {
+      "id": "closing",
+      "complete": true,
+      "closing": true,
+      "output": true,
+      "ready": false
+    },
+    {
+      "id": "closed",
+      "complete": true,
+      "closing": true,
+      "output": false,
+      "ready": false
+    }
+  ],
+  "texts": [
+    {
+      "text": "",
+      "repeat": 1
+    },
+    {
+      "text": "hello",
+      "repeat": 1
+    },
+    {
+      "text": "é🙂é",
+      "repeat": 3
+    },
+    {
+      "text": "x",
+      "repeat": 65537
+    }
+  ],
+  "bodyBytes": [
+    1,
+    4096
+  ],
+  "cancelCuts": [
+    null,
+    0,
+    1,
+    2,
+    3,
+    5,
+    17
+  ],
+  "closeBeforeTake": [
+    false,
+    true
+  ],
+  "closeTurns": 1024,
+  "maximumIdleTurns": 16,
+  "closeFunding": "selected-currencies",
+  "closeGrants": [
+    {
+      "id": "independent-copy-axis-underquotes-selected-handoff",
+      "demand": {
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "grant": {
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "accepted": false
+    },
+    {
+      "id": "selected-event-exact-currencies",
+      "demand": {
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "grant": {
+        "items": 1,
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "accepted": true
+    },
+    {
+      "id": "physical-release-refused",
+      "demand": {
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "grant": {
+        "items": 1,
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 39,
+        "depth": 2
+      },
+      "accepted": false
+    },
+    {
+      "id": "nested-depth-refused",
+      "demand": {
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 2
+      },
+      "grant": {
+        "items": 1,
+        "copyBytes": 40,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "structural-birth-refused",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 64,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "grant": {
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 63,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "accepted": false
+    }
+  ]
+}

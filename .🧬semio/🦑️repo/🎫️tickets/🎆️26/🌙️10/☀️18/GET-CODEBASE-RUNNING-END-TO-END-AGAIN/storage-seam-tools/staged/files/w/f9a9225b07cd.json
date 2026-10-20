@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "platformFree": [
+    "🌐️platform/🟦️.ts",
+    "🌐️platform/📋️contract/🟦️.ts",
+    "🔌️backends/🧭️selection/🟦️.ts"
+  ],
+  "knownEntanglements": [
+    "🌐️platform/📋️contract/📐️statfs/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🌐️platform/🥾️boot/🩹️recovery/📒️ledger/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🌐️platform/🥾️boot/🩹️recovery/🧯️act/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🌐️platform/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts -> mounted-image: 🍎️image/📡️roster/🟦️.ts",
+    "🌐️platform/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts -> mounted-image: 🍎️image/🛠️hdiutil/🟦️.ts",
+    "🌐️platform/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts -> mounted-image: 🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
+    "📤️publication/🌐️platform/🟦️.ts -> directory-partition: 🧱️fixed/🧬️schema/🔣️.json",
+    "📤️publication/🌐️platform/🟦️.ts -> mounted-image: 🍎️image/🤫️silence/🟦️.ts",
+    "📤️publication/🌐️platform/🟦️.ts -> mounted-image: 🍎️image/🤫️silence/🧬️schema/🔣️.json",
+    "📤️publication/🌐️platform/🟦️.ts -> mounted-image: 📤️publication/📚️witness/🍎️events/🟦️.ts",
+    "📤️publication/🎛️owner/🟦️.ts -> directory-partition: 📤️publication/🧱️fixed/🟦️.ts",
+    "📤️publication/🎛️owner/🟦️.ts -> directory-partition: 🧱️fixed/🧬️schema/🔣️.json",
+    "📤️publication/🎛️owner/🟦️.ts -> mounted-image: 🍎️image/👤️owners/🟦️.ts",
+    "📤️publication/🎛️owner/🟦️.ts -> mounted-image: 🍎️image/📥️information/🟦️.ts",
+    "📤️publication/🎛️owner/🟦️.ts -> mounted-image: 🍎️image/🛠️hdiutil/🟦️.ts",
+    "📤️publication/🎛️owner/🟦️.ts -> mounted-image: 📤️publication/📚️witness/🍎️events/🟦️.ts",
+    "📤️publication/📚️witness/🟦️.ts -> mounted-image: 📤️publication/📚️witness/🍎️events/🟦️.ts",
+    "🧹️cleanup/♻️retirement/💾️durability/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🧹️cleanup/♻️retirement/📋️contract/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🧹️cleanup/🎛️command/🟦️.ts -> directory-partition: 🧱️fixed/🟦️.ts",
+    "🧹️cleanup/📋️state/🟦️.ts -> mounted-image: 🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
+    "🧾️metadata/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🍎️image/🟦️.ts -> directory-partition: 🧱️fixed/🟦️.ts"
+  ],
+  "knownCrossBackend": [
+    "🍎️image/🟦️.ts -> 🧱️fixed/🟦️.ts",
+    "🧹️cleanup/🎛️command/🟦️.ts -> 🧱️fixed/🟦️.ts"
+  ],
+  "hdiutilLiteralsOutsideStorage": [
+    "🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+    "🧪️testing/🏖️sandbox/🖼️images/🟦️.ts"
+  ]
+}

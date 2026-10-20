@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "exact-frozen-extent",
+      "kind": "ordinary",
+      "bytes": 57696,
+      "checkExpected": true,
+      "accepted": true
+    },
+    {
+      "id": "observer-limit",
+      "kind": "ordinary",
+      "bytes": 65536,
+      "accepted": true
+    },
+    {
+      "id": "over-profile-limit",
+      "kind": "ordinary",
+      "bytes": 65537,
+      "accepted": false
+    },
+    {
+      "id": "hardlink-refused",
+      "kind": "hardlink",
+      "bytes": 32,
+      "accepted": false
+    },
+    {
+      "id": "leaf-symlink-refused",
+      "kind": "leaf-symlink",
+      "bytes": 32,
+      "accepted": false
+    },
+    {
+      "id": "parent-symlink-refused",
+      "kind": "parent-symlink",
+      "bytes": 32,
+      "accepted": false
+    },
+    {
+      "id": "missing-refused",
+      "kind": "missing",
+      "bytes": 32,
+      "accepted": false
+    },
+    {
+      "id": "expected-hash-refused",
+      "kind": "ordinary",
+      "bytes": 57696,
+      "checkExpected": true,
+      "expectedMutation": true,
+      "accepted": false
+    },
+    {
+      "id": "expected-extent-refused",
+      "kind": "ordinary",
+      "bytes": 57695,
+      "checkExpected": true,
+      "accepted": false
+    }
+  ],
+  "wrapperCases": [
+    {
+      "id": "normal",
+      "accepted": true
+    },
+    {
+      "id": "wrong-pre-identity",
+      "accepted": false
+    },
+    {
+      "id": "not-running",
+      "accepted": false
+    },
+    {
+      "id": "source-overcap",
+      "accepted": false
+    },
+    {
+      "id": "source-wrong-extent",
+      "accepted": false
+    },
+    {
+      "id": "source-wrong-hash",
+      "accepted": false
+    },
+    {
+      "id": "source-noncanonical-base64",
+      "accepted": false
+    },
+    {
+      "id": "post-identity-changed",
+      "accepted": false
+    },
+    {
+      "id": "authority-changed",
+      "accepted": false
+    },
+    {
+      "id": "client-timeout",
+      "accepted": false
+    },
+    {
+      "id": "metadata-overcap",
+      "accepted": false
+    }
+  ],
+  "outputCases": [
+    {
+      "id": "absent",
+      "kind": "absent",
+      "accepted": true
+    },
+    {
+      "id": "ordinary",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "id": "dangling",
+      "kind": "dangling",
+      "accepted": false
+    }
+  ],
+  "transformCases": [
+    {
+      "id": "matching"
+    },
+    {
+      "id": "null"
+    },
+    {
+      "id": "wrong-identity"
+    },
+    {
+      "id": "loader-error"
+    },
+    {
+      "id": "loader-undefined"
+    },
+    {
+      "id": "getter-error"
+    },
+    {
+      "id": "logger-before-error"
+    },
+    {
+      "id": "logger-after-error"
+    },
+    {
+      "id": "held"
+    },
+    {
+      "id": "overlap"
+    },
+    {
+      "id": "cap-nine"
+    },
+    {
+      "id": "false-result"
+    },
+    {
+      "id": "zero-result"
+    },
+    {
+      "id": "empty-result"
+    },
+    {
+      "id": "undefined-result"
+    },
+    {
+      "id": "nan-result"
+    }
+  ],
+  "transformShapeRefusals": [
+    "duplicate-loader",
+    "separated-guard",
+    "multi-declaration",
+    "guard-else",
+    "identifier-collision"
+  ]
+}

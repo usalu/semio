@@ -36,6 +36,7 @@ pub const FRAMEWORK_RESERVED_CONTRIBUTIONS: [manifest::ReservedContribution; 2] 
 //#endregion 🧩️ReservedFeatures
 
 pub use semio_framework_ui_declaration::IconName;
+pub use semio_framework_ui_locale::{Locale, Terminology};
 pub use semio_framework_io_schema as io_schema;
 pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 pub use action_bus::{

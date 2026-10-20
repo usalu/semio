@@ -55,7 +55,7 @@ impl Drop for Operation { fn drop(&mut self) { retire(0); } }
 /// ❄️ The independent cold builder disposes owned wire values once without a native Mutation facet.
 #[test]
 fn snapshot_builder_retires_original_owners_on_success_and_refusal() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(corpus["disposal"], "owned-wire");
     assert_eq!(corpus["nativeOperation"], false);
     for row in corpus["cases"].as_array().unwrap() {
@@ -73,5 +73,4 @@ fn snapshot_builder_retires_original_owners_on_success_and_refusal() {
         if let Ok(builder) = result { let snapshot = builder.build().unwrap(); assert_eq!(snapshot.value, row["result"].as_i64().unwrap()); Delta::retire_projection(snapshot); }
         if let Some(diff) = returned_diff { Delta::retire_cold(diff); }
     }
-    eprintln!("[DEBUG] Cold SnapshotBuilder: {} neutral cases preserve wire values, disposal counts, and an operation with no native Mutation facet", corpus["cases"].as_array().unwrap().len());
 }

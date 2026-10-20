@@ -46,13 +46,22 @@ type EventInput struct {
 type EventLog struct {
 	mu       sync.RWMutex
 	events   []Event
+	sizes    []int
 	data     []byte
 	maxBytes int
 	maxCount int
+	ring     bool
+	next     uint64
+	anchor   string
 }
 
 func NewEventLog(maxBytes, maxCount int) *EventLog {
 	return &EventLog{maxBytes: maxBytes, maxCount: maxCount}
+}
+
+// 🔁️NewRingEventLog retains the newest events within the bounds and forgets the oldest ones instead of refusing: a session that outlives the bound keeps answering, and the retained window stays a verifiable hash chain that starts at its anchor.
+func NewRingEventLog(maxBytes, maxCount int) *EventLog {
+	return &EventLog{maxBytes: maxBytes, maxCount: maxCount, ring: true}
 }
 
 func (log *EventLog) Commit(ctx context.Context, inputs ...EventInput) error {
@@ -64,15 +73,16 @@ func (log *EventLog) Commit(ctx context.Context, inputs ...EventInput) error {
 	}
 	log.mu.Lock()
 	defer log.mu.Unlock()
-	if log.maxCount > 0 && len(log.events)+len(inputs) > log.maxCount {
+	if log.maxCount > 0 && len(log.events)+len(inputs) > log.maxCount && (!log.ring || len(inputs) > log.maxCount) {
 		return ErrLimit
 	}
-	previous := ""
+	previous := log.anchor
 	if len(log.events) > 0 {
 		previous = log.events[len(log.events)-1].Hash
 	}
 	stagedEvents := make([]Event, 0, len(inputs))
 	var staged bytes.Buffer
+	var stagedSizes []int
 	for index, input := range inputs {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -80,7 +90,7 @@ func (log *EventLog) Commit(ctx context.Context, inputs ...EventInput) error {
 		if input.Kind == "" || !json.Valid(input.Payload) {
 			return errors.New("mcp: invalid event")
 		}
-		event := Event{Schema: EventSchema, Sequence: uint64(len(log.events) + index + 1), Kind: input.Kind, Peer: input.Peer, Generation: input.Generation, RequestID: input.RequestID, Payload: append(json.RawMessage(nil), input.Payload...), Previous: previous}
+		event := Event{Schema: EventSchema, Sequence: log.next + uint64(index) + 1, Kind: input.Kind, Peer: input.Peer, Generation: input.Generation, RequestID: input.RequestID, Payload: append(json.RawMessage(nil), input.Payload...), Previous: previous}
 		digest, err := eventDigest(event)
 		if err != nil {
 			return err
@@ -93,17 +103,42 @@ func (log *EventLog) Commit(ctx context.Context, inputs ...EventInput) error {
 		staged.Write(encoded)
 		staged.WriteByte('\n')
 		stagedEvents = append(stagedEvents, event)
+		stagedSizes = append(stagedSizes, len(encoded)+1)
 		previous = digest
 	}
-	if log.maxBytes > 0 && len(log.data)+staged.Len() > log.maxBytes {
+	if log.maxBytes > 0 && staged.Len() > log.maxBytes {
+		return ErrLimit
+	}
+	if log.maxBytes > 0 && len(log.data)+staged.Len() > log.maxBytes && !log.ring {
 		return ErrLimit
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	if log.ring {
+		log.evict(len(stagedEvents), staged.Len())
+	}
 	log.events = append(log.events, stagedEvents...)
+	log.sizes = append(log.sizes, stagedSizes...)
 	log.data = append(log.data, staged.Bytes()...)
+	log.next += uint64(len(stagedEvents))
 	return nil
+}
+
+// 🧹️evict forgets the oldest retained events until the incoming events fit the bounds; the hash of the last forgotten event becomes the anchor of the retained chain. The caller holds the lock.
+func (log *EventLog) evict(incomingCount, incomingBytes int) {
+	drop, dropBytes := 0, 0
+	for drop < len(log.events) && ((log.maxCount > 0 && len(log.events)-drop+incomingCount > log.maxCount) || (log.maxBytes > 0 && len(log.data)-dropBytes+incomingBytes > log.maxBytes)) {
+		dropBytes += log.sizes[drop]
+		drop++
+	}
+	if drop == 0 {
+		return
+	}
+	log.anchor = log.events[drop-1].Hash
+	log.events = append([]Event(nil), log.events[drop:]...)
+	log.sizes = append([]int(nil), log.sizes[drop:]...)
+	log.data = append([]byte(nil), log.data[dropBytes:]...)
 }
 
 func (log *EventLog) Snapshot() []byte {
@@ -132,6 +167,7 @@ func ReplayEvents(ctx context.Context, data []byte, maxBytes, maxCount int) ([]E
 	scanner.Buffer(make([]byte, 64*1024), limit)
 	result := make([]Event, 0)
 	previous := ""
+	var window uint64
 	for scanner.Scan() {
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -143,7 +179,10 @@ func ReplayEvents(ctx context.Context, data []byte, maxBytes, maxCount int) ([]E
 		if err := decodeExact(scanner.Bytes(), &event); err != nil {
 			return nil, fmt.Errorf("mcp: corrupt event %d: %w", len(result)+1, err)
 		}
-		if event.Schema != EventSchema || event.Sequence != uint64(len(result)+1) || event.Previous != previous || event.Kind == "" || !json.Valid(event.Payload) {
+		if len(result) == 0 && event.Sequence > 1 && event.Previous != "" {
+			previous, window = event.Previous, event.Sequence-1
+		}
+		if event.Schema != EventSchema || event.Sequence != window+uint64(len(result))+1 || event.Previous != previous || event.Kind == "" || !json.Valid(event.Payload) {
 			return nil, fmt.Errorf("mcp: corrupt event %d", len(result)+1)
 		}
 		digest, err := eventDigest(event)

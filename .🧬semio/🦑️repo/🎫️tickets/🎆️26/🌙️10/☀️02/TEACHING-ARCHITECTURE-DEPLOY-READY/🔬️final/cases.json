@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "group": "plan",
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "group": "plan",
+      "id": "unknown-role",
+      "accepted": false
+    },
+    {
+      "group": "plan",
+      "id": "latest",
+      "accepted": false
+    },
+    {
+      "group": "plan",
+      "id": "missing-evidence",
+      "accepted": true
+    },
+    {
+      "group": "terminal",
+      "id": "21-zero",
+      "accepted": true
+    },
+    {
+      "group": "terminal",
+      "id": "wrong-argv",
+      "accepted": false
+    },
+    {
+      "group": "terminal",
+      "id": "20-steps",
+      "accepted": false
+    },
+    {
+      "group": "terminal",
+      "id": "signal",
+      "accepted": false
+    },
+    {
+      "group": "terminal",
+      "id": "no-guest-original",
+      "accepted": false
+    },
+    {
+      "group": "delta",
+      "id": "added-changed-deleted",
+      "accepted": true
+    },
+    {
+      "group": "delta",
+      "id": "duplicate-path",
+      "accepted": false
+    },
+    {
+      "group": "delta",
+      "id": "out-of-order",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "two-images",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "wrong-config-id",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "wrong-layer",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "missing-caddy",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "wrong-tag",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "wrong-platform",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "wrong-embedded-proctor",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "oversized-pax",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "truncated",
+      "accepted": false
+    },
+    {
+      "group": "export",
+      "id": "exact-roster",
+      "accepted": true
+    },
+    {
+      "group": "export",
+      "id": "wrong-hash",
+      "accepted": false
+    },
+    {
+      "group": "export",
+      "id": "cancelled",
+      "accepted": false
+    },
+    {
+      "group": "export",
+      "id": "wrong-cohort",
+      "accepted": false
+    },
+    {
+      "group": "receipt",
+      "id": "missing-producer",
+      "accepted": true
+    },
+    {
+      "group": "receipt",
+      "id": "nonzero-cargo",
+      "accepted": false
+    },
+    {
+      "group": "receipt",
+      "id": "optional-wrong-native",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "same-tag-rebound",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "root-dir",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "alias-rows",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "conflicting-alias",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "hybrid",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "hybrid-tag-conflict",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "hybrid-layer-conflict",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "repeated-build-id",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "rebound-build-id",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "gzip-layer",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "mutated-layer-bytes",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "selected-overwrite",
+      "accepted": true
+    },
+    {
+      "group": "archive",
+      "id": "selected-whiteout",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "selected-opaque",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "selected-link",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "hybrid-invalid-index",
+      "accepted": false
+    },
+    {
+      "group": "integration",
+      "id": "complete-neutral-evidence",
+      "accepted": true
+    },
+    {
+      "group": "integration",
+      "id": "required-boundaries-unavailable",
+      "accepted": false
+    },
+    {
+      "group": "archive",
+      "id": "pax-xattr",
+      "accepted": true
+    },
+    {
+      "id": "windows-logical-physical",
+      "group": "export",
+      "accepted": true
+    },
+    {
+      "id": "posix-mode-difference",
+      "group": "export",
+      "accepted": false
+    },
+    {
+      "id": "windows-downgrade-on-posix",
+      "group": "export",
+      "accepted": false
+    },
+    {
+      "id": "physical-mode-receipt-mutation",
+      "group": "export",
+      "accepted": false
+    }
+  ],
+  "fixtures": {
+    "delta": {
+      "before": [
+        {
+          "path": "a",
+          "bytes": 1,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "b",
+          "bytes": 1,
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "after": [
+        {
+          "path": "b",
+          "bytes": 2,
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        {
+          "path": "c",
+          "bytes": 1,
+          "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "a",
+          "kind": "deleted"
+        },
+        {
+          "path": "b",
+          "kind": "changed"
+        },
+        {
+          "path": "c",
+          "kind": "added"
+        }
+      ]
+    }
+  }
+}

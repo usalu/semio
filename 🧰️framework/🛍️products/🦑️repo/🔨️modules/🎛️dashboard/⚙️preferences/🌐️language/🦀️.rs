@@ -1,70 +1,40 @@
-//! 🌐️ The language chain: where the dashboard takes its language from when no preference event,
-//! environment override or argument names one. The system variables and the fallback order are data
-//! in the sibling `🔣️.json`; no language is hard-coded and `Locale` has no `Default`.
-//!
-//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/⚙️preferences/🌐️language/🔣️.json
-
+//! 🌐️ Resolves explicit or supported system language without selecting a default.
 use serde::Deserialize;
 use std::sync::OnceLock;
 use ui_locale::Locale;
-
 const DECLARATION: &str = include_str!("🔣️.json");
-
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Choice { pub language: String, pub name: String }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Document {
-    #[serde(rename = "$schema", default)]
-    _schema: Option<String>,
-    #[serde(rename = "systemVariables")]
-    system_variables: Vec<String>,
-    fallback: Vec<String>,
-}
-
-/// 🔗️ The declared chain: system variables first, then the fallback languages in preference order.
+struct Document { #[serde(rename="$schema",default)] _schema: Option<String>, #[serde(rename="systemVariables")] system_variables: Vec<String>, choices: Vec<Choice>, prompt: Vec<String>, messages: std::collections::BTreeMap<String,String> }
+/// 🔗️ Supported system variables and explicit language choices; order never implies selection.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Chain { system_variables: Vec<String>, fallback: Vec<Locale> }
-
-/// 🔎️ Reads a variable of the environment; an empty value is no value.
+pub struct Chain { system_variables: Vec<String>, choices: Vec<Choice>, prompt: Vec<String>, messages: std::collections::BTreeMap<String,String> }
 pub type Lookup<'a> = &'a dyn Fn(&str) -> Option<String>;
-
-/// 🌍️ The process environment as a lookup.
+/// 🌍️ Reads a nonempty system setting.
 pub fn process_environment(name: &str) -> Option<String> { std::env::var(name).ok().filter(|value| !value.is_empty()) }
-
-/// 🗣️ Names the supported language of a system value: `de_DE.UTF-8`, `de-AT` and `de@euro` name `de`; `C`, `POSIX` and unsupported languages name none.
-pub fn negotiate(value: &str) -> Option<Locale> {
-    let language = value.split(['.', '@']).next()?.split(['_', '-']).next()?;
-    Locale::parse(&language.to_ascii_lowercase())
-}
-
-fn is_variable_name(name: &str) -> bool { name.starts_with(|c: char| c.is_ascii_uppercase()) && name.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_') }
-
+/// 🗣️ Names a supported system language; C, POSIX and unsupported locales resolve to none.
+pub fn negotiate(value: &str) -> Option<Locale> { let language=value.split(['.','@']).next()?.split(['_','-']).next()?; Locale::parse(&language.to_ascii_lowercase()) }
+fn bounded(text: &str, maximum: usize) -> bool { !text.is_empty() && text.chars().count()<=maximum && !text.chars().any(char::is_control) }
 impl Chain {
-    /// 🔍️ Reads a declaration; every fallback must be a supported language and at least one is required.
-    pub fn parse(text: &str) -> Result<Self, String> {
-        let document: Document = serde_json::from_str(text).map_err(|error| format!("the language chain is not valid: {error}"))?;
-        let fallback = document.fallback.iter().map(|id| Locale::parse(id).ok_or_else(|| format!("the language chain falls back to unsupported language {id:?}"))).collect::<Result<Vec<_>, _>>()?;
-        if fallback.is_empty() { return Err("the language chain declares no fallback language".into()); }
-        if fallback.iter().enumerate().any(|(at, locale)| fallback[..at].contains(locale)) { return Err("the language chain repeats a fallback language".into()); }
-        if let Some(name) = document.system_variables.iter().enumerate().find_map(|(at, name)| (!is_variable_name(name) || document.system_variables[..at].contains(name)).then_some(name)) { return Err(format!("the language chain names {name:?}, which is not a distinct environment variable")); }
-        Ok(Self { system_variables: document.system_variables, fallback })
+    /// 🔍️ Validates the closed authored choices and bilingual startup prompt.
+    pub fn parse(text: &str) -> Result<Self,String> {
+        let document: Document=serde_json::from_str(text).map_err(|error| error.to_string())?;
+        if document.choices.len()!=2 || document.choices.iter().enumerate().any(|(at,choice)| Locale::parse(&choice.language).is_none() || !bounded(&choice.name,64) || document.choices[..at].iter().any(|previous| previous.language==choice.language)) { return Err("distinct supported language choices required".into()); }
+        if document.prompt.len()!=3 || document.prompt.iter().any(|line| !bounded(line,256)) { return Err("bounded bilingual language prompt required".into()); }
+        if document.system_variables.iter().enumerate().any(|(at,name)| !name.starts_with(|c:char| c.is_ascii_uppercase()) || !name.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c=='_') || document.system_variables[..at].contains(name)) { return Err("distinct system variable names required".into()); }
+        let keys=["saving","saveFailed","disconnected","terminalUnavailable","required","cancelled"];if document.messages.len()!=keys.len() || keys.iter().any(|key|document.messages.get(*key).is_none_or(|value|!bounded(value,256))){return Err("closed bilingual language messages required".into());}
+        Ok(Self{system_variables:document.system_variables,choices:document.choices,prompt:document.prompt,messages:document.messages})
     }
-
-    /// 🖥️ The first system variable that names a supported language.
-    pub fn system(&self, lookup: Lookup<'_>) -> Option<Locale> { self.system_variables.iter().find_map(|name| lookup(name).as_deref().and_then(negotiate)) }
-
-    /// 🥇️ The first declared fallback language.
-    pub fn fallback(&self) -> Locale { self.fallback[0] }
-
-    /// 🧭️ The system language, or the first declared fallback when the system names none.
-    pub fn resolve(&self, lookup: Lookup<'_>) -> Locale { self.system(lookup).unwrap_or_else(|| self.fallback()) }
+    /// 🖥️ Resolves the first supported system setting without a fallback.
+    pub fn resolve(&self, lookup: Lookup<'_>) -> Option<Locale> { self.system_variables.iter().find_map(|name| lookup(name).as_deref().and_then(negotiate)) }
+    pub fn choices(&self) -> &[Choice] { &self.choices }
+    pub fn prompt(&self) -> &[String] { &self.prompt }
+    pub fn message(&self,key:&str)->&str { self.messages.get(key).expect("authored language message") }
 }
-
-/// 📜️ The chain shipped with the dashboard.
-pub fn declared() -> &'static Chain {
-    static CHAIN: OnceLock<Chain> = OnceLock::new();
-    CHAIN.get_or_init(|| Chain::parse(DECLARATION).expect("the shipped language chain is valid"))
-}
-
+/// 📜️ Reads one validated authored language policy.
+pub fn declared() -> &'static Chain { static CHAIN:OnceLock<Chain>=OnceLock::new(); CHAIN.get_or_init(||Chain::parse(DECLARATION).expect("valid authored language choices")) }
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[path="🧪️tests/🔬️unit/🦀️.rs"] mod tests;

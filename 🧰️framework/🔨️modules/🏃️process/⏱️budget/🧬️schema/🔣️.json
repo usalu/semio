@@ -84,6 +84,36 @@
           "maximum": 1
         }
       }
+    },
+    "TimerInputCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "budget",
+        "callback",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "budget": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "callback": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$ref": "#/$defs/Milliseconds"

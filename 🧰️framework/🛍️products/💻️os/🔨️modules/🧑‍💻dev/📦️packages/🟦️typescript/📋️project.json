@@ -23,6 +23,60 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
       "sharedGlobals"
     ],
+    "viteBundleSources": [
+      "{workspaceRoot}/🧰️framework/**/*",
+      "!{workspaceRoot}/🧰️framework/**/node_modules/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.git/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.nx/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.cache/**/*",
+      "!{workspaceRoot}/🧰️framework/**/target/**/*",
+      "!{workspaceRoot}/🧰️framework/**/dist/**/*",
+      "!{workspaceRoot}/🧰️framework/**/📤️dist/**/*",
+      "!{workspaceRoot}/🧰️framework/**/build/**/*",
+      "!{workspaceRoot}/🧰️framework/**/out/**/*",
+      "!{workspaceRoot}/🧰️framework/**/coverage/**/*",
+      "!{workspaceRoot}/🧰️framework/**/test-results/**/*",
+      "!{workspaceRoot}/🧰️framework/**/playwright-report/**/*",
+      "!{workspaceRoot}/🧰️framework/**/storybook-static/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.venv/**/*",
+      "!{workspaceRoot}/🧰️framework/**/__pycache__/**/*",
+      "!{workspaceRoot}/🧰️framework/**/bin/**/*",
+      "!{workspaceRoot}/🧰️framework/**/obj/**/*",
+      "!{workspaceRoot}/🧰️framework/**/⚡️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/**/🗑️generated/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.lake/**/*",
+      "!{workspaceRoot}/🧰️framework/**/pkg/**/*",
+      "!{workspaceRoot}/🧰️framework/**/.🧾️store/**/*",
+      "!{workspaceRoot}/🧰️framework/**/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/node_modules/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.git/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.nx/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.cache/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/target/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/dist/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/📤️dist/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/build/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/out/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/coverage/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/test-results/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/playwright-report/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/storybook-static/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.venv/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/__pycache__/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/bin/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/obj/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/⚡️cache/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/🗑️generated/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.lake/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/pkg/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/.🧾️store/**/*",
+      "!{workspaceRoot}/✏️s/🧑‍💻dev/**/🧪️tests/**/*",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/tsconfig.json"
+    ],
     "stagingRootSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🏭️build-owners/🟦️.ts",
@@ -164,12 +218,7 @@
       }
     },
     "build": {
-      "executor": "repo:script",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
-        "forwardAllArgs": true
-      },
+      "executor": "repo:noop",
       "metadata": {
         "semio": {
           "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
@@ -177,9 +226,7 @@
       },
       "dependsOn": [
         "build-s-react"
-      ],
-      "cache": false,
-      "outputs": []
+      ]
     },
     "test": {
       "executor": "repo:script",
@@ -219,6 +266,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts bench",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "plugin": {
@@ -253,6 +305,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts plugin size",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "parity": {
@@ -335,7 +392,8 @@
                 "valueFlag": "--roles"
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -379,7 +437,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -438,7 +497,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -465,7 +525,8 @@
                 "valuePositional": true
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -492,7 +553,8 @@
                 "valuePositional": true
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -519,7 +581,8 @@
                 "valuePositional": true
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -546,7 +609,8 @@
                 "valuePositional": true
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -581,7 +645,12 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts cold-boot-check s react dev"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "s-host-foreign-kind-s": {
       "metadata": {
@@ -590,7 +659,8 @@
             "requires": [
               "playground:s"
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -609,7 +679,8 @@
             "requires": [
               "playground:s"
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -735,6 +806,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts bench plugins native",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "bench-plugins-react": {
@@ -748,6 +824,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts bench plugins react",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "bench-plugins-wgpu": {
@@ -761,6 +842,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts bench plugins wgpu",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "build-inputs": {
@@ -845,6 +931,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify two-human --journey viewer",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "two-human-cross-undo": {
@@ -854,6 +945,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify two-human --journey cross-undo",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "boot-budget": {
@@ -863,6 +959,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify boot",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "time-travel": {
@@ -892,7 +993,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       },
       "executor": "repo:script",
@@ -914,12 +1016,19 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "stagingRootSources"
+      ]
     },
     "parity-journey": {
       "executor": "repo:script",
@@ -1057,7 +1166,8 @@
               "en": "Compare interactive journeys across the selected renderers.",
               "de": "Interaktive Abläufe der ausgewählten Renderer vergleichen."
             }
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
         }
       }
     },

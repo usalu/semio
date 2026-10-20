@@ -76,7 +76,7 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
     fn terminal_is_empty(&self)->bool{self.closing&&self.before.is_none()&&self.mutation.is_none()}
 }
 
-fn law()->Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔗️source-custody/🔣️.json")).unwrap()}
+fn law()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔗️source-custody/🔣️.json")).unwrap()}
 fn policy(law:&Value)->ArtifactStoreOneItemGrant{ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:law["copyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:law["capacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:law["releaseBytes"].as_u64().unwrap() as usize,maximum_depth:law["depth"].as_u64().unwrap() as usize}}
 
 fn original_owner(law:&Value)->(Box<dyn ArtifactStoreOneItemPreparation<Document,DocumentMutation>>,Arc<Document>,Arc<dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>>,Arc<dyn SnapshotRetirementFactory<Document>>){
@@ -120,7 +120,7 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(..))=>{prepared=owner.take_prepared();break;}
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(_,receipt))=>assert!(receipt.fits(policy(&law).retained_grant())),
                 Ok(ArtifactStoreOneItemPreparationStep::Blocked)=>panic!("funded original source action stalled"),
-                Err(error)=>{eprintln!("[DEBUG] original source case={} returned error={error:?}",row["name"]);assert_eq!(error.kind,ValueRefusalKind::InvalidValue);refused=true;break;}
+                Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::InvalidValue);refused=true;break;}
             }
         }
         assert_eq!(refused,row["refuseEdit"].as_bool().unwrap());assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),law["base"]);
@@ -131,7 +131,6 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
         }
         close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),row["expectedMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),row["expectedSnapshotCalls"].as_u64().unwrap() as usize);assert_eq!(observe(||drop(owner)).1.released_bytes,0);
         drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
-        eprintln!("[DEBUG] Paged original source {} actualMissuerCalls={} actualSissuerCalls={} genuineOriginalRefs=true deniedCallbacks=0 terminalDrop=0",row["name"],CALLS.get(),SNAPSHOT_CALLS.get());
     }
     for stop in law["cancelAt"].as_array().unwrap(){
         CALLS.set(0);SNAPSHOT_CALLS.set(0);EDIT_CALLS.set(0);REFUSE_EDIT.set(false);REFUSE_ISSUER.set(false);
@@ -139,7 +138,6 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
         for _ in 0..stop.as_u64().unwrap(){assert!(!matches!(owner.advance(policy(&law)).unwrap(),ArtifactStoreOneItemPreparationStep::Prepared(..)));}
         owner.cancel();close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),1);assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),law["base"]);assert_eq!(observe(||drop(owner)).1.released_bytes,0);
         drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
-        eprintln!("[DEBUG] Paged original source cancelAt={stop} actualMissuerCalls=1 originalBeforeUnchanged=true terminalDrop=0");
     }
 }      
 #[test]
@@ -211,5 +209,4 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
         assert!(authority_close.close_step(grant).unwrap().progress().fits(grant));
     }
     assert!(authority_close.terminal_is_empty());assert_eq!(observe(||drop((edit_close,post_close,authority_close,factory_close))).1.released_bytes,0);
-    eprintln!("[DEBUG] Paged actual failed seal returnedEditAddress=true returnedPostAddress=true exactMissuerCalls=1 exactSissuerCalls=1 oneBelowAdmissionHeap=0 deniedCloseHeap=0 terminalDrop=0");
 }

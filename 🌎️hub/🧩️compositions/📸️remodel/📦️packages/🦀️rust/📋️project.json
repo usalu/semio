@@ -23,7 +23,12 @@
         "forwardAllArgs": true
       },
       "outputs": [],
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     }
   }
 }

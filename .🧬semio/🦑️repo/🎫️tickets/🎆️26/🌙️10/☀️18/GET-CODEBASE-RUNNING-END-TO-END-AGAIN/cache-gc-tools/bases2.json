@@ -1,0 +1,12 @@
+{
+ "catalog": "033beb76e03a0cc2848ee2c97f813103e2e27395ee009b523865b1ecd41b7bc7",
+ "file:gc-command.ts": "9aa2045fac3dd1b3c9193b2ed77cea69c1a60b6df0197c01a9523b1fda8a22ea",
+ "file:gc-runner.ts": "799db735b22c2bed42eb65adde32326b3b993ddb649ad3e2ba3becfb00608b5f",
+ "file:gc-test.ts": "ccf3c15b982a27d504e5dbe20514662f9822e18aace61de5a2edee296b2a8928",
+ "file:ledger-fixtures.json": "4802efb508d1c3e8e7902c0d0b6a923af2c60656a162f1e4190005a85664506c",
+ "file:ledger-index.ts": "87ba6dfaeb6b5a6d4e9c488bbc069628b8a82f83387beb886e027ee6dbf3bd6e",
+ "file:ledger-policy.json": "3d148c5255f90143cb593a449f1ffff25ee58a9e8946299f28c4577b1f7aa1e4",
+ "file:ledger-schema.json": "3d44dccdb58c6efc485ec4fe636ebf12e552284c150edcc44a93feccc3e2ef3c",
+ "file:ledger-test.ts": "d757cd0207579da9463ea7297415db532ca00118b9b598afafee60478a85ed14",
+ "file:ledger-texts.json": "a0db3e347667041ebe247fef897f348bce905b203c31cc7be030bdda1aedde75"
+}

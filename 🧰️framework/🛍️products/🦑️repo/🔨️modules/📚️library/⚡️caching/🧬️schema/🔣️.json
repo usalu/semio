@@ -119,6 +119,13 @@
               "type": "string"
             }
           },
+          "identity": {
+            "description": "Files whose meaning, not their bytes, keys a task: the Cargo resolution identity digests them semantically (comments, ordering and artifact locations never count), so a task never hashes them raw; they are still watched.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "environment": {
             "type": "array",
             "items": {

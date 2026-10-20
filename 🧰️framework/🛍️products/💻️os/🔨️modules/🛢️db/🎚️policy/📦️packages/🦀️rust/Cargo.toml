@@ -29,3 +29,4 @@ semio-framework-async = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

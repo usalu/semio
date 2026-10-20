@@ -226,6 +226,22 @@ type ServerCapabilities struct {
 	Resources   *ResourceCapability `json:"resources,omitempty"`
 	Tools       *ListCapability     `json:"tools,omitempty"`
 	Completions *EmptyCapability    `json:"completions,omitempty"`
+	Tasks       *TasksCapability    `json:"tasks,omitempty"`
+}
+
+// ⏳️TasksCapability declares the experimental task utility: `tasks/list`, `tasks/cancel` and task-augmented `tools/call`.
+type TasksCapability struct {
+	List     *EmptyCapability       `json:"list,omitempty"`
+	Cancel   *EmptyCapability       `json:"cancel,omitempty"`
+	Requests *TaskRequestCapability `json:"requests,omitempty"`
+}
+
+type TaskRequestCapability struct {
+	Tools *TaskToolsCapability `json:"tools,omitempty"`
+}
+
+type TaskToolsCapability struct {
+	Call *EmptyCapability `json:"call,omitempty"`
 }
 
 type EmptyCapability struct{}
@@ -282,14 +298,43 @@ type Schema struct {
 	Enum                 []string          `json:"enum,omitempty"`
 	MinLength            int               `json:"minLength,omitempty"`
 	Pattern              string            `json:"pattern,omitempty"`
+	Default              json.RawMessage   `json:"default,omitempty"`
+	Minimum              *int64            `json:"minimum,omitempty"`
+	Maximum              *int64            `json:"maximum,omitempty"`
+	MinItems             int               `json:"minItems,omitempty"`
+	MaxItems             int               `json:"maxItems,omitempty"`
+	UniqueItems          bool              `json:"uniqueItems,omitempty"`
+	AnyOf                []Schema          `json:"anyOf,omitempty"`
+}
+
+// 🏷️ToolAnnotations are the optional behaviour hints of a tool; an unset hint is omitted.
+type ToolAnnotations struct {
+	Title           string `json:"title,omitempty"`
+	ReadOnlyHint    *bool  `json:"readOnlyHint,omitempty"`
+	DestructiveHint *bool  `json:"destructiveHint,omitempty"`
+	IdempotentHint  *bool  `json:"idempotentHint,omitempty"`
+	OpenWorldHint   *bool  `json:"openWorldHint,omitempty"`
+}
+
+const (
+	TaskSupportForbidden = "forbidden"
+	TaskSupportOptional  = "optional"
+	TaskSupportRequired  = "required"
+)
+
+// ⏳️ToolExecution declares whether a tool may, must or must not run as a task.
+type ToolExecution struct {
+	TaskSupport string `json:"taskSupport,omitempty"`
 }
 
 type Tool struct {
-	Name        string `json:"name"`
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	InputSchema Schema `json:"inputSchema"`
-	OutputSchema *Schema `json:"outputSchema,omitempty"`
+	Name         string           `json:"name"`
+	Title        string           `json:"title,omitempty"`
+	Description  string           `json:"description,omitempty"`
+	InputSchema  Schema           `json:"inputSchema"`
+	OutputSchema *Schema          `json:"outputSchema,omitempty"`
+	Annotations  *ToolAnnotations `json:"annotations,omitempty"`
+	Execution    *ToolExecution   `json:"execution,omitempty"`
 }
 
 // 📤️ToolResultOutputSchema is the one `outputSchema` every repository tool declares: object data is returned as is, array or scalar data is wrapped as `{"result": <value>}` (see `CallToolResult.MarshalJSON` and `$defs.ToolOutput` of the module schema).
@@ -307,6 +352,7 @@ type CallToolParams struct {
 	Name      string          `json:"name"`
 	Arguments json.RawMessage `json:"arguments,omitempty"`
 	Meta      ListMeta        `json:"_meta,omitempty"`
+	Task      *TaskRequest    `json:"task,omitempty"`
 }
 
 type Content struct {
@@ -317,10 +363,27 @@ type Content struct {
 	URI      string `json:"uri,omitempty"`
 }
 
+// 📝️MarshalJSON keeps `text` on every text block, including an empty one, because a text block without `text` is invalid.
+func (content Content) MarshalJSON() ([]byte, error) {
+	type wire struct {
+		Type     string  `json:"type"`
+		Text     *string `json:"text,omitempty"`
+		Data     string  `json:"data,omitempty"`
+		MIMEType string  `json:"mimeType,omitempty"`
+		URI      string  `json:"uri,omitempty"`
+	}
+	encoded := wire{Type: content.Type, Data: content.Data, MIMEType: content.MIMEType, URI: content.URI}
+	if content.Type == "text" || content.Text != "" {
+		encoded.Text = &content.Text
+	}
+	return json.Marshal(encoded)
+}
+
 type CallToolResult struct {
 	Content           []Content       `json:"content"`
 	StructuredContent json.RawMessage `json:"structuredContent,omitempty"`
 	IsError           bool            `json:"isError,omitempty"`
+	Meta              map[string]any  `json:"_meta,omitempty"`
 	OutputSchemaDeclared bool         `json:"-"`
 }
 
@@ -426,6 +489,49 @@ type GetPromptResult struct {
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
 }
+
+// ⏳️Task states of the experimental task utility.
+const (
+	TaskWorking   = "working"
+	TaskCompleted = "completed"
+	TaskFailed    = "failed"
+	TaskCancelled = "cancelled"
+)
+
+// ⏳️TaskRequest asks the server to run a request as a task that outlives the request; `ttl` is the retention in milliseconds.
+type TaskRequest struct {
+	TTL *int64 `json:"ttl,omitempty"`
+}
+
+// ⏳️Task is the state of one task.
+type Task struct {
+	TaskID        string `json:"taskId"`
+	Status        string `json:"status"`
+	StatusMessage string `json:"statusMessage,omitempty"`
+	CreatedAt     string `json:"createdAt"`
+	LastUpdatedAt string `json:"lastUpdatedAt"`
+	TTL           *int64 `json:"ttl"`
+	PollInterval  int64  `json:"pollInterval,omitempty"`
+}
+
+// ⏳️CreateTaskResult answers a task-augmented request at once.
+type CreateTaskResult struct {
+	Task Task `json:"task"`
+}
+
+// ⏳️TaskIDParams are the params of `tasks/get`, `tasks/result` and `tasks/cancel`.
+type TaskIDParams struct {
+	TaskID string   `json:"taskId"`
+	Meta   ListMeta `json:"_meta,omitempty"`
+}
+
+// ⏳️ListTasksResult is one page of `tasks/list`.
+type ListTasksResult struct {
+	Tasks      []Task `json:"tasks"`
+	NextCursor string `json:"nextCursor,omitempty"`
+}
+
+const RelatedTaskMeta = "io.modelcontextprotocol/related-task"
 
 type CancelParams struct {
 	RequestID ID     `json:"requestId"`

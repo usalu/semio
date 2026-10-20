@@ -1,5 +1,5 @@
 //#region 🧬️OwnedOperations
-import { NumericIndex, type NumericIndexGrant } from "@semio-tech/value-ts/ordered/numeric";
+import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { retainedUiComponentStrings, retainedUiAccessibilityStrings, retainedUiBindingStrings, measureRetainedUiText } from "../🟦️.ts";
 import { RetainedUiNumericTable } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexEdit, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";

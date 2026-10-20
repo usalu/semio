@@ -126,5 +126,77 @@
         "owner": "source"
       }
     ]
-  }
+  },
+  "takeQuery": [
+    {
+      "closing": false,
+      "owner": {
+        "copyBytes": 24,
+        "capacityBytes": 0,
+        "releaseBytes": 64,
+        "depth": 1
+      },
+      "lease": {
+        "copyBytes": 56,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 3
+      },
+      "expected": {
+        "copyBytes": 56,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 3
+      }
+    },
+    {
+      "closing": false,
+      "owner": {
+        "copyBytes": 24,
+        "capacityBytes": 0,
+        "releaseBytes": 64,
+        "depth": 1
+      },
+      "lease": null,
+      "expected": {
+        "copyBytes": 24,
+        "capacityBytes": 0,
+        "releaseBytes": 64,
+        "depth": 1
+      }
+    },
+    {
+      "closing": true,
+      "owner": {
+        "copyBytes": 24,
+        "capacityBytes": 0,
+        "releaseBytes": 64,
+        "depth": 1
+      },
+      "lease": {
+        "copyBytes": 56,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 3
+      },
+      "expected": null
+    },
+    {
+      "closing": false,
+      "owner": null,
+      "lease": null,
+      "expected": null
+    },
+    {
+      "closing": false,
+      "owner": null,
+      "lease": {
+        "copyBytes": 56,
+        "capacityBytes": 0,
+        "releaseBytes": 40,
+        "depth": 3
+      },
+      "expected": null
+    }
+  ]
 }

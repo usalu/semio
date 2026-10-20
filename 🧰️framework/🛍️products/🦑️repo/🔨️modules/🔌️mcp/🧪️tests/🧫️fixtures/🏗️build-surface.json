@@ -1,0 +1,549 @@
+{
+  "schema": "semio.repo.mcp.build-surface/1",
+  "tools": [
+    "affected",
+    "cache_remote",
+    "cache_status",
+    "capacity_run",
+    "capacity_status",
+    "cargo",
+    "concurrency_list",
+    "concurrency_plan",
+    "concurrency_run",
+    "dependencies_ensure",
+    "dependencies_lock",
+    "dependencies_sync",
+    "exec",
+    "graph",
+    "incremental_discard",
+    "incremental_list",
+    "incremental_plan",
+    "incremental_prepare",
+    "incremental_run",
+    "inputs",
+    "leases_status",
+    "preflight",
+    "remote_execution_status",
+    "run",
+    "run_many",
+    "show_project",
+    "show_projects",
+    "show_targets",
+    "test",
+    "tools_setup"
+  ],
+  "vectors": [
+    {
+      "id": "run-plain",
+      "tool": "run",
+      "arguments": {
+        "target": "@semio-tech/repo-client:build"
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "@semio-tech/repo-client:build"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "run-flags",
+      "tool": "run",
+      "arguments": {
+        "target": "x:y",
+        "configuration": "release",
+        "parallel": 2,
+        "skip_cache": true,
+        "dry_run": true,
+        "bail": false
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "x:y",
+        "--configuration=release",
+        "--dry-run",
+        "--parallel=2",
+        "--skip-cache"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "run-with-configuration-suffix",
+      "tool": "run",
+      "arguments": {
+        "target": "x:y:release"
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "x:y:release"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "test-project",
+      "tool": "test",
+      "arguments": {
+        "project": "@semio-tech/repo-client",
+        "test_level": "quick"
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "@semio-tech/repo-client:test"
+      ],
+      "environment": {
+        "SEMIO_TEST_LEVEL": "quick"
+      },
+      "agent": ""
+    },
+    {
+      "id": "run-many-lists",
+      "tool": "run_many",
+      "arguments": {
+        "targets": [
+          "build",
+          "test"
+        ],
+        "projects": [
+          "a",
+          "b"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "run-many",
+        "--projects=a,b",
+        "--targets=build,test"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "affected-base",
+      "tool": "affected",
+      "arguments": {
+        "targets": [
+          "test"
+        ],
+        "base": "origin/main"
+      },
+      "valid": true,
+      "argv": [
+        "affected",
+        "--base=origin/main",
+        "--targets=test"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "show-projects-current",
+      "tool": "show_projects",
+      "arguments": {},
+      "valid": true,
+      "argv": [
+        "show",
+        "projects",
+        "--json",
+        "--graph-policy=current"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "show-projects-fresh",
+      "tool": "show_projects",
+      "arguments": {
+        "graph_policy": "fresh"
+      },
+      "valid": true,
+      "argv": [
+        "show",
+        "projects",
+        "--json",
+        "--graph-policy=fresh"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "show-project",
+      "tool": "show_project",
+      "arguments": {
+        "name": "@semio-tech/repo-client"
+      },
+      "valid": true,
+      "argv": [
+        "show",
+        "project",
+        "@semio-tech/repo-client",
+        "--json",
+        "--graph-policy=current"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "graph-file",
+      "tool": "graph",
+      "arguments": {
+        "file": "graph.json"
+      },
+      "valid": true,
+      "argv": [
+        "graph",
+        "--json",
+        "--file=graph.json",
+        "--graph-policy=current"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "leases",
+      "tool": "leases_status",
+      "arguments": {
+        "all": true
+      },
+      "valid": true,
+      "argv": [
+        "leases",
+        "status",
+        "--json",
+        "--all"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "capacity",
+      "tool": "capacity_status",
+      "arguments": {},
+      "valid": true,
+      "argv": [
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "cache-status",
+      "tool": "cache_status",
+      "arguments": {
+        "tasks": true,
+        "area": [
+          "a"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "cache",
+        "status",
+        "--json",
+        "--area=a",
+        "--tasks"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "cargo",
+      "tool": "cargo",
+      "arguments": {
+        "store": "shared",
+        "configuration": "prototype",
+        "command": [
+          "check",
+          "-p",
+          "x",
+          "--lib"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "cargo",
+        "--configuration=prototype",
+        "--store=shared",
+        "--",
+        "check",
+        "-p",
+        "x",
+        "--lib"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "exec",
+      "tool": "exec",
+      "arguments": {
+        "projects": [
+          "workspace"
+        ],
+        "command": [
+          "bun",
+          "test"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "exec",
+        "--projects=workspace",
+        "--",
+        "bun",
+        "test"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "capacity-run",
+      "tool": "capacity_run",
+      "arguments": {
+        "memory": 6144,
+        "command": [
+          "bun",
+          "test"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "capacity",
+        "run",
+        "--memory=6144",
+        "--",
+        "bun",
+        "test"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "dependencies-scope",
+      "tool": "dependencies_sync",
+      "arguments": {
+        "scope": "owner"
+      },
+      "valid": true,
+      "argv": [
+        "dependencies",
+        "sync",
+        "--scope",
+        "owner"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "tools-setup",
+      "tool": "tools_setup",
+      "arguments": {
+        "which": "all"
+      },
+      "valid": true,
+      "argv": [
+        "tools",
+        "setup",
+        "all"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "incremental-run",
+      "tool": "incremental_run",
+      "arguments": {
+        "scenario": [
+          "a",
+          "b"
+        ],
+        "implementations": [
+          "nx",
+          "bazel"
+        ],
+        "phases": [
+          "warm",
+          "edit"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "incremental",
+        "run",
+        "--implementations=nx,bazel",
+        "--phases=warm,edit",
+        "--scenario=a,b"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "identity-and-selection",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "tool": "bazel",
+        "language": "de",
+        "workers": "off",
+        "agent": "alpha"
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "a:b"
+      ],
+      "environment": {
+        "SEMIO_BUILD_TOOL": "bazel",
+        "SEMIO_LANGUAGE": "de",
+        "SEMIO_BUILD_WORKERS": "off"
+      },
+      "agent": "alpha"
+    },
+    {
+      "id": "run-without-target",
+      "tool": "run",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "run-target-without-colon",
+      "tool": "run",
+      "arguments": {
+        "target": "nocolon"
+      },
+      "valid": false
+    },
+    {
+      "id": "run-target-flag-injection",
+      "tool": "run",
+      "arguments": {
+        "target": "--help:x"
+      },
+      "valid": false
+    },
+    {
+      "id": "run-parallel-zero",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "parallel": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "run-unknown-argument",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "bogus": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "run-many-empty-targets",
+      "tool": "run_many",
+      "arguments": {
+        "targets": []
+      },
+      "valid": false
+    },
+    {
+      "id": "run-many-without-targets",
+      "tool": "run_many",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "run-many-repeated-target",
+      "tool": "run_many",
+      "arguments": {
+        "targets": [
+          "a",
+          "a"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "show-project-flag-injection",
+      "tool": "show_project",
+      "arguments": {
+        "name": "--help"
+      },
+      "valid": false
+    },
+    {
+      "id": "dependencies-without-selector",
+      "tool": "dependencies_sync",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "capacity-run-without-grant",
+      "tool": "capacity_run",
+      "arguments": {
+        "command": [
+          "x"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "exec-empty-command",
+      "tool": "exec",
+      "arguments": {
+        "projects": [
+          "a"
+        ],
+        "command": []
+      },
+      "valid": false
+    },
+    {
+      "id": "run-unknown-tool",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "tool": "make"
+      },
+      "valid": false
+    },
+    {
+      "id": "run-bad-agent",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "agent": "bad name!"
+      },
+      "valid": false
+    },
+    {
+      "id": "cargo-bad-store",
+      "tool": "cargo",
+      "arguments": {
+        "store": "x",
+        "configuration": "prototype",
+        "command": [
+          "check"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "test-level-unknown",
+      "tool": "test",
+      "arguments": {
+        "project": "a",
+        "test_level": "huge"
+      },
+      "valid": false
+    }
+  ]
+}

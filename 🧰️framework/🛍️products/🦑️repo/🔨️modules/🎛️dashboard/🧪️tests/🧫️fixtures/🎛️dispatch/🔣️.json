@@ -922,5 +922,251 @@
     "selector": "dispatch",
     "target": "test-dispatch",
     "test": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts"
+  },
+  "sourceAudit": {
+    "groups": [
+      {
+        "name": "incremental-rendering",
+        "assets": [
+          "🖥️terminal/🦀️.rs",
+          "🖥️terminal/⌨️controls/🦀️.rs",
+          "🖥️terminal/📡️sessions/🦀️.rs",
+          "🖥️terminal/🪟️windows/🦀️.rs",
+          "🖥️terminal/📋️panes/🦀️.rs"
+        ],
+        "forbidden": [
+          "render_full"
+        ]
+      },
+      {
+        "name": "localized-labels",
+        "assets": [
+          "🖥️terminal/⌨️controls/🦀️.rs",
+          "🖥️terminal/📡️sessions/🦀️.rs",
+          "🖥️terminal/📋️panes/🦀️.rs",
+          "🖥️terminal/🪟️windows/🦀️.rs"
+        ],
+        "forbidden": [
+          "\"connecting\"",
+          "\"reconnecting\"",
+          "\"daemon stopped\"",
+          "\"Commands\"",
+          "\"Tasks\"",
+          "\"Settings\"",
+          "commands are still being discovered",
+          "daemon shutdown timed out"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "name": "incremental patch",
+        "group": "incremental-rendering",
+        "text": "tui.render_due(now)",
+        "accepted": true
+      },
+      {
+        "name": "full redraw",
+        "group": "incremental-rendering",
+        "text": "tui.render_full()",
+        "accepted": false
+      },
+      {
+        "name": "catalog reference",
+        "group": "localized-labels",
+        "text": "text.tasks.as_str()",
+        "accepted": true
+      },
+      {
+        "name": "literal label",
+        "group": "localized-labels",
+        "text": "\"Tasks\"",
+        "accepted": false
+      },
+      {
+        "name": "untranslated long message",
+        "group": "localized-labels",
+        "text": "commands are still being discovered",
+        "accepted": false
+      }
+    ]
+  },
+  "lawMounts": {
+    "maximumFiles": 512,
+    "maximumBytes": 4194304,
+    "cases": [
+      {
+        "id": "direct",
+        "entry": "root.rs",
+        "target": "law.rs",
+        "nodes": [
+          {
+            "path": "root.rs",
+            "mounts": [
+              "law.rs"
+            ]
+          },
+          {
+            "path": "law.rs",
+            "mounts": []
+          }
+        ],
+        "reachable": true
+      },
+      {
+        "id": "present-but-unmounted",
+        "entry": "root.rs",
+        "target": "law.rs",
+        "nodes": [
+          {
+            "path": "root.rs",
+            "mounts": []
+          },
+          {
+            "path": "law.rs",
+            "mounts": []
+          }
+        ],
+        "reachable": false
+      },
+      {
+        "id": "nested",
+        "entry": "root.rs",
+        "target": "tests/law.rs",
+        "nodes": [
+          {
+            "path": "root.rs",
+            "mounts": [
+              "branch.rs"
+            ]
+          },
+          {
+            "path": "branch.rs",
+            "mounts": [
+              "tests/law.rs"
+            ]
+          },
+          {
+            "path": "tests/law.rs",
+            "mounts": []
+          }
+        ],
+        "reachable": true
+      },
+      {
+        "id": "dependency-source-not-mounted",
+        "entry": "root.rs",
+        "target": "dependency/law.rs",
+        "nodes": [
+          {
+            "path": "root.rs",
+            "mounts": []
+          },
+          {
+            "path": "dependency/law.rs",
+            "mounts": []
+          }
+        ],
+        "reachable": false
+      },
+      {
+        "id": "cycle-does-not-admit-unmounted-law",
+        "entry": "root.rs",
+        "target": "law.rs",
+        "nodes": [
+          {
+            "path": "root.rs",
+            "mounts": [
+              "branch.rs"
+            ]
+          },
+          {
+            "path": "branch.rs",
+            "mounts": [
+              "root.rs"
+            ]
+          },
+          {
+            "path": "law.rs",
+            "mounts": []
+          }
+        ],
+        "reachable": false
+      }
+    ],
+    "fixtureBindings": [
+      {
+        "manifest": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs",
+        "fixture": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+        "required": [
+          "originalBytes",
+          "charges",
+          "expectedBytes",
+          "payloadBytes",
+          "cuts",
+          "copyQuantum"
+        ]
+      },
+      {
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/🦀️.rs",
+        "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json",
+        "required": [
+          "selection"
+        ]
+      },
+      {
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🦀️.rs",
+        "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🔣️.json",
+        "required": [
+          "limit",
+          "cases"
+        ]
+      },
+      {
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🖼️window-focus-and-sessions/🦀️.rs",
+        "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🧪️tests/🔣️.json",
+        "required": [
+          "terminalHeader"
+        ]
+      },
+      {
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🦀️.rs",
+        "fixture": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📬️commands/📝️buffer/🧫️fixtures/🔣️.json",
+        "required": [
+          "cases"
+        ]
+      }
+    ]
+  },
+  "installedBattles": {
+    "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+    "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-dashboard-journeys",
+    "authority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+    "routes": [
+      {
+        "target": "test-journeys",
+        "suite": "journeys",
+        "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts",
+        "test": "journeys",
+        "inputs": [
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/**/*"
+        ]
+      },
+      {
+        "target": "test-load",
+        "suite": "load",
+        "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏋️load/🟦️.ts",
+        "test": "load",
+        "inputs": [
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/**/*"
+        ]
+      }
+    ]
   }
 }

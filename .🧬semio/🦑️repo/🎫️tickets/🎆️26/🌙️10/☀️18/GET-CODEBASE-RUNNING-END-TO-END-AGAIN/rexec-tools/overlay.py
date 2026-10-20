@@ -5,15 +5,14 @@ import os, re, shutil, sys
 ROOT = "/Users/ueli/Documents/semio"
 C = os.path.join(ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN")
 STAGED = os.path.join(C, "rexec-tools/staged")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(STAGED), "..")))
+from winpath import iter_logical, resolve
 OVERLAY = os.path.join(C, "rexec-tools/run/overlay")
 B = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel"
 pattern = re.compile(r'(from\s*|import\()(["\'])(\.{1,2}/[^"\']+)\2')
 
 shutil.rmtree(OVERLAY, ignore_errors=True)
-staged_files = []
-for base, _dirs, names in os.walk(STAGED):
-    for name in names:
-        staged_files.append(os.path.relpath(os.path.join(base, name), STAGED))
+staged_files = iter_logical(STAGED)
 staged_set = set(staged_files)
 
 def target_for(final_dir_rel, spec, out_dir):
@@ -24,7 +23,7 @@ def target_for(final_dir_rel, spec, out_dir):
     return result if result.startswith(".") else "./" + result
 
 for rel in sorted(staged_files):
-    source = os.path.join(STAGED, rel)
+    source = resolve(STAGED, rel)
     out = os.path.join(OVERLAY, rel)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     if rel.endswith((".ts", ".mjs")):

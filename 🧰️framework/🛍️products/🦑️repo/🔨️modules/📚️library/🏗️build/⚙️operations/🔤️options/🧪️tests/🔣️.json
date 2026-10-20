@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "space separated global enumerations", "args": ["--workers", "on", "show", "--help"], "expected": ["--workers=on", "show", "--help"] },
+    { "name": "tool and language", "args": ["--tool", "bazel", "show", "projects", "--lang", "de"], "expected": ["--tool=bazel", "show", "projects", "--lang=de"] },
+    { "name": "equals form is untouched", "args": ["--workers=off", "run", "a:b", "--configuration=release"], "expected": ["--workers=off", "run", "a:b", "--configuration=release"] },
+    { "name": "aliases become the long name", "args": ["run-many", "-t", "test", "-p", "a,b", "-c", "prototype"], "expected": ["run-many", "--targets=test", "--projects=a,b", "--configuration=prototype"] },
+    { "name": "alias spelling of the long name", "args": ["affected", "--target", "build", "--output-style", "static"], "expected": ["affected", "--targets=build", "--output=static"] },
+    { "name": "enumerations of single operations", "args": ["cargo", "--store", "shared", "--configuration", "release", "--parallelism", "4", "--", "check"], "expected": ["cargo", "--store=shared", "--configuration=release", "--parallelism=4", "--", "check"] },
+    { "name": "options after the separator belong to the child", "args": ["exec", "--projects", "a", "--", "tool", "--lang", "de", "--workers", "on"], "expected": ["exec", "--projects=a", "--", "tool", "--lang", "de", "--workers", "on"] },
+    { "name": "flags without a value never consume the next word", "args": ["run", "--bail", "a:b", "--dry-run", "--graph", "plan.json"], "expected": ["run", "--bail", "a:b", "--dry-run", "--graph", "plan.json"] },
+    { "name": "separate and optional values stay as typed", "args": ["cache", "serve", "--port", "8080", "--host", "127.0.0.1", "--graph=x"], "expected": ["cache", "serve", "--port", "8080", "--host", "127.0.0.1", "--graph=x"] },
+    { "name": "a missing value is left for the reader to refuse", "args": ["show", "--tool"], "expected": ["show", "--tool"] },
+    { "name": "a following option is no value", "args": ["show", "--lang", "--json"], "expected": ["show", "--lang", "--json"] },
+    { "name": "an empty value is a value", "args": ["show", "--lang", ""], "expected": ["show", "--lang="] },
+    { "name": "a value that names a flag after equals is kept", "args": ["run", "--projects", "tag:rust", "--exclude", "!a*"], "expected": ["run", "--projects=tag:rust", "--exclude=!a*"] }
+  ],
+  "oracle": {
+    "strings": ["tool", "workers", "lang", "projects", "targets", "configuration", "output", "store", "parallelism", "exclude"],
+    "aliases": { "projects": ["p"], "targets": ["t", "target"], "configuration": ["c"], "output": ["output-style"] },
+    "args": [["--workers", "on", "show", "--help"], ["run-many", "-t", "test", "-p", "a,b", "-c", "prototype"], ["--tool", "bazel", "show", "--lang", "de", "projects"], ["cargo", "--store", "shared", "--parallelism", "4"]]
+  }
+}

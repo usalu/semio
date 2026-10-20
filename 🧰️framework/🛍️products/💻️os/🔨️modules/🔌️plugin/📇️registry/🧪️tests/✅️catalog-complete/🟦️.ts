@@ -22,7 +22,7 @@ import { sha256CatalogArtifact } from "../../✅️catalog-verification/📥️a
 import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { examplesForApp, normalizeManifestExamples } from "@semio-tech/framework";
+import { examplesForApp } from "@semio-tech/framework";
 import type { PluginManifest } from "@semio-tech/framework";
 import { identityInstallationSchemaUrl } from "@semio-tech/framework/identity/testing/fixtures";
 

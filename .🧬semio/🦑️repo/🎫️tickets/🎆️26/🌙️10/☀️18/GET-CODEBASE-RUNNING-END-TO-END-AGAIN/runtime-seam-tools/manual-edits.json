@@ -1,0 +1,688 @@
+{
+ "files": [
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+   "edits": [
+    {
+     "old": "const {dlopen,read}=process.getBuiltinModule(\"bun:ffi\") as typeof import(\"bun:ffi\"),errnoName=",
+     "new": "const {dlopen,read}=runtimeNativeSystemV1(),errnoName=",
+     "count": 1
+    },
+    {
+     "old": "!process.versions.bun||",
+     "new": "!runtimeSupportsV1(\"ffi\")||",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🔀️exchange/🟦️.ts",
+   "edits": [
+    {
+     "old": "import type{dlopen as BunDlopen}from\"bun:ffi\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "const{dlopen,FFIType,read}=createRequire(import.meta.url)(\"bun:ffi\")as typeof import(\"bun:ffi\");",
+     "new": "const{dlopen,FFIType,read}=runtimeNativeSystemV1();",
+     "count": 1
+    },
+    {
+     "old": "ReturnType<typeof BunDlopen>",
+     "new": "ReturnType<typeof dlopen>",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts",
+   "edits": [
+    {
+     "old": "createRequire(import.meta.url)(\"bun:ffi\")as typeof import(\"bun:ffi\")",
+     "new": "runtimeNativeSystemV1()",
+     "count": 2
+    },
+    {
+     "old": "||!process.versions.bun",
+     "new": "||!runtimeSupportsV1(\"ffi\")",
+     "count": 2
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🪟️conditional-retirement/🔌️port/🟦️.ts",
+   "edits": [
+    {
+     "old": "createRequire(import.meta.url)(\"bun:ffi\")as typeof import(\"bun:ffi\")",
+     "new": "runtimeNativeSystemV1()",
+     "count": 1
+    },
+    {
+     "old": "||!process.versions.bun||",
+     "new": "||!runtimeSupportsV1(\"ffi\")||",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🟦️.ts",
+   "edits": [
+    {
+     "old": "check();if(!process.versions.bun)throw Error(\"Bun Native volume service observer required\");const{dlopen,FFIType}=systemLibrary(\"bun:ffi\")as typeof import(\"bun:ffi\");",
+     "new": "check();if(!runtimeSupportsV1(\"ffi\"))throw Error(\"Bun Native volume service observer required\");const{dlopen,FFIType}=runtimeNativeSystemV1();",
+     "count": 1
+    },
+    {
+     "old": "const.platform||!process.versions.bun||!Number.isSafeInteger(device)",
+     "new": "const.platform||!runtimeSupportsV1(\"ffi\")||!Number.isSafeInteger(device)",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts",
+   "edits": [
+    {
+     "old": "  const ffi = process.getBuiltinModule(\"bun:ffi\") as typeof import(\"bun:ffi\") | undefined;\n  if (ffi === undefined) throw Error(\"Win32 jobserver semaphores require the Bun runtime\");\n  const { dlopen, FFIType } = ffi;\n",
+     "new": "  if (!runtimeSupportsV1(\"ffi\")) throw Error(\"Win32 jobserver semaphores require the Bun runtime\");\n  const { dlopen, FFIType } = runtimeNativeSystemV1();\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+   "edits": [
+    {
+     "old": "createRequire(import.meta.url)(\"bun:ffi\")as typeof import(\"bun:ffi\")",
+     "new": "runtimeNativeSystemV1()",
+     "count": 2
+    },
+    {
+     "old": "||!process.versions.bun",
+     "new": "||!runtimeSupportsV1(\"ffi\")",
+     "count": 2
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1",
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+   "edits": [
+    {
+     "old": "createRequire(import.meta.url)(\"bun:ffi\") as typeof import(\"bun:ffi\")",
+     "new": "runtimeNativeSystemV1()",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/👁️observe/🟦️.ts",
+   "edits": [
+    {
+     "old": "  const moduleName = \"bun:ffi\";\n  return await import(moduleName) as TransactionNativeApi;",
+     "new": "  return runtimeNativeSystemV1() as unknown as TransactionNativeApi;",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+   "edits": [
+    {
+     "old": "/** 🗃️ Bun's own SQLite, named through a constant rather than inline. The specifier is a Bun BUILTIN:\n * a bundler asked to analyse this module refuses it outright (\"Cannot bundle built-in module\"), which\n * failed whole test FILES whose graph reaches this store from a browser-flavoured environment. Holding it\n * in a `const` (whose literal type still gives the import its real module type) plus `@vite-ignore` leaves\n * the resolution to the runtime, which is the only place it was ever meant to happen. */\nconst BUN_SQLITE_MODULE = \"bun:sqlite\" as const;\n\n/** 🗃️ Uses each runtime's system SQLite behind the same local interface. */\nasync function openDatabase(path: string, readonly=false,create=!readonly): Promise<LeaseDatabase> {\n  if (process.versions.bun) {\n    const { Database } = await import(/* @vite-ignore */ BUN_SQLITE_MODULE), database = new Database(path, { readonly, readwrite:!readonly, create });let closed=false;\n    return { exec: sql => database.exec(sql), read: (sql, ...values) => {const statement=database.prepare(sql);try{return statement.get(...values) as Record<string, unknown>|undefined;}finally{statement.finalize();}}, close: () => {if(!closed){database.close(true);closed=true;}} };\n  }\n  const { DatabaseSync } = await import(\"node:sqlite\"), database = new DatabaseSync(path,{readOnly:readonly});let closed=false;\n  return { exec: sql => database.exec(sql), read: (sql, ...values) => database.prepare(sql).get(...values), close: () => {if(!closed){database.close();closed=true;}} };\n}\n",
+     "new": "/** 🗃️ Uses the hosting runtime's system SQLite through the owned runtime connection class. */\nasync function openDatabase(path: string, readonly=false,create=!readonly): Promise<LeaseDatabase> {\n  const database = new SqliteDatabaseV1(path, { readonly, readwrite:!readonly, create });let closed=false;\n  return { exec: sql => database.exec(sql), read: (sql, ...values) => {const statement=database.prepare(sql);try{return statement.get(...values) as Record<string, unknown>|undefined;}finally{statement.finalize();}}, close: () => {if(!closed){database.close(true);closed=true;}} };\n}\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "SqliteDatabaseV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🟦️.ts",
+   "edits": [
+    {
+     "old": "const builtin=\"bun:sqlite\" as const;\nasync function sqlite(path:string,readonly:boolean):Promise<Sqlite>{\n if(process.versions.bun){const{Database}=await import(builtin),db=new Database(path,{readonly,create:!readonly}),statement=<T>(sql:string,values:Value[],run:(query:ReturnType<InstanceType<typeof Database>[\"prepare\"]>)=>T):T=>{const query=db.prepare(sql);try{return run(query);}finally{query.finalize();}};let closed=false;return{exec:sql=>db.exec(sql),get:(sql,...values)=>statement(sql,values,query=>query.get(...values) as Row|undefined),all:(sql,...values)=>statement(sql,values,query=>query.all(...values) as Row[]),run:(sql,...values)=>{statement(sql,values,query=>query.run(...values));},close:()=>{if(!closed){db.close(true);closed=true;}}};}\n const{DatabaseSync}=await import(\"node:sqlite\"),db=new DatabaseSync(path,{readOnly:readonly});let closed=false;return{exec:sql=>db.exec(sql),get:(sql,...values)=>db.prepare(sql).get(...values),all:(sql,...values)=>db.prepare(sql).all(...values),run:(sql,...values)=>{db.prepare(sql).run(...values);},close:()=>{if(!closed){db.close();closed=true;}}};\n}\n",
+     "new": "async function sqlite(path:string,readonly:boolean):Promise<Sqlite>{\n const Database=SqliteDatabaseV1,db=new Database(path,{readonly,create:!readonly}),statement=<T>(sql:string,values:Value[],run:(query:ReturnType<InstanceType<typeof Database>[\"prepare\"]>)=>T):T=>{const query=db.prepare(sql);try{return run(query);}finally{query.finalize();}};let closed=false;return{exec:sql=>db.exec(sql),get:(sql,...values)=>statement(sql,values,query=>query.get(...values) as Row|undefined),all:(sql,...values)=>statement(sql,values,query=>query.all(...values) as Row[]),run:(sql,...values)=>{statement(sql,values,query=>query.run(...values));},close:()=>{if(!closed){db.close(true);closed=true;}}};\n}\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "SqliteDatabaseV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs",
+   "edits": [
+    {
+     "old": "async function databaseV1(path){\n if(process.versions.bun){const name=\"bun:sqlite\",{Database}=await import(name),database=new Database(path,{create:true});return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.query(sql).get(...args),close:()=>database.close()};}\n const {DatabaseSync}=await import(\"node:sqlite\"),database=new DatabaseSync(path);return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.prepare(sql).get(...args),close:()=>database.close()};\n}\n",
+     "new": "async function databaseV1(path){\n const database=new SqliteDatabaseV1(path,{create:true});return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.query(sql).get(...args),close:()=>database.close()};\n}\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "SqliteDatabaseV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🟦️.ts",
+   "edits": [
+    {
+     "old": ",builtin=\"bun:sqlite\"as const;",
+     "new": ";",
+     "count": 1
+    },
+    {
+     "old": "async function database(file:string):Promise<CatalogDatabase>{\n if(process.versions.bun){const{Database}=await import(builtin),actual=new Database(file,{create:true,readwrite:true}),statements=new Map<string,ReturnType<typeof actual.prepare>>();const statement=(sql:string)=>{let value=statements.get(sql);if(!value){if(statements.size>=protocol.maximumStatements)throw Error(\"Finite catalog statement frontier exceeded\");value=actual.prepare(sql);statements.set(sql,value);}return value;};return{exec:sql=>actual.exec(sql),read:(sql,...values)=>{try{return statement(sql).get(...values)as Record<string,unknown>|undefined;}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},run:(sql,...values)=>{statement(sql).run(...values);return Number((statement(\"SELECT changes() AS count\").get()as{count:number}|undefined)?.count);},rows:(sql,...values)=>{try{return statement(sql).all(...values)as Record<string,unknown>[];}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},close:async()=>{finishResourceLeaseCleanupV1(false,undefined,[...[...statements.values()].map(value=>()=>value.finalize()),()=>actual.close(true)]);}};}\n const{DatabaseSync}=await import(\"node:sqlite\"),actual=new DatabaseSync(file),statements=new Map<string,ReturnType<typeof actual.prepare>>();const statement=(sql:string)=>{let value=statements.get(sql);if(!value){if(statements.size>=protocol.maximumStatements)throw Error(\"Finite catalog statement frontier exceeded\");value=actual.prepare(sql);statements.set(sql,value);}return value;};return{exec:sql=>actual.exec(sql),read:(sql,...values)=>{try{return statement(sql).get(...values);}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},run:(sql,...values)=>{statement(sql).run(...values);return Number((statement(\"SELECT changes() AS count\").get()as{count:number}|undefined)?.count);},rows:(sql,...values)=>{try{return statement(sql).all(...values)as Record<string,unknown>[];}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},close:async()=>{statements.clear();actual.close();}};\n}\n",
+     "new": "async function database(file:string):Promise<CatalogDatabase>{\n const actual=new SqliteDatabaseV1(file,{create:true,readwrite:true}),statements=new Map<string,ReturnType<typeof actual.prepare>>();const statement=(sql:string)=>{let value=statements.get(sql);if(!value){if(statements.size>=protocol.maximumStatements)throw Error(\"Finite catalog statement frontier exceeded\");value=actual.prepare(sql);statements.set(sql,value);}return value;};return{exec:sql=>actual.exec(sql),read:(sql,...values)=>{try{return statement(sql).get(...values)as Record<string,unknown>|undefined;}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},run:(sql,...values)=>{statement(sql).run(...values);return Number((statement(\"SELECT changes() AS count\").get()as{count:number}|undefined)?.count);},rows:(sql,...values)=>{try{return statement(sql).all(...values)as Record<string,unknown>[];}catch(error){if(corruption(error))throw new CorruptCatalog(\"Corrupt descriptor catalog\");throw error;}},close:async()=>{finishResourceLeaseCleanupV1(false,undefined,[...[...statements.values()].map(value=>()=>value.finalize()),()=>actual.close(true)]);}};\n}\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "SqliteDatabaseV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "edits": [
+    {
+     "old": ":bun:${process.versions.bun}",
+     "new": ":${runtimeKeyV1()}",
+     "count": 2
+    }
+   ],
+   "imports": [
+    "runtimeKeyV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
+   "edits": [
+    {
+     "old": ":bun:${process.versions.bun}",
+     "new": ":${runtimeKeyV1()}",
+     "count": 2
+    },
+    {
+     "old": "const server=Bun.serve({hostname:options.host,port:options.port,async fetch(request){",
+     "new": "const server=await runtimeServeV1({hostname:options.host,port:options.port,async fetch(request){",
+     "count": 1
+    },
+    {
+     "old": "const output=Bun.file(file);if(!await output.exists())return new Response(\"Not Found\",{status:404});return new Response(output);",
+     "new": "const output=runtimeFileV1(file);if(!await output.exists())return new Response(\"Not Found\",{status:404});return new Response(output.body());",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeKeyV1",
+    "runtimeFileV1",
+    "runtimeServeV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+   "edits": [
+    {
+     "old": "\":bun:\"+process.versions.bun",
+     "new": "\":\"+runtimeKeyV1()",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeKeyV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "edits": [
+    {
+     "old": "bun:process.versions.bun,mode:",
+     "new": "bun:runtimeIdentityV1().version,mode:",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+   "edits": [
+    {
+     "old": "manifest.patchedDependencies,process.versions.bun,process.platform",
+     "new": "manifest.patchedDependencies,runtimeIdentityV1().version,process.platform",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "old": "sourceRoot,process.versions.bun,process.platform",
+     "new": "sourceRoot,runtimeIdentityV1().version,process.platform",
+     "count": 1
+    },
+    {
+     "old": "protocol.ambientFallback,process.versions.bun,process.versions.node",
+     "new": "protocol.ambientFallback,runtimeIdentityV1().version,process.versions.node",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "old": "bun:String(process.versions.bun),revision:String((globalThis as {Bun?:{revision?:string}}).Bun?.revision??\"\")",
+     "new": "bun:String(runtimeIdentityV1().version),revision:String(runtimeIdentityV1().revision)",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts",
+   "edits": [
+    {
+     "old": "compiler={name:\"Bun\",version:Bun.version,revision:Bun.revision,target:\"bun\",format:\"esm\",minify:true}",
+     "new": "compiler={name:runtimeIdentityV1().id,version:runtimeIdentityV1().version,revision:runtimeIdentityV1().revision,target:\"runtime\",format:\"esm\",minify:true}",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts",
+   "edits": [
+    {
+     "old": "actualVersion: string = Bun.version",
+     "new": "actualVersion: string = runtimeIdentityV1().version",
+     "count": 1
+    },
+    {
+     "old": "  const runtime = globalThis as typeof globalThis & {\n    Bun: { build(options: { entrypoints: string[]; target: \"browser\"; format: \"esm\"; define: Record<string, string> }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> };\n  };\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "const result = await runtime.Bun.build({ entrypoints: [entryPath], target: \"browser\", format: \"esm\", define: { \"import.meta.vitest\": \"undefined\" } });",
+     "new": "const result = await runtimeBundleV1({ entrypoints: [entryPath], target: \"browser\", format: \"esm\", define: { \"import.meta.vitest\": \"undefined\" } });",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1",
+    "runtimeBundleV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
+   "edits": [
+    {
+     "old": "actualVersion: string = Bun.version",
+     "new": "actualVersion: string = runtimeIdentityV1().version",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+   "edits": [
+    {
+     "old": "if(Bun.version!==\"1.4.2\"||",
+     "new": "if(runtimeIdentityV1().version!==\"1.4.2\"||",
+     "count": 1
+    },
+    {
+     "old": "if (typeof Bun === \"undefined\" || Bun.version !== \"1.4.2\" || ",
+     "new": "if (runtimeIdentityV1().version !== \"1.4.2\" || ",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts",
+   "edits": [
+    {
+     "old": "Bun.file(entry.path)",
+     "new": "runtimeFileV1(entry.path).body()",
+     "count": 1
+    },
+    {
+     "old": "const server=Bun.serve({hostname:options.host,port:options.port,idleTimeout:60,maxRequestBodySize:options.maximumEntryBytes*2,fetch:request=>handler(request)});",
+     "new": "const server=await runtimeServeV1({hostname:options.host,port:options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,fetch:request=>handler(request)});",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeFileV1",
+    "runtimeServeV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts",
+   "edits": [
+    {
+     "old": "import { existsSync, readFileSync, readdirSync } from \"node:fs\";",
+     "new": "import { existsSync, readFileSync, readdirSync, writeFileSync } from \"node:fs\";",
+     "count": 1
+    },
+    {
+     "old": "await Bun.write(file, next);",
+     "new": "writeFileSync(file, next);",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🟦️.ts",
+   "edits": [
+    {
+     "old": " || specifier === \"bun\" ||",
+     "new": " ||",
+     "count": 2
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+   "edits": [
+    {
+     "old": " || target === \"bun\" ||",
+     "new": " ||",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts",
+   "edits": [
+    {
+     "old": "const DEPENDENCY_JS_BUILTIN_PREFIXES = [\"node:\", \"bun:\"];\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "DEPENDENCY_JS_BUILTIN_PREFIXES.some((prefix) => specifier.startsWith(prefix))",
+     "new": "isRuntimeBuiltinSpecifierV1(specifier)",
+     "count": 2
+    }
+   ],
+   "imports": [
+    "isRuntimeBuiltinSpecifierV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "edits": [
+    {
+     "old": "platform: unknown = Reflect.get(globalThis, \"Bun\")): readonly RegistryCompilerImport[] {",
+     "new": "platform: unknown = undefined): readonly RegistryCompilerImport[] {",
+     "count": 1
+    },
+    {
+     "old": "  if (platform === null || typeof platform !== \"object\" && typeof platform !== \"function\") throw new Error(\"Registry import discovery requires Bun's compiler runtime.\");",
+     "new": "  if (platform === undefined) return new TranspilerV1({ loader: language }).scanImports(source).map((row) => ({ path: row.path, kind: row.kind }));\n  if (platform === null || typeof platform !== \"object\" && typeof platform !== \"function\") throw new Error(\"Registry import discovery requires Bun's compiler runtime.\");",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "TranspilerV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+   "edits": [
+    {
+     "old": "await import(\"bun:ffi\")",
+     "new": "runtimeNativeSystemV1()",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeNativeSystemV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "old": "typeof Bun===\"undefined\"",
+     "new": "!runtimeSupportsV1(\"which\")",
+     "count": 3
+    }
+   ],
+   "imports": [
+    "runtimeSupportsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "edits": [
+    {
+     "old": "  const runtime = (globalThis as { readonly Bun?: unknown }).Bun;\n  const which = typeof runtime === \"object\" && runtime !== null ? (runtime as { readonly which?: unknown }).which : undefined;\n  if (!env.SEMIO_WASM_BINDGEN_BIN && typeof which !== \"function\") throw new Error(\"wasm-bindgen resolution requires Bun.which.\");\n  const command = env.SEMIO_WASM_BINDGEN_BIN\n    ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)\n    : (which as (name: string, options: { readonly PATH?: string }) => string | null)(\"wasm-bindgen\", { PATH: env.PATH });\n",
+     "new": "  if (!env.SEMIO_WASM_BINDGEN_BIN && !runtimeSupportsV1(\"which\")) throw new Error(\"wasm-bindgen resolution requires a runtime executable lookup.\");\n  const command = env.SEMIO_WASM_BINDGEN_BIN\n    ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)\n    : runtimeWhichV1(\"wasm-bindgen\", { PATH: env.PATH });\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeSupportsV1",
+    "runtimeWhichV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚚️cargo-provider/🟦️.ts",
+   "edits": [
+    {
+     "old": "    const runtime = (globalThis as { readonly Bun?: unknown }).Bun;\n    const toml = typeof runtime === \"object\" && runtime !== null ? (runtime as { readonly TOML?: unknown }).TOML : undefined;\n    if (typeof toml !== \"object\" || toml === null || typeof (toml as { readonly parse?: unknown }).parse !== \"function\") throw new Error(\"Cargo provider TOML projection requires Bun.TOML.parse.\");\n    return (toml as { readonly parse: (input: string) => unknown }).parse(source);\n",
+     "new": "    return runtimeParseTomlV1(source);\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeParseTomlV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/👁️observers/🟦️.ts",
+   "edits": [
+    {
+     "old": "const bun=(globalThis as {Bun?:{zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}}).Bun,node=(zlib as unknown as {zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}).zstdDecompressSync,decode=bun?.zstdDecompressSync??node;",
+     "new": "const decode=(zlib as unknown as {zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}).zstdDecompressSync;",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "edits": [
+    {
+     "old": "  if (!globalThis.Bun?.Glob) throw Error(\"Declared module globs require Bun.Glob\");\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "Glob: globalThis.Bun.Glob, join",
+     "new": "Glob: GlobV1, join",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "GlobV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
+   "edits": [
+    {
+     "old": "  const bun = (\n    globalThis as unknown as {\n      Bun: { build(options: { entrypoints: string[]; outdir: string; naming: string; target: \"bun\"; packages: \"external\" }): Promise<{ success: boolean; logs: unknown[] }> };\n    }\n  ).Bun;\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "await bun.build({ entrypoints: [identityPaths.suite!], outdir: bundleRoot, naming: \"🟦️.test.js\", target: \"bun\", packages: \"external\" })",
+     "new": "await runtimeBundleV1({ entrypoints: [identityPaths.suite!], outdir: bundleRoot, naming: \"🟦️.test.js\", target: \"runtime\", packages: \"external\" })",
+     "count": 1
+    },
+    {
+     "old": "await bun.build({ entrypoints: [identityPaths.normalization!], outdir: normalizationBundleRoot, naming: \"🟦️.js\", target: \"bun\", packages: \"external\" })",
+     "new": "await runtimeBundleV1({ entrypoints: [identityPaths.normalization!], outdir: normalizationBundleRoot, naming: \"🟦️.js\", target: \"runtime\", packages: \"external\" })",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeBundleV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗃️sqlite-constructor/🟦️.ts",
+   "edits": [
+    {
+     "old": "/** 🗃️ The Bun builtin, ASSEMBLED at runtime. A bundler asked to ANALYSE this module refuses the\n * specifier outright (\"Cannot bundle built-in module\"), which failed whole jsdom test files whose\n * graph reaches here; `@vite-ignore` beside a constant was not enough, because a `const` holding a\n * string literal is exactly what the analyser constant-folds back into a static specifier. Joining\n * the two halves leaves nothing to fold, and the module's real type is restored in a TYPE position,\n * which the bundler never sees. Resolution is left to the runtime that actually has it. */\nconst BUN_SQLITE_MODULE = [\"bun\", \"sqlite\"].join(\":\");\n\n/** 📥️ Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */\nlet backboneDatabaseCtor: typeof import(\"bun:sqlite\").Database | undefined;\nexport async function backboneDatabaseCtorLazy(): Promise<typeof import(\"bun:sqlite\").Database> {\n  if (backboneDatabaseCtor) return backboneDatabaseCtor;\n  const { Database } = (await import(/* @vite-ignore */ BUN_SQLITE_MODULE)) as typeof import(\"bun:sqlite\");\n  backboneDatabaseCtor = Database;\n  return Database;\n}\nexport type BackboneSqliteHandle = InstanceType<typeof import(\"bun:sqlite\").Database>;\n",
+     "new": "/** 📥️ Gives the owned SQLite connection class of the hosting runtime; the facade resolves the runtime's own SQLite lazily, so loading this module under Vite's config bundler never touches a runtime builtin. */\nexport async function backboneDatabaseCtorLazy(): Promise<typeof SqliteDatabaseV1> {\n  return SqliteDatabaseV1;\n}\nexport type BackboneSqliteHandle = InstanceType<typeof SqliteDatabaseV1>;\n",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "SqliteDatabaseV1"
+   ],
+   "before": true
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🔷️typescript-project/🟦️.ts",
+   "edits": [
+    {
+     "old": "types: [\"bun\", \"node\"],",
+     "new": "types: [runtimeTypeEnvironmentV1(), \"node\"],",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeTypeEnvironmentV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "edits": [
+    {
+     "old": "RUSTC_WRAPPER:\"bun\"",
+     "new": "RUSTC_WRAPPER:runtimeExecutableV1()",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts",
+   "edits": [
+    {
+     "old": "new Bun.CryptoHasher(\"sha256\").update(distance).digest(\"hex\")",
+     "new": "createHash(\"sha256\").update(distance).digest(\"hex\")",
+     "count": 1
+    },
+    {
+     "old": "import { typeScriptLibraryArgumentsV1 } from \"../../../🏗️build/🟦️typescript/📚️libraries/🟦️.ts\";\n",
+     "new": "import { createHash } from \"node:crypto\";\nimport { typeScriptLibraryArgumentsV1 } from \"../../../🏗️build/🟦️typescript/📚️libraries/🟦️.ts\";\n",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🟦️.ts",
+   "edits": [
+    {
+     "old": "if(![\"bun\",\"bun.exe\",process.execPath].includes(command[0]??\"\"))return undefined;",
+     "new": "if(!isRuntimeExecutableV1(command[0]??\"\"))return undefined;",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isRuntimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "edits": [
+    {
+     "old": "if (tokens[0] !== \"bun\") return undefined;",
+     "new": "if (!isRuntimeExecutableV1(tokens[0] ?? \"\")) return undefined;",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isRuntimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+   "edits": [
+    {
+     "old": "!specifier.includes(\":\")&&specifier!==\"bun\"",
+     "new": "!specifier.includes(\":\")&&!isRuntimeBuiltinSpecifierV1(specifier)",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isRuntimeBuiltinSpecifierV1"
+   ]
+  }
+ ]
+}

@@ -1,1 +1,335 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://semio.tech/repo/cargo-retirement-budget/v1","type":"object","additionalProperties":false,"required":["version","retainedBytes","targetAvailableBytes","maximumDeletionBytes"],"properties":{"version":{"const":1},"retainedBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"targetAvailableBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumDeletionBytes":{"type":"integer","minimum":1,"maximum":9007199254740991}},"definitions":{"Default":{"const":{"version":1,"retainedBytes":4294967296,"targetAvailableBytes":4294967296,"maximumDeletionBytes":4294967296}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/cargo-retirement-budget/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "retainedBytes",
+    "targetAvailableBytes",
+    "maximumDeletionBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "retainedBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "targetAvailableBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "maximumDeletionBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    }
+  },
+  "definitions": {
+    "Default": {
+      "const": {
+        "version": 1,
+        "retainedBytes": 4294967296,
+        "targetAvailableBytes": 4294967296,
+        "maximumDeletionBytes": 4294967296
+      }
+    },
+    "Operation": {
+      "enum": [
+        "preview",
+        "retire",
+        "preview-historical",
+        "retire-historical"
+      ]
+    },
+    "Arguments": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "$ref": "#/definitions/Operation"
+      }
+    },
+    "Summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "mode",
+        "root",
+        "buildDirectory",
+        "artifactDirectory",
+        "targetDirectory",
+        "units",
+        "logicalBytes",
+        "availableBytes",
+        "plannedUnits",
+        "plannedLogicalBytes",
+        "unmetBytes",
+        "planPath"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "preview",
+            "retire"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "buildDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "artifactDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "units": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "targetDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "plannedUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "plannedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unmetBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "planPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Runtime": {
+      "const": {
+        "maximumMilliseconds": 600000
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "logicalBytes",
+        "availableBytes",
+        "plannedUnits",
+        "plannedLogicalBytes",
+        "unmetBytes",
+        "planPath"
+      ],
+      "properties": {
+        "units": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "plannedUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "plannedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unmetBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "planPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "conditional": {
+          "$ref": "#/definitions/WindowsConditionalSummary"
+        }
+      }
+    },
+    "Observation": {
+      "const": {
+        "version": 1,
+        "role": "read-only-process-context",
+        "headroom": "native-filesystem",
+        "platforms": {
+          "darwin": {
+            "command": "ps",
+            "args": [
+              "-axo",
+              "pid,comm"
+            ]
+          },
+          "linux": {
+            "command": "ps",
+            "args": [
+              "-axo",
+              "pid,comm"
+            ]
+          },
+          "win32": {
+            "command": "tasklist.exe",
+            "args": [
+              "/FO",
+              "CSV",
+              "/NH"
+            ]
+          }
+        },
+        "refused": [
+          "unsupported-platform",
+          "non-exit",
+          "nonzero-exit",
+          "signal",
+          "stderr",
+          "unsafe-headroom",
+          "cancellation"
+        ],
+        "grants": []
+      }
+    },
+    "ObservationCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "accepted",
+          "command",
+          "args"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "command": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "WindowsConditionalSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "acceptedEntries",
+        "removedEntries",
+        "acceptedLogicalBytes",
+        "removedLogicalBytes",
+        "unsettledUnits",
+        "handlesSettled",
+        "headroomDeficitBytes"
+      ],
+      "properties": {
+        "kind": {
+          "const": "windows-kernel-conditional"
+        },
+        "acceptedEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "removedEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "acceptedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "removedLogicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unsettledUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "handlesSettled": {
+          "type": "boolean"
+        },
+        "headroomDeficitBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

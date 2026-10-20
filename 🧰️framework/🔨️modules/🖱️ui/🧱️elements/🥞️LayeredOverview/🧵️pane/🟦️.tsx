@@ -1,3 +1,4 @@
+/** 🧵️ The pane of LayeredOverview: mounting, error boundary, placeholder and the card host. */
 import { type LayeredLifecycle, type LayeredRevealSource, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";

@@ -1,0 +1,284 @@
+{
+ "cases": [
+  {
+   "expected": {
+    "name": "a",
+    "nativeRoot": "crates/a"
+   },
+   "extractor": "project-json",
+   "name": "project name and native root",
+   "text": "{\"name\":\"a\",\"metadata\":{\"nativeRoot\":\"crates/a\"}}"
+  },
+  {
+   "expected": {
+    "name": null,
+    "nativeRoot": null
+   },
+   "extractor": "project-json",
+   "name": "project without name",
+   "text": "{\"targets\":{}}"
+  },
+  {
+   "expected": {
+    "error": "parse"
+   },
+   "extractor": "project-json",
+   "name": "project not json",
+   "text": "{"
+  },
+  {
+   "expected": null,
+   "extractor": "package-json",
+   "name": "missing manifest",
+   "text": null
+  },
+  {
+   "expected": {
+    "name": "@x/y"
+   },
+   "extractor": "package-json",
+   "name": "package name",
+   "text": "{\"name\":\"@x/y\",\"dependencies\":{\"z\":\"1\"}}"
+  },
+  {
+   "expected": {
+    "name": null
+   },
+   "extractor": "package-json",
+   "name": "package without name",
+   "text": "{\"private\":true}"
+  },
+  {
+   "expected": {
+    "module": "example.com/x"
+   },
+   "extractor": "go-mod",
+   "name": "go module",
+   "text": "module example.com/x\n\ngo 1.22\n"
+  },
+  {
+   "expected": {
+    "module": "example.com/y"
+   },
+   "extractor": "go-mod",
+   "name": "go module after a comment",
+   "text": "// header\nmodule example.com/y\nrequire a v1\n"
+  },
+  {
+   "expected": {
+    "module": null
+   },
+   "extractor": "go-mod",
+   "name": "go without module",
+   "text": "go 1.22\n"
+  },
+  {
+   "expected": {
+    "name": "my-crate"
+   },
+   "extractor": "cargo-package",
+   "name": "crate",
+   "text": "[package]\nname = \"my-crate\"\nversion = \"0.1.0\"\n"
+  },
+  {
+   "expected": {
+    "name": "later"
+   },
+   "extractor": "cargo-package",
+   "name": "crate after dependencies",
+   "text": "[dependencies]\nserde = \"1\"\n\n[package]\nname = \"later\"\n"
+  },
+  {
+   "expected": {
+    "name": "meta"
+   },
+   "extractor": "cargo-package",
+   "name": "crate with metadata table",
+   "text": "[package]\nversion = \"1\"\nname = \"meta\"\n\n[package.metadata]\nname = \"not-this\"\n"
+  },
+  {
+   "expected": {
+    "name": "new"
+   },
+   "extractor": "cargo-package",
+   "name": "crate with commented name",
+   "text": "[package]\n# name = \"old\"\nname = \"new\"\n"
+  },
+  {
+   "expected": {
+    "name": "literal"
+   },
+   "extractor": "cargo-package",
+   "name": "crate with literal string",
+   "text": "[package]\nname = 'literal'\n"
+  },
+  {
+   "expected": {
+    "name": "crlf"
+   },
+   "extractor": "cargo-package",
+   "name": "crate with windows line endings",
+   "text": "[package]\r\nname = \"crlf\"\r\nversion = \"1\"\r\n"
+  },
+  {
+   "expected": {
+    "name": null
+   },
+   "extractor": "cargo-package",
+   "name": "workspace manifest without package",
+   "text": "[workspace]\nmembers = [\"a\"]\n"
+  }
+ ],
+ "digests": [
+  {
+   "digest": "586a63df8cd99f46397a32ca995fb76e2b8befb33da9c80be53ea8d093c5b568",
+   "name": "base",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "586a63df8cd99f46397a32ca995fb76e2b8befb33da9c80be53ea8d093c5b568",
+   "name": "dependency list edited",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"2\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "17f72d9e3ccaf264e83f5a12954af59ca85d0f5e4607529f4dd07ae0dcf1590a",
+   "name": "package renamed",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/renamed\"}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "6f9e39ba9c3977a946b0b4e3b0571d5e0014e798f10b39c411ef58b7493899d3",
+   "name": "workspace manifest edited",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\",\"crates/d\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "586a63df8cd99f46397a32ca995fb76e2b8befb33da9c80be53ea8d093c5b568",
+   "name": "crate manifest without workspace edited",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\nversion = \"2\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "c1b70af6216e29e57010301c9d89f7cd66fffa3644fcfd42baacd82a5bbc6ad0",
+   "name": "lock edited",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-2",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "7e81cec6b12e5e76cacb32b6f066ced54e75bc3b72bf3b0f6241b145d732d4de",
+   "name": "taxonomy edited",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{\"x\":1}"
+   }
+  },
+  {
+   "digest": "5fd24d066acba86bc58293fd6388d12898b7875b8fdf67fa80f47f3aafdb136f",
+   "name": "go module renamed",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b2\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "bun.lock": "lock-1",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  },
+  {
+   "digest": "ddd55077c9f1dd5dec7ff5621a3b1e9f3c7ef76a344883a1ab2636740df34d5a",
+   "name": "lock removed",
+   "tree": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/c\"]\n",
+    "a/package.json": "{\"name\":\"@x/a\",\"dependencies\":{\"b\":\"1\"}}",
+    "a/📋️project.json": "{\"name\":\"a\"}",
+    "b/go.mod": "module example.com/b\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"metadata\":{\"nativeRoot\":\"crates/b\"}}",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n",
+    "tax.json": "{}"
+   }
+  }
+ ],
+ "lock": "bun.lock",
+ "projects": [
+  {
+   "config": "a/📋️project.json",
+   "name": "a",
+   "root": "a"
+  },
+  {
+   "config": "b/📋️project.json",
+   "name": "b",
+   "nativeRoot": "crates/b",
+   "root": "b"
+  },
+  {
+   "config": "crates/c/Cargo.toml",
+   "name": "c",
+   "root": "crates/c"
+  }
+ ],
+ "taxonomy": "tax.json",
+ "version": 1,
+ "workspaceManifests": [
+  "Cargo.toml",
+  "crates/c/Cargo.toml"
+ ]
+}

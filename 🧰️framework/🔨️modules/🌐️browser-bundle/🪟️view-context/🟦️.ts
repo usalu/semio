@@ -1,5 +1,5 @@
 /** 🪟️ Ephemeral host view for one live document opening, independent of document config. */
-import { parseResolvedPluginViewState, type ResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
+import { parseResolvedPluginViewState, type ResolvedPluginViewState } from "../../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import type { DocumentScope } from "../../📄️document/🪪️scope/🟦️.ts";
 
 export type BrowserActorViewStateRequest = {

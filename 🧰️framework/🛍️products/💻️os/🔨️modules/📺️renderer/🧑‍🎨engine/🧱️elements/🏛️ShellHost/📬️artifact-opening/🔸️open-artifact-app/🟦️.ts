@@ -108,7 +108,7 @@ export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, cap
   }, [closeDocument, openArtifactWithAppRef, openDocument, publishPreparedArtifactOpening, retireDocumentAttachment]);
   openReadySpaceArtifactCreationRef.current = openReadySpaceArtifactCreation;
 
-  /** 👁️✏️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
+  /** 🗂️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
    * roles even when only one has registered surfaces (an empty `options` list still renders the row,
    * matching the Settings table's "dialect × {viewer, editor}" framing in contract freeze §5). */
   const defaultAppsRows = useMemo((): readonly DefaultAppRow[] => {

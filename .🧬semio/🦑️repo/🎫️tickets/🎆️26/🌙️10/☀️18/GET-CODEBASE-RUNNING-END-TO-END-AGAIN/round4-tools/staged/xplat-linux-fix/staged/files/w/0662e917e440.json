@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "envelope": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008
+  },
+  "files": [
+    [
+      "a",
+      1
+    ],
+    [
+      "b",
+      5000
+    ],
+    [
+      "c",
+      100000
+    ],
+    [
+      "d",
+      1048576
+    ]
+  ],
+  "hostPlatforms": [
+    {
+      "platform": "darwin"
+    },
+    {
+      "platform": "freebsd"
+    }
+  ]
+}

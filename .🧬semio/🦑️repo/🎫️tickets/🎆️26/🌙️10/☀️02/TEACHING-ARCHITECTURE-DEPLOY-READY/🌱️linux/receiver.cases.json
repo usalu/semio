@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unicode",
+      "accepted": true,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "oversized-pax",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "chained-pax",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "gnu",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "global",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "sparse",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "oversized-regular",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "truncated-extension",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "bad-checksum",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "missing-end",
+      "accepted": false,
+      "path": "🎓️/ü.txt",
+      "body": "bmV1dHJhbA=="
+    },
+    {
+      "id": "unsafe-path",
+      "accepted": false,
+      "path": "../escape.txt",
+      "body": "bmV1dHJhbA=="
+    }
+  ]
+}

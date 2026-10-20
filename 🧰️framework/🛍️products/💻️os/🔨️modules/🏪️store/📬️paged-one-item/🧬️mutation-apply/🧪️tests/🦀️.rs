@@ -348,7 +348,7 @@ impl semio_framework_os_store_snapshot_clone::config_apply::ConfigApplyMutation<
 
 #[test]
 fn config_apply_reaches_prepared_with_independent_scalar_owner(){
-    let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
+    let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let base=law["base"].as_i64().unwrap();let expected=base+law["diff"].as_i64().unwrap();
     let root=Arc::new(base);let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("scalar config source lease"));
     let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
@@ -372,7 +372,6 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
         if owner.terminal_is_empty(){break;}let copy=owner.next_close_copy_byte_demand().unwrap();let quote=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};assert!(owner.close_step(quote).unwrap().progress().fits(quote.retained_grant()));
     }
     assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1.released_bytes,0);drain_fixture(root);
-    eprintln!("[DEBUG] Independent scalar config source reached Prepared in {turns} turns; post={expected}, exact inverse={base}, immutable input preserved, original owners closed");
 }
 /// 🚦️ Diagnostic admission preserves every original row and refuses a valid nonempty hostile diff before writes.
 
@@ -389,7 +388,7 @@ fn replay_diagnostics_decide_before_inverse_and_application() {
     impl ReplayEdits<DocumentMutation> for Edits {
         fn replay_edit(&self, id: &str) -> Option<&protocol::Edit<DocumentMutation>> { self.0.iter().find(|edit| edit.id == id) }
     }
-    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let original = plain_document_json(&fixture()["base"]);
     for case in law["cases"].as_array().unwrap() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
@@ -423,7 +422,6 @@ fn replay_diagnostics_decide_before_inverse_and_application() {
             let post = result.state.as_ref().unwrap();
             if case["applied"].as_bool().unwrap() { assert_eq!(post.nodes[0].text, "diagnostic applied", "{route}"); } else { assert_eq!(post.as_ref(), &original, "{route}"); }
             result.retire_unscheduled().unwrap();
-            eprintln!("[DEBUG] {route} {}: original diagnostics preserved; refused delta applies/inverses zero times", case["level"]);
         }
     }
 }
@@ -453,7 +451,7 @@ impl ColdMutationDiff<i64> for ScalarDiff {
 /// 🧮️ The typed native decision produces the exact portable scalar projection and call counts independently verified by SQLite.
 #[test]
 fn mutation_apply_admission_scalar_fixture_matches_independent_oracle() {
-    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let base = law["base"].as_i64().unwrap();
     for case in law["cases"].as_array().unwrap() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
@@ -474,14 +472,13 @@ fn mutation_apply_admission_scalar_fixture_matches_independent_oracle() {
         assert_eq!(post, case["post"].as_i64().unwrap());
         assert_eq!(APPLY_CALLS.get(), case["applyCalls"].as_u64().unwrap() as usize);
         assert_eq!(INVERSE_CALLS.get(), case["inverseCalls"].as_u64().unwrap() as usize);
-        eprintln!("[DEBUG] {} scalar projection {post}, apply={}, inverse={} agrees with portable SQLite oracle", case["level"], APPLY_CALLS.get(), INVERSE_CALLS.get());
     }
 }
 
 /// 📤️ The complete structural preparation transfers admitted original diagnostics into its sealed candidate.
 #[test]
 fn paged_preparation_preserves_original_admitted_diagnostics_until_typed_retirement() {
-    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let original = plain_document_json(&fixture()["base"]);
     for case in law["cases"].as_array().unwrap() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
@@ -495,7 +492,6 @@ fn paged_preparation_preserves_original_admitted_diagnostics_until_typed_retirem
             let wire: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&messages[0])).unwrap();
             assert_eq!(wire, Value::Object(expected));
         } else { assert!(matches!(actual, Outcome::Refused(_)), "refused original outcome cannot seal"); }
-        eprintln!("[DEBUG] complete paged {} original diagnostic retained through seal and typed candidate cancellation", case["level"]);
     }
 }
 
@@ -520,7 +516,7 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         fn close_step(&mut self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         fn terminal_is_empty(&self)->bool{true}
     }
-    let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️inverse-issuer/🔣️.json")).unwrap();
+    let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️inverse-issuer/🔣️.json")).unwrap();
     let original=plain_document_json(&fixture()["base"]);
     let factory:Arc<dyn ArtifactStoreOneItemPreparationFactory<Document,DocumentMutation>>=Arc::new(PagedOneItemPreparationFactory::<Document,DocumentMutation,InvalidReceiptEdit>::default());
     for row in law["cases"].as_array().unwrap() {
@@ -528,7 +524,6 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         let outcome=prepare_with(&factory,&|| (document_from_plain(original.clone()),DocumentMutation::SetText{index:0,text:"new".into()}),grant(1<<16,WIDE),None);
         assert!(matches!(outcome,Outcome::Refused(_)));
         assert_eq!(ORIGINAL_ISSUER_RETIRES.get(),row["expectedIssuerCalls"].as_u64().unwrap()as usize,"returned inverse must use the actual original issuer on receipt refusal");
-        eprintln!("[DEBUG] Paged receipt refusal {} retains original operation plus inverseRows={} under original issuer calls={} through typed terminal closure",row["name"],row["inverseRows"],ORIGINAL_ISSUER_RETIRES.get());
     }
 }
 
@@ -581,7 +576,7 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
     use paged::PagedOneItemEdit;
     use paged::PagedOneItemEditStep;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let original = plain_document_json(&fixture()["base"]);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
     for case in law["cases"].as_array().unwrap() {
@@ -616,14 +611,13 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
         while !matches!(owner.close_step(&issuer,grant).unwrap(), RetainedCloneStep::Complete(_)) {}
         assert!(owner.terminal_is_empty());
         drain_fixture(post);before_source.close();mutation_source.close();
-        eprintln!("[DEBUG] mutation-apply original {} diagnostic applied={applied}; target/index retained; publication refusal precedes writes", case["level"]);
     }
 }
 #[test]
 fn mutation_apply_inverse_cancellation_uses_original_factory() {
     use paged::{PagedOneItemEdit, PagedOneItemEditStep};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️inverse-cancellation/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/♻️inverse-cancellation/🔣️.json")).unwrap();
     for case in law["cases"].as_array().unwrap() {
         let original = plain_document_json(&law["base"]);
         let mutation = mutation(&law["mutation"]);
@@ -655,7 +649,6 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         assert_eq!(APPLY_CALLS.get(), 0);
         assert_eq!(ORIGINAL_ISSUER_RETIRES.get(), case["issuerCalls"].as_u64().unwrap() as usize);
         drain_fixture(post);before_source.close();mutation_source.close();
-        eprintln!("[DEBUG] inverse cancellation frontier={} rows={} exact issuer={} immutable before preserved", case["boundary"], case["inverseRows"], ORIGINAL_ISSUER_RETIRES.get());
     }
 }
 #[test]
@@ -687,7 +680,6 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
     assert_eq!(plain_document(&post), original);
     assert_eq!((DIFF_CALLS.get(), INVERSE_CALLS.get(), APPLY_CALLS.get()), (1, 0, 0));
     drain_fixture(post);before_source.close();mutation_source.close();
-    eprintln!("[DEBUG] decided delta cancellation closed original diff and warning under independently quoted grants");
 }
 #[test]
 fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
@@ -699,7 +691,7 @@ fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
  let inverse=owner.inverse.as_ref().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};owner.close_step(original_issuer,q).unwrap();
  let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse.as_ref().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&post),original);
  for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=owner.close_step(original_issuer,g).unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}
- assert!(owner.terminal_is_empty());drain_fixture(post);before.close();input.close();eprintln!("[DEBUG] generic retained editor sameData=true/sameVtable=false refuses with pending inverse headers/string identity preserved; foreign calls0");
+ assert!(owner.terminal_is_empty());drain_fixture(post);before.close();input.close();
 }
 
 }
@@ -722,6 +714,5 @@ fn mutation_apply_admits_large_immutable_documents_with_bounded_changed_paths() 
     assert_eq!(inverse, vec![DocumentMutation::SetText { index: 700, text }]);
     let (bounded,bounded_inverse,_)=completed(prepare(&build,grant(1<<16,1<<20),None));
     assert_eq!(bounded.nodes[700].text,"edited");assert_eq!(bounded.nodes.len(),1400);assert_eq!(bounded_inverse,inverse);
-    eprintln!("[DEBUG] mutation-apply admitted a {bytes}-byte document; footprint={}", footprint.retained_bytes);
 }
 }

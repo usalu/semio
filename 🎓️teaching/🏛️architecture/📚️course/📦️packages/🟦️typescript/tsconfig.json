@@ -2,7 +2,6 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "node_modules/.cache/architecture-course-typecheck.tsbuildinfo",
     "types": ["bun", "react", "react-dom", "vite/client"],
     "paths": {
       "@semio-tech/course-react/app": ["../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/📚️app/🟦️.tsx"],

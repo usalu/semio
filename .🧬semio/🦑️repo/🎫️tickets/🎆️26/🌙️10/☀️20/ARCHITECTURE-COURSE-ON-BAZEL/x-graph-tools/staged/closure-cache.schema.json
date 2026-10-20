@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "closure-cache.fixture",
+  "title": "Build Owner Admission Closure And Cache Fixture V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "closure", "keys", "chains", "receipts", "publishable", "scenarios", "expected"],
+  "properties": {
+    "version": {"const": 1},
+    "closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worlds", "cases"],
+      "properties": {
+        "worlds": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/world"}},
+        "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/case"}}
+      }
+    },
+    "keys": {"type": "array", "items": {"$ref": "#/$defs/keyVector"}},
+    "chains": {"type": "array", "items": {"$ref": "#/$defs/chainVector"}},
+    "receipts": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "value", "valid"], "properties": {"id": {"type": "string"}, "value": {}, "valid": {"type": "boolean"}}}},
+    "publishable": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "startedAt", "observations", "expected"], "properties": {"id": {"type": "string"}, "startedAt": {"type": "integer"}, "observations": {"type": "array", "items": {"type": "object"}}, "expected": {"type": "boolean"}}}},
+    "scenarios": {"type": "array", "items": {"$ref": "#/$defs/scenario"}},
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closure", "keys", "chains", "publishable", "receipts", "scenarios"],
+      "properties": {
+        "closure": {"type": "object", "additionalProperties": {"$ref": "#/$defs/answer"}},
+        "keys": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["leaf", "keySha256"], "properties": {"leaf": {"type": "string", "pattern": "^np/[a-f0-9]{24}\\.json$"}, "keySha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}},
+        "chains": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "publishable": {"type": "object", "additionalProperties": {"type": "boolean"}},
+        "receipts": {"type": "object", "additionalProperties": {"type": "boolean"}},
+        "scenarios": {"type": "object", "additionalProperties": {"type": "array", "items": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["owners", "added"], "properties": {"owners": {"$ref": "#/$defs/names"}, "added": {"$ref": "#/$defs/names"}}}]}}}
+      }
+    }
+  },
+  "$defs": {
+    "names": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "task": {"type": "object", "additionalProperties": false, "required": ["dependsOn", "files", "dependencies", "dependencyInputs", "generatedDependencies"], "properties": {
+      "dependsOn": {"type": "array", "items": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["target"], "properties": {"target": {"type": "string"}, "projects": {"oneOf": [{"type": "string"}, {"$ref": "#/$defs/names"}]}, "dependencies": {"type": "boolean"}}}]}},
+      "files": {"$ref": "#/$defs/names"},
+      "dependencies": {"$ref": "#/$defs/names"},
+      "dependencyInputs": {"type": "object", "additionalProperties": {"$ref": "#/$defs/names"}},
+      "generatedDependencies": {"$ref": "#/$defs/names"}
+    }},
+    "owner": {"type": "object", "additionalProperties": false, "required": ["name", "root", "manifest", "base", "targets", "inputFiles"], "properties": {
+      "name": {"type": "string", "minLength": 1},
+      "root": {"type": "string", "minLength": 1},
+      "manifest": {"type": "string", "minLength": 1},
+      "nativeRoots": {"$ref": "#/$defs/names"},
+      "base": {"type": "object", "additionalProperties": false, "required": ["files", "dependencies"], "properties": {"files": {"$ref": "#/$defs/names"}, "dependencies": {"$ref": "#/$defs/names"}}},
+      "targets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/task"}},
+      "inputFiles": {"type": "object", "additionalProperties": {"$ref": "#/$defs/names"}}
+    }},
+    "world": {"type": "object", "additionalProperties": false, "required": ["id", "owners", "catalogProviders", "broken"], "properties": {
+      "id": {"type": "string", "minLength": 1},
+      "owners": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/owner"}},
+      "catalogProviders": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["ownerRoot", "sourcePath", "consumerRoots"], "properties": {"ownerRoot": {"type": "string"}, "sourcePath": {"type": "string"}, "consumerRoots": {"$ref": "#/$defs/names"}}}},
+      "broken": {"$ref": "#/$defs/names"}
+    }},
+    "selection": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind"], "properties": {"kind": {"const": "all"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "tasks"], "properties": {"kind": {"const": "tasks"}, "tasks": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["project", "target"], "properties": {"project": {"type": "string"}, "target": {"type": "string"}}}}}}
+    ]},
+    "case": {"type": "object", "additionalProperties": false, "required": ["id", "world", "selection"], "properties": {"id": {"type": "string", "minLength": 1}, "world": {"type": "string"}, "selection": {"$ref": "#/$defs/selection"}}},
+    "answer": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["throws", "blocked"], "properties": {"throws": {"const": true}, "blocked": {"type": "string"}}},
+      {"type": "object", "additionalProperties": false, "required": ["throws", "owners", "files", "targets", "inputs", "catalogProviders"], "properties": {
+        "throws": {"const": false},
+        "owners": {"$ref": "#/$defs/names"},
+        "files": {"$ref": "#/$defs/names"},
+        "targets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/names"}},
+        "inputs": {"type": "object", "additionalProperties": {"$ref": "#/$defs/names"}},
+        "catalogProviders": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["ownerRoot", "sourcePath"], "properties": {"ownerRoot": {"type": "string"}, "sourcePath": {"type": "string"}}}},
+        "generatedDependencies": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"$ref": "#/$defs/names"}}}
+      }}
+    ]},
+    "keyVector": {"type": "object", "additionalProperties": false, "required": ["id", "implementation", "scope", "registry", "owner", "targets", "inputs"], "properties": {
+      "id": {"type": "string"},
+      "implementation": {"type": "string"},
+      "scope": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+      "registry": {"type": "string"},
+      "owner": {"type": "object", "additionalProperties": false, "required": ["name", "root", "manifest"], "properties": {"name": {"type": "string"}, "root": {"type": "string"}, "manifest": {"type": "string"}}},
+      "targets": {"$ref": "#/$defs/names"},
+      "inputs": {"$ref": "#/$defs/names"}
+    }},
+    "chainVector": {"type": "object", "additionalProperties": false, "required": ["id", "name", "requestedBy"], "properties": {
+      "id": {"type": "string"},
+      "name": {"type": "string"},
+      "requestedBy": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"type": "string"}, {"oneOf": [{"type": "null"}, {"const": "catalog"}, {"type": "object", "additionalProperties": false, "required": ["owner"], "properties": {"owner": {"type": "string"}, "target": {"type": "string"}}}]}]}}
+    }},
+    "scenario": {"type": "object", "additionalProperties": false, "required": ["id", "world", "steps"], "properties": {
+      "id": {"type": "string"},
+      "world": {"$ref": "#/$defs/world"},
+      "steps": {"type": "array", "items": {"oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["op", "selection", "expect"], "properties": {"op": {"const": "run"}, "selection": {"$ref": "#/$defs/selection"}, "expect": {"enum": ["cold", "warm", "changed", "all", "cancel", "resume"]}, "changed": {"$ref": "#/$defs/names"}, "cancelAfter": {"type": "integer", "minimum": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["op", "owner", "declaration"], "properties": {"op": {"const": "replace"}, "owner": {"type": "string"}, "declaration": {"$ref": "#/$defs/owner"}}},
+        {"type": "object", "additionalProperties": false, "required": ["op", "digest"], "properties": {"op": {"const": "registry"}, "digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+        {"type": "object", "additionalProperties": false, "required": ["op", "revision"], "properties": {"op": {"const": "implementation"}, "revision": {"type": "string"}}}
+      ]}}
+    }}
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "files": {
+    "package.json": "{\"name\": \"fixture-root\", \"private\": true}\n",
+    "tsconfig.base.json": "{\"compilerOptions\": {\"target\": \"ES2022\", \"module\": \"ESNext\", \"moduleResolution\": \"Bundler\", \"strict\": true, \"noEmit\": true, \"allowImportingTsExtensions\": true, \"resolveJsonModule\": true, \"types\": []}}\n",
+    "app/tsconfig.json": "{\"extends\": \"../tsconfig.base.json\", \"include\": [\"./\\ud83d\\udcdc\\ufe0fscript.ts\", \"./src/**/*.ts\", \"./types/**/*.d.ts\"]}\n",
+    "app/📜️script.ts": "import { a } from './src/a.ts';\nexport const result = a;\n",
+    "app/src/main.ts": "import { a } from './a.ts';\nimport type { Shape } from '../types/shape.d.ts';\nimport 'ts-dep';\nexport const x: Shape = { n: a };\n",
+    "app/src/a.ts": "export const a = 1;\n",
+    "app/src/unreached.ts": "export const unreached = 2;\n",
+    "app/types/shape.d.ts": "export interface Shape { n: number }\n",
+    "app/test/one.test.ts": "import { dirname, join } from 'node:path';\nimport { fileURLToPath } from 'node:url';\nimport { helper } from './helper.ts';\nimport data from './data.json';\nconst origin = (url: string): string => url;\nexport const schemaUrl = new URL('../src/schema.json', origin(import.meta.url));\nexport const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'schema2.json');\nexport const checked = helper + data.value;\n",
+    "app/test/helper.ts": "export const helper = 1;\n",
+    "app/test/data.json": "{\"value\":1}\n",
+    "app/test/skipped.test.ts": "export const skipped = 1;\n",
+    "app/test/notes.md": "not a module\n",
+    "node_modules/ts-dep/package.json": "{\"name\": \"ts-dep\", \"version\": \"1.0.0\", \"types\": \"index.d.ts\", \"main\": \"index.js\"}\n",
+    "node_modules/ts-dep/index.d.ts": "export declare const dep: number;\n",
+    "node_modules/ts-dep/index.js": "exports.dep = 1;\n",
+    "app/src/schema.json": "{\"schema\":1}\n",
+    "app/src/schema2.json": "{\"schema\":2}\n"
+  },
+  "projectRoot": "app",
+  "command": "bun ./📜️script.ts check",
+  "modules": {
+    "metadata": {
+      "semio": {
+        "closure": {
+          "modules": [
+            "{projectRoot}/test/**/*.ts",
+            "!{projectRoot}/test/skipped.test.ts"
+          ]
+        }
+      }
+    },
+    "closure": [
+      "app/src/a.ts",
+      "app/src/schema.json",
+      "app/src/schema2.json",
+      "app/test/data.json",
+      "app/test/helper.ts",
+      "app/test/one.test.ts",
+      "app/📜️script.ts"
+    ],
+    "oracleEntries": [
+      "app/test/one.test.ts"
+    ]
+  },
+  "typescript": {
+    "metadata": {
+      "semio": {
+        "closure": {
+          "typescript": [
+            "{projectRoot}/tsconfig.json"
+          ]
+        }
+      }
+    },
+    "closure": [
+      "app/src/a.ts",
+      "app/src/main.ts",
+      "app/src/unreached.ts",
+      "app/tsconfig.json",
+      "app/types/shape.d.ts",
+      "app/📜️script.ts",
+      "tsconfig.base.json"
+    ],
+    "packages": [
+      "ts-dep",
+      "typescript"
+    ]
+  },
+  "mutations": [
+    {
+      "name": "unreached include member edited",
+      "file": "app/src/unreached.ts",
+      "content": "export const unreached = 3;\n",
+      "target": "typescript",
+      "closure": "same",
+      "digest": "changes"
+    },
+    {
+      "name": "new module under a declared glob",
+      "file": "app/test/second.test.ts",
+      "content": "export const second = 1;\n",
+      "target": "modules",
+      "closure": [
+        "app/src/a.ts",
+        "app/src/schema.json",
+        "app/src/schema2.json",
+        "app/test/data.json",
+        "app/test/helper.ts",
+        "app/test/one.test.ts",
+        "app/test/second.test.ts",
+        "app/📜️script.ts"
+      ],
+      "digest": "changes"
+    },
+    {
+      "name": "excluded test edited",
+      "file": "app/test/skipped.test.ts",
+      "content": "export const skipped = 2;\n",
+      "target": "modules",
+      "closure": "same",
+      "digest": "same"
+    },
+    {
+      "name": "non-module file under the glob directory edited",
+      "file": "app/test/notes.md",
+      "content": "changed\n",
+      "target": "modules",
+      "closure": "same",
+      "digest": "same"
+    }
+  ]
+}

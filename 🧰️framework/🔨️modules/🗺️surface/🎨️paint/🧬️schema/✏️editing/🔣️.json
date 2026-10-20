@@ -479,13 +479,28 @@
         "spans": {
           "type": "array",
           "items": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "coverage": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 255
+              }
             },
-            "minItems": 3,
-            "maxItems": 3
+            "required": [
+              "start",
+              "length",
+              "coverage"
+            ]
           }
         },
         "bounds": {

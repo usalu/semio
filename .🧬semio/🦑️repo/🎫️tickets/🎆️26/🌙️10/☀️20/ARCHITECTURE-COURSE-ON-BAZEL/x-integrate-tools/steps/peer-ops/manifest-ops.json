@@ -1,0 +1,250 @@
+[
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "build",
+  "id": "@teaching/architecture-course:build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "managed-output",
+   "reason": "outputs-in-managed-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "check",
+  "id": "@teaching/architecture-course:check",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "default",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   },
+   "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
+   "{workspaceRoot}/Cargo.toml",
+   "{workspaceRoot}/Cargo.lock",
+   "{workspaceRoot}/.cargo/config.toml",
+   "{workspaceRoot}/rust-toolchain.toml",
+   {
+    "env": "PROCTOR_COURSE"
+   }
+  ]
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "ci-browser-prepare",
+  "id": "@teaching/architecture-course:ci-browser-prepare",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "deploy-check",
+  "id": "@teaching/architecture-course:deploy-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-build",
+  "id": "@teaching/architecture-course:docker-image-build",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-check",
+  "id": "@teaching/architecture-course:docker-image-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-image-publish",
+  "id": "@teaching/architecture-course:docker-image-publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-bundle",
+  "id": "@teaching/architecture-course:docker-stack-bundle",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "docker-stack-check",
+  "id": "@teaching/architecture-course:docker-stack-check",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "preflight",
+  "id": "@teaching/architecture-course:preflight",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "diagnostic",
+   "reason": "measures-environment"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "publish",
+  "id": "@teaching/architecture-course:publish",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "publishes-remote"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+  "target": "test-e2e",
+  "id": "@teaching/architecture-course:test-e2e",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "backup",
+  "id": "@teaching/proctor:backup",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "capacity",
+  "id": "@teaching/proctor:capacity",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "check",
+  "id": "@teaching/proctor:check",
+  "cache": true,
+  "outputs": [],
+  "inputs": [
+   "cargoTests",
+   {
+    "env": "SEMIO_TEST_LEVEL"
+   },
+   {
+    "env": "SEMIO_TEST_BUDGET_MS"
+   },
+   {
+    "env": "SEMIO_BUILD_BUDGET_MS"
+   },
+   "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+   {
+    "env": "PROCTOR_COURSE"
+   }
+  ]
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "erase",
+  "id": "@teaching/proctor:erase",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "health",
+  "id": "@teaching/proctor:health",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "live",
+   "reason": "drives-running-process"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "prune",
+  "id": "@teaching/proctor:prune",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "rebuild",
+  "id": "@teaching/proctor:rebuild",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ },
+ {
+  "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+  "target": "restore",
+  "id": "@teaching/proctor:restore",
+  "cache": false,
+  "decision": {
+   "version": 1,
+   "class": "side-effecting",
+   "reason": "mutates-host-store"
+  }
+ }
+]

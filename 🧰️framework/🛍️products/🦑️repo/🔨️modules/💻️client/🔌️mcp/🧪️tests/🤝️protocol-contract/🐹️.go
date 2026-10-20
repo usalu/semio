@@ -76,7 +76,7 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 	if err := decodeExact(data, &fixture); err != nil {
 		t.Fatal(err)
 	}
-	if fixture.Schema != "semio.repo.mcp.entrypoint/1" || fixture.ProfileEnvironment != MCPProfileEnvironment || len(fixture.Arguments) != 0 {
+	if fixture.Schema != "semio.repo.mcp.entrypoint/1" || fixture.ProfileEnvironment != MCPProfileEnvironment || len(fixture.Arguments) != 1 || fixture.Arguments[0] != "mcp" {
 		t.Fatalf("unexpected entrypoint fixture identity: %#v", fixture)
 	}
 	wantFlow := []string{"initialize", "notifications/initialized", "resources/list", "resources/read:repo://goals", "tools/list", "tools/call"}

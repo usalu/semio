@@ -1,3 +1,4 @@
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -13,10 +14,10 @@ export default defineConfig(async () => {
   const aliases = await workspaceTestAliasesV1(repoRoot, { owner: "🎓️teaching" });
   return {
   root: siteRoot,
-  cacheDir: process.env.SEMIO_TICKET_DIR ? resolve(process.env.SEMIO_TICKET_DIR, "🗑️generated", "vitest-course-cache") : undefined,
+  cacheDir: resolve(tmpdir(), "semio-vitest-architecture-course"),
   resolve: {
     alias: [...aliases],
   },
-  test: { root: siteRoot, provide: { architectureWorkspaceExports: aliases.map(({ find, replacement }) => ({ pattern: find.source, flags: find.flags, replacement })) }, name: "@teaching/architecture-course", environment: "node", include: ["🧪️tests/🧪️course/🟦️.ts", "🧪️tests/🧪️deploy/🟦️.ts", "🧪️tests/🧱️local-stack/🟦️.ts", "🧪️tests/🏗️proctor-build/🟦️.ts", "🧪️tests/🐳️image/🟦️.ts", "🧪️tests/🪢️presence/🟦️.ts", "🧪️tests/📰️host-document/🟦️.ts", "🧪️tests/🐾️pet-cast/🟦️.ts", "🧪️tests/🎛️dashboard/🟦️.ts", "🧪️tests/🎛️dashboard/🎚️parameters/🟦️.ts", "🧪️tests/🎭️sessions/🟦️.ts", "🧪️tests/📦️resolution/🟦️.ts", "🧪️tests/🏷️release-tags/🟦️.ts"], passWithNoTests: false },
+  test: { root: siteRoot, provide: { architectureWorkspaceExports: aliases.map(({ find, replacement }) => ({ pattern: find.source, flags: find.flags, replacement })) }, name: "@teaching/architecture-course", environment: "node", include: ["🧪️tests/🧪️course/🟦️.ts", "🧪️tests/🧪️deploy/🟦️.ts", "🧪️tests/🧱️local-stack/🟦️.ts", "🧪️tests/🏗️proctor-build/🟦️.ts", "🧪️tests/🧾️proctor-product/🟦️.ts", "🧪️tests/🐳️image/🟦️.ts", "🧪️tests/🪢️presence/🟦️.ts", "🧪️tests/📰️host-document/🟦️.ts", "🧪️tests/🐾️pet-cast/🟦️.ts", "🧪️tests/🎛️dashboard/🟦️.ts", "🧪️tests/🎛️dashboard/🎚️parameters/🟦️.ts", "🧪️tests/🎭️sessions/🟦️.ts", "🧪️tests/📦️resolution/🟦️.ts", "🧪️tests/🏷️release-tags/🟦️.ts", "🧪️tests/🎚️mode/🟦️.ts"], passWithNoTests: false },
   };
 });

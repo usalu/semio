@@ -631,7 +631,7 @@ nul
 # fixtures tree explicitly, the same way the taxonomy dirs above are rescued.
 !**/🧫️fixtures/
 !**/🧫️fixtures/**
-**/🧫️fixtures/**/🌐️browser-bundles/**
+**/🌐️browser-bundles/**
 **/🧫️fixtures/**/🤖️generated/**
 
 # Nx-staged package deliverables remain generated inside fixture packages.

@@ -224,6 +224,19 @@ function readListingProjection(root, path) {
   entries.sort(byName);
   return projectListing(root, path, entries);
 }
+/** 📤️ Exports the settled directory listings this process retained under one workspace, so a later process can reuse them under their stamps. */
+function exportOwnershipIndexV1(root) {
+  const rows = [];
+  for (const [path, record] of listingCache) if (record.root === root) rows.push({ path, stamp: record.stamp, count: record.count ?? record.entries.length, entries: (record.projected ??= projectListing(root, path, record.entries)).map(({ name, kind }) => ({ name, kind })) });
+  return rows;
+}
+/** 📥️ Seeds settled directory listings persisted by an earlier process; each is trusted only while the live directory carries exactly its stamp. */
+function seedOwnershipIndexV1(root, records) {
+  for (const record of records) {
+    if (listingCache.size >= limits.maximumListingCacheDirectories) break;
+    if (!listingCache.has(record.path)) listingCache.set(record.path, { stamp: record.stamp, root, entries: record.entries, count: record.count, projected: record.entries });
+  }
+}
 function nativeOperations(observations, root, budget = physicalBudget()) {
   const retain = (operation, path, value) => retainOwnershipObservationV1(observations, operation, path, value);
   let recent;
@@ -251,11 +264,11 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
         entries.sort(byName);
         const after = observe(path);
         if (after.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path);
-        record = { stamp, root, entries, projected: undefined };
+        record = { stamp, root, entries, count: entries.length, projected: undefined };
         if (directoryStamp(after.entry) === stamp && settledDirectory(after.entry, listedAt)) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
         else listingCache.delete(path);
-      } else if (record.entries.length > limits.maximumDirectoryEntries || budget.entries - prior + record.entries.length > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
-      budget.entries = budget.entries - prior + record.entries.length; budget.lists.set(path, record.entries.length);
+      } else if ((record.count ?? record.entries.length) > limits.maximumDirectoryEntries || budget.entries - prior + (record.count ?? record.entries.length) > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
+      budget.entries = budget.entries - prior + (record.count ?? record.entries.length); budget.lists.set(path, record.count ?? record.entries.length);
       if (observations) {
         retain("list", path, record.projected ??= projectListing(root, path, record.entries));
         const after = fs.lstatSync(path, { bigint: true });
@@ -490,6 +503,6 @@ function createBunWorkspaceOwnershipV1(value) {
   if (typeof ownershipPath !== "string" || !isAbsolute(ownershipPath) || resolve(ownershipPath) !== ownershipPath || ownershipPath.length > limits.maximumPathUnits || typeof ownershipSource !== "string" || Buffer.byteLength(ownershipSource) > limits.maximumPolicyBytes) throw Error("Finite physical Bun policy Source required");
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun captured ownership policy changed before binding");
   const ownership = Object.freeze({ ownershipPath, ownershipSource });
-  return Object.freeze({...{ readListingProjection, withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages }, withCurrentBunWorkspaceOwnershipV1:withCurrentBunWorkspaceOwnershipV1.bind(undefined,ownership),withPublishedBunWorkspaceOwnershipV1:withPublishedBunWorkspaceOwnershipV1.bind(undefined,ownership),discoverCurrentBunWorkspaceScopesV1:discoverCurrentBunWorkspaceScopesV1.bind(undefined,ownership),inspectBunWorkspaceOwnership:inspectBunWorkspaceOwnership.bind(undefined,ownership),publishBunWorkspaceOwnership:publishBunWorkspaceOwnership.bind(undefined,ownership)});
+  return Object.freeze({...{ exportOwnershipIndexV1, seedOwnershipIndexV1, readListingProjection, withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages }, withCurrentBunWorkspaceOwnershipV1:withCurrentBunWorkspaceOwnershipV1.bind(undefined,ownership),withPublishedBunWorkspaceOwnershipV1:withPublishedBunWorkspaceOwnershipV1.bind(undefined,ownership),discoverCurrentBunWorkspaceScopesV1:discoverCurrentBunWorkspaceScopesV1.bind(undefined,ownership),inspectBunWorkspaceOwnership:inspectBunWorkspaceOwnership.bind(undefined,ownership),publishBunWorkspaceOwnership:publishBunWorkspaceOwnership.bind(undefined,ownership)});
 }
 module.exports = {createBunWorkspaceOwnershipV1,readBunRepositoryMembership};

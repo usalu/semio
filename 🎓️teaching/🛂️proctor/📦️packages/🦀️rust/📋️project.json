@@ -19,15 +19,68 @@
       "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/dist/**",
       "sharedGlobals"
     ],
-    "cargoSources": [
-      "cargo",
-      "^cargo",
-      "sharedGlobals",
-      "{workspaceRoot}/Cargo.lock",
+    "proctorRust": [
       "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*.rs",
       "{workspaceRoot}/🎓️teaching/🛂️proctor/**/Cargo.toml",
-      "{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔀️dispatch/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔀️dispatch/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️control/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️control/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts",
+      "!{workspaceRoot}/**/target/**",
+      "!{workspaceRoot}/**/dist/**",
+      "!{workspaceRoot}/**/node_modules/**"
+    ],
+    "cargoSources": [
+      "cargoToolchain",
+      "proctorRust",
+      "sharedGlobals",
       "{projectRoot}/📜️script.ts",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/**/*.ts",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/**/*.json",
       "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/target/**"
     ],
     "cargoTests": [
@@ -49,7 +102,10 @@
       "inputs": [
         "cargoSources"
       ],
-      "outputs": ["{projectRoot}/.🧾️store/build.json"]
+      "outputs": [
+        "{projectRoot}/dist/build/prototype",
+        "{projectRoot}/dist/build/release"
+      ]
     },
     "test": {
       "executor": "repo:script",
@@ -71,11 +127,27 @@
             "ready": {
               "port": 8791,
               "portEnv": "PROCTOR_PORT"
-            }
+            },
+            "parameters": [
+              {
+                "id": "stack",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "beside",
+                    "env": {
+                      "PROCTOR_PORT": "8793",
+                      "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside"
+                    }
+                  }
+                ]
+              }
+            ]
           }
         }
       },
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
@@ -85,37 +157,67 @@
     },
     "check": {
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "sharedGlobals",
+        { "dependentTasksOutputFiles": "**/receipt.json", "transitive": false },
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" },
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+        { "env": "PROCTOR_COURSE" }
+      ]
     },
     "rebuild": {
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts rebuild"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "health": {
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts health"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "backup": {
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts backup",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "restore": {
       "metadata": {
@@ -129,10 +231,12 @@
                 "valuePositional": true
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       },
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts restore",
@@ -168,10 +272,12 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       },
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts erase",
@@ -199,10 +305,12 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       },
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts prune",
@@ -212,12 +320,18 @@
     },
     "capacity": {
       "executor": "repo:script",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts capacity",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     }
   }
 }

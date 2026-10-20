@@ -1,0 +1,109 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "toolchain": {
+    "pin": "rust-toolchain.toml",
+    "config": ".cargo/config.toml",
+    "configExcluded": [
+      "build.target-dir",
+      "build.build-dir"
+    ]
+  },
+  "workspaceKeys": {
+    "literals": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "rust-toolchain.toml",
+      ".cargo/config.toml"
+    ],
+    "tails": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "*.rs",
+      "🧬️schema/**/*"
+    ],
+    "exempt": [
+      {
+        "command": " native cargo metadata ",
+        "reason": "`cargo metadata --locked` validates the shared lock against every manifest of the workspace, so its result is a function of all of them by design."
+      }
+    ],
+    "exemptTargets": [
+      {
+        "targets": [
+          "@semio-tech/framework-os-kernel:test-command-ingress-consumer",
+          "@semio-tech/framework-plugin:test-command-ingress-consumer",
+          "@semio-tech/framework-replication-rs:test-command-ingress-native",
+          "@semio-tech/framework-replication-rs:test-command-ingress-ownership",
+          "@semio-tech/framework-replication-rs:test-crate-partition"
+        ],
+        "reason": "These tests assert the partition of the root workspace's members, so the root manifest is data of the test; the owner derives the member list into an exact roster."
+      },
+      {
+        "targets": [
+          "@semio-tech/repo-lib:lint-cargo-dependency-direction",
+          "@semio-tech/repo-lib:lint-rust-source-direction",
+          "@semio-tech/repo-lib:test-cargo-dependency-direction",
+          "@semio-tech/repo-lib:test-native-owner-command-policy",
+          "@semio-tech/repo-lib:test-package-body-policy",
+          "os-hub:unit-census-check"
+        ],
+        "reason": "These laws and censuses read every Cargo manifest or lock of the workspace by design."
+      },
+      {
+        "targets": [
+          "workspace:schema-check",
+          "workspace:schema-docs",
+          "workspace:schema-fixture-boundary",
+          "workspace:schema-generate",
+          "workspace:schema-verify",
+          "@semio-tech/repo-test-domain:test-schema"
+        ],
+        "reason": "The schema family validates, documents and generates every schema scope of the workspace by design; a per-scope partition of the schema registry would be needed to key them narrower."
+      },
+      {
+        "targets": [
+          "repo:test-cargo-provenance"
+        ],
+        "reason": "The test reads rust-toolchain.toml as data to prove where the pinned toolchain comes from."
+      },
+      {
+        "targets": [
+          "@semio-tech/hub-compositions:native",
+          "@semio-tech/stdio-js:package-contract",
+          "@semio-tech/stdio-js:package-graph",
+          "@semio-tech/stdio-plugin:home-io-surface-native-check",
+          "@teaching/architecture-course:build",
+          "@teaching/architecture-course:check",
+          "@teaching/architecture-course:test",
+          "@teaching/architecture-course:typecheck"
+        ],
+        "reason": "Recorded debt: these authored targets hash root Cargo files or whole-workspace Rust patterns although each reads one crate closure; the owner replaces the entry by the generated `cargoToolchain` group and deletes it here."
+      }
+    ]
+  },
+  "messages": {
+    "languages": [
+      "en",
+      "de"
+    ],
+    "texts": {
+      "workspaceKey": {
+        "en": "{subject} declares the whole-workspace Rust key {keys}: a crate's key hashes its own sources, its path dependencies, its locked dependency slice, what its workspaces give it and the toolchain digest, never a root Cargo file or a workspace-wide manifest, lock, source or schema pattern",
+        "de": "{subject} deklariert den Rust-Schlüssel des ganzen Arbeitsbereichs {keys}: der Schlüssel eines Crates enthält seine Quellen, seine Pfadabhängigkeiten, seinen gesperrten Abhängigkeitsausschnitt, das, was seine Arbeitsbereiche ihm geben, und den Werkzeugketten-Digest, niemals eine Cargo-Datei der Wurzel oder ein Muster über alle Manifeste, Sperrdateien, Quellen oder Schemata"
+      },
+      "cycle": {
+        "en": "Cargo path dependency cycle at {crate}",
+        "de": "Zyklus der Cargo-Pfadabhängigkeiten bei {crate}"
+      },
+      "escape": {
+        "en": "Cargo path of {crate} leaves the repository",
+        "de": "Cargo-Pfad von {crate} verlässt das Repository"
+      },
+      "workspace": {
+        "en": "Cargo workspace of {crate} is not declared by any manifest",
+        "de": "Cargo-Arbeitsbereich von {crate} ist in keinem Manifest deklariert"
+      }
+    }
+  }
+}

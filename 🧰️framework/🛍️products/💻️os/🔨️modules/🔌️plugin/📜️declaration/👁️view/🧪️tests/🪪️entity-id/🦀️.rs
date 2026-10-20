@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn operation_entity_ids_obey_the_portable_authoring_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️entity-id/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️entity-id/🔣️.json")).unwrap();
     let mut ids = std::collections::HashSet::new();
     for row in fixture["rows"].as_array().unwrap() {
         let context = AppOperationContext {

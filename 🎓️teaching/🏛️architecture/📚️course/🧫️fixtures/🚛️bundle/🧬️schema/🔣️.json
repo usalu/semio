@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Offline Stack Image Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proctor",
+    "proxy"
+  ],
+  "properties": {
+    "proctor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pull_policy"
+      ],
+      "properties": {
+        "pull_policy": {
+          "const": "never"
+        }
+      }
+    },
+    "proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image",
+        "pull_policy"
+      ],
+      "properties": {
+        "image": {
+          "type": "string",
+          "pattern": "^caddy:sha256-[a-f0-9]{64}$"
+        },
+        "pull_policy": {
+          "const": "never"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "imageExportFixture": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "proctor",
+        "proxy",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "proctor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference",
+            "config"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "pattern": "^ghcr[.]io/usalu/architecture-course-proctor:[a-z0-9-]+$"
+            },
+            "config": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          }
+        },
+        "proxy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "reference",
+            "config"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "pattern": "^caddy:[0-9.]+@sha256:[a-f0-9]{64}$"
+            },
+            "reference": {
+              "type": "string",
+              "pattern": "^caddy:sha256-[a-f0-9]{64}$"
+            },
+            "config": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 23,
+          "maxItems": 23,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "stable",
+                  "root-dot",
+                  "retag-before-save",
+                  "retag-after-save",
+                  "aba-during-save",
+                  "wrong-config-bytes",
+                  "missing-proctor-tag",
+                  "missing-caddy-alias",
+                  "duplicate-tag",
+                  "duplicate-config-entry",
+                  "missing-config",
+                  "truncated-archive",
+                  "bad-header-checksum",
+                  "timestamp-pax",
+                  "path-pax",
+                  "hybrid-consistent",
+                  "hybrid-wrong-config",
+                  "hybrid-wrong-tag",
+                  "cancel-before-save",
+                  "cancel-during-verification",
+                  "root-dot-slash",
+                  "shared-config-tags",
+                  "wrong-platform"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

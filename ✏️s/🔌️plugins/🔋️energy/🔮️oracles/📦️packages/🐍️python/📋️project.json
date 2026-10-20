@@ -21,7 +21,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "oracle-status": {
       "executor": "repo:script",
@@ -34,7 +39,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
+      }
     },
     "oracle-run": {
       "executor": "repo:script",
@@ -47,7 +57,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
     },
     "oracle-native": {
       "executor": "repo:script",
@@ -60,7 +75,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
     },
     "oracle-epjson": {
       "executor": "repo:script",
@@ -73,7 +93,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
     },
     "oracle-emit": {
       "executor": "repo:script",
@@ -86,7 +111,12 @@
       "outputs": [],
       "dependsOn": [
         "deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",
@@ -108,6 +138,11 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts deps"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     }
   }

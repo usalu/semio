@@ -2,8 +2,8 @@
 
 import type { ConflictResolution, MergePolicy } from "@semio-tech/framework";
 import { conflictResolutionAsU8, mergePolicyAsU8 } from "../../🎠️kernel/🔄️merge-outcome/🟦️.ts";
-import type { ArtifactPresencePeer } from "@semio-tech/framework-replication";
-import { encodePresencePeer } from "@semio-tech/framework-replication";
+import type { ArtifactPresencePeer } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
+import { encodePresencePeer } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import type { AppFrameValue } from "../../🪢️wire-contracts/🟦️.ts";
 import type { ReplyLedger } from "../📮️reply-ledger/🟦️.ts";
 

@@ -1,0 +1,219 @@
+{
+  "name": "@semio-tech/gis-plugin",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🌍️gis/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.json",
+      "{projectRoot}/**/*"
+    ],
+    "gisTree": [
+      "sharedGlobals",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🌍️gis/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/target/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/node_modules/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/🗑️generated/**/*"
+    ]
+  },
+  "targets": {
+    "installed-service-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts installed-service-source"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "gisTree"
+      ]
+    },
+    "component-cold-map-patch-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "component-cold-map-patch-native-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": [
+        "{projectRoot}/dist/component-cold-map-patch-native-check"
+      ]
+    },
+    "durable-three-store-assembly-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "durable-three-store-assembly-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-native-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "map-create-region-group-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "map-create-region-group-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-native-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "native-codec-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-check",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": [],
+      "cache": true
+    },
+    "native-codec-projection": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-projection",
+        "forwardAllArgs": true
+      },
+      "outputs": [
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json"
+      ],
+      "cache": true
+    },
+    "inference-transport-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-transport-check"
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": [],
+      "cache": true
+    },
+    "native-codec-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-oracle",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": []
+    },
+    "inference-discovery-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-oracle"
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": [],
+      "dependsOn": [
+        "semio-hub-gis-component:component"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "gis-inference-discovery-oracle"
+          ]
+        }
+      }
+    },
+    "inference-discovery-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-check"
+      },
+      "inputs": ["default", "^default", "gisTree"],
+      "outputs": [],
+      "dependsOn": [
+        "semio-hub-gis-component:component"
+      ]
+    },
+    "hub-edit-durability-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-edit-durability-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    }
+  }
+}

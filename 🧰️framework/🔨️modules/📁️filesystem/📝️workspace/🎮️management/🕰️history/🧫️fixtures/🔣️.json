@@ -1,0 +1,485 @@
+{
+  "version": 1,
+  "policy": {
+    "maximumSegmentNames": 4096,
+    "maximumSegmentBytes": 67108864,
+    "reservedMaintenanceNames": 16,
+    "reservedMaintenanceBytes": 1048576,
+    "maximumSegments": 4096,
+    "pageSize": 64,
+    "layout": "segment-from-first-publication",
+    "publishedPayloadMoves": false,
+    "unresolved": "durable-quarantine-no-recovery-authority",
+    "selection": "consecutive-sequence-and-previous-digest"
+  },
+  "cases": [
+    {
+      "name": "clean-inspection",
+      "input": {
+        "request": "inspect",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "inspection"
+    },
+    {
+      "name": "intent-before-effects",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "not-applied"
+    },
+    {
+      "name": "observed-retained-without-outcome",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "absent",
+        "object": "expected",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "committed-observed"
+    },
+    {
+      "name": "truncated-outcome-retained",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "absent",
+        "object": "expected",
+        "outcome": "partial",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "committed-observed"
+    },
+    {
+      "name": "foreign-same-basename",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "foreign",
+        "object": "foreign",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "rebound-device-exact-inode-chain",
+      "input": {
+        "request": "reconcile",
+        "namespace": "rebound",
+        "intent": "valid",
+        "source": "absent",
+        "object": "expected",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "committed-observed"
+    },
+    {
+      "name": "foreign-root-or-store",
+      "input": {
+        "request": "reconcile",
+        "namespace": "foreign",
+        "intent": "valid",
+        "source": "before",
+        "object": "expected",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "unknown-object",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "unknown",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "ordinary-name-frontier",
+      "input": {
+        "request": "inspect",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 4080,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "rollover-required"
+    },
+    {
+      "name": "ordinary-byte-frontier",
+      "input": {
+        "request": "inspect",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 66060288,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "rollover-required"
+    },
+    {
+      "name": "archive-before-selection",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "sealed",
+        "selection": "missing",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "selection-required"
+    },
+    {
+      "name": "archive-after-selection",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "sealed",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "segment-selected"
+    },
+    {
+      "name": "cancel-before-maintenance",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "before"
+      },
+      "expected": "cancelled"
+    },
+    {
+      "name": "cancel-after-committed-segment",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "sealed",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "after"
+      },
+      "expected": "segment-selected"
+    },
+    {
+      "name": "reopen-settled-descendant",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "absent",
+        "object": "expected",
+        "outcome": "complete",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "settled"
+    },
+    {
+      "name": "unknown-archive-member",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "malformed",
+        "source": "before",
+        "object": "absent",
+        "outcome": "complete",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "reserved-name-tail",
+      "input": {
+        "request": "inspect",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 4095,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "rollover-required"
+    },
+    {
+      "name": "reserved-byte-tail",
+      "input": {
+        "request": "inspect",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 67108863,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "rollover-required"
+    },
+    {
+      "name": "segment-publish-cut",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "publishing",
+        "selection": "missing",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "selection-required"
+    },
+    {
+      "name": "forked-selection",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "fork",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "total-segment-frontier",
+      "input": {
+        "request": "rollover",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "absent",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 4096,
+        "cancel": "none"
+      },
+      "expected": "history-full"
+    },
+    {
+      "name": "expected-object-foreign-new-source",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "foreign",
+        "object": "expected",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "conflict-retained"
+    },
+    {
+      "name": "invalid-intent-with-expected-object",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "malformed",
+        "source": "absent",
+        "object": "expected",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "incomplete-effect-source-unchanged",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "before",
+        "object": "foreign",
+        "outcome": "missing",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "complete-receipt-foreign-object",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "absent",
+        "object": "foreign",
+        "outcome": "complete",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    },
+    {
+      "name": "complete-receipt-unknown-object",
+      "input": {
+        "request": "reconcile",
+        "namespace": "continuous",
+        "intent": "valid",
+        "source": "absent",
+        "object": "unknown",
+        "outcome": "complete",
+        "segment": "open",
+        "selection": "valid",
+        "names": 3,
+        "bytes": 512,
+        "segments": 1,
+        "cancel": "none"
+      },
+      "expected": "quarantined"
+    }
+  ]
+}

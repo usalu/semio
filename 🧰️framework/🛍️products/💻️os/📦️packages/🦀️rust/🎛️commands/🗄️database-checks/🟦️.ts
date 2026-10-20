@@ -433,12 +433,12 @@ export class DbErrorOwnershipCheckScript extends BundleScript {
     assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
     assert.equal(fixture.cases.filter((row: { source: string }) => row.source === "ValueRefusal").length, 8);
     for (const row of fixture.transport) assert.equal(row.transient, row.retry === "Transient");
-    const actors = JSON.parse(readFileSync(join(owner, "🔄️sync/🧫️fixtures/📝️actor-retirement/🔣️.json"), "utf8"));
+    const actors = JSON.parse(readFileSync(join(owner, "🔄️sync/🧪️tests/🧫️fixtures/📝️actor-retirement/🔣️.json"), "utf8"));
     assert.equal(actors.aliases, 2);
     assert.equal(actors.firstLeaseReleasedBytes, 0);
     assert.equal(actors.newAllocationsOnClose, 0);
     for (const text of actors.actors) assert.equal(JSON.parse(JSON.stringify(text)), text);
-    const custody = JSON.parse(readFileSync(join(owner, "🗄️storage/🧫️fixtures/⚠️fault-custody/🔣️.json"), "utf8"));
+    const custody = JSON.parse(readFileSync(join(owner, "🗄️storage/🧪️tests/🧫️fixtures/⚠️fault-custody/🔣️.json"), "utf8"));
     const validateCustody: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🗄️storage/🧬️schema/⚠️fault-custody/🔣️.json"), "utf8")));
     assert(validateCustody(custody), JSON.stringify(validateCustody.errors));
     const rotation = custody.fairness.owners.map((name: string) => ({ name, closed: false }));

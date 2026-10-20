@@ -1,0 +1,47 @@
+{
+ "schema.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧬️schema/🔣️.json",
+  "sha256": "205e7b94c5ec0d64b6bfb36b543460962a1715e029729abf1d140fb9407066c6",
+  "length": 129
+ },
+ "workloads.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🎬️workloads/🔣️.json",
+  "sha256": "e8d6ba1904fee264cbf18770c1703e5ec555cc0b1304f3bc27a7a83861d13310",
+  "length": 132
+ },
+ "model.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🟦️.ts",
+  "sha256": "0816653c3a3228600527e06e3420f350e6bde4ef1f2e721551b7c4ecfb386afb",
+  "length": 118
+ },
+ "runner.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts",
+  "sha256": "cf7c41f24bd60173678ba8387c389974371563468d461527bab8038fcc824b90",
+  "length": 127
+ },
+ "command.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/⌨️command/🟦️.ts",
+  "sha256": "72b336e7e0aa420cb67292a0b5f7ac41a61ef4e5a6a18dd0d09c58a07635dbe5",
+  "length": 128
+ },
+ "test.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts",
+  "sha256": "b22b256f532d7d6778bf4c167c51224ca6f2b0bf2f8895fd3c22673b0769c2a2",
+  "length": 126
+ },
+ "fixture.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🧫️fixtures/🔣️.json",
+  "sha256": "0594197ac706651e153164fd4fc8f32cb6533bd50440645ee4029ac52ac5dfca",
+  "length": 139
+ },
+ "oracle.py": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🐍️oracle/🐍️.py",
+  "sha256": "7cd744566ba4c60c2f61d232ec7fd3dbd081629acca9fbe912c4e19d1bedfebf",
+  "length": 135
+ },
+ "stub.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🎭️stub/🟦️.ts",
+  "sha256": "17d7507a236024297f16aa3a1bcc638288f3018c0b754dfce50ba0aa67d23cde",
+  "length": 133
+ }
+}

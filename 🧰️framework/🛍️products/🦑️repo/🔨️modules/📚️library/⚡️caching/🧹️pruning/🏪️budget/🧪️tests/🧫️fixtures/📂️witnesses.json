@@ -1,0 +1,90 @@
+[
+  {
+    "name": "one-root",
+    "rootCount": 1,
+    "failure": "none",
+    "opened": 1,
+    "closed": 1,
+    "body": true
+  },
+  {
+    "name": "two-roots",
+    "rootCount": 2,
+    "failure": "none",
+    "opened": 2,
+    "closed": 2,
+    "body": true
+  },
+  {
+    "name": "first-open-refusal",
+    "rootCount": 2,
+    "failure": "open-first",
+    "opened": 0,
+    "closed": 0,
+    "body": false
+  },
+  {
+    "name": "second-open-refusal",
+    "rootCount": 2,
+    "failure": "open-second",
+    "opened": 1,
+    "closed": 1,
+    "body": false
+  },
+  {
+    "name": "post-open-stat-refusal",
+    "rootCount": 2,
+    "failure": "stat-first",
+    "opened": 1,
+    "closed": 1,
+    "body": false
+  },
+  {
+    "name": "second-lstat-refusal",
+    "rootCount": 2,
+    "failure": "lstat-second",
+    "opened": 2,
+    "closed": 2,
+    "body": false
+  },
+  {
+    "name": "changed-root-identity",
+    "rootCount": 2,
+    "failure": "identity",
+    "opened": 1,
+    "closed": 1,
+    "body": false
+  },
+  {
+    "name": "consumer-refusal",
+    "rootCount": 2,
+    "failure": "body",
+    "opened": 2,
+    "closed": 2,
+    "body": true
+  },
+  {
+    "name": "close-refusal-retained",
+    "rootCount": 2,
+    "failure": "close",
+    "opened": 2,
+    "closed": 2,
+    "body": true
+  },
+  {
+    "name": "body-and-close-causes-retained",
+    "rootCount": 2,
+    "failure": "body-close",
+    "opened": 2,
+    "closed": 2,
+    "body": true
+  },
+  {
+    "name": "undefined-primary-and-close-retained",
+    "rootCount": 2,
+    "failure": "undefined-body-close",
+    "opened": 2,
+    "closed": 2,
+    "body": true
+  }
+]

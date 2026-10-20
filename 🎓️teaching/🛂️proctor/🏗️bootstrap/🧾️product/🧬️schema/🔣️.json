@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:teaching:proctor-product:v1",
+  "definitions": {
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "package",
+        "binary",
+        "mode",
+        "platform",
+        "architecture",
+        "executable",
+        "sha256",
+        "bytes",
+        "sources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "package": {
+          "const": "teaching-proctor"
+        },
+        "binary": {
+          "const": "proctor"
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "architecture": {
+          "enum": [
+            "arm64",
+            "x64"
+          ]
+        },
+        "executable": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}/proctor(\\.exe)?$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "Message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "errors",
+        "reasons"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "errors": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "missing",
+            "stale",
+            "uncovered"
+          ],
+          "properties": {
+            "missing": {
+              "$ref": "#/definitions/Message"
+            },
+            "stale": {
+              "$ref": "#/definitions/Message"
+            },
+            "uncovered": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        },
+        "reasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unreadable",
+            "invalid",
+            "mode",
+            "platform",
+            "executable",
+            "size",
+            "hash"
+          ],
+          "properties": {
+            "unreadable": {
+              "$ref": "#/definitions/Message"
+            },
+            "invalid": {
+              "$ref": "#/definitions/Message"
+            },
+            "mode": {
+              "$ref": "#/definitions/Message"
+            },
+            "platform": {
+              "$ref": "#/definitions/Message"
+            },
+            "executable": {
+              "$ref": "#/definitions/Message"
+            },
+            "size": {
+              "$ref": "#/definitions/Message"
+            },
+            "hash": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        }
+      }
+    },
+    "Inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^*!{}\\\\]+$"
+          }
+        }
+      }
+    }
+  }
+}

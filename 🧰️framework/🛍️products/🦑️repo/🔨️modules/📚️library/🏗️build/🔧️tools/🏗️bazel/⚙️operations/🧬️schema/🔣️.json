@@ -4,7 +4,7 @@
   "description": "Bazel's side of the neutral build operations: how its disk cache is measured and cleared, how its build event stream becomes the cache activity ledger, and which bounds every walk obeys. The neutral result shapes live in the sibling operations catalogue schema.",
   "definitions": {
     "Policy": {
-      "description": "Closed constants. `diskCache.directories` are the only folders of the disk cache whose files are cache entries (`tmp` and `gc` are bookkeeping). `ledger` and `eventsSuffix` name files inside the server output base directory, so a reset of the outputs drops them with the cache they describe. `serverPattern` selects the per-workspace output bases below the server directory; a server exits a few seconds after its pid file is removed.",
+      "description": "Closed constants. `diskCache.directories` are the only folders of the disk cache whose files are cache entries (`tmp` and `gc` are bookkeeping). `ledger` and `eventsSuffix` name files inside the server output base directory, so a reset of the outputs drops them with the cache they describe. `serverPattern` selects the per-slot output bases below the server directory and `sessionSuffix` the remembered slot states beside them; a server exits a few seconds after its pid file is removed.",
       "const": {
         "version": 1,
         "diskCache": { "directories": ["ac", "cas"], "maximumDepth": 4 },
@@ -13,7 +13,8 @@
         "ledger": "metrics.json",
         "eventsSuffix": ".events.json",
         "maximumEventBytes": 67108864,
-        "serverPattern": "^[0-9a-f]{16}$",
+        "serverPattern": "^[sd][0-9]{1,2}$",
+        "sessionSuffix": ".session.json",
         "pidFile": "server/server.pid.txt",
         "serverStopMilliseconds": 10000,
         "serverPollMilliseconds": 100,

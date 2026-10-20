@@ -1,0 +1,183 @@
+{
+ "classes": [
+  {
+   "name": "Go service test",
+   "project": "@semio-tech/repo-coordinator-go",
+   "target": "test",
+   "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+   "kind": "command",
+   "command": "bun ./📜️script.ts test",
+   "expected": true
+  },
+  {
+   "name": "Go service build",
+   "project": "@semio-tech/repo-coordinator-go",
+   "target": "build",
+   "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+   "kind": "command",
+   "command": "bun ./📜️script.ts build",
+   "expected": true
+  },
+  {
+   "name": "hub Rust service test",
+   "project": "os-hub",
+   "target": "test",
+   "root": "🌎️hub/📦️packages/🦀️rust",
+   "kind": "command",
+   "command": "bun ./📜️script.ts test",
+   "expected": false
+  },
+  {
+   "name": "hub TypeScript typecheck",
+   "project": "os-hub-ts",
+   "target": "typecheck",
+   "root": "🌎️hub/📦️packages/🟦️typescript",
+   "kind": "command",
+   "command": "bun ./📜️script.ts typecheck",
+   "expected": false
+  },
+  {
+   "name": "ordering task at a Go root",
+   "project": "@semio-tech/repo-coordinator-go",
+   "target": "all",
+   "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+   "kind": "noop",
+   "expected": false
+  }
+ ],
+ "digests": [
+  {
+   "name": "base through PATH",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin:@root/empty"
+   }
+  },
+  {
+   "name": "same toolchain through GOROOT",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "GOROOT": "@root/goroot",
+    "PATH": "@root/empty"
+   },
+   "same_as": "base through PATH"
+  },
+  {
+   "name": "same toolchain through a symlinked directory",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "links": {
+    "/link": "/goroot"
+   },
+   "env": {
+    "PATH": "@root/link/bin"
+   },
+   "same_as": "base through PATH"
+  },
+  {
+   "name": "upgraded version file",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.1\ntime 2025-09-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin"
+   }
+  },
+  {
+   "name": "rebuilt binary",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-2\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin"
+   }
+  },
+  {
+   "name": "compile flags",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin",
+    "GOFLAGS": "-mod=mod",
+    "CGO_ENABLED": "0"
+   }
+  },
+  {
+   "name": "irrelevant variables do not matter",
+   "platform": "darwin-arm64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin",
+    "HOME": "/x",
+    "GOCACHE": "/y"
+   },
+   "same_as": "base through PATH"
+  },
+  {
+   "name": "other host",
+   "platform": "linux-x64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin"
+   }
+  },
+  {
+   "name": "unknown host",
+   "platform": "freebsd-x64",
+   "files": {
+    "/goroot/bin/go": "#!go-binary-1\n",
+    "/goroot/VERSION": "go1.25.0\ntime 2025-08-01T00:00:00Z\n"
+   },
+   "env": {
+    "PATH": "@root/goroot/bin"
+   }
+  },
+  {
+   "name": "no toolchain",
+   "platform": "darwin-arm64",
+   "files": {},
+   "env": {
+    "PATH": "@root/empty"
+   }
+  }
+ ],
+ "policyEnvironment": [
+  "CGO_ENABLED",
+  "GOARCH",
+  "GOEXPERIMENT",
+  "GOFLAGS",
+  "GOOS",
+  "GOTOOLCHAIN"
+ ],
+ "hosts": {
+  "darwin-arm64": "darwin/arm64",
+  "darwin-x64": "darwin/amd64",
+  "linux-arm64": "linux/arm64",
+  "linux-x64": "linux/amd64",
+  "win32-x64": "windows/amd64"
+ }
+}

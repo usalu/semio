@@ -1,7 +1,7 @@
 /** 🌳️ Fuel-bounded closure admission over immutable decoded document projections. */
-import { isCanonicalArtifactKind, type ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
+import { isCanonicalArtifactKind, type ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🗿️artifact-reference/🟦️.ts";
 import type { OwnerRef } from "../../🪆️child/🏠️owner/🧬️schema/🟦️.ts";
-export type { ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
+export type { ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🗿️artifact-reference/🟦️.ts";
 export type { OwnerRef } from "../../🪆️child/🏠️owner/🧬️schema/🟦️.ts";
 export interface OwnedDocumentChildProjection { slot: string; childId: string; target: ArtifactRef; }
 export interface OwnedDocumentRootProjection { reference: ArtifactRef; children: readonly OwnedDocumentChildProjection[]; }

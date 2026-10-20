@@ -248,7 +248,8 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
 async fn sqlite_snapshot_composed_owner_census() {
     use semio_framework_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshotHost};
     use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
-    use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
+    use semio_framework::ArtifactDialect;
+    use semio_framework::io_schema::{IoFidelity, SQLITE_SNAPSHOT};
     use semio_s_artifact_space_home::{SHomeSnapshot,SHomeMutation};
     use semio_s_artifact_space_space::{SSpaceSnapshot,SSpaceMutation};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪶️snapshot-owner-census/🔣️.json")).expect("closed neutral composed owner census");

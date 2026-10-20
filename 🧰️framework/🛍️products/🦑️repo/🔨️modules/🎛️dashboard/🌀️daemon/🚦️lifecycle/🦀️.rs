@@ -36,7 +36,7 @@ pub fn serve(root: &Path, running: &AtomicBool) -> std::io::Result<()> {
     Ok(())
 }
 
-/// 🚀 Starts a detached daemon process (`semio daemon serve --root …`) and waits until it answers; the answer is its pid.
+/// 🚀 Starts a detached daemon process (`repo dashboard daemon serve --root …`) and waits until it answers; the answer is its pid.
 pub fn spawn_daemon(root: &Path, executable: &Path) -> std::io::Result<u32> {
     let spawned = semio_framework_ui_tui_terminal::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["SEMIO_BUILD_INVOCATION_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
     let deadline = Instant::now() + Duration::from_secs(5);

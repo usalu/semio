@@ -1,5 +1,5 @@
 import { posix } from "node:path";
-import { rustStringValue, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustStringValue, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { inspectRustModuleGraphFacts } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";

@@ -4,8 +4,8 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { type ComparisonProfile, type Implementation, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type PlatformId, currentPlatform, EVIDENCE_CLASSES } from "@semio-tech/framework/test/adapter";
+import { parseFeature } from "../../../../../📦️packages/🟦️typescript/🧪️test/🥒️gherkin/🟦️.ts";
+import { type ComparisonProfile, type Implementation, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type PlatformId, currentPlatform, EVIDENCE_CLASSES } from "../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-pinned-generation/v1",
+  "title": "Nx pinned generation receipt",
+  "description": "Proof that the project-graph, file-map and source-maps files of one Nx workspace data namespace were constructed for exactly one sealed portable graph (digest), plugin implementation, Nx tooling and identity-file digest; each graph file is bound by device, inode, size, mtime and ctime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "claim", "graph"],
+  "definitions": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "stamp": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "number"}}
+  },
+  "properties": {
+    "format": {"const": 1},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["graphDigest", "implementation", "tooling", "identity"],
+      "properties": {
+        "graphDigest": {"$ref": "#/definitions/sha256"},
+        "implementation": {"$ref": "#/definitions/sha256"},
+        "tooling": {"$ref": "#/definitions/sha256"},
+        "identity": {"$ref": "#/definitions/sha256"}
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project-graph.json", "file-map.json", "source-maps.json"],
+      "properties": {
+        "project-graph.json": {"$ref": "#/definitions/stamp"},
+        "file-map.json": {"$ref": "#/definitions/stamp"},
+        "source-maps.json": {"$ref": "#/definitions/stamp"}
+      }
+    }
+  }
+}

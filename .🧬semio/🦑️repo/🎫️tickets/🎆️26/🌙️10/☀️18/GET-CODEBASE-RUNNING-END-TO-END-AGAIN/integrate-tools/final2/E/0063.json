@@ -1,0 +1,185 @@
+{
+  "name": "@semio-tech/assets",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../README.md",
+        "{projectRoot}/../../🌱️metabolism/🔣️icons/🤖️generated",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🖼️icons",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🖼️icon_svgs",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🔤️shortcodes",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"
+      ]
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "outputs": []
+    },
+    "check-generated": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-generated"
+      }
+    },
+    "logo": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts export-logo",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "cache": false,
+      "dependsOn": [
+        "generate-logo",
+        "workspace:deps-browsers"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "runtime": "ffmpeg -version"
+        },
+        {
+          "env": "PLAYWRIGHT_BROWSERS_PATH"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/../../🪧️logos/🎞️animation/🎬️animation.mp4"
+      ]
+    },
+    "logo-dev": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun --watch ./📜️script.ts generate-logo",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
+    },
+    "generate-logo": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/../../🪧️logos/🎞️animation/⚡️animated.svg"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts generate-logo",
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"
+      }
+    },
+    "test-mesh-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-mesh-contract"
+      }
+    },
+    "test-tile-proxy-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-tile-proxy-contract"
+      }
+    },
+    "test-dispatch-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-dispatch-contract"
+      }
+    },
+    "test-svg-video-contract": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-svg-video-contract"
+      }
+    }
+  }
+}

@@ -1,0 +1,423 @@
+{
+  "version": 1,
+  "navigation": [
+    {
+      "id": "ordinary-root",
+      "directory": "",
+      "query": "",
+      "history": false,
+      "root": null,
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "List",
+      "expectedPath": ""
+    },
+    {
+      "id": "ordinary-parent",
+      "directory": "a/b",
+      "query": "",
+      "history": false,
+      "root": null,
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "List",
+      "expectedPath": "a"
+    },
+    {
+      "id": "history-index",
+      "directory": "",
+      "query": "",
+      "history": true,
+      "root": null,
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "HistoryPage",
+      "expectedPath": ""
+    },
+    {
+      "id": "history-root",
+      "directory": "/history/root",
+      "query": "",
+      "history": true,
+      "root": "/history/root",
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "HistoryPage",
+      "expectedPath": ""
+    },
+    {
+      "id": "history-child",
+      "directory": "/history/root/child",
+      "query": "",
+      "history": true,
+      "root": "/history/root",
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "RecoveryList",
+      "expectedPath": "/history/root"
+    },
+    {
+      "id": "history-no-escape",
+      "directory": "/history/other/leaf",
+      "query": "",
+      "history": true,
+      "root": "/history/root",
+      "action": "parent",
+      "entry": null,
+      "expectedKind": "HistoryPage",
+      "expectedPath": ""
+    },
+    {
+      "id": "ordinary-file",
+      "directory": "",
+      "query": "",
+      "history": false,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "a.txt",
+        "directory": false
+      },
+      "expectedKind": "Load",
+      "expectedPath": "a.txt"
+    },
+    {
+      "id": "ordinary-directory",
+      "directory": "",
+      "query": "",
+      "history": false,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "folder",
+        "directory": true
+      },
+      "expectedKind": "List",
+      "expectedPath": "folder"
+    },
+    {
+      "id": "history-file",
+      "directory": "",
+      "query": "",
+      "history": true,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "/history/a",
+        "directory": false
+      },
+      "expectedKind": "Recovery",
+      "expectedPath": "/history/a"
+    },
+    {
+      "id": "history-directory",
+      "directory": "",
+      "query": "",
+      "history": true,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "/history/a",
+        "directory": true
+      },
+      "expectedKind": "RecoveryList",
+      "expectedPath": "/history/a"
+    },
+    {
+      "id": "visible-parent",
+      "directory": "src",
+      "query": "",
+      "history": false,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "src/a",
+        "directory": false
+      },
+      "expectedKind": "List",
+      "expectedPath": ""
+    },
+    {
+      "id": "filtered-first-file",
+      "directory": "src",
+      "query": "a",
+      "history": false,
+      "root": null,
+      "action": "activate",
+      "entry": {
+        "path": "src/a",
+        "directory": false
+      },
+      "expectedKind": "Load",
+      "expectedPath": "src/a"
+    }
+  ],
+  "forms": [
+    {
+      "id": "create-file",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "new.txt",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "CreateFile",
+      "expectedPath": "new.txt"
+    },
+    {
+      "id": "create-directory",
+      "action": "create-directory",
+      "directory": "src",
+      "path": "",
+      "value": "folder",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "CreateDirectory",
+      "expectedPath": "src/folder"
+    },
+    {
+      "id": "rename-observed",
+      "action": "rename",
+      "directory": "",
+      "path": "old",
+      "value": "new",
+      "history": false,
+      "busy": false,
+      "observed": true,
+      "expectedKind": "Rename",
+      "expectedPath": "new"
+    },
+    {
+      "id": "retain-confirmed",
+      "action": "retain",
+      "directory": "",
+      "path": "old",
+      "value": "old",
+      "history": false,
+      "busy": false,
+      "observed": true,
+      "expectedKind": "Retain",
+      "expectedPath": "old"
+    },
+    {
+      "id": "empty-name",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "InvalidPath",
+      "expectedPath": ""
+    },
+    {
+      "id": "nested-name-refused",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "a/b",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "InvalidPath",
+      "expectedPath": ""
+    },
+    {
+      "id": "traversal-refused",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "..",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "InvalidPath",
+      "expectedPath": ""
+    },
+    {
+      "id": "observation-required",
+      "action": "rename",
+      "directory": "",
+      "path": "old",
+      "value": "new",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "MissingObservation",
+      "expectedPath": ""
+    },
+    {
+      "id": "history-readonly",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "new",
+      "history": true,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "ReadOnly",
+      "expectedPath": ""
+    },
+    {
+      "id": "busy-form",
+      "action": "rename",
+      "directory": "",
+      "path": "old",
+      "value": "new",
+      "history": false,
+      "busy": true,
+      "observed": true,
+      "expectedKind": "Busy",
+      "expectedPath": ""
+    },
+    {
+      "id": "retain-exact-confirmation",
+      "action": "retain",
+      "directory": "",
+      "path": "old",
+      "value": "wrong",
+      "history": false,
+      "busy": false,
+      "observed": true,
+      "expectedKind": "ConfirmRetain",
+      "expectedPath": ""
+    },
+    {
+      "id": "unicode-create",
+      "action": "create-file",
+      "directory": "",
+      "path": "",
+      "value": "中🧪.txt",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "CreateFile",
+      "expectedPath": "中🧪.txt"
+    },
+    {
+      "id": "projected-destination-bound",
+      "action": "create-file",
+      "directory": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "path": "",
+      "value": "longname",
+      "history": false,
+      "busy": false,
+      "observed": false,
+      "expectedKind": "InvalidPath",
+      "expectedPath": ""
+    }
+  ],
+  "history": [
+    {
+      "id": "empty-history",
+      "active": "",
+      "value": "",
+      "busy": false,
+      "expected": "EmptyHistory",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "no-preselected-submit",
+      "active": "00000000",
+      "value": "",
+      "busy": false,
+      "expected": "ConfirmHistory",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "exact-segment",
+      "active": "00000000",
+      "value": "00000000",
+      "busy": false,
+      "expected": "Confirmed",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "changed-segment",
+      "active": "00000001",
+      "value": "00000000",
+      "busy": false,
+      "expected": "ConfirmHistory",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "exact-no-whitespace",
+      "active": "00000000",
+      "value": " 00000000",
+      "busy": false,
+      "expected": "ConfirmHistory",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "pending-cannot-repeat",
+      "active": "00000000",
+      "value": "00000000",
+      "busy": true,
+      "expected": "Busy",
+      "action": "reconcile",
+      "pending": null
+    },
+    {
+      "id": "pending-genesis-empty-enter",
+      "active": "",
+      "pending": "00000000",
+      "action": "reconcile",
+      "value": "",
+      "busy": false,
+      "expected": "ConfirmHistory"
+    },
+    {
+      "id": "pending-genesis-reconcile",
+      "active": "",
+      "pending": "00000000",
+      "action": "reconcile",
+      "value": "00000000",
+      "busy": false,
+      "expected": "Confirmed"
+    },
+    {
+      "id": "pending-genesis-wrong-token",
+      "active": "",
+      "pending": "00000000",
+      "action": "reconcile",
+      "value": "00000001",
+      "busy": false,
+      "expected": "ConfirmHistory"
+    },
+    {
+      "id": "pending-genesis-no-archive",
+      "active": "",
+      "pending": "00000000",
+      "action": "archive",
+      "value": "00000000",
+      "busy": false,
+      "expected": "PendingHistory"
+    },
+    {
+      "id": "pending-seal-selects-pending",
+      "active": "00000000",
+      "pending": "00000001",
+      "action": "reconcile",
+      "value": "00000001",
+      "busy": false,
+      "expected": "Confirmed"
+    },
+    {
+      "id": "pending-seal-no-archive",
+      "active": "00000000",
+      "pending": "00000001",
+      "action": "archive",
+      "value": "00000000",
+      "busy": false,
+      "expected": "PendingHistory"
+    }
+  ]
+}

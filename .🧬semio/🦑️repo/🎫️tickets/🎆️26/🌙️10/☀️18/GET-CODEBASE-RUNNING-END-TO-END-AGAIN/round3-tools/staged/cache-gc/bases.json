@@ -1,0 +1,9 @@
+{
+ "build-script": "233f14de95cfc4103e3fbb2ff9cf5008f64a652f5da8bd1946b4861eab0b88d1",
+ "caching-index": "8cb9bef2768dc5e77fc3e06bfa597caccba14cd62a6768817fb2ab72d5e0d7c7",
+ "caching-policy": "14bb17d2b9aa2eb4f819897afa305536a5d059414716590f6f36afdc2ae142b4",
+ "catalog": "04f59e7e36f23d0976a5ea966439deeb0ceddada17bb605b101c9aca24944975",
+ "nx-json": "42331a94211b7ad3839977b4195e34a87ccbbe7e03ea688545dc36343d066ee9",
+ "operations": "758ce6fbdcf91c2820fda4025e4c9aa426ca856ed07723fc18463e5fdc7e328a",
+ "providers-test": "63caf7bc6b3b9ca26952d7d9195889d0ee7391dc2dd8c869ab9a379d0e3fa047"
+}

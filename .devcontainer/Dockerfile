@@ -107,9 +107,6 @@ ENV PATH=/home/vscode/.local/bin:/home/vscode/.bun/bin:/usr/local/sbin:/usr/loca
 ENV SEMIO_WORKSPACE_ROOT=/workspaces/semio
 
 RUN mkdir -p /home/vscode/.local/bin \
-    /home/vscode/.gitkraken \
-    /home/vscode/.local/share/GitKrakenCLI \
-    /home/vscode/.local/share/gk \
     /home/vscode/.claude \
     /home/vscode/.codex \
     /home/vscode/.config/gh \

@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "environment": {
+    "shard": "SEMIO_TEST_SHARD",
+    "shardStatusFile": "SEMIO_TEST_SHARD_STATUS_FILE",
+    "xmlOutputFile": "SEMIO_TEST_XML_OUTPUT_FILE",
+    "reportOwner": "SEMIO_TEST_REPORT_OWNER",
+    "report": "SEMIO_TEST_REPORT"
+  },
+  "shard": {
+    "maximumTotal": 64,
+    "assignment": "sorted-round-robin"
+  },
+  "report": {
+    "resultsRoot": ".cache/b/o/m/tests/results",
+    "fileName": "test.xml",
+    "maximumSlugCodeUnits": 48,
+    "maximumNameCodeUnits": 200,
+    "maximumMessageCodeUnits": 2000,
+    "lockStaleMilliseconds": 10000,
+    "lockWaitMilliseconds": 30000,
+    "identity": [
+      {
+        "project": "SEMIO_TASK_PROJECT",
+        "target": "SEMIO_TASK_TARGET"
+      },
+      {
+        "project": "NX_TASK_TARGET_PROJECT",
+        "target": "NX_TASK_TARGET_TARGET"
+      }
+    ],
+    "root": "SEMIO_WORKSPACE_ROOT",
+    "defaultTargets": "^test(-.+)?$"
+  },
+  "tools": [
+    {
+      "id": "bun-test",
+      "match": {
+        "commandBasenames": [
+          "bun",
+          "bun.exe"
+        ],
+        "firstArgument": "test"
+      },
+      "shardFlag": "--shard=${index}/${total}",
+      "junitFlags": [
+        "--reporter=junit",
+        "--reporter-outfile=${file}"
+      ],
+      "junitRefusedBy": [
+        "--reporter",
+        "--reporter-outfile"
+      ],
+      "shardRefusedBy": [
+        "--shard"
+      ]
+    },
+    {
+      "id": "vitest",
+      "match": {
+        "argumentBasenames": [
+          "vitest",
+          "vitest.mjs",
+          "vitest.js",
+          "vitest.cjs"
+        ],
+        "alsoContains": "run"
+      },
+      "shardFlag": "--shard=${index}/${total}",
+      "junitFlags": [
+        "--reporter=default",
+        "--reporter=junit",
+        "--outputFile.junit=${file}"
+      ],
+      "junitRefusedBy": [
+        "--reporter"
+      ],
+      "shardRefusedBy": [
+        "--shard"
+      ]
+    },
+    {
+      "id": "cargo-test",
+      "match": {
+        "commandBasenames": [
+          "cargo",
+          "cargo.exe"
+        ],
+        "firstArgument": "test",
+        "skipToolchain": true
+      }
+    },
+    {
+      "id": "go-test",
+      "match": {
+        "commandBasenames": [
+          "go",
+          "go.exe"
+        ],
+        "firstArgument": "test"
+      }
+    },
+    {
+      "id": "pytest",
+      "match": {
+        "commandBasenames": [
+          "pytest",
+          "pytest.exe"
+        ]
+      }
+    },
+    {
+      "id": "dotnet-test",
+      "match": {
+        "commandBasenames": [
+          "dotnet",
+          "dotnet.exe"
+        ],
+        "firstArgument": "test"
+      }
+    },
+    {
+      "id": "ctest",
+      "match": {
+        "commandBasenames": [
+          "ctest",
+          "ctest.exe"
+        ]
+      }
+    }
+  ],
+  "messages": {
+    "reportFailed": {
+      "en": "The test result file could not be written: ${reason}",
+      "de": "Die Testergebnisdatei konnte nicht geschrieben werden: ${reason}"
+    }
+  }
+}

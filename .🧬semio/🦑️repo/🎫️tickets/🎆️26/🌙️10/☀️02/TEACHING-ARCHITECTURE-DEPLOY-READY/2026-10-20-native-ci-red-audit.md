@@ -1,0 +1,15 @@
+# Native CI RED Static Audit
+
+Bounded read-only review of existing compose-caddy-and-workflow test, deploy-fixtures loader, readiness JSON fixture, and ticket native-ci JSON/schema. No commands or implementation imports ran.
+
+The added test consumes workflow parsed by the existing third-party yaml package from the real .github/workflows/architecture-course.yml path. It compares actual check/site/proctor provisioning order, shell and exact recipe to separate neutral readiness DATA, then compares all ordinary run steps to13literal argv lists (6+3+4) under expected sudo environment. This is not comparing a derived object with itself. With current unchanged workflow the check job has setup index-1, so its first new-test assertion fails with missing native frontend provisioning before any recipe/ordinary assertion. Collection/import success and actual terminal RED remain unproven.
+
+Concrete GREEN coordination required: the subsequent preexisting workflow test still compares every check/site/proctor run step against readiness.release.commands/siteCommands/proctorSteps. Those arrays currently retain bun repo and omit the provisioning script, so editing workflow alone cannot pass. Update these expectations coherently, preserving proctor login ordering and external publication scope. A preexisting loop checks only steps containing ` bun repo dependencies sync`; after replacement it silently stops checking native sync steps. Update that guard or explicitly assert the native sync steps through the new ordinary roster.
+
+The17ticket cases are schema-shaped DATA only in the inspected additions. The actual test imports readiness JSON, not ticket native-ci contract, and does not execute its cases or conditional provisioning program. Exact recipe equality proves authored script text, not absent/unusable/usable branching, failure short-circuit or recovery-call counts. Do not report17neutral executions or shell behavior proof until an actual bounded consumer exercises these cases with controlled ports; schema validation alone cannot provide that. Existing yaml is an independent parser oracle for document structure, not an execution oracle for Bash semantics.
+
+Schema has closed outer/case objects and17minimum; it permits unrelated case IDs and change strings and does not enforce unique IDs or cross-field recovery coherence. That is acceptable for draft DATA but insufficient as proof that its17intended scenarios execute. Recipe printf was checked at character level: one backslash followed by n in format, so no double-escape issue exists.
+
+Issues sent directly to Release and Root. Current scope is correctly prepared RED with actual implementation unchanged; no GREEN or runtime CI success claimed.
+
+Release acknowledges these findings and reports its unexecuted patch candidate will prepend the exact YAML block-scalar recipe plus final newline to old full-run arrays and remove the redundant positional stale-sync assertion, while the explicit13ordinary roster checks all3jobs.17cases remain prepared data only. No candidate application or runtime proof was inspected here.

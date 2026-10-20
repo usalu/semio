@@ -1,0 +1,18 @@
+{
+ "tokenConflictSha256": "4322b6f06869310342bea5d829b033bb916544215ba237147ec774c0ea9d44a2",
+ "choices": [
+  "import {BAZEL_HERMETIC_RUNNER,BAZEL_HERMETIC_STARLARK,bazelBunStorePathV1,bazelExecutionFlagsV1,bazelExecutionPlatformV1,bazelHermeticDecisionV1,bazelHermeticManifestV1,bazelRemoteExecutionV1,linkBazelToolchainsV1,prepareBazelBunV1,renderBazelExecutionBuildV1,type BazelExecutionPlanV1} from \"./🏃️execution/🟦️.ts\";\nimport {bazelPlatformProfileV1,bazelPlatformRulesV1} from \"./🌐️platform/🟦️.ts\";\nimport {readNativeWindowsLongPathsEnabledV1} from \"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts\";\nimport {bazelCommandPlanV1,bazelTestTimeoutV1,bazelTestWithinLimitV1} from \"./🧭️commands/🟦️.ts\";\nimport {bazelAffectedBuildV1,bazelAffectedExpressionV1,bazelAffectedProjectsFromOutputV1,bazelAffectedWorkspaceV1} from \"./🎯️affected/🟦️.ts\";\n",
+  "ours",
+  "skipCache:boolean,execution:{hermetic:boolean}={hermetic:false},tests?:ReadonlySet<string>)",
+  "ours",
+  "ours",
+  "ours",
+  "ours",
+  "ours",
+  "request.skipCache===true,{hermetic:true},await readBazelTestsV1(workspace)),workers=planWorkersV1(workerPolicy,currentWorkerHostV1(),{...(request.parallel?{jobs:request.parallel}:{}),...(request.workers===undefined?{}:{workers:request.workers})}",
+  "profile=requireBazelPlatformProfileV1(cache),startup=bazelStartupOptionsV1(",
+  "storage,cache,profile),",
+  "...settings.flags];\n  if(cache.helper){await mkdir(dirname(cache.helper.path),{recursive:true});await writeChanged(cache.helper.path,cache.helper.content);await chmod(cache.helper.path,cache.helper.mode);}\n  let jobs=workers.localJobs;if(hermetic){const execution=bazelExecutionFlagsV1({host:{platform:process.platform,arch:process.arch},hermetic,jobs:workers.localJobs,environment:process.env});options.push(...execution.command);if(execution.remote)jobs=execution.jobs;}",
+  "theirs"
+ ]
+}

@@ -87,8 +87,8 @@
     },
     "crates": {
       "type": "array",
-      "minItems": 17,
-      "maxItems": 17,
+      "minItems": 18,
+      "maxItems": 18,
       "items": {
         "type": "object",
         "required": [

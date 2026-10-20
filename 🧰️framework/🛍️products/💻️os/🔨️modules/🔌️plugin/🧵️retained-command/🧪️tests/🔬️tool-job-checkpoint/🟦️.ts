@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 

@@ -1,13 +1,13 @@
-import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{readNativeStorageReservationPolicyV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import type{CargoCompilerInputsPortV1}from"@semio-tech/process/artifacts/native-build/inputs";
 import{DESCRIPTOR_EMITTER_MANIFEST_V1}from"../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
 import {dirname} from "node:path";
 import {withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
-import { withRepositoryCargoPassInputsV1, repositoryCargoCompilerInputsV1, repositoryCargoConsumptionV1, type CargoDependencyNetworkV1, componentPassPlanV1, nativeBuildPipelinePlanV1 } from "@semio-tech/repo-lib/cargo";
-import { withRepositoryCompilerStoreV1, withCompilerWorkspaceWriteV1, withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
-import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
+import { readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { withRepositoryCargoPassInputsV1, repositoryCargoCompilerInputsV1, repositoryCargoConsumptionV1, type CargoDependencyNetworkV1, componentPassPlanV1, nativeBuildPipelinePlanV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
+import { withRepositoryCompilerStoreV1, withCompilerWorkspaceWriteV1, withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import { requireMaterializedPathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModeEnvironment, buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -23,7 +23,7 @@ import type { SemanticDescriptorEmissionV1 } from "../../🖨️describe/🛂️
 
 import {withComponentModelPublicationV1,describeComponentModelV1,publishComponentModelV1,type ComponentModelPublicationV1} from "../../📦️model/🟦️.ts";
 import {componentStagePlanV1,type ComponentStageFacetV1} from "./📋️contract/🟦️.ts";
-import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
+import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.mjs";
 
 /** 🧩️ The post-link stages of one shipped plugin or extension component inside a build driver, each holding one jobserver token and cached by content:
  * `describe` (the semantic descriptor exactly these bytes answer, verified against the committed pair) and `transpile` start the moment the component is

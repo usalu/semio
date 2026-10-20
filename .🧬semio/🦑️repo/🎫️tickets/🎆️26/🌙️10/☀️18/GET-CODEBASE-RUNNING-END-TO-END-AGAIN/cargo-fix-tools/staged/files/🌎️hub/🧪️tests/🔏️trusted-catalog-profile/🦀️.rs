@@ -1,0 +1,189 @@
+//! 🏗️ Feature-gated builder for one real GIS Map editor profile, loadable by every crate target.
+//!
+//! `mod tests` cannot serve the `os-hub` binary target or any other crate, because `#[cfg(test)]` is
+//! per-compilation-unit. This module is compiled under the `integration-fixtures` Cargo feature instead, so a
+//! binary-target law can build a genuine [`VerifiedTrustedCatalog`] and the frozen
+//! [`VerifiedGisMapArtifactBindingV1`] the hub inference runtime requires. It goes through the exact
+//! production loader — no second, divergent trust check exists — and it binds real
+//! `semio_hub_gis` descriptor, service and native-codec metadata. The browser actor bytes are always
+//! synthetic. [`verified_gis_map_integration_profile`] also carries synthetic component bytes — it never executes
+//! the guest and must never be offered as evidence that one was executed — while
+//! [`verified_gis_map_release_profile`] carries the GIS release component this tree builds, for laws that run it.
+
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use semio_hub_trusted_catalog::{TrustedCatalogLoader, VerifiedTrustedCatalog};
+use semio_hub_native_openable::NativeCodecProviderSetV1;
+use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
+use semio_hub_inference_catalog::VerifiedGisMapArtifactBindingV1;
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
+use directory::os_store;
+use semio_framework_hash::{Hasher, Sha256};
+
+const SYNTHETIC_COMPONENT: &[u8] = b"synthetic-gis-component-for-hub-integration-fixtures-profile";
+const SYNTHETIC_ACTOR: &[u8] = b"synthetic-gis-closed-actor-for-hub-integration-fixtures-profile";
+
+/// 🧱️ The GIS plugin's own release component as this tree builds it
+/// (`semio-hub-gis-component:component`, which the hub's all-features test target depends on).
+const GIS_RELEASE_COMPONENT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_gis_component.wasm");
+
+/// 🆔️ The profile identifier every caller of this builder passes to the loader.
+pub const GIS_MAP_INTEGRATION_PROFILE_ID: &str = "gis-map-integration-fixtures";
+
+/// ⏱️ An uncancelled fixed-clock control; the builder never exercises cancellation itself.
+struct BuilderControl;
+
+impl AuthorityOperationControl for BuilderControl {
+    fn now_ms(&self) -> u64 {
+        1_000
+    }
+
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, _progress: AuthorityProgress) {}
+}
+
+/// 🗂️ One retained on-disk GIS Map profile; its directory is removed when the value is dropped.
+pub struct VerifiedGisMapIntegrationProfileV1 {
+    root: PathBuf,
+    pub bundle_path: PathBuf,
+    pub catalog: Arc<VerifiedTrustedCatalog>,
+    pub binding: Arc<VerifiedGisMapArtifactBindingV1>,
+}
+
+impl VerifiedGisMapIntegrationProfileV1 {
+    /// 🗺️ Returns the frozen GIS Map editor binding this profile verified.
+    pub fn binding(&self) -> &Arc<VerifiedGisMapArtifactBindingV1> {
+        &self.binding
+    }
+
+    /// 🗂️ Returns the verified catalog the binding retains for its whole lifetime.
+    pub fn catalog(&self) -> &Arc<VerifiedTrustedCatalog> {
+        &self.catalog
+    }
+
+    /// 📄️ Returns the bundle path a candidate hub would receive through its startup environment.
+    pub fn bundle_path(&self) -> &Path {
+        &self.bundle_path
+    }
+}
+
+impl Drop for VerifiedGisMapIntegrationProfileV1 {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
+}
+
+/// 🏗️ Writes one bundle with real GIS metadata under `root` and loads it through the real loader.
+///
+/// The returned binding satisfies every check in `verified_gis_map_binding`: plugin `gis`, package
+/// `semio:gis`, artifact kind `s.gis.gismap`, an `Editor` surface with `read`+`write`+`observe`, the
+/// declared `s.gis.gismap.inference` service, and an executable identity equal to the compiled
+/// `gis_map_inference_service()`.
+pub async fn verified_gis_map_integration_profile(root: &Path) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
+    verified_gis_map_profile(root, SYNTHETIC_COMPONENT).await
+}
+
+/// 🧬️ The same profile around the GIS plugin's real release component built from this tree, so a law
+/// that runs the guest — genesis above all — executes the genuine component, never synthetic bytes or
+/// a native shortcut. Refused when the component has not been built.
+pub async fn verified_gis_map_release_profile(root: &Path) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
+    let component = std::fs::read(GIS_RELEASE_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("GIS release component unavailable at {GIS_RELEASE_COMPONENT} (build `semio-hub-gis-component:component`): {error}")))?;
+    verified_gis_map_profile(root, &component).await
+}
+
+async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
+    let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
+    let descriptor = semio_hub_trusted_catalog_descriptor::decode_package_descriptor(&emitted)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;
+    let component_sha256 = hex_lower(&Sha256::digest(component));
+    let actor_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_ACTOR));
+    let mut component_blake3 = Hasher::new();
+    component_blake3.update(component);
+    let descriptor_bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
+        .map_err(|error| AuthorityError::Catalog(format!("GIS native codec receipts unavailable: {error:?}")))?
+        .into_iter()
+        .map(|receipt| {
+            let identity = receipt.identity();
+            serde_json::json!({ "artifactKind": identity.artifact_kind, "artifactSchema": identity.schema, "packSchemaHash": hex_lower(&identity.pack_schema_hash) })
+        })
+        .collect();
+    let map_pack_schema_hash = native_codecs.iter().find(|codec| codec["artifactKind"] == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS receipts declare no s.gis.gismap codec".to_owned()))?["packSchemaHash"].clone();
+    let editor =
+        descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor && app.dialect.artifact_kind == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS assembly declares no s.gis.gismap editor".to_owned()))?;
+    let window_kind = editor.window_kinds.first();
+    let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
+    let target = serde_json::json!({
+        "artifactKind": "s.gis.gismap",
+        "artifactSchema": "gis.map",
+        "packSchemaHash": map_pack_schema_hash,
+        "surfaceId": editor.id,
+        "appId": editor.id,
+        "windowKindId": window_kind.id,
+        "role": "editor",
+        "rendererTarget": "wasm",
+        "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
+        "grant": { "read": true, "write": true, "observe": true }
+    });
+    std::fs::create_dir_all(root).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures profile directory unavailable: {error}")))?;
+    std::fs::write(root.join("component.wasm"), component).map_err(|error| AuthorityError::Catalog(format!("component write failed: {error}")))?;
+    std::fs::write(root.join("descriptor.semio"), &descriptor_bytes).map_err(|error| AuthorityError::Catalog(format!("descriptor write failed: {error}")))?;
+    std::fs::write(root.join("closed-actor.mjs"), SYNTHETIC_ACTOR).map_err(|error| AuthorityError::Catalog(format!("synthetic actor write failed: {error}")))?;
+    let (stdio_identity, stdio_record) = semio_hub_trusted_catalog::headless_stdio_fixture_package(root)?;
+    let receipt = semio_hub_trusted_catalog::fixture_component_receipt(&descriptor.manifest.plugin_id, &descriptor.package_id, &component_sha256, component.len() as u64, &descriptor_bytes);
+    let plugin_module = semio_hub_trusted_catalog::write_fixture_plugin_module(root, &descriptor.manifest.plugin_id, &descriptor.package_id, &descriptor.manifest.version, &receipt, &descriptor_bytes)?;
+    let mut bundle = serde_json::json!({
+        "schemaVersion": semio_hub_trusted_catalog_contract::schema::TRUSTED_BUNDLE_SCHEMA_VERSION,
+        "profiles": [{
+            "id": GIS_MAP_INTEGRATION_PROFILE_ID,
+            "selectedClosure": [package.clone(), stdio_identity.clone()],
+            "selectedClosureSha256": "01".repeat(32),
+            "openTargets": [{ "package": package.clone(), "target": target.clone() }],
+            "generationId": "02".repeat(32)
+        }],
+        "packages": [{
+            "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
+            "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
+            "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
+            "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
+            "receipt": receipt,
+            "browserActor": {
+                "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.34.0-jspi.v1",
+                "path":"closed-actor.mjs", "byteLength":SYNTHETIC_ACTOR.len(), "sha256":actor_sha256,
+                "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":hex_lower(&Sha256::digest(&descriptor_bytes)), "policySha256":"41".repeat(32), "importInterfaces":[]
+            },
+            "pluginModule": plugin_module,
+            "nativeCodecs": native_codecs, "openTargets": [target]
+        }, stdio_record]
+    });
+    let decoded: semio_hub_trusted_catalog_contract::schema::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
+    bundle["profiles"][0]["selectedClosureSha256"] = hex_lower(&semio_hub_trusted_catalog_descriptor::selected_closure_digest(&decoded.profiles[0].selected_closure)?).into();
+    let regenerated: semio_hub_trusted_catalog_contract::schema::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
+    bundle["profiles"][0]["generationId"] = semio_hub_trusted_catalog_descriptor::trusted_profile_generation(&regenerated, &regenerated.profiles[0])?.into();
+    let bundle_path = root.join("trusted-catalog.json");
+    std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?).map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;
+    let control = BuilderControl;
+    let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
+    let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&bundle_path, GIS_MAP_INTEGRATION_PROFILE_ID, &NativeCodecProviderSetV1::linked(), &context).await?);
+    let binding = semio_hub_inference_catalog::verified_gis_map_binding(catalog.clone(), &semio_hub_gis::inference::GisMapInferenceBindingV1)
+        .map_err(|error| AuthorityError::Catalog(format!("verified GIS Map binding rejected the integration-fixtures profile: {error:?}")))?
+        .ok_or_else(|| AuthorityError::Catalog("integration-fixtures profile did not select a writable GIS Map editor".to_owned()))?;
+    Ok(VerifiedGisMapIntegrationProfileV1 { root: root.to_path_buf(), bundle_path, catalog, binding })
+}
+
+/// 📂️ Returns a process-unique directory under the system temporary root for one profile.
+pub fn unique_profile_root(label: &str) -> PathBuf {
+    static SEQUENCE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let sequence = SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    semio_hub_testing::test_artifact_root().join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
+}
+
+#[path = "🪶️count/🦀️.rs"]
+pub mod count_trusted_catalog_fixture;

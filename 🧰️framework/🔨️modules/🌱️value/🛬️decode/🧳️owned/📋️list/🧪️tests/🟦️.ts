@@ -3,7 +3,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv/dist/2020.js";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🧫️fixtures/🔣️.json";
-import{NativePersistentListReceiving}from"../🟦️.ts";
+import{NativePersistentListReceiving,nativeReceivingChildBody}from"../🟦️.ts";
 function input(count:number):{label:string;rank:number}[]{return Array.from({length:count},(_,i)=>({label:i===0?fixture.prefix.repeat(fixture.firstRepeat):fixture.prefix+i,rank:i*fixture.stride}));}
 test("persistent native receiving preserves original inputs and ranked typed output",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");
@@ -15,3 +15,5 @@ test("persistent receiving keeps later invalid rows and every cancelled prefix",
  for(const count of fixture.cases)for(const cut of fixture.cuts){const original=input(count),receiver=new NativePersistentListReceiving(original);for(let turn=0;turn<cut&&!receiver.ready;turn++)receiver.advance();receiver.close();expect(receiver.empty).toBe(true);expect(original.length).toBe(count);}
  const invalid=new NativePersistentListReceiving({rows:[]});expect(()=>invalid.advance()).toThrow();invalid.close();expect(invalid.empty).toBe(true);console.log("[DEBUG] native persistent receiving neutral60 cancellations and three later-row refusals preserve original input");
 });
+
+test("composite receiving reserves metadata before selected child work",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.bodyReservations){const oracle=db.query("SELECT max(0, ? - ?) AS child").get(row.bodyBytes,row.metadataBytes)as{child:number};expect(nativeReceivingChildBody(row.bodyBytes,row.metadataBytes)).toBe(row.childBytes);expect(oracle.child).toBe(row.childBytes);}expect(nativeReceivingChildBody(nativeReceivingChildBody(4096,33),8)+33+8).toBe(4096);}finally{db.close();}});

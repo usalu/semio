@@ -15,7 +15,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-reac
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1, runtimeMetricsRowsV1, spawnedJobTasksV1, taskManagerColumns, taskManagerElapsedSecondsV1, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerTasksPanel, TaskManagerWindow, toolCallTasksV1, toolRunTasksV1, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerSourcesV1, type TaskManagerTableCell, type TaskManagerTaskV1 } from "../../🟦️.tsx";
 import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
-import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
+import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
 import { ActivationRegistry } from "@semio-tech/framework";
 import { ShardClient } from "@semio-tech/framework/actor/shard-client";

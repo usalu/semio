@@ -3,6 +3,7 @@
   "generalScript": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
   "generalProject": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
   "repoScript": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/📜️script.ts",
+  "repoOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts",
   "repoProject": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
   "retainedRoutes": [
     "lint",
@@ -67,7 +68,9 @@
     },
     {
       "name": "CheckUiPrimitivesScript",
-      "sha256": "75b8246dc4a7d094018cab572b6641ffb8db2bda6a86dd143b482972895af034"
+      "sha256": "0e8e8e52faf80a2073bddfe0b66a7b504f0bfedcf0332ecd2f66699eb81fa81f",
+      "runner": "runCheckUiPrimitivesScript",
+      "runnerBodySha256": "b26977ee173217aec22ca9414acd25dc957ef85d04bc117580ac52b090c4024f"
     },
     {
       "name": "CHROME_I18N_ALLOWLIST",
@@ -127,7 +130,9 @@
     },
     {
       "name": "CheckChromeI18nScript",
-      "sha256": "f8ebcaace8c8bb5a982f175104518d53400bcae008d1b5e6be7ba1980cf31b5e"
+      "sha256": "be55c116b3a4d044d8dd156e5ed10f1e2d458a7f09b337a3812534eadfe5681d",
+      "runner": "runCheckChromeI18nScript",
+      "runnerBodySha256": "82e9448cd0b99ae9ad3d3bf792e22bd70394496927c0a5d53065c801cb506d2c"
     }
   ],
   "productRoots": [
@@ -142,6 +147,7 @@
   "storybookCases": [
     {
       "declaration": "DevScript",
+      "runner": "runDevScript",
       "arguments": [
         "./📜️script.ts",
         "dev",
@@ -153,6 +159,7 @@
     },
     {
       "declaration": "BuildScript",
+      "runner": "runBuildScript",
       "arguments": [
         "./📜️script.ts",
         "build",

@@ -1,7 +1,7 @@
 /** 🛠️ `dev` command family: storybook, storybook-static and the MCP launchers.
  * @see 📜️script.ts
  */
-import { readBuildMode } from "@semio-tech/process/build-mode";
+import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -37,6 +37,7 @@ export class DevScript extends Script {
     process.exit(1);
   }
 
+  /** 🔖️ Splits storybook arguments into the scope list and the pass-through arguments. A single scope argument may itself be a comma-list of top-level scopes (`"ui,framework/os"`); several space-separated arguments keep the slash-join of hierarchical scopes (`"framework" "os"` gives `"framework/os"`). */
   private async parseStorybookSegments(segments: string[]): Promise<{ scope: string; args: string[] }> {
     const scopeSegments: string[] = [];
     const args: string[] = [];
@@ -49,8 +50,6 @@ export class DevScript extends Script {
       parsingScope = false;
       if (segment !== "--") args.push(segment);
     }
-    // A single scope arg may itself be a comma-list of top-level scopes ("ui,framework/os").
-    // Multiple space-separated args keep slash-join behavior for hierarchical scopes ("framework" "os" -> "framework/os").
     const scope = scopeSegments.length === 1 && scopeSegments[0]!.includes(",") ? scopeSegments[0]! : scopeSegments.join("/");
     const scopeIds = scope
       ? scope
@@ -115,7 +114,7 @@ export class DevScript extends Script {
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {
-    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio } = await import("@semio-tech/framework-os-mcp");
+    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
     const options = { cwd: this.root, ...daemonBudgetOpts() };
     if (mcpBinaryIsStaged(this.root)) return runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], options);
     process.exit(await serveWarmMcpStdio(this.root, extra, { ...process.env, ...options.env }));

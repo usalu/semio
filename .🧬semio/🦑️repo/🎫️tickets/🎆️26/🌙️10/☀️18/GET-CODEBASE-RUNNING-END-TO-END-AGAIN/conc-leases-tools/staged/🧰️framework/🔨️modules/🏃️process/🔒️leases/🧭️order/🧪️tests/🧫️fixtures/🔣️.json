@@ -1,0 +1,1103 @@
+{
+ "version": 1,
+ "policy": {
+  "version": 1,
+  "rules": {
+   "outOfOrder": "enforce",
+   "holdAndWait": "enforce",
+   "selfDeadlock": "enforce",
+   "cycle": "enforce"
+  },
+  "holdAndWait": {
+   "graceMilliseconds": 1000,
+   "pollMilliseconds": 50
+  },
+  "cycle": {
+   "intervalMilliseconds": 50
+  },
+  "registry": {
+   "flushMilliseconds": 0,
+   "maximumEntryBytes": 65536,
+   "maximumViolations": 50
+  },
+  "fairness": {
+   "queuedWithResourceLeases": true
+  },
+  "gate": {
+   "releaseWhileWaiting": true,
+   "pollInitialMilliseconds": 5,
+   "pollMaximumMilliseconds": 40
+  },
+  "classes": [
+   {
+    "id": "outer",
+    "rank": 1,
+    "scope": "checkout",
+    "owner": "test",
+    "title": {
+     "en": "Outer",
+     "de": "Außen"
+    },
+    "match": [
+     {
+      "kind": "prefix",
+      "value": "outer:"
+     }
+    ]
+   },
+   {
+    "id": "middle",
+    "rank": 2,
+    "scope": "project",
+    "owner": "test",
+    "title": {
+     "en": "Middle",
+     "de": "Mitte"
+    },
+    "match": [
+     {
+      "kind": "prefix",
+      "value": "middle:"
+     },
+     {
+      "kind": "exact",
+      "value": "middle-singleton"
+     }
+    ]
+   },
+   {
+    "id": "inner",
+    "rank": 3,
+    "scope": "path",
+    "owner": "test",
+    "title": {
+     "en": "Inner",
+     "de": "Innen"
+    },
+    "match": [
+     {
+      "kind": "prefix",
+      "value": "inner:"
+     },
+     {
+      "kind": "prefix",
+      "value": "inner:special:"
+     }
+    ]
+   },
+   {
+    "id": "free",
+    "rank": 0,
+    "scope": "session",
+    "owner": "test",
+    "title": {
+     "en": "Free",
+     "de": "Frei"
+    },
+    "match": [
+     {
+      "kind": "prefix",
+      "value": "free:"
+     }
+    ]
+   }
+  ],
+  "allowed": [
+   {
+    "from": "inner",
+    "to": "middle",
+    "reason": {
+     "en": "Declared exception.",
+     "de": "Erklärte Ausnahme."
+    }
+   }
+  ]
+ },
+ "classification": [
+  {
+   "resource": "outer:a",
+   "class": "outer"
+  },
+  {
+   "resource": "middle-singleton",
+   "class": "middle"
+  },
+  {
+   "resource": "middle:x",
+   "class": "middle"
+  },
+  {
+   "resource": "inner:special:z",
+   "class": "inner"
+  },
+  {
+   "resource": "free:q",
+   "class": "free"
+  },
+  {
+   "resource": "unknown",
+   "class": "unclassified"
+  },
+  {
+   "resource": "middle-singleton-extra",
+   "class": "unclassified"
+  }
+ ],
+ "order": [
+  {
+   "id": "inward-allowed",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "outward-refused",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": {
+    "kind": "out-of-order",
+    "heldClass": "inner",
+    "requestedClass": "outer"
+   }
+  },
+  {
+   "id": "declared-edge-exempt",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "middle:x",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "unclassified-never-constrained",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "unknown",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "free-rank-zero-never-constrained",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "free:q",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "try-lock-exempt",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": true,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "same-rank-allowed",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "middle:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "middle:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": null
+  },
+  {
+   "id": "oldest-offender-named",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:late",
+     "mode": "exclusive",
+     "atMs": 3000,
+     "task": 1
+    },
+    {
+     "directory": "/lease",
+     "resource": "middle:early",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "expect": {
+    "kind": "out-of-order",
+    "held": "middle:early"
+   }
+  }
+ ],
+ "selfDeadlock": [
+  {
+   "id": "within-grace",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "shared",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 999,
+   "expect": null
+  },
+  {
+   "id": "shared-then-exclusive-after-grace",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "shared",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 1000,
+   "expect": {
+    "kind": "self-deadlock",
+    "heldClass": "outer",
+    "requestedClass": "outer",
+    "held": "outer:a"
+   }
+  },
+  {
+   "id": "exclusive-then-shared-after-grace",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "shared",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 5000,
+   "expect": {
+    "kind": "self-deadlock",
+    "heldClass": "outer"
+   }
+  },
+  {
+   "id": "reentrant-shared-is-fine",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "shared",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "shared",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "bounded-request-is-left-to-expire",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "shared",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": true
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "try-lock-exempt",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": true,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "same-name-other-directory-is-another-lease",
+   "held": [
+    {
+     "directory": "/other",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "unrelated-lease-is-not-a-self-conflict",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "outer:a",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  }
+ ],
+ "holdAndWait": [
+  {
+   "id": "within-grace",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 999,
+   "expect": null
+  },
+  {
+   "id": "after-grace-refused",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 1000,
+   "blocker": {
+    "pid": 4242,
+    "heldSeconds": 77
+   },
+   "expect": {
+    "kind": "hold-and-wait",
+    "held": "outer:a",
+    "blockerPid": 4242,
+    "blockerHeldSeconds": 77
+   }
+  },
+  {
+   "id": "shared-hold-never-refused",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "shared",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "declared-edge-exempt",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "middle:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "try-lock-exempt",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "outer:a",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": true,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "the-lease-itself-is-not-a-hold",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "inner:b",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "shared",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 99999,
+   "expect": null
+  },
+  {
+   "id": "unclassified-holds-count",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "unknown",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 2000,
+   "expect": {
+    "kind": "hold-and-wait",
+    "heldClass": "unclassified"
+   }
+  },
+  {
+   "id": "oldest-exclusive-named",
+   "held": [
+    {
+     "directory": "/lease",
+     "resource": "middle:new",
+     "mode": "exclusive",
+     "atMs": 5000,
+     "task": 1
+    },
+    {
+     "directory": "/lease",
+     "resource": "outer:old",
+     "mode": "exclusive",
+     "atMs": 1000,
+     "task": 1
+    }
+   ],
+   "request": {
+    "directory": "/lease",
+    "resource": "inner:b",
+    "mode": "exclusive",
+    "nonblocking": false,
+    "bounded": false
+   },
+   "waitedMilliseconds": 2000,
+   "expect": {
+    "kind": "hold-and-wait",
+    "held": "outer:old"
+   }
+  }
+ ],
+ "cycles": [
+  {
+   "id": "two-party",
+   "from": "1/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": false
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "A",
+      "mode": "exclusive",
+      "sinceMs": 200,
+      "queued": false
+     }
+    }
+   ],
+   "expect": {
+    "members": [
+     "1/1",
+     "2/1"
+    ],
+    "victim": "2/1"
+   }
+  },
+  {
+   "id": "three-party-victim-is-latest-wait",
+   "from": "2/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "exclusive",
+      "sinceMs": 300,
+      "queued": false
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "C",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": false
+     }
+    },
+    {
+     "id": "3/1",
+     "holds": [
+      {
+       "key": "C",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "A",
+      "mode": "exclusive",
+      "sinceMs": 200,
+      "queued": false
+     }
+    }
+   ],
+   "expect": {
+    "members": [
+     "2/1",
+     "3/1",
+     "1/1"
+    ],
+    "victim": "1/1"
+   }
+  },
+  {
+   "id": "shared-holders-do-not-block-shared-waiters",
+   "from": "1/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "shared"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "shared",
+      "sinceMs": 1,
+      "queued": false
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "shared"
+      }
+     ],
+     "wait": {
+      "key": "A",
+      "mode": "shared",
+      "sinceMs": 2,
+      "queued": false
+     }
+    }
+   ],
+   "expect": null
+  },
+  {
+   "id": "chain-without-cycle",
+   "from": "1/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [],
+     "wait": {
+      "key": "A",
+      "mode": "exclusive",
+      "sinceMs": 1,
+      "queued": false
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "exclusive",
+      "sinceMs": 2,
+      "queued": false
+     }
+    },
+    {
+     "id": "3/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "exclusive"
+      }
+     ]
+    }
+   ],
+   "expect": null
+  },
+  {
+   "id": "queue-order-closes-a-cycle",
+   "from": "1/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "shared"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "exclusive",
+      "sinceMs": 300,
+      "queued": true
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "shared"
+      }
+     ],
+     "wait": {
+      "key": "A",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": true
+     }
+    }
+   ],
+   "expect": {
+    "members": [
+     "1/1",
+     "2/1"
+    ],
+    "victim": "1/1"
+   }
+  },
+  {
+   "id": "cycle-not-through-requester-is-left-to-its-members",
+   "from": "1/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [],
+     "wait": {
+      "key": "A",
+      "mode": "exclusive",
+      "sinceMs": 1,
+      "queued": false
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [
+      {
+       "key": "A",
+       "mode": "exclusive"
+      },
+      {
+       "key": "C",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "B",
+      "mode": "exclusive",
+      "sinceMs": 2,
+      "queued": false
+     }
+    },
+    {
+     "id": "3/1",
+     "holds": [
+      {
+       "key": "B",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "C",
+      "mode": "exclusive",
+      "sinceMs": 3,
+      "queued": false
+     }
+    }
+   ],
+   "expect": null
+  }
+ ],
+ "messages": [
+  {
+   "id": "hold-and-wait-en",
+   "language": "en",
+   "violation": {
+    "version": 1,
+    "kind": "hold-and-wait",
+    "held": "outer:a",
+    "heldMode": "exclusive",
+    "heldRank": 1,
+    "heldClass": "outer",
+    "requested": "inner:b",
+    "requestedMode": "shared",
+    "requestedRank": 3,
+    "requestedClass": "inner",
+    "waitedMilliseconds": 15000,
+    "blockerPid": 4242,
+    "blockerHeldSeconds": 77,
+    "atMs": 1,
+    "pid": 1
+   },
+   "contains": [
+    "inner:b",
+    "shared",
+    "15 s",
+    "process 4242",
+    "77 s",
+    "outer:a",
+    "exclusively"
+   ]
+  },
+  {
+   "id": "hold-and-wait-de",
+   "language": "de",
+   "violation": {
+    "version": 1,
+    "kind": "hold-and-wait",
+    "held": "outer:a",
+    "heldMode": "exclusive",
+    "heldRank": 1,
+    "heldClass": "outer",
+    "requested": "inner:b",
+    "requestedMode": "shared",
+    "requestedRank": 3,
+    "requestedClass": "inner",
+    "waitedMilliseconds": 15000,
+    "blockerPid": 4242,
+    "blockerHeldSeconds": 77,
+    "atMs": 1,
+    "pid": 1
+   },
+   "contains": [
+    "inner:b",
+    "15 s",
+    "Prozess 4242",
+    "77 s",
+    "outer:a",
+    "exklusiv"
+   ]
+  },
+  {
+   "id": "order-en",
+   "language": "en",
+   "violation": {
+    "version": 1,
+    "kind": "out-of-order",
+    "held": "inner:b",
+    "heldMode": "exclusive",
+    "heldRank": 3,
+    "heldClass": "inner",
+    "requested": "outer:a",
+    "requestedMode": "exclusive",
+    "requestedRank": 1,
+    "requestedClass": "outer",
+    "atMs": 1,
+    "pid": 1
+   },
+   "contains": [
+    "Lock order violated",
+    "rank 1",
+    "rank 3",
+    "inner:b"
+   ]
+  },
+  {
+   "id": "order-de",
+   "language": "de",
+   "violation": {
+    "version": 1,
+    "kind": "out-of-order",
+    "held": "inner:b",
+    "heldMode": "exclusive",
+    "heldRank": 3,
+    "heldClass": "inner",
+    "requested": "outer:a",
+    "requestedMode": "exclusive",
+    "requestedRank": 1,
+    "requestedClass": "outer",
+    "atMs": 1,
+    "pid": 1
+   },
+   "contains": [
+    "Sperrreihenfolge verletzt",
+    "Rang 1",
+    "Rang 3",
+    "inner:b"
+   ]
+  },
+  {
+   "id": "cycle-de",
+   "language": "de",
+   "violation": {
+    "version": 1,
+    "kind": "cycle",
+    "held": "a",
+    "heldMode": "exclusive",
+    "heldRank": 0,
+    "heldClass": "unclassified",
+    "requested": "b",
+    "requestedMode": "exclusive",
+    "requestedRank": 0,
+    "requestedClass": "unclassified",
+    "cycle": [
+     "1/1",
+     "2/1"
+    ],
+    "atMs": 1,
+    "pid": 1
+   },
+   "contains": [
+    "Verklemmung erkannt",
+    "1/1 → 2/1"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "cohort",
+    "operation",
+    "engineId",
+    "cohortPlan",
+    "terminal",
+    "repository",
+    "caddy",
+    "milliseconds",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "fresh-final-observation"
+    },
+    "cohort": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "engineId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "cohortPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "repository": {
+      "const": "ghcr.io/usalu/architecture-course-proctor"
+    },
+    "caddy": {
+      "const": "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"
+    },
+    "milliseconds": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 300000
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core",
+        "entry",
+        "schema",
+        "cases",
+        "tests",
+        "oracle",
+        "controller",
+        "controllerSchema",
+        "finalCore",
+        "modes",
+        "fixture",
+        "finalSchema",
+        "finalFixture",
+        "finalEntry"
+      ],
+      "properties": {
+        "core": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cases": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "tests": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "oracle": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "controller": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "controllerSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "finalCore": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modes": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "fixture": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "finalSchema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "finalFixture": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "finalEntry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "group",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "group": {
+                "enum": [
+                  "plan",
+                  "observation",
+                  "guest"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

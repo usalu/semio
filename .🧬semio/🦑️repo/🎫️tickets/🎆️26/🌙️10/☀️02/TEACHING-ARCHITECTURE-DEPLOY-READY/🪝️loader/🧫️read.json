@@ -19,16 +19,18 @@
     "sha256",
     "bytes",
     "loaderDeclarationLine",
-    "loaderInitializerLiteralMax512",
     "guardLine",
-    "guardLiteralMax256",
-    "guardConsequenceLiteralMax256",
     "loaderOccurrenceCount",
     "guardOccurrenceCount",
-    "enclosingFunctionNames"
+    "enclosingFunctionNames",
+    "atMostTwoSnippetsEachMaximum512Bytes"
   ],
   "requiredLoaderIdentifier": "loadSemioGraphAuthorizersV1",
   "requiredGuardCondition": "!frozen || frozen.toolingIdentity !== toolingIdentity",
   "requiredGuardMessage": "Original immutable graph authorizers required",
-  "launchAuthorized": false
+  "launchAuthorized": false,
+  "maximumTransportBytes": 98304,
+  "ownClientKillSignal": "SIGKILL",
+  "containerIdentityReference": "🗑️generated/2026-10-20-builder-resume-identity.json",
+  "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60"
 }

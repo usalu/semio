@@ -1,0 +1,36 @@
+{
+  "en": {
+    "template": "{command} · {phase}: {done} of {total} {units}",
+    "phases": {
+      "inference": {
+        "label": "Inferring projects",
+        "units": "projects"
+      },
+      "verification": {
+        "label": "Verifying input closures",
+        "units": "closures"
+      },
+      "expansion": {
+        "label": "Expanding input closures",
+        "units": "closures"
+      }
+    }
+  },
+  "de": {
+    "template": "{command} · {phase}: {done} von {total} {units}",
+    "phases": {
+      "inference": {
+        "label": "Projekte ableiten",
+        "units": "Projekte"
+      },
+      "verification": {
+        "label": "Eingabehüllen prüfen",
+        "units": "Hüllen"
+      },
+      "expansion": {
+        "label": "Eingabehüllen auflösen",
+        "units": "Hüllen"
+      }
+    }
+  }
+}

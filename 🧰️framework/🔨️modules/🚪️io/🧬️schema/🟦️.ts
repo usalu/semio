@@ -1,5 +1,5 @@
 /** 🚪️ Physical artifact routes and coordinate codecs. */
-import { parseArtifactDialect, type ArtifactDialect, type ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
+import { parseArtifactDialect, type ArtifactDialect, type ArtifactRef } from "../../🧬️schema/📦️packages/🟦️typescript/🗿️artifact-reference/🟦️.ts";
 
 /** 🗄️ Framework-owned carrier dialect for raw untyped bytes — mirrors Rust `io_schema::CARRIER_BINARY`, the payload law's binary exception. */
 export const CARRIER_BINARY: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.binary", standard: "raw", subset: "*" });

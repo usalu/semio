@@ -66,7 +66,7 @@ pub fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value,
         execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
         quotas: semio_framework::kernel::QuotaSchema::default(), contributions: semio_framework::ContributionSet::default(), assets: Vec::new(),
     };
-    let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     decode_package_descriptor(&bytes)?;
     std::fs::write(root.join("stdio-component.wasm"), component).map_err(catalog_error)?;
     std::fs::write(root.join("stdio-descriptor.semio"), &bytes).map_err(catalog_error)?;

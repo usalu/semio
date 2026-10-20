@@ -1710,7 +1710,7 @@
         }
       }
     },
-    "ProducerRecipeProtocol": {"const":{"version":5,"kind":"javascript-install-projection","backend":"hardlink","lifecycle":"ignore-scripts","linker":"isolated","cache":"bun-cache","global":"bun-global","bin":"bun-bin","temporary":"tmp","home":"bun-home","config":"bun-config","clearEnvironmentPrefixes":["BUN_","NPM_CONFIG_"],"clearEnvironmentKeys":["HOME","USERPROFILE","XDG_CONFIG_HOME","XDG_CACHE_HOME","TMPDIR","TMP","TEMP","NODE_ENV","NODE_OPTIONS"],"directoryRoles":["bun-cache","bun-global","bun-bin","tmp","bun-home","bun-config"],"nodeEnvironment":"development","maximumEnvironmentEntries":512,"maximumEnvironmentBytes":65536,"maximumEnvironmentValueUnits":32768,"borrowedProviders":"canonical-owner-declared-version-and-manifest"}},
+    "ProducerRecipeProtocol": {"const":{"version":6,"kind":"javascript-install-projection","backends":{"darwin":"clonefile","linux":"copyfile","win32":"copyfile"},"lifecycle":"ignore-scripts","linker":"isolated","cache":"bun-cache","global":"bun-global","bin":"bun-bin","temporary":"tmp","home":"bun-home","config":"bun-config","clearEnvironmentPrefixes":["BUN_","NPM_CONFIG_"],"clearEnvironmentKeys":["HOME","USERPROFILE","XDG_CONFIG_HOME","XDG_CACHE_HOME","TMPDIR","TMP","TEMP","NODE_ENV","NODE_OPTIONS"],"directoryRoles":["bun-cache","bun-global","bun-bin","tmp","bun-home","bun-config"],"nodeEnvironment":"development","maximumEnvironmentEntries":512,"maximumEnvironmentBytes":65536,"maximumEnvironmentValueUnits":32768,"borrowedProviders":"canonical-owner-declared-version-and-manifest"}},
     "ProducerDirectoryRoleCase": {
       "type": "object",
       "additionalProperties": false,
@@ -1911,7 +1911,7 @@
         "maximumEntries": 1048576,
         "maximumDirectoryEntries": 65536,
         "maximumBindingRewritesPerHandle": 8,
-        "fullFenceInterval": 32,
+        "fullFenceInterval": 64,
         "maximumWork": 16777216,
         "progressWorkUnits": 64,
         "scanProgressWorkUnits": 4096

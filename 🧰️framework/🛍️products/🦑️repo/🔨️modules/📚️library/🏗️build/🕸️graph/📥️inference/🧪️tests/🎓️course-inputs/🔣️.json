@@ -1,0 +1,91 @@
+{
+  "site": "🎓️teaching/🏛️architecture/📚️course",
+  "project": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+  "workspaces": "🎓️teaching/package.json",
+  "targets": {
+    "test": {
+      "reads": [
+        {
+          "kind": "vitest",
+          "config": "{site}/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "kind": "workspace-manifests"
+        },
+        {
+          "kind": "nearest-tsconfig"
+        },
+        {
+          "kind": "files",
+          "paths": [
+            ".github/workflows/architecture-course.yml",
+            "bun.lock",
+            "🎓️teaching/🏛️architecture/📚️course/README.md",
+            "🎓️teaching/🏛️architecture/📚️course/🌐️.html",
+            "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+            "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+            "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+            "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+            "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile.dockerignore",
+            "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+            "🎓️teaching/🏛️architecture/📚️course/🟦️.ts",
+            "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🌬️ventilation/🔣️.json",
+            "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🐾️context-casts/🔣️.json",
+            "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🗂️topics/🔣️.json",
+            "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🪂️canopies/🔣️.json",
+            "🎓️teaching/🛂️proctor/README.md",
+            "🎓️teaching/🛂️proctor/🔨️modules/📚️course/🧰️fixtures/🦀️.rs",
+            "🎓️teaching/🛂️proctor/🔨️modules/🗄️storage/🦀️.rs",
+            "🎓️teaching/🛂️proctor/🧪️tests/🌐️end-to-end/🧰️harness/🦀️.rs",
+            "🎓️teaching/🛂️proctor/🧪️tests/🧫️fixtures/⚡️power/🔣️.json",
+            "🎓️teaching/🛂️proctor/🧪️tests/🧫️fixtures/🏠️homes/🔣️.json",
+            "🎓️teaching/🛂️proctor/🧪️tests/🧫️fixtures/📚️catalog/🔣️.json",
+            "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json",
+            "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+            "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🧾️unit-evidence/🔣️.json",
+            "🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧬️schema/🔣️.json",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧬️schema/🔣️.json"
+          ]
+        },
+        {
+          "kind": "rust",
+          "workspaceManifest": "🎓️teaching/Cargo.toml",
+          "package": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/Cargo.toml",
+          "pattern": "^Cargo\\.toml$"
+        }
+      ]
+    },
+    "typecheck": {
+      "reads": [
+        {
+          "kind": "tsconfig",
+          "path": "{project}/tsconfig.json"
+        }
+      ]
+    },
+    "check": {
+      "reads": [
+        {
+          "kind": "imports",
+          "entries": [
+            "{project}/📜️script.ts"
+          ]
+        }
+      ]
+    },
+    "build": {
+      "reads": [
+        {
+          "kind": "tsconfig",
+          "path": "{project}/tsconfig.site.json"
+        }
+      ]
+    }
+  },
+  "inventory": [
+    "🧰️framework",
+    "🎓️teaching"
+  ]
+}

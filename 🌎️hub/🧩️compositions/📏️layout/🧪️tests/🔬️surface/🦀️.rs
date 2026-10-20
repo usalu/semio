@@ -6,10 +6,10 @@ use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_d
 
 #[semio_framework_async_macros::async_test]
 async fn layout_viewer_never_mutates() {
-    assert_viewer_never_mutates::<crate::viewer::layout::LayoutViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_layout_layout_viewer::LayoutViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn layout_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<crate::editor::layout::LayoutPlayApp, crate::viewer::layout::LayoutViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_layout_layout_editor::LayoutPlayApp, semio_s_artifact_layout_layout_viewer::LayoutViewer>().await;
 }

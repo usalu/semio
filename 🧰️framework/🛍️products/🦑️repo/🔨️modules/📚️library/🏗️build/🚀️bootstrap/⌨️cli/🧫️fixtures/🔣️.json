@@ -259,5 +259,466 @@
       "tool": "bazel",
       "mode": "release"
     }
+  ],
+  "maintenance": [
+    {
+      "name": "preview",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "none",
+      "target": "preview"
+    },
+    {
+      "name": "retire",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "fault": "none",
+      "target": "retire"
+    },
+    {
+      "name": "output-pair",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--output",
+        "stream"
+      ],
+      "fault": "none",
+      "target": "preview"
+    },
+    {
+      "name": "--dry-run",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--dry-run"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--help",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--help"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--graph",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--graph"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--exclude-dependencies",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--exclude-dependencies"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--skip-cache=false",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--skip-cache=false"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--unknown",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--unknown"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "--force",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview",
+        "--force"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "tail",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive",
+        "--",
+        "retire-historical"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "configuration",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive:prototype"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "historical",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-historical"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "other-owner",
+      "args": [
+        "run",
+        "other:cache-retire-inactive-preview"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "many",
+      "args": [
+        "run-many",
+        "--projects=repo",
+        "--targets=cache-retire-inactive"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "refuse-owner",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "owner",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-command",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "command",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-dependencies",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "dependencies",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-cwd",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "cwd",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-forward",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "forward",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-source",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "source",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-capture",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "capture",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-spread",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "spread",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-abort",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "abort",
+      "target": "preview"
+    },
+    {
+      "name": "refuse-reject",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive-preview"
+      ],
+      "fault": "reject",
+      "target": "preview"
+    }
+  ],
+  "reset": [
+    {
+      "name": "fixed-owner",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "none",
+      "target": "nx"
+    },
+    {
+      "name": "stream-and-skip",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "fault": "none",
+      "target": "nx"
+    },
+    {
+      "name": "split-output",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--output",
+        "stream"
+      ],
+      "fault": "none",
+      "target": "nx"
+    },
+    {
+      "name": "reject---force",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--force"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "reject---exclude-dependencies",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--exclude-dependencies"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "reject---skip-cache=false",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--skip-cache=false"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "reject---unknown",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--unknown"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "no-arguments",
+      "args": [
+        "run",
+        "repo:cache-reset-nx",
+        "--",
+        "reset"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "no-configuration",
+      "args": [
+        "run",
+        "repo:cache-reset-nx:prototype"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "no-other-owner",
+      "args": [
+        "run",
+        "other:cache-reset-nx"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "no-run-many",
+      "args": [
+        "run-many",
+        "--projects=repo",
+        "--targets=cache-reset-nx"
+      ],
+      "fault": "none",
+      "target": null
+    },
+    {
+      "name": "refuse-owner",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "owner",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-command",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "command",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-dependencies",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "dependencies",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-outputs",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "outputs",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-cache",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "cache",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-cwd",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "cwd",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-forward",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "forward",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-source",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "source",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-capture",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "capture",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-spread",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "spread",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-abort",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "abort",
+      "target": "nx"
+    },
+    {
+      "name": "refuse-reject",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "fault": "reject",
+      "target": "nx"
+    }
   ]
 }

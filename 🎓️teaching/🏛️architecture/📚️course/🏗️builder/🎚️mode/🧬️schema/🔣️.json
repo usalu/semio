@@ -2,5 +2,49 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object", "additionalProperties": false,
   "required": ["intent", "originalMode"],
-  "properties": {"intent": {"enum": ["dev", "release"]}, "originalMode": {"enum": ["prototype", "release"]}}
+  "properties": {"intent": {"enum": ["dev", "release"]}, "originalMode": {"enum": ["prototype", "release"]}},
+  "definitions": {
+    "Messages": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "refusals"],
+      "properties": {
+        "version": {"const": 1},
+        "refusals": {
+          "type": "object", "additionalProperties": false,
+          "required": ["release-required", "closed-request"],
+          "properties": {
+            "release-required": {"$ref": "#/definitions/Refusal"},
+            "closed-request": {"$ref": "#/definitions/Refusal"}
+          }
+        }
+      }
+    },
+    "Refusal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 40}, "de": {"type": "string", "minLength": 40}}
+    },
+    "Fixture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "decisions", "malformed", "oracle"],
+      "properties": {
+        "version": {"const": 1},
+        "decisions": {
+          "type": "array", "minItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "intent", "originalMode", "expected"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+              "intent": {"enum": ["dev", "release"]},
+              "originalMode": {"enum": ["prototype", "release"]},
+              "expected": {"enum": ["allowed:prototype", "allowed:release", "refused:release-required"]}
+            }
+          }
+        },
+        "malformed": {"type": "array", "minItems": 3, "items": {"type": "object"}},
+        "oracle": {"type": "object"}
+      }
+    }
+  }
 }

@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "pinCases": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "extra-field",
+      "accepted": false
+    },
+    {
+      "id": "fake-digest",
+      "accepted": false
+    },
+    {
+      "id": "host-destination",
+      "accepted": false
+    },
+    {
+      "id": "source-destination",
+      "accepted": false
+    },
+    {
+      "id": "over-binary-cap",
+      "accepted": false
+    },
+    {
+      "id": "below-header",
+      "accepted": false
+    },
+    {
+      "id": "dynamic-interpreter",
+      "accepted": false
+    }
+  ],
+  "elfCases": [
+    {
+      "id": "elf64-static",
+      "accepted": true
+    },
+    {
+      "id": "wrong-machine",
+      "accepted": false
+    },
+    {
+      "id": "wrong-class",
+      "accepted": false
+    },
+    {
+      "id": "wrong-endian",
+      "accepted": false
+    },
+    {
+      "id": "wrong-type",
+      "accepted": false
+    },
+    {
+      "id": "truncated",
+      "accepted": false
+    },
+    {
+      "id": "program-table-outside",
+      "accepted": false
+    },
+    {
+      "id": "interp",
+      "accepted": false
+    }
+  ],
+  "identityCases": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-id",
+      "accepted": false
+    },
+    {
+      "id": "wrong-token",
+      "accepted": false
+    },
+    {
+      "id": "wrong-mount",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-mount",
+      "accepted": false
+    },
+    {
+      "id": "not-running",
+      "accepted": false
+    },
+    {
+      "id": "paused",
+      "accepted": false
+    },
+    {
+      "id": "created-change",
+      "accepted": false
+    }
+  ],
+  "transportCases": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "before-identity",
+      "accepted": false
+    },
+    {
+      "id": "after-identity",
+      "accepted": false
+    },
+    {
+      "id": "receive-failure",
+      "accepted": false
+    },
+    {
+      "id": "digest-mismatch",
+      "accepted": false
+    },
+    {
+      "id": "guest-mode",
+      "accepted": false
+    },
+    {
+      "id": "help-nonzero",
+      "accepted": false
+    },
+    {
+      "id": "help-overflow",
+      "accepted": false
+    },
+    {
+      "id": "deadline",
+      "accepted": false
+    },
+    {
+      "id": "cancel-before",
+      "accepted": false
+    },
+    {
+      "id": "cancel-final-postinspect",
+      "accepted": false
+    },
+    {
+      "id": "deadline-final-postinspect",
+      "accepted": false
+    },
+    {
+      "id": "stopped-before",
+      "accepted": false
+    },
+    {
+      "id": "unpinned-binary",
+      "accepted": false
+    }
+  ],
+  "fileCases": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "empty",
+      "accepted": false
+    },
+    {
+      "id": "over-limit",
+      "accepted": false
+    },
+    {
+      "id": "directory",
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "accepted": false
+    }
+  ],
+  "guestCases": [
+    {
+      "kind": "receive",
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "kind": "receive",
+      "id": "collision",
+      "accepted": false
+    },
+    {
+      "kind": "receive",
+      "id": "bad-digest",
+      "accepted": false
+    },
+    {
+      "kind": "receive",
+      "id": "too-many",
+      "accepted": false
+    },
+    {
+      "kind": "receive",
+      "id": "symlink-parent",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "kind": "probe",
+      "id": "help-failure",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "symlink-parent",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "symlink-file",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "hardlink",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "descriptor-change",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "name-change",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "read-failure",
+      "accepted": false
+    },
+    {
+      "kind": "probe",
+      "id": "wrong-mode",
+      "accepted": false
+    }
+  ],
+  "platformCases": [
+    {
+      "id": "windows-host-non-posix-mode",
+      "platform": "win32",
+      "mode": 420,
+      "executable": true,
+      "changed": false,
+      "accepted": true
+    },
+    {
+      "id": "windows-data-read",
+      "platform": "win32",
+      "mode": 420,
+      "executable": false,
+      "changed": false,
+      "accepted": true
+    },
+    {
+      "id": "linux-missing-execute",
+      "platform": "linux",
+      "mode": 420,
+      "executable": true,
+      "changed": false,
+      "accepted": false
+    },
+    {
+      "id": "macos-missing-execute",
+      "platform": "darwin",
+      "mode": 420,
+      "executable": true,
+      "changed": false,
+      "accepted": false
+    },
+    {
+      "id": "linux-executable",
+      "platform": "linux",
+      "mode": 493,
+      "executable": true,
+      "changed": false,
+      "accepted": true
+    },
+    {
+      "id": "macos-executable",
+      "platform": "darwin",
+      "mode": 493,
+      "executable": true,
+      "changed": false,
+      "accepted": true
+    },
+    {
+      "id": "windows-observed-mode-changed",
+      "platform": "win32",
+      "mode": 420,
+      "executable": true,
+      "changed": true,
+      "accepted": false
+    },
+    {
+      "id": "linux-observed-mode-changed",
+      "platform": "linux",
+      "mode": 493,
+      "executable": true,
+      "changed": true,
+      "accepted": false
+    },
+    {
+      "id": "windows-special-mode-refused",
+      "platform": "win32",
+      "mode": 2468,
+      "executable": true,
+      "changed": false,
+      "accepted": false
+    }
+  ]
+}

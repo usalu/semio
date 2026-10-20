@@ -1,0 +1,15 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️protocol/🐹️.go": "d2d63099e3ffa9b874a940598a6b8a7a1db67fb193cb19f7cbb4cb51b0f72b64",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🖥️server/🐹️.go": "438fa95667fa0c61300ed168f415335e2144cc99c41eb77a1cdaf76e2640e42b",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📡️event/🐹️.go": "45f40be49e96f472b993fd51397ae7ee448b6de7f2641d48742524eadba7047c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧩️component/🐹️.go": "2e90a59304c80146a3beea8e82503576d0fb7d71cc1968ff988b7d5b4f775322",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go": "9eedc7040ee92a3119f612c37188b49addc51b0532b3daf8dd81d6fe502fecb2",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go": "4df34b8fd1560ec22a3ba33b5b0c6cd5459f699f4b26d63db1ea050684c8c04d",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🚪️entrypoint-contract.json": "1afddba1b2e14a36aab83239f512d5f2d95e50550685e54c583309a16e940786",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs": "c21128155e58ffc0d5b09c9b6310ed0bc65cbc563ed96822bd4233a0e9e48c7c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go": "533ce90e468bf5ba64d30c174dabc1240b15986dc678f7af1dc2c1e504395e9e",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs": "e19284369e15c9443a9bf2fc40662310013b5c4f6a1ee3bbb438d5e3d65e874d",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json": "1e33963567090242b290c53b2cf78c8cf63864e33f0a3964c972be1cf050bb13",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md": "e28de2b7a50754e60bd712ea4a44563f174414966414b9741379989f47cfca1f",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚀️run-and-projection/🦀️.rs": "08a18e48e581e7e0a2730e18d46b61fe8ca2609f5a0858d667b178d366cbe075"
+}

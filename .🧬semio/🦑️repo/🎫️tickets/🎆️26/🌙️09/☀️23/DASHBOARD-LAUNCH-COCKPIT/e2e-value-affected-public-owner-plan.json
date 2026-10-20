@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "workspace": "🧰️framework/Cargo.toml",
+  "configuration": "prototype",
+  "rustMinStack": 134217728,
+  "packages": [
+    "semio-framework-value-retained-clone",
+    "semio-framework-value-retained-clone-integration",
+    "semio-framework-value-persistent",
+    "semio-framework-value-snapshot-projection",
+    "semio-framework-value-tests",
+    "semio-framework-value-derive"
+  ],
+  "publicIntegrationLaws": [
+    "scalar_lifecycle_tests::scalar_output_and_selected_close_preserve_each_lifecycle",
+    "scalar_lifecycle_tests::scalar_compounds_preserve_selected_close_and_single_output_custody",
+    "scalar_lifecycle_tests::composite_close_quotes_its_own_child_start_before_the_child_close_protocol",
+    "normal_demand_tests::retained_clone_normal_demand_generic_compounds"
+  ],
+  "advertisedTripleCount": 69,
+  "expectedBodyCount": 133
+}

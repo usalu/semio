@@ -20,20 +20,17 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "production",
-        "^production"
+        "^production",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*"
       ],
       "outputs": [],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
-      },
+      "options": { "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts build" },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
         }
       }
     },

@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "kind": "read-only-unused-root-portable-window-disposition",
+  "graphHelperCalls": 0,
+  "graphHelperDefinitions": 1,
+  "referenceScanFiles": 300,
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+      "bytes": 60060,
+      "sha256": "a83ca8391d460041fb3cf6e03bb45d492856c1f8e6e17804f97cdef8775f31a2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+      "bytes": 19202,
+      "sha256": "03d1a5d78c63a35576432d39eb4a5579037753cbabac8487688858e2d4040668"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+      "bytes": 6564,
+      "sha256": "4c3c9dd892f82dbbc6cfe88601a92bf075ea8ffc6187d6f9d6bc58108faea642"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🔣️.json",
+      "bytes": 1375,
+      "sha256": "31630700bcb5c74d956d25ad95823a23205b48b4a1f83701a971e8bf1be20546"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🧬️schema/🔣️.json",
+      "bytes": 1046,
+      "sha256": "f0a1b15f87ce63f87c1775efa42518c8662e60eca8cb3ba47fb70285b7857e32"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs",
+      "bytes": 3183,
+      "sha256": "46c6552835705d096587924a69db792f0230058bbceb269cb7f17398e4da8325"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+      "bytes": 26767,
+      "sha256": "e62bd7a4759dfc1617d2c38870118e936370e1791eeb6a1f19789527c710b0f6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+      "bytes": 30835,
+      "sha256": "3e66150941bbf6cdb230767ce24a72f35bf9b5370e6c7bdb2a292067b681365f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts",
+      "bytes": 127513,
+      "sha256": "64217f7e906777870ec1fc48dbd2858651cfe8ba8a00dc6beb2f58d2b2a85f02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+      "bytes": 13671,
+      "sha256": "2d80245049faf00f61c88b7f48d7f91afc094a3001644ae5b5058221cc2dd548"
+    }
+  ],
+  "recommendation": "Remove only superseded Root helper/import/public reexport and its seven extraction-only regression rows/schema/test block; preserve peer lean reads and existing original settlement and physical gate tests. This does not claim failure-final physical check aggregation exists in peer path."
+}

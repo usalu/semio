@@ -8,8 +8,81 @@
     "admission"
   ],
   "definitions": {
-    "GraphWriterLeaseProtocol": {"const":{"version":1,"partition":"leases","role":"infrastructure-reader","artifactReservation":false}},
-    "GraphWriterLeaseCase": {"type":"object","additionalProperties":false,"required":["id","failAt","releaseFails","closeFails","usedBytes","expectedFailure","expectedClosed","expectedAcquired"],"properties":{"id":{"type":"string","minLength":1,"maxLength":64},"failAt":{"enum":["none","open","recheck","acquire","graph","body","cancel","body-undefined","cancel-body"]},"releaseFails":{"type":"boolean"},"closeFails":{"type":"boolean"},"usedBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"expectedFailure":{"enum":[null,"open","recheck","acquire","graph","body","cancel","release","close","capacity","body-undefined","cancel-body"]},"expectedClosed":{"type":"boolean"},"expectedAcquired":{"type":"boolean"}}},
+    "GraphWriterLeaseProtocol": {
+      "const": {
+        "version": 1,
+        "partition": "leases",
+        "role": "infrastructure-reader",
+        "artifactReservation": false
+      }
+    },
+    "GraphWriterLeaseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "failAt",
+        "releaseFails",
+        "closeFails",
+        "usedBytes",
+        "expectedFailure",
+        "expectedClosed",
+        "expectedAcquired"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "failAt": {
+          "enum": [
+            "none",
+            "open",
+            "recheck",
+            "acquire",
+            "graph",
+            "body",
+            "cancel",
+            "body-undefined",
+            "cancel-body"
+          ]
+        },
+        "releaseFails": {
+          "type": "boolean"
+        },
+        "closeFails": {
+          "type": "boolean"
+        },
+        "usedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedFailure": {
+          "enum": [
+            null,
+            "open",
+            "recheck",
+            "acquire",
+            "graph",
+            "body",
+            "cancel",
+            "release",
+            "close",
+            "capacity",
+            "body-undefined",
+            "cancel-body"
+          ]
+        },
+        "expectedClosed": {
+          "type": "boolean"
+        },
+        "expectedAcquired": {
+          "type": "boolean"
+        }
+      }
+    },
     "OptionalQuota": {
       "title": "Optional Graph Cache Quota",
       "type": "object",
@@ -47,7 +120,7 @@
         "lowWaterBytes": 536870912,
         "minimumAvailableBytes": 1073741824
       },
-      "optionalPath": "^(?:(?:selections|contexts)/[a-f0-9]{64}/)?(?:(?:np/[a-f0-9]{24}\\.json|inference/emoji-project-json\\.json|(?:inference/)?test-cases\\.json)(?:\\.[0-9]+\\.[0-9]+\\.tmp|\\.records/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?)?|mr/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?)$",
+      "optionalPath": "^(?:(?:selections|contexts)/[a-f0-9]{64}/)?(?:(?:(?:np|ip|rr)/[a-f0-9]{24}\\.json|inference/emoji-project-json\\.json|(?:inference/)?test-cases\\.json)(?:\\.[0-9]+\\.[0-9]+\\.tmp|\\.records/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?)?|mr/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?|(?:(?:np|ip|rr|inference)/)?ob/[a-f0-9]{64}\\.br(?:\\.[0-9]+\\.[0-9]+\\.tmp)?)$",
       "definitions": {
         "Headroom": {
           "type": "object",

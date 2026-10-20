@@ -1,5 +1,5 @@
-import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { cargoWorkspaceDeclaresMemberV1 } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";

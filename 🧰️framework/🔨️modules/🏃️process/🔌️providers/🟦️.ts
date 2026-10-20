@@ -12,7 +12,7 @@ const PROVIDER_EXPORT: string = schema.definitions.Export.const;
 export type ScriptProviderMapV1 = Readonly<{ version: 1; providers: Readonly<Record<string, string>> }>;
 declare const brand: unique symbol;
 /** 🏷️ Names one framework-owned port and the exact functions its implementation must expose. */
-export type ScriptProviderTokenV1<Provider extends object> = Readonly<{ name: string; methods: readonly (keyof Provider & string)[]; readonly [brand]?: Provider }>;
+export interface ScriptProviderTokenV1<Provider extends object> { readonly name: string; readonly methods: readonly (keyof Provider & string)[]; readonly [brand]?: Provider }
 
 const loading = new Map<string, Promise<object>>();
 const loaded = new Map<string, object>();

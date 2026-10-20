@@ -44,7 +44,7 @@ fn agent_session_body(audience: &str) -> Vec<u8> {
 async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     let state = test_state().await;
     let human = issue_test_session(&state, "delegator@example.com").await;
-    let space_id = create_space_for_test(&state, &human.user_id, "Agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+    let space_id = create_space_for_test(&state, &human.user_id, "Agent space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
     let addr = spawn_server(state.clone()).await;
     let bearer = format!("Bearer {}", human.token);
 
@@ -115,7 +115,7 @@ fn revoking_a_delegation_closes_the_agents_open_document_socket_and_roster_row()
     run_socket_test(|| async {
         let state = test_state().await;
         let human = issue_test_session(&state, "revoking-human@example.com").await;
-        let space_id = create_space_for_test(&state, &human.user_id, "Revoked agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Revoked agent space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
         announce_document_for_test(&state, &space_id, "agent-doc").await;
         let addr = spawn_server(state.clone()).await;
         let bearer = format!("Bearer {}", human.token);
@@ -187,7 +187,7 @@ fn a_withdrawn_delegation_admits_no_agent_edit_after_it_in_either_order() {
         }
         let state = test_state().await;
         let human = issue_test_session(&state, "withdrawing-human@example.com").await;
-        let space_id = create_space_for_test(&state, &human.user_id, "Withdrawn agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Withdrawn agent space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
         announce_document_for_test(&state, &space_id, "withdraw-in-flight").await;
         announce_document_for_test(&state, &space_id, "withdraw-first").await;
         let addr = spawn_server(state.clone()).await;
@@ -304,8 +304,8 @@ fn an_agent_session_holds_at_most_its_delegations_audience_in_its_delegations_sp
         }
         let state = test_state().await;
         let human = issue_test_session(&state, "audience-human@example.com").await;
-        let space_id = create_space_for_test(&state, &human.user_id, "Audience space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
-        let other_space = create_space_for_test(&state, &human.user_id, "Other space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Audience space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        let other_space = create_space_for_test(&state, &human.user_id, "Other space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
         for document in ["read-agent-doc", "edit-agent-doc"] {
             announce_document_for_test(&state, &space_id, document).await;
         }
@@ -435,7 +435,7 @@ async fn an_agent_can_never_widen_its_own_audience_or_probe_another_humans_deleg
     let state = test_state().await;
     let human = issue_test_session(&state, "narrow@example.com").await;
     let stranger = issue_test_session(&state, "stranger@example.com").await;
-    let space_id = create_space_for_test(&state, &human.user_id, "Narrow space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+    let space_id = create_space_for_test(&state, &human.user_id, "Narrow space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
     let addr = spawn_server(state.clone()).await;
     let bearer = format!("Bearer {}", human.token);
 
@@ -482,7 +482,7 @@ async fn only_an_author_of_the_space_can_delegate_to_an_agent() {
     let outsider = bounded_law_step("author delegation law: outsider session", issue_test_session(&state, "outsider@example.com")).await;
     watchdog.at("space creation");
     let space_id =
-        bounded_law_step("author delegation law: space creation", create_space_for_test(&state, &owner.user_id, "Author space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private)).await;
+        bounded_law_step("author delegation law: space creation", create_space_for_test(&state, &owner.user_id, "Author space", directory::os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private)).await;
     watchdog.at("spectator membership");
     bounded_law_step("author delegation law: spectator membership", upsert_member_for_test(&state, &space_id, "spectator@example.com", DirectorySpaceRole::Spectator)).await;
     watchdog.at("server spawn");

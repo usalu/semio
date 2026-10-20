@@ -1,0 +1,34 @@
+{
+  "name": "@semio-tech/remodel-plugin",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/📸️remodel/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "regenerate-example": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts regenerate-example",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    }
+  }
+}

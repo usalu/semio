@@ -6,7 +6,7 @@ import { receiveScriptProcessInvocation } from "../../../../🧰️framework/�
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BundleScript, checkScriptInvocation, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🟦️.ts";
 import { serveVite, closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
@@ -31,15 +31,6 @@ class PreparationScript extends BundleScript {
       if (session.variant !== target.variant || session.registryPluginId !== target.pluginId) throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
     }
     console.log(`Prepared Demonstrator ${mode}: ${DEMONSTRATOR_RUNTIME_TARGETS.length} runtime variants`);
-  }
-}
-
-/** 🏁️ Completes the selected component lane prerequisites owned by the build tool. */
-class CompleteScript extends BundleScript {
-  run(args: string[]): void {
-    if (args.length) throw new Error("Runtime lane completion accepts no arguments");
-    checkScriptInvocation(this.invocation);
-    console.log(`Prepared Demonstrator component lanes: ${readBuildMode(process.env.SEMIO_BUILD_MODE)}`);
   }
 }
 
@@ -91,5 +82,5 @@ class ServeTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("prepare", PreparationScript).register("complete", CompleteScript).register("activate", ActivationScript).register("serve", ServeScript).register("prepare-test", PrepareTestScript).register("serve-test", ServeTestScript);
+const router = new ScriptRouter(import.meta.dir).register("prepare", PreparationScript).register("activate", ActivationScript).register("serve", ServeScript).register("prepare-test", PrepareTestScript).register("serve-test", ServeTestScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

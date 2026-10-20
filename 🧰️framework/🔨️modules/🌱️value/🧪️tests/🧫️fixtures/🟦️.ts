@@ -1,5 +1,5 @@
 /** 🧫 The value module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
-import { fixtureUrl } from "@semio-tech/framework/test/source-text";
+import { fixtureUrl } from "../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
 export const valueRetirementSchemaUrl = fixtureUrl(import.meta.url, "../../♻️retirement/🧬️contract/🧬️schema/🔣️.json");
 export { default as valueRefusalSchema } from "../../⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };
 export const valueTypeSchemaUrl = fixtureUrl(import.meta.url, "../../🏷️type/🧬️schema/🔣️.json");

@@ -8,13 +8,14 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildExecPlanV1,runBuildCacheOperationV1,type BuildCacheToolV1} from "../🟦️.ts";
-import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1} from "../📖️help/🟦️.ts";
+import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1,type BuildHelpRequestV1} from "../📖️help/🟦️.ts";
 import {buildExecEnvironmentV1} from "../🌱️exec-environment/🟦️.ts";
 import {validateBuildTaskArgumentsV1} from "../../🧭️selection/🟦️.ts";
 import snapshots from "./🧫️fixtures/📖️help/🔣️.json" with {type:"json"};
 import catalog from "../🔣️catalog.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import scoping from "./🧫️fixtures/🧭️scoping/🔣️.json" with {type:"json"};
 
 const help=catalog as BuildHelpCatalogV1,taskOperations=["run","run-many","affected","exec","watch"],entry=(name:string)=>name==="root"?[]:name.split(" ");
 
@@ -64,7 +65,7 @@ test("human help and examples use the canonical native frontend in every declare
 test("every neutral operation has a tool state, and unimplemented states are honest",async()=>{
  for(const row of catalog.operations){
   expect(["nx","bazel"].every(tool=>["native","adapter","neutral","missing"].includes(row.implementations[tool as "nx"|"bazel"])),row.name).toBe(true);
-  if(row.dryRun)expect(row.notes?.some(note=>note.includes("--dry-run")||note.includes("Changed files"))||row.name==="run-many"||row.name==="affected",row.name).toBe(true);
+  if(row.dryRun)expect(row.notes?.some(note=>note.en.includes("--dry-run")||note.en.includes("Changed files"))||row.name==="run-many"||row.name==="affected",row.name).toBe(true);
  }
  const cache=catalog.operations.find(row=>row.name==="cache")!,bazel=(await import("../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();
  expect(cache.implementations.bazel).toBe("adapter");
@@ -142,15 +143,21 @@ test("the documented flags are exactly the flags the task validator and the othe
  }
 });
 
-test("the help language follows --lang, the environment and the catalogue order, and refuses unknown choices",()=>{
- expect(resolveBuildHelpLanguageV1(help.languages,[],{})).toBe(help.languages[0]);
- expect(resolveBuildHelpLanguageV1(help.languages,["--lang=de"],{LANG:"en_US.UTF-8"})).toBe("de");
- expect(resolveBuildHelpLanguageV1(help.languages,["--lang","de"],{})).toBe("de");
- expect(resolveBuildHelpLanguageV1(help.languages,[],{SEMIO_LANGUAGE:"de",LANG:"en_US.UTF-8"})).toBe("de");
- expect(resolveBuildHelpLanguageV1(help.languages,[],{LANG:"de_DE.UTF-8"})).toBe("de");
- expect(resolveBuildHelpLanguageV1(help.languages,[],{LC_ALL:"C",LANG:"fr_FR.UTF-8"})).toBe(help.languages[0]);
- expect(resolveBuildHelpLanguageV1(help.languages,["--","--lang=de"],{})).toBe(help.languages[0]);
- expect(()=>resolveBuildHelpLanguageV1(help.languages,["--lang=fr"],{})).toThrow("Unknown help language: fr");
+test("the help language follows --lang, the environment and the system, never assumes one, and refuses unknown choices",()=>{
+ const none=()=>[] as string[];
+ expect(resolveBuildHelpLanguageV1(help.languages,["--lang=de"],{LANG:"en_US.UTF-8"},none)).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,["--lang","de"],{},none)).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{SEMIO_LANGUAGE:"de",LANG:"en_US.UTF-8"},none)).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{LANG:"de_DE.UTF-8"},none)).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{LC_ALL:"C",LANG:"fr_FR.UTF-8"},()=>["fr-FR","de-DE"])).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,["--","--lang=de"],{LANG:"en_US.UTF-8"},none)).toBe("en");
+ for(const [args,environment] of [[[],{}],[["--","--lang=de"],{LANG:"C"}]] as const){
+  let message="";try{resolveBuildHelpLanguageV1(help.languages,args,environment,none);}catch(error){message=(error as Error).message;}
+  const lines=message.split("\n");
+  expect(lines.length).toBe(help.languages.length);
+  expect(lines[0]).toContain("No language selected");expect(lines[1]).toContain("Keine Sprache");
+ }
+ expect(()=>resolveBuildHelpLanguageV1(help.languages,["--lang=fr"],{},none)).toThrow("Unknown language: fr");
  expect(readBuildHelpRequestV1(help,["--tool","bazel","cache","clear","--help"])).toEqual({operation:"cache",subcommand:"clear"});
  expect(readBuildHelpRequestV1(help,["run","a:b","--help"])).toEqual({operation:"run"});
  expect(readBuildHelpRequestV1(help,["--help"])).toEqual({});
@@ -175,3 +182,50 @@ test("the real CLI prints the own help of a command, also for preflight, without
   expect(result.stdout.includes(expected),args.join(" ")+"\n"+result.stdout).toBe(true);
  }
 },120_000);
+
+test("the help request reader skips the value of every option with a required value in either spelling",()=>{
+ expect(readBuildHelpRequestV1(help,["--workers","on","cache","clear","--help"])).toEqual({operation:"cache",subcommand:"clear"});
+ expect(readBuildHelpRequestV1(help,["--configuration","prototype","run","--help"])).toEqual({operation:"run"});
+ expect(readBuildHelpRequestV1(help,["run-many","-t","test","-p","a","--help"])).toEqual({operation:"run-many"});
+});
+
+test("every note is rendered in every language, on every page of its operation",()=>{
+ let rendered=0;
+ for(const operation of help.operations){
+  for(const note of operation.notes??[]){
+   for(const language of help.languages){
+    expect(Object.keys(note),operation.name).toEqual([...help.languages]);
+    for(const request of [{operation:operation.name},...(operation.subcommands??[]).map(sub=>({operation:operation.name,subcommand:sub.name}))] as readonly BuildHelpRequestV1[]){
+     const page=renderBuildHelpV1(help,request,language);
+     expect(page.includes(`  - ${note[language]}`),`${operation.name} ${request.subcommand??""} ${language}`).toBe(true);
+     expect(page.includes(`${help.labels.notes![language]}:`)).toBe(true);
+    }
+   }
+   rendered++;
+  }
+ }
+ expect(rendered).toBe(scoping.noteCount);
+});
+
+test("a subcommand lists only the options it reads and the examples that belong to it",()=>{
+ for(const row of scoping.scopedSubcommands){
+  const operation=help.operations.find(candidate=>candidate.name===row.operation)!,subcommand=operation.subcommands!.find(candidate=>candidate.name===row.subcommand)!;
+  expect(subcommand.flags,row.operation+" "+row.subcommand).toEqual(row.flags);
+  for(const name of subcommand.flags??[])expect(operation.flags.includes(name),name).toBe(true);
+  for(const language of help.languages){
+   const page=renderBuildHelpV1(help,{operation:row.operation,subcommand:row.subcommand},language),optionLines=page.split("\n").filter(line=>/^  (-\w, )?--[a-z]/u.test(line)&&!/^  (--tool|--workers|-h, --help|--lang)/u.test(line));
+   expect(optionLines.length,row.operation+" "+row.subcommand+" "+language).toBe(row.flags.length);
+   for(const name of row.flags)expect(page.includes(`  ${name}`),name).toBe(true);
+   for(const command of row.examples)expect(page.includes(`  ${command}`),command).toBe(true);
+   for(const command of row.excludedExamples)expect(page.includes(`  ${command}`),command).toBe(false);
+  }
+ }
+ expect(help.operations.find(row=>row.name==="dependencies")!.synopsis).toBe(scoping.dependenciesSynopsis);
+});
+
+test("the neutral help never names a tool environment variable or a tool command line",()=>{
+ for(const language of help.languages){
+  const pages=[renderBuildHelpV1(help,{},language),...help.operations.flatMap(operation=>[renderBuildHelpV1(help,{operation:operation.name},language),...(operation.subcommands??[]).map(sub=>renderBuildHelpV1(help,{operation:operation.name,subcommand:sub.name},language))])].join("\n");
+  expect(pages,language).not.toMatch(/\bNX_[A-Z_]+|\bBAZEL_[A-Z_]+|--remote_[a-z_]+|--nocache_test_results|--build_tests_only|nx reset/u);
+ }
+});

@@ -148,7 +148,8 @@
    "expected": {
     "command": [
      "--extra_execution_platforms=//:exec_darwin_arm64",
-     "--extra_toolchains=//:bun_toolchain_darwin_arm64"
+     "--extra_toolchains=//:bun_toolchain_darwin_arm64",
+     "--strategy=RepoHermetic=sandboxed,local"
     ],
     "remote": false,
     "platform": "darwin-arm64",
@@ -171,7 +172,8 @@
      "--extra_execution_platforms=//:exec_darwin_arm64,//:exec_remote_linux_x64",
      "--extra_toolchains=//:bun_toolchain_darwin_arm64,//:bun_toolchain_linux_x64",
      "--remote_executor=grpcs://exec.example.test:443",
-     "--noremote_local_fallback"
+     "--noremote_local_fallback",
+     "--strategy=RepoHermetic=remote,sandboxed,local"
     ],
     "remote": true,
     "platform": "linux-x64",
@@ -194,7 +196,8 @@
      "--extra_execution_platforms=//:exec_linux_x64,//:exec_remote_linux_x64",
      "--extra_toolchains=//:bun_toolchain_linux_x64",
      "--remote_executor=grpc://h:1",
-     "--noremote_local_fallback"
+     "--noremote_local_fallback",
+     "--strategy=RepoHermetic=remote,sandboxed,local"
     ],
     "remote": true,
     "platform": "linux-x64",
@@ -213,7 +216,8 @@
    "expected": {
     "command": [
      "--extra_execution_platforms=//:exec_windows_x64",
-     "--extra_toolchains=//:bun_toolchain_windows_x64"
+     "--extra_toolchains=//:bun_toolchain_windows_x64",
+     "--strategy=RepoHermetic=local"
     ],
     "remote": false,
     "platform": "windows-x64",

@@ -1,0 +1,62 @@
+
+/** 🧱️ The shared fact table of persisted records: the rows of one record are cut into content-defined blocks (a cut follows every row whose key hash hits the mask once a block has its minimum rows), so the long runs of rows that thousands of projects share, such as one command closure, become the same block files and a record header lists block digests instead of repeating the rows. */
+const BLOCK_MINIMUM_ROWS=32,BLOCK_MAXIMUM_ROWS=4096,BLOCK_CUT_MASK=0x7f;
+const blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=new Map(),blocksByDigest=new Map(),blocksWritten=new Set();
+let blockRowCounter=0;
+const blockRowIdV1=row=>{let id=blockRowIdentities.get(row);if(id===undefined){id=++blockRowCounter;blockRowIdentities.set(row,id);}return id;};
+const blockRowCutV1=row=>{let cut=blockRowCuts.get(row);if(cut===undefined){const key=observationKeyV1(row);let hash=0x811c9dc5;for(let at=0;at<key.length;at++){hash^=key.charCodeAt(at);hash=Math.imul(hash,16777619);}cut=(hash>>>0)&BLOCK_CUT_MASK;blockRowCuts.set(row,cut);}return cut;};
+function partitionObservationsV1(rows){
+ const blocks=[];let current=[],ids=[];
+ for(const row of rows){
+  current.push(row);ids.push(blockRowIdV1(row));
+  if(current.length>=BLOCK_MAXIMUM_ROWS||current.length>=BLOCK_MINIMUM_ROWS&&blockRowCutV1(row)===0){blocks.push({rows:current,key:ids.join(",")});current=[];ids=[];}
+ }
+ if(current.length)blocks.push({rows:current,key:ids.join(",")});
+ return blocks;
+}
+
+/** 💾️ Writes one block file once per process and directory; a block the quota refuses stays inline in its record. */
+function persistInferenceBlockV1(directory,block){
+ let known=blocksByIdentity.get(block.key);
+ if(known===undefined){known={digest:createHash("sha256").update(observationRowsJsonV1(block.rows)).digest("hex"),rows:block.rows};blocksByIdentity.set(block.key,known);if(!blocksByDigest.has(known.digest))blocksByDigest.set(known.digest,block.rows);}
+ block.digest=known.digest;
+ const stamp=directory+"\0"+known.digest;if(blocksWritten.has(stamp))return true;
+ const path=join(directory,known.digest.slice(0,24)+".json");
+ if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}
+ fs.mkdirSync(directory,{recursive:true});
+ const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows))),temporary=`${path}.${process.pid}.${Date.now()}.tmp`;
+ if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{fs.writeFileSync(temporary,packed,{flag:"wx"});fs.renameSync(temporary,path);}))return false;
+ blocksWritten.add(stamp);return true;
+}
+
+/** 🧾️ The header text of a record: blocks first (written before the record that names them), rows no block could hold inline. */
+function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){
+ const blocks=[],inline=[];
+ for(const block of partitionObservationsV1(rows)){if(persistInferenceBlockV1(directory,block))blocks.push(block.digest);else for(const row of block.rows)inline.push(row);}
+ return `{"digest":${JSON.stringify(digest)},"resultSha256":"${resultSha256}","authorityObservations":${observationRowsJsonV1(authority)},"blocks":${JSON.stringify(blocks)},"observations":${observationRowsJsonV1(inline)}}`;
+}
+
+/** 📖️ The rows of the named blocks, each block read, verified against its name and interned once per process; a bad block is removed so the record that named it is recomputed. */
+function expandInferenceBlocksV1(directory,digests){
+ const rows=[];
+ for(const digest of digests){
+  let block=blocksByDigest.get(digest);
+  if(block===undefined){
+   const path=join(directory,digest.slice(0,24)+".json");
+   try{
+    const text=brotliDecompressSync(fs.readFileSync(path)).toString("utf8");
+    if(createHash("sha256").update(text).digest("hex")!==digest)throw Error("Inference block content differs from its name");
+    block=internObservationsV1(JSON.parse(text));blocksByDigest.set(digest,block);
+   }catch(error){try{fs.rmSync(path,{force:true});}catch{}throw error;}
+  }
+  for(const row of block)rows.push(row);
+ }
+ return rows;
+}
+
+/** 🧾️ A persisted record header with its blocks expanded: every row the record observed, in block order followed by the inline rows. */
+export function readInferenceHeaderV1(cachePath){
+ const text=brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"),newline=text.indexOf("\n"),header=JSON.parse(text.slice(0,newline));
+ header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks??[]),...header.observations];
+ return header;
+}

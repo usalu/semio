@@ -1,5 +1,6 @@
 /** 🏷️ Contract: typed Cargo actions render the exact ingress argv, a closed host-independent manifest, deterministic BUILD text and a spawn-free toolchain identity; native Cargo tasks are the only exclusive actions. */
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -10,7 +11,7 @@ import schema from "../🧬️schema/🔣️.json";
 import * as cargo from "../🟦️.ts";
 import {selectCargoArtifactsV1} from "../🏃️action/🟦️.ts";
 
-const api=await import("../../📜️script.ts"),python=Bun.which("python3"),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
+const api=await import("../../📜️script.ts"),python=testPythonV1(),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
 
 test("native Cargo commands classify by their authored command and execution kind",()=>{
  for(const row of corpus.classes)expect(cargo.bazelCargoClassV1({definition:{execution:{command:row.command},metadata:{semio:{execution:{kind:row.kind}}}}}) ?? null,row.name).toEqual(row.expected);

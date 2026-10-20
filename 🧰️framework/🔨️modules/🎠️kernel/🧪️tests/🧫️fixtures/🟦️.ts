@@ -1,5 +1,5 @@
 /** 🧫 The kernel module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
-import { fixtureUrl } from "@semio-tech/framework/test/source-text";
+import { fixtureUrl } from "../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
 export const loadContentInputBuilderDocument = () => import("../../📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json").then(module => module.default);
 export const loadContentInputBuilderFixture = () => import("../../📤️return/📦️content/📥️input/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadContentInputPayloadDocument = () => import("../../📤️return/📦️content/📥️input/📦️payload/📜️contract/🔣️.json").then(module => module.default);

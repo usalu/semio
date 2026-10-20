@@ -1,6 +1,6 @@
 /** 🏷️ App channel codec primitives: the media export handle wire, the exact media export frame, the document identity assertion and the command and frame tag tables. */
 
-import { readStr, readVarintU64, readVarintU64Exact, writeStr, writeVarintU64, writeVarintU64Exact } from "@semio-tech/framework-replication";
+import { readStr, readVarintU64, readVarintU64Exact, writeStr, writeVarintU64, writeVarintU64Exact } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { type AppDocumentIdentity, type MediaExportHandle } from "../../🪢️wire-contracts/🟦️.ts";
 
 //#region 🔖️AppChannelCodec

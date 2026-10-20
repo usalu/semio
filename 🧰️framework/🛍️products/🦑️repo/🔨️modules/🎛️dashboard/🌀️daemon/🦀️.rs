@@ -2,7 +2,7 @@
 //! One folder per concern. The wire both ends agree on and the plumbing under it (the frames, the transport, the readiness and
 //! replay of output, the journal, the lease and the connection a view holds) is the `dashboard_wire` crate; this crate is what
 //! only the daemon process and its controllers need — the views it serves, the launch groups, the supervisor, the control surface
-//! without a terminal and the lifecycle — and the `semio daemon start|serve|stop|status|attach` verb is the `⌨️command` folder.
+//! without a terminal and the lifecycle — and the `repo dashboard daemon start|serve|stop|status|attach` verb is the `⌨️command` folder.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌀️daemon/🔣️.json
 

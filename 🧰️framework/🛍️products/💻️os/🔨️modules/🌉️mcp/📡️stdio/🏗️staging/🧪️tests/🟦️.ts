@@ -8,7 +8,7 @@ import Ajv from "ajv/dist/2020";
 import ts from "typescript";
 
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const source = readFileSync(new URL("../../../🟦️.ts", import.meta.url), "utf8");
 const ast = ts.createSourceFile("mcp.ts", source, ts.ScriptTarget.Latest, true);
 const names = ["mcpStagingEnvironment", "stageMcpBinaryAsync", "nativeMcpBinaryStagingFor"];

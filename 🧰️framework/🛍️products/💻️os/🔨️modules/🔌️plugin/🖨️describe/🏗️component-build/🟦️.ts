@@ -1,13 +1,13 @@
-import { requireHostPlatformBuildArgumentsV1 } from "@semio-tech/repo-lib/cargo";
+import { requireHostPlatformBuildArgumentsV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import {buildDescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
-import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
-import { cargoTargetDirectory, devToolingEnv, resolveWorkspaceBin, runCmd } from "@semio-tech/process/execution";
-import { runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
+import { cargoTargetDirectory, devToolingEnv, resolveWorkspaceBin, runCmd } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";

@@ -356,6 +356,22 @@
             "ready": { "port": 6090, "portEnv": "SEMIO_REMOTE_CACHE_PORT", "path": "/healthz" }
           },
           {
+            "id": "build-remote-execution-status",
+            "title": { "en": "Show the local remote execution cluster", "de": "Lokalen Remote-Execution-Cluster anzeigen" },
+            "description": { "en": "Report whether the container runtime answers, the containers of the optional local cluster and whether its frontend answers; nothing is started.", "de": "Melden, ob die Container-Laufzeit antwortet, welche Container der optionale lokale Cluster hat und ob sein Frontend antwortet; es wird nichts gestartet." },
+            "verb": "inspect",
+            "command": ["bun", "repo", "remote-execution", "status"]
+          },
+          {
+            "id": "build-remote-execution-serve",
+            "title": { "en": "Run the local remote execution cluster", "de": "Lokalen Remote-Execution-Cluster betreiben" },
+            "description": { "en": "Run an optional container cluster on this machine until stopped so hermetic Bazel actions can run remotely; clients set the variables printed at start.", "de": "Einen optionalen Container-Cluster auf diesem Rechner bis zum Stopp betreiben, damit hermetische Bazel-Actions entfernt laufen können; Clients setzen die beim Start ausgegebenen Variablen." },
+            "verb": "serve",
+            "command": ["bun", "repo", "remote-execution", "serve", "--diagnostics-port", "{port}"],
+            "continuous": true,
+            "ready": { "port": 8981, "portEnv": "SEMIO_RBE_DIAGNOSTICS_PORT", "path": "/-/healthy" }
+          },
+          {
             "id": "build-exec",
             "title": { "en": "Run a command in projects or preview it", "de": "Befehl in Projekten ausführen oder vorprüfen" },
             "description": { "en": "Select projects, backend and optional dry run, then enter the command words in Arguments; the dry run prints the per-project plan and runs nothing.", "de": "Projekte, Werkzeug und optionalen Probelauf auswählen, dann die Befehlswörter unter Argumente eingeben; der Probelauf zeigt den Plan je Projekt und führt nichts aus." },
@@ -379,6 +395,17 @@
             "description": { "en": "Check architecture, free space, required tools and directory exchange of this host; nothing is provisioned.", "de": "Architektur, freien Platz, nötige Werkzeuge und Verzeichnisaustausch dieses Rechners prüfen; es wird nichts bereitgestellt." },
             "verb": "inspect",
             "command": ["bun", "repo", "preflight"]
+          },
+          {
+            "id": "verify-build-parity",
+            "title": { "en": "Verify Nx and Bazel parity", "de": "Parität von Nx und Bazel prüfen" },
+            "description": { "en": "Run the sample targets with both build tools into separate output roots and compare task graph, declared outputs, exit codes, test results and inputs; every difference that no documented rule explains fails.", "de": "Die Stichproben mit beiden Build-Werkzeugen in getrennte Ausgabewurzeln ausführen und Aufgabengraph, deklarierte Ausgaben, Exit-Codes, Testergebnisse und Eingaben vergleichen; jede Abweichung ohne dokumentierte Regel schlägt fehl." },
+            "verb": "verify",
+            "command": ["bun", "repo", "verify", "build-parity", "--only={only}"],
+            "parameters": [
+              { "id": "only", "title": { "en": "Samples", "de": "Stichproben" }, "description": { "en": "Comma list of sample ids or area:<area>; empty verifies every sample.", "de": "Kommaliste von Stichproben-IDs oder area:<Bereich>; leer prüft jede Stichprobe." }, "kind": "text", "default": "" },
+              { "id": "plans-only", "title": { "en": "Compare only the planned task graphs", "de": "Nur die geplanten Aufgabengraphen vergleichen" }, "kind": "flag", "args": ["--plans-only"] }
+            ]
           },
           {
             "id": "build-deps-sync",
@@ -1070,6 +1097,18 @@
       "outputs": [],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test"
+      },
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     },
     "agents-check": {
@@ -1091,6 +1130,11 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts agents write"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "fem-pcg-publication-owners": {
@@ -2078,7 +2122,12 @@
         "prepare",
         "repo-mcp:install",
         "@semio-tech/framework-os-mcp-rs:build"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "dev-storybook": {
       "metadata": {
@@ -2397,7 +2446,12 @@
       "options": {
         "command": "bun ./📜️script.ts generate config"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "generate-config-check": {
       "executor": "repo:script",
@@ -2549,7 +2603,12 @@
         "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "schema-parsers-restate": {
       "executor": "repo:script",
@@ -2558,7 +2617,12 @@
         "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript --restate all",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "schema-parsers-check": {
       "executor": "repo:script",
@@ -2609,6 +2673,11 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts format"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test": {
@@ -2649,6 +2718,11 @@
       "options": {
         "command": "bun ./📜️script.ts test doctor",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "test-contract": {
@@ -2731,6 +2805,11 @@
       "options": {
         "command": "bun ./📜️script.ts test report",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-test": {
@@ -2740,6 +2819,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean test",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-coverage": {
@@ -2749,6 +2833,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean coverage",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-marker-only-folders": {
@@ -2758,6 +2847,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean marker-only-folders",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-taxonomy-inventory": {
@@ -2767,6 +2861,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean taxonomy inventory",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-taxonomy-plan": {
@@ -2776,6 +2875,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean taxonomy plan",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-taxonomy-apply": {
@@ -2785,6 +2889,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean taxonomy apply",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "clean-taxonomy-verify": {
@@ -2794,6 +2903,11 @@
       "options": {
         "command": "bun ./📜️script.ts clean taxonomy verify",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "new-taxonomy-mutation": {
@@ -2803,6 +2917,11 @@
       "options": {
         "command": "bun ./📜️script.ts new mutation",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-storybook": {
@@ -2825,6 +2944,11 @@
       "options": {
         "command": "bun ./📜️script.ts bench plugins",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+        }
       }
     },
     "os": {
@@ -2834,6 +2958,12 @@
       "options": {
         "command": "bun ./📜️script.ts os",
         "forwardAllArgs": true
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
       }
     },
     "semio": {
@@ -2843,6 +2973,12 @@
       "options": {
         "command": "bun ./📜️script.ts semio",
         "forwardAllArgs": true
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
       }
     },
     "examples": {
@@ -2989,7 +3125,12 @@
       "options": {
         "command": "bun ./📜️script.ts stdio fuzz"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "stdio-cross-platform": {
       "executor": "repo:script",
@@ -3033,6 +3174,26 @@
       ],
       "options": {
         "command": "bun ./📜️script.ts verify gate"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
+    },
+    "verify-build-parity": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify build-parity",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
       }
     },
     "verify-rust-warnings": {
@@ -3117,7 +3278,16 @@
         "command": "bun ./📜️script.ts verify zero-touch"
       },
       "outputs": [],
-      "cache": true
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🛗️zero-touch-closure/🟦️.ts"
+          ]
+        }
+      }
     },
     "verify-build-owners-sync": {
       "executor": "repo:script",
@@ -3125,7 +3295,12 @@
       "options": {
         "command": "bun ./📜️script.ts verify build-owners sync"
       },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
     },
     "verify-typescript-project": {
       "executor": "repo:script",
@@ -3134,6 +3309,11 @@
       "options": {
         "command": "bun ./📜️script.ts verify typescript project",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "verify-typescript": {
@@ -3346,6 +3526,11 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify canonical-architecture"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
       }
     },
     "verify-layering": {
@@ -3354,10 +3539,15 @@
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify layering"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
       }
     },
     "build": {
-      "executor": "repo:script",
+      "executor": "repo:noop",
       "dependsOn": [
         {
           "target": "build",
@@ -3368,22 +3558,12 @@
         },
         "build-storybook"
       ],
-      "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build",
-        "forwardAllArgs": true
-      },
-      "cache": false,
-      "outputs": [],
       "metadata": {
         "semio": {
-          "orchestrator": true
+          "orchestrator": true,
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
         }
-      },
-      "inputs": [
-        {
-          "env": "SEMIO_BUILD_MODE"
-        }
-      ]
+      }
     },
     "release": {
       "executor": "repo:script",
@@ -3488,7 +3668,8 @@
                 ]
               }
             ]
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" }
         }
       },
       "options": {
@@ -3509,20 +3690,22 @@
         "forwardAllArgs": true
       },
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "build-storybook": {
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
+        "env": { "STORYBOOK_PORT": "6010" }
       },
-      "cache": false,
-      "outputs": [],
+      "cache": true,
+      "outputs": ["{projectRoot}/.🧾️store/build-storybook.json"],
       "inputs": [
         "production",
         "^production",
@@ -3543,22 +3726,26 @@
             "SEMIO_BUILD_MODE": "release"
           }
         }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
+        }
       }
     },
     "cpp": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts cpp",
-        "forwardAllArgs": true
-      },
+      "executor": "repo:noop",
       "dependsOn": [
         {
           "target": "cpp-test",
           "params": "forward"
         }
       ],
-      "outputs": []
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      }
     },
     "cpp-setup": {
       "executor": "repo:script",
@@ -3567,7 +3754,12 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp setup",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "cpp-configure": {
       "executor": "repo:script",
@@ -3579,7 +3771,12 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
+      }
     },
     "cpp-build": {
       "executor": "repo:script",
@@ -3594,7 +3791,12 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp build",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+        }
+      }
     },
     "cpp-test": {
       "executor": "repo:script",
@@ -3609,7 +3811,12 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+        }
+      }
     },
     "cpp-custody": {
       "executor": "repo:script",
@@ -3643,7 +3850,12 @@
       "dependsOn": [
         "deps-browsers"
       ],
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "publish": {
       "executor": "repo:script",
@@ -3651,6 +3863,11 @@
       "options": {
         "command": "bun ./📜️script.ts publish",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" }
+        }
       }
     },
     "deps-javascript": {
@@ -3659,6 +3876,11 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "deps-python": {
@@ -3677,7 +3899,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3693,7 +3916,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3709,7 +3933,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3728,7 +3953,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3747,7 +3973,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3764,7 +3991,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3784,7 +4012,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3801,7 +4030,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -3811,6 +4041,11 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" prepare"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "deps-tools": {
@@ -3825,14 +4060,13 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
     "prepare": {
-      "executor": "repo:script",
-      "cache": false,
-      "outputs": [],
+      "executor": "repo:noop",
       "dependsOn": [
         "@semio-tech/framework-schema:generate",
         "@semio-tech/ui-styling-tokens:generate",
@@ -3840,9 +4074,6 @@
         "@semio-tech/framework-graph:generate",
         "@semio-tech/plugin-registry:generate"
       ],
-      "options": {
-        "command": "bun ./📜️script.ts setup prepare"
-      },
       "metadata": {
         "semio": {
           "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
@@ -3855,6 +4086,11 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts setup git"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "setup-native": {
@@ -3863,6 +4099,11 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts setup native"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "test-browser-actor-host-context": {
@@ -4558,7 +4799,8 @@
           "execution": {
             "version": 1,
             "kind": "orchestration"
-          }
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }
     },
@@ -4568,6 +4810,11 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" lock"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "deps-js-contract": {
@@ -4576,6 +4823,11 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" contract-check"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "deps-js-all": {
@@ -4584,6 +4836,11 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync --all"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "cargo-prepare": {
@@ -4593,7 +4850,12 @@
       },
       "cache": false,
       "outputs": [],
-      "dependsOn": []
+      "dependsOn": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
     },
     "runtime-fixture-graph": {
       "executor": "repo:script",
@@ -4604,6 +4866,11 @@
           "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
           "CARGO_BUILD_BUILD_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
         }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "build-canvas-font-assets": {
@@ -4613,6 +4880,11 @@
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build canvas fonts",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
       }
     },
     "test-canvas-native": {
@@ -4665,6 +4937,11 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts repo tools setup all"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "test-command-entrypoint": {
@@ -4702,7 +4979,8 @@
                 { "id": "offline", "args": ["offline"] }
               ]
             }]
-          }
+          },
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
         }
       },
       "options": {
@@ -4716,6 +4994,11 @@
       "outputs": [],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel-bootstrap"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+        }
       }
     },
     "test-runtime-build-producer": {
@@ -4741,6 +5024,11 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts setup devcontainer start"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "setup-devcontainer-attach": {
@@ -4748,6 +5036,11 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts setup devcontainer attach"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "fem3d-numerical-child-source": {

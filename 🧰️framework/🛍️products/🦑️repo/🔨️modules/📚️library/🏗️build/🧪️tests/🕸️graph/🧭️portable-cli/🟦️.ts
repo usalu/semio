@@ -16,6 +16,7 @@ import {runOwnedBuildChildInvocationV1} from "../../../📥️caller/📤️chil
 import schema from "../../../🧬️schema/🔣️.json";
 import {readBuildGraphV1,neutralBuildTargetV1,resolveBuildTargetV1} from "../../../🕸️graph/🟦️.ts";
 import {parseBuildInvocationV1,nxBuildArgumentsV1,resolveBuildInvocationV1} from "../../../🧭️invocation/🟦️.ts";
+import buildPolicy from "../../../🔣️policy.json";
 import {watchBuildInvocationV1,selectBuildTasksV1,selectBuildProjectsV1} from "../../../🧭️selection/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope,advanceScriptInvocation,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {nxOracleRequireV1,graph} from "../🧰️support/🟦️.ts";
@@ -24,6 +25,7 @@ const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").defaul
 test("portable CLI keeps backend selection separate from literal task arguments",()=>{
   expect(parseBuildInvocationV1(["--tool=bazel","run","app:build","--","--tool=nx"],{})).toEqual({tool:"bazel",args:["run","app:build","--","--tool=nx"]});
   expect(parseBuildInvocationV1(["show","projects"],{SEMIO_BUILD_TOOL:"bazel"}).tool).toBe("bazel");
+  expect(parseBuildInvocationV1(["run","app:build"],{}).tool).toBe(buildPolicy.defaultTool);expect(parseBuildInvocationV1(["run","app:build"],{SEMIO_BUILD_TOOL:"nx"}).tool).toBe("nx");expect(parseBuildInvocationV1(["--tool=nx","run","app:build"],{SEMIO_BUILD_TOOL:"bazel"}).tool).toBe("nx");expect(parseBuildInvocationV1(["--tool=bazel","run","app:build"],{SEMIO_BUILD_TOOL:"nx"}).tool).toBe("bazel");
   expect(()=>parseBuildInvocationV1(["--tool=unknown"],{})).toThrow();
   expect(nxBuildArgumentsV1(["run","app:build","--skip-cache","--exclude-dependencies","--output=stream","--","--skip-cache"])).toEqual(["run","app:build","--skip-nx-cache","--excludeTaskDependencies","--output-style=stream","--","--skip-cache"]);
   expect(resolveBuildInvocationV1(process.cwd(),["run","app:build:release"],{}).env.SEMIO_BUILD_MODE).toBe("release");
@@ -82,7 +84,7 @@ test("explicit editor grants retain their original native resource bounds before
   const custom={...authored,native:{...authored.native,transport:{maximumBytes:12345,maximumLines:123},child:{maximumElapsedMilliseconds:123456}}};
   const admitted=readBuildAuthoringCapabilitiesV1(root,args,"nx",custom),schema=(await import("../../../🧬️schema/📥️authoring.json")).default;
   expect(new (require("ajv").default)({strict:false}).compile(schema)(custom)).toBe(true);expect(admitted.native).toEqual(custom.native);expect(admitted.tool).toBe("nx");
-  const actual=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom)});expect(actual).toEqual({...admitted,launches:[...admitted.launches,["nx","run","app:build"],["nx","run","workspace:deps-javascript","--output-style=stream"]]});
+  const actual=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom),SEMIO_BUILD_TOOL:"nx"});expect(actual).toEqual({...admitted,launches:[...admitted.launches,["nx","run","app:build"],["nx","run","workspace:deps-javascript","--output-style=stream"]]});
   expect(()=>readBuildAuthoringCapabilitiesV1(root,["run","other:build"],"nx",custom)).toThrow("authored build request");
 });
 test.each(fixture.initialAuthoring.cases)("relative initial declarations preserve exact GUI resources through original orchestration and native task issuance ($name)",async row=>{
@@ -91,7 +93,7 @@ test.each(fixture.initialAuthoring.cases)("relative initial declarations preserv
  expect(require("@iarna/toml").parse(await readFile(join(root,".cargo/config.toml"),"utf8")).build["target-dir"]).toBe(fixture.initialAuthoring.cases[0]!.native.artifactDirectory);
   const args=[...row.arguments,"--help"],request=["repo",...args],authored={workspaceRoot:row.workspaceRoot,tool:row.tool,arguments:request,selection:request,launches:[request],buildMode:row.buildMode,native:row.native};
   expect(validateAuthoring(authored),row.name).toBe(true);
-  const admitted=readBuildAuthoringCapabilitiesV1(root,args,"nx",authored),initial=await createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored)});
+  const admitted=readBuildAuthoringCapabilitiesV1(root,args,"nx",authored),initial=await createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored),SEMIO_BUILD_TOOL:"nx"});
   expect(initial).toEqual({...admitted,launches:[request,["nx","run",row.arguments[1],"--skip-nx-cache","--excludeTaskDependencies","--parallel=1","--configuration=prototype","--help"]]});expect(validateCaller(initial),row.name).toBe(true);expect(admitted.workspaceRoot).toBe(root);expect(admitted.native).toEqual({...row.native,artifactDirectory:resolve(root,row.native.artifactDirectory)});
   const refusal=fixture.initialAuthoring.missingLaunches,missing=JSON.parse(JSON.stringify(authored));delete missing[refusal.omit];expect(validateAuthoring(missing)).toBe(refusal.valid);expect(()=>readBuildAuthoringCapabilitiesV1(root,args,"nx",missing)).toThrow(refusal.error);
   const missingCaller=JSON.parse(JSON.stringify(admitted));delete missingCaller[refusal.omit];expect(validateCaller(missingCaller)).toBe(refusal.valid);

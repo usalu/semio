@@ -1,0 +1,418 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "command": {
+    "name": "verify build-parity",
+    "synopsis": "verify build-parity [--samples=<file>] [--only=<ids>] [--plans-only] [--out=<directory>] [--keep] [--json] [--lang=en|de]",
+    "summary": {
+      "en": "Runs every sample target with Nx and with Bazel into separate output roots and compares task graph, declared outputs byte for byte, exit codes and test results, and the inputs each tool sees.",
+      "de": "Führt jede Stichprobe mit Nx und mit Bazel in getrennte Ausgabewurzeln aus und vergleicht Aufgabengraph, deklarierte Ausgaben Byte für Byte, Exit-Codes und Testergebnisse sowie die Eingaben, die jedes Werkzeug sieht."
+    },
+    "flags": [
+      {
+        "name": "--samples",
+        "valueName": "file",
+        "description": {
+          "en": "Sample set to verify (default: the authored set beside the verifier).",
+          "de": "Zu prüfende Stichprobenmenge (Standard: die mitgelieferte Menge neben dem Prüfer)."
+        }
+      },
+      {
+        "name": "--only",
+        "valueName": "ids",
+        "description": {
+          "en": "Comma list of sample ids or area:<area> to verify.",
+          "de": "Kommaliste von Stichproben-IDs oder area:<Bereich>, die geprüft werden."
+        }
+      },
+      {
+        "name": "--plans-only",
+        "description": {
+          "en": "Compare only the dry-run task graphs; nothing is executed.",
+          "de": "Nur die Aufgabengraphen der Probeläufe vergleichen; nichts wird ausgeführt."
+        }
+      },
+      {
+        "name": "--out",
+        "valueName": "directory",
+        "description": {
+          "en": "Evidence directory; must be empty or absent (default: a fresh directory in the test artifact area).",
+          "de": "Beweisverzeichnis; muss leer oder nicht vorhanden sein (Standard: ein neues Verzeichnis im Testartefaktbereich)."
+        }
+      },
+      {
+        "name": "--keep",
+        "description": {
+          "en": "Keep the captured outputs of samples without divergences.",
+          "de": "Erfasste Ausgaben von Stichproben ohne Abweichungen behalten."
+        }
+      },
+      {
+        "name": "--json",
+        "description": {
+          "en": "Print the report as JSON instead of tables.",
+          "de": "Den Bericht als JSON statt als Tabellen ausgeben."
+        }
+      },
+      {
+        "name": "--recover",
+        "valueName": "directory",
+        "description": {
+          "en": "Restore the output roots an interrupted verification set aside, then stop.",
+          "de": "Die von einer unterbrochenen Prüfung beiseitegelegten Ausgabewurzeln wiederherstellen und beenden."
+        }
+      },
+      {
+        "name": "--lang",
+        "valueName": "en|de",
+        "description": {
+          "en": "Language of help and report; otherwise SEMIO_LANGUAGE, then the locale, then English.",
+          "de": "Sprache von Hilfe und Bericht; sonst SEMIO_LANGUAGE, dann die Locale, dann Englisch."
+        }
+      },
+      {
+        "name": "--help",
+        "description": {
+          "en": "Print this help and stop.",
+          "de": "Diese Hilfe ausgeben und beenden."
+        }
+      }
+    ],
+    "examples": [
+      {
+        "command": "repo verify build-parity --plans-only",
+        "description": {
+          "en": "Compare only the planned task graphs of all samples.",
+          "de": "Nur die geplanten Aufgabengraphen aller Stichproben vergleichen."
+        }
+      },
+      {
+        "command": "repo verify build-parity --only=area:teaching",
+        "description": {
+          "en": "Run the teaching samples with both tools and compare everything.",
+          "de": "Die Stichproben des Bereichs teaching mit beiden Werkzeugen ausführen und alles vergleichen."
+        }
+      },
+      {
+        "command": "repo verify build-parity --recover=<directory>",
+        "description": {
+          "en": "Put back outputs after a cancelled verification.",
+          "de": "Ausgaben nach einer abgebrochenen Prüfung zurücklegen."
+        }
+      }
+    ],
+    "notes": [
+      {
+        "en": "Nothing is normalized except what rules.json documents with a justification; every other difference is a divergence and ends the command with a non-zero exit code.",
+        "de": "Nichts wird normalisiert außer dem, was rules.json mit Begründung dokumentiert; jede andere Abweichung beendet den Befehl mit einem Exit-Code ungleich null."
+      },
+      {
+        "en": "Declared output roots are set aside before each run and restored afterwards; Ctrl-C restores them as well.",
+        "de": "Deklarierte Ausgabewurzeln werden vor jedem Lauf beiseitegelegt und danach zurückgelegt; auch Strg-C stellt sie wieder her."
+      }
+    ]
+  },
+  "labels": {
+    "title": {
+      "en": "Build parity: Nx and Bazel",
+      "de": "Build-Parität: Nx und Bazel"
+    },
+    "sample": {
+      "en": "Sample",
+      "de": "Stichprobe"
+    },
+    "area": {
+      "en": "Area",
+      "de": "Bereich"
+    },
+    "target": {
+      "en": "Target",
+      "de": "Ziel"
+    },
+    "status": {
+      "en": "Status",
+      "de": "Status"
+    },
+    "check": {
+      "en": "Check",
+      "de": "Prüfung"
+    },
+    "phase": {
+      "en": "Phase",
+      "de": "Phase"
+    },
+    "code": {
+      "en": "Divergence",
+      "de": "Abweichung"
+    },
+    "subject": {
+      "en": "Subject",
+      "de": "Gegenstand"
+    },
+    "nx": {
+      "en": "Nx",
+      "de": "Nx"
+    },
+    "bazel": {
+      "en": "Bazel",
+      "de": "Bazel"
+    },
+    "divergences": {
+      "en": "Divergences",
+      "de": "Abweichungen"
+    },
+    "rules": {
+      "en": "Documented normalizations",
+      "de": "Dokumentierte Normalisierungen"
+    },
+    "rule": {
+      "en": "Rule",
+      "de": "Regel"
+    },
+    "applied": {
+      "en": "Applied",
+      "de": "Angewandt"
+    },
+    "justification": {
+      "en": "Justification",
+      "de": "Begründung"
+    },
+    "usage": {
+      "en": "Usage",
+      "de": "Aufruf"
+    },
+    "options": {
+      "en": "Options",
+      "de": "Optionen"
+    },
+    "examples": {
+      "en": "Examples",
+      "de": "Beispiele"
+    },
+    "totals": {
+      "en": "Totals",
+      "de": "Summen"
+    },
+    "samples": {
+      "en": "Samples",
+      "de": "Stichproben"
+    },
+    "none": {
+      "en": "No divergences.",
+      "de": "Keine Abweichungen."
+    },
+    "verdict-equal": {
+      "en": "Both implementations agree on every sample.",
+      "de": "Beide Implementierungen stimmen bei jeder Stichprobe überein."
+    },
+    "verdict-diverged": {
+      "en": "The implementations diverge.",
+      "de": "Die Implementierungen weichen voneinander ab."
+    },
+    "evidence": {
+      "en": "Evidence directory",
+      "de": "Beweisverzeichnis"
+    },
+    "recovered": {
+      "en": "Restored output roots of interrupted runs",
+      "de": "Wiederhergestellte Ausgabewurzeln unterbrochener Läufe"
+    }
+  },
+  "status": {
+    "equal": {
+      "en": "equal",
+      "de": "gleich"
+    },
+    "diverged": {
+      "en": "diverged",
+      "de": "abweichend"
+    },
+    "error": {
+      "en": "error",
+      "de": "Fehler"
+    },
+    "not-applicable": {
+      "en": "not applicable",
+      "de": "nicht anwendbar"
+    },
+    "unavailable": {
+      "en": "unavailable",
+      "de": "nicht verfügbar"
+    }
+  },
+  "checks": {
+    "graph": {
+      "en": "Task graph",
+      "de": "Aufgabengraph"
+    },
+    "closure": {
+      "en": "Closure against Bazel cquery",
+      "de": "Abschluss gegen Bazel-cquery"
+    },
+    "outputs": {
+      "en": "Declared outputs",
+      "de": "Deklarierte Ausgaben"
+    },
+    "results": {
+      "en": "Exit codes and test results",
+      "de": "Exit-Codes und Testergebnisse"
+    },
+    "inputs": {
+      "en": "Inputs and environment",
+      "de": "Eingaben und Umgebung"
+    },
+    "restore": {
+      "en": "Cache restore",
+      "de": "Cache-Wiederherstellung"
+    },
+    "observation": {
+      "en": "Observation",
+      "de": "Beobachtung"
+    }
+  },
+  "codes": {
+    "observation-error": {
+      "en": "A tool could not be observed.",
+      "de": "Ein Werkzeug konnte nicht beobachtet werden."
+    },
+    "plan-unavailable": {
+      "en": "A tool printed no task graph for the dry run.",
+      "de": "Ein Werkzeug hat für den Probelauf keinen Aufgabengraphen ausgegeben."
+    },
+    "task-missing-nx": {
+      "en": "Bazel plans a task that Nx does not.",
+      "de": "Bazel plant eine Aufgabe, die Nx nicht plant."
+    },
+    "task-missing-bazel": {
+      "en": "Nx plans a task that Bazel does not.",
+      "de": "Nx plant eine Aufgabe, die Bazel nicht plant."
+    },
+    "edge-missing-nx": {
+      "en": "Bazel orders two tasks that Nx leaves unordered.",
+      "de": "Bazel ordnet zwei Aufgaben, die Nx ungeordnet lässt."
+    },
+    "edge-missing-bazel": {
+      "en": "Nx orders two tasks that Bazel leaves unordered.",
+      "de": "Nx ordnet zwei Aufgaben, die Bazel ungeordnet lässt."
+    },
+    "root-differs": {
+      "en": "The tools start from different root tasks.",
+      "de": "Die Werkzeuge beginnen mit verschiedenen Wurzelaufgaben."
+    },
+    "continuous-edge-differs": {
+      "en": "The tools disagree on which dependency only has to be running.",
+      "de": "Die Werkzeuge sind uneins, welche Abhängigkeit nur laufen muss."
+    },
+    "closure-unavailable": {
+      "en": "The closure could not be compared with the Bazel query.",
+      "de": "Der Abschluss konnte nicht mit der Bazel-Abfrage verglichen werden."
+    },
+    "closure-task-missing-in-query": {
+      "en": "The planner selects a task that Bazel's cquery does not return.",
+      "de": "Der Planer wählt eine Aufgabe, die Bazels cquery nicht liefert."
+    },
+    "closure-task-extra-in-query": {
+      "en": "Bazel's cquery returns a task the planner does not select.",
+      "de": "Bazels cquery liefert eine Aufgabe, die der Planer nicht wählt."
+    },
+    "output-missing-nx": {
+      "en": "Only Bazel produced this declared output.",
+      "de": "Nur Bazel hat diese deklarierte Ausgabe erzeugt."
+    },
+    "output-missing-bazel": {
+      "en": "Only Nx produced this declared output.",
+      "de": "Nur Nx hat diese deklarierte Ausgabe erzeugt."
+    },
+    "output-kind-differs": {
+      "en": "The output is a file for one tool and a directory or link for the other.",
+      "de": "Die Ausgabe ist bei einem Werkzeug eine Datei und beim anderen ein Verzeichnis oder Link."
+    },
+    "output-link-differs": {
+      "en": "The symbolic links point to different targets.",
+      "de": "Die symbolischen Links zeigen auf verschiedene Ziele."
+    },
+    "output-mode-differs": {
+      "en": "The permission bits differ.",
+      "de": "Die Zugriffsrechte unterscheiden sich."
+    },
+    "output-bytes-differ": {
+      "en": "The output files differ byte for byte.",
+      "de": "Die Ausgabedateien unterscheiden sich Byte für Byte."
+    },
+    "output-root-differs": {
+      "en": "The tools attribute different declared roots to the task.",
+      "de": "Die Werkzeuge ordnen der Aufgabe verschiedene deklarierte Wurzeln zu."
+    },
+    "run-unavailable": {
+      "en": "A tool left no run result.",
+      "de": "Ein Werkzeug hat kein Laufergebnis hinterlassen."
+    },
+    "exit-differs": {
+      "en": "The tools end with different exit codes.",
+      "de": "Die Werkzeuge enden mit verschiedenen Exit-Codes."
+    },
+    "exit-unexpected": {
+      "en": "A tool ends with another exit code than the sample expects.",
+      "de": "Ein Werkzeug endet mit einem anderen Exit-Code, als die Stichprobe erwartet."
+    },
+    "reason-differs": {
+      "en": "The runs ended for different reasons.",
+      "de": "Die Läufe endeten aus verschiedenen Gründen."
+    },
+    "failed-tasks-differ": {
+      "en": "The tools report different failed tasks.",
+      "de": "Die Werkzeuge melden verschiedene fehlgeschlagene Aufgaben."
+    },
+    "test-status-differs": {
+      "en": "A test task has a different result.",
+      "de": "Eine Testaufgabe hat ein anderes Ergebnis."
+    },
+    "inputs-unavailable": {
+      "en": "The inputs of a task are known for only one tool.",
+      "de": "Die Eingaben einer Aufgabe sind nur für ein Werkzeug bekannt."
+    },
+    "input-file-only-nx": {
+      "en": "Nx hashes a file that Bazel does not hand to the action.",
+      "de": "Nx hasht eine Datei, die Bazel der Aktion nicht übergibt."
+    },
+    "input-file-only-bazel": {
+      "en": "Bazel hands the action a file that Nx does not hash.",
+      "de": "Bazel übergibt der Aktion eine Datei, die Nx nicht hasht."
+    },
+    "env-hashed-not-visible": {
+      "en": "Nx hashes an environment variable the Bazel action does not see.",
+      "de": "Nx hasht eine Umgebungsvariable, die die Bazel-Aktion nicht sieht."
+    },
+    "env-visible-not-hashed": {
+      "en": "The Bazel action sees an environment variable Nx does not hash and no documented rule explains.",
+      "de": "Die Bazel-Aktion sieht eine Umgebungsvariable, die Nx nicht hasht und die keine dokumentierte Regel erklärt."
+    },
+    "external-uncovered": {
+      "en": "Nx hashes external packages but Bazel receives no lock file.",
+      "de": "Nx hasht externe Pakete, aber Bazel erhält keine Sperrdatei."
+    },
+    "runtime-uncovered": {
+      "en": "Nx hashes a runtime value but Bazel receives no matching toolchain input.",
+      "de": "Nx hasht einen Laufzeitwert, aber Bazel erhält keine passende Toolchain-Eingabe."
+    },
+    "restore-missing": {
+      "en": "A cache restore lacks an output (or invents one) compared with the cold run.",
+      "de": "Eine Cache-Wiederherstellung lässt eine Ausgabe aus (oder erfindet eine) gegenüber dem kalten Lauf."
+    },
+    "restore-kind-differs": {
+      "en": "A cache restore changes the kind of an output.",
+      "de": "Eine Cache-Wiederherstellung ändert die Art einer Ausgabe."
+    },
+    "restore-mode-differs": {
+      "en": "A cache restore changes the permission bits of an output.",
+      "de": "Eine Cache-Wiederherstellung ändert die Zugriffsrechte einer Ausgabe."
+    },
+    "restore-bytes-differ": {
+      "en": "A cache restore changes the bytes of an output.",
+      "de": "Eine Cache-Wiederherstellung ändert die Bytes einer Ausgabe."
+    }
+  }
+}

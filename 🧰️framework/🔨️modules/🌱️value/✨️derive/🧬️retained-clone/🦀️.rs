@@ -80,6 +80,35 @@ fn type_mentions_ident(ty: &Type, ident: &syn::Ident) -> bool {
     }
 }
 
+
+/// 🧭️ Packed records cannot lend aligned references to their initialized fields.
+pub(crate) fn require_aligned_fields(input:&DeriveInput,owner:&str)->syn::Result<()>{for attribute in input.attrs.iter().filter(|a|a.path().is_ident("repr")){let representations=attribute.parse_args_with(syn::punctuated::Punctuated::<syn::Meta,syn::Token![,]>::parse_terminated)?;if representations.iter().any(|r|r.path().is_ident("packed")){return Err(syn::Error::new_spanned(attribute,format!("{owner} requires naturally aligned fields and refuses packed records")));}}Ok(())}
+
+fn shared_original_retirement(input:&DeriveInput,value_crate:&syn::Path,generics:&syn::Generics)->syn::Result<(TokenStream,TokenStream)>{
+ let Data::Struct(data)=&input.data else{return Ok((quote!(),quote!()));};require_aligned_fields(input,"RetireOwned")?;
+ let name=&input.ident;let cursor=format_ident!("__{name}SharedOriginalRetirement");let(_,types,_)=generics.split_for_impl();let mut owned_generics=generics.clone();owned_generics.make_where_clause().predicates.push(syn::parse_quote!(#name #types:Sync));let(implementation,types,conditions)=owned_generics.split_for_impl();
+ let owner=quote!(#value_crate::retirement::arc_custody::original::SharedOriginal<#name #types>);
+ let demands=data.fields.iter().enumerate().map(|(index,field)|{let access=field_access(&data.fields,index);let ty=&field.ty;quote!(#index=>{if !<#ty as #value_crate::retirement::RetireOwned>::controlled_retirement_supported(){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::UnsupportedOwner,"shared original field has no controlled native issuer"));}let field=unsafe{original.field(|root|::std::ptr::addr_of!((*root).#access))};Ok(#value_crate::RetirementDemand{copy_bytes: ::std::mem::size_of::<#ty>().checked_mul(2).ok_or_else(||#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::WorkLimit,"shared original field movement overflow"))?,capacity_bytes:<#ty as #value_crate::retirement::RetireOwned>::retirement_birth_bytes(field).ok_or_else(||#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::UnsupportedOwner,"shared original field has no native cursor birth"))?,depth:1,..Default::default()})})});
+ let steps=data.fields.iter().enumerate().map(|(index,field)|{let access=field_access(&data.fields,index);let ty=&field.ty;quote!(#index=>{let value=unsafe{original.take_field(|root|::std::ptr::addr_of_mut!((*root).#access))};self.ordinal+=1;let child=<#ty as #value_crate::retirement::RetireOwned>::retirement(value);#value_crate::retirement::RetirementStep::ChildProgress(child,#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})})});
+ let declaration=quote!{
+ struct #cursor #implementation #conditions{original:Option<#owner>,ordinal:usize}
+ impl #implementation #value_crate::retirement::RetirementCursor for #cursor #types #conditions{
+  fn next_demand(&self,_body:usize)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{let Some(original)=self.original.as_ref()else{return Ok(Default::default())};match self.ordinal{#(#demands,)*_=>Ok(#value_crate::RetirementDemand{release_bytes:<#owner>::allocation_bytes(),depth:1,..Default::default()})}}
+  fn close_step(&mut self,grant:#value_crate::retained_clone::RetainedCloneGrant)->#value_crate::retirement::RetirementStep{let demand=match <Self as #value_crate::retirement::RetirementCursor>::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return #value_crate::retirement::RetirementStep::Failure(error)};if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand){return #value_crate::retirement::RetirementStep::BudgetExhausted;}let Some(original)=self.original.as_mut()else{return #value_crate::retirement::RetirementStep::Complete};match self.ordinal{#(#steps,)*_=>{let receipt=unsafe{original.release_empty(grant)};if receipt.copied_items==0{return #value_crate::retirement::RetirementStep::BudgetExhausted;}self.original=None;#value_crate::retirement::RetirementStep::Progress(receipt)}}}
+  fn terminal_is_empty(&self)->bool{self.original.is_none()}
+  fn next_work_byte_demand(&self)->Result<usize,#value_crate::ValueError>{Ok(<Self as #value_crate::retirement::RetirementCursor>::next_demand(self,0)?.copy_bytes)}
+  fn next_birth_bytes(&self,body:usize)->Option<usize>{<Self as #value_crate::retirement::RetirementCursor>::next_demand(self,body).ok().map(|d|d.capacity_bytes)}
+  fn next_close_byte_demand(&self)->Option<usize>{<Self as #value_crate::retirement::RetirementCursor>::next_demand(self,0).ok().map(|d|d.release_bytes)}
+  fn terminal_release_bytes(&self)->Option<usize>{self.original.is_none().then_some(::std::mem::size_of::<Self>())}
+ }
+ };
+ let methods=quote!{
+  fn shared_original_birth_bytes(&self)->Option<usize> where Self:Sync{trait OriginalWithoutDrop<A>{fn verify(){}}impl<T:?Sized> OriginalWithoutDrop<()> for T{}#[allow(drop_bounds)]impl<T:?Sized+Drop> OriginalWithoutDrop<u8> for T{}let _=<Self as OriginalWithoutDrop<_>>::verify;Some(::std::mem::size_of::<#cursor #types>())}
+  fn shared_original_retirement(original:&mut Option<#value_crate::retirement::arc_custody::original::SharedOriginal<Self>>,grant:#value_crate::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn #value_crate::retirement::RetirementCursor>,#value_crate::retained_clone::RetainedCloneProgress)>,#value_crate::ValueError> where Self:Sync{if !<Self as #value_crate::retirement::RetireOwned>::controlled_retirement_supported(){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::UnsupportedOwner,"shared original has an unsupported native field"));}if original.is_none(){return Ok(None);}let capacity_bytes=::std::mem::size_of::<#cursor #types>();let demand=#value_crate::RetirementDemand{capacity_bytes,depth:1,..Default::default()};if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::OwnershipLimit,"shared original cursor birth is not funded"));}let mut cursor=Box::new(#cursor{original:None,ordinal:0});cursor.original=original.take();Ok(Some((cursor,#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity_bytes,..Default::default()})))}
+ };
+ Ok((declaration,methods))
+}
+
 pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
     let name = &input.ident;
     let value_crate = crate::component::declared_value_crate(input)?;
@@ -126,13 +155,16 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
         Data::Union(_) => unreachable!(),
     };
     let components = field_types(input);
+    let (shared_declaration,shared_methods)=shared_original_retirement(input,&value_crate,&generics)?;
     Ok(quote! {
+        #shared_declaration
         impl #impl_generics #value_crate::retirement::RetireOwned for #name #ty_generics #where_clause {
             fn retirement(self) -> Box<dyn #value_crate::retirement::RetirementCursor> {
                 #body
             }
             fn retirement_birth_bytes(&self) -> Option<usize> { #birth }
-            fn controlled_retirement_supported() -> bool { true }
+            #shared_methods
+            fn controlled_retirement_supported() -> bool { true #(&& <#components as #value_crate::retirement::RetireOwned>::controlled_retirement_supported())* }
             fn retirement_element_copy_bytes() -> usize {
                 #value_crate::retirement::composite_copy_bytes::<Self>(&[#(<#components as #value_crate::retirement::RetireOwned>::retirement_element_copy_bytes()),*])
             }

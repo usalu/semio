@@ -1,9 +1,9 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
-import { toolJobRuntimeProofQualified } from "@semio-tech/repo-lib/laws";
+import { readSourceFamilySource } from "../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
+import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { toolJobRuntimeProofQualified } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
 export function toolJobFactoryProofJoinSelfTests(): number {

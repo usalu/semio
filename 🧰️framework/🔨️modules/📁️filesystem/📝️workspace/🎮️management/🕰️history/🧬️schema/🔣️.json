@@ -1,0 +1,363 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "maximumSegmentNames": 4096,
+        "maximumSegmentBytes": 67108864,
+        "reservedMaintenanceNames": 16,
+        "reservedMaintenanceBytes": 1048576,
+        "maximumSegments": 4096,
+        "pageSize": 64,
+        "layout": "segment-from-first-publication",
+        "publishedPayloadMoves": false,
+        "unresolved": "durable-quarantine-no-recovery-authority",
+        "selection": "consecutive-sequence-and-previous-digest"
+      },
+      "description": "📏️ Segment names are direct children. Byte limits cover journal controls and saved text predecessors/stages; removed retained payloads and retained directory descendants are excluded."
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 26,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {
+            "$ref": "#/$defs/Observation"
+          },
+          "expected": {
+            "$ref": "#/$defs/Outcome"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "namespace",
+        "intent",
+        "source",
+        "object",
+        "outcome",
+        "segment",
+        "selection",
+        "names",
+        "bytes",
+        "segments",
+        "cancel"
+      ],
+      "properties": {
+        "request": {
+          "enum": [
+            "inspect",
+            "reconcile",
+            "rollover"
+          ]
+        },
+        "namespace": {
+          "enum": [
+            "continuous",
+            "rebound",
+            "foreign"
+          ]
+        },
+        "intent": {
+          "enum": [
+            "valid",
+            "missing",
+            "malformed"
+          ]
+        },
+        "source": {
+          "enum": [
+            "before",
+            "after",
+            "absent",
+            "foreign"
+          ]
+        },
+        "object": {
+          "enum": [
+            "absent",
+            "expected",
+            "foreign",
+            "unknown"
+          ],
+          "description": "🪪️ Fresh current namespace/inode/type instance; structural settlement grants no content or save authority. Recovery separately verifies full current content/tree fingerprint."
+        },
+        "outcome": {
+          "enum": [
+            "complete",
+            "missing",
+            "partial"
+          ]
+        },
+        "segment": {
+          "enum": [
+            "open",
+            "sealed",
+            "publishing"
+          ]
+        },
+        "selection": {
+          "enum": [
+            "valid",
+            "missing",
+            "fork"
+          ]
+        },
+        "names": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864,
+          "description": "📦️ Current segment journal/control and saved-text bytes, excluding .retained payloads and directory descendants."
+        },
+        "segments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "cancel": {
+          "enum": [
+            "none",
+            "before",
+            "after"
+          ]
+        }
+      }
+    },
+    "Outcome": {
+      "enum": [
+        "inspection",
+        "not-applied",
+        "committed-observed",
+        "quarantined",
+        "rollover-required",
+        "selection-required",
+        "segment-selected",
+        "cancelled",
+        "settled",
+        "history-full",
+        "conflict-retained"
+      ]
+    },
+    "SelectionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header",
+        "sequence",
+        "previous",
+        "root",
+        "store",
+        "container",
+        "segment",
+        "quarantined",
+        "orphans",
+        "status"
+      ],
+      "properties": {
+        "header": {
+          "const": "source-history-selection-v1"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "previous": {
+          "type": "string",
+          "pattern": "^(-|[0-9a-f]{64})$"
+        },
+        "root": {
+          "$ref": "#/$defs/Identity"
+        },
+        "store": {
+          "$ref": "#/$defs/Identity"
+        },
+        "container": {
+          "$ref": "#/$defs/Identity"
+        },
+        "segment": {
+          "$ref": "#/$defs/Identity"
+        },
+        "quarantined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "const": "selected"
+        },
+        "orphans": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        }
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device",
+        "inode"
+      ],
+      "properties": {
+        "device": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "inode": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      }
+    },
+    "TransitionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header",
+        "sequence",
+        "stage",
+        "digest",
+        "status"
+      ],
+      "properties": {
+        "header": {
+          "const": "source-history-transition-v1"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "stage": {
+          "type": "string",
+          "pattern": "^\\.stage-[0-9a-f]{12}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "status": {
+          "const": "prepared"
+        }
+      }
+    },
+    "SettlementRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header",
+        "selection",
+        "quarantined",
+        "rows"
+      ],
+      "properties": {
+        "header": {
+          "const": "source-history-reconciliation-v1"
+        },
+        "selection": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "quarantined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "intent",
+              "status",
+              "device",
+              "inode",
+              "kind",
+              "fingerprint"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]+(-[0-9a-f]+)*$",
+                "maxLength": 64
+              },
+              "intent": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "status": {
+                "enum": [
+                  "observed",
+                  "not-applied",
+                  "quarantined"
+                ]
+              },
+              "device": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory",
+                  "unknown"
+                ]
+              },
+              "fingerprint": {
+                "type": "string",
+                "pattern": "^(-|[0-9a-f]{64})$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PendingConfirmation": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{8}$",
+      "description": "🧾️ Display/confirmation identifier projected from an authenticated incomplete transition; private inspection authority also binds the exact header digest."
+    }
+  }
+}

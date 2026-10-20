@@ -1,5 +1,5 @@
 import {readFileSync} from "node:fs";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 /** 🗺️ Declares exact manifests whose distinct assertion policies accompany one owning command. */
 export type NativeOwnerTestManifestRequestV1=Readonly<{version:1;manifest:string;cwd:string;testManifests:readonly string[];command:string;args:readonly string[]}>;
 const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🗺️owner-test-manifests/🔣️.json",import.meta.url),"utf8"));

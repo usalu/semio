@@ -1,0 +1,11 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust/Cargo.toml": "4a2a7eb7ff25.toml",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🔬️unit/👻️ghost-selection-and-drag-laws/🦀️.rs": "9f2cd32046ce.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs": "f8cb7b87db0e.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs": "9ddee1f7aaa1.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/📦️packages/🦀️rust/Cargo.toml": "0269779107f3.toml",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍎️shell-tests-input-1/📦️packages/🦀️rust/Cargo.toml": "fb8d66df65af.toml",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍯️shell-tests-input-2/📦️packages/🦀️rust/Cargo.toml": "65173e10be5f.toml"
+ }
+}

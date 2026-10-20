@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "success",
+      "body": "value",
+      "final": "ok",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "value"
+    },
+    {
+      "id": "body-error",
+      "body": "error",
+      "final": "ok",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "same-body"
+    },
+    {
+      "id": "undefined-body-error",
+      "body": "undefined",
+      "final": "ok",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "same-body"
+    },
+    {
+      "id": "final-error",
+      "body": "value",
+      "final": "error",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "same-final"
+    },
+    {
+      "id": "both-errors",
+      "body": "error",
+      "final": "error",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "aggregate-body-final"
+    },
+    {
+      "id": "cancelled-body",
+      "body": "cancel",
+      "final": "ok",
+      "expected": [
+        "strict-before",
+        "window-body",
+        "strict-final"
+      ],
+      "outcome": "aggregate-body-final"
+    },
+    {
+      "id": "precheck-error",
+      "before": "error",
+      "body": "value",
+      "final": "ok",
+      "expected": [
+        "strict-before"
+      ],
+      "outcome": "same-before"
+    }
+  ]
+}

@@ -17,7 +17,7 @@ mod macros_wp4_reactor;
 //#endregion 📣️FacadeMacroMounts
 pub use semio_framework_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerJobReceiptV1, MountedOwnerPhaseV1, MountedOwnerPolicyV1, MountedOwnerTurnV1};
 
-#[cfg(test)] use semio_framework_ui_locale::{Label, LabelText, Locale, LocalizedLabel, Terminology};
+#[cfg(test)] use semio_framework_ui_locale::{Label, LabelText};
 
 /// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
 /// — the same `extern crate semio_framework_os_kernel as dsl;` every technology crate declares.
@@ -233,6 +233,11 @@ pub use app::authoring_law;
 pub use app::time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunLedger, ToolRunTickReceipt};
 pub use app::ActionFactory;
+pub use semio_framework::{IconName, Locale, Terminology};
+pub use semio_framework_ui_locale::LocalizedLabel;
+/// 🔀️ `dyn_enum_close!` for `PluginApp` resolves its captured dispatch macro through this root export.
+#[doc(hidden)]
+pub use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 pub use app::{FRAMEWORK_TOOL_RUN_BODY_KEY, OriginalToolRunJobPortRetirement, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunTraceKeys, ToolRunView, ToolRunPollView, is_time_travel_action_id};
 pub use app::{AsyncTaskSource,AsyncTaskRun};
 pub use app::{activation_target, resolve_labels, row_action, row_target, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
@@ -451,7 +456,10 @@ pub use app::{
     PluginAssemblyError,
     OriginalRenderFailure,
     OriginalRenderResult,
+    NeedsLabel,
+    NeedsVersion,
     PluginBuilder,
+    Ready,
     PluginLifecycleStep,
     PluginProgram,
     PresenceView,

@@ -1,0 +1,27 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+import {readFile,writeFile,open} from "node:fs/promises";
+import {lstatSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {join} from "node:path";
+import fixture from "./🔣️.json" with {type:"json"};
+import schema from "../../../🧬️schema/🧊️execution/❄️cold-start/🔣️.json" with {type:"json"};
+import installationSchema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json" with {type:"json"};
+import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
+import {dashboardInstalled,staleDashboard,digestDashboardSources,launchDashboard,withInstalledDashboardV1} from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+
+async function receipt(path:string){
+ let facts;try{facts=lstatSync(path,{bigint:true});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return null;throw error;}if(!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1n||facts.size>4194304n)throw Error("Bounded physical canonical installation receipt required");const text=await readFile(path,"utf8"),after=lstatSync(path,{bigint:true}),fields=["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"]as const;if(fields.some(key=>facts[key]!==after[key]))throw Error("Canonical installation receipt changed while observing");let value:any;try{value=JSON.parse(text);}catch{value=null;}return{value,stamp:fields.map(key=>String(after[key])).join(":"),text};
+}
+
+test("canonical cold launch rebuilds real absent or stale installation then warm replay retains publication",async()=>{
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.cases){const oracle=db.query("SELECT NOT ?1 OR NOT ?2 OR ?3 IS NOT ?4 cold").get(Number(row.installed),Number(row.valid),row.recorded,row.current)as{cold:number};expect(Boolean(oracle.cold),row.id).toBe(row.cold);}
+ await withBuildTestInvocationV1(async invocation=>{const root=process.cwd(),artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifact)throw Error("Caller-owned cold launch evidence directory required");const mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(invocation,"dashboard:cold-acceptance",0),options={mode,control,workspace:root,network:repositoryCargoNetworkV1(invocation,root),invocation},path=join(root,".🧬semio/🦑️repo/⚡️cache/🎛️dashboard",mode,"installed.json"),before=await receipt(path),valid=dashboardInstalled(root,mode),current=valid?await digestDashboardSources(root,before!.value.sources):"absent-or-invalid",oracle=db.query("SELECT NOT ?1 OR NOT ?2 OR ?3 IS NOT ?4 cold").get(Number(before!==null),Number(valid),valid?before!.value.sources.digest:null,current)as{cold:number},reason=await staleDashboard(root,mode);
+ if(!reason||!oracle.cold)throw Error("Genuine absent or stale canonical installation required for cold acceptance; current installation retained");console.log("[DEBUG] canonical cold launch begins "+JSON.stringify({mode,reason,installed:before!==null,valid,recorded:valid?before!.value.sources.digest:null,current}));checkResourceLeaseControl(control);expect(await launchDashboard(root,fixture.command,options)).toBe(0);checkResourceLeaseControl(control);const installed=await receipt(path);if(!installed)throw Error("Actual cold launch did not publish its canonical receipt");expect(new Ajv({strict:true}).compile(installationSchema)(installed.value)).toBe(true);expect(await staleDashboard(root,mode)).toBeUndefined();let observedDigest="";await withInstalledDashboardV1(root,options,async executable=>{const file=await open(executable,"r"),hash=createHash("sha256"),buffer=Buffer.alloc(65536);let count=0;try{for(;;){checkResourceLeaseControl(control);const row=await file.read(buffer,0,buffer.length,null);if(!row.bytesRead)break;count+=row.bytesRead;hash.update(buffer.subarray(0,row.bytesRead));if(count%4194304===0){await control.publish({resource:"dashboard:cold-evidence",mode:"shared",elapsedMs:0});await control.yieldContinuation();}}}finally{await file.close();}observedDigest=hash.digest("hex");expect(count).toBe(installed.value.bytes);expect(observedDigest).toBe(installed.value.digest);});
+ console.log("[DEBUG] canonical cold launch settled; starting warm replay");expect(await launchDashboard(root,fixture.command,options)).toBe(0);const warm=await receipt(path);expect(warm?.stamp).toBe(installed.stamp);expect(warm?.text).toBe(installed.text);expect(await staleDashboard(root,mode)).toBeUndefined();await writeFile(join(artifact,"dashboard-cold-launch.json"),JSON.stringify({version:1,mode,reason,before:before?{stamp:before.stamp,record:before.value}:null,after:{stamp:installed.stamp,record:installed.value},binaryDigest:observedDigest,warmReceiptUnchanged:true})+"\n");console.log("[DEBUG] actual canonical lazy build/install/commands check and warm replay passed; immutable binary matched published digest");});}finally{db.close();}
+});

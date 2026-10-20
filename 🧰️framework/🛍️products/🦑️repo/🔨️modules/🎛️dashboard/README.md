@@ -36,8 +36,7 @@ prints the executable path for direct native invocation.
 
 The first view immediately shows task controls. Dark appearance, native terminology,
 React and tabbed output are opinionated defaults; the language is the one the system names (`LC_ALL`,
-`LC_MESSAGES`, `LANG`) or else the first language of the declared chain in `⚙️preferences/🌐️language/🔣️.json`
-(English, then German); startup asks no questions. Command discovery
+`LC_MESSAGES`, `LANG`). When no supported system or explicit preference resolves a language, startup shows English and Deutsch with no selected choice. Select and confirm a language to publish a preference event; cancellation exits without creating one. The choices and bilingual prompt are authored in `⚙️preferences/🌐️language/🔣️.json`. Command discovery
 and daemon connection run in the background. Choose New Task and type search terms to select a
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
@@ -53,6 +52,9 @@ an owner target or typed dashboard declaration.
 | Work | Search or command | Next action |
 | --- | --- | --- |
 | Browse and edit source | **Workspace Files** (`Ctrl+B F`) | Filter a directory or file name, press Enter to open it, and edit in the native document tab. `Ctrl+B S` saves; `Ctrl+B R` reloads a clean document. |
+| Create a file or folder | **Workspace Files**, **New file** (`Ctrl+B N`) or **New folder** (`Ctrl+B M`) | Enter a portable name in the current directory. Enter applies; Escape cancels. New files open in the native document editor. |
+| Rename or remove an entry | **Workspace Files**, **Rename entry** (`Ctrl+B E`) or **Remove and retain entry** (`Ctrl+B X`) | Select a file or a bounded folder tree (at most 4096 entries including its root). Rename requires an absent destination. Removal requires typing the exact selected name and retains the actual tree in local event history; inspect its recovery location in the readonly history browser. |
+| Inspect and maintain local history | **Inspect history** (`Ctrl+B J`), **Reconcile history** (`Ctrl+B K`), **Archive history segment** (`Ctrl+B A`), **Next history page** (`Ctrl+B P`) | Inspect bounded counts and pending transitions. Reconcile or archive requires typing the displayed inspected selection identifier; The confirmation starts empty. A pending transition must be reconciled before archive. Escape requests cancellation. |
 | Use a workspace shell | `@semio-tech/repo-developer-tools:terminal` | Choose the directory and platform shell. Input, output and cancellation stay in the task view. |
 | Prepare the checkout | `workspace:setup` | Start the setup task; read progress in its output. For native toolchain repair choose `workspace:setup-native`. |
 | Inspect build commands | `tool:workspace/build-help` | Read the current runner's help in retained task output. |
@@ -81,14 +83,21 @@ keyboard or mouse selection, `Ctrl+A` select all, `Ctrl+C` copy, `Ctrl+Z` undo a
 The visible cursor and line/column status follow the document. Existing CRLF line endings are
 preserved. Files above 1 MiB, unsupported binary text, symbolic-link escapes and paths above
 256 UTF-16 units are refused with a visible reason. Loading, listing and saving run outside
-the UI loop; `Ctrl+B C` requests cancellation.
+the UI loop; `Ctrl+B C` requests cancellation. File-management forms use the same worker and customizable
+actions. An in-flight mutation protects its source and destination document buffers until settlement;
+a committed outcome stays authoritative if cancellation arrives after publication. Directory commands inspect
+at most 4096 entries including the root and refuse links, any managed file over 64 MiB, or any projected
+path over 256 UTF-16 units. The editor remains limited to 1 MiB per document.
+Dirty descendant documents block the command. A committed rename remaps clean descendants and requires
+a reload before further edits; retention closes their old workspace views. `Ctrl+B V` browses the
+authenticated retained tree readonly, with navigation bounded to that tree or the history index.
 
 A dirty close, reload, detach or shutdown keeps the buffer and shows a save/discard decision.
 `Ctrl+B D` explicitly discards after that decision; using it directly asks for confirmation first.
 Saving compares the version loaded and retains a conflicting local buffer. A race during atomic
 publication reports its actual outcome and preserves the exchanged predecessor or draft in the
 workspace event history. `Ctrl+B V` opens that retained version in a separate read-only native tab.
-The history has a fixed storage bound and refuses further saves when full. All controls above are
+History uses bounded immutable segments. Completed payloads keep their original recovery paths when a segment is archived. The index pages64 authenticated retained roots at a time; `Ctrl+B P` requests the next actual backend cursor. Reconciliation records completed or uncertain commands without rewriting retained payloads. Inspect before maintenance and confirm the exact displayed selection; stale observations refuse safely. All controls above are
 customizable through the same keymap and use the selected English or German labels.
 
 Initial host provisioning installs the fixed native debugger packages. A healthy macOS LLDB needs no additional installation. Later Linux repair requires root or noninteractive `sudo`; machine-wide LLVM on Windows uses the elevated host bootstrap. Setup and debugging retain the dashboard task's output, cancellation and process time limit.
@@ -195,7 +204,7 @@ Humans use `repo dashboard [arguments]` for the registry, daemon and viewer. Wit
 | `repo dashboard stop\|restart\|kill <task> [--group] [--timeout S] [--root PATH]` | control a task and wait until it left its state |
 | `repo dashboard open <task> [--print] [--root PATH]` | open the ready address of a task in the system browser |
 | `repo dashboard daemon start\|status\|stop\|attach\|serve [--root PATH]` | manage the workspace daemon |
-| `repo dashboard dashboard [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace] [--help]` | the interactive dashboard (also plain `repo dashboard`); `--help` prints its keyboard help |
+| `repo dashboard [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace] [--help]` | the interactive dashboard; `--help` prints its keyboard help |
 | `repo dashboard preferences show\|set [--language L] [--appearance A] [--terminology T] [--renderer R] [--layout L] [--prefix KEY] [--bindings JSON] [--root PATH] [--config JOURNAL] [--workspace]` | read or record preferences |
 | `repo dashboard catalog [--json]` | list the playground catalog |
 | `repo dashboard plugin registry generate\|check` | generate or check the plugin registry |
@@ -215,7 +224,7 @@ members of a launch), a command id (its live session, else its latest) or a uniq
 command id, and an ambiguous name is refused with the candidates. A position in a listing is no handle. A selection the declarations do not allow exits with status 2 and
 names the problem on stderr.
 
-`repo dashboard --help` prints the usage with every flag (`repo dashboard dashboard --help` the keyboard help). Semio has no other
+`repo dashboard --help` prints the usage and keyboard help. The dashboard has no other
 verbs and forwards nothing to another script: every task of the monorepo is a registry command. The routes of
 the root script are targets of the root project, so `repo dashboard run workspace:test`, `repo dashboard run workspace:verify
 --param check=taxonomy`, `repo dashboard run workspace:dev-storybook`, `repo dashboard run workspace:os -- run <bundle>.studio`,
@@ -262,8 +271,12 @@ the label catalogue (English and German), so this table is only the default stat
 | Key after `Ctrl+B` | Action |
 | --- | --- |
 | `F` | Browse workspace files and edit a document |
+| `N` / `M` | Create a file / create a folder in the current directory |
+| `E` / `X` | Rename the selected entry / confirm retained removal (files and bounded folder trees) |
 | `S` / `R` / `D` | Save / reload / explicitly discard document changes |
 | `C` / `V` | Cancel a file operation / inspect a retained version read-only |
+| `J` / `K` | Inspect local history / confirm reconciliation of the inspected selection |
+| `A` / `P` | Confirm archive of a history segment / load the next history page |
 | `n` | Search and start a task |
 | `h` | Task overview, including statuses and exit codes |
 | `p` | Optional settings |
@@ -307,8 +320,7 @@ launch accepts `--language`, `--appearance`, `--terminology`, `--renderer`, `--l
 
 Environment overrides are `SEMIO_LOCALE`, `SEMIO_APPEARANCE`, `SEMIO_LOCKED_TERMINOLOGY`,
 `SEMIO_DASHBOARD_RENDERER`, `SEMIO_DASHBOARD_LAYOUT` and `SEMIO_DASHBOARD_PREFIX`. `SEMIO_DASHBOARD_CONFIG` selects a local
-journal. Values are validated strictly. The language resolves from the system and the declared chain at the
-bottom, then shared events, local events, `SEMIO_LOCALE` and `--language` over it; `Locale` has no `Default`. Local events live under
+journal. Values are validated strictly. The language resolves from a supported system setting, then shared events, local events, `SEMIO_LOCALE` and `--language` over it. Unresolved preferences expose `language: null`, bilingual help, and an explicit first-choice screen before the interactive control plane. `Locale` has no `Default`. Local events live under
 `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/preferences.jsonl`; shared events live under
 `.🧬semio/🦑️repo/🎛️dashboard/⚙️preferences.jsonl`. Event revisions are serialized by operating-system
 file locks, and each journal has a 1 MiB admission limit. Task output and view state remain ephemeral.

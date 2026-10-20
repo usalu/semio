@@ -1,5 +1,6 @@
 /** 🔒️ Law: a sample hermetic build, run through the generated workspace and the real Bazel with its execution log, reads only declared inputs, holds only the declared toolchain and the strict environment, writes only declared outputs, and produces byte-identical outputs from two clean builds under different umasks. */
 import {expect,test} from "bun:test";
+import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
@@ -77,7 +78,7 @@ test.skipIf(!binary)("law: hermetic actions read only declared inputs, hold the 
 
   const leak=build("base-a",["neg:leak"]);expect(leak.status,"an undeclared read must fail").not.toBe(0);expect(leak.stderr+leak.stdout).toMatch(/secret\.txt/u);
   const stray=build("base-a",["neg:stray"]);expect(stray.status,"an undeclared write must fail").not.toBe(0);expect(stray.stderr+stray.stdout).toMatch(/undeclared writes outside the declared outputs: neg\/stray\.txt/u);
-  if(process.platform!=="win32"){const local=build("base-a",["neg:iso"],["--spawn_strategy=local"]);expect(local.status,"a non-isolated run must be refused").not.toBe(0);expect(local.stderr+local.stdout).toMatch(/isolated execution root is required/u);}
+  {const local=build("base-local",["neg:iso"],["--strategy=RepoHermetic=local"]);expect(local.status,local.stderr).toBe(0);expect(local.stderr).toMatch(/\d+ local/u);const localLeak=build("base-local",["neg:leak"],["--strategy=RepoHermetic=local"]);expect(localLeak.status,"an undeclared read must fail under the local strategy too").not.toBe(0);expect(localLeak.stderr+localLeak.stdout).toMatch(/secret\.txt/u);}
   if(process.platform==="linux"&&lan!==undefined){const net=build("base-a",["neg:net"]);expect(net.status,"a hermetic action must not reach a non-loopback address").not.toBe(0);expect(reached,"the listener must never be reached").toBe(0);}
   const iso=build("base-a",["neg:iso"]);expect(iso.status,iso.stderr).toBe(0);
 
@@ -90,7 +91,7 @@ test.skipIf(!binary)("law: hermetic actions read only declared inputs, hold the 
  }finally{
   server.stop(true);
   spawnSync(binary!,[`--output_base=${join(directory,"base-a")}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","shutdown"],{timeout:120000});
-  for(const base of ["base-b","base-r"])spawnSync(binary!,[`--output_base=${join(directory,base)}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","shutdown"],{timeout:120000});
-  spawnSync("chmod",["-R","u+w",directory]);rmSync(directory,{recursive:true,force:true});
+  for(const base of ["base-b","base-r","base-local"])spawnSync(binary!,[`--output_base=${join(directory,base)}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","shutdown"],{timeout:120000});
+  makeTestTreeWritableV1(directory);rmSync(directory,{recursive:true,force:true});
  }
 },1200000);

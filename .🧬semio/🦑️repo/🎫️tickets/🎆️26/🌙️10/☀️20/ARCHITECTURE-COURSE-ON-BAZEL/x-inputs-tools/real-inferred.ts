@@ -1,0 +1,14 @@
+import {writeFileSync} from "node:fs";
+const root = process.env.SEMIO_INPUTS_ROOT ?? "/Users/ueli/Documents/semio";
+const [targetName = "test", out = "closure.json"] = process.argv.slice(2);
+const inf = await import(`${root}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs`) as any;
+await inf.libraryBootstrap;
+const {cacheInternals, createScriptInputCache} = inf;
+const pr = "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript";
+const manifestPath = process.env.SEMIO_INPUTS_MANIFEST ?? `${root}/${pr}/📋️project.json`;
+const manifest = JSON.parse(await Bun.file(manifestPath).text());
+const target = manifest.targets[targetName];
+const t0 = Date.now();
+const sources = await cacheInternals.targetScriptSources(target, root, createScriptInputCache(), pr);
+console.error("ms", Date.now() - t0, "closure", sources.closure?.length, "fallback", sources.fallback, "packages", sources.packages?.length);
+writeFileSync(out, JSON.stringify(sources, null, 1));

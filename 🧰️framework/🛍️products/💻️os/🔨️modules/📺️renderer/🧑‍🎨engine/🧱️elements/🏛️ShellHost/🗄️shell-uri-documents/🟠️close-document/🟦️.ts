@@ -111,7 +111,7 @@ export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArti
   const rememberLocalFolder = useCallback((binding: LocalFolderBinding) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, attachLocalFolder(binding))), [scope.storage]);
   const forgetLocalFolder = useCallback((documentId: string) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, detachLocalFolder(documentId))), [scope.storage]);
 
-  /** 🔗️ Attaches the focused program's document to a folder, a file or a hub. The document is addressed by the program's
+  /** 🧷️ Attaches the focused program's document to a folder, a file or a hub. The document is addressed by the program's
    * own document identity — the id its store stamps on every envelope it publishes — so the actor admits the program's
    * edits as its own document's instead of refusing each batch as another document's (`local.backbone-scope-mismatch`,
    * e2e R2-4); a program without a document has nothing to attach. */
@@ -182,13 +182,13 @@ export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArti
       if (timer !== null) clearTimeout(timer);
     };
   }, [syncTargetProgram?.pluginId, syncTargetProgram?.instanceId, syncTargetProgram?.app.id, loadedPlugins]);
-  /** 📎️ The remembered folder offered back for the focused program's document, while that document is not attached. */
+  /** 📂️ The remembered folder offered back for the focused program's document, while that document is not attached. */
   const folderReconnectOffer = useMemo(
     () => localFolderReconnectOfferV1(localFolderBindings, syncProgramIdentity, new Set([...openDocumentSessionsRef.current.values()].filter((entry) => entry.scope === undefined).map((entry) => entry.documentId))),
     [localFolderBindings, syncProgramIdentity, syncBackboneUri],
   );
   const [folderReconnectBusy, setFolderReconnectBusy] = useState(false);
-  /** 📎️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
+  /** 🔁️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
   const reconnectLocalFolder = useCallback((binding: LocalFolderBinding) => {
     setFolderReconnectBusy(true);
     void attachSyncTarget({ kind: "folder", path: binding.folder.path }).finally(() => setFolderReconnectBusy(false));

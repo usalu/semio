@@ -4,10 +4,10 @@
  */
 
 //#region 🔌️Adapters
-import { type Implementation, IMPLEMENTATIONS } from "@semio-tech/framework/test/adapter";
+import { type Implementation, IMPLEMENTATIONS } from "../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { getSemioRoot, type Taxonomy } from "@semio-tech/repo-lib/inventory";
+import { getSemioRoot, type Taxonomy } from "../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract

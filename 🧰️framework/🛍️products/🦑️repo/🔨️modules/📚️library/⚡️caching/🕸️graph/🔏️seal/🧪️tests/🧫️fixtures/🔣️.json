@@ -167,6 +167,15 @@
         "content": "local\n"
       },
       "holds": true
+    },
+    {
+      "id": "inference-record-rewritten",
+      "mutation": {
+        "kind": "write",
+        "path": ".nx/workspace-data/inference/emoji-project-json.json",
+        "content": "rewritten record\n"
+      },
+      "holds": false
     }
   ]
 }

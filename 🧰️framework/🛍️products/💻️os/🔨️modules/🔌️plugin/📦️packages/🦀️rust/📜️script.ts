@@ -600,7 +600,7 @@ export async function pluginTestRunnerSelfTests(): Promise<number> {
 class RemoteIngestPrefixScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!["source","native"].includes(args[0]!))throw new Error("test-remote-ingest-prefix source|native");
-  const owner=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/📥️remote-prefix"),law=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8"));
+  const owner=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/📥️remote-prefix"),law=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8"));
   const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")));assert.equal(validate(law),true,JSON.stringify(validate.errors));
   const {Database}=await import("bun:sqlite"),oracle=new Database(":memory:");
   try{oracle.exec("CREATE TABLE accepted(id TEXT PRIMARY KEY,payload TEXT NOT NULL CHECK(payload='valid'),amount INTEGER NOT NULL)");for(const row of law.cases){this.invocation.control.signal.throwIfAborted();oracle.exec("DELETE FROM accepted");let refused=false,notifications=0;for(const step of row.steps){try{const result=oracle.query("INSERT INTO accepted VALUES('original',?,1) ON CONFLICT DO NOTHING").run(step==="malformed"?"malformed":"valid");notifications+=Number(result.changes);}catch{refused=true;break;}}const value=oracle.query("SELECT COALESCE(SUM(amount),0) AS count FROM accepted").get()as{count:number};assert.equal(refused,row.refused,row.name);assert.equal(value.count,row.count,row.name);assert.equal(notifications,row.notifications,row.name);}}

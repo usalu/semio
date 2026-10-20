@@ -3,7 +3,8 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import ts from "typescript";
 import { createHash } from "node:crypto";
 import { open } from "node:fs/promises";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { expect, it } from "vitest";
 import schema from "../../../../🛂️proctor/🏗️bootstrap/🧬️schema/🔣️.json" with { type: "json" };
@@ -46,11 +47,7 @@ it("follows the prepared build graph's local owners once, excluding dev dependen
 });
 
 it("publishes identical rebuild bytes in a new generation while the old immutable reader remains held", async () => {
-  const ticket = process.env.SEMIO_TICKET_DIR;
-  if (!ticket) throw Error("Original proctor test ticket required");
-  const parent = join(ticket, "🗑️generated", "pin");
-  mkdirSync(parent, { recursive: true });
-  const root = mkdtempSync(join(parent, "r-")), source = join(root, "proctor"), directory = join(root, "leases");
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "course-pin-")), source = join(root, "proctor"), directory = join(root, "leases");
   writeFileSync(source, fixtures.runtime.bytes);
   const digest = Buffer.from(sha256(Buffer.from(fixtures.runtime.bytes))).toString("hex");
   try {
@@ -71,11 +68,7 @@ it("publishes identical rebuild bytes in a new generation while the old immutabl
 });
 
 it("carries the current compiler phase through capture and drains children and byte exports before closing storage", async () => {
-  const ticket = process.env.SEMIO_TICKET_DIR;
-  if (!ticket) throw Error("Original proctor test ticket required");
-  const parent = join(ticket, "🗑️generated", "b");
-  mkdirSync(parent, { recursive: true });
-  const root = mkdtempSync(join(parent, "r-")), source = join(root, process.platform === "win32" ? "proctor.exe" : "proctor"), phases: string[] = [];
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "course-build-")), source = join(root, process.platform === "win32" ? "proctor.exe" : "proctor"), phases: string[] = [];
   writeFileSync(source, fixtures.runtime.bytes);
   const document = ts.createSourceFile("bootstrap.ts", readFileSync(new URL("../../../../🛂️proctor/🏗️bootstrap/🟦️.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
   expect(ts.transpileModule(document.text, { reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).diagnostics).toEqual([]);

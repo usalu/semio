@@ -15,15 +15,17 @@
   "definitions": {
     "ToolName": { "enum": ["nx", "bazel"] },
     "Implementation": { "enum": ["native", "adapter", "neutral", "missing"] },
+    "Requires": { "enum": ["none", "dependencies"] },
     "OperationName": {
-      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "reset", "tools", "preflight", "dependencies", "cargo", "cache"]
+      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "reset", "tools", "preflight", "incremental", "concurrency", "dependencies", "cargo", "cache", "capacity", "leases", "remote-execution"]
     },
     "Operation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "synopsis", "summary", "implementations", "dryRun", "progress", "cancellable", "flags", "examples"],
+      "required": ["name", "requires", "synopsis", "summary", "implementations", "dryRun", "progress", "cancellable", "flags", "examples"],
       "properties": {
         "name": { "$ref": "#/definitions/OperationName" },
+        "requires": { "$ref": "#/definitions/Requires" },
         "synopsis": { "type": "string", "minLength": 1 },
         "implementations": {
           "type": "object",
@@ -34,7 +36,7 @@
         "dryRun": { "type": "boolean" },
         "progress": { "type": "boolean" },
         "cancellable": { "type": "boolean" },
-        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "notes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/LocalizedText" } },
         "summary": { "$ref": "#/definitions/LocalizedText" },
         "subcommands": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Subcommand" } },
         "flags": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/FlagName" } },
@@ -123,7 +125,7 @@
     "Labels": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tagline", "usage", "commands", "options", "globalOptions", "subcommands", "examples", "usedBy"],
+      "required": ["tagline", "usage", "commands", "options", "globalOptions", "subcommands", "examples", "usedBy", "notes"],
       "properties": {
         "tagline": { "$ref": "#/definitions/LocalizedText" },
         "usage": { "$ref": "#/definitions/LocalizedText" },
@@ -132,7 +134,8 @@
         "globalOptions": { "$ref": "#/definitions/LocalizedText" },
         "subcommands": { "$ref": "#/definitions/LocalizedText" },
         "examples": { "$ref": "#/definitions/LocalizedText" },
-        "usedBy": { "$ref": "#/definitions/LocalizedText" }
+        "usedBy": { "$ref": "#/definitions/LocalizedText" },
+        "notes": { "$ref": "#/definitions/LocalizedText" }
       }
     },
     "FlagName": { "type": "string", "pattern": "^--[a-z][a-z-]*$" },
@@ -156,7 +159,9 @@
       "properties": {
         "name": { "type": "string", "minLength": 1 },
         "synopsis": { "type": "string", "minLength": 1 },
-        "summary": { "$ref": "#/definitions/LocalizedText" }
+        "summary": { "$ref": "#/definitions/LocalizedText" },
+        "flags": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/FlagName" } },
+        "examples": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Example" } }
       }
     },
     "Example": {

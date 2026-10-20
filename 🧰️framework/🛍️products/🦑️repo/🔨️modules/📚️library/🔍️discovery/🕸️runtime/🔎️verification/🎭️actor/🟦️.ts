@@ -1,10 +1,10 @@
 import{isAbsolute,join,resolve}from"node:path";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import{cargoConfigurationArgumentsV1}from"@semio-tech/process/native-build";
-import{nativeBuildPassArgsV1}from"@semio-tech/process/native-release";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{cargoConfigurationArgumentsV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import{nativeBuildPassArgsV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
 import{renderCargoProfileConfigurationV1,appendCargoProfileSelectorsV1}from"../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import profileSchema from"../../../../🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json"with{type:"json"};
-import{descriptorEmitterCargoArgumentsV1}from"@semio-tech/framework-plugin/describe/emitter/contract";
+import{descriptorEmitterCargoArgumentsV1}from"../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export interface RuntimeActorCargoArgumentsRequestV1{readonly version:1;readonly kind:"component"|"descriptor-emitter";readonly mode:"release";readonly root:string;readonly workspaceOwner:string;readonly workspaceKind:"repository"|"isolated";readonly packageManifest:string;readonly packageName:string;readonly buildDirectory:string}
 const hosts=Object.freeze(profileSchema.definitions.Request.properties.target.enum.filter(value=>!value.startsWith("wasm")));

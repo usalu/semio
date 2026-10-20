@@ -31,9 +31,7 @@ it("rejects content whose actual streamed byte count differs from the declared e
 });
 
 function scratch(): string {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "image-inputs") : join(realpathSync(tmpdir()), "image-inputs");
-  mkdirSync(parent, { recursive: true });
-  return mkdtempSync(join(parent, "run-"));
+  return mkdtempSync(join(realpathSync(tmpdir()), "course-image-"));
 }
 
 for (const row of fixtures.catalogs) it(`bounds the authored catalog roster ${row.id}`, () => {

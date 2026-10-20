@@ -72,7 +72,7 @@ fn close_source(source:&mut RetainedCloneSource<DslValue>,copy:usize,born:&mut u
     let mut stalled=0;
     for _ in 0..100000 {
         if source.terminal_is_empty(){return;}
-        let demand=RetirementDemand {copy_bytes:source.next_close_copy_byte_demand().unwrap(),capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()};let admitted=grant(demand,copy);
+        let demand=source.next_close_demand(copy).unwrap();let admitted=grant(demand,0);assert_eq!(source.next_close_demand(admitted.maximum_copy_bytes).unwrap(),demand);
         if demand.release_bytes>8 {let denied=RetainedCloneGrant {maximum_release_bytes:8,..admitted};let(result,heap)=observe(||source.close_step(denied));check_denied(result,heap,denied,demand);}
         let(result,heap)=observe(||source.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"[DEBUG] Original dynamic source closure stalled copy={copy} demand={demand:?}");
     }

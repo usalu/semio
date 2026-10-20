@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { Database } from "bun:sqlite";
-import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { WORKSPACE_ROOT } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 
 /** 🧪️ Validates neutral generation values, ordinal keys and independent five-currency conservation. */
 export function proceduralGenerationRootSelfTests(): number {

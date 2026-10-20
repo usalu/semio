@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "labels": {
+    "en": {
+      "template": "{command} · {phase}: {done} of {total} {units}",
+      "phases": {
+        "inference": {
+          "label": "Inferring projects",
+          "units": "projects"
+        },
+        "verification": {
+          "label": "Verifying input closures",
+          "units": "closures"
+        },
+        "expansion": {
+          "label": "Expanding input closures",
+          "units": "closures"
+        }
+      }
+    },
+    "de": {
+      "template": "{command} · {phase}: {done} von {total} {units}",
+      "phases": {
+        "inference": {
+          "label": "Projekte ableiten",
+          "units": "Projekte"
+        },
+        "verification": {
+          "label": "Eingabehüllen prüfen",
+          "units": "Hüllen"
+        },
+        "expansion": {
+          "label": "Eingabehüllen auflösen",
+          "units": "Hüllen"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "en-inference-120-of-3656",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:120:3656",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Inferring projects: 120 of 3656 projects"
+    },
+    {
+      "name": "en-verification-0-of-17713",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:verification:0:17713",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Verifying input closures: 0 of 17713 closures"
+    },
+    {
+      "name": "en-expansion-14232-of-14232",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:expansion:14232:14232",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Expanding input closures: 14232 of 14232 closures"
+    },
+    {
+      "name": "de-inference-120-of-3656",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:120:3656",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Projekte ableiten: 120 von 3656 Projekte"
+    },
+    {
+      "name": "de-verification-0-of-17713",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:verification:0:17713",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Eingabehüllen prüfen: 0 von 17713 Hüllen"
+    },
+    {
+      "name": "de-expansion-14232-of-14232",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:expansion:14232:14232",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Eingabehüllen auflösen: 14232 von 14232 Hüllen"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "done-above-total",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:5:4",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "unknown-phase",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:publishing:1:2",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "missing-total",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "extra-part",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2:3",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "leading-zero",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:01:2",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "non-zero-elapsed",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2",
+      "mode": "shared",
+      "elapsedMs": 5
+    },
+    {
+      "name": "exclusive-mode",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2",
+      "mode": "exclusive",
+      "elapsedMs": 0
+    },
+    {
+      "name": "overflowing-count",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:99999999999999999999",
+      "mode": "shared",
+      "elapsedMs": 0
+    }
+  ]
+}

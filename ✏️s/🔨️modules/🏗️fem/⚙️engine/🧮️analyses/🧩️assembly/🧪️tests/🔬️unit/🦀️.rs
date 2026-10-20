@@ -328,7 +328,7 @@ fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
             } else {
                 -1.0
             };
-            merged_full.push_reserved(AssemblyTriplet { sequence, row: row.try_into().expect("row index"), col: column.try_into().expect("column index"), value }).expect("tridiagonal triplet slot");
+            merged_full.push_reserved(SparseTriplet { sequence, row: row.try_into().expect("row index"), col: column.try_into().expect("column index"), value }).expect("tridiagonal triplet slot");
             sequence += 1;
         }
     }
@@ -365,15 +365,26 @@ fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
     let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("completed assembly enters CSR build"));
     let mut previous_bytes = 0;
     for _ in 0..100_000 {
-        let complete = build.step_one().expect("paged CSR build");
-        let current_bytes = build.row_counts.allocated_bytes() + build.indptr.allocated_bytes() + build.indices.allocated_bytes() + build.values.allocated_bytes();
+        let demand = build.next_demands().expect("original CSR demand");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: demand.depth };
+        let (complete, progress) = build.step_one_funded(grant).expect("paged CSR build");
+        assert!(progress.fits(grant));
+        let current_bytes = build.csr.row_counts.allocated_bytes() + build.csr.indptr.allocated_bytes() + build.csr.indices.allocated_bytes() + build.csr.values.allocated_bytes();
         assert!(current_bytes.saturating_sub(previous_bytes) <= MOUNTED_OWNER_PAGE_BYTES);
         previous_bytes = current_bytes;
         if complete {
             break;
         }
     }
-    let mut matrix = build.take_complete().expect("paged CSR completes");
+    let demand = build.take_demands().expect("original matrix output demand");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: demand.depth };
+        let before = build.csr.matrix.as_ref().map(|matrix| (matrix as *const Csr, matrix.allocated_bytes()));
+        let mut denied = grant;
+        denied.maximum_copy_bytes -= 1;
+        assert!(build.take_complete(denied).is_none());
+        assert_eq!(build.csr.matrix.as_ref().map(|matrix| (matrix as *const Csr, matrix.allocated_bytes())), before);
+        let (mut matrix, progress) = build.take_complete(grant).expect("funded original matrix output");
+        assert!(progress.fits(grant));
     assert_eq!(matrix.entries_len(), entry_count);
     let [indptr_bytes, index_bytes, value_bytes] = matrix.physical_backing_bytes();
     assert!(indptr_bytes != 0);

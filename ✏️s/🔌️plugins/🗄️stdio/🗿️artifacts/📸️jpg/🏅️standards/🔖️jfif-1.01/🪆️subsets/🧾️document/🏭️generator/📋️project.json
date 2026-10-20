@@ -79,7 +79,12 @@
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts witness",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     }
   }
 }

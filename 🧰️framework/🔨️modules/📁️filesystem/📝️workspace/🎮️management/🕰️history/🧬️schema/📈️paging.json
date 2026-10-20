@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded History Paging Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "interference"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "segments",
+          "perSegment",
+          "offset",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "segments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4096
+          },
+          "perSegment": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entries",
+              "proofs",
+              "chainWalks",
+              "selectionReads",
+              "next"
+            ],
+            "properties": {
+              "entries": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 64
+              },
+              "proofs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65
+              },
+              "chainWalks": {
+                "const": 2
+              },
+              "selectionReads": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 8192
+              },
+              "next": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "interference": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "change",
+          "expected"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "Checking",
+              "Listing",
+              "Complete"
+            ]
+          },
+          "change": {
+            "enum": [
+              "object",
+              "outcome",
+              "reconciliation",
+              "selection",
+              "seal",
+              "ancestor"
+            ]
+          },
+          "expected": {
+            "const": "refused"
+          }
+        }
+      }
+    }
+  }
+}

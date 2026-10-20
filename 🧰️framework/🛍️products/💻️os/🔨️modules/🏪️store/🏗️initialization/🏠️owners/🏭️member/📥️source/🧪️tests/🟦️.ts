@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import {toolJobMemberStoreProducerExact,memberStoreProducerSourceDeclarationV1,type ToolJobMemberStoreProducerSources, type MemberProducerSourceRole,type MemberProducerSourceBody} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧪️ Runs portable current-body producer laws without importing the executable workspace script. */
 export function memberStoreProducerSourceSelfTests(check:typeof toolJobMemberStoreProducerExact):number{

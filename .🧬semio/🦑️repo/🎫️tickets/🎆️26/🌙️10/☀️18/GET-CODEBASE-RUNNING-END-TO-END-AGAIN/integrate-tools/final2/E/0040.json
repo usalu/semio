@@ -1,0 +1,1626 @@
+{
+  "name": "os-hub",
+  "$schema": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "application",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/**/*.rs",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/{🟦️.ts,🏗️staging/🟦️.ts}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ],
+    "hubSocketGrantCommandSources": [
+      "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🤝️integration-harness/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🌎️hub/📇️directory/🦀️.rs",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/**/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/**/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🏗️bootstrap/**/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+    ],
+    "hubFoundationSources": [
+      "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧪️testing/🛂️expectation/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧪️tests/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🔐️auth/{🧬️schema/🔣️.json,🧫️fixtures/🔑️capability-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📇️directory/{🦀️.rs,🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/{📜️script.ts,📋️project.json,Cargo.toml,🦀️.rs}",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/**/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/{🦀️.rs,📜️script.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/**/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}"
+    ]
+  },
+  "targets": {
+    "runtime-fixture-graph": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts runtime-fixture-graph",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "schema",
+            "runtime-graph"
+          ],
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      }
+    },
+    "setup": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts setup"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    },
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "publish": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/dist/publish"
+      ],
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts publish"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" }
+        }
+      }
+    },
+    "build-dev": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build-dev"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build-dev"
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "test-all-features": {
+      "executor": "repo:script",
+      "dependsOn": [
+        {
+          "projects": [
+            "semio-hub-gis-component"
+          ],
+          "target": "component"
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test all-features",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
+    },
+    "directory-live-lanes": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-live-lanes",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "artifact-cas-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts artifact-cas-check",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "socket-grant-command-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "hubSocketGrantCommandSources"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts socket-grant-command-source-check"
+      },
+      "outputs": []
+    },
+    "socket-grant-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "hubSocketGrantCommandSources"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts socket-grant-check"
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "scoped-directory-socket-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts scoped-directory-socket-check source"
+      },
+      "outputs": []
+    },
+    "scoped-directory-socket-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts scoped-directory-socket-check native"
+      },
+      "outputs": []
+    },
+    "scoped-directory-socket-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts scoped-directory-socket-check process"
+      },
+      "outputs": []
+    },
+    "directory-message-authority-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-message-authority-check source"
+      },
+      "outputs": []
+    },
+    "directory-message-authority-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-message-authority-check native"
+      },
+      "outputs": []
+    },
+    "admin-directory-authority-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-directory-authority-check source"
+      },
+      "outputs": []
+    },
+    "admin-directory-authority-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-directory-authority-check native"
+      },
+      "outputs": []
+    },
+    "share-issuance-atomicity-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts share-issuance-atomicity-check"
+      },
+      "outputs": []
+    },
+    "share-issuance-atomicity-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts share-issuance-atomicity-check --native"
+      },
+      "outputs": []
+    },
+    "retained-short-admin-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-short-admin-check"
+      },
+      "outputs": []
+    },
+    "retained-short-admin-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-short-admin-check --native"
+      },
+      "outputs": []
+    },
+    "presence-normalization-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-normalization-check source"
+      },
+      "outputs": []
+    },
+    "presence-normalization-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-normalization-check native"
+      },
+      "outputs": []
+    },
+    "admin-presence-target-recovery-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-presence-target-recovery-check source"
+      },
+      "outputs": []
+    },
+    "admin-presence-target-recovery-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-presence-target-recovery-check native"
+      },
+      "outputs": []
+    },
+    "presence-lease-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-lease-check source"
+      },
+      "outputs": []
+    },
+    "presence-lease-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-lease-check native"
+      },
+      "outputs": []
+    },
+    "presence-lease-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-lease-check process"
+      },
+      "outputs": []
+    },
+    "directory-event-page-v1-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-event-page-v1-check source"
+      },
+      "outputs": []
+    },
+    "directory-event-page-v1-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-event-page-v1-check native"
+      },
+      "outputs": []
+    },
+    "directory-event-page-v1-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-event-page-v1-check process"
+      },
+      "outputs": []
+    },
+    "space-administration-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-administration-check source"
+      },
+      "outputs": []
+    },
+    "space-administration-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-administration-check native"
+      },
+      "outputs": []
+    },
+    "directory-command-receipt-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check source"
+      },
+      "outputs": []
+    },
+    "directory-command-authority-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check authority"
+      },
+      "outputs": []
+    },
+    "directory-invite-authority-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check invites"
+      },
+      "outputs": []
+    },
+    "directory-command-receipt-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check native"
+      },
+      "outputs": []
+    },
+    "directory-command-receipt-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check process"
+      },
+      "outputs": []
+    },
+    "space-journey-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-journey-check --source"
+      },
+      "outputs": []
+    },
+    "space-journey-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-journey-check --process"
+      },
+      "outputs": []
+    },
+    "directory-home-browser-process-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check source"
+      },
+      "outputs": []
+    },
+    "directory-home-browser-process-runtime-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check runtime"
+      },
+      "outputs": []
+    },
+    "directory-home-browser-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check process"
+      },
+      "outputs": []
+    },
+    "scoped-presence-browser-serve": {
+      "executor": "repo:script",
+      "cache": false,
+      "continuous": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts scoped-presence-browser-serve"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
+    },
+    "invite-redemption-transaction-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts invite-redemption-transaction-check"
+      },
+      "outputs": []
+    },
+    "invite-redemption-transaction-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts invite-redemption-transaction-check --native"
+      },
+      "outputs": []
+    },
+    "invite-redemption-transaction-postgres-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts invite-redemption-transaction-check --postgres"
+      },
+      "outputs": []
+    },
+    "invite-redemption-transaction-neo4j-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts invite-redemption-transaction-check --neo4j"
+      },
+      "outputs": []
+    },
+    "execution-target-relay-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-relay-check"
+      },
+      "outputs": []
+    },
+    "execution-target-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-relay-check --native"
+      },
+      "outputs": []
+    },
+    "live-sign-in-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "build-dev"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts live-sign-in-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "local-relay-routing-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🧪️tests/🔬️admission/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🔐️auth/🧬️schema/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-relay-routing-check"
+      },
+      "outputs": []
+    },
+    "browser-broker-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-broker-check"
+      },
+      "outputs": []
+    },
+    "admin-relay-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-relay-check"
+      },
+      "outputs": []
+    },
+    "admin-backend-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-backend-check"
+      },
+      "outputs": []
+    },
+    "admin-live-journey-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-live-journey-check"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "directory-ordered-publication-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-ordered-publication-check"
+      },
+      "outputs": []
+    },
+    "unit-census-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts unit-census-check"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "sharedGlobals",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.lock",
+        "{workspaceRoot}/rust-toolchain.toml",
+        "{workspaceRoot}/.cargo/config.toml",
+        {
+          "env": "RUSTFLAGS"
+        },
+        {
+          "env": "RUSTUP_TOOLCHAIN"
+        }
+      ]
+    },
+    "foundation-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "hubFoundationSources"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts foundation-source-check"
+      },
+      "outputs": []
+    },
+    "directory-ordered-publication-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-ordered-publication-check --native"
+      },
+      "outputs": []
+    },
+    "canonical-pair-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-pair-check"
+      },
+      "outputs": []
+    },
+    "native-catalog-selection-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-catalog-selection-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-catalog-selection/🗑️generated",
+          "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-catalog-selection/🗑️generated/cargo-target"
+        }
+      },
+      "outputs": []
+    },
+    "native-openable-catalog-provider-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-openable-catalog-provider-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider/🗑️generated",
+          "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider/🗑️generated/cargo-target"
+        }
+      },
+      "configurations": {
+        "stdio-only": {
+          "args": ["--stdio-only"],
+          "env": {
+            "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated",
+            "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated/cargo-target"
+          }
+        }
+      },
+      "outputs": []
+    },
+    "open-plan-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-check"
+      },
+      "outputs": []
+    },
+    "open-plan-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-check --source"
+      },
+      "outputs": []
+    },
+    "open-plan-server-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-server-check"
+      },
+      "outputs": []
+    },
+    "browser-actor-child-worker-containment-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-child-worker-containment-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "../../../.🧬semio/🦑️repo/⚡️cache/browser-actor-child-containment"
+        }
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "browser-actor-gis-describe-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-gis-describe-check"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "browser-actor-document-reservation-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-document-reservation-check"
+      },
+      "outputs": []
+    },
+    "browser-document-open-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-document-open-check"
+      },
+      "outputs": []
+    },
+    "execution-target-lease-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-lease-check"
+      },
+      "outputs": []
+    },
+    "execution-target-lease-browser-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-lease-browser-check"
+      },
+      "outputs": []
+    },
+    "space-public-boundary-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-public-boundary-check"
+      },
+      "outputs": []
+    },
+    "document-browser-actor-identity-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check"
+      },
+      "outputs": []
+    },
+    "document-browser-actor-identity-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check --native"
+      },
+      "outputs": []
+    },
+    "trusted-browser-actor-catalog-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check --catalog-native"
+      },
+      "outputs": []
+    },
+    "check-in-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-in-check source"
+      },
+      "outputs": []
+    },
+    "space-artifact-creation-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check source"
+      },
+      "outputs": []
+    },
+    "space-artifact-creation-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check native"
+      },
+      "outputs": []
+    },
+    "space-artifact-creation-sqlite-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check sqlite"
+      },
+      "outputs": []
+    },
+    "space-artifact-creation-postgres-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check postgres"
+      },
+      "outputs": []
+    },
+    "space-artifact-creation-neo4j-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check neo4j"
+      },
+      "outputs": []
+    },
+    "check-in-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-in-check native"
+      },
+      "outputs": []
+    },
+    "check-in-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-in-check process"
+      },
+      "outputs": []
+    },
+    "trusted-catalog-opened-root-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-opened-root-check"
+      },
+      "outputs": []
+    },
+    "trusted-catalog-opened-root-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-opened-root-check --native"
+      },
+      "outputs": []
+    },
+    "trusted-catalog-preflight": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "packages",
+                "kind": "text",
+                "valueFlag": "--packages"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-preflight",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "trusted-catalog-bootstrap": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "packages",
+                "kind": "text",
+                "valueFlag": "--packages"
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-bootstrap",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "trusted-stdio-gis-bundle-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "trusted-stdio-gis-bundle-browser-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check --browser"
+      },
+      "outputs": []
+    },
+    "trusted-stdio-gis-bundle-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check --process"
+      },
+      "outputs": []
+    },
+    "gis-inference-ledger-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-inference-ledger-oracle"
+      },
+      "outputs": []
+    },
+    "inference-relay-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-relay-check"
+      },
+      "outputs": []
+    },
+    "gis-inference-ledger-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-inference-ledger-check"
+      },
+      "outputs": []
+    },
+    "gis-map-frozen-binding-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-frozen-binding-check"
+      },
+      "outputs": []
+    },
+    "gis-map-frozen-binding-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-frozen-binding-check --native"
+      },
+      "outputs": []
+    },
+    "gis-map-proposal-source-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --source"
+      },
+      "outputs": []
+    },
+    "gis-map-proposal-native-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --native"
+      },
+      "outputs": []
+    },
+    "gis-map-proposal-process-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --process"
+      },
+      "outputs": []
+    },
+    "native-document-open-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-document-open-check"
+      },
+      "outputs": []
+    },
+    "local-bootstrap-launch-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-bootstrap-launch-check"
+      },
+      "outputs": []
+    },
+    "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-postgres": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            },
+            "parameters": [
+              {
+                "id": "data",
+                "kind": "text",
+                "default": "{workspace}/.🧬semio/🌐hub/hub-dev-postgres",
+                "valueEnv": "OS_HUB_DATA"
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev postgres"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-neo4j": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            },
+            "parameters": [
+              {
+                "id": "data",
+                "kind": "text",
+                "default": "{workspace}/.🧬semio/🌐hub/hub-dev-neo4j",
+                "valueEnv": "OS_HUB_DATA"
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev neo4j"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-secure-suite": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-suite"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-secure-native": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-native"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-secure-mcp": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-mcp"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-secure-admin": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "build-dev",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-admin"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "secure-local-smoke": {
+      "executor": "repo:script",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts secure-local-smoke"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
+    },
+    "hostile-input-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hostile-input-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ]
+    },
+    "local-hub-owner": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "path": "/admin"
+            }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-hub-owner",
+        "forwardAllArgs": true
+      }
+    },
+    "dev-collaboration": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev-collaboration",
+        "forwardAllArgs": true
+      }
+    },
+    "test-inference-client-contract": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-inference-client-contract"
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "component-codec-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-codec-check",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "semio-hub-note-component",
+            "semio-hub-gis-component",
+            "semio-hub-stdio-component"
+          ],
+          "target": "component"
+        }
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧩️component-codecs/**/*",
+        "{workspaceRoot}/🌎️hub/🧬️schema/🧩️component-codecs/**/*"
+      ]
+    },
+    "component-codec-budget-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-codec-check budget",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "semio-hub-gis-component"
+          ],
+          "target": "component"
+        }
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧩️component-codecs/**/*",
+        "{workspaceRoot}/🌎️hub/🧬️schema/🧩️component-codecs/**/*"
+      ]
+    },
+    "hub-document-sweep": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6071/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-document-sweep",
+        "forwardAllArgs": true
+      }
+    },
+    "io-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts io-matrix",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

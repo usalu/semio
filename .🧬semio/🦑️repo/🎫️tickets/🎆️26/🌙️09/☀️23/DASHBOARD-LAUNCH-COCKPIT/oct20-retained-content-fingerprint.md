@@ -1,0 +1,17 @@
+# Retained Content Fingerprint
+
+Existing semio-framework-hash supplies incremental repository-owned SHA256 with zero external runtime dependencies. Its API stays private behind the workspace command implementation; no external type is exported. A declared path dependency is resolved by actual repo cargo commands in both workspaces. Offline lock generation exposed three incidental cached registry upgrades; real targeted precise updates are preserving the previous cc/find-msvc-tools/redox_syscall coordinates. Framework registry is already exactly restored to the retained612-tuple baseline; Root verification is pending. No synthetic lock was written.
+
+Six language-neutral vectors cover empty, ASCII, Unicode/CRLF, binary, a16KiBchunk boundary and2MiB beyond the text editor extent. The independent system SHA256 oracle and Ajv law are mounted in the existing Source workspace suite. Rust behavioral tests must precede fingerprint production: exact outcome digest for all vectors, retained in-place tamper refusal, and bounded streamed progress/cancellation. No runtime fingerprint acceptance is claimed yet.
+
+## Actual Paired Lock Settlement
+
+Framework72661 and Root36274 offline lock generation settled whole0. Real targeted Cargo updates22213/81026/71596 and81294/26929/70819 all settled whole0 and restored exactly the previous registry coordinates. Final framework1065packages/612registry andRoot1562/706; both add only filesystem-workspace→semio-framework-hash over the retained baseline plus previously recorded clone-source-testing→serde_json supplemental edge (if baseline predates it). Exact JSON audit is temporary generated evidence; no lock receipt or registry tuple was hand-edited.
+
+Correction from the full edge audit: Root tempfile3.27.0 also selected existing getrandom0.3.4 instead of existing0.4.3; registry identity sets are unchanged. Actual cached upstream Cargo.toml declares >=0.3.0,<0.5 for this edge, so both are compatible. One real targeted tempfile recursive update will attempt to retain the prior edge; no hand rewrite or synthetic checksum. Until final readback, do not describe Root semantic delta as only the new hash edge.
+
+## Final Lock Audit And Physical Verification Scope
+
+Root89537 real tempfile recursive update restored the previous getrandom0.4.3 edge and selected nine different compatible existing Windows-sys dependency coordinates. All package/version/registry sets remain unchanged. Low independently checked all nine exact cached upstream ranges and every requested feature; the genuine resolver graph is accepted without a hand rewrite. The Root lock semantic delta therefore includes those compatible edges and filesystem-workspace→firstpartyhash.
+
+Managed standalone content verification is bounded to64MiB with16KiBchunks and a captured initial extent; editor/create text remains1MiB. Nonempty folder snapshots are4096total nodes, nofollow and one physical namespace, with projected observed UTF16paths≤256. Tree fingerprints normalize only the root renamectime and mounted device coordinate while retaining descendant stamps and inode chain. Authenticated retained payload is uncopied existing data; the64MiB journal quota covers newly allocated events/staging/save predecessors, not relocated payload. No claim of global filesystem CAS or host-qualified Windows crash durability is made. Runtime content/tree/history bodies remain pending.

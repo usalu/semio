@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧫️fixtures/🔣️.schema.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import schema from "./🧫️fixtures/🔣️.schema.json";
 
 test("persisted child identity keeps every exact target independently of local materialization", () => {
   const validate = new Ajv({ strict: true }).compile(schema);
@@ -27,5 +27,4 @@ test("persisted child identity keeps every exact target independently of local m
   expect(source).toContain("self.header.close_step(grant)");
   expect(source).toContain("ArtifactChild::new(header.child_id,header.target)");
   expect(source).not.toContain("FromValue");
-  console.log("[DEBUG] authored persisted child identities agree with Ajv, SQLite JSON and UTF8; staged native owner preserves original headers without a local snapshot");
 });

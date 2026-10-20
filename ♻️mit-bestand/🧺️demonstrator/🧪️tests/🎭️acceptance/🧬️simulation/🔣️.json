@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["energy", "fem"],
+  "properties": {
+    "energy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paneId", "toolTabId", "toolCategoryId", "complete", "finalized", "aborted", "finalStep", "noResult"],
+      "properties": {
+        "paneId": { "const": "energie" },
+        "toolTabId": { "const": "tool.energySimulation" },
+        "toolCategoryId": { "const": "framework.category.tool" },
+        "complete": { "type": "string", "minLength": 1 },
+        "finalized": { "type": "string", "minLength": 1 },
+        "aborted": { "type": "string", "minLength": 1 },
+        "finalStep": { "type": "string", "minLength": 1 },
+        "noResult": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paneId", "panelTabId", "panelCategoryId", "caption", "phase", "initialScale", "changedScale", "steps"],
+      "properties": {
+        "paneId": { "const": "statik" },
+        "panelTabId": { "const": "fem3d.panel.results" },
+        "panelCategoryId": { "const": "framework.category.display" },
+        "caption": { "const": "Case: dead" },
+        "phase": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "initialScale": { "type": "number", "exclusiveMinimum": 0 },
+        "changedScale": { "type": "number", "exclusiveMinimum": 0 },
+        "steps": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "scale"],
+            "properties": {
+              "action": { "enum": ["change", "undo", "redo"] },
+              "scale": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

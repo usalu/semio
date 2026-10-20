@@ -1,0 +1,1245 @@
+{
+  "version": 1,
+  "status": "reviewed-metadata-plan; prefer fresh capture, historical overlay27 not ready",
+  "createdAt": "2026-10-20T15:38:48.304Z",
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "privateRoot": "/repo",
+  "scope": "14 requested host Source files plus16 finite adjacent entry/held-production checks; no full current-tree equivalence",
+  "base": {
+    "manifest": "🗑️generated/private-source-capture-manifest.json",
+    "sha256": "8579fa82486d7a67d41046c62d04167914d25b4ff3747d6514f2c0c44a836c36",
+    "sourceRevision": "bd9e4e02bd0a1225c7cc47d9f2de10f116927e1d",
+    "atomicHostSnapshot": false,
+    "files": 121423,
+    "totalBytes": 1415976711
+  },
+  "plan": {
+    "path": "2026-10-19-build-input.json",
+    "sha256": "8144161ecbfa4faf9707da52f02e28e68d2ca5e66917fe8236da2b7614fe145b",
+    "permanentOverlays": 26,
+    "chainValid": true,
+    "overlays": [
+      {
+        "number": 1,
+        "valid": true,
+        "paths": 4,
+        "sha256": "4f884ce4003da1e9422d7e308855f70015f4e6df25dca8c5792883a1977423b1"
+      },
+      {
+        "number": 2,
+        "valid": true,
+        "paths": 9,
+        "sha256": "cfb0f131153d0e879d85d9edf2c4b647654202ac3a17e7f3d2e6462f2a6ab56a"
+      },
+      {
+        "number": 3,
+        "valid": true,
+        "paths": 6,
+        "sha256": "1d620c609f5cb7390f0b118fe82d2beedc1c65e400a19468cf58e11ec4312001"
+      },
+      {
+        "number": 4,
+        "valid": true,
+        "paths": 4,
+        "sha256": "146c4ea48c3dec36d6b92763456c79b229871d71c365acd930a54cb6a7c66e19"
+      },
+      {
+        "number": 5,
+        "valid": true,
+        "paths": 4,
+        "sha256": "94af06929d185e7c1fffccf7cf736a573b143d14398a5cfb58cc3918b4dcd4eb"
+      },
+      {
+        "number": 6,
+        "valid": true,
+        "paths": 12,
+        "sha256": "b800e195f2c5f0adb88474cff040a37753ddc2f2a57b62627a3862fa5443132c"
+      },
+      {
+        "number": 7,
+        "valid": true,
+        "paths": 4,
+        "sha256": "6fbba2212d9451aa526ebfd7fd55c6fcc81dabce24993d4a64b4007eda435333"
+      },
+      {
+        "number": 8,
+        "valid": true,
+        "paths": 6,
+        "sha256": "a80b0e40c5b2820940e668d7bfb09eb27aff7caa485c92a89e58b87e7a00ad62"
+      },
+      {
+        "number": 9,
+        "valid": true,
+        "paths": 5,
+        "sha256": "39c3f5da29dd02bc2408237661277e56cc9cdaccf6ea459c43377933e168c367"
+      },
+      {
+        "number": 10,
+        "valid": true,
+        "paths": 3,
+        "sha256": "7cd542d8ff28bdb37ab31775a7738b3ee6512375d64d6d1340cf2aede9f38795"
+      },
+      {
+        "number": 11,
+        "valid": true,
+        "paths": 7,
+        "sha256": "3c46adb6b97cce809b5008723d2da8e3ee3ad94b02c20ca467c64012d4d3a10e"
+      },
+      {
+        "number": 12,
+        "valid": true,
+        "paths": 11,
+        "sha256": "34643d4304c9d943d63765a0059dc2de94d3145ce54b8a2178d71a019b84da25"
+      },
+      {
+        "number": 13,
+        "valid": true,
+        "paths": 6,
+        "sha256": "b33bc6ed8a85d4808c3444fd1a1c6b112b43cc62f2e199b27a7aa8c47c20f070"
+      },
+      {
+        "number": 14,
+        "valid": true,
+        "paths": 5,
+        "sha256": "7e9e79250234d296a223298815f728786b6c450b010d45180a73d4e57b92805f"
+      },
+      {
+        "number": 15,
+        "valid": true,
+        "paths": 7,
+        "sha256": "fd650d96b73f50dc8c83df1568a48b6baebeef4c9df16c96b15b0f1ce04fb23f"
+      },
+      {
+        "number": 16,
+        "valid": true,
+        "paths": 12,
+        "sha256": "8b6d84f7540e22cb257a074b92bb97261908579900372c07cb62d32f50c0f155"
+      },
+      {
+        "number": 17,
+        "valid": true,
+        "paths": 6,
+        "sha256": "409932ba6db9b93ca03090cb85307698f3044a3c24f7d1923b551af46ba3902c"
+      },
+      {
+        "number": 18,
+        "valid": true,
+        "paths": 9,
+        "sha256": "322f37fd1df869f5d8fc39484d2fe005cf35708ab6459c5af71442d6fd879b19"
+      },
+      {
+        "number": 19,
+        "valid": true,
+        "paths": 6,
+        "sha256": "c27e1465b906f07ba80a571c0d7b1494d7f7790add0d4beccba1fefe0f16dc3b"
+      },
+      {
+        "number": 20,
+        "valid": true,
+        "paths": 5,
+        "sha256": "fafc5e44981e7d92bd57fff2b36f5306f35dbba44cd490c9853e4e79e3c0497e"
+      },
+      {
+        "number": 21,
+        "valid": true,
+        "paths": 29,
+        "sha256": "17e9a00456165ff75f9f275581bd1de1ab6e7dee2d2ee1434be0c2b7a2bbe134"
+      },
+      {
+        "number": 22,
+        "valid": true,
+        "paths": 3,
+        "sha256": "26b6509f11e8e9947457a9cd20563e02eefe6fc22b90c2f8fd2be70cf70a2f99"
+      },
+      {
+        "number": 23,
+        "valid": true,
+        "paths": 2,
+        "sha256": "76406aafec66f22a83c2d776d67d7fba39599625486649d97e2039f9e8a672be"
+      },
+      {
+        "number": 24,
+        "valid": true,
+        "paths": 14,
+        "sha256": "76270fb0daa668a29eb68d93672b8665b9cc79c059a96590044aa2001e61d5ba"
+      },
+      {
+        "number": 25,
+        "valid": true,
+        "paths": 4,
+        "sha256": "bfbdd77949cc223437d1f5b4b4fb75ceaaed23e411564f62095ff1a5dffc6853"
+      },
+      {
+        "number": 26,
+        "valid": true,
+        "paths": 4,
+        "sha256": "002e24944bec79d5799b73488e15dc1d7f05f202214b995a69bf56c0b63d6e37"
+      }
+    ],
+    "nextReceipt": "🗑️generated/2026-10-19-source-overlay-27.json",
+    "nextReceiptExists": false
+  },
+  "restoreBeforeAnyOverlay": [
+    {
+      "kind": "inner-authorizer-loader",
+      "action": "inner-loader-remove",
+      "inverse": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+          "fromSha256": "07da11ff3dca6b229ba6bda552eede26b60b3be31a2a74a2d4ae3a92bc9ecedb",
+          "toSha256": "d272b0e95b7f838aff8a35acad8b3f99b129d2b76f35d56114441b5b5fa2c33c",
+          "activeBytes": 58393
+        }
+      ]
+    },
+    {
+      "kind": "sdk-reader-failure",
+      "action": "sdk-reader-failure-remove",
+      "inverse": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "fromSha256": "2b68f2d91aa967280af049bfe63ba0604fb0dad725e3ab7734a3cc580d96ab64",
+          "toSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "activeBytes": 14810
+        }
+      ]
+    },
+    {
+      "kind": "sdk-reader-stage",
+      "action": "sdk-reader-remove",
+      "inverse": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "fromSha256": "2380273e42416f035a63241d73f7d6ab54c9d9ed61d7f4def07cd376e5eba8df",
+          "toSha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+          "activeBytes": 12889
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "group": "publisher",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+      "host": {
+        "sha256": "d8f982cba9dceadf5b3e002acd3b25291e770ca6040e827879f9ffb25d98b522",
+        "bytes": 2743,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437205083",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "2743",
+          "mtimeNs": "1792509010477632170",
+          "ctimeNs": "1792509010477632170"
+        }
+      },
+      "privateExpected": {
+        "sha256": "b66841acdefbe8f8b4a200f2d733a1a021a956eeba9b56d9fd20948b14b679f8",
+        "bytes": 2276,
+        "origin": "base",
+        "epoch": 3392
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 95,
+      "capture26": [],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "publisher",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json",
+      "host": {
+        "sha256": "5cd3488e7a281508f7b53e17ced596a24dd4d50cdf28b97ded5ea392d2ab547f",
+        "bytes": 4130,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437641056",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "4130",
+          "mtimeNs": "1792509010475477876",
+          "ctimeNs": "1792509010475477876"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 123,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "publisher",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json",
+      "host": {
+        "sha256": "faa27bddcb87f1530b861c607ab4af03347b45f6854564357b5886433e347e26",
+        "bytes": 5069,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437641058",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "5069",
+          "mtimeNs": "1792509010476131002",
+          "ctimeNs": "1792509010476131002"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 125,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "publisher",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+      "host": {
+        "sha256": "71d864748af202b6a534fed8a6c6e82415b8f22f0cb55375daa8a0519d204723",
+        "bytes": 16310,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437645887",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "16310",
+          "mtimeNs": "1792509010476900336",
+          "ctimeNs": "1792509010476900336"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 120,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "generator",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+      "host": {
+        "sha256": "6d8a92a93943d3d1fa75483b70abd6baf7fbcd95342dd20e7fda611d05ec3c07",
+        "bytes": 3889,
+        "identity": {
+          "dev": "16777229",
+          "ino": "206821397",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "3889",
+          "mtimeNs": "1792509923794850271",
+          "ctimeNs": "1792509923794850271"
+        }
+      },
+      "privateExpected": {
+        "sha256": "0626522cfa748215be1725d1f4fc04d03357d195b3779e67a62751fee610e4c0",
+        "bytes": 3783,
+        "origin": "base",
+        "epoch": 0
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 114,
+      "capture26": [],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "generator",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+      "host": {
+        "sha256": "88976061930a33159e1ca3b67e4de79e58b88db5bbbee25744ce9a134e115270",
+        "bytes": 32317,
+        "identity": {
+          "dev": "16777229",
+          "ino": "423230748",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "32317",
+          "mtimeNs": "1792510237862946443",
+          "ctimeNs": "1792510237862946443"
+        }
+      },
+      "privateExpected": {
+        "sha256": "d10b2d84986dcae773183f005186ef89fabae159587a0ef88276e955c1855df5",
+        "bytes": 31125,
+        "origin": "overlay17",
+        "receipt": "🗑️generated/2026-10-19-source-overlay-17.json",
+        "receiptSha256": "409932ba6db9b93ca03090cb85307698f3044a3c24f7d1923b551af46ba3902c",
+        "scoped": false
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 140,
+      "capture26": [
+        {
+          "kind": "compiler",
+          "sha256": "d10b2d84986dcae773183f005186ef89fabae159587a0ef88276e955c1855df5"
+        }
+      ],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "generator",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json",
+      "host": {
+        "sha256": "e21558fc721ddb9a6587d0f485f602ecd5f6a8a23884875c52f41031100c802c",
+        "bytes": 7182,
+        "identity": {
+          "dev": "16777229",
+          "ino": "337051473",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "7182",
+          "mtimeNs": "1792509737821860010",
+          "ctimeNs": "1792509737821860010"
+        }
+      },
+      "privateExpected": {
+        "sha256": "16dcb815993d86131b0ccbf82cfb395731527fc023905e021268503816939db0",
+        "bytes": 6664,
+        "origin": "overlay16",
+        "receipt": "🗑️generated/2026-10-19-source-overlay-16.json",
+        "receiptSha256": "8b6d84f7540e22cb257a074b92bb97261908579900372c07cb62d32f50c0f155",
+        "scoped": false
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 119,
+      "capture26": [
+        {
+          "kind": "compiler",
+          "sha256": "16dcb815993d86131b0ccbf82cfb395731527fc023905e021268503816939db0"
+        }
+      ],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "generator",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+      "host": {
+        "sha256": "03c6154949cde2541c7a896ef610c4678a4f4fe88869f4ef2bfd01d7641f3383",
+        "bytes": 127165,
+        "identity": {
+          "dev": "16777229",
+          "ino": "436569783",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "127165",
+          "mtimeNs": "1792510273420725123",
+          "ctimeNs": "1792510273420725123"
+        }
+      },
+      "privateExpected": {
+        "sha256": "6263eb324dbcd66f89bb0f095b916a0000c946361ced4fe9bc4358d1a9cd84f7",
+        "bytes": 121308,
+        "origin": "overlay17",
+        "receipt": "🗑️generated/2026-10-19-source-overlay-17.json",
+        "receiptSha256": "409932ba6db9b93ca03090cb85307698f3044a3c24f7d1923b551af46ba3902c",
+        "scoped": false
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 130,
+      "capture26": [],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "generator",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+      "host": {
+        "sha256": "0ed6dd7b94e6dc23ecd336301c1b65380d0071d686993ecfa0b0b5886e4d685c",
+        "bytes": 70595,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440578270",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "70595",
+          "mtimeNs": "1792510385149960335",
+          "ctimeNs": "1792510385149960335"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 133,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "hold until actual source regression receipt"
+    },
+    {
+      "group": "ciRed",
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🔣️.json",
+      "host": {
+        "sha256": "67da8556b13fbc86b4fa0064796c2aefc932617dca0b78fb00204404dbd421c0",
+        "bytes": 6499,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431592444",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "6499",
+          "mtimeNs": "1792508161931361014",
+          "ctimeNs": "1792508161931361014"
+        }
+      },
+      "privateExpected": {
+        "sha256": "d21a3406644fd438f741663990e97358186cc4d1082518048479be3ab1e19a96",
+        "bytes": 4174,
+        "origin": "base",
+        "epoch": 683
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 99,
+      "capture26": [],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "held until actual collected RED, implementation and GREEN"
+    },
+    {
+      "group": "ciRed",
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧩️compose-caddy-and-workflow/🟦️.ts",
+      "host": {
+        "sha256": "025ea9407d277db60de4855e978f48d0aae47b9019b88744c4e815a8a04523ed",
+        "bytes": 9340,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437424567",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "9340",
+          "mtimeNs": "1792508161933180224",
+          "ctimeNs": "1792508161933180224"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 121,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "held until actual collected RED, implementation and GREEN"
+    },
+    {
+      "group": "offlineRed",
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json",
+      "host": {
+        "sha256": "ee5d649f333d5d98f0897248a7e711a89b6e87bf0e669a34800434a38635385e",
+        "bytes": 803,
+        "identity": {
+          "dev": "16777229",
+          "ino": "443889059",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "803",
+          "mtimeNs": "1792509679464786856",
+          "ctimeNs": "1792509679464786856"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 106,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "held until actual collected RED, implementation and GREEN"
+    },
+    {
+      "group": "offlineRed",
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🔣️.json",
+      "host": {
+        "sha256": "f815738c13d3a1350b4a8203507c8d19b84df59e69394fc7cc7acae68c66e380",
+        "bytes": 1912,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431592446",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "1912",
+          "mtimeNs": "1792509801020013979",
+          "ctimeNs": "1792509801020013979"
+        }
+      },
+      "privateExpected": {
+        "sha256": "6889d90a4b186cc0902fcf3ec386b3542f96bb73d93f3dd581432fe67d1a8aba",
+        "bytes": 1534,
+        "origin": "base",
+        "epoch": 683
+      },
+      "baseCaptured": true,
+      "relation": "different-review-scoped-delta",
+      "maximumAbsolutePathLength": 96,
+      "capture26": [],
+      "transportDecision": "review exact owned delta; do not overwrite frozen peer bytes",
+      "gate": "held until actual collected RED, implementation and GREEN"
+    },
+    {
+      "group": "offlineRed",
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🌐️sealed-publication-and-bundle/🟦️.ts",
+      "host": {
+        "sha256": "c8eb87311b653c6e443898c5af0233461eafe1ea97d1fe55611c5a5d93edd4de",
+        "bytes": 17698,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437424569",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "17698",
+          "mtimeNs": "1792509801021409355",
+          "ctimeNs": "1792509801021409355"
+        }
+      },
+      "privateExpected": null,
+      "baseCaptured": false,
+      "relation": "absent-in-base-plus26",
+      "maximumAbsolutePathLength": 124,
+      "capture26": [],
+      "transportDecision": "not supported by unchanged creation allowlist",
+      "gate": "held until actual collected RED, implementation and GREEN"
+    }
+  ],
+  "adjacentReviewOnly": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+      "host": {
+        "sha256": "a1602694244743641c1e992e0c5e162c16908e5f1316d59b6b159025486b6931",
+        "bytes": 12576,
+        "identity": {
+          "dev": "16777229",
+          "ino": "222798428",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "12576",
+          "mtimeNs": "1792492776611185807",
+          "ctimeNs": "1792504239676095116"
+        }
+      },
+      "privateExpected": {
+        "sha256": "60a2f7000d52cba51f348b789caaaadd54a69ba03022013ab8168999f9d25806",
+        "bytes": 1117,
+        "origin": "base",
+        "epoch": 3392
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+      "host": {
+        "sha256": "a5edae17a14ba9cc9d8b7bd055a40f3d9edc8eda490c77097cf75705da5ad641",
+        "bytes": 2729,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440928326",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "2729",
+          "mtimeNs": "1792502003733632587",
+          "ctimeNs": "1792504239674296868"
+        }
+      },
+      "privateExpected": {
+        "sha256": "62aadb84be36412dfec6de0c63d0b6f062e936ce5456378a8d65eef6b3c638ab",
+        "bytes": 1357,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+      "host": {
+        "sha256": "8750b710dff735c8b056b2434e86ff4d724ebd2a16d82caeda990fbff3a1fcc1",
+        "bytes": 32088,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440987805",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "32088",
+          "mtimeNs": "1792502315665742147",
+          "ctimeNs": "1792504241505831668"
+        }
+      },
+      "privateExpected": {
+        "sha256": "52b89ed1189886dc9853305368cea9b22091df48517a54e0d3b64ea8a7016dde",
+        "bytes": 30051,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "📋️project.json",
+      "host": {
+        "sha256": "fcb0c979144c18636c88165dd68a00e71f52453cc5012afd1d30c6010b01409f",
+        "bytes": 147006,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440928298",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "147006",
+          "mtimeNs": "1792502003728669923",
+          "ctimeNs": "1792504246207724416"
+        }
+      },
+      "privateExpected": {
+        "sha256": "e8b905d655b5ec51a51f08ff019a034aa26f64fdfef974b88d55a34ad1794c6f",
+        "bytes": 136738,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "host": {
+        "sha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325",
+        "bytes": 19735,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440928293",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "19735",
+          "mtimeNs": "1792502003727959216",
+          "ctimeNs": "1792504246200885170"
+        }
+      },
+      "privateExpected": {
+        "sha256": "c71bb794d3ebe9dc8c2669a642fc7a8a36ae57af3558b4205a1906a362593deb",
+        "bytes": 18073,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+      "host": {
+        "sha256": "6b725b97908bf712cf17c528f007811fdad201874da672adb3fc179a678f4959",
+        "bytes": 10602,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431592327",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "10602",
+          "mtimeNs": "1792503837903208144",
+          "ctimeNs": "1792504246200953253"
+        }
+      },
+      "privateExpected": {
+        "sha256": "91a34096c35838254020a3a1495949a7bd976170e2dd641eacbd2f4ced26569a",
+        "bytes": 10475,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+      "host": {
+        "sha256": "4e9a00685890aefa30a06f2bc6f1089ecce18edcaf65bbe9cbfa25485ac8a529",
+        "bytes": 1999,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431623291",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "1999",
+          "mtimeNs": "1792407772005536191",
+          "ctimeNs": "1792504246201027170"
+        }
+      },
+      "privateExpected": {
+        "sha256": "4e9a00685890aefa30a06f2bc6f1089ecce18edcaf65bbe9cbfa25485ac8a529",
+        "bytes": 1999,
+        "origin": "base",
+        "epoch": 0
+      },
+      "relation": "exact"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+      "host": {
+        "sha256": "f402a30139cee7bac15dd9c2a4b352d91ae768efe7a2b7cc8a06efa1517359bb",
+        "bytes": 2257,
+        "identity": {
+          "dev": "16777229",
+          "ino": "436006562",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "2257",
+          "mtimeNs": "1792503837901758853",
+          "ctimeNs": "1792504246201092711"
+        }
+      },
+      "privateExpected": {
+        "sha256": "bb41be62af3b5be2a69aeaa0f7ab43adb781f4ab8f5d4e3d4fe011a0e2222a83",
+        "bytes": 2372,
+        "origin": "base",
+        "epoch": 2438
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+      "host": {
+        "sha256": "44741261b72c33dcea3167c92b4441cb05fbb74f391f8d77d984250cc48ee98e",
+        "bytes": 3683,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431592407",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "3683",
+          "mtimeNs": "1792506236350478045",
+          "ctimeNs": "1792506236350478045"
+        }
+      },
+      "privateExpected": {
+        "sha256": "44b7566628a2b6287176bfe8ff97912836e0bf8db8d5eaee07feb828fcea07bd",
+        "bytes": 50804,
+        "origin": "base",
+        "epoch": 683
+      },
+      "relation": "different-needs-independent-review"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧰️deploy-fixtures/🟦️.ts",
+      "host": {
+        "sha256": "1e4b4f1894ea152f529c3baa4dd658c05d9b9c8764c27d70443506ec598a52fc",
+        "bytes": 5618,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437424561",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "5618",
+          "mtimeNs": "1792506224089276371",
+          "ctimeNs": "1792506224089276371"
+        }
+      },
+      "privateExpected": null,
+      "relation": "absent-in-base-plus26"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🛑️cancellation-and-staging/🟦️.ts",
+      "host": {
+        "sha256": "bca25e086552a235d4eb84cfcebec20762ea957f95b8a38eab2255c79109c464",
+        "bytes": 7212,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437424563",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "7212",
+          "mtimeNs": "1792488668483626213",
+          "ctimeNs": "1792504246172760143"
+        }
+      },
+      "privateExpected": null,
+      "relation": "absent-in-base-plus26"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🐳️docker-context-and-image/🟦️.ts",
+      "host": {
+        "sha256": "cb8d02ac959178dac1c73f746d563de14f535c1bc2ec08550033446dcaae733c",
+        "bytes": 13249,
+        "identity": {
+          "dev": "16777229",
+          "ino": "437424565",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "13249",
+          "mtimeNs": "1792488668483938254",
+          "ctimeNs": "1792504246171727227"
+        }
+      },
+      "privateExpected": null,
+      "relation": "absent-in-base-plus26"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🏗️site-build/🟦️.ts",
+      "host": {
+        "sha256": "13547ce0d410656c2d16ceda2ca033da2f078a257e7d1c0d3ea90e3dac4e1abf",
+        "bytes": 4745,
+        "identity": {
+          "dev": "16777229",
+          "ino": "441208401",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "4745",
+          "mtimeNs": "1792503850282898880",
+          "ctimeNs": "1792503850282898880"
+        }
+      },
+      "privateExpected": null,
+      "relation": "absent-in-base-plus26"
+    },
+    {
+      "path": ".github/workflows/architecture-course.yml",
+      "host": {
+        "sha256": "d6d1e450b1d8141b20c70485909d6fd5ccb2081f01db4216151a4809629ce75c",
+        "bytes": 9010,
+        "identity": {
+          "dev": "16777229",
+          "ino": "431583413",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "9010",
+          "mtimeNs": "1792413544992739200",
+          "ctimeNs": "1792504715403745305"
+        }
+      },
+      "privateExpected": {
+        "sha256": "d6d1e450b1d8141b20c70485909d6fd5ccb2081f01db4216151a4809629ce75c",
+        "bytes": 9010,
+        "origin": "base",
+        "epoch": 4
+      },
+      "relation": "exact"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+      "host": {
+        "sha256": "97952fc4904739401bf9784feafca2c3057d06a96ec14bab130a8b38b45a4ee4",
+        "bytes": 9392,
+        "identity": {
+          "dev": "16777229",
+          "ino": "432431482",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "9392",
+          "mtimeNs": "1792415016741431146",
+          "ctimeNs": "1792504246163552190"
+        }
+      },
+      "privateExpected": {
+        "sha256": "97952fc4904739401bf9784feafca2c3057d06a96ec14bab130a8b38b45a4ee4",
+        "bytes": 9392,
+        "origin": "base",
+        "epoch": 683
+      },
+      "relation": "exact"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/📚️course/README.md",
+      "host": {
+        "sha256": "4801e26c4444d89975eac4b443597ad9f1361888c9f7d6bf2199126df9b575ad",
+        "bytes": 82127,
+        "identity": {
+          "dev": "16777229",
+          "ino": "432134288",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "82127",
+          "mtimeNs": "1792503935611266347",
+          "ctimeNs": "1792504246167946229"
+        }
+      },
+      "privateExpected": {
+        "sha256": "30191fbf7d9d571dc3e021532827966ddc126541c699f44a2abb803c9850557d",
+        "bytes": 58408,
+        "origin": "base",
+        "epoch": 683
+      },
+      "relation": "different-needs-independent-review"
+    }
+  ],
+  "protectedBoundaries": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "restoredPrivate": {
+        "sha256": "d272b0e95b7f838aff8a35acad8b3f99b129d2b76f35d56114441b5b5fa2c33c",
+        "bytes": 57696,
+        "origin": "base",
+        "epoch": 0
+      },
+      "host": {
+        "sha256": "ba4276937a29f2f5c6f64d6dbaf58e25d62d9258955f383190f297e33eadf74b",
+        "bytes": 59264,
+        "identity": {
+          "dev": "16777229",
+          "ino": "440578189",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "59264",
+          "mtimeNs": "1792500995941058931",
+          "ctimeNs": "1792504240903117453"
+        }
+      },
+      "transfer": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+      "restoredPrivate": {
+        "sha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+        "bytes": 11828,
+        "origin": "base",
+        "epoch": 0
+      },
+      "host": {
+        "sha256": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+        "bytes": 11828,
+        "identity": {
+          "dev": "16777229",
+          "ino": "338470392",
+          "mode": "33188",
+          "nlink": "1",
+          "size": "11828",
+          "mtimeNs": "1792354432641657414",
+          "ctimeNs": "1792504241052696372"
+        }
+      },
+      "transfer": false
+    }
+  ],
+  "pendingProductionPatches": [
+    {
+      "path": "native-ci.patch",
+      "sha256": "c5d7d92fb5db5b4d90fbb35d8989d4a737777b95383da6c679c3a1b1dda663c0",
+      "applied": false,
+      "addsPotentialSourceFiles": [
+        ".github/workflows/architecture-course.yml"
+      ],
+      "condition": "actual architecture CI assertion RED then exact implementation GREEN"
+    },
+    {
+      "path": "native-ci-corpus.patch",
+      "sha256": "816f0a991bf6011f9d3cc788a48263a8ba9d97501c975790e6250f7ca8306cc4",
+      "applied": false,
+      "condition": "optional supplemental neutral corpus consumer; if applied its2new assets+site-build test require new roster rows"
+    },
+    {
+      "path": "🎯️contracts/offline-stack.patch",
+      "sha256": "f2016f571f33aad8f5aee444fa955f347f88354cf4c4508369d501ac52c5de3f",
+      "applied": false,
+      "addsPotentialSourceFiles": [
+        "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+        "🎓️teaching/🏛️architecture/📚️course/README.md"
+      ],
+      "condition": "actual offline policy assertion RED then exact implementation GREEN"
+    }
+  ],
+  "transportLimits": {
+    "helperPath": "📥️patches/📜️script.ts",
+    "helperSha256": "59def571e65084de77d4b39172116dc1fc8ce383f5af85e1c6ff6af68edfe7cc",
+    "helperBytes": 112698,
+    "maximumRows": 128,
+    "maximumFileBytes": 4194304,
+    "maximumEnvelopeBytes": 25165824,
+    "maximumAbsolutePath": 256,
+    "creationAllowlist": "only three historical workspaces .d.cts declarations; none of7absent requested files allowed",
+    "scopedStrategies": [
+      "single target metadata insertion on manifest, exact anchor and semantic equality required",
+      "one canonical value import replacement on TypeScript Source",
+      "owned module binding substitutions only on3historical workspace leaves"
+    ],
+    "readyForRows": false
+  },
+  "requiredReceipts": [
+    "authoritative retained process terminal/custody before Source mutation",
+    "three exact reverse diagnostic receipts, all flags inactive, restored clean private hashes",
+    "actual host native source regression pass for final hashes",
+    "actual architecture collected CI/offline RED then implementation GREEN with final hashes",
+    "reviewed per-file prepared private posthash/extent and full inverse; absent-preimage owner/ancestry proof for creations",
+    "owned native transport/preflight acceptance for finite cohort; not current unsupported old helper invocation",
+    "immutable overlay27 actual receipt with same base and continuous predecessor hashes, authority:false/non-atomic",
+    "fresh actual Linux runtime/compiler captures and source/snapshot/read independent oracle within original bounds",
+    "native Linux frontend actual help0+fresh original product invocation; no old Bun-repo runner reuse",
+    "all final course/native/browser/deploy/offline checks against that actual cohort and same real image tag"
+  ],
+  "prohibited": [
+    "source body copies into ticket",
+    "whole current tree copy or wholesale14file host overwrite",
+    "claiming14file roster equals complete current Linux cohort",
+    "private helper/source/container/process mutation by this preparation",
+    "promoting diagnostic run to clean Source acceptance"
+  ],
+  "preferredStrategy": "fresh-current-Source",
+  "freshCurrentSourceOption": {
+    "preferred": true,
+    "status": "prepare-after-host-regressions-and-collected-CI-offline-RED-GREEN; not implemented or run",
+    "sourceModel": "fresh current physical tracked+untracked Source plus required provider/owner/install inputs; independently sealed owner/provider epochs, non-atomic; fresh manifest is separate provenance from8579base+26",
+    "reuse": {
+      "capture": {
+        "path": "📥️private/📜️script.ts",
+        "bytes": 46531,
+        "sha256": "ff6851e7cabfe6177b4ac952e9ffc43cf1d9fb66f0c21a43d69e1013945f0555",
+        "modes": [
+          "source",
+          "capture transport",
+          "imports"
+        ],
+        "stream": "bounded memory PAX generator → Node Readable/Writable pipeline → unique dedicated volume; no Source/tar copy to ticket",
+        "freshRoster": "source mode refreshes actual gitRows/untrackedGitPaths and relativeScriptInputs; critical epoch expands actual canonical registry and physical ownership before/after",
+        "limits": {
+          "memoryAndStreamAndVolumeBytes": 4294967296,
+          "maximumFiles": 262144,
+          "maximumMilliseconds": 900000,
+          "maximumPathUnits": 256,
+          "maximumPathBytes": 1024,
+          "maximumAncestors": 64
+        }
+      },
+      "implementationSnapshot": {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts",
+        "api": "captureBuildSourceClosureV1(workspace,entry,original)",
+        "scope": "genuine Original implementation closure only, not full Source tree",
+        "role": "no-follow module/schema capture with original control, closed imports, checksums and bounded immutable loader"
+      },
+      "builder": {
+        "path": "🚀️run/📜️script.ts",
+        "sha256": "4fd721538c653fa1e3764a6115a27d215bf958c6c66806ed3d31c915ef98ad14",
+        "bytes": 50799,
+        "reuse": "dedicated unique labeled Source volume + owned builder image, inner Docker root, exact tool/image/source identity; bounded Original logs/terminal/export semantics"
+      },
+      "nativeFrontend": {
+        "artifact": "🗑️generated/n3/repo",
+        "knownSha256": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c",
+        "knownBytes": 11767992,
+        "format": "independently reviewed ELF64 little-endian x86-64 ET_EXEC/no PT_INTERP; not guest help proof",
+        "provisioningPort": "actual provision/guestProgram semantics in frozen 🧰️native inputs; current constants bind oldcontainer+8579manifest, so cannot use unchanged on fresh cohort"
+      }
+    },
+    "freshRequiredPaths": [
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+        "sha256": "d8f982cba9dceadf5b3e002acd3b25291e770ca6040e827879f9ffb25d98b522",
+        "bytes": 2743
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json",
+        "sha256": "5cd3488e7a281508f7b53e17ced596a24dd4d50cdf28b97ded5ea392d2ab547f",
+        "bytes": 4130
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json",
+        "sha256": "faa27bddcb87f1530b861c607ab4af03347b45f6854564357b5886433e347e26",
+        "bytes": 5069
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+        "sha256": "71d864748af202b6a534fed8a6c6e82415b8f22f0cb55375daa8a0519d204723",
+        "bytes": 16310
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+        "sha256": "6d8a92a93943d3d1fa75483b70abd6baf7fbcd95342dd20e7fda611d05ec3c07",
+        "bytes": 3889
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+        "sha256": "88976061930a33159e1ca3b67e4de79e58b88db5bbbee25744ce9a134e115270",
+        "bytes": 32317
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json",
+        "sha256": "e21558fc721ddb9a6587d0f485f602ecd5f6a8a23884875c52f41031100c802c",
+        "bytes": 7182
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+        "sha256": "03c6154949cde2541c7a896ef610c4678a4f4fe88869f4ef2bfd01d7641f3383",
+        "bytes": 127165
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+        "sha256": "0ed6dd7b94e6dc23ecd336301c1b65380d0071d686993ecfa0b0b5886e4d685c",
+        "bytes": 70595
+      },
+      {
+        "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🔣️.json",
+        "sha256": "67da8556b13fbc86b4fa0064796c2aefc932617dca0b78fb00204404dbd421c0",
+        "bytes": 6499
+      },
+      {
+        "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧩️compose-caddy-and-workflow/🟦️.ts",
+        "sha256": "025ea9407d277db60de4855e978f48d0aae47b9019b88744c4e815a8a04523ed",
+        "bytes": 9340
+      },
+      {
+        "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json",
+        "sha256": "ee5d649f333d5d98f0897248a7e711a89b6e87bf0e669a34800434a38635385e",
+        "bytes": 803
+      },
+      {
+        "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🔣️.json",
+        "sha256": "f815738c13d3a1350b4a8203507c8d19b84df59e69394fc7cc7acae68c66e380",
+        "bytes": 1912
+      },
+      {
+        "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🌐️sealed-publication-and-bundle/🟦️.ts",
+        "sha256": "c8eb87311b653c6e443898c5af0233461eafe1ea97d1fe55611c5a5d93edd4de",
+        "bytes": 17698
+      }
+    ],
+    "closureRequirement": "after patches/GREEN recompute all final changed hashes plus16adjacent authority files; actual capture must include every required split test/fixture/module/manifest. Guest selected graph closes complete runtime/type/native/provider/test closure. Current14file map alone never establishes complete current Source.",
+    "diagnostics": {
+      "activePrivateOld": 3,
+      "freshSourceLayers": 0,
+      "freshCurrentHostReader": "2bd3d090eefacaf699ec62cbfaf3ae56c1c892fc8afdc6dbb6792633a50b3714",
+      "freshCurrentHostBootstrap": "ba4276937a29f2f5c6f64d6dbaf58e25d62d9258955f383190f297e33eadf74b",
+      "oldRestoreIsFreshPrerequisite": false,
+      "oldOverlayRequiresRestoreFirst": true
+    },
+    "preciseGaps": [
+      {
+        "gap": "immutable fresh output slot",
+        "evidence": "capture/imports hardcode private-source-capture-{manifest,receipt,host-divergence}.json and complete metadata; writes overwrite old evidence. Need fresh cohort-specific generated names/references sealed together, without overwriting8579proof."
+      },
+      {
+        "gap": "capture tool/image inputs",
+        "evidence": "capture hardcodes old extractionimage04ed and official Bun a83d from generated/builder-probe/bun. Existing historical proof is reusable behavior; fresh input must reseal exact still-present tool/image and genuine current API/dependency path compatibility."
+      },
+      {
+        "gap": "native builder ingress",
+        "evidence": "runner hardcodes old2026-10-19buildplan and command spawns guest bun repo. Fresh command must invoke authenticated absolute native repo n3 and preserve genuine guest Original/environment. No old bun-repo product route."
+      },
+      {
+        "gap": "fresh native provision identity",
+        "evidence": "frozen pin/readPin/authority bind old container ID+identitySHA+Source8579manifest. Need reviewed fresh cohort identity input/resealed owned provisioning without editing frozen active4inputs."
+      },
+      {
+        "gap": "current Source closure",
+        "evidence": "7requested and4adjacent split testfiles absent oldbase+26. Current fresh roster includes ordinary tracked/untracked paths, but must actually prove all required final hashes, physical membership and test/import closure, not infer completeness from broad counts."
+      },
+      {
+        "gap": "separate Git and postlock Source provenance",
+        "evidence": "existing Git supplement separately streams genuine metadata; capture is not atomic with Git. Native lock once mutates authored locks; preserve actual postlock deltas/receipts before sync once and product graph authority."
+      },
+      {
+        "gap": "cleanup terminal evidence",
+        "evidence": "historical capture finally issues forced container/volume cleanup without checking every result. Fresh controller must verify exact ownership and terminal/absence status, retaining failed/unknown cleanup evidence."
+      }
+    ],
+    "sequence": [
+      "actual native workspace build regression pass for final generator/publisher Source",
+      "actual architecture collected RED for CI/offline, apply only reviewed patches, same owner GREEN and final file seal",
+      "fresh capture currentSource with unique evidence slots and critical final file subset/registry/ownership fences",
+      "direct bounded stream and full guest hash/size/kind/import proof; separate genuine Git supplement; no host Source/cache binds",
+      "create exact dedicated single-workload Linux x64 builder from approved image with actual available headroom and owned inner Docker data root",
+      "reseal/provision actual n3 frontend to that fresh builder and verify actual native help0",
+      "genuine guest native preflight and owned tool provisioning as required; exactly1dependencies lock --all then1sync --all; record receipts and postlock Source deltas",
+      "genuine guest Native Original selected graph/course/native/browser/deploy tests and same-tag offlinebundle; independent artifact audit/export",
+      "on failure/cancel use progress+bounded cancellation, verify sole ownership and process terminal; stopping dedicated owned builder is valid where it owns the single workload; remove only exact owned temporary resources after identity checks and retain cleanup receipt"
+    ],
+    "ownership": {
+      "newNameAndRunToken": "fresh random unique labels; Source manifest and image identities bound before action",
+      "oldVolume": "retained separately; no forced reuse or mutation",
+      "stopPolicy": "no blanket ban on stop; a dedicated owned single-workload builder may be stopped to cancel its owned workload after exact custody checks",
+      "cleanup": "verify actual terminal/stop/removal/volume absence or explicitly record unknown; do not remove peers by name-only guess"
+    },
+    "newSourceOrArtifactClaim": false
+  }
+}

@@ -1,0 +1,29 @@
+# Native Next-Route Preparation Audit
+
+Read-only preparation review; no commands, Source edits, copies or private guest action. Root remains owner of the sole dry-run handle63416.
+
+## Workflow Findings
+
+Existing .github/workflows/architecture-course.yml runs every managed command as sudo env … CI=true bun repo. setup-node/setup-bun do not provision a native repo frontend. Merely replacing the token with repo therefore does not prove zero-touch CI. A repair needs an explicit existing owned native provisioning route and actual native --help success before first owner operation. Native frontend magic/metadata alone is insufficient (release host binary already demonstrated MCP-only). Pinning executable to a checked absolute path avoids PATH/sudo selection ambiguity; platform/architecture must match Linux/amd64 for this release runner.
+
+Workflow check currently covers course unit tests, typecheck and rehearsal topology only. Full deploy-check has additional dev topology and image/stack acceptance; proctor unit tests are separate. Proctor job builds and publishes GHCR, with login after build. Site job builds/uploads the separate Pages artifact. No offline stack-bundle or artifact upload currently exists. Changing ingress must preserve these semantics and not silently turn a preparation fix into new external publication. Full offline delivery requires retained site output plus proctor+Caddy archive and bundle acceptance, beyond ingress repair.
+
+## Provisioning, Relocation And Envelope Constraints
+
+Current resolveCliBin/resolveMcpBin use unified .🧬semio/🦑️repo/⚡️cache/🗃️bin/<mode>/repo/repo (repo.exe on Windows), with explicit REPO_CLI_BIN/REPO_MCP_BIN overrides resolved absolute. These overrides choose a path only, not platform correctness or producer authority. Native entrypoint build port finds checkout from working directory and internally execs Bun with inherited streams/environment. Relocating a standalone frontend requires checkout-root discovery and internal script availability; copying a macOS binary cannot yield Linux frontend. An issued envelope may carry source/physical authority, so host-to-guest relocation must not reuse or fabricate that envelope. New Linux process must obtain proper original invocation through existing owner provisioning/execution, preserving release mode and cancellation/progress. No raw Cargo/Go/Bun bootstrap bypass is authorized by these observations.
+
+## Neutral Acceptance Requirements
+
+Before execution, source-level tests should prove exact native argv (no bun-repo at managed ingress), correctly ordered native provisioning/probe, explicit Linux/amd64 producer, preserved release-mode and caller environment, per-job fresh checkout behavior, no shell-quoting loss, and unchanged gate dependencies/default-branch/manual controls. Independent YAML parser validation should compare workflow job/step structure and commands, with meaningful red against actual stale ingress. Native executable acceptance must include real --help0 and an owned dry-run, not just magic or receipt presence. Linux image acceptance must retain ELF64 machine62 and authenticated release receipt; offline archive acceptance must include both pinned Caddy and proctor images, pull_policy never, exact stack files and separate CDN artifact. These neutral proofs do not replace real native Linux acceptance or prove current product success.
+
+Runtime/Release concrete plans remain pending; this report will be amended when supplied.
+
+## Runtime Provisioning Candidate Review
+
+Runtime identifies existing repo-mcp:build Go owner as a candidate and reports inherited GOOS/GOARCH/CGO, but no declared cross-target configuration/input/output namespace. The current owner source previously inspected here agrees: resolveMcpBin selects the same mode publication destination irrespective of target. Therefore a Linux cross-build launched from macOS could replace its native host publication; it must not be attempted against the usable prototype without an existing owner-isolated target destination. Environment inheritance alone does not establish target cache identity, CGO feasibility, or permission to overwrite host frontend. The installer explicitly validates current host magic and executes --help, so a Linux cross output cannot be installed on macOS. Runtime is checking the concrete CGO closure and source entrypoint before recommending anything. No cross-build, copy or guest action is authorized by this audit.
+
+## Release CI Preparation Review
+
+Release proposes bounded edits to architecture-course.yml plus existing compose-caddy-and-workflow test and readiness fixture: each check/site/proctor job provisions through the existing owned repo-mcp:build release recovery ingress after pinned Bun; adds the published release directory to GITHUB_PATH; probes native repo --help in a subsequent step; ordinary commands become repo preserving sudo PATH/HOME/release/CI. This fixes the missing bootstrap in a token-only replacement and does not require a new container interface. The build skill recovery exception applies only to absent/unusable frontend; ordinary commands must remain native after publication. No new raw Go/Cargo compiler route is acceptable.
+
+No concrete blocker in this bounded CI preparation plan, provided its recovery ingress preserves original release envelope and actual help0 gates use. GITHUB_PATH applies subsequent steps, so the help probe must follow publication/path export. Neutral vectors should reject stale MCP-only artifact even when receipt/magic exist (help1), wrong output path/missing binary, late provision, raw compile, residual ordinary bun-repo ingress, environment loss and changed publication order; independent YAML parser must validate authored workflow shape. This plan does not authorize dispatch, GHCR/Pages publication, or establish a locally available Linux frontend/offline artifact.

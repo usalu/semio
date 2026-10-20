@@ -118,7 +118,25 @@
       "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
       "absent": [
         "GEMINI.md",
-        ".github/copilot-instructions.md"
+        ".github/copilot-instructions.md",
+        "gitkraken",
+        "launchGitKraken"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts",
+      "absent": [
+        "GitKraken",
+        "gitkraken",
+        "spawnDetached"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+      "absent": [
+        "GitKraken",
+        "SEMIO_GITKRAKEN",
+        "Configure-GitKrakenWorkspace"
       ]
     }
   ],

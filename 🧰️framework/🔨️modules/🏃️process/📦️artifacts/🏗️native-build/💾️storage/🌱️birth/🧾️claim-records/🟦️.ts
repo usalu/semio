@@ -4,6 +4,7 @@ import { types } from "node:util";
 import { validateJsonSchemaSubset } from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import exportedStorageSchema from "../../🧬️schema/🔣️.json" with{type:"json"};
 import exportedSchema from "../🧾️claim/🧬️schema/🔣️.json" with{type:"json"};
+import{bindNativeIdentitiesV1}from"../../🌐️platform/🥾️boot/🩹️recovery/📋️plan/🟦️.ts";
 
 export const storageSchema=JSON.parse(JSON.stringify(exportedStorageSchema))as typeof exportedStorageSchema,schema=JSON.parse(JSON.stringify(exportedSchema))as typeof exportedSchema,protocol=Object.freeze({...schema.definitions.Protocol.const});
 
@@ -15,6 +16,9 @@ export type NativeCreatorClaimRequestV1=import("../../📜️journal/🟦️.ts"
 export type RecordV1=Readonly<{version:1;request:NativeCreatorClaimRequestV1;stage:"declared"|"directory"|"root";parent:Identity;directory:Identity|null;root:Identity|null}>;
 
 export const same=(left:unknown,right:unknown)=>JSON.stringify(left)===JSON.stringify(right);
+
+/** 🪪️ Accepts a recorded creator identity when its inode and mode are exact; device numbers are never persisted truth. */
+export const stable=(recorded:Identity,current:Identity)=>bindNativeIdentitiesV1([recorded],[current])!=="mismatch";
 
 /** 🧬️ Copies the closed request without invoking getters or retaining mutable caller DATA. */
 export function readRequest(value:unknown):NativeCreatorClaimRequestV1{const definition=storageSchema.definitions.ChildRequest;if(!value||typeof value!=="object"||types.isProxy(value)||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)throw Error("Plain Native creator request DATA required");const keys=Reflect.ownKeys(value);if(keys.length!==definition.required.length||keys.some(key=>typeof key!=="string"||!definition.required.includes(key)))throw Error("Closed Native creator request fields required");const captured:Record<string,string|number>=Object.create(null);for(const key of definition.required){const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!descriptor||!("value"in descriptor)||!descriptor.enumerable||typeof descriptor.value!=="string"&&typeof descriptor.value!=="number")throw Error("Primitive Native creator request required");captured[key]=descriptor.value;}if(validateJsonSchemaSubset(definition,captured).length)throw Error("Finite Native creator request required");return Object.freeze(captured as NativeCreatorClaimRequestV1);}

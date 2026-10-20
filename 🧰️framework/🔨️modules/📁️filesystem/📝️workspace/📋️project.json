@@ -3,12 +3,15 @@
   "targets": {
     "test-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
         "^default",
-        "{projectRoot}/**/*"
+        "{projectRoot}/**/*",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
       ],
       "outputs": [],
       "options": {
@@ -30,7 +33,11 @@
               "en": "Verify portable source paths, optimistic saves, cancellation and retained conflict events.",
               "de": "Portable Quellpfade, optimistisches Speichern, Abbruch und erhaltene Konfliktereignisse prüfen."
             }
-          }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🟦️.ts"
+          ]
         }
       }
     }

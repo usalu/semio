@@ -6156,6 +6156,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/replication-mutation-retained-field-rs",
+      "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/replication-mutation-retained-rs",
       "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/📋️project.json",
@@ -6207,6 +6213,12 @@
       "name": "@semio-tech/value-registry-rs",
       "root": "🧰️framework/🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/value-retained-clone-integration-rs",
+      "root": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {

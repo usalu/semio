@@ -37,7 +37,7 @@
               "type": "array",
               "minItems": 2,
               "maxItems": 2,
-              "items": [{ "type": "string" }, { "enum": ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network"] }]
+              "items": [{ "type": "string" }, { "enum": ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] }]
             }
           }
         }

@@ -380,7 +380,7 @@ fn keyboard_docking_and_tab_reordering_have_localized_customizable_actions() {
     dashboard.perform(&mut tui, Action::TabRight);
     assert_eq!(super::windows::stack_of(&dashboard.layout, &source)[1], source);
     for action in [Action::DockLeft, Action::DockRight, Action::DockTop, Action::DockBottom, Action::JoinWindow, Action::TabLeft, Action::TabRight] {
-        assert!(super::labels::labels(ui_locale::Locale::parse("de").unwrap()).try_action(action.id()).is_some());
+        assert!(dashboard_labels::labels(ui_locale::Locale::parse("de").unwrap()).try_action(action.id()).is_some());
     }
 }
 

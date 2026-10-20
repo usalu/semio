@@ -43,7 +43,12 @@
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "source-check": {
       "executor": "repo:script",
@@ -155,6 +160,9 @@
     "generate": {
       "executor": "repo:script",
       "cache": true,
+      "inputs": [
+        "sharedGlobals"
+      ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication generate"
@@ -178,6 +186,11 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication preview"
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
       }
     }
   }

@@ -19,7 +19,7 @@ use semio_hub_session_routes::guard::authenticate_admin_principal;
 use tokio_tungstenite::connect_async;
 use semio_hub_route_models::directory_events::{directory_access_change_for_reader, directory_message_bindings, directory_stream_message_space};
 use semio_hub_directory_service::{directory_command_result_kind, replay_directory_command_receipt};
-use {semio_framework_os_kernel as directory_command_sha256, semio_framework_os_kernel as validate_directory_event_page_event};
+use {directory as directory_command_sha256, directory as validate_directory_event_page_event};
 use semio_hub_runtime::presence::document_scope_key_v1;
 use semio_hub_session_routes::session_agent::{get_session_me, post_session_sign_out};
 use semio_hub_session_routes::access_grants::issue_directory_socket_grant;

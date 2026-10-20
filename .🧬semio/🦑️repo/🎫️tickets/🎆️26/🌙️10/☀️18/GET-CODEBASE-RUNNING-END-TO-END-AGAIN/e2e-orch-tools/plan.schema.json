@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.invalid/e2e-orch/plan.schema.json",
+  "title": "E2eOrchPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tool", "thresholds", "playwright", "tectonic", "phases", "products"],
+  "properties": {
+    "version": { "const": 1 },
+    "tool": { "enum": ["bazel"] },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minFreeDiskGbCold", "minFreeDiskGbWarm", "abortFreeDiskGb", "minAvailableMemoryGb", "loadWarnPerCore", "loadFailPerCore",
+        "heartbeatSeconds", "snapshotSeconds", "snapshotTimeoutSeconds", "staggerSeconds", "terminateGraceSeconds", "deadlineHours", "cliProbeSeconds"
+      ],
+      "patternProperties": { "^[a-zA-Z]+$": { "type": "number", "minimum": 0 } }
+    },
+    "playwright": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedChromium", "expectedFfmpeg"],
+      "properties": {
+        "expectedChromium": { "type": "string", "pattern": "^[0-9]+$" },
+        "expectedFfmpeg": { "type": "string", "pattern": "^[0-9]+$" }
+      }
+    },
+    "tectonic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": { "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" } }
+    },
+    "phases": { "type": "array", "items": { "enum": ["cold", "warm", "e2e", "probe"] }, "uniqueItems": true },
+    "products": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z0-9]+$" },
+      "additionalProperties": { "$ref": "#/$defs/product" }
+    }
+  },
+  "$defs": {
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "package", "order", "cargoLane", "ports", "needs", "steps"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "pattern": "^@[a-z0-9-]+/[a-z0-9-]+$" },
+        "order": { "type": "integer", "minimum": 1 },
+        "cargoLane": { "type": "string", "pattern": "^[a-z0-9]{1,12}$" },
+        "ports": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 65535 }, "uniqueItems": true },
+        "needs": { "type": "array", "items": { "enum": ["playwright", "bazel", "tectonic", "node"] }, "uniqueItems": true },
+        "appliedMarkers": { "type": "array", "items": { "$ref": "#/$defs/marker" } },
+        "steps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cold", "warm", "e2e", "probe"],
+          "properties": {
+            "cold": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+            "warm": { "oneOf": [{ "const": "cold" }, { "type": "array", "items": { "$ref": "#/$defs/step" } }] },
+            "e2e": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+            "probe": { "type": "array", "items": { "$ref": "#/$defs/step" } }
+          }
+        }
+      }
+    },
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "manifest": { "type": "string" },
+        "target": { "type": "string" },
+        "cache": { "type": "boolean" },
+        "exists": { "type": "string" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "group", "kind", "timeoutSeconds"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "group": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "kind": { "enum": ["repo", "ticket-script", "exec"] },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "script": { "type": "string" },
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "needs": { "type": "array", "items": { "type": "string" } },
+        "ports": { "type": "array", "items": { "type": "integer" } },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "warm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["zero", "allow", "skip"] },
+            "allow": { "type": "integer", "minimum": 0 },
+            "maxSeconds": { "type": "integer", "minimum": 1 }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "repo" } } }, "then": { "required": ["args"] } },
+        { "if": { "properties": { "kind": { "const": "ticket-script" } } }, "then": { "required": ["script"] } },
+        { "if": { "properties": { "kind": { "const": "exec" } } }, "then": { "required": ["argv"] } }
+      ]
+    }
+  }
+}

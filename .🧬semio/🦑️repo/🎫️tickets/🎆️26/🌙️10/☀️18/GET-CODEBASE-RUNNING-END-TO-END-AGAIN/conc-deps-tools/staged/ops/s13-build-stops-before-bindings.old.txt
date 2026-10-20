@@ -1,0 +1,2 @@
+for(const row of selected)await requireJavascriptDependencyInstalledPathsIncrementalV1(workspace,context,control,row.plan.generation,checkpoint);await fence();
+ const inputSha256=createHash("sha256")

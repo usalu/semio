@@ -1,0 +1,7 @@
+# Graph Inventory Requires Acquired Custody
+
+The actual selected invocations repeatedly reported repository:graph-cache-inventory. Read-only tracing found pressure maintenance inventories the entire inference tree before requesting nonwaiting exclusive custody, then discards that census and inventories again inside acquired custody. A deferred operation therefore performs a costly census that cannot authorize deletion. Ledger initialization has another full measure; that separate accounting proof is unchanged.
+
+The production change keeps initial image recheck, requests existing nonwaiting exclusive maintenance, and inventories once only inside acquired custody. Healthy and boundary states return false through the actual acquired result value; deferred returns false without any census. Low-water/required-headroom checks, exact pre-unlink identities, sorting, progress/cancellation, final capacity refusal and image rechecks remain. No quotas or publication guards change.
+
+Nine closed neutral cases were authored before production: deferred pressure/healthy, acquired healthy/boundary, logical/physical pressure, changed identity, exact cancellation object, unavailable required headroom. The actual extracted production function is compared with Ajv and independent SQLite custody/effect/order decisions, with precise failure messages/stages. The new leaf is mounted in the existing optional-cache suite under workspace:test-workspace-build. These laws and actual runtime performance are pending; no speedup is claimed yet.

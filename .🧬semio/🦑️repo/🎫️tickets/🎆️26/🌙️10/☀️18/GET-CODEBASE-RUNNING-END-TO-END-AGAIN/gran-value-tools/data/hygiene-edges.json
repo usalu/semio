@@ -1,0 +1,4436 @@
+[
+{
+"crate": "semio-s-artifact-writer-writer-v1",
+"dir": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-writer-writer-v1",
+"dir": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-writer-writer-tests",
+"dir": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-writer-writer",
+"dir": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-mathematical-equation-examples",
+"dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-mathematical-equation-examples",
+"dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-mathematical-equation-leaf-tests",
+"dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-mathematical-equation",
+"dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-mathematical-equation",
+"dir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-plugin-wfc-engine",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-kernel",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧠️kernel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-kernel",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧠️kernel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-lattice",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧮️lattice/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-lattice",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧮️lattice/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-oracle",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧿️oracle/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-plugin-wfc-engine-oracle",
+"dir": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧿️oracle/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-2d-tests",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-2d-tests",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-2d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-2d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-wfc-grid2d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-grid2d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-wfc-bitmap-tests",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-bitmap-tests",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-wfc-bitmap",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-bitmap",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-wfc-3d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-3d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-wfc-grid3d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-wfc-grid3d",
+"dir": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-2d-testkit",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🧪️tests/🧰️support/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-3d-io-sqlite",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-generation3d",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-procedural-generation3d",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-generation3d",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-3d-geometry-phased-job-support",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/⏱️geometry-phased-job-support/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-procedural-3d-testkit",
+"dir": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/🧰️support/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow-original-command-retirement-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-flow-flow-original-command-retirement-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow-original-command-retirement-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow-unit-tests-2",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow-unit-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow-unit-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-flow-flow",
+"dir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-plugin-flow-brep-tests",
+"dir": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-gis-gisterrain",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-gis-gisterrain",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-gis-gismap-terminology-tests",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-gis-gismap-terminology-tests",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-gis-gismap-tile-coordinates",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-gis-gismap-tile-coordinates",
+"dir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-vcs-vcs-v1",
+"dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-vcs-vcs-v1",
+"dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-vcs-vcs",
+"dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-vcs-vcs",
+"dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-vcs-vcs",
+"dir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-animate-presentation-v1",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-animate-presentation-v1",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-animate-presentation-animation",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-animate-presentation-animation",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-animate-presentation-video",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-animate-presentation",
+"dir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-shooting-shooting-mut-any-3",
+"dir": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-shooting-shooting-mut-any-3",
+"dir": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-shooting-shooting",
+"dir": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-demonstrator-playground-examples",
+"dir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-demonstrator-playground-examples",
+"dir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-demonstrator-playground",
+"dir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-demonstrator-playground",
+"dir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-sequence-sequence-v1",
+"dir": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-sequence-sequence",
+"dir": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-sequence-sequence",
+"dir": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-2d-editor-results-window",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-fem-2d-editor-results-window",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-fem-2d-editor-interaction",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-2d-editor-session-catalog",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🪪️session-constants-and-owner-catalog/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-fem-2d-mutations",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-2d-mesh-elements",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔩️elements/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-3d-editor-interaction",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-3d-mutations",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-fem-3d-mesh-elements",
+"dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔩️elements/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-v1",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-coordinate-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️coordinate/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-coordinate-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️coordinate/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-families-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🪑️families/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-families-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🪑️families/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-interaction",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-interaction",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-entities",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️entities/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-gestures-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-gestures-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-utilities-tests",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-svg",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🎨️svg/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-ifc",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-sheets",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📄️sheets/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-ifc-2",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🏗️ifc/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-io",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-tests-4",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-tests-4",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-tests-3",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-tests-3",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model-curtain-walls",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪟️curtain-walls/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-formula",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📏️authored/📝️formula/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-formula",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📏️authored/📝️formula/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-building-elements",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patches/🧱️building-elements/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-building-elements",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patches/🧱️building-elements/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-cascade-restore",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model-cascade-restore",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-bim-model",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-bim-model",
+"dir": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-architect-program-architect",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-architect-program-tests-3",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-architect-program-tests-3",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-architect-program",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-architect-program",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-architect-program",
+"dir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-lowpoly-lowpoly-mut-laws",
+"dir": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/⚖️laws/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-reasoning-wires-v1",
+"dir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-reasoning-wires-v1",
+"dir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-reasoning-wires-snapshot-2",
+"dir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-reasoning-wires",
+"dir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-questions",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-questions",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-config",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-config-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🔬️window/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-forms-forms-config-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🔬️window/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-forms-forms-config-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🔬️window/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-commands",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️add-question/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-forms",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-forms-forms-terminology-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-terminology-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-terminology-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-tests",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-inferences",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-definition",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-tests-2",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🧪️tests/🔬️events/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-snapshot",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-diff",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-tests-3",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-tests-3",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms-mutations",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-forms-forms",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-forms-forms",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-forms-forms",
+"dir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-engine",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-engine",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-editor-commands",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-examples",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-examples",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-io",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-mutations-content-2",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️content-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-dictionary",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-layout-layout-host",
+"dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-cad-cad-io",
+"dir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1990-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-din18599-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1997-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-din16798-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-vdi3805-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-iso16757-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1996-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1996-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1995-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1995-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1999-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-norm-en1998-io-text",
+"dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-playbook-playbook-v1",
+"dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-playbook-playbook-v1",
+"dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-playbook-playbook",
+"dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-playbook-playbook",
+"dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-playbook-playbook",
+"dir": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-imperative-procedure",
+"dir": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-imperative-procedure",
+"dir": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-imperative-procedure",
+"dir": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-plugin-imperative-control",
+"dir": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-remodel-remodeling-mut-vectors",
+"dir": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-remodel-remodeling",
+"dir": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-energy-model-editor-edit",
+"dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-energy-model-mutation-fixtures",
+"dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-energy-model",
+"dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-energy-model",
+"dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting-v1",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting-v1",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting-v1",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-rewriting",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-jack-shell",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-jack",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-trinity-jack-graph-manifest-tests",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-trinity-jack-graph-manifest-tests",
+"dir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-dag-dag-v1",
+"dir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-dag-dag-tests",
+"dir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-dag-dag",
+"dir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-dag-dag",
+"dir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-draw-drawing-examples",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-draw-drawing-examples",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-draw-drawing-read",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-draw-drawing",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-draw-drawing-host",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-draw-drawing-host-digest",
+"dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🔏️digest/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-raster-raster-io",
+"dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-raster-raster-io-media-bridge",
+"dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️media-bridge/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-las-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-las-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-las-tests-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-las",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-las",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-html-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-html-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-html",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-html",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-epw-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-epw-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-epw-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-epw-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-epw-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-epw",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-zip-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️opc/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-zip-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️opc/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-zip",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gif-fixture-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gif-fixture-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gif",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-mp4-text",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-mp4-text",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-mp4-boxes",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-mp4-boxes",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-mp4",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-svg",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-mp3-editor",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-mp3-editor",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-mp3",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-bcf",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-bcf",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-binary",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-binary",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-csv-editor",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-csv-editor",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-csv-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-csv",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-step-geometry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-tsv-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-tsv-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-tsv",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-tsv",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-schema-3",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-schema-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-7",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🚪️io/💾️binary/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-6",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-14",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧬️schema/🧬️mutations/🧽️remove-output-intent/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-14",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧬️schema/🧬️mutations/🧽️remove-output-intent/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-x-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-x-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-13",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/🔒️insert-encryption-dictionary/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-13",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/🔒️insert-encryption-dictionary/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-lower",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-lower",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-lift",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-lift",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-tables",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-tables",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-fonts",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-fonts",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-7",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-7",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-6",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-inferences",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-graph-projection",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-graph-projection",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-testkit",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧪️testkit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-8",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/➕️append-page-content/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-8",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/➕️append-page-content/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-9",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎚️remove-ext-g-state/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-base-9",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎚️remove-ext-g-state/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-12",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗂️set-catalog-entry/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-family-12",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗂️set-catalog-entry/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-mut-vt",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf-tests-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-pdf",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-md",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-xml-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-xml-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-xml",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-xml",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-png-mutations-facets",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🎹️facets/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-png-mutations-facets",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🎹️facets/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-png-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-png-mutations",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-png",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-jpg",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-jpg",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-avi-codec-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🧪️tests/🔬️codec/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-avi-codec-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🧪️tests/🔬️codec/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-avi",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-avi",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-wav-codec-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️codec/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-wav-codec-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️codec/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-wav",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-wav",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-txt-examples",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-txt-examples",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-txt",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-txt",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-stl-viewer",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-stl",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-dwg-geometry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-dxf-inferences",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-dxf",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-tiff",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-deflate-examples",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-deflate",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-deflate",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-obj",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-obj",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-v2-0",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-v2-0",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-projection-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/🧪️tests/🧮️decoded-accessor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-projection-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/🧪️tests/🧮️decoded-accessor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-wire",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/🔺️diff/🧵️wire/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-schema",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🧪️serde-oracle/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-wire-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/🔺️diff/🧵️wire/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model-wire-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/🔺️diff/🧵️wire/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-centroid",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/⚖️mass-distribution/🎯️centroid/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-footprint-area",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/🦶️footprint-area/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-geometry-core",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🔨️geometry-kernel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-geometry-core",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🔨️geometry-kernel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-connected-components",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🤝️adjacency/🧩️connected-components/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-exposed-area",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🧱️area-volume/☀️exposed-area/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-volume",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🧱️area-volume/📦️volume/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-inferences-repetition-ratio",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🪞️symmetry/🔂️repetition-ratio/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-model",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🧪️tests/🔬️t041/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🧪️tests/🔬️t041/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-9",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-9",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧪️tests/⬇️demotes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-6",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🧪️tests/🔬️t053/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-6",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🧪️tests/🔬️t053/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-8",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-8",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧪️tests/🚫️removes/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-10",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-10",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-4",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🧪️fixture-corpus/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-4",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🧪️fixture-corpus/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-7",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🌱️create/🧪️tests/🔬️t065/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-gltf-mutations-mut-any-7",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🌱️create/🧪️tests/🔬️t065/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-ply-io-registry",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-ply",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-ply",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-json-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-json-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-json-number",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔢️number/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-json",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-json",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-cad-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-cad-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-graph-mut-fixture-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-graph-mut-fixture-tests",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-drawing",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-drawing-binary",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-drawing-binary",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-drawing-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-drawing-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-image-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-image-io",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-1",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧫️subset-laws-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-1",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧫️subset-laws-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧬️subset-laws-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-2",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧬️subset-laws-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧮️subset-laws-5/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧮️subset-laws-5/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-5",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧮️subset-laws-5/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-4",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧱️subset-laws-4/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-4",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧱️subset-laws-4/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-3",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧲️subset-laws-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-stdio-semio-sqlite-laws-3",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🧲️subset-laws-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-bmp-mutation-regressions",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧬️mutation-regressions/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-stdio-bmp",
+"dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-note-note-unit-tests",
+"dir": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-note-note-unit-tests",
+"dir": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-note-note",
+"dir": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-board-host",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-board-host",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-engine",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-engine",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-engine",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-tambour-single-storey",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-tambour-single-storey",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-tambour-end-storeys",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-tambour-end-storeys",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-interaction",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-v1-editor-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-v1-editor-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-unit-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-unit-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-unit-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-history-edit-runtime-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️history-edit-runtime/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-history-edit-runtime-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️history-edit-runtime/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-8",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-8",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-9",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/📇️installs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-connect-handles-preparation",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-connect-handles-preparation",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-7",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/⚓️derives/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-7",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/⚓️derives/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-6",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🚫️rejects/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-6",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🚫️rejects/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-mut-any-5",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-graph-manifest",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🤖️generated/📇️registry/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-2d-graph-manifest",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🤖️generated/📇️registry/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-v1",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-v1",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-host-admission-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️host-admission/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-v1-unit-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-v1-unit-tests",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-testkit",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️testkit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-mut-any-6",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🧪️tests/📍️moves-part-a/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-mut-any-6",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🧪️tests/📍️moves-part-a/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-mut-any-7",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d-mut-any-7",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-5d",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-puzzle-3d-commands-runtime",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-3d-editor-presence",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-3d-editor-presence",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-puzzle-3d",
+"dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-plugin-block",
+"dir": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-block-2d",
+"dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-block-5d",
+"dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-block-3d",
+"dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-space-home",
+"dir": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-artifact-space-space",
+"dir": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-sourcing-curation",
+"dir": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-artifact-sourcing-curation",
+"dir": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-fem-test-support",
+"dir": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧪️tests/🧰️support/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-s-dev-gis-services",
+"dir": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-fixture-sweep",
+"dir": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-s-mutation-vectors",
+"dir": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-hub-inference-contract-laws",
+"dir": "🌎️hub/💡️inference/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-hub-writer",
+"dir": "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-writer",
+"dir": "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-mathematical",
+"dir": "🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-mathematical",
+"dir": "🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-wfc",
+"dir": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-procedural",
+"dir": "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-flow",
+"dir": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-vcs",
+"dir": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-vcs",
+"dir": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-hub-animate",
+"dir": "🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-animate",
+"dir": "🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-shooting",
+"dir": "🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-shooting",
+"dir": "🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-demonstrator",
+"dir": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-demonstrator",
+"dir": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-sequence",
+"dir": "🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-sequence",
+"dir": "🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-fem",
+"dir": "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-bim",
+"dir": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-bim",
+"dir": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-architect",
+"dir": "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-architect",
+"dir": "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-process",
+"dir": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-process",
+"dir": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-lowpoly",
+"dir": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-lowpoly",
+"dir": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-reasoning",
+"dir": "🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-reasoning",
+"dir": "🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-forms",
+"dir": "🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-forms",
+"dir": "🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-layout",
+"dir": "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-layout",
+"dir": "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-cad",
+"dir": "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-cad",
+"dir": "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-norm",
+"dir": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-playbook",
+"dir": "🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-playbook",
+"dir": "🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-imperative",
+"dir": "🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-imperative",
+"dir": "🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-remodel",
+"dir": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-remodel",
+"dir": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-energy",
+"dir": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-energy",
+"dir": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-trinity",
+"dir": "🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-dag",
+"dir": "🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-draw",
+"dir": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-draw",
+"dir": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-raster",
+"dir": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-raster",
+"dir": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-stdio",
+"dir": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-hub-note",
+"dir": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-note",
+"dir": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-puzzle",
+"dir": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-block",
+"dir": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-sourcing",
+"dir": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-sourcing",
+"dir": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-hub-trusted-catalog-fixtures",
+"dir": "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-hub-route-testkit",
+"dir": "🌎️hub/🧪️tests/🔬️bin-unit/🧰️testkit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-2d-text-font-testing",
+"dir": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack-record-retained",
+"dir": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack",
+"dir": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack",
+"dir": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-schema",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack-json-tests",
+"dir": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack-json-tests",
+"dir": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pack-json-tests",
+"dir": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-kernel",
+"dir": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-replication-edit",
+"dir": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-replication-interaction",
+"dir": "🧰️framework/🔨️modules/📡️replication/📡️wire/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-replication",
+"dir": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-pixels-tests",
+"dir": "🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-ui-retained-tree",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-wgpu-render",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-wgpu-draw-execution",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-wgpu-pipelines",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-wgpu-mesh",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-wgpu-raster",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-backend-webgpu",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-operations",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-operations",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-values",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-builder",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-typegen",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-typegen",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-text-edit",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-contract-text-edit",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-ui-viewport",
+"dir": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-io-sqlite-snapshot-tests",
+"dir": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🌅️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-io-sqlite-snapshot-tests",
+"dir": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🌅️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-manifest-view-model",
+"dir": "🧰️framework/🔨️modules/🛂️manifest/🖼️view-model/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-3d-brep-construction",
+"dir": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-3d-mesh-document",
+"dir": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📄️document/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-test-transient-preparation-law",
+"dir": "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-test-typed-input-law",
+"dir": "🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-test-original-snapshot-owners",
+"dir": "🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-test-original-snapshot-owners",
+"dir": "🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-schema",
+"dir": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-job-conformance",
+"dir": "🧰️framework/🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-config-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🌈️companion-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-config-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🌈️companion-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-config-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🌌️companion-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-config-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🌌️companion-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-kernel",
+"dir": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-retirement-owner",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-infinite-board-normal-focus",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-infinite",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-infinite",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-artifact-infinite-dag",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-flow-host-laws",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/⚖️laws/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-flow-host-source",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-artifact-flow-flow-copy",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-artifact-flow-flow-document",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧾️document/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-store-one-item-batch",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-sync-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-sync-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-sync-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🥧️bin-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-durable-group-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🥧️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-member-open-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-member-open-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-doubles",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-doubles",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-doubles",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-store-testing-prelude",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-store-testing-prelude",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-prelude",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-testing-prelude",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-05",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-02",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-02",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-store-tests-03",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-03",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-04",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-04",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-07",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌲️bin-07/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-07",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌲️bin-07/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-06",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-06",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-06",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-08",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍃️bin-08/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-09",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-09",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-09",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-09",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-10",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍯️bin-10/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-10",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍯️bin-10/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-10",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍯️bin-10/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-store-ephemeral",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-inference",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-directory-client-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🧶️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-directory-client-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🧶️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-directory-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍯️companion-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-directory-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍯️companion-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-directory-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-directory-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-command-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧷️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-command-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧷️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-history-record-decode-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-history-record-decode-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-history-record-decode-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-history-testing-retirement",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️testing/♻️retirement/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-history-testing-retirement",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️testing/♻️retirement/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-spr",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-spr",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-spr-laws-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🥣️laws-companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-spr-laws-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🥣️laws-companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-channel-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🪤️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-channel-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🪤️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-history",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏪️shell-history/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-history",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏪️shell-history/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-async",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏳️shell-async/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-async",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏳️shell-async/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-dock",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚓️shell-dock/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-engine-text",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/✍️engine-text/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-3",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌅️shell-tests-chrome-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-3",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌅️shell-tests-chrome-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-windows-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌆️shell-tests-windows-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌈️shell-tests-chrome-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌌️shell-tests-chrome-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-5",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌲️shell-tests-chrome-5/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-4",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌴️shell-tests-chrome-4/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-chrome-6",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍃️shell-tests-chrome-6/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-frame-tests-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍇️frame-tests-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-input-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍎️shell-tests-input-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-input-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍯️shell-tests-input-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-input-3",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍰️shell-tests-input-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-chrome",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍱️shell-view-chrome/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-chrome",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍱️shell-view-chrome/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-prefs",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎛️shell-prefs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-commands",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎹️shell-commands/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-kernel-pool",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏊️kernel-pool/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-kernel-pool",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏊️kernel-pool/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-windows-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏙️shell-tests-windows-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-state",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐙️shell-state/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-state",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐙️shell-state/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-doc-open",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📂️shell-doc-open/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-docs",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📄️shell-docs/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-directory",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📒️shell-directory/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-actions",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔀️shell-actions/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-sync",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔃️shell-sync/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-sync",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔃️shell-sync/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-engine-attach",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔗️engine-attach/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-windows",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔲️shell-windows/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-input",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🕹️shell-input/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-paint",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖍️shell-view-paint/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-paint",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖍️shell-view-paint/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-pointer",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖐️shell-pointer/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-overlays",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗨️shell-view-overlays/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-session",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚶️shell-session/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-docs-3",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥣️shell-tests-docs-3/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-docs-1",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥧️shell-tests-docs-1/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-tests-docs-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥪️shell-tests-docs-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-plugins",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧲️shell-plugins/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-scene-ink-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧶️scene-ink-tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-ui-engine-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧿️ui-engine-tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-panels",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪀️shell-view-panels/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-view-panels",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪀️shell-view-panels/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-engine-attach-tests-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪜️engine-attach-tests-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-window-actions",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪝️shell-window-actions/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-runtime-mailbox-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪤️runtime-mailbox-tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-renderer-wgpu-shell-surfaces",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫧️shell-surfaces/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-time-travel",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-persistent",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-store-stage-laws",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-runtime-instances",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-reactor-core",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-reactor-wit-bridge",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-decl-surface",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-retirement-owner",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-registry",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-interaction",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component-refusal",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component-refusal",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-host-test-component-refusal",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-caller",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-laws",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-laws",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures-publication",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures-publication",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures-publication",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-fixtures",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-testing-acceptance",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-surface-fixture",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-surface-fixture",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-surface-fixture",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-instance-history",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📜️history/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-instance-app",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-instance-children",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪆️children/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-tests-06",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍉️tests-06/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-03",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍊️tests-03/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-04",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍋️tests-04/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-04",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍋️tests-04/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-04",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍋️tests-04/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-05",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-05",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-05",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-snapshot-read",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍎️tests-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-01",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍎️tests-01/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-02",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍐️tests-02/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-tests-02",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍐️tests-02/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-05-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🔩️tests-05-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-plugin-tests-05-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🔩️tests-05-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-02-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧰️tests-02-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-02-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧰️tests-02-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-06-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧲️tests-06-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-04-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧶️tests-04-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-04-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧶️tests-04-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-01-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🪜️tests-01-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-01-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🪜️tests-01-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-tests-03-2",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🪢️tests-03-2/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-plugin-instance-ladders",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-derive",
+"verdict": "unused"
+},
+{
+"crate": "semio-framework-os-dsl-module-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🌴️module-companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-dsl-module-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🌴️module-companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-dsl-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🥪️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-dsl-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🥪️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-services-tests",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🍎️companion/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-kernel-db-ids",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-kernel-neural-engine",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-space-testing-sqlite-preflight",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-space-testing-sqlite-native-caller",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust",
+"dependency": "semio-framework-value",
+"verdict": "test-only"
+},
+{
+"crate": "semio-framework-os-space-testing-sqlite-native-caller",
+"dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust",
+"dependency": "semio-framework-value-native-owned",
+"verdict": "test-only"
+}
+]

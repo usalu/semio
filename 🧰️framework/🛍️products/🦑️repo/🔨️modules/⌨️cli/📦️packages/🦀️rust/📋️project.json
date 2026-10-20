@@ -1,13 +1,6 @@
 {
   "name": "@semio-tech/repo-cli-rs",
   "namedInputs": {
-    "cargoToolchain": [
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/rust-toolchain.toml",
-      "{workspaceRoot}/rustfmt.toml"
-    ],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
@@ -72,7 +65,13 @@
         "command": "bun ./📜️script.ts repo",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
     },
     "mcp": {
       "executor": "repo:script",
@@ -81,7 +80,13 @@
         "command": "bun ./📜️script.ts mcp",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": false,
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
     },
     "build-cli": {
       "executor": "repo:script",

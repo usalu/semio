@@ -248,25 +248,7 @@ export interface ProctorArtifact {
   close(): Promise<void>;
 }
 
-/** 🏗️ The repository's build entry, relative to the repository root: `bun <entry> repo cargo …` is `bun repo cargo …`. */
-export const REPOSITORY_BUILD_ENTRY = ["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🏗️build", "📜️script.ts"] as const;
-
-/** 🚪️ The sanctioned launch of the proctor build: the repository's issued Cargo launcher in the shared store, run in the
- * teaching workspace. `.cargo/config.toml` refuses a bare `cargo` (its compiler is the launcher-only ingress), so every
- * build goes through the launcher, which selects the `prototype` configuration for Cargo's `dev` build and `release` for
- * the deployed one and sets `SEMIO_BUILD_MODE` to match, as the launcher refuses a mode that disagrees with it.
- * @see ../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts */
-export function proctorBuildLaunch(repoRoot: string, env: NodeJS.ProcessEnv = process.env, profile: "dev" | "release" = "dev"): { command: string; args: string[]; cwd: string; env: NodeJS.ProcessEnv } {
-  const configuration = profile === "release" ? "release" : "prototype";
-  return {
-    command: process.execPath,
-    args: [join(repoRoot, ...REPOSITORY_BUILD_ENTRY), "repo", "cargo", "--store=shared", `--configuration=${configuration}`, "--", "build", "--locked", "--package", PROCTOR_PACKAGE, "--bin", "proctor", "--message-format=json-render-diagnostics"],
-    cwd: join(repoRoot, TEACHING_WORKSPACE),
-    env: { ...env, SEMIO_BUILD_MODE: configuration },
-  };
-}
-
-/** 🏗️ Builds with the original caller, then retains the charged compiler image through {@link proctorBuildLaunch} and immutable reader for all consumers. */
+/** 🏗️ Builds with the original caller, then retains the charged compiler image and immutable reader for all consumers. The course obtains the proctor through `./🧾️product/🟦️.ts` instead, which resolves the cached product of `@teaching/proctor:build`. */
 export async function buildProctor(repoRoot: string, invocation: ScriptInvocation, env: NodeJS.ProcessEnv = process.env, signal?: AbortSignal, requestedMode?: BuildMode): Promise<ProctorArtifact> {
   requireIssuedScriptInvocationV1(invocation);
   const authority = readNativeCallerAuthorityV1(invocation.capabilities), mode = proctorBuildMode({ version: 1, originalMode: authority.original.buildMode, ...(requestedMode === undefined ? {} : { requestedMode }) });
@@ -511,31 +493,4 @@ function launchProctorProcess(executable: string, repoRoot: string, args: readon
       return exited;
     },
   };
-}
-
-/** ▶️ Build the binary, run `proctor <args…>` from a private copy with `env`, wait for it and delete the copy; a
- * non-zero exit is an error naming the command. An interrupt during the build cancels it. */
-export async function runProctor(repoRoot: string, invocation: ScriptInvocation, args: readonly string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
-  const interruption = new AbortController();
-  let artifact: ProctorArtifact | undefined;
-  let proctor: ProctorProcess | undefined;
-  const forward = (signal: NodeJS.Signals): void => {
-    interruption.abort();
-    proctor?.interrupt(signal);
-  };
-  for (const signal of LAUNCHER_SIGNALS) process.on(signal, forward);
-  try {
-    artifact = await buildProctor(repoRoot, invocation, env, interruption.signal);
-    proctor = artifact.launch(args, env);
-    const status = await proctor.exited;
-    if (status !== 0) throw new Error(`proctor ${args.join(" ")} exited with status ${status}`);
-  } finally {
-    try { await artifact?.close(); } finally { for (const signal of LAUNCHER_SIGNALS) process.off(signal, forward); }
-  }
-}
-
-/** 🛠️ `dev` of the proctor alone: settle the development data ({@link developmentDataSettled}), saying what was set
- * aside or why it ends here, then build, serve with the dev defaults and wait like {@link runProctor}. */
-export async function runDevelopmentProctor(repoRoot: string, invocation: ScriptInvocation, env: NodeJS.ProcessEnv = proctorDevelopmentEnvironment(repoRoot)): Promise<void> {
-  if (await developmentDataSettled(repoRoot, env, (line) => console.warn(`[proctor] ${line}`))) await runProctor(repoRoot, invocation, ["serve"], env);
 }

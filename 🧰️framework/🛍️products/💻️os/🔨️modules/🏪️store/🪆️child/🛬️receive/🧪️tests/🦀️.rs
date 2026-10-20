@@ -30,7 +30,7 @@ fn retire<T:semio_framework_value::RetireOwned>(value:T,caller:&mut OriginalJobF
 
 #[test]
 fn original_child_receive_same_caller_all_partial_prefixes_and_literal_target() {
-    let laws:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let laws:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
     for law in laws["cases"].as_array().unwrap() {
         let mut completed=0;
         for cut in 0..2048 {
@@ -94,6 +94,5 @@ fn original_child_receive_same_caller_all_partial_prefixes_and_literal_target() 
             if completed>0&&cut>completed { break; }
         }
         assert!(completed>0);
-        println!("[DEBUG] nativeChild receiving completed={completed} sameOriginalCaller=true everyPrefixClosed=true localSnapshotFabricated=false");
     }
 }

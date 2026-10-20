@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "files": [
+    "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts"
+  ]
+}

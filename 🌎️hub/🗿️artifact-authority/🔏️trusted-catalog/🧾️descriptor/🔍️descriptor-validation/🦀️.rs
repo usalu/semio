@@ -79,15 +79,15 @@ pub fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, Auth
     options.limits.max_items = 262_144;
     options.limits.max_depth = 64;
     options.limits.max_total_alloc = TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION;
-    let value = os_pack::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
+    let value = directory::os_pack::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
     reject_duplicate_descriptor_fields(&value)?;
-    let canonical = os_pack::pack_rt::encode_wire_value(&value);
+    let canonical = directory::os_pack::pack_rt::encode_wire_value(&value);
     if canonical != bytes {
         return Err(catalog("package descriptor is not its exact canonical schema projection"));
     }
     let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(value).map_err(catalog_error)?;
     let projection = semio_framework_value::ToValue::to_value(&descriptor);
-    if os_pack::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
+    if directory::os_pack::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
     Ok(descriptor)
 }
 

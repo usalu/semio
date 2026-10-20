@@ -1,0 +1,53 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+ "function": "toolJobLatestWinsSelfTests",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of toolJobLatestWinsSelfTests. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️base",
+   "doc": "/** 🔶️ The base phase of toolJobLatestWinsSelfTests. */",
+   "phases": [
+    {
+     "name": "buildBaseState",
+     "emoji": "🔷",
+     "doc": "Builds base, fixture, schema, Ajv of toolJobLatestWinsSelfTests.",
+     "from": 13,
+     "to": 159
+    }
+   ]
+  },
+  {
+   "dir": "🔸️raw-close",
+   "doc": "/** 🔸️ The raw close phase of toolJobLatestWinsSelfTests. */",
+   "phases": [
+    {
+     "name": "buildRawCloseState",
+     "emoji": "🔹",
+     "doc": "Builds rawClose, mutateRawClose, rawHostiles, childCloseFixture of toolJobLatestWinsSelfTests.",
+     "from": 163,
+     "to": 305
+    }
+   ]
+  },
+  {
+   "dir": "🟠️mutations",
+   "doc": "/** 🟠️ The mutations phase of toolJobLatestWinsSelfTests. */",
+   "phases": [
+    {
+     "name": "buildMutations",
+     "emoji": "🟡",
+     "doc": "Builds mutations of toolJobLatestWinsSelfTests.",
+     "from": 306,
+     "to": 319
+    }
+   ]
+  }
+ ]
+}

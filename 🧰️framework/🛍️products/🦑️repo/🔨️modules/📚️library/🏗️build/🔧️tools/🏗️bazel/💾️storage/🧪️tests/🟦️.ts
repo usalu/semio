@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {join,resolve} from "node:path";
@@ -6,9 +7,11 @@ import {mkdtempSync,mkdirSync,readFileSync,readdirSync,rmSync,writeFileSync} fro
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {spawnSync} from "node:child_process";
+import ts from "typescript";
 import {parse} from "@iarna/toml";
 import componentSchema from "../../🧬️schema/🔣️.json";const schema=componentSchema.definitions.StorageLayout;
 import fixture from "./🧫️fixtures/🔣️.json";
+import catalogue from "../../../../⚙️operations/🔣️catalog.json";
 import {bazelCacheLayoutV1,bazelCacheFlagsV1,bazelDiskCacheMaximumBytesV1,bazelServerBaseV1,requireBazelHostPathsV1} from "../🟦️.ts";
 import {canonicalArchitectureEnvironment} from "../../../../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";
 
@@ -25,7 +28,7 @@ test("native grants select the authored Cargo target against an independent TOML
  for(const row of fixture.cargoAuthority){const expected=resolve(root,row.target==="configuration"?configuration.build["target-dir"]:row.target),actual=canonicalArchitectureEnvironment(root,row.environment);expect(actual.CARGO_TARGET_DIR).toBe(expected);expect(actual.CARGO_BUILD_BUILD_DIR).toBe(resolve(root,configuration.build["build-dir"]));}
 });
 
-const cachePolicy=componentSchema.definitions.CachePolicy.const,cache=fixture.cache,layoutOf=()=>bazelCacheLayoutV1({tools:resolve(fixture.roots.tools),dependencies:resolve(fixture.roots.dependencies),products:resolve(fixture.roots.products)});
+const cachePolicy=componentSchema.definitions.CachePolicy.const,cache=fixture.cache,slot=fixture.cache.slots[0]!,layoutOf=()=>bazelCacheLayoutV1({tools:resolve(fixture.roots.tools),dependencies:resolve(fixture.roots.dependencies),products:resolve(fixture.roots.products)});
 
 test("the disk cache bound is the authored share of the products budget against an independent SQL oracle",()=>{
  const budget=JSON.parse(readFileSync(join(import.meta.dir,"../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json"),"utf8")),database=new Database(":memory:");
@@ -38,20 +41,20 @@ test("the disk cache bound is the authored share of the products budget against 
 });
 
 test("generated Bazel cache flags agree with the fixture, the closed schema and an independent hash oracle",()=>{
- const layout=layoutOf(),validate=new Ajv({strict:true}).compile({definitions:{CacheFlags:componentSchema.definitions.CacheFlags},$ref:"#/definitions/CacheFlags"}),workspace=cache.workspaces[0]!.workspace,helperPath=join(layout.temporary,"remote-cache-credentials."+(process.platform==="win32"?"cmd":"sh"));
- for(const row of cache.workspaces)expect(bazelServerBaseV1(layout,row.workspace)).toBe(join(layout.server,createHash("sha256").update(row.workspace).digest("hex").slice(0,16))),expect(bazelServerBaseV1(layout,row.workspace)).toBe(join(layout.server,row.sha256Prefix));
- expect(bazelServerBaseV1(layout,cache.workspaces[0]!.workspace)).not.toBe(bazelServerBaseV1(layout,cache.workspaces[1]!.workspace));
- expect(()=>bazelServerBaseV1(layout,"relative")).toThrow("Absolute");
+ const layout=layoutOf(),validate=new Ajv({strict:true}).compile({definitions:{CacheFlags:componentSchema.definitions.CacheFlags},$ref:"#/definitions/CacheFlags"}),helperPath=join(layout.temporary,"remote-cache-credentials."+(process.platform==="win32"?"cmd":"sh"));
+ for(const row of cache.slots)expect(bazelServerBaseV1(layout,row)).toBe(join(layout.server,row));
+ expect(bazelServerBaseV1(layout,cache.slots[0]!)).not.toBe(bazelServerBaseV1(layout,cache.slots[1]!));
+ for(const row of cache.refusedSlots)expect(()=>bazelServerBaseV1(layout,row),row).toThrow("Bazel session slot required");
  for(const row of cache.accepted){
-  const options={environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache,skipRemoteCache:(row as {skipRemoteCache?:boolean}).skipRemoteCache},flags=bazelCacheFlagsV1(layout,workspace,options);
+  const options={environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache,skipRemoteCache:(row as {skipRemoteCache?:boolean}).skipRemoteCache},flags=bazelCacheFlagsV1(layout,slot,options);
   expect(validate(flags),row.name+JSON.stringify(validate.errors)).toBe(true);
-  expect(flags.command,row.name).toEqual(row.command.map(flag=>flag.replace("{actions}",layout.actions).replace("{helper}",helperPath)));expect(flags.remote,row.name).toBe(row.remote);expect(flags.startup).toEqual(["--output_base="+bazelServerBaseV1(layout,workspace)]);
+  expect(flags.command,row.name).toEqual(row.command.map(flag=>flag.replace("{actions}",layout.actions).replace("{helper}",helperPath)));expect(flags.remote,row.name).toBe(row.remote);expect(flags.startup).toEqual(["--output_base="+bazelServerBaseV1(layout,slot)]);
   expect(flags.environment,row.name).toEqual(row.tokenEnvironment);expect(flags.helper?.path,row.name).toBe(row.helper?helperPath:undefined);
   expect(flags.command.some(flag=>flag.startsWith("--remote_cache=")),row.name).toBe(row.remote);
   expect(JSON.stringify(flags.command)+JSON.stringify(flags.helper??{}),row.name+" keeps the token out of flags and helper").not.toContain("tok-123");
  }
- for(const row of cache.refused)expect(()=>bazelCacheFlagsV1(layout,workspace,{environment:row.environment}),row.name).toThrow(row.message);
- expect(bazelCacheFlagsV1(layout,workspace,{environment:{PATH:"/usr/bin",HOME:"/home/x"}}).remote).toBe(false);
+ for(const row of cache.refused)expect(()=>bazelCacheFlagsV1(layout,slot,{environment:row.environment}),row.name).toThrow(row.message);
+ expect(bazelCacheFlagsV1(layout,slot,{environment:{PATH:"/usr/bin",HOME:"/home/x"}}).remote).toBe(false);
 });
 
 test("the repository .bazelrc carries exactly the authored static cache policy and no host paths",()=>{
@@ -71,7 +74,7 @@ test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the provisioned Bazel binary 
  try{
   mkdirSync(workspace);writeFileSync(join(workspace,"MODULE.bazel"),'module(name="flags")\n');writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="x",outs=["x.txt"],cmd="echo x > $@")\n');
   for(const row of cache.accepted){
-   const flags=bazelCacheFlagsV1(layout,workspace,{environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache});if(flags.helper){if(process.platform==="win32")continue;mkdirSync(layout.temporary,{recursive:true});writeFileSync(flags.helper.path,flags.helper.content,{mode:flags.helper.mode});}
+   const flags=bazelCacheFlagsV1(layout,slot,{environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache});if(flags.helper){if(process.platform==="win32")continue;mkdirSync(layout.temporary,{recursive:true});writeFileSync(flags.helper.path,flags.helper.content,{mode:flags.helper.mode});}
    const result=spawnSync(binary,["--batch",`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,...flags.startup,"--nosystem_rc","--nohome_rc","--noworkspace_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"build","--nobuild","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command,"//:x"],{cwd:workspace,encoding:"utf8",timeout:240000});
    expect(result.status,row.name+"\n"+result.stderr).toBe(0);
   }
@@ -79,7 +82,7 @@ test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the provisioned Bazel binary 
 },600000);
 
 test("Bazel host paths must be ASCII on macOS (install, outputs, server) and on Linux (install), against an independent Python regex",()=>{
- const policy=componentSchema.definitions.HostPaths.const,python=Bun.which("python3");
+ const policy=componentSchema.definitions.HostPaths.const,python=testPythonV1();
  expect(new Ajv({strict:true}).compile(componentSchema.definitions.HostPathPolicy)(policy)).toBe(true);expect(Object.keys(policy.platforms)).toEqual(["darwin","linux"]);
  for(const row of fixture.hostPaths){
   const check=()=>requireBazelHostPathsV1(row.platform,{...row.layout,modules:"/m"});
@@ -93,11 +96,11 @@ test("Bazel host paths must be ASCII on macOS (install, outputs, server) and on 
  if(process.platform==="darwin"||process.platform==="linux")expect(()=>bazelCacheLayoutV1(emoji)).toThrow("ASCII Bazel host path required");else expect(bazelCacheLayoutV1(emoji).install).toContain("\u{1F9F0}");
  const emojiProducts={...roots,products:join(roots.products,"\u{1F9F0}\uFE0F")};
  expect(policy.guarded).toEqual(["install","outputs","server"]);
- if(process.platform==="darwin")expect(()=>bazelCacheLayoutV1(emojiProducts)).toThrow("ASCII Bazel host path required on darwin: outputs");else expect(bazelServerBaseV1(bazelCacheLayoutV1(emojiProducts),"/w")).toContain("\u{1F9F0}");
+ if(process.platform==="darwin")expect(()=>bazelCacheLayoutV1(emojiProducts)).toThrow("ASCII Bazel host path required on darwin: outputs");else expect(bazelServerBaseV1(bazelCacheLayoutV1(emojiProducts),"s0")).toContain("\u{1F9F0}");
 });
 
 test("the production Bazel layout names an ASCII output base and the rc never overrides the sandbox strategy",()=>{
- const layout=bazelCacheLayoutV1(fixture.sandbox.roots),flags=bazelCacheFlagsV1(layout,fixture.sandbox.workspace,{environment:{}}),base=flags.startup.find(flag=>flag.startsWith("--output_base="))!.slice("--output_base=".length),rc=readFileSync(join(import.meta.dir,"../../../../../../../../../../.bazelrc"),"utf8"),pattern=new RegExp(componentSchema.definitions.HostPaths.const.platforms.darwin.pattern);
+ const layout=bazelCacheLayoutV1(fixture.sandbox.roots),flags=bazelCacheFlagsV1(layout,slot,{environment:{}}),base=flags.startup.find(flag=>flag.startsWith("--output_base="))!.slice("--output_base=".length),rc=readFileSync(join(import.meta.dir,"../../../../../../../../../../.bazelrc"),"utf8"),pattern=new RegExp(componentSchema.definitions.HostPaths.const.platforms.darwin.pattern);
  expect(base.startsWith(layout.server+"/")).toBe(true);expect(pattern.test(base)).toBe(true);
  expect(flags.command.some(flag=>flag.startsWith("--sandbox_")||flag.startsWith("--spawn_strategy")||flag.startsWith("--strategy"))).toBe(false);
  for(const name of fixture.sandbox.forbiddenRcFlags)expect(rc,name).not.toMatch(new RegExp(`(^|\\s)--(no)?${name}\\b`,"m"));
@@ -114,3 +117,19 @@ test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY||process.platform!=="darwin")("
   const sandboxes=join(emojiBase,"sandbox/darwin-sandbox"),profile=readFileSync(join(sandboxes,readdirSync(sandboxes)[0]!,"sandbox.sb"),"utf8"),encoded=Buffer.from(Buffer.from(emojiBase,"utf8").toString("latin1"),"utf8").toString("utf8");expect(profile).toContain(encoded);expect(profile).not.toContain(emojiBase);
  }finally{for(const name of ["base-ascii","\u{1F9F0}\uFE0Fbase"])spawnSync(binary,[...common,`--output_base=${join(directory,name)}`,`--install_base=${asciiInstall}`,"shutdown"],{cwd:workspace,timeout:120000});rmSync(base,{recursive:true,force:true});}
 },900000);
+
+const setupContract={type:"object",required:["opens","full","installSkipped"],additionalProperties:false,properties:{opens:{type:"array",uniqueItems:true,minItems:2,items:{enum:["tools","dependencies","products"]}},full:{type:"array",uniqueItems:true,minItems:3,items:{enum:["tools","dependencies","products"]}},installSkipped:{type:"array",uniqueItems:true,minItems:1,items:{type:"string"}}}};
+test("tools setup bazel opens only the tools and dependencies partitions and never installs JavaScript or Nx, read by the TypeScript compiler and a text oracle",()=>{
+ expect(new Ajv({strict:true}).validate(setupContract,fixture.setup)).toBe(true);
+ const parse=(path:string)=>{const file=join(import.meta.dir,path);return ts.createSourceFile(file,readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true);},declaration=(file:ts.SourceFile,name:string)=>file.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!;
+ const opened=(node:ts.Node)=>{const names:string[]=[],visit=(child:ts.Node)=>{if(ts.isCallExpression(child)&&ts.isIdentifier(child.expression)&&child.expression.text==="withRepositoryCacheStoreV1"&&child.arguments[1]&&ts.isStringLiteral(child.arguments[1]))names.push(child.arguments[1].text);ts.forEachChild(child,visit);};visit(node);return names;};
+ const storageFile=parse("../🟦️.ts"),setup=declaration(storageFile,"withBazelSetupStorageV1"),full=declaration(storageFile,"withBazelStorageV1");
+ expect(opened(setup)).toEqual(fixture.setup.opens);expect(opened(full)).toEqual(fixture.setup.full);
+ for(const node of [setup,full])expect(opened(node)).toEqual([...node.getText().matchAll(/withRepositoryCacheStoreV1\(root,"(\w+)"/g)].map(match=>match[1]));
+ const entry=parse("../../../../📜️script.ts"),leases=declaration(entry,"runOwnedBuildInLeasesV1"),branches:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))branches.push(node);ts.forEachChild(node,visit);};visit(leases);
+ const tools=branches.find(node=>node.expression.getText()==='command==="tools"')!,guard=branches.find(node=>node.expression.getText().includes("buildOperationRequiresV1"))!;
+ expect(tools.getText()).toContain("withBazelSetupStorageV1");expect(tools.getText()).not.toContain("withBazelStorageV1");expect(tools.getText()).not.toContain("ensureBuildEnvironmentV1");
+ const required=new Map(catalogue.operations.map(row=>[row.name,row.requires]));
+ for(const name of fixture.setup.installSkipped)expect(required.get(name),name).toBe("none");
+ expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)==="dependencies"');expect(guard.thenStatement.getText()).toContain("ensureBuildEnvironmentV1");
+});

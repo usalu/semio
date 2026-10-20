@@ -1,0 +1,118 @@
+{
+  "run": [
+    [
+      "--dry-run prints a DryRunPlan on stdout and executes nothing; --graph is the same flag for every tool and takes an optional file.",
+      "--dry-run gibt einen DryRunPlan auf stdout aus und führt nichts aus; --graph ist für jedes Werkzeug dasselbe Flag und nimmt optional eine Datei."
+    ],
+    [
+      "Bazel: a selection builds exactly the transitive closure of its tasks in one generated workspace; a cached test-family task without declared outputs and without dependents runs as a Bazel test (cached test results; only tests are built when only tests are selected; --skip-cache switches the cached test results off), every other task as a cacheable build action. Test sharding is not offered because the neutral contract defines no shard protocol.",
+      "Bazel: Eine Auswahl baut genau den transitiven Abschluss ihrer Tasks in einem erzeugten Workspace; eine gecachte Test-Task ohne deklarierte Ausgaben und ohne Abhängige läuft als Bazel-Test (gecachte Testergebnisse; sind nur Tests ausgewählt, werden nur Tests gebaut; --skip-cache schaltet die gecachten Testergebnisse ab), jede andere Task als cachebare Build-Aktion. Test-Sharding wird nicht angeboten, weil der neutrale Vertrag kein Shard-Protokoll definiert."
+    ]
+  ],
+  "affected": [
+    [
+      "Changed files: tracked changes against HEAD plus untracked files by default; --base/--head, --files, --uncommitted and --untracked narrow them; --all selects every project.",
+      "Geänderte Dateien: standardmäßig verfolgte Änderungen gegen HEAD plus unverfolgte Dateien; --base/--head, --files, --uncommitted und --untracked schränken sie ein; --all wählt jedes Projekt."
+    ],
+    [
+      "Nx translation: no selector adds --base=HEAD, --uncommitted with --untracked becomes --base=HEAD, --all becomes run-many. The project closure stays tool-native (the Nx project graph; for Bazel a reverse-dependency query over a generated package of project and changed-file nodes, which asserts the same answer).",
+      "Nx-Übersetzung: ohne Selektor wird --base=HEAD ergänzt, --uncommitted mit --untracked wird zu --base=HEAD, --all wird zu run-many. Der Projektabschluss bleibt werkzeugeigen (der Nx-Projektgraph; bei Bazel eine Rückwärtsabhängigkeits-Abfrage über ein erzeugtes Paket aus Projekt- und Dateiknoten, die dieselbe Antwort zusichert)."
+    ],
+    [
+      "Affected projects (identical for every tool, asserted against Nx's own locators): the deepest project root that owns a changed file, projects whose target inputs name a changed {workspaceRoot}/ file, every project when nx.json changes, then all dependents. Package manager manifest and lock semantics (Nx diffs package.json) are Nx-only.",
+      "Betroffene Projekte (für jedes Werkzeug gleich, gegen die Locator von Nx geprüft): die tiefste Projektwurzel, der eine geänderte Datei gehört, Projekte, deren Target-Eingaben eine geänderte {workspaceRoot}/-Datei nennen, jedes Projekt bei einer Änderung von nx.json, danach alle Abhängigen. Die Semantik von Paketmanager-Manifest und Lock (Nx vergleicht package.json) gibt es nur bei Nx."
+    ],
+    [
+      "--projects is refused for every tool; use run-many to narrow.",
+      "--projects wird für jedes Werkzeug abgelehnt; zum Eingrenzen run-many verwenden."
+    ]
+  ],
+  "exec": [
+    [
+      "Runs the command once per selected project with the project root as working directory and SEMIO_PROJECT_NAME and SEMIO_PROJECT_ROOT exported (the root relative to the workspace); Bazel runs the repo-exec task of each project, uncached; the Nx implementation maps the names its own exec exports.",
+      "Führt den Befehl einmal je ausgewähltem Projekt mit der Projektwurzel als Arbeitsverzeichnis aus und exportiert SEMIO_PROJECT_NAME und SEMIO_PROJECT_ROOT (die Wurzel relativ zum Workspace); Bazel führt die repo-exec-Task jedes Projekts ohne Cache aus; die Nx-Implementierung bildet die Namen ab, die ihr eigenes exec exportiert."
+    ],
+    [
+      "--dry-run prints the ExecPlan tasks (project:repo-exec) and runs nothing for every tool.",
+      "--dry-run gibt die Tasks des ExecPlan (project:repo-exec) aus und führt für jedes Werkzeug nichts aus."
+    ]
+  ],
+  "inputs": [
+    [
+      "Prints JSON with files, environment, runtime, depOutputs and external. Bazel does not implement this operation: it records the inputs and environment of its spawns in the evidence directory of repo verify build-parity instead.",
+      "Gibt JSON mit files, environment, runtime, depOutputs und external aus. Bazel implementiert diese Operation nicht: Es zeichnet die Eingaben und die Umgebung seiner Prozessstarts stattdessen im Beweisverzeichnis von repo verify build-parity auf."
+    ]
+  ],
+  "cache": [
+    [
+      "status prints a CacheStatus, clear prints a CacheClear; both stop at the next checkpoint when the caller cancels and publish progress while walking or removing entries.",
+      "status gibt einen CacheStatus aus, clear einen CacheClear; beide halten am nächsten Prüfpunkt an, wenn der Aufrufer abbricht, und melden Fortschritt beim Durchlaufen oder Entfernen von Einträgen."
+    ],
+    [
+      "Nx: status walks the artifacts directory of the Nx cache partition, clear resets only the Nx task cache inside the bounded Nx namespace.",
+      "Nx: status durchläuft das Artefaktverzeichnis der Nx-Cache-Partition, clear setzt nur den Nx-Task-Cache innerhalb des begrenzten Nx-Namensraums zurück."
+    ],
+    [
+      "Bazel: status counts the files of the disk cache entry folders (action cache and content-addressed store) of the products partition and adds the recorded build activity (builds, actions, executed, cacheHits) read from the build event stream; clear stops the persistent servers, removes their output bases (the local action cache) and empties the disk cache, so the next build is a miss; toolchains and modules stay.",
+      "Bazel: status zählt die Dateien der Ordner des Festplatten-Caches (Aktions-Cache und inhaltsadressierter Speicher) der Produkt-Partition und ergänzt die aufgezeichnete Build-Aktivität (builds, actions, executed, cacheHits) aus dem Build-Ereignisstrom; clear stoppt die dauerhaften Server, entfernt deren Ausgabebasen (den lokalen Aktions-Cache) und leert den Festplatten-Cache, sodass der nächste Build ein Fehltreffer ist; Toolchains und Module bleiben."
+    ],
+    [
+      "The remote cache is off until SEMIO_REMOTE_CACHE_ENDPOINT names an http or https origin. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS and _RETRIES override the defaults of the build policy; the access token is read from the variable named by SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT (default SEMIO_REMOTE_CACHE_TOKEN) and is never written to disk.",
+      "Der Remote-Cache ist aus, bis SEMIO_REMOTE_CACHE_ENDPOINT einen http- oder https-Ursprung nennt. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS und _RETRIES überschreiben die Standardwerte der Build-Policy; das Zugriffstoken wird aus der Variablen gelesen, die SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT nennt (Standard SEMIO_REMOTE_CACHE_TOKEN), und nie auf die Festplatte geschrieben."
+    ],
+    [
+      "Bazel renders the contract into its remote cache settings (endpoint, instance name, upload, compression, download mode, timeout, retries) and passes the token through a credential helper. Nx renders it into its self-hosted remote cache variables (server and access token); it cannot honour compression, download mode, timeouts or retries and leaves read-only to the scope of the server's token. remote status prints both facts.",
+      "Bazel setzt den Vertrag in seine Remote-Cache-Einstellungen um (Endpunkt, Instanzname, Upload, Kompression, Download-Modus, Zeitlimit, Wiederholungen) und reicht das Token über einen Credential-Helper weiter. Nx setzt ihn in seine Variablen für den selbst gehosteten Remote-Cache um (Server und Zugriffstoken); es kann Kompression, Download-Modus, Zeitlimits und Wiederholungen nicht einhalten und überlässt read-only dem Geltungsbereich des Server-Tokens. remote status gibt beide Tatsachen aus."
+    ],
+    [
+      "serve speaks the HTTP cache protocol of Bazel (GET, HEAD and PUT on /ac/<sha256> and /cas/<sha256>, blobs verified against their digest) and the self-hosted cache API of Nx (GET and PUT on /v1/cache/<hash>, 409 when an entry exists), each under an optional /<instance> prefix. Bearer tokens come from SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN and SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; without a token it refuses to listen beyond loopback. The store is bounded and evicts the least recently used entries; serve publishes progress while it scans the store and stops at the next checkpoint when the caller cancels.",
+      "serve spricht das HTTP-Cache-Protokoll von Bazel (GET, HEAD und PUT auf /ac/<sha256> und /cas/<sha256>, Blobs gegen ihren Digest geprüft) und die API des selbst gehosteten Caches von Nx (GET und PUT auf /v1/cache/<hash>, 409 bei vorhandenem Eintrag), jeweils unter einem optionalen Präfix /<instance>. Bearer-Tokens stammen aus SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN und SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; ohne Token verweigert serve das Lauschen außerhalb von Loopback. Der Speicher ist begrenzt und verdrängt die am längsten ungenutzten Einträge; serve meldet Fortschritt beim Durchsuchen des Speichers und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht."
+    ]
+  ],
+  "capacity": [
+    [
+      "Every heavy repo command (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) is admitted the same way before it starts; capacity run does it for everything else.",
+      "Jeder schwere repo-Befehl (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) wird vor dem Start auf dieselbe Weise zugelassen; capacity run tut dies für alles andere."
+    ],
+    [
+      "A request is admitted while the free memory stays above the floor (a share of the host memory between 4 and 8 GB), the swap stays below its ceiling and the load below its ceiling per core, the machine-wide open file table stays below its ceiling share and fewer disk images are attached than the maximum (the last three are waited out and overridden only when nothing of ours runs); memory pressure at the critical level admits nobody. Requests are served first come first served, interactive before batch.",
+      "Eine Anfrage wird zugelassen, solange der freie Speicher über der Untergrenze bleibt (ein Anteil des Host-Speichers zwischen 4 und 8 GB), der Swap unter seiner Obergrenze und die Last unter ihrer Obergrenze je Kern, die systemweite Tabelle offener Dateien unter ihrem Anteil der Obergrenze und weniger Disk-Images angehängt sind als das Maximum (die letzten drei werden abgewartet und nur übergangen, wenn nichts von uns läuft); Speicherdruck auf kritischer Stufe lässt niemanden zu. Anfragen werden in der Reihenfolge des Eintreffens bedient, interaktive vor Stapelläufen."
+    ],
+    [
+      "The grant sets the parallelism of the selected tool through that tool's own limits: the task parallelism for Nx, the job and local-resource limits for Bazel, the core count for Cargo. SEMIO_HOST_CAPACITY=off switches the governor off explicitly.",
+      "Die Zuteilung setzt die Parallelität des gewählten Werkzeugs über dessen eigene Grenzen: die Task-Parallelität bei Nx, die Job- und lokalen Ressourcengrenzen bei Bazel, die Kernzahl bei Cargo. SEMIO_HOST_CAPACITY=off schaltet die Steuerung ausdrücklich ab."
+    ],
+    [
+      "Waiting prints a progress line in the chosen language and stops at the next checkpoint when the caller cancels; the grant of a process that dies is reclaimed automatically.",
+      "Das Warten gibt eine Fortschrittszeile in der gewählten Sprache aus und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht; die Zuteilung eines beendeten Prozesses wird automatisch zurückgefordert."
+    ]
+  ],
+  "remote-execution": [
+    [
+      "Optional developer service, never a dependency: with SEMIO_REMOTE_EXECUTION_ENDPOINT unset every action stays local. The service description, schema and pinned container images live in the build module; every image is an official one and is pinned by digest.",
+      "Optionaler Entwicklerdienst, nie eine Abhängigkeit: Ist SEMIO_REMOTE_EXECUTION_ENDPOINT nicht gesetzt, bleibt jede Aktion lokal. Dienstbeschreibung, Schema und festgelegte Container-Images liegen im Build-Modul; jedes Image ist ein offizielles und per Digest festgelegt."
+    ],
+    [
+      "serve needs a running container runtime (Docker Desktop or the docker service) and the compose plugin. It copies the packaged stack to an ASCII-only runtime directory below the workspace, starts the cluster on loopback only (the cluster has no authentication), prints the client variables once the frontend answers and, when the caller cancels, removes containers and volumes: its state is ephemeral and local to this machine.",
+      "serve braucht eine laufende Container-Runtime (Docker Desktop oder der docker-Dienst) und das Compose-Plugin. Es kopiert den paketierten Stack in ein ASCII-only Laufzeitverzeichnis unterhalb des Workspace, startet den Cluster nur auf Loopback (der Cluster hat keine Authentifizierung), gibt die Client-Variablen aus, sobald das Frontend antwortet, und entfernt bei Abbruch Container und Volumes: Sein Zustand ist flüchtig und lokal auf dieser Maschine."
+    ],
+    [
+      "The workers advertise the properties of their execution platform (linux-arm64 or linux-x64) and the instance name main; set the printed variables, then run hermetic targets with the Bazel implementation.",
+      "Die Worker melden die Eigenschaften ihrer Ausführungsplattform (linux-arm64 oder linux-x64) und den Instanznamen main; die ausgegebenen Variablen setzen, danach hermetische Targets mit der Bazel-Implementierung ausführen."
+    ],
+    [
+      "serve publishes progress while it checks the runtime, renders the stack, starts the cluster and tears it down; status and env change nothing.",
+      "serve meldet Fortschritt beim Prüfen der Runtime, Erzeugen des Stacks, Starten des Clusters und Abbauen; status und env ändern nichts."
+    ]
+  ],
+  "concurrency": [
+    [
+      "Prepare the disposable copy first with `repo incremental prepare`.",
+      "Zuerst die Wegwerf-Kopie mit `repo incremental prepare` vorbereiten."
+    ],
+    [
+      "Waits are measured from the lease trace named by SEMIO_LEASE_TRACE; without it the progress rows only give lower bounds and the criteria stay unproven.",
+      "Wartezeiten werden aus der Lease-Spur gemessen, die SEMIO_LEASE_TRACE nennt; ohne sie liefern die Fortschrittszeilen nur Untergrenzen, und die Kriterien bleiben unbewiesen."
+    ]
+  ]
+}

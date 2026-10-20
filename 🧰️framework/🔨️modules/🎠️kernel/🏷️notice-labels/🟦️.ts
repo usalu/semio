@@ -4,7 +4,7 @@
  */
 
 import type { ShellLocale, ShellTerminology } from "@semio-tech/framework-manifest/generated/ui-axes";
-import { faultNoticeText, fillFaultNotice, type FaultNoticeDefinition } from "@semio-tech/framework-manifest";
+import { faultNoticeText, fillFaultNotice, type FaultNoticeDefinition } from "../../🛂️manifest/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

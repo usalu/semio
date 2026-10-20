@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+const [staged,repo]=process.argv.slice(2);
+const B="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const api=await import(join(staged!,B,"🔧️tools/🏗️bazel/🔁️probe/🟦️.ts")),spec=JSON.parse(readFileSync(join(repo!,L,"⚡️caching/🔁️verification/🔣️probe.json"),"utf8"));
+const options={version:"8.4.2",executable:"/tools/bazel",installBase:"/tools/install/8.4.2/darwin-arm64",module:'module(name = "semio_tasks", version = "0.0.0")\n',lock:'{"lockFileVersion":13}\n',repository:"/deps/repositories"};
+const contents:Record<string,string>={"source.json":'{"value":42}',"toolchain.json":'{"version":1}',"📜️script.ts":"console.log(1)\n","spec.json":'{"case":1}'};
+const read=(file:string)=>contents[file]===undefined?undefined:new TextEncoder().encode(contents[file]!);
+const fixture={version:1,workspace:"/ws",options,files:api.renderBazelProbeV1(spec,"/ws",options.module),leaves:Object.fromEntries(spec.targets.map((target:any)=>[target.name,api.bazelProbeLeavesV1(spec,target)])),inputNames:Object.fromEntries(spec.targets.flatMap((target:any)=>api.bazelProbeLeavesV1(spec,target)).map((leaf:any)=>["file" in leaf?"file:"+leaf.file:"env:"+leaf.env,api.bazelProbeInputNameV1(leaf)])),contents,environment:{CACHE_PROBE_MODE:"two"},nonce:"nonce-1",digests:api.bazelProbeDigestsV1(spec,read,{CACHE_PROBE_MODE:"two"},"nonce-1"),arguments:{build:api.bazelProbeArgumentsV1(options,spec,"/ws","build")},workspaceName:{fixture:"/tmp/fx",instance:"1:2",base:"/scratch"}};
+(fixture as any).workspaceName.expected=api.bazelProbeWorkspaceV1("/tmp/fx","1:2","/scratch");
+writeFileSync(join(staged!,B,"🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🧫️fixtures/🔣️.json"),JSON.stringify(fixture,null,2)+"\n");
+console.log(Object.keys(fixture.files),fixture.arguments.build.length);

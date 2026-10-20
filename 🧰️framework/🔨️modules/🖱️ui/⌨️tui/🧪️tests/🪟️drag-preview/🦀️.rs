@@ -321,3 +321,17 @@ fn narrow_overflow_preserves_the_active_chip_and_its_controls() {
     assert_eq!(narrow.groups.iter().flat_map(|group| &group.tabs).filter(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))).count(), 1);
     assert!(narrow.groups.iter().flat_map(|group| &group.tabs).any(|tab| tab.kind == TabKind::Tab && tab.index == 1 && tab.close_x.is_some() && tab.maximize_x.is_some() && tab.drag_x.is_some()));
 }
+
+#[test]
+fn mounted_window_layout_query_requires_live_shared_canvas_membership() {
+    for row in fixture().as_object().unwrap().get("mountScope").unwrap().as_array().unwrap() {
+        let row = row.as_object().unwrap();
+        let flag = |name: &str| row.get(name).and_then(Value::as_bool).unwrap();
+        let (mut tui, built, _layout, source, target) = world(Size { width: 100, height: 40 }, [1.0, 1.0], false, false, false, GlyphSet::Unicode, false);
+        let other = tui.scene.add(tui.scene.root(), semio_framework_ui_tui_frame::scene::Node::new(NodeContent::Box));
+        if !flag("canvasAlive") { tui.scene.remove(built.canvas); }
+        let actual = tui.scene.window_layout_containing(if flag("firstKnown") { source } else { other }, if flag("secondKnown") { target } else { other });
+        assert_eq!(actual.is_some(), flag("matched"), "{}", row.get("name").and_then(Value::as_str).unwrap());
+        if let Some((_layout, canvas, windows)) = actual { assert_eq!(canvas, built.canvas); assert!(windows.iter().any(|(_, node)| *node == source)); assert!(windows.iter().any(|(_, node)| *node == target)); }
+    }
+}

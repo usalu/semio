@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "kind": "superseded-root-portable-window-cleanup",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+      "before": {
+        "bytes": 60060,
+        "sha256": "a83ca8391d460041fb3cf6e03bb45d492856c1f8e6e17804f97cdef8775f31a2"
+      },
+      "after": {
+        "bytes": 59068,
+        "sha256": "2c517630732bcc0fa218bff51a868e854182481bd0292d63571ebdb82ce421ff"
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+      "before": {
+        "bytes": 19202,
+        "sha256": "03d1a5d78c63a35576432d39eb4a5579037753cbabac8487688858e2d4040668"
+      },
+      "after": {
+        "bytes": 19135,
+        "sha256": "2de3e85e7e339d2a132d0b98940bb2237b3af48d4f8f37da530e531613b26a30"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+      "before": {
+        "bytes": 6564,
+        "sha256": "4c3c9dd892f82dbbc6cfe88601a92bf075ea8ffc6187d6f9d6bc58108faea642"
+      },
+      "after": {
+        "bytes": 3268,
+        "sha256": "1a751c3fb62662fba5c88d3550ccc33f89507061e4f259e05005401e5c200ef2"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🔣️.json",
+      "before": {
+        "bytes": 1375,
+        "sha256": "31630700bcb5c74d956d25ad95823a23205b48b4a1f83701a971e8bf1be20546"
+      },
+      "after": {
+        "bytes": 422,
+        "sha256": "c6cc55f25778a45933752d95709e97e27061be693421bbbb3930651febe373bd"
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🧬️schema/🔣️.json",
+      "before": {
+        "bytes": 1046,
+        "sha256": "f0a1b15f87ce63f87c1775efa42518c8662e60eca8cb3ba47fb70285b7857e32"
+      },
+      "after": {
+        "bytes": 522,
+        "sha256": "8a177ee4c48caab9d5644110fc63079e5277e6f28fec3a0fc0b52cfe526d8392"
+      }
+    }
+  ],
+  "checks": {
+    "peerPortableInputsByteEqual": true,
+    "originalSixCaseTestByteEqual": true,
+    "originalSixCaseFixtureEqual": true,
+    "originalSixCaseSchemaEqual": true,
+    "asyncLocalStorageImportRetained": true,
+    "physicalGateImplementationAndTestsNotWritten": true,
+    "ajvOriginalSixCases": true,
+    "syntax": [
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+        "syntaxDiagnostics": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+        "syntaxDiagnostics": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+        "syntaxDiagnostics": []
+      }
+    ]
+  },
+  "commandsExecuted": 0
+}

@@ -26,3 +26,6 @@ doctest = false
 semio-framework-value-clone-source = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

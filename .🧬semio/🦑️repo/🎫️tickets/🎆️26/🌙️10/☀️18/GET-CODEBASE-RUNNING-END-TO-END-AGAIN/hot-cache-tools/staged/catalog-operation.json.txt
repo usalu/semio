@@ -1,0 +1,107 @@
+    {
+      "name": "service",
+      "requires": "none",
+      "synopsis": "service status|start|stop|restart|issue|drop-caches|probe",
+      "summary": {
+        "en": "Run, inspect or stop the resident service of this worktree that keeps the graph, file digests and task results warm and answers every agent over one local socket.",
+        "de": "Startet, prüft oder beendet den residenten Dienst dieses Worktrees, der Graph, Datei-Prüfsummen und Aufgabenergebnisse warm hält und alle Agenten über einen lokalen Socket bedient."
+      },
+      "implementations": {
+        "nx": "neutral",
+        "bazel": "neutral"
+      },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "status",
+          "synopsis": "service status [--json]",
+          "summary": {
+            "en": "Print the process, the file watcher backend and trust, the graph generation, queue and memory of the service.",
+            "de": "Gibt Prozess, Backend und Vertrauensstufe des Dateibeobachters, Graph-Generation, Warteschlange und Speicher des Dienstes aus."
+          }
+        },
+        {
+          "name": "start",
+          "synopsis": "service start [--foreground]",
+          "summary": {
+            "en": "Start the service detached and wait until it answers; with --foreground run it in this terminal.",
+            "de": "Startet den Dienst losgelöst und wartet, bis er antwortet; mit --foreground läuft er in diesem Terminal."
+          }
+        },
+        {
+          "name": "stop",
+          "synopsis": "service stop",
+          "summary": {
+            "en": "Drain running requests and stop the service.",
+            "de": "Lässt laufende Anfragen auslaufen und beendet den Dienst."
+          }
+        },
+        {
+          "name": "restart",
+          "synopsis": "service restart",
+          "summary": {
+            "en": "Stop the service and start it again.",
+            "de": "Beendet den Dienst und startet ihn erneut."
+          }
+        },
+        {
+          "name": "issue",
+          "synopsis": "service issue [--classes <classes>] [--for <projects>] [--ttl <seconds>]",
+          "summary": {
+            "en": "Print a capability token restricted to command classes, projects and lifetime; hand it to an agent that must not do more.",
+            "de": "Gibt eine Berechtigung aus, beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf."
+          }
+        },
+        {
+          "name": "drop-caches",
+          "synopsis": "service drop-caches",
+          "summary": {
+            "en": "Forget digests and task results; the next request re-proves everything.",
+            "de": "Vergisst Prüfsummen und Aufgabenergebnisse; die nächste Anfrage belegt alles neu."
+          }
+        },
+        {
+          "name": "probe",
+          "synopsis": "service probe",
+          "summary": {
+            "en": "Exit 0 when the service answers, 1 otherwise; prints nothing.",
+            "de": "Endet mit 0, wenn der Dienst antwortet, sonst mit 1; gibt nichts aus."
+          }
+        }
+      ],
+      "flags": [
+        "--json",
+        "--foreground",
+        "--classes",
+        "--for",
+        "--ttl"
+      ],
+      "examples": [
+        {
+          "command": "repo service start",
+          "description": {
+            "en": "Keep this worktree's graph and results warm for every agent.",
+            "de": "Hält Graph und Ergebnisse dieses Worktrees für alle Agenten warm."
+          }
+        },
+        {
+          "command": "repo service issue --classes=run --for=lib-a --ttl=3600",
+          "description": {
+            "en": "A token that may only run tasks of lib-a for one hour.",
+            "de": "Eine Berechtigung, die eine Stunde lang nur Aufgaben von lib-a ausführen darf."
+          }
+        }
+      ],
+      "notes": [
+        {
+          "en": "With a service running, run and affected answer from its results in milliseconds when nothing relevant changed; --service=off or SEMIO_BUILD_SERVICE=off always runs in this process, --service=require fails when no service answers.",
+          "de": "Läuft ein Dienst, antworten run und affected in Millisekunden aus seinen Ergebnissen, wenn sich nichts Relevantes geändert hat; --service=off oder SEMIO_BUILD_SERVICE=off läuft immer in diesem Prozess, --service=require schlägt fehl, wenn kein Dienst antwortet."
+        },
+        {
+          "en": "Only the owner of the checkout can reach the service: its runtime directory is private to the user and every request carries a capability token.",
+          "de": "Nur der Eigentümer des Checkouts erreicht den Dienst: Sein Laufzeitverzeichnis ist privat für den Benutzer und jede Anfrage trägt eine Berechtigung."
+        }
+      ]
+    },

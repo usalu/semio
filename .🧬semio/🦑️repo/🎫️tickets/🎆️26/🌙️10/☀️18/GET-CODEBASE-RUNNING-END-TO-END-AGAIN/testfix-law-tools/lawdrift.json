@@ -1,0 +1,2180 @@
+[
+{
+"file": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️complete/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔣️transport/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🧪️tests/🔣️transport/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/🚀️activation/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 12,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: error: Cannot find module '@semio-tech/framework-filesystem/observation/descriptor' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️r"
+},
+{
+"file": "✏️s/🔌️plugins/📕️norm/🧪️tests/🧪️wire-twins/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔢️binary64-transport/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 11,
+"fail": 1,
+"note": "",
+"firstError": "error: Build failed with 1 error:"
+},
+{
+"file": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 7,
+"fail": 9,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: $.content: child identity must equal its target artifact id"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🎛️adjustment/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🎭️mask/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔒️protection/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️apply-filter/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-image/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️fill-region/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️fill-selection/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️cohort/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧹️lifecycle/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/✂️hex-splices/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/view-state-and-public-invocation' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎁️packs/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️audit/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🗂️typed-file/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🧪️fixture-corpus/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📦️public/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️branches/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🔺️mutate-semio-mesh/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️semantic/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-blocks/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts'"
+},
+{
+"file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🔬️neutral/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 4,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-filesystem/observation/descriptor' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️i"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/📷️camera-presence/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/🔱️trinity-graph-child/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/🖨️raster-decoded-image/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/🗺️gismap-shell-history-route/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/🚀️procedural-renderer-boot/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🏘️plugin-composition/🚢️stdio-shipped-fleet/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 37,
+"fail": 2,
+"note": "",
+"firstError": "error: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-config/🦀️.rs => /Users/ueli/Documents/semio/✏️s"
+},
+{
+"file": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪪️document/🟦️.ts",
+"owner": "hub",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts'"
+},
+{
+"file": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🟦️.ts",
+"owner": "hub",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/media' from '/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🟦️.ts'"
+},
+{
+"file": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🧩️composition/🟦️.ts",
+"owner": "hub",
+"cls": "law-drift",
+"pass_": 62,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+"owner": "hub",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-transient' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts'"
+},
+{
+"file": "✏️s/🧪️tests/🗂️native-ownership/🟦️.ts",
+"owner": "✏️s",
+"cls": "law-drift",
+"pass_": 3,
+"fail": 1,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts",
+"owner": "🧪️tests",
+"cls": "law-drift",
+"pass_": 4,
+"fail": 5,
+"note": "",
+"firstError": "error: .codex/config.toml must contain command = \"bun\""
+},
+{
+"file": "🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts",
+"owner": "framework/other",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 1,
+"note": "",
+"firstError": "error: Build failed with 1 error:"
+},
+{
+"file": "🧰️framework/🔨️modules/⏪️time-travel/🕹️actions/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/🧪️tests/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 4,
+"fail": 2,
+"note": "",
+"firstError": "error: Complete Script policy required"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-filesystem/observation/descriptor' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 3,
+"note": "",
+"firstError": "error: Component input cancelled"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-filesystem/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏱️timers/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": "error: Complete Script policy required"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📊️profile/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️settlement/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 55,
+"fail": 1,
+"note": "",
+"firstError": "error: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts"
+},
+{
+"file": "🧰️framework/🔨️modules/📁️filesystem/🛡️durability/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 2,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🏛️crate-partition/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 19,
+"fail": 4,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/ui/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🤝️interoperability/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 3,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️fault-notices/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/📦️targets/🧪️packaging/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/✂️clipping/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 14,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-trace/clock/testing/tool-job-telemetry-contention' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.t"
+},
+{
+"file": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts",
+"owner": "framework/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/ui/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/📄️catalog-retirement/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 13,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).not.toContain(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🧪️tests/🧬️representation/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📋️data/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/ui/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📋️data/🧪️test"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔮️directory-and-hub-oracles/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔮️world3d-gesture-oracles/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️window-lifecycle-template-drag/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-effect/video-render-program' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧪️tests/🧩️suite/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/ui/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧪️tests/🧩️suite/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🧾️bytes/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/plugin-registry-publication/publication.json' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🚪️boundaries/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-transient' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-transient' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-effect/video-render-program' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 20,
+"fail": 1,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧬️semantic-source-pairs/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-transient' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 6,
+"fail": 7,
+"note": "",
+"firstError": "error: Unrecorded original law: retained_rejected_completion_closes_original_artifact_and_ephemeral_owners"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️producer/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️unit/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-filesystem/observation' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/ui/testing/fixtures' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/📦️crate-boundaries/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 41,
+"fail": 4,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/📡️scene-wire/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/view-state-and-public-invocation' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎁️packs/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/view-state-and-public-invocation' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎁️packs/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️attached-document-replacement/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-persistence/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-read-back/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-hash' from '/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/💻️os/🧪️tests/🪢️canonical-checkpoint-pair/🟦️.ts",
+"owner": "framework/products/os",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: Cannot find module '@semio-tech/framework-manifest/schema' from '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts'"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/🟦️.ts",
+"owner": "repo/modules",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 3,
+"note": "",
+"firstError": "error: expect(received).toContain(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📇️indexed-generated-output/🧪️tests/🗂️indexed-generated-output/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 2,
+"note": "",
+"firstError": "error: Exact carried graph purpose receipt required"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 9,
+"fail": 1,
+"note": "",
+"firstError": "error: The dashboard-selected owner-test route is missing"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": "error: projectInputs"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 3,
+"fail": 1,
+"note": "",
+"firstError": "error: Received value must be an array type, or both received and expected values must be strings."
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 21,
+"fail": 23,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Original native caller capabilities required"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 2,
+"note": "",
+"firstError": "error: 52 |  const work=Promise.resolve().then(async()=>{await ready;if(!startFixture)throw Error(\"Actual build test fixture Original lifetime ended\");await startFixture(open,async value=>{if(publishe"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/📥️consumption/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 1,
+"note": "",
+"firstError": "TypeError: undefined is not an object (evaluating 'options.pkg.files')"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 3,
+"fail": 1,
+"note": "",
+"firstError": "TypeError: undefined is not an object (evaluating 'options.pkg.files')"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 1,
+"note": "",
+"firstError": "error: Actual authored TOML profiles required"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "sqlite snapshot receiving source moved (mount/needle)",
+"firstError": "error: Original snapshot fixture required"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 3,
+"fail": 3,
+"note": "",
+"firstError": "error: Original report reader failure"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 9,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toContain(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: Actual selected pattern loop required"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 8,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 19,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 6,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🧪️tests/🧭️router-ownership/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 3,
+"fail": 2,
+"note": "",
+"firstError": "error: UI_PRIMITIVES_SKIP_DIRS"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 10,
+"fail": 7,
+"note": "",
+"firstError": "error: [script] {\"owner\":\"tst8\",\"command\":\"test-snapshot-sqlite\",\"stage\":\"loading\"}"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 0,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎟️reference-coverage-selection/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 4,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toContain(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎫️ticket-role-routing/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 19,
+"fail": 2,
+"note": "",
+"firstError": "error: expect(received).toHaveLength(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 6,
+"fail": 1,
+"note": "",
+"firstError": "error: Received value does not have a length property: null"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔤️taxonomy-leading-grapheme/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 9,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toHaveLength(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 20,
+"fail": 1,
+"note": "",
+"firstError": ""
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗂️collection-catalog/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 6,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 13,
+"fail": 4,
+"note": "",
+"firstError": "error: revised-exact-authority: [{\"instancePath\":\"/sourceAuthority/kind\",\"schemaPath\":\"#/properties/kind/const\",\"keyword\":\"const\",\"params\":{\"allowedValue\":\"exact-owner-current-source-approval-v1\"},\"me"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 9,
+"fail": 1,
+"note": "",
+"firstError": "error: Received value does not have a length property: null"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🤖️agent-client-configuration/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 20,
+"fail": 4,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 7,
+"fail": 1,
+"note": "",
+"firstError": "error: Received value does not have a length property: null"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 15,
+"fail": 2,
+"note": "",
+"firstError": "error: tracked relative paths above 213 UTF-16 units (max 226)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔷️typescript-project/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 22,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 16,
+"fail": 2,
+"note": "",
+"firstError": "error: Bun workspace escapes repository or path capacity: ✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript/package.json"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧫️fixture-ownership/🟦️.ts",
+"owner": "repo/library",
+"cls": "law-drift",
+"pass_": 1,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBe(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/🧪️tests/🟦️.ts",
+"owner": "repo/modules",
+"cls": "law-drift",
+"pass_": 0,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toBeLessThanOrEqual(expected)"
+},
+{
+"file": "🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+"owner": "framework/products/other",
+"cls": "law-drift",
+"pass_": 2,
+"fail": 1,
+"note": "",
+"firstError": "error: expect(received).toEqual(expected)"
+}
+]

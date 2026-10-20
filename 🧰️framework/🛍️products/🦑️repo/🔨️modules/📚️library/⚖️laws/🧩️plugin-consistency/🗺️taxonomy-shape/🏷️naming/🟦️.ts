@@ -5,7 +5,7 @@ import { loadTaxonomy, semanticDirectoryKindId } from "../../../../🔍️discov
 import { policyReaddirSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyLeadingEmojiPrefix, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { createFixedContractResolver, fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
-import { type PathEmojiEntry, pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
+import { type PathEmojiEntry, pathEmojiStatuteFindings } from "../../../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
 import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
 import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";

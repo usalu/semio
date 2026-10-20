@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "messageCapacity": 32,
+  "cases": [
+    {
+      "id": "list-root",
+      "kind": "list",
+      "path": "",
+      "cancelled": false,
+      "outcome": "List",
+      "text": ""
+    },
+    {
+      "id": "load-unicode",
+      "kind": "load",
+      "path": "a 🧪.txt",
+      "cancelled": false,
+      "outcome": "Load",
+      "text": "α🧪\n"
+    },
+    {
+      "id": "cancel-before-list",
+      "kind": "list",
+      "path": "",
+      "cancelled": true,
+      "outcome": "Cancelled",
+      "text": ""
+    },
+    {
+      "id": "recovery-index",
+      "kind": "recovery-list",
+      "path": "",
+      "cancelled": false,
+      "outcome": "RecoveryList",
+      "text": ""
+    }
+  ],
+  "saturation": {
+    "publishes": 1032,
+    "queued": 32,
+    "dropped": 1000,
+    "wakes": 32
+  }
+}

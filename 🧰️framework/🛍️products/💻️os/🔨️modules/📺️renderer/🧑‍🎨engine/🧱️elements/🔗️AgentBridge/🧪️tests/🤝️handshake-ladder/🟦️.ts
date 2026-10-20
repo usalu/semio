@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge } from "../../🟦️.tsx";
 import { encodeGatewayToShell, type GatewayToShell } from "@semio-tech/framework/mcp/bridge";
-import { BRIDGE_HANDSHAKE_DEADLINE_MS, BRIDGE_UNANSWERED_ATTEMPTS, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../../🟦️.tsx";
+import { BRIDGE_HANDSHAKE_DEADLINE_MS, BRIDGE_UNANSWERED_ATTEMPTS, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../../🟢️shared/🟦️.tsx";
 import { BRIDGE_VERSION } from "@semio-tech/framework/mcp/bridge";
 // #endregion 🔌️Adapters
 

@@ -1,5 +1,5 @@
 /** 🪞️ The path projection contracts, owned file projections, reference consumers and the mutation catalog projection. */
-import { requireExactKeys, requireRecord, requireString, requireStringArray, type UnknownRecord } from "@semio-tech/schema-validator-ts";
+import { requireExactKeys, requireRecord, requireString, requireStringArray, type UnknownRecord } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import type { FileKindSpec, FixedFilenameContract, SemanticDirectoryKindSpec, SemanticDirectoryMemberKindSpec, SemanticProjectedMemberKindSpec } from "../📐️kind-specs/🟦️.ts";
 import { normalizeRelative } from "../../🛣️path/🟦️.ts";

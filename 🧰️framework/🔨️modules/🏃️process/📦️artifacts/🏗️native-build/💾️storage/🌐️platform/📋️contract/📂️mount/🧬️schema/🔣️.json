@@ -36,6 +36,218 @@
         ],
         "deletionAuthority": false
       }
+    },
+    "PublishedBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "published",
+        "publishedBackingDevice",
+        "currentBackingDevice"
+      ],
+      "properties": {
+        "published": {
+          "$ref": "#"
+        },
+        "publishedBackingDevice": {
+          "$ref": "#/properties/dev"
+        },
+        "currentBackingDevice": {
+          "$ref": "#/properties/dev"
+        }
+      }
+    },
+    "PublicationBindingProtocol": {
+      "const": {
+        "version": 1,
+        "deviceNamespace": "published-backing",
+        "liveDeviceNamespace": "current-anchored-backing",
+        "retained": [
+          "ino",
+          "mode"
+        ],
+        "authority": false,
+        "rewritesPublication": false
+      }
+    },
+    "BindingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "$ref": "#"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InspectionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "publishedDeviceDelta",
+        "backingDeviceDelta",
+        "mountDeviceDelta",
+        "receiptOmit",
+        "kernel",
+        "mutation",
+        "expected",
+        "failure",
+        "captures"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "publishedDeviceDelta": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "backingDeviceDelta": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "mountDeviceDelta": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "receiptOmit": {
+          "enum": [
+            null,
+            "bootSession",
+            "ancestry"
+          ]
+        },
+        "kernel": {
+          "enum": [
+            "absent",
+            "wrong-root"
+          ]
+        },
+        "mutation": {
+          "enum": [
+            "none",
+            "ancestor",
+            "backing",
+            "underlying",
+            "receipt",
+            "cancel"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "inactive",
+            "refuse"
+          ]
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          ]
+        },
+        "captures": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "LiveAncestryProtocol": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 65,
+        "identity": [
+          "dev",
+          "ino",
+          "mode"
+        ],
+        "authority": false
+      }
+    },
+    "RetirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "publishedDeviceDelta",
+        "expected",
+        "failure"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "mutation": {
+          "enum": [
+            "none",
+            "published",
+            "ancestor",
+            "backing",
+            "underlying",
+            "receipt",
+            "cancel"
+          ]
+        },
+        "publishedDeviceDelta": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "expected": {
+          "type": "boolean"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          ]
+        }
+      }
     }
   }
 }

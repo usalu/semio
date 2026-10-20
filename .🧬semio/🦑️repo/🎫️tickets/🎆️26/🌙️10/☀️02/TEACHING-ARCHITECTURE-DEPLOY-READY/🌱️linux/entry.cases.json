@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "create",
+      "accepted": true
+    },
+    {
+      "id": "receiver",
+      "accepted": true
+    },
+    {
+      "id": "provision",
+      "accepted": true
+    },
+    {
+      "id": "create-with-identity",
+      "accepted": false
+    },
+    {
+      "id": "receiver-without-identity",
+      "accepted": false
+    },
+    {
+      "id": "receiver-future-manifest",
+      "accepted": false
+    },
+    {
+      "id": "provision-without-manifest",
+      "accepted": false
+    },
+    {
+      "id": "wrong-name",
+      "accepted": false
+    },
+    {
+      "id": "wrong-volume",
+      "accepted": false
+    },
+    {
+      "id": "old-builder",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image",
+      "accepted": false
+    },
+    {
+      "id": "wrong-native",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "accepted": false
+    },
+    {
+      "id": "invalid-input-hash",
+      "accepted": false
+    }
+  ],
+  "creation": [
+    {
+      "id": "success",
+      "accepted": true
+    },
+    {
+      "id": "claim-collision",
+      "accepted": false
+    },
+    {
+      "id": "foreign-engine",
+      "accepted": false
+    },
+    {
+      "id": "present-container",
+      "accepted": false
+    },
+    {
+      "id": "present-volume",
+      "accepted": false
+    },
+    {
+      "id": "foreign-volume",
+      "accepted": false
+    },
+    {
+      "id": "tool-failure",
+      "accepted": false
+    }
+  ],
+  "owner": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-binding",
+      "accepted": false
+    },
+    {
+      "id": "wrong-cohort",
+      "accepted": false
+    },
+    {
+      "id": "wrong-id",
+      "accepted": false
+    },
+    {
+      "id": "wrong-operation",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "accepted": false
+    }
+  ],
+  "receiverNamespace": [
+    {
+      "id": "foreign-namespace-collision",
+      "accepted": false
+    }
+  ],
+  "receiverFlow": [
+    {
+      "id": "success",
+      "accepted": true
+    },
+    {
+      "id": "wrong-terminal",
+      "accepted": false
+    },
+    {
+      "id": "body-failure",
+      "accepted": false
+    },
+    {
+      "id": "swallowed-finish-refusal",
+      "accepted": false
+    },
+    {
+      "id": "join-failure",
+      "accepted": false
+    }
+  ]
+}

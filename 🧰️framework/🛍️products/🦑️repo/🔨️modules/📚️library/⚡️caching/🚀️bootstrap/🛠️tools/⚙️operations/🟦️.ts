@@ -36,6 +36,7 @@ export function nxExecWrapperV1():string[]{
 /** 🧭️ Translates one neutral operation into the Nx arguments it launches; `undefined` means no Nx process is needed. */
 export function nxOperationArgumentsV1(args:readonly string[]):string[]|undefined{
  if(args[0]==="cache")return args[1]==="clear"?["reset","--onlyCache"]:undefined;
+ if(args[0]==="inputs"){if(args.includes("--help")||args.includes("-h"))return undefined;if(args.length!==2||!/^[^\s:]+:[^\s:]+(?::[^\s:]+)?$/u.test(args[1]!))throw Error("Expected repo inputs <project:target[:configuration]>");return ["show","target","inputs",args[1]!,"--json"];}
  const translated=nxBuildArgumentsV1(args),boundary=translated.indexOf("--");
  if(args[0]==="exec"&&boundary>=0&&boundary<translated.length-1)return [...translated.slice(0,boundary+1),...nxExecWrapperV1(),...translated.slice(boundary+1)];
  return args[0]==="affected"?nxAffectedArgumentsV1(translated):translated;

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, configureGitKrakenWorkspace, configureRepoHooks, devcontainerAttach, devcontainerStart, gitKrakenWorkspaceState, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, configureRepoHooks, devcontainerAttach, devcontainerStart, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
 function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
@@ -16,17 +16,14 @@ function recordingHost(answer: (command: string, args: readonly string[]) => Par
       if (options?.input !== undefined) inputs.set([command, ...args].join(" "), options.input);
       return { status: 0, stdout: "", stderr: "", ...answer(command, args) };
     },
-    spawnDetached: (command, args) => void calls.push(["detached", command, ...args]),
     download: async () => undefined,
     fetchJson: async () => ({}),
-    sleep: async () => undefined,
     log: (line) => void lines.push(line),
   };
 }
 
 /** 🔁️ The devcontainer start/attach lifecycle against its language-agnostic fixture: the fontconfig document (jsdom XML
- * oracle), architecture and release-asset selection (lodash oracle), dashboard attach, GitKraken workspace states and the
- * create / complete / set calls on a checkout with a submodule, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
+ * oracle), architecture and release-asset selection (lodash oracle), dashboard attach without alternate control planes, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
  * that never issues a destructive command, and dashboard-only attach through a recording host. */
 export async function testDevcontainerLifecycle(workspace: string, generated: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
@@ -36,18 +33,10 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   const aliases = Object.fromEntries([...document.querySelectorAll("fontconfig > alias")].map(alias => [alias.querySelector("family")!.textContent, [...alias.querySelectorAll("prefer > family")].map(family => family.textContent)]));
   assert.deepEqual(aliases, fixture.fontconfig.aliases);
   assert.ok([...document.querySelectorAll("fontconfig > match")].every(match => match.textContent?.includes(fixture.fontconfig.emojiFamily)));
-  for (const row of fixture.architectures) assert.deepEqual(toolArchitectures(row.arch), { debian: row.debian, f3d: row.f3d, gk: row.gk }, row.arch);
+  for (const row of fixture.architectures) assert.deepEqual(toolArchitectures(row.arch), { debian: row.debian, f3d: row.f3d }, row.arch);
   for (const row of fixture.releaseCases) {
     assert.equal(releaseAssetUrl(fixture.release, row.suffix), row.url, row.suffix);
     assert.equal(lodash.find(fixture.release.assets, (asset: { name: string }) => lodash.endsWith(asset.name, row.suffix))?.browser_download_url ?? null, row.url);
-  }
-  for (const row of fixture.gitKrakenInfo) assert.equal(gitKrakenWorkspaceState(row.info), row.state, row.info);
-  for (const row of fixture.gitKrakenWorkspace.cases) {
-    const checkout = mkdtempSync(join(generated, "gk-")), fill = (text: string) => text.replaceAll(`{workspace}/${fixture.gitKrakenWorkspace.submodule}`, join(checkout, fixture.gitKrakenWorkspace.submodule)).replaceAll("{workspace}", checkout);
-    writeFileSync(join(checkout, ".gitmodules"), `[submodule "${fixture.gitKrakenWorkspace.submodule}"]\n\tpath = ${fixture.gitKrakenWorkspace.submodule}\n`);
-    const host = recordingHost((command, args) => (command === "gk" && args[0] === "auth" ? { status: row.authenticated ? 0 : 1 } : command === "gk" && args[1] === "info" ? { stdout: fill(row.info) } : command === "git" && args.includes("--get-regexp") ? { stdout: `submodule.${fixture.gitKrakenWorkspace.submodule}.path ${fixture.gitKrakenWorkspace.submodule}\n` } : {}));
-    configureGitKrakenWorkspace(host, { workspace: checkout, home: checkout, user: "vscode", env: { SEMIO_GITKRAKEN_WORKSPACE_NAME: row.name }, arch: "x64" });
-    assert.deepEqual(host.calls.filter((call) => call[0] === "gk" && call[1] === "ws" && call[2] !== "info").map((call) => call.slice(1).join(" ")), row.expected.map(fill), row.id);
   }
   assert.deepEqual(missingSafeDirectories(fixture.safeDirectories.listed, fixture.safeDirectories.required), fixture.safeDirectories.missing);
   const once = withSshAgentShellBlock("export PATH=$PATH\n");
@@ -89,7 +78,7 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
     assert.deepEqual(hooks.lines, [message]);
   }
 
-  console.log("✅️ Devcontainer lifecycle: fontconfig (jsdom XML), tool selection (lodash), dashboard-only attach, GitKraken states + workspace calls, safe.directory, Claude auth storage, start without destructive commands, IDE controls retired PASS");
+  console.log("✅️ Devcontainer lifecycle: fontconfig (jsdom XML), tool selection (lodash), dashboard-only attach, safe.directory, Claude auth storage, start without destructive commands, IDE controls retired PASS");
 }
 
 /** 🎛️ Checks the language-neutral retirement fixture and records attach behavior with independent lodash predicates. */
@@ -105,9 +94,14 @@ export async function testDevcontainerDashboardOwnership(workspace: string): Pro
   const native = readFileSync(join(workspace, fixture.dashboardOnly.nativeBootstrap.path), "utf8");
   for (const token of fixture.dashboardOnly.nativeBootstrap.forbiddenTokens) assert.equal(native.includes(token), false, token);
   assert.equal(container.mounts.some((mount: string) => /(?:cursor|antigravity|vscode|windsurf)-server/u.test(mount)), false);
-  for (const cli of fixture.dashboardOnly.forbiddenPrograms) {
+  for (const state of fixture.dashboardOnly.forbiddenState) {
+    assert.equal(PERSISTED_HOME_DIRECTORIES.includes(state as typeof PERSISTED_HOME_DIRECTORIES[number]), false, state);
+    assert.equal(container.mounts.some((mount: string) => mount.includes(state)), false, state);
+  }
+  assert.equal("SEMIO_GITKRAKEN_WORKSPACE_NAME" in container.containerEnv, false);
+  for (const mode of fixture.dashboardOnly.attachModes) for (const cli of fixture.dashboardOnly.forbiddenPrograms) {
     const attach = recordingHost((command) => command === "which" ? { stdout: `/usr/bin/${cli}\n` } : {});
-    await devcontainerAttach(attach, { workspace, home: workspace, user: "vscode", env: { SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL: "1", TERM_PROGRAM: cli, VSCODE_IPC_HOOK_CLI: "/tmp/editor.sock" }, arch: "x64" });
+    await devcontainerAttach(attach, { workspace, home: workspace, user: "vscode", env: { ...(mode.skipTools ? { SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL: "1" } : {}), TERM_PROGRAM: cli, VSCODE_IPC_HOOK_CLI: "/tmp/editor.sock" }, arch: "x64" });
     const forbidden = (call: string[]) => fixture.dashboardOnly.forbiddenPrograms.includes(call[0]) || call.some((argument) => fixture.dashboardOnly.forbiddenArgs.includes(argument));
     assert.deepEqual(attach.calls.filter(forbidden), []);
     assert.deepEqual(lodash.filter(attach.calls, (call: string[]) => lodash.includes(fixture.dashboardOnly.forbiddenPrograms, call[0]) || lodash.some(call, (argument: string) => lodash.includes(fixture.dashboardOnly.forbiddenArgs, argument))), []);

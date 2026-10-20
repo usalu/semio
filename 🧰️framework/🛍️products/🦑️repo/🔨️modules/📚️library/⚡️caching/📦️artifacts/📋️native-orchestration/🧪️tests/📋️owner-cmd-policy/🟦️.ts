@@ -2,7 +2,8 @@ import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
-import type { ClassDeclaration, ClassElement, FunctionDeclaration, IfStatement, MethodDeclaration, Statement } from "typescript";
+import type { FunctionDeclaration, IfStatement, Node, Statement } from "typescript";
+import { readRegisteredTestRoute } from "../../../../../🧪️tests/🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import * as toml from "@iarna/toml";
@@ -83,7 +84,7 @@ test("native progress follows the declared owner and preserves independent child
   const workspace=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📋️owner-cmd-policy/🔣️.json"),"utf8")).cases.find((row:{classification:string})=>row.classification==="workspace");
   const manifest=join(root,workspace.manifest),cwd=join(root,workspace.cwd);
   const {build}=await import("esbuild");
-  const compiled=await build({stdin:{contents:`setTimeout(()=>console.log("[DEBUG] interactive-ready"),${corpus.durationMs});`,loader:"js"},write:false,platform:"node",format:"esm"});
+  const compiled=await build({stdin:{contents:`setTimeout(()=>console.log("interactive-ready"),${corpus.durationMs});`,loader:"js"},write:false,platform:"node",format:"esm"});
   const code=compiled.outputFiles[0]!.text;
   const collect=async(args:string[],environment:NodeJS.ProcessEnv)=>{
     const process=Bun.spawn(args,{cwd:root,env:environment,stdout:"pipe",stderr:"pipe"});
@@ -97,16 +98,18 @@ test("native progress follows the declared owner and preserves independent child
     const row=corpus.cases[index],result=observed[index]!;
     writeFileSync(join(output,`${row.id}.stdout.log`),result.stdout);writeFileSync(join(output,`${row.id}.stderr.log`),result.stderr);
     expect(result.status,result.stderr).toBe(0);
-    expect(result.stdout.split(/\r?\n/).filter(line=>line.startsWith("[DEBUG] interactive-ready")).join("\n")+"\n").toBe(oracle.stdout);
+    expect(result.stdout.split(/\r?\n/).filter(line=>line.startsWith("interactive-ready")).join("\n")+"\n").toBe(oracle.stdout);
     expect(result.stderr.includes("[native:owner-command] running elapsedMs="),row.id).toBe(row.wrapperProgress);
   }
 },180000);
 
 test("dashboard-selected owner tests allocate their output without manual environment setup", async () => {
   const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8")),ts=(await import("typescript")).default;
-  const script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts"),source=ts.createSourceFile(script,readFileSync(script,"utf8"),ts.ScriptTarget.Latest,true);
-  const testScript=source.statements.find((node:Statement):node is ClassDeclaration=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript"),runMethod=testScript?.members.find((node:ClassElement):node is MethodDeclaration=>ts.isMethodDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text==="run");
-  const selected=runMethod?.body?.statements.find((node:Statement):node is IfStatement=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === "native-owner-command-policy"');
+  const family=readRegisteredTestRoute(root,corpus.artifactEnvironment.route),source=ts.createSourceFile(family.path,family.text,ts.ScriptTarget.Latest,true);
+  const found:IfStatement[]=[];
+  const find=(node:Node):void=>{if(ts.isIfStatement(node)&&node.expression.getText(source)===`segments[0] === "${corpus.artifactEnvironment.route}"`)found.push(node);ts.forEachChild(node,find);};
+  find(source);
+  const selected=found[0];
   if(selected===undefined)throw new Error("The dashboard-selected owner-test route is missing");
   const environmentPath=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),environmentSyntax=ts.createSourceFile(environmentPath,readFileSync(environmentPath,"utf8"),ts.ScriptTarget.Latest,true),environmentDeclaration=environmentSyntax.statements.find((node:Statement):node is FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="repoTestArtifactEnvironment");
   if(environmentDeclaration===undefined)throw new Error("repoTestArtifactEnvironment is missing");
@@ -115,8 +118,8 @@ test("dashboard-selected owner tests allocate their output without manual enviro
   for(const compile of compilers){
     const allocate=new Function("resolve","mkdirSync",compile(environmentSource)+";return repoTestArtifactEnvironment;")(resolve,()=>{});
     let observed:NodeJS.ProcessEnv|undefined;
-    const run=new Function("process","resolveTestLevel","join","repoTestArtifactEnvironment","runRepositoryTestCommand",compile(`async function execute(segments:string[]){${selected.getText(source)}}`)+";return execute;")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,{}),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});
-    await run.call({repoRoot:root},[corpus.artifactEnvironment.route]);
+    const run=new Function("process","resolveTestLevel","join","repoTestArtifactEnvironment","runRepositoryTestCommand",compile(`async function execute(context:{repoRoot:string},segments:string[]){${selected.getText(source)}}`)+";return execute;")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,{}),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});
+    await run({repoRoot:root},[corpus.artifactEnvironment.route]);
     expect(observed?.SEMIO_TEST_ARTIFACT_DIR).toBe(resolve(root,corpus.artifactEnvironment.defaultRelativeRoot,corpus.artifactEnvironment.route));
   }
 });
@@ -132,8 +135,8 @@ test("actual native receiving command refuses a different original caller comman
   const started = Date.now(), artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifacts) throw Error("Caller-owned ticket output required");
   const output = mkdtempSync(join(artifacts, "native-capability-")), row = corpus.cases.find(row => row.classification === "workspace")!;
-  const manifest = row.manifest!, cwd = row.cwd!, requestedManifest = relative(root, join(output, "unacquired", "Cargo.toml")), code = 'console.log("[DEBUG] foreign acquisition occurred")';
-  const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("[DEBUG] original command")'], output, 15000, started,"prototype");
+  const manifest = row.manifest!, cwd = row.cwd!, requestedManifest = relative(root, join(output, "unacquired", "Cargo.toml")), code = 'console.log("foreign acquisition occurred")';
+  const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("original command")'], output, 15000, started,"prototype");
   const oracle = Bun.spawnSync(["node", "--eval", 'console.log(JSON.stringify(JSON.stringify(JSON.parse(process.argv[1]).capabilities.command.arguments) === JSON.stringify(["--eval",process.argv[2]])))', wire, code]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toBe(false);
   const observations = ["different-command", "missing-child", "zero-child"].map(id => {

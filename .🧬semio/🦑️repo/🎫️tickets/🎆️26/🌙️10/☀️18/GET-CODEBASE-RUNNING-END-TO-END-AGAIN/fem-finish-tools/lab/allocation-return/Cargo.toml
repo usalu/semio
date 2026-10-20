@@ -1,0 +1,8 @@
+[package]
+name = "semio-framework-value-allocation-return"
+version = "0.1.0"
+edition = "2021"
+[lib]
+path = "@REPO@/🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🦀️.rs"
+[dependencies]
+semio-framework-value-control-contract = { path = "../control-contract" }

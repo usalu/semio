@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { operationEntityId } from "../../🧬️schema/🪪️entity-id/🟦️.ts";
-import fixture from "../../🧫️fixtures/🪪️entity-id/🔣️.json";
+import fixture from "../🧫️fixtures/🪪️entity-id/🔣️.json";
 
 test("operation entity authority distinguishes writers and replays the same admission", () => {
   const ids = new Set<string>();

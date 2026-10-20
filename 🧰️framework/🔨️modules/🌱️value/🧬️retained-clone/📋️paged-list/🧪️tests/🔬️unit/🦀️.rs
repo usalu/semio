@@ -11,15 +11,15 @@ use std::{
 };
 
 fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
-    let copy=work.max(cursor.next_close_copy_byte_demand()?);
-    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy)?, maximum_release_bytes: cursor.next_close_release_byte_demand()?, maximum_depth: cursor.next_close_depth_demand()? };
+    let d=cursor.close_demands(work)?;
+    let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes)?,d);
     let step = cursor.close_step(grant)?;
     assert!(step.progress().fits(grant));
     Ok(step)
 }
 
 fn retire_fixture<T: RetireOwned>(owner: &mut crate::retirement::controlled::ControlledRetirement<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
-    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: work, maximum_capacity_bytes: owner.next_capacity_byte_demand(work)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()? };
+    let d=owner.selected_demand(work)?;let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(owner.selected_demand(grant.maximum_copy_bytes)?,d);
     let step = owner.step(grant)?;
     assert!(step.progress().fits(grant));
     Ok(step)
@@ -83,6 +83,7 @@ struct DropProbeCursor {
 }
 
 impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<DropProbe>(self.output.is_some(),&self.source,body)}
     fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
 
@@ -154,6 +155,7 @@ struct NonconformingChildCursor {
 impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
     fn output_ready(&self) -> bool { false }
     fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{assert!(self.closing,"fixture close must begin before its quote");RetainedCloneBinding::close_demand(&self.source,body)}
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingChild>()},depth:1,..Default::default()})}
 
@@ -211,6 +213,7 @@ struct NonconformingRetirementChildCursor {
 impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetirementChildCursor {
     fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{assert!(self.closing,"fixture close must begin before its quote");if !self.reported{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.source,body)}}
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingRetirementChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingRetirementChild>()},depth:1,..Default::default()})}
 
@@ -283,6 +286,7 @@ impl RetainedClone for ReleaseProbe {
 }
 
 impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
+    fn close_demands(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
     fn output_ready(&self) -> bool { self.0[1] == 0 && self.0[0] != 0 }
     fn close_started(&self) -> bool { self.0[1] != 0 }
 
@@ -387,6 +391,7 @@ struct InsufficientScaffoldChildCursor {
 impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChildCursor {
     fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{assert!(self.closing,"fixture close must begin before its quote");let mut demand=if self.output.is_some(){crate::RetirementDemand{depth:1,..Default::default()}}else{RetainedCloneBinding::close_demand(&self.source,body)?};demand.release_bytes=demand.release_bytes.max(128);Ok(demand)}
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,InsufficientScaffoldChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<InsufficientScaffoldChild>()},depth:1,..Default::default()})}
 
@@ -523,7 +528,7 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
         }
         assert!(close_turns < 100_000, "spent cursor close terminates");
     }
-    assert_eq!(close_turns,9,"a spent cursor separately retires its original alias, typed lease frame, and source binding before terminal closure");
+    assert_eq!(close_turns,8,"a spent cursor separately retires its original alias, directly admitted native lease frame, and source binding before terminal closure");
     let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
     let mut retirement_turns = 0usize;
     while !retirement.terminal_is_empty() {
@@ -610,7 +615,7 @@ fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
     let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
         bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
-        close_fixture(&mut cursor, 8, 4096).expect("insufficient scaffold cursor close");
+        let step=close_fixture(&mut cursor, 8, 4096).expect("insufficient scaffold cursor close");
     }
     drop(source);
 }
@@ -638,7 +643,7 @@ fn retained_derive_refuses_scaffold_grant_that_cannot_release_field() {
     let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
         bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
-        close_fixture(&mut cursor, 8, 4096).expect("derived insufficient scaffold cursor close");
+        let step=close_fixture(&mut cursor, 8, 4096).expect("derived insufficient scaffold cursor close");
     }
     drop(source);
 }

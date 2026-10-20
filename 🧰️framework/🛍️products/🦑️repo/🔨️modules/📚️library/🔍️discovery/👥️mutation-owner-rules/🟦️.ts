@@ -1,5 +1,5 @@
-import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 
 /** 🌳️ Level descriptor: fixed allowlist or wildcard (`*` = any emoji-prefixed slug dir). */

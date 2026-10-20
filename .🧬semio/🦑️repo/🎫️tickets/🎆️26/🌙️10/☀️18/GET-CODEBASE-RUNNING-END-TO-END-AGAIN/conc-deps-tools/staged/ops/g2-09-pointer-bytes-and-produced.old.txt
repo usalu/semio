@@ -1,0 +1,1 @@
+next=sealConcurrentPointerV1(previous,scope,generation,switched);

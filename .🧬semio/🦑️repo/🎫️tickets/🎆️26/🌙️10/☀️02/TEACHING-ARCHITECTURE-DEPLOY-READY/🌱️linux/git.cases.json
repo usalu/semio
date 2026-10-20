@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "plan": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-name",
+      "accepted": false
+    },
+    {
+      "id": "wrong-volume",
+      "accepted": false
+    },
+    {
+      "id": "old-id",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "accepted": false
+    },
+    {
+      "id": "oversized",
+      "accepted": false
+    },
+    {
+      "id": "wrong-head-binding",
+      "accepted": false
+    }
+  ],
+  "path": [
+    {
+      "path": ".git/HEAD",
+      "accepted": true
+    },
+    {
+      "path": ".git/index",
+      "accepted": true
+    },
+    {
+      "path": ".git/config",
+      "accepted": true
+    },
+    {
+      "path": ".git/packed-refs",
+      "accepted": true
+    },
+    {
+      "path": ".git/refs/heads/main",
+      "accepted": true
+    },
+    {
+      "path": ".git/objects/pack/pack-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.pack",
+      "accepted": true
+    },
+    {
+      "path": ".semio-private/git.json",
+      "accepted": true
+    },
+    {
+      "path": ".git/hooks/pre-commit",
+      "accepted": false
+    },
+    {
+      "path": ".git/refs/replace/a",
+      "accepted": false
+    },
+    {
+      "path": ".git/../config",
+      "accepted": false
+    },
+    {
+      "path": ".git/objects/aa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": false
+    },
+    {
+      "path": "source.ts",
+      "accepted": false
+    }
+  ],
+  "proof": [
+    {
+      "id": "valid",
+      "accepted": true
+    },
+    {
+      "id": "wrong-head",
+      "accepted": false
+    },
+    {
+      "id": "wrong-time",
+      "accepted": false
+    },
+    {
+      "id": "wrong-source",
+      "accepted": false
+    },
+    {
+      "id": "guest-dirty-differs",
+      "accepted": true
+    },
+    {
+      "id": "not-guest",
+      "accepted": false
+    },
+    {
+      "id": "command-failed",
+      "accepted": false
+    },
+    {
+      "id": "missing-command",
+      "accepted": false
+    },
+    {
+      "id": "wrong-manifest",
+      "accepted": false
+    },
+    {
+      "id": "wrong-command",
+      "accepted": false
+    },
+    {
+      "id": "wrong-environment",
+      "accepted": false
+    },
+    {
+      "id": "invalid-dirty-type",
+      "accepted": false
+    },
+    {
+      "id": "wrong-dirty-observation",
+      "accepted": false
+    }
+  ]
+}

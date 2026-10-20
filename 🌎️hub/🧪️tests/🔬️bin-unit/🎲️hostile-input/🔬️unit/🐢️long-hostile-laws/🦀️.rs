@@ -157,7 +157,7 @@ use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture
         let author = issue_test_session(&state, "creation-author@example.test").await;
         let peer = issue_test_session(&state, "creation-peer@example.test").await;
         let spectator = issue_test_session(&state, "creation-spectator@example.test").await;
-        let space_id = create_space_for_test(&state, &author.user_id, "Artifact Creation", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Artifact Creation", directory::os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         upsert_member_for_test(&state, &space_id, "creation-author@example.test", DirectorySpaceRole::Author).await;
         upsert_member_for_test(&state, &space_id, "creation-peer@example.test", DirectorySpaceRole::Author).await;
         upsert_member_for_test(&state, &space_id, "creation-spectator@example.test", DirectorySpaceRole::Spectator).await;
@@ -253,7 +253,7 @@ use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture
             session_kind: AuthSessionKind::DevelopmentLocal,
             device_instance_id: "admin-device".into(),
         };
-        let rows = (0..ADMIN_PAGE_MAX).map(|index| os_directory::UserView { id: format!("user:{index}:{}", "i".repeat(4_000)), email: format!("{index}@{}", "e".repeat(4_000)), display_name: "n".repeat(4_000), created_at_ms: 0 }).collect();
+        let rows = (0..ADMIN_PAGE_MAX).map(|index| directory::os_directory::UserView { id: format!("user:{index}:{}", "i".repeat(4_000)), email: format!("{index}@{}", "e".repeat(4_000)), display_name: "n".repeat(4_000), created_at_ms: 0 }).collect();
         let page = admin_fit_page(rows, false, 7, |rows| admin_cursor_encode(&cursor_key, &principal, 2, rows.len())).expect("byte-bounded user page");
         assert!(page.rows.len() < ADMIN_PAGE_MAX);
         assert!(page.next_cursor.is_some());
@@ -278,7 +278,7 @@ use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture
         let view = SpaceView {
             id: "space:one".into(),
             name: "Space".into(),
-            kind: os_directory::DirectorySpaceKind::Studio,
+            kind: directory::os_directory::DirectorySpaceKind::Studio,
             visibility: DirectorySpaceVisibility::Private,
             owner_user_id: "user:owner".into(),
             role: None,
@@ -294,7 +294,7 @@ use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture
         assert!(detail.members.next_cursor.is_some());
         assert!(semio_framework_pack_json::to_json_string(&detail).len() <= ADMIN_RESPONSE_MAX_BYTES);
 
-        let oversized = vec![os_directory::UserView { id: "i".repeat(ADMIN_RESPONSE_MAX_BYTES), email: "e@example.com".into(), display_name: "name".into(), created_at_ms: 0 }];
+        let oversized = vec![directory::os_directory::UserView { id: "i".repeat(ADMIN_RESPONSE_MAX_BYTES), email: "e@example.com".into(), display_name: "name".into(), created_at_ms: 0 }];
         assert_eq!(admin_fit_page(oversized, false, 7, |_| Ok("a".repeat(84))), Err(StatusCode::PAYLOAD_TOO_LARGE));
     }
 
@@ -400,7 +400,7 @@ use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture
     async fn artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests() {
         let state = test_state().await;
         for index in 0..5 {
-            let space_id = create_space_for_test(&state, "seed", &format!("CAS {index}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let space_id = create_space_for_test(&state, "seed", &format!("CAS {index}"), directory::os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
             let (document_id, _) = seed_genesis_document_for_test(&state, "cas-maintenance-author@example.com", &space_id, &format!("cas-maintenance-{index}")).await;
             publish_checkpoint_for_test(&state, &space_id, &document_id).await;
         }

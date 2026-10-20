@@ -451,7 +451,7 @@ fn retained_sync_hello_production_census_has_zero_blocking_waits_and_no_eager_fo
 
 #[semio_framework_async_macros::async_test]
 async fn hello_shared_actor_retirement_releases_actual_final_allocation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📝️actor-retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📝️actor-retirement/🔣️.json")).unwrap();
     for row in fixture["actors"].as_array().unwrap() {
         let text = row.as_str().unwrap();
         let mut original = String::with_capacity(fixture["reservedTextBytes"].as_u64().unwrap() as usize);
@@ -477,5 +477,4 @@ async fn hello_shared_actor_retirement_releases_actual_final_allocation() {
         assert!(!closed);
         assert_eq!((born, released), (0, 0));
     }
-    eprintln!("[DEBUG] Sync hello actor retirement preserves sibling pointers and physically releases original text and lease backing once");
 }

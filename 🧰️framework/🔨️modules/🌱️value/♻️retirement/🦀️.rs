@@ -13,6 +13,10 @@ mod original_result;
 pub trait RetireOwned: Send + 'static {
     fn retirement(self) -> Box<dyn RetirementCursor>;
     fn retirement_birth_bytes(&self) -> Option<usize> { None }
+    /// 🏡️ Quotes a native cursor that drains this same initialized shared allocation in place.
+    fn shared_original_birth_bytes(&self)->Option<usize> where Self:Sized+Sync{None}
+    /// 🏠️ Admits one exact shared original without extracting its complete inline value; refusal retains the original slot.
+    fn shared_original_retirement(_original:&mut Option<arc_custody::original::SharedOriginal<Self>>,_grant:RetainedCloneGrant)->Result<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> where Self:Sized+Sync{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place shared original retirement"))}
     /// 🔐️ Whether this owner retires through a controlled cursor whose births and releases are priced up front. Required, never defaulted: an owner that forgot to declare it was refused by every factory that demands controlled retirement, and the refusal only surfaced after a fixture deadline.
     fn controlled_retirement_supported() -> bool;
     /// 🧮️ Declares an element's complete inline payload work before a collection discards it.
@@ -183,7 +187,7 @@ pub fn bytes(original:Vec<u8>)->Box<dyn RetirementCursor>{Box::new(Bytes(Manuall
 /// ♻️ Drains trivial elements as bounded logical work; the original backing allocation remains whole until terminal release.
 struct Collection<T: RetireOwned>(ManuallyDrop<Vec<T>>);
 impl<T: RetireOwned> RetirementCursor for Collection<T> {
-    fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:if !std::mem::needs_drop::<T>()&&!self.0.is_empty(){T::retirement_element_copy_bytes()}else{0},capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original collection child lacks a birth quote"))?,release_bytes:if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0},depth:usize::from(!self.terminal_is_empty())})}
+    fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.next_selected_work_byte_demand(body)?,capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original collection child lacks a birth quote"))?,release_bytes:if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0},depth:usize::from(!self.terminal_is_empty())})}
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
@@ -497,7 +501,7 @@ struct PlainArray<T: RetireOwned, const N: usize> {
     remaining: usize,
 }
 impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
-    fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:if self.remaining!=0{T::retirement_element_copy_bytes()}else{0},depth:usize::from(self.remaining!=0),..Default::default()})}
+    fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.next_selected_work_byte_demand(body)?,capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original array child lacks a birth quote"))?,depth:usize::from(self.remaining!=0),..Default::default()})}
 
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {

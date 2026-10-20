@@ -623,7 +623,7 @@ fn unhex(text: &str) -> Option<Vec<u8>> {
     (0..text.len() / 2).map(|index| u8::from_str_radix(text.get(index * 2..index * 2 + 2)?, 16).ok()).collect()
 }
 
-/// 📜 Reads the log files of a session in order, for `semio logs`; it follows the writer across files.
+/// 📜 Reads the log files of a session in order, for `repo dashboard logs`; it follows the writer across files.
 pub struct LogReader {
     directory: PathBuf,
     stem: String,

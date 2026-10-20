@@ -1,0 +1,25 @@
+{
+ "files": {
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🐧️linux/🧫️fixtures/🔣️.json": "5c296bb52abd.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🟦️.ts": "fc6ad0fc9417.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🔒️sites/🟦️.ts": "820e85331647.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🔒️sites/🧫️fixtures/🔣️.json": "4cd72dc12067.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🟦️.ts": "5048b8e07b61.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🧫️fixtures/🔣️.json": "0662e917e440.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🧪️tests/🟦️.ts": "a26aeeaaef82.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🧪️tests/🧫️fixtures/🔣️.json": "7ff40fea934b.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts": "3b1c9686b9df.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🧫️fixtures/🔣️.json": "6eec2c9c2110.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🧪️tests/🟦️.ts": "910b45a9ba3c.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🧪️tests/🧫️fixtures/🔣️.json": "7cc252dfa4c6.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🪟️free-space/🟦️.ts": "c72a50a1ab3d.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts": "bcefce58f9f8.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🧫️fixtures/🔣️.json": "756cc6ba06c6.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🔗️shims/🟦️.ts": "56a316fae39b.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🔗️shims/🧫️fixtures/🔣️.json": "e280da80e440.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/📥️strategies/🟦️.ts": "a5724fa600ff.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/📥️strategies/🧫️fixtures/🔣️.json": "013e47dc93d3.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️shim/🟦️.ts": "8d27541825ee.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️shim/🧫️fixtures/🔣️.json": "c5154cc30805.json"
+ }
+}

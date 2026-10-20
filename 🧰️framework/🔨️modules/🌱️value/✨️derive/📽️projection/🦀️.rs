@@ -3,6 +3,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident,quote};
 use syn::{Data,DeriveInput,Fields,Member,Index,parse_quote};
 pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
+ crate::retained_clone::require_aligned_fields(input,"SnapshotProjection")?;
  let value_crate=crate::component::declared_value_crate(input)?;
  let name=&input.ident;let visibility=&input.vis;let cursor=format_ident!("{}SnapshotProjection",name);let active=format_ident!("{}SnapshotProjectionField",name);
  let Data::Struct(data)=&input.data else{return Err(syn::Error::new_spanned(name,"SnapshotProjection requires a record; variant payloads must have sealed immutable row roots"));};
@@ -16,7 +17,7 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
   #visibility struct #cursor #generics #where_clause{
    binding:Option<#value_crate::retained_clone::RetainedCloneBinding>,
    active: ::std::mem::ManuallyDrop<Option<#active #ty_generics>>,
-   candidate: ::std::mem::MaybeUninit<#name #ty_generics>,
+   candidate: ::std::mem::ManuallyDrop<Option<Box<::std::mem::MaybeUninit<#name #ty_generics>>>>,
    retirement: #value_crate::retained_clone::RetainedCloneClose,
    index:usize,initialized:usize,close_index:usize,field_staged:bool,assembled:bool,output_present:bool,closing:bool,
   }
@@ -27,12 +28,13 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
    fn receipt(mut p: #value_crate::retained_clone::RetainedCloneProgress,copy:usize)->#value_crate::retained_clone::RetainedCloneProgress{p.copied_items=1;p.copied_bytes+=copy;p}
   }
   impl #impl_generics #value_crate::snapshot_projection::SnapshotProjection for #name #ty_generics #where_clause{
+   type Output=Box<Self>;
    type Projection=#cursor #ty_generics;
-   fn projection_birth_demand()->#value_crate::RetirementDemand{#value_crate::RetirementDemand{copy_bytes: ::std::mem::size_of::<Self::Projection>()*2,depth:1,..Default::default()}}
+   fn projection_birth_demand()->#value_crate::RetirementDemand{#value_crate::RetirementDemand{copy_bytes: ::std::mem::size_of::<Self::Projection>()*2,capacity_bytes: ::std::mem::size_of::<Self>(),depth:1,..Default::default()}}
    fn begin_projection(grant: #value_crate::retained_clone::RetainedCloneGrant)->Result<(Self::Projection,#value_crate::retained_clone::RetainedCloneProgress),#value_crate::ValueError>{
     if !<Self as #value_crate::retirement::RetireOwned>::controlled_retirement_supported(){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::UnsupportedOwner,"immutable record fields have no controlled original retirement"));}
     let d=Self::projection_birth_demand();if !#value_crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::OwnershipLimit,"immutable record cursor birth is not funded"));}
-    Ok((#cursor{binding:None,active: ::std::mem::ManuallyDrop::new(None),candidate: ::std::mem::MaybeUninit::uninit(),retirement:Default::default(),index:0,initialized:0,close_index:0,field_staged:false,assembled:false,output_present:false,closing:false},#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+    Ok((#cursor{binding:None,active: ::std::mem::ManuallyDrop::new(None),candidate: ::std::mem::ManuallyDrop::new(Some(Box::<Self>::new_uninit())),retirement:Default::default(),index:0,initialized:0,close_index:0,field_staged:false,assembled:false,output_present:false,closing:false},#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
    }
   }
   impl #impl_generics #value_crate::snapshot_projection::SnapshotProjectionCursor<#name #ty_generics> for #cursor #ty_generics #where_clause{
@@ -41,7 +43,7 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
     if self.closing||self.assembled{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable record projection is closing or prepared"));}
     if !original.check_binding(&self.binding)?{return Ok(RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()});}
     if let Some(active)=self.active.as_ref(){return match active{
-     #(#active::#variants(field)=>{if self.field_staged{if !field.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"transferred original field still retains a child owner"));}return Ok(RetirementDemand{copy_bytes:Self::fixed(),release_bytes: ::std::mem::size_of::<#value_crate::snapshot_projection::ProjectionField<#types>>(),depth:1,..Default::default()});}let d=if field.ready(){field.take_demand()?}else{field.demands(original.project(#keys,|record|&record.#members),body)?};Self::nested(d,Self::fixed())},)*
+     #(#active::#variants(field)=>{if self.field_staged{if !field.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"transferred original field still retains a child owner"));}return Ok(RetirementDemand{copy_bytes:Self::fixed(),release_bytes: ::std::mem::size_of::<#value_crate::snapshot_projection::ProjectionField<#types>>(),depth:1,..Default::default()});}let d=if field.ready(){field.place_demand()?}else{field.demands(original.project(#keys,|record|&record.#members),body.saturating_sub(Self::fixed()))?};Self::nested(d,Self::fixed())},)*
     };}
     match self.index{
      #(#ranks=>Ok(RetirementDemand{copy_bytes: ::std::mem::size_of::<#value_crate::snapshot_projection::ProjectionField<#types>>()*2+Self::fixed(),capacity_bytes: ::std::mem::size_of::<#value_crate::snapshot_projection::ProjectionField<#types>>(),depth:1,..Default::default()}),)*
@@ -61,12 +63,12 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
     if self.field_staged{drop(self.active.take());self.field_staged=false;self.index+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}
     let child=Self::child(grant,Self::fixed());
     match self.active.as_mut().unwrap(){
-     #(#active::#variants(field)=>{if field.ready(){let Some((value,p))=field.take(child)?else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded original record field transfer was refused"));};unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut_ptr()).#members).write(value);}self.initialized+=1;self.field_staged=true;field.begin_close();Ok(RetainedCloneStep::Progress(Self::receipt(admit_retained_clone_progress(child,p,"original record field write")?,Self::fixed())))}else{let step=field.advance(original.project(#keys,|record|&record.#members),body,child)?;Ok(RetainedCloneStep::Progress(Self::receipt(admit_retained_clone_progress(child,step.progress(),"original record active field")?,Self::fixed()))) }},)*
+     #(#active::#variants(field)=>{if field.ready(){let target=unsafe{&mut *::std::ptr::addr_of_mut!((*self.candidate.as_mut().unwrap().as_mut_ptr()).#members).cast::<::std::mem::MaybeUninit<#types>>()};let Some(p)=field.place(target,child)?else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded original record field placement was refused"));};self.initialized+=1;self.field_staged=true;field.begin_close();Ok(RetainedCloneStep::Progress(Self::receipt(admit_retained_clone_progress(child,p,"original record field write")?,Self::fixed())))}else{let step=field.advance(original.project(#keys,|record|&record.#members),body.saturating_sub(Self::fixed()),child)?;Ok(RetainedCloneStep::Progress(Self::receipt(admit_retained_clone_progress(child,step.progress(),"original record active field")?,Self::fixed()))) }},)*
     }
    }
    fn ready(&self)->bool{!self.closing&&self.assembled&&self.output_present}
-   fn take_demand(&self)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{if !self.ready(){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"immutable record has no admitted output"));}Ok(#value_crate::RetirementDemand{copy_bytes: ::std::mem::size_of::<#name #ty_generics>()*2+Self::fixed(),depth:1,..Default::default()})}
-   fn take(&mut self,grant: #value_crate::retained_clone::RetainedCloneGrant)->Result<Option<(#name #ty_generics,#value_crate::retained_clone::RetainedCloneProgress)>,#value_crate::ValueError>{let d=self.take_demand()?;if !#value_crate::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None);}let output=unsafe{self.candidate.assume_init_read()};self.initialized=0;self.output_present=false;Ok(Some((output,#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
+   fn take_demand(&self)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{if !self.ready(){return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"immutable record has no admitted output"));}Ok(#value_crate::RetirementDemand{copy_bytes: ::std::mem::size_of::<Box<#name #ty_generics>>()*2+Self::fixed(),depth:1,..Default::default()})}
+   fn take(&mut self,grant: #value_crate::retained_clone::RetainedCloneGrant)->Result<Option<(Box<#name #ty_generics>,#value_crate::retained_clone::RetainedCloneProgress)>,#value_crate::ValueError>{let d=self.take_demand()?;if !#value_crate::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None);}let output=unsafe{self.candidate.take().unwrap().assume_init()};self.initialized=0;self.output_present=false;Ok(Some((output,#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
    fn begin_close(&mut self){self.closing=true;self.output_present=false;match self.active.as_mut(){#(Some(#active::#variants(field))=>field.begin_close(),)*None=>{}}}
    fn close_demands(&self,body:usize)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{
     use #value_crate::{ValueError,ValueRefusalKind,RetirementDemand};
@@ -74,6 +76,7 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
     if let Some(active)=self.active.as_ref(){return match active{#(#active::#variants(field)=>if field.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:Self::fixed(),release_bytes: ::std::mem::size_of::<#value_crate::snapshot_projection::ProjectionField<#types>>(),depth:1,..Default::default()})}else{Self::nested(field.close_demands(body.saturating_sub(Self::fixed()))?,Self::fixed())},)*};}
     if !self.retirement.is_empty(){return Self::nested(self.retirement.next_owner_demands::<()>(false,&None,body.saturating_sub(Self::fixed()))?,Self::fixed());}
     if self.close_index<self.initialized{return match self.close_index{#(#ranks=>{let copy=Self::fixed()+::std::mem::size_of::<#types>()*2;Self::nested(self.retirement.next_owner_demands::<#types>(true,&None,body.saturating_sub(copy))?,copy)},)*_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original partial record closure rank changed"))};}
+    if self.candidate.is_some(){return Ok(RetirementDemand{copy_bytes:Self::fixed(),release_bytes: ::std::mem::size_of::<#name #ty_generics>(),depth:1,..Default::default()});}
     self.retirement.next_owner_demands::<()>(false,&self.binding,body)
    }
    fn close_step(&mut self,grant: #value_crate::retained_clone::RetainedCloneGrant)->Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::ValueError>{
@@ -82,14 +85,15 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
     if let Some(active)=self.active.as_mut(){match active{#(#active::#variants(field)=>{if !field.terminal_is_empty(){let child=Self::child(grant,Self::fixed());let step=field.close_step(child)?;return Ok(RetainedCloneStep::Progress(Self::receipt(admit_retained_clone_close(child,step,field.terminal_is_empty(),"original active record field cancellation")?.progress(),Self::fixed())));}},)*}drop(self.active.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}
     if !self.retirement.is_empty(){let child=Self::child(grant,Self::fixed());let step=self.retirement.step_granted(child)?;return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress(),Self::fixed())));}
     if self.close_index<self.initialized{match self.close_index{
-     #(#ranks=>{let copy=Self::fixed()+::std::mem::size_of::<#types>()*2;let child=Self::child(grant,copy);let mut original=Some(unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut_ptr()).#members).read()});match self.retirement.begin_granted(&mut original,child){Ok(Some(step))=>{self.close_index+=1;return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress(),copy)));},Ok(None)=>{unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut_ptr()).#members).write(original.take().unwrap());}return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded original partial record field did not enter retirement"));},Err(error)=>{if let Some(original)=original.take(){unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut_ptr()).#members).write(original);}}else{self.close_index+=1;}let p=Self::receipt(error.retained_progress(),copy);return Err(error.with_retained_progress(p));}}},)*
+     #(#ranks=>{let copy=Self::fixed()+::std::mem::size_of::<#types>()*2;let child=Self::child(grant,copy);let mut original=Some(unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut().unwrap().as_mut_ptr()).#members).read()});match self.retirement.begin_granted(&mut original,child){Ok(Some(step))=>{self.close_index+=1;return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress(),copy)));},Ok(None)=>{unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut().unwrap().as_mut_ptr()).#members).write(original.take().unwrap());}return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded original partial record field did not enter retirement"));},Err(error)=>{if let Some(original)=original.take(){unsafe{::std::ptr::addr_of_mut!((*self.candidate.as_mut().unwrap().as_mut_ptr()).#members).write(original);}}else{self.close_index+=1;}let p=Self::receipt(error.retained_progress(),copy);return Err(error.with_retained_progress(p));}}},)*
      _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original partial record closure rank changed")),
     }}
+    if self.candidate.is_some(){drop(self.candidate.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}
     #value_crate::retained_clone::close_retained_binding(&mut self.binding,grant)
    }
-   fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.active.is_none()&&self.close_index==self.initialized&&self.retirement.is_empty()}
+   fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.active.is_none()&&self.candidate.is_none()&&self.close_index==self.initialized&&self.retirement.is_empty()}
   }
-  impl #impl_generics Drop for #cursor #ty_generics #where_clause{fn drop(&mut self){assert!(::std::thread::panicking()||self.binding.is_none()&&self.active.is_none()&&self.close_index==self.initialized&&self.retirement.is_empty(),"immutable record cursor retains original candidate owners");}}
+  impl #impl_generics Drop for #cursor #ty_generics #where_clause{fn drop(&mut self){assert!(::std::thread::panicking()||self.binding.is_none()&&self.active.is_none()&&self.candidate.is_none()&&self.close_index==self.initialized&&self.retirement.is_empty(),"immutable record cursor retains original candidate owners");}}
  })
 }
 

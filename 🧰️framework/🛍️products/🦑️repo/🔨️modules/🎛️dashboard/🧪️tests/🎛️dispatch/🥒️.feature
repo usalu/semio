@@ -62,3 +62,21 @@ Feature: Dashboard test dispatch retains the current execution context
     Then the actual owned test port runs the dispatch law file
     And the owner awaits its completion before returning
     And no native installation or test process is selected
+
+  Scenario: Human help names only the canonical dashboard entry
+    Given the shared human invocation prefix and exact interactive header
+    When native usage and keyboard help are rendered
+    Then every public dashboard verb uses repo dashboard
+    And obsolete semio and repeated dashboard prefixes are not advertised
+    And English and German keyboard help share the same canonical command header
+
+  Scenario: Static Source audits retain their actual assets without native compiler embedding
+    Given the exact production source paths for incremental rendering and localized labels
+    When the Source control checks each forbidden literal and the neutral positive and negative samples
+    Then its result agrees with the independent SQLite text oracle
+    And native tests retain the unchanged-screen and incremental rendering behavior checks
+
+  Scenario: An existing law file must actually be mounted by its selected library
+    Given a law file that exists outside the library explicit module graph
+    Then source dispatch refuses the absent mount
+    And a retirement loan fixture resolves from its real manifest to the exact loan domain

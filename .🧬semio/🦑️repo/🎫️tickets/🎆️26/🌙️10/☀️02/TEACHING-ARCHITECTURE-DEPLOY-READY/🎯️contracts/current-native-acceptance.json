@@ -1,0 +1,325 @@
+{
+  "version": 1,
+  "scope": "current-source-architecture-release-acceptance",
+  "observedAt": "2026-10-20T15:06:34.655Z",
+  "invocation": {
+    "executable": "repo",
+    "mode": "release",
+    "testLevelEnvironment": "SEMIO_TEST_LEVEL=quick",
+    "pathPlaceholders": {
+      "{workspaceRoot}": "actual execution workspace absolute root",
+      "{tag}": "one fresh source-coherent image tag",
+      "{output}": "fresh dedicated output directory"
+    }
+  },
+  "suites": [
+    {
+      "project": "@semio-tech/course",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/course:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/course",
+        "path": "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "d8a0d112ef4961d45fa3d501ea0bede679b03bdd0f8f4d173055d10fc9cc58c0"
+      }
+    },
+    {
+      "project": "@semio-tech/course-rs",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/course-rs:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/course-rs",
+        "path": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/📋️project.json",
+        "sha256": "00617210432ceccad9f1571d21aee7de1d677c8dbb99a1131a2db63a2bfecbb7"
+      }
+    },
+    {
+      "project": "@semio-tech/pets",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/pets:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/pets",
+        "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "91b72cbd96dbc04d8e1a230d0fa1add8cb75300be834360c3571e9f6686f1b71"
+      }
+    },
+    {
+      "project": "@semio-tech/pets-rs",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/pets-rs:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/pets-rs",
+        "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📋️project.json",
+        "sha256": "88dfa27c009b3e3942466437a94de97eed2e3752af485aa86d538d50a4531e3f"
+      }
+    },
+    {
+      "project": "@semio-tech/course-react",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/course-react:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/course-react",
+        "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "bf5855cc43ebd153bfd1430ad77984e973e6eaa881441748df18e094a183fe0a"
+      }
+    },
+    {
+      "project": "@semio-tech/pets-react",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/pets-react:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/pets-react",
+        "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "f2da267f6768be05bf7b27b177dbf98162d14054a6c3f185bdbd397955262805"
+      }
+    },
+    {
+      "project": "@semio-tech/course-tests-runs-rs",
+      "target": "test",
+      "argv": [
+        "run",
+        "@semio-tech/course-tests-runs-rs:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": false,
+      "manifest": {
+        "project": "@semio-tech/course-tests-runs-rs",
+        "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust/📋️project.json",
+        "sha256": "8abae8bb4b3b453770db876de1ea3d3839d10ef487961d02c4db6ac1f1eb27df"
+      }
+    },
+    {
+      "project": "@teaching/proctor",
+      "target": "test",
+      "argv": [
+        "run",
+        "@teaching/proctor:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@teaching/proctor",
+        "path": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+        "sha256": "efb9cbd2f7021861e83329bdb97c4a7d78cc0ab995b2703bdaa5d0e993303ec1"
+      }
+    },
+    {
+      "project": "@teaching/architecture-course",
+      "target": "test",
+      "argv": [
+        "run",
+        "@teaching/architecture-course:test",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@teaching/architecture-course",
+        "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325"
+      }
+    }
+  ],
+  "typechecks": [
+    {
+      "project": "@semio-tech/course-react",
+      "target": "typecheck",
+      "argv": [
+        "run",
+        "@semio-tech/course-react:typecheck",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/course-react",
+        "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "bf5855cc43ebd153bfd1430ad77984e973e6eaa881441748df18e094a183fe0a"
+      }
+    },
+    {
+      "project": "@semio-tech/pets",
+      "target": "typecheck",
+      "argv": [
+        "run",
+        "@semio-tech/pets:typecheck",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/pets",
+        "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "91b72cbd96dbc04d8e1a230d0fa1add8cb75300be834360c3571e9f6686f1b71"
+      }
+    },
+    {
+      "project": "@semio-tech/pets-react",
+      "target": "typecheck",
+      "argv": [
+        "run",
+        "@semio-tech/pets-react:typecheck",
+        "--configuration=release"
+      ],
+      "platform": "host-native",
+      "declared": true,
+      "manifest": {
+        "project": "@semio-tech/pets-react",
+        "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+        "sha256": "f2da267f6768be05bf7b27b177dbf98162d14054a6c3f185bdbd397955262805"
+      }
+    }
+  ],
+  "material": {
+    "project": "@teaching/proctor",
+    "target": "check",
+    "argv": [
+      "run",
+      "@teaching/proctor:check",
+      "--configuration=release",
+      "--",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🔣️.json"
+    ],
+    "platform": "host-native",
+    "declared": true,
+    "manifest": {
+      "project": "@teaching/proctor",
+      "path": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "efb9cbd2f7021861e83329bdb97c4a7d78cc0ab995b2703bdaa5d0e993303ec1"
+    }
+  },
+  "browserPreparation": {
+    "project": "@teaching/architecture-course",
+    "target": "ci-browser-prepare",
+    "argv": [
+      "run",
+      "@teaching/architecture-course:ci-browser-prepare",
+      "--configuration=release"
+    ],
+    "platform": "debian-linux-system-libraries",
+    "declared": true,
+    "manifest": {
+      "project": "@teaching/architecture-course",
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325"
+    }
+  },
+  "deployment": {
+    "project": "@teaching/architecture-course",
+    "target": "deploy-check",
+    "argv": [
+      "run",
+      "@teaching/architecture-course:deploy-check",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "{tag}"
+    ],
+    "platform": "native-linux-x64",
+    "declared": true,
+    "manifest": {
+      "project": "@teaching/architecture-course",
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325"
+    }
+  },
+  "offlineBundle": {
+    "project": "@teaching/architecture-course",
+    "target": "docker-stack-bundle",
+    "argv": [
+      "run",
+      "@teaching/architecture-course:docker-stack-bundle",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "{tag}",
+      "--out",
+      "{output}"
+    ],
+    "platform": "docker-host-with-existing-linux-amd64-image",
+    "declared": true,
+    "manifest": {
+      "project": "@teaching/architecture-course",
+      "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "22248dbb709ad7b7147ac768b2316690f955350c2bbf9dbb3546ed974b880325"
+    }
+  },
+  "outputs": {
+    "site": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/pages/course",
+    "bundle": [
+      "compose.yaml",
+      "Caddyfile",
+      ".env",
+      "README.txt",
+      "certificates/",
+      "proctor-image.tar"
+    ]
+  },
+  "export": {
+    "declaredTarget": null,
+    "requirement": "bounded authenticated transfer of exact same cohort, no registry push or production deployment required"
+  },
+  "uncertainties": [
+    {
+      "project": "@semio-tech/course-tests-runs-rs",
+      "reason": "registered owner and Cargo package verified; test target inferred, native graph confirmation required"
+    }
+  ],
+  "cohort": {
+    "required": [
+      "source revision and admitted source digest",
+      "platform/architecture",
+      "original release mode",
+      "terminal verdict per suite/typecheck/material/browser/deploy step",
+      "proctor receipt/executable digest",
+      "image ID/OCI labels/tag",
+      "pinned Caddy digest",
+      "site and offline bundle file hash roster",
+      "binary-only export provenance"
+    ],
+    "forbidEvidenceMixing": [
+      "host-current tests with old-private image",
+      "new frontend identity as proof of guest product source",
+      "cached verdict without matching declared inputs",
+      "bundle creation as substitute for deploy-check"
+    ]
+  }
+}

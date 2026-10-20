@@ -98,6 +98,9 @@ export async function testServiceReadiness(workspace: string, output: string,inv
     assert.ok(events.every((event, index) => event.timeoutMs === progress.timeoutMs && event.phase === "awaiting-ready-record" && (index === 0 || event.elapsedMs >= events[index - 1].elapsedMs + progress.intervalMs - 5)));
     await assert.rejects(() => api.waitForServiceReady(waiting, idle, new AbortController().signal, 0), /declared positive timeout/i);
     for (const row of progress.lines) for (const language of ["en", "de"]) assert.equal(api.serviceReadyProgressLine(row.owner, row.progress, language), row[language]);
-    for (const row of progress.languages) assert.equal(api.serviceReadyProgressLanguage(row.environment), row.language, JSON.stringify(row.environment));
+    for (const row of progress.languages) {
+      if (row.refusal === undefined) assert.equal(api.serviceReadyProgressLanguage(row.environment, () => []), row.language, JSON.stringify(row.environment));
+      else assert.throws(() => api.serviceReadyProgressLanguage(row.environment, () => []), new RegExp(row.refusal), JSON.stringify(row.environment));
+    }
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

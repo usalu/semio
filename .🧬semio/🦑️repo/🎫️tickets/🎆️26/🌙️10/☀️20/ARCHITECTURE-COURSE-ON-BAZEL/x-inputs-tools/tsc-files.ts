@@ -1,0 +1,14 @@
+import {createRequire} from "node:module";
+import {writeFileSync} from "node:fs";
+import {ROOT, PROJECT} from "./lib-inputs.ts";
+const ts = createRequire(ROOT + "/package.json")("typescript") as typeof import("typescript");
+const configPath = `${ROOT}/${PROJECT}/tsconfig.json`;
+const read = ts.readConfigFile(configPath, ts.sys.readFile);
+const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, `${ROOT}/${PROJECT}`, undefined, configPath);
+const t0 = Date.now();
+const program = ts.createProgram({rootNames: parsed.fileNames, options: {...parsed.options, noEmit: true, incremental: false, tsBuildInfoFile: undefined}});
+const files = program.getSourceFiles().map(f => f.fileName).filter(f => f.startsWith(ROOT + "/") && !f.includes("/node_modules/")).map(f => f.slice(ROOT.length + 1));
+const external = program.getSourceFiles().map(f => f.fileName).filter(f => f.includes("/node_modules/") || !f.startsWith(ROOT + "/"));
+console.error("ms", Date.now() - t0, "roots", parsed.fileNames.length, "workspace files", files.length, "external", external.length);
+writeFileSync(process.argv[2]!, files.sort().join("\n") + "\n");
+writeFileSync(process.argv[2]! + ".external", external.sort().join("\n") + "\n");

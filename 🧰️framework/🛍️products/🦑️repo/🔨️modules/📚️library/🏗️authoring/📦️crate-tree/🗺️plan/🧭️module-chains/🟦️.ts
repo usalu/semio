@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import type { RustModuleNode } from "../../🌳️module-tree/🟦️.ts";
-import { rustTokenPairs, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokenPairs, rustTokens } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { flattenUse } from "../../🧬️mutation-families/🌳️use-tree/🟦️.ts";
 
 /** 🧭️ Absolute directory that nested `#[path]` attributes of an inline module resolve against. */

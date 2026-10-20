@@ -1,0 +1,244 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "navigation",
+    "forms",
+    "history"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "navigation": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/Navigation"
+      }
+    },
+    "forms": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "$ref": "#/$defs/Form"
+      }
+    },
+    "history": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/History"
+      }
+    }
+  },
+  "$defs": {
+    "Navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "directory",
+        "query",
+        "history",
+        "root",
+        "action",
+        "entry",
+        "expectedKind",
+        "expectedPath"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "query": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "history": {
+          "type": "boolean"
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "action": {
+          "enum": [
+            "parent",
+            "activate"
+          ]
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "directory"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "directory": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        },
+        "expectedKind": {
+          "enum": [
+            "List",
+            "Load",
+            "Recovery",
+            "RecoveryList",
+            "HistoryPage"
+          ]
+        },
+        "expectedPath": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "Form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "directory",
+        "path",
+        "value",
+        "history",
+        "busy",
+        "observed",
+        "expectedKind",
+        "expectedPath"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "action": {
+          "enum": [
+            "create-file",
+            "create-directory",
+            "rename",
+            "retain"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "history": {
+          "type": "boolean"
+        },
+        "busy": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "expectedKind": {
+          "enum": [
+            "CreateFile",
+            "CreateDirectory",
+            "Rename",
+            "Retain",
+            "ReadOnly",
+            "Busy",
+            "InvalidPath",
+            "MissingObservation",
+            "ConfirmRetain"
+          ]
+        },
+        "expectedPath": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "History": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "active",
+        "value",
+        "busy",
+        "expected",
+        "action",
+        "pending"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "active": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "busy": {
+          "type": "boolean"
+        },
+        "expected": {
+          "enum": [
+            "EmptyHistory",
+            "ConfirmHistory",
+            "Confirmed",
+            "Busy",
+            "PendingHistory"
+          ]
+        },
+        "action": {
+          "enum": [
+            "reconcile",
+            "archive"
+          ]
+        },
+        "pending": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{8}$"
+        }
+      }
+    }
+  }
+}

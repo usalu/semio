@@ -12,7 +12,10 @@
     "unitWorkspace",
     "borrowedObservations",
     "valueNativeRoutes",
-    "sourceDispatch"
+    "sourceDispatch",
+    "sourceAudit",
+    "lawMounts",
+    "installedBattles"
   ],
   "properties": {
     "windows": {
@@ -392,6 +395,273 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256
+        }
+      }
+    },
+    "sourceAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groups",
+        "cases"
+      ],
+      "properties": {
+        "groups": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "assets",
+              "forbidden"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "incremental-rendering",
+                  "localized-labels"
+                ]
+              },
+              "assets": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                }
+              },
+              "forbidden": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "group",
+              "text",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "group": {
+                "enum": [
+                  "incremental-rendering",
+                  "localized-labels"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "lawMounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumFiles",
+        "maximumBytes",
+        "cases",
+        "fixtureBindings"
+      ],
+      "properties": {
+        "maximumFiles": {
+          "const": 512
+        },
+        "maximumBytes": {
+          "const": 4194304
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "entry",
+              "target",
+              "nodes",
+              "reachable"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "entry": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "reachable": {
+                "type": "boolean"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "mounts"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "mounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fixtureBindings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "manifest",
+              "source",
+              "fixture",
+              "required"
+            ],
+            "properties": {
+              "manifest": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "fixture": {
+                "type": "string"
+              },
+              "required": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "installedBattles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script",
+        "manifest",
+        "package",
+        "authority",
+        "routes"
+      ],
+      "properties": {
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "package": {
+          "const": "semio-dashboard-journeys"
+        },
+        "authority": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "suite",
+              "module",
+              "test",
+              "inputs"
+            ],
+            "properties": {
+              "target": {
+                "enum": [
+                  "test-journeys",
+                  "test-load"
+                ]
+              },
+              "suite": {
+                "enum": [
+                  "journeys",
+                  "load"
+                ]
+              },
+              "module": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "test": {
+                "enum": [
+                  "journeys",
+                  "load"
+                ]
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
+            }
+          }
         }
       }
     }

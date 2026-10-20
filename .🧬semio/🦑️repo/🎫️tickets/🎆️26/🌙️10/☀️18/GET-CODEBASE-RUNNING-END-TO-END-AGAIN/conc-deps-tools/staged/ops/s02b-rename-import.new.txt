@@ -1,0 +1,1 @@
+import {lstatSync,realpathSync,readFileSync,openSync,closeSync,fstatSync,readSync,rmSync,readdirSync,unlinkSync,rmdirSync,chmodSync,renameSync,type Stats,type BigIntStats} from "node:fs";

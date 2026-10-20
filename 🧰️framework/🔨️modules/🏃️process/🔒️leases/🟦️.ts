@@ -2,12 +2,15 @@ import{initializeResourceLeaseContinuationV1,requireResourceLeaseContinuationCat
 import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json" with{type:"json"};
 import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,finishResourceLeaseCleanupV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
-import { createHash } from "node:crypto";
-import {requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createHash, randomBytes } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
+import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
+export {LeaseOrderErrorV1,formatLeaseViolationV1,leaseInheritanceEnvironmentV1,withLeaseTaskV1} from "./🧭️order/🟦️.ts";
+import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
-import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, lstatSync, statSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import {checkResourceLeaseControl,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
+import {checkResourceLeaseControl,isSystemLeaseLinkV1,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
 export {checkResourceLeaseControl,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
@@ -144,14 +147,20 @@ async function openDatabase(path: string, readonly=false,create=!readonly): Prom
 /** 🛣️ Keeps lock identities on regular paths without following a substituted store. */
 function databasePath(directory: string, resource: string): string {
   const admitted = resourceLeasePathV1(directory, resource);
+  let system = false;
   for (let current = resolve(directory); ; current = dirname(current)) {
-    try { const stat = lstatSync(current); if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Invalid lease store directory: ${current}`); }
+    try {
+      const stat = lstatSync(current);
+      if (stat.isSymbolicLink() && isSystemLeaseLinkV1(current, stat) && statSync(current).isDirectory()) system = true;
+      else if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Invalid lease store directory: ${current}`);
+    }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     if (dirname(current) === current) break;
   }
   mkdirSync(directory, { recursive: true });
-  const path = resourceLeasePathV1(realpathSync(directory), resource);
-  if (path !== admitted) throw Error("Resource lease materialized path changed");
+  const real = resourceLeasePathV1(realpathSync(directory), resource);
+  if (!system && real !== admitted) throw Error("Resource lease materialized path changed");
+  const path = system ? admitted : real;
   try { const stat = lstatSync(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error(`Invalid resource lease database: ${path}`); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
   return path;
@@ -240,9 +249,59 @@ function closeDatabase(database:LeaseDatabase,gate?:ResourceLease):void{try{data
 function releaseUnderAdmission(lease:ResourceLease|undefined,gate:ResourceLease):void{if(!lease)return;try{lease.release();}catch(error){protectAdmission(gate,originalLeases.get(lease)!.database);throw error;}}
 
 /** 🚪️ Fences every opener until actual identity SELECT or failed connection close settles. */
-export function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{return acquireResourceLeaseBody(options);}
+export function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{return traceLeaseV1(options,()=>acquireOrderedResourceLeaseV1(options));}
+const trackedAcquisition=new AsyncLocalStorage<{readonly guard:LeaseOrderGuardV1;readonly directory:string;readonly resource:string}>();
+const untrackedTask:object={};
+const internalLeaseResource=(resource:string):boolean=>resource===admissionResource||resource===retentionSchema.properties.resource.const||resource.startsWith(custodySchema.properties.resourcePrefix.const)||resource==="resource-retirement";
+function leaseTaskOf(options:Pick<LeaseOptions,"control"|"signal">):Readonly<{task:number;ancestors:readonly number[]}>{
+ const lineage=currentLeaseLineageV1();
+ if(lineage)return{task:lineage[0]!,ancestors:lineage.slice(1)};
+ const key:object=options.control!==null&&typeof options.control==="object"?options.control:options.signal!==null&&typeof options.signal==="object"?options.signal:untrackedTask;
+ return{task:leaseTaskIdV1(key),ancestors:[]};
+}
+/** 🧭️ Begins the order bookkeeping of one public acquisition; internal queue, claim and admission leases are not tracked. */
+function orderGuard(options:LeaseOptions,queued:boolean):LeaseOrderGuardV1|undefined{
+ if(typeof options.resource!=="string"||!options.resource.length||internalLeaseResource(options.resource))return undefined;
+ return beginLeaseOrderV1({directory:resolve(options.directory),resource:options.resource,mode:options.mode,nonblocking:options.timeoutMs===0,bounded:options.timeoutMs!==undefined,...leaseTaskOf(options),queued});
+}
+/** 🚪️ Fences every opener until actual identity SELECT or failed connection close settles; a request that breaks the declared lock order or would wait while holding fails fast with a diagnostic. */
+async function acquireOrderedResourceLeaseV1(options:LeaseOptions):Promise<ResourceLease>{
+ const guard=orderGuard(options,false);
+ if(!guard)return acquireResourceLeaseBody(options);
+ let lease:ResourceLease;
+ try{lease=await trackedAcquisition.run({guard,directory:resolve(options.directory),resource:options.resource},()=>acquireResourceLeaseBody(options));}catch(error){guard.finish();throw error;}
+ guard.hold(lease);return lease;
+}
+/** 📼 Appends one row `{version,resource,mode,startedMs,acquiredMs,pid}` to the file named by `SEMIO_LEASE_TRACE` for every acquisition that waited at least 100 ms, so a harness can measure lock waits exactly instead of from the 15 s progress rows; never fails an acquisition. */
+async function traceLeaseV1(options:LeaseOptions,acquire:()=>Promise<ResourceLease>):Promise<ResourceLease>{
+  const path=process.env.SEMIO_LEASE_TRACE;
+  if(!path)return acquire();
+  const startedMs=Date.now(),lease=await acquire(),acquiredMs=Date.now();
+  if(acquiredMs-startedMs>=100)try{appendFileSync(path,JSON.stringify({version:1,resource:options.resource,mode:options.mode,startedMs,acquiredMs,pid:process.pid})+"\n");}catch{}
+  return lease;
+}
 async function acquireResourceLeaseBody(options:LeaseOptions,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{
- options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw Error("Directory admission resource is reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw Error("Invalid lease resource");if(!["shared","exclusive"].includes(options.mode))throw Error("Invalid resource access mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw Error("Invalid resource lease timeout");const started=Date.now();remaining(options,started,cleanup);let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
+ options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw Error("Directory admission resource is reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw Error("Invalid lease resource");if(!["shared","exclusive"].includes(options.mode))throw Error("Invalid resource access mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw Error("Invalid resource lease timeout");const started=Date.now();remaining(options,started,cleanup);
+ if(!cleanup&&options.timeoutMs!==0&&leaseOrderPolicyV1().gate.releaseWhileWaiting)return acquireWaitingOutsideGate(options,started);
+ return acquireHoldingGate(options,started,cleanup);
+}
+/** 🚰️ Waits for a busy lease without holding the directory admission gate: each attempt takes the gate shared, tries once and gives the gate back, so retirement and every other opener are never blocked by a waiter. */
+async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Promise<ResourceLease>{
+ const policy=leaseOrderPolicyV1().gate,tracked=trackedAcquisition.getStore(),guard=tracked&&tracked.resource===options.resource&&tracked.directory===resolve(options.directory)?tracked.guard:undefined;
+ let nextProgress=0,poll=policy.pollInitialMilliseconds;
+ for(;;){
+  try{return await acquireHoldingGate({...options,timeoutMs:0},Date.now());}
+  catch(error){if(!(error instanceof Error)||error.message!=="Resource lease timed out: "+options.resource)throw error;}
+  const elapsedMs=Date.now()-started;
+  if(remaining(options,started)<=0)throw new Error(`Resource lease timed out: ${options.resource}`);
+  if(elapsedMs>=nextProgress){await waitProgress(options,{resource:options.resource,mode:options.mode,elapsedMs},started);nextProgress=elapsedMs+1000;}
+  if(guard)await guard.contention(elapsedMs);
+  await delay(Math.max(1,Math.min(poll,remaining(options,started))),undefined,{signal:options.signal}).catch(error=>{options.signal.throwIfAborted();throw error;});
+  poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*3/2));remaining(options,started);
+ }
+}
+async function acquireHoldingGate(options:LeaseOptions,started:number,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{
+ let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
  try{gate=await directoryAdmission(options,"shared",started,cleanup);if(cleanup)cleanupLeaseIdentity(cleanup);lease=await acquireUnderAdmission(options,gate,started,cleanup);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource)failure=Error("Resource lease timed out: "+options.resource);}
  try{releaseAdmission(gate);}catch(error){if(!failed){failed=true;failure=error;}try{lease?.release();}catch{if(gate&&lease)protectAdmission(gate,originalLeases.get(lease)!.database);}}
  if(failed)throw failure;return lease!;
@@ -356,7 +415,15 @@ function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
 }
 
 /** 🚦️ Serves original kernel-held tickets in arrival order; an exclusive SQLite claim alone proves abandoned custody. */
-export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {
+export function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {return traceLeaseV1(options,()=>acquireOrderedQueuedResourceLeaseV1(options));}
+async function acquireOrderedQueuedResourceLeaseV1(options: QueuedLeaseOptions): Promise<ResourceLease> {
+  const guard=orderGuard(options,true);
+  if(!guard)return acquireQueuedResourceLeaseBody(options);
+  let lease:ResourceLease;
+  try{lease=await acquireQueuedResourceLeaseBody(options,guard);}catch(error){guard.finish();throw error;}
+  guard.hold(lease);return lease;
+}
+async function acquireQueuedResourceLeaseBody(options: QueuedLeaseOptions,guard?:LeaseOrderGuardV1): Promise<ResourceLease> {
   options=Object.freeze({...options});
   options.signal.throwIfAborted();
   if("claimCatalogDirectory" in options)throw Error("Queue claim catalog selectors are forbidden");
@@ -373,7 +440,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
   mkdirSync(queue, { recursive: true });
   const catalog=await queueClaimCatalog(pendingOptions(),"shared");let claim:ResourceLease;
   try{claim=await acquireResourceLease({...pendingOptions(),...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});try{remaining(options,started);writeFileSync(join(queue,ticket),JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true}),{flag:"wx"});}catch(error){claim.release();throw error;}}finally{catalog.release();}
-  return awaitQueuedTurn(options,started,queue,ticket,claim);
+  return awaitQueuedTurn(options,started,queue,ticket,claim,guard);
 }
 
 /** ⬆️ Converts a held queued shared lease into an exclusive one at its original arrival position; the shared hold is consumed, so a failed upgrade holds nothing and concurrent upgraders cannot deadlock each other. */
@@ -382,15 +449,16 @@ export async function upgradeQueuedResourceLease(lease:ResourceLease,limits:{rea
   if(!turn||turn.consumed||!turn.inner||lease.mode!=="shared"||issued?.phase!=="held")throw Error("Live queued shared lease required for upgrade");
   if(limits.timeoutMs!==undefined&&(!Number.isFinite(limits.timeoutMs)||limits.timeoutMs<0))throw Error("Invalid resource lease timeout");
   const{sharedCohort:_cohort,timeoutMs:_timeout,...base}=turn.options,options:QueuedLeaseOptions=Object.freeze({...base,mode:"exclusive",...(limits.timeoutMs===undefined?{}:{timeoutMs:limits.timeoutMs})});
-  const started=Date.now();remaining(options,started);
+  const started=Date.now();remaining(options,started);forgetLeaseV1(lease);const guard=orderGuard(options,true);
   const name=join(turn.queue,turn.ticket),temporary=join(dirname(turn.queue),turn.ticket+".u");
   try{writeFileSync(temporary,JSON.stringify({version:1,pid:process.pid,mode:"exclusive",sharedCohort:false}),{flag:"wx"});renameSync(temporary,name);}catch(error){rmSync(temporary,{force:true});throw error;}
   turn.consumed=true;
   try{turn.inner.release();}catch(error){try{rmSync(name,{force:true});}finally{turn.claim.release();}throw error;}
-  return awaitQueuedTurn(options,started,turn.queue,turn.ticket,turn.claim);
+  let upgraded:ResourceLease;try{upgraded=await awaitQueuedTurn(options,started,turn.queue,turn.ticket,turn.claim,guard);}catch(error){guard?.finish();throw error;}
+  guard?.hold(upgraded);return upgraded;
 }
 
-async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:string,ticket:string,claim:ResourceLease):Promise<ResourceLease>{
+async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:string,ticket:string,claim:ResourceLease,guard?:LeaseOrderGuardV1):Promise<ResourceLease>{
   const pendingOptions=():LeaseOptions=>({...options,timeoutMs:options.timeoutMs===undefined?undefined:Math.max(0,remaining(options,started))});
   const swept=new Map<string,number>();let nextProgress=0,poll=waitPolicy.pollInitialMilliseconds;
   try {
@@ -408,12 +476,13 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       const cohort=options.sharedCohort===true&&await retryInterruptedFilesystemRead(options.signal,()=>live.slice(0,live.indexOf(ticket)).every(name=>{let claim:unknown;try{claim=JSON.parse(readFileSync(join(queue,name),"utf8"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return true;if(error instanceof SyntaxError)return false;throw error;}const row=claim as Record<string,unknown>|undefined;return row!==null&&typeof row==="object"&&Object.keys(row).sort().join(",")==="mode,pid,sharedCohort,version"&&row.version===1&&row.pid===queueTicketRequest(name).pid&&row.mode==="shared"&&row.sharedCohort===true;}),options.control);
       remaining(options, started);
       if (live[0] === ticket || cohort) {
-        const lease = await acquireResourceLease({ ...options, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
+        const lease = await acquireResourceLeaseBody({ ...options, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
         try { remaining(options, started); } catch (error) { lease.release(); throw error; }
         return wrapQueuedLease(lease,{options,queue,ticket,claim,consumed:false});
       }
       const elapsedMs = Date.now() - started;
       if (remaining(options, started) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      await guard?.contention(elapsedMs);
       if (elapsedMs >= nextProgress) {
         const progress = { resource: options.resource, mode: options.mode, elapsedMs },info=options.control?queueWaitInfo(options,queue,live,ticket,names.length):undefined,control=options.control;
         await waitProgress(options, progress, started);
@@ -430,13 +499,22 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
   }
 }
 
-/** 🪢️ Orders a resource set consistently and releases it in reverse order on every exit. */
+function orderedLeaseResources(resources:readonly string[]):string[]{
+ const policy=leaseOrderPolicyV1();
+ return [...resources].sort((left,right)=>classifyLeaseResourceV1(policy,left).rank-classifyLeaseResourceV1(policy,right).rank||(left<right?-1:left>right?1:0));
+}
+function acquireOrdered(options:LeaseOptions&{readonly resources?:unknown}):Promise<ResourceLease>{
+ const{resources:_resources,...request}=options;
+ if(leaseOrderPolicyV1().fairness.queuedWithResourceLeases&&request.timeoutMs!==0&&request.maximumDatabaseBytes===undefined&&!internalLeaseResource(request.resource)&&!(()=>{const owner=leaseTaskOf(request);return heldLeasesV1(owner.task,owner.ancestors);})().some(row=>row.directory===resolve(request.directory)&&row.resource===request.resource))return acquireQueuedResourceLease({...request,owner:randomBytes(12).toString("hex"),...(request.mode==="shared"?{sharedCohort:true}:{})});
+ return acquireResourceLease(request);
+}
+/** 🪢️ Orders a resource set by declared lock rank then name, takes shared and exclusive access through the fair arrival queue (readers join cohorts, writers are not starved, a task re-entering a lease it already holds bypasses the queue) and releases in reverse order on every exit. */
 export async function withResourceLeases<T>(options: Omit<LeaseOptions, "resource" | "mode"> & { readonly resources: readonly ResourceAccess[] }, operation: () => Promise<T>): Promise<T> {
   const resources = new Map<string, ResourceAccess["mode"]>(), leases: ResourceLease[] = [];
   let failed=false,failure:unknown;
   for (const entry of options.resources) resources.set(entry.resource, resources.get(entry.resource) === "exclusive" ? "exclusive" : entry.mode);
   try {
-    for (const resource of [...resources.keys()].sort()) leases.push(await acquireResourceLease({ ...options, resource, mode: resources.get(resource)! }));
+    for (const resource of orderedLeaseResources([...resources.keys()])) leases.push(await acquireOrdered({ ...options, resource, mode: resources.get(resource)! }));
     options.signal.throwIfAborted();
     return await operation();
   } catch(error){failed=true;failure=error;throw error;} finally { finishResourceLeaseCleanupV1(failed,failure,leases.reverse().map(lease=>()=>lease.release())); }

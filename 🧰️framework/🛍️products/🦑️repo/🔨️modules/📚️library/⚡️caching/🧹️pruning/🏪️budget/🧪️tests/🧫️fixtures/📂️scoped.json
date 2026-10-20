@@ -1,0 +1,165 @@
+[
+  {
+    "name": "mac-recursive-two-root-union",
+    "platform": "darwin",
+    "roots": [
+      "/compiler/build",
+      "/compiler/target"
+    ],
+    "accepted": true,
+    "args": [
+      "-nP",
+      "+w",
+      "-Fpn",
+      "+f",
+      "--",
+      "/compiler"
+    ],
+    "filesystemRoot": "/compiler"
+  },
+  {
+    "name": "linux-recursive-union",
+    "platform": "linux",
+    "roots": [
+      "/compiler/build",
+      "/compiler/target"
+    ],
+    "accepted": true,
+    "args": [
+      "-nP",
+      "+w",
+      "-Fpn",
+      "-Q",
+      "-x",
+      "f",
+      "+D",
+      "/compiler/build",
+      "+D",
+      "/compiler/target"
+    ],
+    "filesystemRoot": null
+  },
+  {
+    "name": "empty-root-refused",
+    "platform": "darwin",
+    "roots": [],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": "/compiler"
+  },
+  {
+    "name": "filesystem-root-refused",
+    "platform": "linux",
+    "roots": [
+      "/"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "relative-root-refused",
+    "platform": "linux",
+    "roots": [
+      "compiler/build"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "duplicate-scope-refused",
+    "platform": "darwin",
+    "roots": [
+      "/compiler/build",
+      "/compiler/build"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": "/compiler"
+  },
+  {
+    "name": "nested-scope-refused",
+    "platform": "darwin",
+    "roots": [
+      "/compiler/build",
+      "/compiler/build/target"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": "/compiler"
+  },
+  {
+    "name": "normalized-root-required",
+    "platform": "linux",
+    "roots": [
+      "/compiler/../build"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "control-path-refused",
+    "platform": "linux",
+    "roots": [
+      "/compiler/\ntarget"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "overflow-roots-refused",
+    "platform": "darwin",
+    "roots": [
+      "/a",
+      "/b",
+      "/c"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": "/compiler"
+  },
+  {
+    "name": "windows-needs-kernel-port",
+    "platform": "win32",
+    "roots": [
+      "C:\\compiler\\build",
+      "C:\\compiler\\target"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "unknown-host-refused",
+    "platform": "freebsd",
+    "roots": [
+      "/compiler/build"
+    ],
+    "accepted": false,
+    "args": null,
+    "filesystemRoot": null
+  },
+  {
+    "name": "mac-mounted-backing-required",
+    "platform": "darwin",
+    "roots": [
+      "/compiler/build"
+    ],
+    "filesystemRoot": null,
+    "accepted": false,
+    "args": null
+  },
+  {
+    "name": "root-outside-authenticated-backing",
+    "platform": "darwin",
+    "roots": [
+      "/outside/build"
+    ],
+    "filesystemRoot": "/compiler",
+    "accepted": false,
+    "args": null
+  }
+]

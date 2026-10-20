@@ -45,7 +45,7 @@ use semio_hub_space_app::SpaceCommand;
     use semio_hub_space_app::unit_tests::context::studio_emit;
     const FORMAT: &str = "test.space.fixture.source";
     const PROBE_KIND: &str = "test.space.fixture.document";
-    directory::io::register_format_descriptors([directory::io::FormatDescriptor {
+    semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
         kind_id: FORMAT.into(), short_id: FORMAT.into(), aliases: Vec::new(), mimes: vec!["application/vnd.semio.space-fixture-probe+json".into()], extensions: vec![".space-fixture-probe".into()], name: "Fixture source probe".into(), full_name: "Space fixture source probe".into(), neutral: true, dir_name: "fixture-probe".into(), is_binary: false,
     }]).await.unwrap();
     semio_framework_os::workflow::register_os_media_export_handler_kind(PROBE_KIND, FORMAT, |document| {

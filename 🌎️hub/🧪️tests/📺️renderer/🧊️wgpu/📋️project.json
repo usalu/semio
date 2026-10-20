@@ -11,7 +11,12 @@
         "command": "bun ./📜️script.ts journey-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "creation-check": {
       "executor": "repo:script",
@@ -20,7 +25,12 @@
         "command": "bun ./📜️script.ts creation-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "collaboration-check": {
       "executor": "repo:script",
@@ -29,7 +39,12 @@
         "command": "bun ./📜️script.ts collaboration-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "collaboration-acceptance": {
       "executor": "repo:script",
@@ -61,6 +76,11 @@
         "agent-pixels": {
           "args": ["--journey", "agent-pixels"]
         }
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "native-guest-journey-check": {
@@ -70,7 +90,12 @@
         "command": "bun ./📜️script.ts native-guest-journey-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

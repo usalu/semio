@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "args": [
+        "devcontainer-lifecycle"
+      ],
+      "accepted": true
+    },
+    {
+      "args": [],
+      "accepted": false
+    },
+    {
+      "args": [
+        "devcontainer-lifecycle",
+        "extra"
+      ],
+      "accepted": false
+    },
+    {
+      "args": [
+        "runtime-bootstrap"
+      ],
+      "accepted": false
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "accepted": false
+    }
+  ]
+}

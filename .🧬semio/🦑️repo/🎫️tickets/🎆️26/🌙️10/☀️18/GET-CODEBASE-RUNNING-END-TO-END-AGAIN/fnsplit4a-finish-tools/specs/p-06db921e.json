@@ -1,0 +1,41 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts",
+ "function": "toolJobCoverageRun",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟠️shared",
+  "doc": "/** 🟠️ The shared declarations of toolJobCoverageRun. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️macro-files",
+   "doc": "/** 🔶️ The macro files phase of toolJobCoverageRun. */",
+   "phases": [
+    {
+     "name": "buildMacroFilesState",
+     "emoji": "🔷",
+     "doc": "Builds macroFiles, fixtureMacroFiles, commandRows, fixtureCommandRows of toolJobCoverageRun.",
+     "from": 107,
+     "to": 256
+    }
+   ]
+  },
+  {
+   "dir": "🔸️framework-reserved-exact",
+   "doc": "/** 🔸️ The framework reserved exact phase of toolJobCoverageRun. */",
+   "phases": [
+    {
+     "name": "buildFrameworkReservedExactState",
+     "emoji": "🔹",
+     "doc": "Builds frameworkReservedExact, puzzleJobs, puzzle5dEvidence, puzzleReservedExact of toolJobCoverageRun.",
+     "from": 257,
+     "to": 390
+    }
+   ]
+  }
+ ],
+ "allowExportedMoves": true
+}

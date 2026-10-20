@@ -18,7 +18,8 @@ import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx
 import { type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";
 import { reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressUiStateV1 } from "../../🌱️artifact-creation/🟦️.tsx";
 import { closeDirectoryHomeOwnerV1, type DirectoryBootstrapUiState, type DirectoryHomeOwnerV1 } from "../../📇️directory-bootstrap/🟦️.tsx";
-import { useAgentBridge, type AgentAppCommandHandler, type AgentBridgeOfferScopeV1 } from "../../../🔗️AgentBridge/🟦️.tsx";
+import { useAgentBridge, type AgentBridgeOfferScopeV1 } from "../../../🔗️AgentBridge/🟦️.tsx";
+import { type AgentAppCommandHandler } from "../../../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 import { shellAppFault } from "@semio-tech/framework/mcp/channel";
 import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
 import type { ReduceResult, ShellCommand } from "@semio-tech/framework/shell";

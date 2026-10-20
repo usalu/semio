@@ -74,6 +74,8 @@ updates:
   - package-ecosystem: "github-actions"
     directories:
       - "/"
+      - "/.github/actions/bun-repo"
+      - "/.github/actions/cache-proof"
     schedule:
       interval: "weekly"
 

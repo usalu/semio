@@ -1,0 +1,13 @@
+{
+ "verify.ts": "f011ccf3b5386f989e1acf8018bb5a79f9c853e9b8766451f7b8a4b2b7ad16be",
+ "nx-operations.ts": "d56807e1c8db575236cc7ebb9432ee5346bfa90b8f181e5d67ae27b86b8d96c3",
+ "nx-operations-test.ts": "338566ea459f5dd7eb1c66fff154d26eafa56a6e68e370f14115b1e9317c75fd",
+ "nx-operations-fixture.json": "8b4fe607784cee8fb51a9c1ac8151fedf79e0110ea1a7ad45652b4b93f5637d8",
+ "neutral.ts": "38e827a8c520bd3f7e754927e868e5f14d808a8c3a8b6ea5755d62b721ad9d6c",
+ "bazel-adapter.ts": "eea05eebf7344b6b3b09bac99b30a36552072e1928c9fbf84c4ec9728ff4ccff",
+ "bazel-operations.ts": "b3a064c8a16c6fa4d012b088affe568dde24063a331f8b5b5bc420c8d6d6818d",
+ "catalog.json": "a5f10f6e826fd76426ee4e195706d90f5bbd73ada719b358c25bdf010f3b0975",
+ "operations-schema.json": "e60097e991d27939e0c630104ff9ce34002e935fcf71208e3527afe424dce63a",
+ "root-project.json": "a39244b2b8799bb212dc510642c604f37b47697d932a692ac37442f0f733ec6f",
+ "help-snapshots.json": "60e64aa7ad991b4a48791742f899729a7eb560529ba384973b42250ed7fcc767"
+}

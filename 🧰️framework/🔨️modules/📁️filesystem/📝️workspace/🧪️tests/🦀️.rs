@@ -4,11 +4,12 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
-fn root(name:&str)->PathBuf {
+pub(super) fn root(name:&str)->PathBuf {
     let output=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("Explicit ticket artifact directory required");
     let root=PathBuf::from(output).join(format!("source-{name}-{}-{}",std::process::id(),SERIAL.fetch_add(1,Ordering::Relaxed)));
     fs::create_dir_all(&root).unwrap();root
 }
+pub(super) fn journal(root:&Path)->PathBuf{root.join(STATE).join("segments").join("00000000")}
 fn code(error:ErrorKind)->&'static str { match error {ErrorKind::InvalidPath=>"invalid-path",ErrorKind::NotText=>"not-text",ErrorKind::TooLarge=>"too-large",_=>"other"} }
 
 #[test]
@@ -33,8 +34,8 @@ fn source_workspace_unicode_save_reopen_and_retained_event_predecessor() {
     let saved=workspace.save(name,&loaded.revision,"second\r\n🦑\r\n",&cancel,&mut |p|events.push(p.stage)).unwrap();
     assert_eq!(saved.text,"second\r\n🦑\r\n");assert_ne!(saved.revision,loaded.revision);
     assert_eq!(workspace.load(name,&cancel,&mut |_|{}).unwrap().text,saved.text);
-    let history=fs::read_dir(root.join(STATE)).unwrap().map(|e|e.unwrap().path()).collect::<Vec<_>>();
-    let outcome=history.iter().find(|p|p.extension().is_some_and(|e|e=="outcome")).unwrap();let receipt=fs::read_to_string(outcome).unwrap();let prior=PathBuf::from(receipt.lines().nth(2).unwrap());assert_eq!(fs::read_to_string(&prior).unwrap(),before);
+    let history=fs::read_dir(journal(&root)).unwrap().map(|e|e.unwrap().path()).collect::<Vec<_>>();
+    let outcome=history.iter().find(|p|p.extension().is_some_and(|e|e=="outcome")).unwrap();let receipt=fs::read_to_string(outcome).unwrap();let prior=root.join(receipt.lines().nth(3).unwrap());assert_eq!(fs::read_to_string(&prior).unwrap(),before);
     let recovered=workspace.load_recovery(prior.to_str().unwrap(),&cancel,&mut |_|{}).unwrap();assert_eq!(recovered.text,before);assert!(workspace.save(&recovered.path,&recovered.revision,"forbidden",&cancel,&mut |_|{}).is_err());
     assert!(history.iter().any(|p|p.extension().is_some_and(|e|e=="outcome")));
     assert!(events.contains(&Stage::Staging)&&events.contains(&Stage::Publishing)&&events.contains(&Stage::Complete));
@@ -57,7 +58,7 @@ fn source_workspace_cancellation_at_publication_never_publishes() {
     let root=root("cancel");fs::write(root.join("a.txt"),"before").unwrap();let workspace=Workspace::new(&root).unwrap();let cancel=AtomicBool::new(false);let doc=workspace.load("a.txt",&cancel,&mut |_|{}).unwrap();
     let result=workspace.save("a.txt",&doc.revision,"local",&cancel,&mut |p|{if p.stage==Stage::Publishing{cancel.store(true,Ordering::Release);}});
     assert_eq!(result.unwrap_err().kind,ErrorKind::Cancelled);assert_eq!(fs::read_to_string(root.join("a.txt")).unwrap(),"before");
-    assert!(!fs::read_dir(root.join(STATE)).unwrap().any(|p|p.unwrap().path().extension().is_some_and(|e|e=="new")));
+    assert!(!fs::read_dir(journal(&root)).unwrap().any(|p|p.unwrap().path().extension().is_some_and(|e|e=="new")));
 }
 
 #[test]
@@ -70,8 +71,8 @@ fn source_workspace_committed_save_survives_late_cancellation() {
 fn source_workspace_partial_publication_retains_readonly_recovery() {
     let root=root("partial");fs::write(root.join("a.txt"),"foreign predecessor").unwrap();let workspace=Workspace::new(&root).unwrap();let cancel=AtomicBool::new(false);let doc=workspace.load("a.txt",&cancel,&mut |_|{}).unwrap();let mut blocked=false;
     let result=workspace.save("a.txt",&doc.revision,"local",&cancel,&mut |p|{if p.stage==Stage::Publishing&&!blocked{
-        let intent=fs::read_dir(root.join(STATE)).unwrap().map(|e|e.unwrap().path()).find(|p|p.extension().is_some_and(|e|e=="intent")).unwrap();fs::create_dir(intent.with_extension("outcome")).unwrap();blocked=true;
-    }}).unwrap_err();assert_eq!(result.kind,ErrorKind::Io);assert_eq!(fs::read_to_string(root.join("a.txt")).unwrap(),"local");let recovered=workspace.load_recovery(result.recovery_path.as_deref().unwrap(),&cancel,&mut |_|{}).unwrap();assert_eq!(recovered.text,"foreign predecessor");
+        let intent=fs::read_dir(journal(&root)).unwrap().map(|e|e.unwrap().path()).find(|p|p.extension().is_some_and(|e|e=="intent")).unwrap();fs::create_dir(intent.with_extension("outcome")).unwrap();blocked=true;
+    }}).unwrap_err();assert_eq!(result.kind,ErrorKind::Io);assert_eq!(fs::read_to_string(root.join("a.txt")).unwrap(),"local");assert!(workspace.load_recovery(result.recovery_path.as_deref().unwrap(),&cancel,&mut |_|{}).is_err());let observed=workspace.inspect_history(&cancel,&mut |_|{}).unwrap();workspace.reconcile_history(&observed,&cancel,&mut |_|{}).unwrap();let recovered=workspace.load_recovery(result.recovery_path.as_deref().unwrap(),&cancel,&mut |_|{}).unwrap();assert_eq!(recovered.text,"foreign predecessor");
 }
 
 #[test]

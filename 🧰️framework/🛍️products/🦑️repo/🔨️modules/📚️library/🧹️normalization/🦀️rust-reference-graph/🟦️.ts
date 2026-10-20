@@ -6,7 +6,7 @@ import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts
 import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences } from "../../🔍️discovery/🧷️rust-path-references/🟦️.ts";
 import { inspectRustCargoManifest, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, type RustModuleGraph } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts";
-import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { basename, dirname, posix } from "node:path";
 import { requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { checkCancellation } from "../🏷️file-kind-matching/🟦️.ts";
@@ -276,6 +276,11 @@ const RUST_RESERVED_KEYWORDS: ReadonlySet<string> = new Set([
   "as", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where", "while", "async", "await", "try", "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized", "virtual", "yield",
 ]);
 
+/** 🧹️ The code-only token text the macro-trust checks scan: the module-structure-transparent attributes and macros are dropped and every other token is kept.
+ *
+ * A bare `!` immediately after a real identifier is a macro-invocation bang (`name!`/`path::name!`), the only Rust construct a lone `!` token can start that is capable of expanding to an item, and stays in the text for the macro-trust checks. Every other bare `!` is prefix boolean negation (`!expr`), which the grammar restricts to expression position: it can never expand into, or hide, a `mod`. A RESERVED KEYWORD is never a valid macro name, so `if !(…)`/`while !(…)`/`return !x` are negation too, even though the tokenizer gives keywords `kind: "identifier"` the same as real identifiers; `RUST_RESERVED_KEYWORDS` disambiguates. Confirmed by direct instrumentation of `rustFiniteManifestTargets`: the `if !(page.width > 0.0 && …)` of the `stdio.pdf` `✳️x` schema ancestor was tripping the downstream `/[#!]/` scan and disqualifying an otherwise-trusted ancestor.
+ *
+ * `!=` is one punctuation token (see the `punctuation` list of `rustTokens`), never a macro bang, yet it literally CONTAINS a `!` character, which the downstream `/[#!]/` scan matches as a textual substring regardless of token boundaries. It is the same false-positive family as the bare-`!` negation (the `d.code.0 != CODE_TEXT_EMPTY` of the `stdio.pdf` `✳️a` schema ancestor was tripping it after the bare-`!` fix) and is neutralized the same way: comparison operators are expression-position only and can never expand into, or hide, a `mod`. */
 function rustCodeOnlyTextForMacroTrust(source: string): string {
   const tokens = rustSyntaxTokens(source), pairs = rustTokenPairs(tokens), kept: string[] = [];
   for (let index = 0; index < tokens.length; index++) {
@@ -288,23 +293,7 @@ function rustCodeOnlyTextForMacroTrust(source: string): string {
         if (close !== undefined && RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS.has(tokens.slice(bracket + 1, close).map((token) => token.text).join(" "))) { index = close; continue; }
       }
     }
-    // 🚫️ A bare `!` immediately after a real identifier is a macro-invocation bang (`name!`/`path::name!`)
-    // — the only Rust construct a lone `!` token can start that is capable of expanding to an item —
-    // and stays in `kept` for the macro-trust checks below. Every other bare `!` is prefix boolean
-    // negation (`!expr`), which the grammar restricts to expression position: it can never expand
-    // into, or hide, a `mod`. A RESERVED KEYWORD is never a valid macro name, so `if !(…)`/`while
-    // !(…)`/`return !x` are negation too, even though the tokenizer gives keywords `kind: "identifier"`
-    // the same as real identifiers — `RUST_RESERVED_KEYWORDS` disambiguates. Confirmed by direct
-    // instrumentation of `rustFiniteManifestTargets`: `stdio.pdf`'s `✳️x` schema ancestor's `if
-    // !(page.width > 0.0 && …)` was tripping the downstream `/[#!]/` scan and disqualifying an
-    // otherwise-trusted ancestor.
     if (tokens[index]!.text === "!" && (tokens[index - 1]?.kind !== "identifier" || RUST_RESERVED_KEYWORDS.has(tokens[index - 1]!.text))) continue;
-    // 🚫️ `!=` is one punctuation token (see `rustTokens`'s `punctuation` list), never a macro bang —
-    // it still literally CONTAINS a `!` character, which the downstream `/[#!]/` scan matches as a
-    // textual substring regardless of token boundaries. Same false-positive family as the bare-`!`
-    // negation case just above (`stdio.pdf`'s `✳️a` schema ancestor's `d.code.0 != CODE_TEXT_EMPTY`
-    // was tripping it after the bare-`!` fix), so it is neutralized the same way: comparison operators
-    // are expression-position only and can never expand into, or hide, a `mod`.
     if (tokens[index]!.text === "!=") { kept.push("<>"); continue; }
     kept.push(tokens[index]!.text);
   }
@@ -422,6 +411,11 @@ function rustManifestInspection(content: string): RustManifestInspection {
   return { references, arguments: arguments_, candidates, nonRepoBases: arguments_.length > 0 ? [...inspectRustNonRepoJoinBaseSpans(content)] : [] };
 }
 
+/** 🧷️ Builds the manifest-relative reference tokens of one Rust source.
+ *
+ * Two structurally distinct failures are kept apart in the unsupported reason: `targets` is `undefined` when a reference never reached the per-candidate map of `rustFiniteManifestTargets` at all (an early whole-file guard bailed, or its own try/catch threw for this candidate specifically), so no proof was ever attempted; `targets.length !== 1` with `targets` DEFINED means the proof ran to completion and found zero or several distinct physical targets, a genuine ambiguity and not a missing proof. Three earlier diagnoses mistook the first for the second (see the `rust-path-join` ticket history).
+ *
+ * `env::temp_dir()`, `env::var[_os]()`, `env::args()` or a bare `fn` parameter with no local `CARGO_MANIFEST_DIR` anchor PROVES the join's root can never name a repository file at plan time: that is a proven non-reference, so it is never recorded at all (not merely marked resolved). An unrecognized base is untouched and still falls through to the `rust-path-join-unproven` rows unchanged. */
 export function rustManifestReferenceTokens(path: string, content: string, index: ReferencePathIndex, inspection: RustManifestInspection = rustManifestInspection(content)): readonly ReferenceToken[] {
   const { references, arguments: arguments_, candidates } = inspection;
   if (references.length === 0 && arguments_.length === 0 && candidates.length === 0) return [];
@@ -440,13 +434,6 @@ export function rustManifestReferenceTokens(path: string, content: string, index
     const targets = writableInputs.has(reference) ? finite.get(reference.start) : undefined;
     try {
       if (manifests.length !== 1) unsupportedReason = `Rust manifest-relative path requires one proven Cargo owner, found ${manifests.length}`;
-      // 🔀️ Two structurally distinct failures were previously conflated into one message: `targets`
-      // is `undefined` when this reference never reached `rustFiniteManifestTargets`'s per-candidate
-      // map at all (an early whole-file guard bailed, or its own try/catch threw for this candidate
-      // specifically) — no proof was ever attempted. `targets.length !== 1` with `targets` DEFINED
-      // means the proof ran to completion and found zero or several distinct physical targets — a
-      // genuine ambiguity, not a missing proof. Three earlier diagnoses on this codebase (see
-      // `rust-path-join` ticket history) mistook the first for the second; keep them apart.
       else if (targets === undefined) unsupportedReason = "Rust manifest-relative path was never admitted into a proven physical source chain";
       else if (targets.length !== 1) unsupportedReason = `Rust manifest-relative path resolved to ${targets.length} distinct physical targets, not exactly one`;
       else { physicalTargets = [...targets]; sourceBase = normalizeRelative(posix.join(dirname(manifests[0]!), ...reference.base)); }
@@ -458,11 +445,6 @@ export function rustManifestReferenceTokens(path: string, content: string, index
     const physicalTargets = finiteInputs.has(candidate) ? finite.get(candidate.start) : undefined;
     rows.push({ adapter: "rust", structuredLocation: lineLocation(content, candidate.start, physicalTargets ? `rust-finite-manifest-targets:${digest}` : "rust-path-join-unproven"), start: candidate.start, end: candidate.end, value: candidate.value, physicalTargets: physicalTargets ?? unprovenRustReferenceTargets(path, candidate.value, index), ...(physicalTargets ? { physicalInterpretation: "rust-finite-manifest-targets" as const } : {}), unsupportedReason: "Rust finite candidate has no writable literal authority" });
   }
-  // 🚱️ `env::temp_dir()`/`env::var[_os]()`/`env::args()`/a bare `fn` parameter with no local
-  // `CARGO_MANIFEST_DIR` anchor PROVES the join's root can never name a repository file at plan
-  // time — that's not an unprovable reference, it's a proven non-reference, so it must not be
-  // recorded at all (never emitted, not merely marked resolved). An unrecognized base is untouched
-  // by this set and still falls through to the `rust-path-join-unproven` block below unchanged.
   const nonRepoBases = new Set(inspection.nonRepoBases);
   for (const argument of arguments_) if (!nonRepoBases.has(argument.start) && !rows.some((row) => row.start === argument.start && row.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
   return rows;

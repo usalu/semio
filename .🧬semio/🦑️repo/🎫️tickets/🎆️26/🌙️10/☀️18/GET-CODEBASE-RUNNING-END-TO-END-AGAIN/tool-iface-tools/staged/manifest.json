@@ -1,0 +1,957 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0000",
+   "beforeSha256": "489e1600b8761e414355a59b658fe072ff29a750ee69f8696793bc62d8afb567",
+   "afterSha256": "60c171cc268833a1dec33be7745fc9b1fb3c9eff019b02b51b10a7c41927d31f"
+  },
+  {
+   "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0001",
+   "beforeSha256": "a75031cdde41bf4ba11a4ec88fbdb993db8fd01f040a24efbe46ed8f1748596d",
+   "afterSha256": "972907efd615bb9bf889195e9ac53c122b5fdc089003f86ee408a0004165372d"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0002",
+   "beforeSha256": "c8172da9bd9e247e02616d2ea5374d40e6bf8986391052c120e4b74e0603320d",
+   "afterSha256": "e865a4ca4aa9ccb5fe6348002a5dd85cf8c3544c7d87e105b415aec0ac7aabe4"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0003",
+   "beforeSha256": "81dcd2c436c3c3cd88e180d751cf22133aacc13c7a8c1fbc09fa330b5d55fb92",
+   "afterSha256": "33245fa913adc1febb8145b6f64f359a7cb8e67afa6d21a7abbea8fc781168cb"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0004",
+   "beforeSha256": "2b007b1f9a2856f5175d23974fad508f8aaed15dfd465868557fb6759065614a",
+   "afterSha256": "826e6fc60e2f45b8820197829e73e2be62359e117ad0698158ff3169b36c9707"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0005",
+   "beforeSha256": "b2a88fb35c949579e6c357c375fc0411f0b2a45307ea54b487ff3d6dd3040397",
+   "afterSha256": "7b18b5a4bb0b092d9da88cf2d372523a9187db009aa9758e8f67407bbe1a39ac"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0006",
+   "beforeSha256": "88d387e979624cb007c30b86e1de2736b6bc0966d2b24abe90e30895bfd56773",
+   "afterSha256": "22d2452ca3c1fe4150c69b7e246dcf297f25f65e39068a33f3db3c19d09aff54"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0007",
+   "beforeSha256": "2af03163e04e706f902b0b9004fd453746190d58ed6dfc9838d81e7d57c92914",
+   "afterSha256": "53647e3c8d53cd475198731af7450baeced863471bbb9596b682c0bae1c68424"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0008",
+   "beforeSha256": "af13fa13a3b3002b804b1fff0bc95c32d709f81d298e412ac42a239e00993977",
+   "afterSha256": "fe0fea6cf4de43745a3b2d77d87305c11ee506b82615d36f38e87b309a802fa7"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0009",
+   "beforeSha256": "845a80a62fdd97a34533fd5939abf9615f83a58446927e0d4f89c638e5a655cc",
+   "afterSha256": "a7b426fd52ba3d5b13fc95b604179df0e7271efab703f5656a80574b7347a10b"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0010",
+   "beforeSha256": "5012657f3fc6e2ce66399d96374149adf12851c690c2a02a01cb48d7107150f8",
+   "afterSha256": "a453feaed5ebb06442da53039f452654620d4d38f48536c8a5469b6dfed2675c"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0011",
+   "beforeSha256": "6aae35ffa9110cfe0dc28633791f55767d5ad158c83a8fa21e587b3deb0b26c3",
+   "afterSha256": "824fae3a6d95f1a168fd81c7473a240663256a597c32c1ac490bfadef2fe2490"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0012",
+   "beforeSha256": "d1f6fd4ccd7540e6d17e14c55094cd34a6ffb511d9239a3e18e3fa16835af338",
+   "afterSha256": "3efaadaf8fae93996886de594f18909f4e51cae3919651e3cadbd9c206e309e6"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0013",
+   "beforeSha256": "6ceb00f00001a4221417e899ee97c88411efa7e4efdde515c732d87b8e734b02",
+   "afterSha256": "22117c31f50fef86a497dd3311150a4d98f1f3069d622efe26bb9cc50fed0e83"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0014",
+   "beforeSha256": "58858c6ac8fba69b61697ca9355edb293b8b3f4e6bd448b457bea832706f3044",
+   "afterSha256": "481d51e3bf43d9ba9345e62071611a6d56bb4c2dba442ff4b7e6d190b69d7376"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0015",
+   "beforeSha256": "e598fbe6ad1404f1e99982f5d600d5bc7d3ca2c0c55217e8d86116d28f1e1e6b",
+   "afterSha256": "023169eba7c26d6c2e4150ebe39d6fa472ac1ab40d5051ba6e80aee0f6367416"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0016",
+   "beforeSha256": "7b7d2de020e6d18a39a2cf2c85998c67de13a4822949b15607823d661856a4fd",
+   "afterSha256": "341481cd8378d3bed54eab42d0c9c20968804e2de54eca48d6a80138fad0668c"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0017",
+   "beforeSha256": "e79840b43ba25e5b3aeb04884b984cd2e26aa03df2ed57030b9ddf1c56934df5",
+   "afterSha256": "a189b86109566249d514aed28accaa37c612d93d43a08b42e8a75291b698ecb7"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0018",
+   "beforeSha256": "bccf4513ba17e695400f0a26f9b685b4f7b4a0675df27cd2730dc292901d0242",
+   "afterSha256": "7e1d23a372dd1c63eeda4725f710ee3ebfef6bf42da548e7ffe11b919c37bb21"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0019",
+   "beforeSha256": "0e28cec797ad24fb16d7d3cddd74fb222ff85863737370dedcafb5d5f940372c",
+   "afterSha256": "ee1beef7df03b34049792a49a6cd84c607011c4f17f9a3a401f6d6db782cd89a"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0020",
+   "beforeSha256": "8ce9fe8652a7b6694b07d3a95c598d31e4e66afbb7f206a8895a74b3444657f0",
+   "afterSha256": "1a3f8ad7e88f2235d934f59bd750a6b52f228cf75dbadba9337ad6e99ee57aba"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0021",
+   "beforeSha256": "1151ae7e2c241266c2dfcf351212d44dae2e658714771d9b1ab8594e16c90d8c",
+   "afterSha256": "882912c3ac149e80aa419945d485d0e01d31f43cf26b226356ee7c5adc94419e"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0022",
+   "beforeSha256": "d387aaf3750f6591b794fd71ce23be18b6aac4b6d0b4d2d753f5a19367b4ad95",
+   "afterSha256": "57bc8da87d74615a86329759d19a8c211e437977f375bb903a24d01c456bb5f2"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0023",
+   "beforeSha256": "e89dbc5a115d3d38665ab9d5a240b55ed6b8ceaeee4a5675473e83e30f594b6c",
+   "afterSha256": "fadbf58f37257a3c7825b8e18f2cab4e228d7b7de551845c4e0344fd3f7c6981"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0024",
+   "beforeSha256": "ac55fea5b84628d32dd5b3a70b633db88d6ecc130180d89824da402d3005f701",
+   "afterSha256": "61603acfa56edea262137d0487a1beb855bd3d5257432e6ecaf9a2490553741f"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0025",
+   "beforeSha256": "81cc3dc10401c6beb781cf9c5b83173a0721584259d641ff9805c356d6614667",
+   "afterSha256": "540b3b56c614a40a8a31c56d80a98c63509ea25e2fbc5832c76b5566e5367325"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0026",
+   "beforeSha256": "bddbac736fafcf8b571949d1069e869a5f4f5f85a7624a151dcdea521f7733b3",
+   "afterSha256": "ab37406c0ab950f79e33bc571f1387c08c840781bb277683b199353162e02299"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0027",
+   "beforeSha256": "0b46a9246309fe63610c65d73b03993af94ca71f803eb87556b45438cea36419",
+   "afterSha256": "47be5361bb061c788a7a6dc204b4c4aff5cf8dab49f065280877ebc46e33a295"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0028",
+   "beforeSha256": "e9f55fce09152253ac42f7c1af09fa33392843e69bcba65ab8651cb2018587d0",
+   "afterSha256": "8022ed25e01541cf6cb7004b00fcd95d28105db8b49703f66d00a2207066dab0"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0029",
+   "beforeSha256": "0857d4efb10d19130ba14bd04f2378377a42a1d357c0421b4acc4a3d703440f5",
+   "afterSha256": "6a6498516ee60725775d5d0c347ab2e41a24580bcb2dcad945d903d765a776f7"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0030",
+   "beforeSha256": "6bf27b35470c63a89120a2016d0bb2b31873ef037155fb7598a56c2ec3d6af4b",
+   "afterSha256": "3e6b9aa312ab2029dc7c060eae2fbf90a559167f32ba993a50a55b5c9b1c18bc"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0031",
+   "beforeSha256": "18985424718abf12481d32317f7f9a78804b68865adf72e6b8f21ef867c1ba23",
+   "afterSha256": "347b35dcbb84d27f883abf9165ee5487324f11cddbe8e129a03a1772801b814e"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0032",
+   "beforeSha256": "34e5a7e09a986262a4e9818b85e16a0cb6a60936db736998f4678c3c92edc37f",
+   "afterSha256": "ac1230d9b1b67bb03b42e78da54228e0cd3c2c8bb2cc38f926c49b635d768051"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0033",
+   "beforeSha256": "277ca0291a73bd498c580775b0dd75225be98680596bbcfc033f83c57c77c839",
+   "afterSha256": "4d1d0c63eaa34cb9a0d248d8ba20f7cb39d8beb8af40d7cf40addaf7b3a6a243"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0034",
+   "beforeSha256": "04f995638328f0a481e5c162ec648fc45dd35f002b19731671fb7654a7aa2aa5",
+   "afterSha256": "2df5dd47e82f4d589f1d2ad34b86f2cd7500b4fa82d9e7ee16e246b5b1421d2d"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0035",
+   "beforeSha256": "71ba430f932bf01676784b71b97107d101a94f9db52797f471aad184be5875bd",
+   "afterSha256": "a8445f24f3f4451353fb9b6c91837955260fd68cefc3031b8bbe8eff772eb35b"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/⭕️step-line-circle/📜️script.ts",
+   "kind": "migrated",
+   "after": "0036",
+   "beforeSha256": "11c0c5755a6427a102d914f72d0fc1d2883c56db285896668c378fd0e621e9ae",
+   "afterSha256": "4b6e4f0acf480578612f934053c11b51a80860d34a2c62cf10b3ec0bc3bdd6d2"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0037",
+   "beforeSha256": "8d3debf4ff0e1b46152b69ca794864d21a826eaaca7296f026e5b4ebf2871e42",
+   "afterSha256": "7c62ffecb0f52a8d318eed774675501ba13b2b5f19bc838ac2703f1397a44357"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/🖊️dxf-entities/📜️script.ts",
+   "kind": "migrated",
+   "after": "0038",
+   "beforeSha256": "befe599d9dfc7102b9fafdb5f894d67ac5aee2affcd7587507c58674553a3ac3",
+   "afterSha256": "e94052de8a93e281af0f8dc5864ca3e0b3c68652d02d134435687f9f7e7e68de"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
+   "kind": "migrated",
+   "after": "0039",
+   "beforeSha256": "7c8d55a79cbf353c3a8b9d260fc3dcfd5488e4323b045db295c559b4e724c515",
+   "afterSha256": "6cc9dc9ca24cc4ad524fad76cb3874a3af750e6a61dffdde96634f7fd7510fb5"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0040",
+   "beforeSha256": "755db912e1166ca66f50a606a9b1875565c263440076aa4dfd07a502773d54d5",
+   "afterSha256": "c9117778cb8be699852bfd81c496b075af6c4f080cfbe0ea456fd70b1e3d7a83"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0041",
+   "beforeSha256": "bb57e64a6aecd11547c38c445e79a49803ead1f4a9ca39e5e14c998ce8bb0cae",
+   "afterSha256": "c794d80caccafb8b02a0790fd000bce81f5ab412c2f80d2efec7899390e8f9e9"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0042",
+   "beforeSha256": "fd20b1f6501506ab783cedb646cb9b6f52622da8fb0dfd3b23d0cd2c2e84143a",
+   "afterSha256": "d4b1639ae0fe7dad90865e17243c5b5ed5d087aa4ed01eb6782c9cd4ab70f461"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0043",
+   "beforeSha256": "48fcd4591fe87eab8a2d2cefc75d6caae419a4ba3b32c93bffddb6ba962de4fc",
+   "afterSha256": "d12374d81f7de9e0fbd152470ae01d72a628786e99241f2138ace1525248dadc"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0044",
+   "beforeSha256": "13d8677fadfc7aa02cd82b2048de50949ec7c0147e1dfbd4f6e74471dcd0681d",
+   "afterSha256": "e4aa2714ba2d9506502a362921b59de98cdbca35483f7ef5b7554474cb55ed4e"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🟦️.ts",
+   "kind": "migrated",
+   "after": "0045",
+   "beforeSha256": "aa95304c2c673adfb8b3df87bd258d8d6e153761af00b3cb0319f31504969b01",
+   "afterSha256": "d4a2f79b39f8aa224e91922d033e27fc1bd55eb6c28fd3e9f7a6009c7370b349"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0046",
+   "beforeSha256": "b7182f9fb11b0e88a0b250ff76cc4b3f7c6114f2647ecb8552ca89a57be0c87d",
+   "afterSha256": "f2c36f90b421a98e59c31d71b3cc30a1ffee04bfd79c507187ef10043fd08b96"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+   "kind": "migrated",
+   "after": "0047",
+   "beforeSha256": "bdf51c5f2bd03f6623fceb9c6cb01ef2be1af594b38fe31f581768e7fbb4b330",
+   "afterSha256": "f52efc911f549bd0ff8dcf83e27dfccf4265988f5cbce6df17bf3e336799cc94"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+   "kind": "migrated",
+   "after": "0048",
+   "beforeSha256": "027968cbc2ab6e3fcc975eec91484a606393b24f6dca3a95e07d12d9592f6032",
+   "afterSha256": "d45109195d698b7e39f057dd4483f587bd689d3c8e765b5b05367f5473d63e63"
+  },
+  {
+   "path": "🌎️hub/🎛️commands/🏗️build-and-dev/🟦️.ts",
+   "kind": "migrated",
+   "after": "0049",
+   "beforeSha256": "c5139e49bffdd936f6685b2cfa4d3ce29cbbc55ef8584a94d7c7c6cb8b5ae478",
+   "afterSha256": "42c2f7fd0bb68abb1465b3447668242b7700858ed790dac9c6e084efe31c98d9"
+  },
+  {
+   "path": "🌎️hub/🎛️commands/🚦️gate-commands/🟦️.ts",
+   "kind": "migrated",
+   "after": "0050",
+   "beforeSha256": "185582bc146b23b08e15aeb3bf179f71571bad15c86fabc8b9edd6ce55825e24",
+   "afterSha256": "76d0eee5ee295cbf0b1b6d06981dfc34421e5f5211e91934aaa72a8175d6ecfd"
+  },
+  {
+   "path": "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+   "kind": "migrated",
+   "after": "0051",
+   "beforeSha256": "f99cc024b18ab9113df250219504699988a0013297775d05a446e9c3e326e49f",
+   "afterSha256": "2c8792453d84e5b27c56c8238bc1af2b1e67a5c8518ed219f443f9f9670926d2"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🟦️.ts",
+   "kind": "migrated",
+   "after": "0052",
+   "beforeSha256": "6584a0a0137d7cfaacfb3bff38a7401e2f6e76bdb2f41f948c6a4694dee6a9b2",
+   "afterSha256": "6ab6d06b1df2827878476cb8e5393a50abb29dbe522f7a7416e7aea7e39be97c"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🟦️.ts",
+   "kind": "migrated",
+   "after": "0053",
+   "beforeSha256": "ed580b9022d91c4944f8336072f57a4932c6501bbfda7d45e7cb2359272f3f67",
+   "afterSha256": "d521398618e26050f8d95e650f36b627664b00fda5f6c0db0414c6825ded12db"
+  },
+  {
+   "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+   "kind": "migrated",
+   "after": "0054",
+   "beforeSha256": "1b77b320562a4706f31c2b9dcaebcc0cac3cbc410120e936eaeb0d3306b61edb",
+   "afterSha256": "c8f589298e6ebf629e93f5c71146c892f73fe10a222899058beffac05bb769a9"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts",
+   "kind": "edit",
+   "after": "0055",
+   "beforeSha256": "75d20f4b4e35a252a90f7731719592c5e73782010ba22e3be57858188d3baaae",
+   "afterSha256": "cb6f3e559f409019fe9e96ad45cfbce9981331fc37ea98d85472669dbea696ef"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+   "kind": "edit",
+   "after": "0056",
+   "beforeSha256": "a809d7cd5f1cdb14cbc08be0b23c621f0b4cbd7d5666ffa06bcea31b4e7f19ec",
+   "afterSha256": "0289e6ceaf547ffeede6d206a07807c8c90530afc2892ee1a7ae0e3de1bd99e9"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🟦️.ts",
+   "kind": "migrated",
+   "after": "0057",
+   "beforeSha256": "6259fc6cc99e8bc5d3cfc05e4e382f5778f716e3de33a6361cf92ac970a7a6fd",
+   "afterSha256": "75af691cbd797e81ff06e26583fa9fbe32aef70f4a39096be82d1d618bccac54"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts",
+   "kind": "new",
+   "after": "0058",
+   "beforeSha256": null,
+   "afterSha256": "d9fcf03137f4c75b326c6324b6a333b6bafb8b6fec1a5cab22162aa3e850b25e"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️environment/🟦️.ts",
+   "kind": "new",
+   "after": "0059",
+   "beforeSha256": null,
+   "afterSha256": "9b03bc2a6adb063c319a96545248012edc7d1b133d0df921765a658c175bd26e"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️git/🟦️.ts",
+   "kind": "new",
+   "after": "0060",
+   "beforeSha256": null,
+   "afterSha256": "896703daef55325702d39a0f6db3facb5d1e0544931d32f022ba3764a78a20b7"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🎭️playwright/🟦️.ts",
+   "kind": "new",
+   "after": "0061",
+   "beforeSha256": null,
+   "afterSha256": "d415fc8612b137c91a742729200a980ed053a2a485578e6a9bb5f4e38c0f74ab"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts",
+   "kind": "new",
+   "after": "0062",
+   "beforeSha256": null,
+   "afterSha256": "c9b1d6ec7c124c017f509007318318f459e9205b876e4b9b21f9226e41446cb4"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🐙️github/🟦️.ts",
+   "kind": "new",
+   "after": "0063",
+   "beforeSha256": null,
+   "afterSha256": "24b19acef6fba2686589cf9bf8d92a48b887c3aa6047971cd361f9781852bd4b"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/📌️pin/🟦️.ts",
+   "kind": "new",
+   "after": "0064",
+   "beforeSha256": null,
+   "afterSha256": "fe17207305805d450e9052da4e964746442ba23c5231fab2ed6428fc1cfe6002"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/📖️registry/🟦️.ts",
+   "kind": "new",
+   "after": "0065",
+   "beforeSha256": null,
+   "afterSha256": "5bd50a9a29ed94b780f6ea4b16607b09bf95f58e8798f8608af3286f546bc7cf"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔁️compat/🟦️.ts",
+   "kind": "new",
+   "after": "0066",
+   "beforeSha256": null,
+   "afterSha256": "423982016af1b67e098611fba28fac678dce6da5f5313e7cc9637f8f467c9dd2"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔌️funnel/🟦️.ts",
+   "kind": "new",
+   "after": "0067",
+   "beforeSha256": null,
+   "afterSha256": "d5f9dcbc4686401ff91b77ad44339392f9075db70908042cd6a15628bf96a241"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔍️scan/🟦️.ts",
+   "kind": "new",
+   "after": "0068",
+   "beforeSha256": null,
+   "afterSha256": "ec87c9ed2e1fe82c4618e646385e6b98b488b8d160b84579a81df1fe6d8556dd"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔎️resolve/🟦️.ts",
+   "kind": "new",
+   "after": "0069",
+   "beforeSha256": null,
+   "afterSha256": "f3481b0c758f4a00e4ba6a94527d0df4fd4a69dd382099cdde8226ca185c484d"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json",
+   "kind": "new",
+   "after": "0070",
+   "beforeSha256": null,
+   "afterSha256": "75c0e16aef593f1054fe32a2415e8d17f6653465854e971850eb93208c85d32f"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🛡️guard/🟦️.ts",
+   "kind": "new",
+   "after": "0071",
+   "beforeSha256": null,
+   "afterSha256": "a642d7d315fefe68f5fe05191e5024202ce9c5e17938f70be8e987671e6822a1"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🟦️.ts",
+   "kind": "new",
+   "after": "0072",
+   "beforeSha256": null,
+   "afterSha256": "c018c4cd127e07fda3554e40d8f6f70d8ac05161abe65e5ee46baa8c5a0c85ec"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🏃️run/🟦️.ts",
+   "kind": "new",
+   "after": "0073",
+   "beforeSha256": null,
+   "afterSha256": "dd97421ad043497708aa347bc6eccc93347942f7f3971920eb7580c6623be31a"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/📖️registry/🟦️.ts",
+   "kind": "new",
+   "after": "0074",
+   "beforeSha256": null,
+   "afterSha256": "c42ffd0ce78498f75ecf3c2637c235e99c249af510dc7de94970b2df3b675df6"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🔌️funnel/🟦️.ts",
+   "kind": "new",
+   "after": "0075",
+   "beforeSha256": null,
+   "afterSha256": "5ea7129ae1e020f7f913918b8317a789b72c52bc0a461abaa03c9e27b8bb16aa"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🔍️scan/🟦️.ts",
+   "kind": "new",
+   "after": "0076",
+   "beforeSha256": null,
+   "afterSha256": "f8977fb4e11dd98987300208b6d0e5cee435440796d0ede315ec9155d1a5e2fe"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🔎️resolve/🟦️.ts",
+   "kind": "new",
+   "after": "0077",
+   "beforeSha256": null,
+   "afterSha256": "4d22ce7cb308d2a7313517e0ab25afdac19c1b0935d8f5336931f3421238caac"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🛡️guard/🟦️.ts",
+   "kind": "new",
+   "after": "0078",
+   "beforeSha256": null,
+   "afterSha256": "11626350f92e9ed87178621cf3f9ad4046a640ece75bcc843586bb4db7ec3e31"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🧫️fixtures/🔣️.json",
+   "kind": "new",
+   "after": "0079",
+   "beforeSha256": null,
+   "afterSha256": "f59854e4ecf5c05ee3e0877afbbdf5d444e1f06aee5280e1e5576bf6db59e91f"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧬️schema/🔣️.json",
+   "kind": "new",
+   "after": "0080",
+   "beforeSha256": null,
+   "afterSha256": "1e8723b621ddd5afee97c11877074aeee65cfff6667ade11151ab782d5353bc7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
+   "kind": "migrated",
+   "after": "0081",
+   "beforeSha256": "4f92a02f75d766d753f52bb30ae1e0e42ef54c17d7b2adc3cf1dd998ce5c98ae",
+   "afterSha256": "a4950b7f2d7e4f182a705ced318dbb8a0e04f19b17df60352048c7660352900e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+   "kind": "migrated",
+   "after": "0082",
+   "beforeSha256": "0b5708adf1ffc6b5a3a95f4f1cb7fe26b9a9b4583961aac94c271a88b8295f6b",
+   "afterSha256": "764314976144d4076ea0beb338d235f38696a2777d7c9ebbc0adbcc8695972d1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+   "kind": "migrated",
+   "after": "0083",
+   "beforeSha256": "a4cf65478400c70ef3dc809a6a000480171c3ee04b6e23d43f0eb3d1932b67b7",
+   "afterSha256": "f02deb95204477f56a5ffefea92c9ef01fa00e8418325adf0711bee572fcc7d7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+   "kind": "migrated",
+   "after": "0084",
+   "beforeSha256": "8298c47eb8ac180f76b903e7c678977548247ed836213f05e1374764a3fd106e",
+   "afterSha256": "34a9adfa0f9648ff4c201a63a1fa8d8444588e0c8a20e8acc3a8fbb3f253da53"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+   "kind": "edit",
+   "after": "0085",
+   "beforeSha256": "e12d1909cfddd99d64525e25fc9c29792e62ef23c0d86d853b338acefcc5b0fe",
+   "afterSha256": "8195c838c98cec617bb38a6cbc8385cf12ab626f340ae3257730aba53ee5117c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🟦️.ts",
+   "kind": "migrated",
+   "after": "0086",
+   "beforeSha256": "d174f9a15d2cf72c862c7c5211b96cea5e5670510f1ae029fbc6af9208e86ee7",
+   "afterSha256": "8ab16b9d9a5febb1f2829b928420cd07a833f667fef3d71b4e7bebcf6ea749c4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts",
+   "kind": "migrated",
+   "after": "0087",
+   "beforeSha256": "9215c33fb38c45e61fe200869ee89d76386625a7462f462d108eab9e1cb172a9",
+   "afterSha256": "3bde67cae07fc3ee7bdc042d5ca7d305fea31356df7c08cf0931b7ad3dfd2b92"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🌿️git/🐹️.go",
+   "kind": "edit",
+   "after": "0088",
+   "beforeSha256": "e63b9b29c6a31ad2902c7d9c75da7ea41c968a4cb4a3c8681dcfb3dc9ae59e41",
+   "afterSha256": "12cd2821a630075f798a6da1183cdd1b0d70af58487c505f17551d78de04f25f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔒️cache-correctness/🟦️.ts",
+   "kind": "migrated",
+   "after": "0089",
+   "beforeSha256": "131e2a1fd1c68bc061572c732d35306f4da13f58373fb339f5f2ef7f232b37e4",
+   "afterSha256": "ed20512395efa0b13193d860f6ce1084b3dbd93f84df28f604bc78d2bed61f16"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/⌨️command/🟦️.ts",
+   "kind": "new",
+   "after": "0090",
+   "beforeSha256": null,
+   "afterSha256": "72833537e8a6f9941e1dda8acb0ae93c3dc97c91a4ed2f3abce4874205414984"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🟦️.ts",
+   "kind": "new",
+   "after": "0091",
+   "beforeSha256": null,
+   "afterSha256": "b2bbf929eeffc062fd314834837394267a766d9cdf0c9ddde924b4aec4d2850a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🧪️tests/🟦️.ts",
+   "kind": "new",
+   "after": "0092",
+   "beforeSha256": null,
+   "afterSha256": "3100101ec2b9341384adc87265bf9fdb36919a10b9def34f7478f766060b65da"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🧬️schema/🔣️.json",
+   "kind": "new",
+   "after": "0093",
+   "beforeSha256": null,
+   "afterSha256": "0dbd298eb74e3f37f558e16967b7dbc35459511a6067e173e03abe78cedf7497"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🧾️ledger/🔣️.json",
+   "kind": "generated",
+   "after": "0094",
+   "beforeSha256": null,
+   "afterSha256": "0fa3778fc7de99813b1e0371e064f5f1787dd6104853f542714ed5e1504defdc"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🟦️.ts",
+   "kind": "migrated",
+   "after": "0095",
+   "beforeSha256": "7438dcc4be131e43ce7c685a2182b67a92ec6a93da416244ec4f4294e6f02487",
+   "afterSha256": "23533e5bcef196451e492524d8226e0ae756626a3691c804a3f02c4e01d8b565"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/🟦️.ts",
+   "kind": "migrated",
+   "after": "0096",
+   "beforeSha256": "b2131760acc63e4b9850c1f8a5049f980698b4ace7dfe4191ecdbfa70c9d647b",
+   "afterSha256": "41adeeda3dfe2ecdc9cf2543a0862e126afbe995ff07f8cdfc1a350d8946a84f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
+   "kind": "migrated",
+   "after": "0097",
+   "beforeSha256": "3b10982e5dec48b0e125302ab423936eb3706cfab1a85a9afe41027d9ec6f23d",
+   "afterSha256": "3b65fbab53f42e8caa16ca67a7918756ba20bcf422c50ef38951a9fb7435b734"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🔷️typescript-project/🟦️.ts",
+   "kind": "migrated",
+   "after": "0098",
+   "beforeSha256": "1af6f32b888fd8670daafd83b3d583400c2b3487739588302a55a0bc84925ab7",
+   "afterSha256": "b6b991ce2840cb875278f92a07323b9a961f9b64263c22897de5aa8ab51c5770"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+   "kind": "edit",
+   "after": "0099",
+   "beforeSha256": "3863d39bdecc9d73e2de972c3c20bcd7914bb034e7b2057772cd896329489ee5",
+   "afterSha256": "f595c65b772621e64a3c0b5177f5fd65c250a2e441b7aea7590c80ba35b1bcb5"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",
+   "kind": "migrated",
+   "after": "0100",
+   "beforeSha256": "b53ea2a115e8265beeefbffe5e72bdbff1ff87acde6cf7166c621ced22721deb",
+   "afterSha256": "a5247f12da9af7450fe372ba6fb6f9e80e906803ea4a4d9413b0c0aeacf00ac8"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🔀️run-commit/🟦️.ts",
+   "kind": "migrated",
+   "after": "0101",
+   "beforeSha256": "13fe3f98d324b83baf4dbdd9c581c9e3072bd8a6a5aa9aca69fafa37d430ff54",
+   "afterSha256": "4c2d22a346dedec901dc495d5726efedac74b8a2e254a7e61f6f13b28a140b8c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪙️micro-commit/🟦️.ts",
+   "kind": "migrated",
+   "after": "0102",
+   "beforeSha256": "63d2a88fa5f1c703890dc1c1c78e8d430f4d3cbe7d39b1a9d71a3e86af76dd25",
+   "afterSha256": "2bbe353cf28ddd4ed3cf31e47ecb04013320d944046d255da348ee97bc8127e3"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🗂️documents/🟦️.ts",
+   "kind": "migrated",
+   "after": "0103",
+   "beforeSha256": "4cd1e8d3251e895cab72a7ade29598b7408917cf398ba142b25d51224195d6a6",
+   "afterSha256": "9e50e380b3aa8fb11cf5bca73625bb334013865dd571b8c9726ac00b6ffcb390"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/📇️source/🟦️.ts",
+   "kind": "migrated",
+   "after": "0104",
+   "beforeSha256": "a388ef378ccdf9ac89b510d433effec5863ba03fc0e59189a1c67b00b9dbce28",
+   "afterSha256": "d2e988c4d8dc939ab0eb0e66655ca5ecd83b3f70b2a061a5832a239d7026557f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts",
+   "kind": "migrated",
+   "after": "0105",
+   "beforeSha256": "91092369ca3032083dc22960b42618e381e477e162298aaef85231c1d232d834",
+   "afterSha256": "1f74d62374e32b42567716d61c38789e97194dfea34498774edd1763b7ef633b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts",
+   "kind": "migrated",
+   "after": "0106",
+   "beforeSha256": "cf49f9d2ffc5a54a397fdbb35b2999572277ead2e1dc075d3f5598a44b096dfa",
+   "afterSha256": "1b180a3ff38af188eb1c26330128c790924f9163785459194414f69fab300dd9"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "kind": "edit",
+   "after": "0107",
+   "beforeSha256": "b232544e8cf70f039407d650dc81bafc857a917e16cd4c8e2c84f1564c56bab7",
+   "afterSha256": "f005a04ed204e374d7427eb9b63dcbbcc5fc4881a99bdc0f4ceb97c4608417ea"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts",
+   "kind": "migrated",
+   "after": "0108",
+   "beforeSha256": "589d99565ef87d25c6a2cb7b60703edd5fb2b904db377be9f5d313b06f10e83d",
+   "afterSha256": "22e848ebbf11099d4cd617367e7d2ad40abd3ba41c18577e47661cb15c7068ee"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts",
+   "kind": "migrated",
+   "after": "0109",
+   "beforeSha256": "92062ed50731f3de4de652364ad4624e80653f6a792cb21766ddbf9ce614d799",
+   "afterSha256": "44c36db3a65a576a4f27361693f59d96d0e0f0bc7a963dc72b7b6d750b6336e7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/📏️measure/🟦️.ts",
+   "kind": "migrated",
+   "after": "0110",
+   "beforeSha256": "ceb43105ea75ce492e723dd0752eda8357d4c1e82dd6f1fecdf66c9c21ef9464",
+   "afterSha256": "37cd982e91fe67f2f78cd4fda299aa72483074b0f0a1da312e33155905e1bdd0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts",
+   "kind": "migrated",
+   "after": "0111",
+   "beforeSha256": "ffff608f7b8a6ed00dbc533a8620868a58da9621d930c6420c786561e1760a3c",
+   "afterSha256": "14620166c509757bc49ea9baa79cd5e2e7713755f442480f52e5cec40a83e0e6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🪞️unmirror/🏃️run/🟦️.ts",
+   "kind": "migrated",
+   "after": "0112",
+   "beforeSha256": "7aec561a598a8161f483eebe4fdeab5f8ae4978c0313d15cfebb18bfa0c281fc",
+   "afterSha256": "b94a79fb4f6bc00a2899fba5bbd85c174c7fdf1b19949bcd4b03ba1a6edda1c7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "kind": "edit",
+   "after": "0113",
+   "beforeSha256": "033beb76e03a0cc2848ee2c97f813103e2e27395ee009b523865b1ecd41b7bc7",
+   "afterSha256": "9b7a90b720c295c86d6cfd7fd2deac577387ac6dc4730d56dc9f1e753835e203"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json",
+   "kind": "generated",
+   "after": "0114",
+   "beforeSha256": "9108331f52654d6205c0a3a3aedd3805e5d4eb66bddad1cb7ec6934253053063",
+   "afterSha256": "0b3377c941ca38f0ae2e5edc75c0b39a97b3a9dca0c82e26adf0dfbd1d48ea33"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/⌨️command/🟦️.ts",
+   "kind": "migrated",
+   "after": "0115",
+   "beforeSha256": "bdfa778854cd13993c55e071637eec366bd7440d14fc16695feefdc85daed8d2",
+   "afterSha256": "446b43852cf38bbe253e5bc3dd69eeecdf9135154abc444ba1dfb49fb89e22b7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "kind": "edit",
+   "after": "0116",
+   "beforeSha256": "1cdca47eeb2d2920f3b69d838cab3c1cd9fd047ce0d1f7beac0aab2f2d710c17",
+   "afterSha256": "eab18d7e2dc137f1bbf07f168049129bb02c4d88205a79a1a7514d720b0050f0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "kind": "migrated",
+   "after": "0117",
+   "beforeSha256": "ce528279edfb5573247d7d596aa81bf3b8fc07db1b8e2eb3a060dc5bfa09d2b8",
+   "afterSha256": "84e83d07f73fb39577afa70d2ba096e80f522a057c1708a2092afe06152744cc"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts",
+   "kind": "migrated",
+   "after": "0118",
+   "beforeSha256": "cd80f7465ff4318d84faee593477216e3ca705c4ec8453fe48c3a05eaeec7c26",
+   "afterSha256": "70927d485ea8b2660820348fe46e12f7d5be16e86ffdb920b98000d9c2f014b6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "kind": "new",
+   "after": "0119",
+   "beforeSha256": null,
+   "afterSha256": "f98706470233e5f534a2f347bcc46c2ebe031006472e3e5f2b8cd131a7d29c6a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪞️parity/🏃️collect/🟦️.ts",
+   "kind": "migrated",
+   "after": "0120",
+   "beforeSha256": "38722e1a3fac402fe141b99e1a18720f4fd6915f82bbac9d3a70fc69b2575cc3",
+   "afterSha256": "07afe3bb752c44199554c6a9b94459fafb7ef98fb2a40d34c9623dc467d07bec"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+   "kind": "migrated",
+   "after": "0121",
+   "beforeSha256": "240e486fd4a2daadea0a3b2ea4fa19ba865ad3e17263699e6290a61c27587ad0",
+   "afterSha256": "7009f14e3910d75073e9c028cc214236afd1476b23911247c49227441b49b5b7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "kind": "migrated",
+   "after": "0122",
+   "beforeSha256": "552a33ca1a137a7501a19c8ae5d7023b078f7433e35d2c8623286d5a780fdf97",
+   "afterSha256": "b369ff6feb5041a7369ab43f6e86abf8b569a84efedeb033f5a5d4a3490c98b8"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "kind": "migrated",
+   "after": "0123",
+   "beforeSha256": "9efbc0967add9c7fbb91b17a7752583058e181ee4e6b87c17f82c542ad36cb9c",
+   "afterSha256": "153587e293df9270429c09710e8e852555b6ecbdd6ea562e42503b4ebae15340"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "kind": "migrated",
+   "after": "0124",
+   "beforeSha256": "a45c49ee81da9cf81473ec0146e2b69e39bebc223dbf88020b164780baddeb8f",
+   "afterSha256": "bfb60e7ec027d6f3ba35317c75bcf7f3c9e21fa58cbdec426933dbd6e13cd701"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🌳️tree-digests/🟦️.ts",
+   "kind": "migrated",
+   "after": "0125",
+   "beforeSha256": "51d261d2923e9cf1a4bf83821a1425fcad5ded3963e0172f01467727840b7e17",
+   "afterSha256": "3fd356f1b1c9babeb50a84237c0430cfbd8fe51537ff78ed8ea0628d8d8e96d6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📥️incoming-references/🟦️.ts",
+   "kind": "migrated",
+   "after": "0126",
+   "beforeSha256": "7946ea377f40c4c5f7a2b3662baaf1bac5e00f01228a64102b9948f5d3056794",
+   "afterSha256": "348ac7b5c1462adb30125cf26ce27450beaffa7ecb13fd67a5deed9fd6a13b19"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📸️repository-capture/🟦️.ts",
+   "kind": "migrated",
+   "after": "0127",
+   "beforeSha256": "bdc867191b1483b80e8729303725a24445564cbc3e99f833a2765bc318459c5f",
+   "afterSha256": "298821ce629e133328ecb5cab57182ab9719672254f1d70f3979772ddbc9a96a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🎯️attempt-selection/🟦️.ts",
+   "kind": "migrated",
+   "after": "0128",
+   "beforeSha256": "f24c4cbe45f8b50b6490e913c75f07983cca29c6ac0c6e46ef51f34a6bd8a8ce",
+   "afterSha256": "95f14601019fc7ea56f4fdb48c5d5f50b0c15710ce05f24608a5b929745f6a1f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚪️source-admission/📁️io/🟦️.ts",
+   "kind": "migrated",
+   "after": "0129",
+   "beforeSha256": "e9f20a18bf4b11ae68421e696121b6c545ce7e9b34bdd05077ff5d48c4571d62",
+   "afterSha256": "ce3a57f557ed0edf831e62c2f0ea6dcd4919acb5cecacae8849cd0f667a750d0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧮️reference-digests/🟦️.ts",
+   "kind": "migrated",
+   "after": "0130",
+   "beforeSha256": "b0f58a0f97a6bcc9e4def683eb67fb11f6ad4781bf0c90dd3db501b667cc5865",
+   "afterSha256": "d358b94fbce77bb042c8660b1276df580287d5370c9e472758bd22605e97295f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts",
+   "kind": "migrated",
+   "after": "0131",
+   "beforeSha256": "0c8121b3149c2caf39827b51157e98e3ec86f51af7de051690a56e8fd87ef5d8",
+   "afterSha256": "80739703bd5299445ea3d2a7379d3e50e5fe8a1530da8e940a8270c330745f3d"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts",
+   "kind": "migrated",
+   "after": "0132",
+   "beforeSha256": "562da2c285e602428588635eb44a182f518b70598a0920200857ec15fb0a044e",
+   "afterSha256": "862296884b362856e7bd3ba5f4662b46b1b0de0025280530d3ffa52cf461abb7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🚦️goal-gate/🟦️.ts",
+   "kind": "migrated",
+   "after": "0133",
+   "beforeSha256": "967eba8cf107b08d40254f65a80a157e4e3c5e55c555d31dff36514c55bd981c",
+   "afterSha256": "e1b7e785af6b7b04e7da10c23dbc5498fea7cc5fb08f18a6c8da5014089ebf4c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts",
+   "kind": "migrated",
+   "after": "0134",
+   "beforeSha256": "cf759f255973e30f69fadc73202da6927187302eb9af15adfe891391297e1c7e",
+   "afterSha256": "dd68b2b0d2225ab0b6cd9fc01fa70fc734d29f589db568ce729575c3130492ee"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts",
+   "kind": "migrated",
+   "after": "0135",
+   "beforeSha256": "c73ea19d03fe6e358b8053e59626c5e064286bd1a8464596e1512d4036681baf",
+   "afterSha256": "c6867c148ac1569a1136247641b0d8e78535d2e5ec4a62bf1026220de44c8cbd"
+  }
+ ]
+}

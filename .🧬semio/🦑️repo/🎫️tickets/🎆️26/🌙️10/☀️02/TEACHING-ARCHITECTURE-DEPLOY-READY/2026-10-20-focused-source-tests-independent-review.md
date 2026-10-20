@@ -1,0 +1,9 @@
+# Focused Source Tests Independent Review
+
+Read-only review of proposed2026-10-20-focused-cache-reset-neutral-plan.md and exact current test names/lifetimes. No current seal changed and no command or test executed.
+
+Both anchored filters name exactly three real unconditional Bun tests. Cache selection includes the actual selected-custody corpus validator (all4/5accept6refuse rows), separate general3/exact5/cardinality/refusal test, and the direct process-Original receiver test that invokes independent Python/SQLite selected wire oracle plus actual lsof and source-owner checks. Reset selection includes actual14-case owner, actual four/five witness law, and actual rooted/nested filesystem publication. None of these selected declarations uses skipIf. Exact3pass/0fail and actual0/nullsignal per child prevent a missing/filtered test from silently satisfying acceptance; unrelated filtered declarations are not coverage.
+
+Separate sequential projected Bun-test children are necessary: cache direct receiveScriptProcessInvocation retires its process Original, whereas reset withBuildTestInvocation retains a shared receiver through afterAll. Its actual afterAll joins pending users, closes suite resources and finishes receiver lifetime; putting both files in one child would conflate lifetimes. Per-child generated artifact directories preserve scratch ownership. Cache120s/reset180s child ceilings exceed the stated runner test timeouts and retain parent lifetime; all children need live projected envelopes, never replayed retired Original.
+
+Proposed existing8 plus observer120s plus focused300s equals1470s within1560s parent, leaving90s. Direct12 Source pin roster is honestly narrower than a full transitive snapshot and must be refreshed before the future seal. No material plan blocker found; actual execution and exact summary checks remain required.

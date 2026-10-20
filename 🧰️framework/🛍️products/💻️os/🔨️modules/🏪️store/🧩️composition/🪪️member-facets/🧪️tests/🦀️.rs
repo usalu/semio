@@ -43,12 +43,10 @@ fn native_member_facet_admits_non_clone_non_reference_types(){
  assert_native_member::<OriginalProjection,OriginalOperation>();
  let original=OriginalProjection(DemoSnapshot{n:Some(7)});
  assert_eq!(serde_json::Value::from(original.to_value()),serde_json::json!({"n":7}));
- println!("[DEBUG] actual SpaceMember generic capability and concrete non-Clone/no-ColdMutation projection+operation compile; borrowed wire observation agrees with Serde, native publication runtime validated separately");
 }
 /// 📖️ Portable explicit selection never removes native capabilities or manufactures reference capabilities.
 #[test]
 fn original_member_profiles_match_explicit_authority_selection(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){assert!(row["native"].as_bool().unwrap());let admitted=["snapshotClone","mutationClone","coldMutation","referenceSelected"].into_iter().all(|key|row[key].as_bool().unwrap());assert_eq!(admitted,row["reference"].as_bool().unwrap());}
- println!("[DEBUG] {} original native/reference member profile rows preserve explicit reference selection",law["cases"].as_array().unwrap().len());
 }

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -43,7 +44,7 @@ test("classifies foreign sources under POSIX and Windows path rules, agreeing wi
     foreignDepInfoPaths(row.paths.map((path): CargoDepInfoFile => ({ base: "build", path })), row.roots, row.platform),
   );
   expect(actual).toEqual(fixture.classify.map((row: { foreign: string[] }) => row.foreign));
-  const python = Bun.which("python3") ?? Bun.which("python");
+  const python = testPythonV1() ?? Bun.which("python");
   expect(python, "python3 is part of the workspace toolchain").toBeTruthy();
   const oracle = spawnSync(python!, ["-c", PYTHON_CONTAINMENT_ORACLE, JSON.stringify(fixture.classify)], { encoding: "utf8" });
   expect(oracle.status, oracle.stderr).toBe(0);

@@ -4,7 +4,7 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "build-zwischenbericht",
@@ -18,9 +18,15 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
         }
-      }
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/📦️artifacts/**/*",
+        { "dependentTasksOutputFiles": "**/*", "transitive": false }
+      ]
     },
     "watch": {
       "executor": "repo:script",
@@ -40,7 +46,7 @@
       "executor": "repo:script",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/documents/zwischenbericht"
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/report/zwischenbericht"
       ],
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
@@ -100,7 +106,7 @@
       "executor": "repo:script",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/documents/forschungsbericht"
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/report/forschungsbericht"
       ],
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
@@ -160,7 +166,7 @@
       "executor": "repo:script",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/documents/kompaktbericht"
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/report/kompaktbericht"
       ],
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",

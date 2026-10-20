@@ -413,7 +413,6 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
     assert!(duplicates.iter().all(|report| !report.accepted));
     assert_eq!(first.snapshot().expect("unchanged duplicate"), combined);
     assert_eq!(events(&first).await.len(), events(&second).await.len());
-    eprintln!("[DEBUG] FEM3d two mounted editors authored while disconnected, replayed original causal envelopes and deduplicated catch-up with both sparse fields intact");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -587,7 +586,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     use semio_framework_plugin::artifact_app_laws::assert_registered_presence_round_trip;
     use semio_framework_plugin::artifact_app_laws::fixture_identity;
     use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
     let boot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
     let node = boot.nodes.first().expect("bundled structural node");

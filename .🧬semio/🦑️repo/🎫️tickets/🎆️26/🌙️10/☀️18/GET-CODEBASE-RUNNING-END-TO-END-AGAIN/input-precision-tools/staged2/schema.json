@@ -1,0 +1,695 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Input Precision Derivation",
+  "description": "🎯️ Declares, per build target, which workspace files the task really reads. A rule selects targets and names the derivations (static globs, taxonomy file kinds, Cargo crate closures, TypeScript program closures, dispatcher branches, owner delegation); the engine turns them into the narrowest declared input set and refuses a rule that would fall back to the whole repository.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "exclusions",
+    "retained",
+    "profiles",
+    "routes",
+    "rules",
+    "messages"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Profile"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Rule"
+      }
+    },
+    "routes": {
+      "description": "Owner delegation table: the script words a root command forwards to an owner target, generated from the owners' workspaceCommand declarations and checked against them.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Route"
+      }
+    },
+    "exclusions": {
+      "description": "Negations appended to every derived pattern list: generated and vendored trees no task reads.",
+      "$ref": "#/definitions/Patterns"
+    },
+    "retained": {
+      "description": "Inputs every narrowed target keeps although its rule replaces the broad groups that contain them: the toolchain, platform and build-mode identity of the cache key (`sharedGlobals`) and the project manifest, whose options and environment the task replays with.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96
+      }
+    },
+    "messages": {
+      "$ref": "#/definitions/Messages"
+    }
+  },
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "maxLength": 96
+    },
+    "Pattern": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^!?\\{(?:workspaceRoot|projectRoot)\\}/\\S+$"
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[^/\\s*?{}][^*?{}]*$"
+    },
+    "Patterns": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/Pattern"
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "reads"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "reads": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/definitions/FlatRead"
+          }
+        }
+      }
+    },
+    "Select": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "commands": {
+          "description": "Command heads as script words: the script path as written followed by its leading words; a target matches when its command starts with exactly these words.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        }
+      }
+    },
+    "Read": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/ProfileRead"
+        },
+        {
+          "$ref": "#/definitions/GlobRead"
+        },
+        {
+          "$ref": "#/definitions/KindRead"
+        },
+        {
+          "$ref": "#/definitions/CargoRead"
+        },
+        {
+          "$ref": "#/definitions/DispatchRead"
+        },
+        {
+          "$ref": "#/definitions/ProgramRead"
+        },
+        {
+          "$ref": "#/definitions/OwnerRead"
+        },
+        {
+          "$ref": "#/definitions/InputRead"
+        },
+        {
+          "$ref": "#/definitions/ScriptRead"
+        }
+      ]
+    },
+    "ProfileRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "GlobRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "globs"
+      ],
+      "properties": {
+        "globs": {
+          "$ref": "#/definitions/Patterns"
+        }
+      }
+    },
+    "KindRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kinds",
+        "under"
+      ],
+      "properties": {
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        },
+        "under": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Dir"
+          }
+        },
+        "named": {
+          "description": "Select only the canonical emoji-named file of each kind (🟦️.ts) instead of every file of the kind.",
+          "type": "boolean"
+        }
+      }
+    },
+    "CargoRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargo"
+      ],
+      "properties": {
+        "cargo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "packages": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "directories": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/Dir"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DispatchRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatch"
+      ],
+      "properties": {
+        "dispatch": {
+          "description": "Harvests the Cargo packages (-p), TypeScript entry files and repository paths a dispatcher branch names, for the branch the command selects.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "after"
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/definitions/Path"
+            },
+            "after": {
+              "description": "The routing words the command consumed before the dispatcher sees its segments.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            }
+          }
+        }
+      }
+    },
+    "ProgramRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program"
+      ],
+      "properties": {
+        "program": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tsconfig"
+          ],
+          "properties": {
+            "tsconfig": {
+              "$ref": "#/definitions/Path"
+            }
+          }
+        }
+      }
+    },
+    "OwnerRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner"
+      ],
+      "properties": {
+        "owner": {
+          "const": "route"
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "select",
+        "replaces",
+        "reads",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "select": {
+          "$ref": "#/definitions/Select"
+        },
+        "replaces": {
+          "description": "Broad inherited input groups this rule narrows; every other declared input stays.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "reads": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/Read"
+          }
+        },
+        "evidence": {
+          "description": "How the rule's reads are known: traced (containment-checked against a recorded run), static (derived from code or manifests), bound (a kind-bounded superset of a family), whole (reads the whole repository by design, stated in the description; inherited inputs stay) or assumed (a narrowing awaiting a trace; inherited inputs stay and the debt is recorded).",
+          "enum": [
+            "traced",
+            "static",
+            "bound",
+            "whole",
+            "assumed"
+          ]
+        }
+      }
+    },
+    "Route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "words",
+        "project",
+        "target",
+        "root"
+      ],
+      "properties": {
+        "words": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "root": {
+          "$ref": "#/definitions/Path"
+        }
+      }
+    },
+    "InputRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "input": {
+          "description": "A named input group of the target's project kept as an input.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        }
+      }
+    },
+    "Dir": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?:\\.|[^/\\s*?{}][^*?{}]*)$"
+    },
+    "FlatRead": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/GlobRead"
+        },
+        {
+          "$ref": "#/definitions/KindRead"
+        },
+        {
+          "$ref": "#/definitions/CargoRead"
+        },
+        {
+          "$ref": "#/definitions/DispatchRead"
+        },
+        {
+          "$ref": "#/definitions/ProgramRead"
+        },
+        {
+          "$ref": "#/definitions/OwnerRead"
+        },
+        {
+          "$ref": "#/definitions/InputRead"
+        },
+        {
+          "$ref": "#/definitions/ScriptRead"
+        }
+      ]
+    },
+    "ScriptRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script"
+      ],
+      "properties": {
+        "script": {
+          "description": "Harvests the Cargo packages, test files and repository paths a whole script names and follows the imports of the files among them.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/definitions/Path"
+            }
+          }
+        }
+      }
+    },
+    "Messages": {
+      "description": "Progress texts of the program analysis in every language, with `{tsconfig}`, `{files}`, `{derived}`, `{reused}` and `{seconds}` placeholders; the language is chosen like the CLI help: SEMIO_LANGUAGE, then the locale, then the first language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "languages",
+        "texts"
+      ],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          }
+        },
+        "texts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deriving",
+            "progress",
+            "done"
+          ],
+          "properties": {
+            "deriving": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
+            },
+            "progress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
+            },
+            "done": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ProgramReceipt": {
+      "description": "The persisted import analysis of one TypeScript program: per source file the content digest, what its imports resolved to and the facts that resolution consulted; reused while every one of them still holds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "tsconfig",
+        "compiler",
+        "chain",
+        "facts",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "tsconfig": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiler": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "path",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory",
+                  "text",
+                  "realpath",
+                  "directories",
+                  "digest"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": [
+                  "boolean",
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sha256",
+              "resolved",
+              "facts"
+            ],
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resolved": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "facts": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

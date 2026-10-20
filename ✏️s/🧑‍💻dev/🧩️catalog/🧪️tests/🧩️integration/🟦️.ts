@@ -7,7 +7,7 @@ import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrou
 import { auditPluginCatalogSources } from "@semio-tech/plugin-registry/catalog-verification/source-audit";
 import { auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "@semio-tech/plugin-registry/catalog-verification/navbar-example-audits";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework-manifest";
+import { examplesForApp, type PluginManifest } from "@semio-tech/framework-manifest";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "@semio-tech/plugin-registry/catalog";
@@ -86,10 +86,9 @@ describe("Specific original catalog completion", () => {
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
     const manifest = descriptor.manifest;
     expect(manifest?.pluginId).toBe("sourcing");
-    const admitted = normalizeManifestExamples(manifest!);
-    const editor = admitted.apps?.find((app) => (app as { id?: string }).id === "s.sourcing.curation@1/*#editor");
+    const editor = manifest!.apps?.find((app) => (app as { id?: string }).id === "s.sourcing.curation@1/*#editor");
     expect(editor).toBeTruthy();
-    const options = examplesForApp(admitted.examples ?? [], editor as { dialect?: { artifactKind: string; standard: string; subset: string } });
+    const options = examplesForApp(manifest!.examples ?? [], editor as { dialect?: { artifactKind: string; standard: string; subset: string } });
     expect(options.map((row) => row.id)).toEqual(["demo"]);
     expect(options[0]?.artifactJson?.includes("curation.curation.dsl")).toBe(true);
   });

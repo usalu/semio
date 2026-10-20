@@ -1,0 +1,11 @@
+# Explicit Read Roster Eligibility Audit
+
+Read-only review of actual combined schema, derive schema/cases/tests, host capture adapter and the three newly explicit physical readers. No tests, native execution or Source changes.
+
+Combined sourceFiles now has exactly fifty-two required properties with additionalProperties false and identical required/property membership. Production derive criticalPaths has eighty-eight entries and appends the exact source-reader TS, inference component-roster JSON and caching inference MJS. The three critical88 negative vectors select missing, extra and old-roster mutations; actual derive test truncates the old roster to eighty-five and its independent SQLite oracle compares exact unique membership, so the old eighty-five roster is refused. Sixteen phases, thirteen collection vectors and 2280000/2190000/90000 ms budget coupling remain unchanged.
+
+Present physical observations for these three files: ordinary regular single-link leaves, no leaf symlink, all inspected ancestors ordinary nonsymlink directories. Absolute UTF-16 path lengths are 139, 136 and 113; byte sizes are 1926, 4082 and 7688. Each exact path is required in combined schema and production critical roster, and none contains a host excluded path component. These are read-time observations, not a held filesystem lease. Actual host capture uses lstat facts and O_NOFOLLOW/nonblocking descriptor opening, and its stable Source reader/core enforces descriptor/ancestry identity and required critical ownership/hash.
+
+Actual source-reader lists component paths but readInferenceSourceV1 selects one named row and reads only that file; roster contains one script-inputs row pointing to the already reviewed implementation. Thus admitting reader+roster does not imply reading every listed component. Parser exports the exact commandSourceImports/runtimeModuleSourceImports used by the new test, takes actual source text, resolves TypeScript through its existing tool boundary, and reads its own bytes for sourceHash. No new production runtime dependency or broad transitive pin completeness is asserted.
+
+No blocking static coupling or present physical eligibility issue found. Root still must obtain a complete stable fresh seal over accepted current inputs and dispatch only its reviewed raw manifest hash. No collection/pass follows from this audit.

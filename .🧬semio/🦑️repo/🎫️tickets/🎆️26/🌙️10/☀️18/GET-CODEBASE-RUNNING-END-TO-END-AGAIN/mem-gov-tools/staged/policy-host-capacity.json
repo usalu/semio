@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "enabled": true,
+  "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192,
+    "budgetBasisPoints": 10000,
+    "rampMilliseconds": 300000
+  },
+  "swap": {
+    "ceilingBasisPoints": 2500,
+    "outMegabytesPerSecond": 64
+  },
+  "pressure": {
+    "psiWarnPercent": 10,
+    "psiCriticalPercent": 30,
+    "availableWarnBasisPoints": 1500,
+    "availableCriticalBasisPoints": 600
+  },
+  "load": {
+    "perCoreCeiling": 2,
+    "overrideAfterMilliseconds": 120000
+  },
+  "files": {
+    "ceilingBasisPoints": 8000
+  },
+  "attaches": {
+    "maximum": 32
+  },
+  "wait": {
+    "pollMilliseconds": 1000,
+    "progressMilliseconds": 5000,
+    "heartbeatMilliseconds": 15000,
+    "staleMilliseconds": 21600000,
+    "lockStaleMilliseconds": 10000,
+    "sampleMaximumAgeMilliseconds": 1000,
+    "maximumWaiters": 256,
+    "bypassMilliseconds": 30000,
+    "maximumBypasses": 6,
+    "agingMilliseconds": 300000
+  },
+  "kinds": {
+    "test": { "cpu": 1, "megabytes": 1536 },
+    "check": { "cpu": 1, "megabytes": 4096 },
+    "generate": { "cpu": 1, "megabytes": 1024 },
+    "build": { "cpu": 1, "megabytes": 2048 },
+    "script": { "cpu": 1, "megabytes": 768 },
+    "service": { "cpu": 1, "megabytes": 2048 }
+  },
+  "operations": [
+    { "name": "run", "shape": "tasks", "fixedMegabytes": 1536, "cpu": 1, "priority": "batch" },
+    { "name": "run-many", "shape": "tasks", "fixedMegabytes": 1536, "cpu": 1, "priority": "batch" },
+    { "name": "affected", "shape": "tasks", "fixedMegabytes": 1536, "cpu": 1, "priority": "batch" },
+    { "name": "exec", "shape": "tasks", "fixedMegabytes": 1536, "cpu": 1, "priority": "batch" },
+    { "name": "watch", "shape": "tasks", "fixedMegabytes": 1536, "cpu": 1, "priority": "interactive" },
+    { "name": "cargo", "shape": "tasks", "kind": "build", "fixedMegabytes": 1536, "cpu": 1, "priority": "batch" },
+    { "name": "show", "shape": "fixed", "fixedMegabytes": 5120, "cpu": 2, "priority": "batch" },
+    { "name": "graph", "shape": "fixed", "fixedMegabytes": 5120, "cpu": 2, "priority": "batch" },
+    { "name": "dependencies", "shape": "fixed", "fixedMegabytes": 6144, "cpu": 2, "priority": "batch" },
+    { "name": "command", "shape": "fixed", "fixedMegabytes": 2048, "cpu": 1, "priority": "batch" }
+  ]
+}

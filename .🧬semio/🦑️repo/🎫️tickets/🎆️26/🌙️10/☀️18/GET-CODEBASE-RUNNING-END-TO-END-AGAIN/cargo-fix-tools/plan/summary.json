@@ -1,0 +1,71 @@
+{
+ "missingNames": [],
+ "packages": 3423,
+ "workspaces": 290,
+ "touchedPackages": 2121,
+ "notScheduledTouched": [],
+ "unresolvedExtra": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"
+ ],
+ "findingCrates": 149,
+ "byGroup": {
+  "lock": {
+   "steps": 15,
+   "pkgs": 118,
+   "est": 236
+  },
+  "value": {
+   "steps": 16,
+   "pkgs": 55,
+   "est": 93
+  },
+  "retained": {
+   "steps": 44,
+   "pkgs": 152,
+   "est": 255
+  },
+  "fem": {
+   "steps": 3,
+   "pkgs": 13,
+   "est": 19
+  },
+  "proctor": {
+   "steps": 8,
+   "pkgs": 13,
+   "est": 35
+  },
+  "course": {
+   "steps": 1,
+   "pkgs": 4,
+   "est": 6
+  },
+  "test": {
+   "steps": 27,
+   "pkgs": 192,
+   "est": 226
+  },
+  "engines": {
+   "steps": 154,
+   "pkgs": 378,
+   "est": 782
+  },
+  "hub": {
+   "steps": 804,
+   "pkgs": 2102,
+   "est": 4167
+  },
+  "touched": {
+   "steps": 205,
+   "pkgs": 446,
+   "est": 999
+  },
+  "wasm": {
+   "steps": 9,
+   "pkgs": 42,
+   "est": 59
+  }
+ },
+ "steps": 1286,
+ "estMinutes": 6877,
+ "lockWorkspaces": 118
+}

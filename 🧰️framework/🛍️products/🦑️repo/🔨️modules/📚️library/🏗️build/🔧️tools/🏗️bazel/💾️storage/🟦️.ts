@@ -2,7 +2,7 @@ import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {isAbsolute,join} from "node:path";
-import {createHash} from "node:crypto";
+import {requireBazelSlotV1} from "../🧵️sessions/🟦️.ts";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -29,6 +29,12 @@ export interface BazelStorageV1{readonly tools:RepositoryCacheStoreV1;readonly d
 export async function requireBazelStorageV1(root:string,storage:BazelStorageV1):Promise<void>{for(const id of ["tools","dependencies","products"] as const){const store=storage[id];requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(root,id))throw Error("Original declared Bazel partition required");}const roots={tools:storage.tools.root,dependencies:storage.dependencies.root,products:storage.products.root},layout=bazelCacheLayoutV1(roots);if(JSON.stringify(layout)!==JSON.stringify(storage.paths))throw Error("Original Bazel partition layout required");for(const[key,path]of Object.entries(layout))if(key!=="version")requireNativeStoragePathV1(key==="executable"||key==="install"?roots.tools:key==="modules"?roots.dependencies:roots.products,path as string);}
 /** 🏪️ Keeps all finite stores alive through the complete native Bazel invocation. */
 export function withBazelStorageV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(storage:BazelStorageV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withRepositoryCacheStoreV1(root,"tools",invocation,phaseControl,(tools,toolPhase)=>withRepositoryCacheStoreV1(root,"dependencies",invocation,toolPhase,(dependencies,dependencyPhase)=>withRepositoryCacheStoreV1(root,"products",invocation,dependencyPhase,(products,actualPhase)=>body(Object.freeze({tools,dependencies,products,paths:bazelCacheLayoutV1({tools:tools.root,dependencies:dependencies.root,products:products.root})}),actualPhase))));}
+/** 🧳️ The two stores `tools setup bazel` writes: the executable and the module catalog never touch the products partition. */
+export type BazelSetupStorageV1=Pick<BazelStorageV1,"tools"|"dependencies"|"paths">;
+/** 🛂️ Refuses fabricated setup contexts; the products root is a declared path here and is never opened. */
+export async function requireBazelSetupStorageV1(root:string,storage:BazelSetupStorageV1):Promise<void>{for(const id of ["tools","dependencies"] as const){const store=storage[id];requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(root,id))throw Error("Original declared Bazel partition required");}const roots={tools:storage.tools.root,dependencies:storage.dependencies.root,products:repositoryCachePartitionRootV1(root,"products")},layout=bazelCacheLayoutV1(roots);if(JSON.stringify(layout)!==JSON.stringify(storage.paths))throw Error("Original Bazel partition layout required");for(const key of ["executable","install","modules"] as const)requireNativeStoragePathV1(key==="modules"?roots.dependencies:roots.tools,layout[key]);}
+/** 🏬️ Keeps only the tools and dependencies stores alive while Bazel and its fixed module catalog are provisioned. */
+export function withBazelSetupStorageV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(storage:BazelSetupStorageV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withRepositoryCacheStoreV1(root,"tools",invocation,phaseControl,(tools,toolPhase)=>withRepositoryCacheStoreV1(root,"dependencies",invocation,toolPhase,(dependencies,actualPhase)=>body(Object.freeze({tools,dependencies,paths:bazelCacheLayoutV1({tools:tools.root,dependencies:dependencies.root,products:repositoryCachePartitionRootV1(root,"products")})}),actualPhase)));}
 
 const cachePolicy=schema.definitions.CachePolicy.const;
 /** 📏️ Bounds Bazel's disk cache to its authored share of the finite products partition, aligned down to whole MiB. */
@@ -36,17 +42,16 @@ export function bazelDiskCacheMaximumBytesV1(productsMaximumLogicalBytes:number=
  if(!Number.isSafeInteger(productsMaximumLogicalBytes)||productsMaximumLogicalBytes<1048576)throw Error("Finite products budget required");
  return Math.floor(productsMaximumLogicalBytes*cachePolicy.diskCache.productsShareBasisPoints/10000/1048576)*1048576;
 }
-/** 🖥️ Names the one output base whose server serves every command of a single workspace, because Bazel restarts a server bound to another workspace directory. */
-export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,workspace:string):string{
- if(!isAbsolute(workspace))throw Error("Absolute Bazel workspace required");
- const base=join(layout.server,createHash("sha256").update(workspace).digest("hex").slice(0,16));if(base.length>256)throw Error("Bazel storage path exceeds 256 characters");return base;
+/** 🖥️ Names the output base of one session slot: a short ASCII path (slot ids are `s0`, `s1`, ...) whose server serves every command of the slot's one holder, because Bazel restarts a server bound to another workspace directory and serializes commands on one output base. */
+export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string):string{
+ const base=join(layout.server,requireBazelSlotV1(slot));if(base.length>256)throw Error("Bazel storage path exceeds 256 characters");return base;
 }
 /** 🌐️ Derives the closed startup and command flags for Bazel's disk, repository-content and optional remote caches; the remote part is the Bazel rendering of the neutral remote cache contract (`🌐️remote-cache`) and stays off until an endpoint is configured. The token travels only in `environment`, which the caller hands to the Bazel client and never persists. */
-export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,workspace:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
+export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
  const input=options.environment??{},contract=resolveRemoteCacheContractV1(input),command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
  if(options.skipCache)command.push("--noremote_accept_cached");
  const rendering=contract!==undefined&&!options.skipRemoteCache?bazelRemoteCacheV1(contract,input,{helperDirectory:layout.temporary}):undefined;
  if(rendering)command.push(...rendering.flags);
- const flags={startup:Object.freeze([`--output_base=${bazelServerBaseV1(layout,workspace)}`]),command:Object.freeze(command),remote:rendering!==undefined,environment:rendering?.environment??Object.freeze({}),...(rendering?.helper?{helper:rendering.helper}:{})};
+ const flags={startup:Object.freeze([`--output_base=${bazelServerBaseV1(layout,slot)}`]),command:Object.freeze(command),remote:rendering!==undefined,environment:rendering?.environment??Object.freeze({}),...(rendering?.helper?{helper:rendering.helper}:{})};
  if(validateJsonSchemaSubset(schema.definitions.CacheFlags,flags,schema).length)throw Error("Closed Bazel cache flags required");return Object.freeze(flags);
 }

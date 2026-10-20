@@ -5,6 +5,5 @@ L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 target="$L/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json"
 cp "$here/../rcache-tools/gen-help.ts" "$ov/gen-help.ts" && (cd "$ov" && bun gen-help.ts "$target") || exit 1
 rm -f "$ov/gen-help.ts"
-cp "$ov/$target" "$merged/$target"
-echo "regenerated help snapshots: $(python3 -c "
-import json,sys;d=json.load(open(sys.argv[1]));print(sum(len(v) for v in d['snapshots'].values()),'entries')" "$merged/$target")"
+base="${BASEDIR:-/private/tmp/ig/base0}"
+if [ -f "$merged/$target" ] || ! python3 -c "import json,sys;sys.exit(0 if json.load(open(sys.argv[1]))==json.load(open(sys.argv[2])) else 1)" "$ov/$target" "$base/$target"; then mkdir -p "$(dirname "$merged/$target")"; cp "$ov/$target" "$merged/$target"; echo "regenerated help snapshots (changed)"; else echo "help snapshots unchanged"; fi

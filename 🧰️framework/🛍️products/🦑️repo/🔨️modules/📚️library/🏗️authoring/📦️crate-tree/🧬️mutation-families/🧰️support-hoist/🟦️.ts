@@ -1,7 +1,7 @@
 /** 🧬️ Support hoist: module exporting `SupportHoist`, `inherentSelf`, `hoistAggregateSupport`. */
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { rustTokens } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { parseRustSourceTree, type RustSourceItem } from "../../🌳️module-tree/🟦️.ts";
 
 /** 🔭️ One name an aggregate module puts in scope: an import, a public child module or an item of its own. */

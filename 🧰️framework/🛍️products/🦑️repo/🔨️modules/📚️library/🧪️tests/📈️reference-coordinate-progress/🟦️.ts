@@ -5,6 +5,7 @@ import { dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:p
 import { parse as parseJsonc } from "jsonc-parser";
 import { dirname as oracleDirname } from "pathe";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress";
@@ -177,7 +178,7 @@ test("actual plan and apply callers forward progress without changing the marker
   const capture = declaration("capturePreflightReferenceBasis") as ts.FunctionDeclaration;
   expect(capture.parameters[6]?.name.getText(syntax)).toBe("progress");
   expect(calls("validatePreflightReferenceBasis", "capturePreflightReferenceBasis")[0]?.arguments[6]?.getText(syntax)).toBe("progress");
-  const apply = calls("applyTaxonomyPlan", "capturePreflightReferenceBasis");
+  const apply = calls("capturePreflight", "capturePreflightReferenceBasis");
   expect(apply).toHaveLength(2);
   expect(apply.map((node) => node.arguments[6]?.getText(syntax))).toEqual(["options.progress", "options.progress"]);
   expect(ts.isArrowFunction(calls("capturePreflightReferenceBasis", "referenceCoordinateRoots")[0]!.arguments[4]!)).toBe(true);
@@ -187,7 +188,7 @@ test("registration only: coordinate progress has one exact route and package own
   const registration = vector.registration;
   const project = JSON.parse(input(packageRoot + "/📋️project.json").toString("utf8"));
   const packageJson = JSON.parse(input(packageRoot + "/package.json").toString("utf8"));
-  const router = input(packageRoot + "/📜️script.ts").toString("utf8");
+  const router = input(readRegisteredTestRoute(root, registration.command).path).toString("utf8");
   expect(project.targets[registration.target]?.options?.command).toBe("bun ./📜️script.ts test " + registration.command);
   expect(packageJson.scripts?.[registration.target]).toBe("bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:" + registration.target);
   expect(router).toContain('"' + registration.command + '"');

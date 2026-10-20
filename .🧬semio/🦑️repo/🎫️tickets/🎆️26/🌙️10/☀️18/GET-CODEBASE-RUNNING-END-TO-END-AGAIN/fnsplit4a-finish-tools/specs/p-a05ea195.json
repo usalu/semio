@@ -1,0 +1,53 @@
+{
+ "file": "/private/tmp/fnsplit4a-finish/ov/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/👆️ink-pointer/🟦️.ts",
+ "function": "useInkPointer",
+ "keep": [],
+ "resolve": true,
+ "typesFromProducers": true,
+ "allowAny": true,
+ "shared": {
+  "dir": "🟢️shared",
+  "doc": "/** 🟢️ The shared declarations of useInkPointer. */"
+ },
+ "files": [
+  {
+   "dir": "🔶️abort-gesture",
+   "doc": "/** 🔶️ The abort gesture phase of useInkPointer. */",
+   "phases": [
+    {
+     "name": "useAbortGestureState",
+     "emoji": "🔷",
+     "doc": "Builds abortGesture, atomicGesture, beginGesture, commitGesture of useInkPointer.",
+     "from": 14,
+     "to": 117
+    }
+   ]
+  },
+  {
+   "dir": "🔸️handle-pointer-move",
+   "doc": "/** 🔸️ The handle pointer move phase of useInkPointer. */",
+   "phases": [
+    {
+     "name": "useHandlePointerMoveState",
+     "emoji": "🔹",
+     "doc": "Builds handlePointerMove, releaseContact, handlePointerUp, handlePointerCancel of useInkPointer.",
+     "from": 127,
+     "to": 261
+    }
+   ]
+  },
+  {
+   "dir": "🟠️handle-wheel",
+   "doc": "/** 🟠️ The handle wheel phase of useInkPointer. */",
+   "phases": [
+    {
+     "name": "useHandleWheelState",
+     "emoji": "🟡",
+     "doc": "Builds handleWheel, handleDoubleClick of useInkPointer.",
+     "from": 268,
+     "to": 287
+    }
+   ]
+  }
+ ]
+}

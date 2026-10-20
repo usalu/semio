@@ -1,0 +1,4024 @@
+{
+  "version": 1,
+  "scope": "Neutral expected contract only; actual Root predicate extraction pending",
+  "expectedReceipts": {
+    "sdk-reader-stage": {
+      "version": 1,
+      "kind": "sdk-reader-stage",
+      "action": "sdk-reader-instrument",
+      "rows": [
+        {
+          "path": "fixture/reader.ts",
+          "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "bytes": 11
+        }
+      ],
+      "appliedAt": "2042-01-01T00:00:00.000Z",
+      "guardsUnchanged": true
+    },
+    "sdk-reader-failure": {
+      "version": 1,
+      "kind": "sdk-reader-failure",
+      "action": "sdk-reader-failure-instrument",
+      "rows": [
+        {
+          "path": "fixture/reader.ts",
+          "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bytes": 12
+        }
+      ],
+      "appliedAt": "2042-01-01T00:00:00.000Z",
+      "guardsUnchanged": true
+    },
+    "inner-authorizer-loader": {
+      "version": 1,
+      "kind": "inner-authorizer-loader",
+      "action": "inner-loader-instrument",
+      "rows": [
+        {
+          "path": "fixture/bootstrap.ts",
+          "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+          "bytes": 23
+        }
+      ],
+      "appliedAt": "2042-01-01T00:00:00.000Z",
+      "guardsUnchanged": true
+    }
+  },
+  "policies": {
+    "install-inner": {
+      "kinds": [
+        "sdk-reader-stage",
+        "sdk-reader-failure"
+      ],
+      "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "remove-inner": {
+      "kinds": [
+        "sdk-reader-stage",
+        "sdk-reader-failure",
+        "inner-authorizer-loader"
+      ],
+      "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    "remove-failure": {
+      "kinds": [
+        "sdk-reader-stage",
+        "sdk-reader-failure"
+      ],
+      "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "remove-stage": {
+      "kinds": [
+        "sdk-reader-stage"
+      ],
+      "readerSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  },
+  "cases": [
+    {
+      "id": "install-inner-normal",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": true
+    },
+    {
+      "id": "remove-inner-normal",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": true
+    },
+    {
+      "id": "remove-failure-normal",
+      "input": {
+        "operation": "remove-failure",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": true
+    },
+    {
+      "id": "remove-stage-normal",
+      "input": {
+        "operation": "remove-stage",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": true
+    },
+    {
+      "id": "inactive-history-ignored",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "kind": "old-observer",
+            "active": false,
+            "rows": []
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": true
+    },
+    {
+      "id": "unknown-active-same-count",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "unrelated",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "duplicate-active-same-count",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "missing-stage",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "missing-failure",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "inner-already-active",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "missing-stage-receipt",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "stale-stage-receipt",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "active-receipt-row-mismatch",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 99
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "matching-but-stale-rows",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 99
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 99
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-receipt-kind",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-receipt-action",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-remove",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "malformed-active-flag",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": "true"
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "inactive-failure-no-authority",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "kind": "sdk-reader-failure",
+            "active": false,
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ]
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-current-reader",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-current-bootstrap",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "output-collision",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": true
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-inner-missing-own-receipt",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-inner-wrong-own-row",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-inner-missing-underlying-failure",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-inner-unknown-extra",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "other",
+            "action": "sdk-reader-instrument",
+            "rows": [],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-failure-before-inner",
+      "input": {
+        "operation": "remove-failure",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-stage-before-inner-and-failure",
+      "input": {
+        "operation": "remove-stage",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-stage-before-failure",
+      "input": {
+        "operation": "remove-stage",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "install-duplicate-failure",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-duplicate-sdk-reader-stage",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-duplicate-sdk-reader-failure",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-duplicate-inner-authorizer-loader",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-unknown-same-count",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "unrelated",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-active-path",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "other/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "wrong-receipt-version",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 2,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "extra-receipt-row",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              },
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "string-false-flag",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": "false"
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-inactive-inner",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "kind": "inner-authorizer-loader",
+            "active": false,
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ]
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-current-bootstrap-not-installed",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-output-collision",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": true
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-missing-stage-receipt",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "remove-equal-stale-own-rows",
+      "input": {
+        "operation": "remove-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "inner-authorizer-loader": {
+            "version": 1,
+            "kind": "inner-authorizer-loader",
+            "action": "inner-loader-instrument",
+            "rows": [
+              {
+                "path": "fixture/bootstrap.ts",
+                "beforeSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "afterSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "bytes": 23
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "stale-install-appliedAt",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2041-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "stale-install-action",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-remove",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "stale-install-version",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 2,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    },
+    {
+      "id": "stale-install-extra-field",
+      "input": {
+        "operation": "install-inner",
+        "diagnostics": [
+          {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true,
+            "notInReceipt": true
+          },
+          {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true,
+            "active": true
+          }
+        ],
+        "receipts": {
+          "sdk-reader-stage": {
+            "version": 1,
+            "kind": "sdk-reader-stage",
+            "action": "sdk-reader-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "bytes": 11
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          },
+          "sdk-reader-failure": {
+            "version": 1,
+            "kind": "sdk-reader-failure",
+            "action": "sdk-reader-failure-instrument",
+            "rows": [
+              {
+                "path": "fixture/reader.ts",
+                "beforeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "afterSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                "bytes": 12
+              }
+            ],
+            "appliedAt": "2042-01-01T00:00:00.000Z",
+            "guardsUnchanged": true
+          }
+        },
+        "current": {
+          "readerSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "bootstrapSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "outputExists": false
+      },
+      "admitted": false
+    }
+  ],
+  "lifecycle": [
+    "install-stage",
+    "install-failure",
+    "install-inner",
+    "remove-inner",
+    "remove-failure",
+    "remove-stage"
+  ]
+}

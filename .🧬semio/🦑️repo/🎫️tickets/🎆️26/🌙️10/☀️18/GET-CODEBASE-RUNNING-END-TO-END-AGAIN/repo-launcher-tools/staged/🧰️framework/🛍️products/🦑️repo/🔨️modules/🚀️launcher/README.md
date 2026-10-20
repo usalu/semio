@@ -1,0 +1,77 @@
+# 🚀️ Launcher
+
+`repo` without a JavaScript runtime installed. The launcher is the small native program behind the `repo` command: it finds the repository, provisions the pinned JavaScript runtime itself from a schema-declared registry, and hands the process over to the repository implementation with the exact arguments, the runtime's own PID, streams, signals and exit code. Nobody types `bun` anymore; the runtime is an adapter that the registry can swap.
+
+```
+repo --version
+repo preflight
+repo run @semio-tech/repo-cli-go:test
+repo ./📜️script.ts build
+```
+
+## 🧱️ How it works
+
+1. **Root.** The nearest ancestor of the working directory (start: `SEMIO_WORKSPACE_ROOT`, `REPO_ROOT`, the working directory; at most 32 levels) with a regular `📋️project.json` next to a `package.json` that declares `workspaces`. A malformed `package.json` is refused, never skipped.
+2. **Registry.** `🗂️registry/🔣️.json` (schema next to it) pins every runtime: version, the archive per operating system, architecture and C library with its size and SHA-256, how the runtime starts a script, and which implementation entries exist. It also holds the EN/DE texts. The registry belongs to the checkout, so a checkout pins its own runtime; bumping the runtime is a registry edit.
+3. **Provision.** A runtime is looked up in the tools partition (`.cache/b/t/m/<runtime>/<sha256>/`, written by the build implementation's own tools setup) and then in the user cache (`SEMIO_RUNTIME_CACHE`, else the operating system's cache directory under `semio/runtimes/`). When it is absent it is downloaded once (progress on stderr, Ctrl+C cancels, concurrent starts wait for one download), size and SHA-256 are checked before anything is unpacked, the executable is extracted with a size bound, its version is probed, and the directory is published with one atomic rename. Nothing is installed on a failed check. `SEMIO_RUNTIME_MIRROR` points at a mirror (https, or loopback http); the pins still decide.
+4. **Hand-over.** The launcher starts `runtime [fixed arguments] [mapped options] script [entry prefix] arguments…`. On macOS, Linux and in the devcontainer it replaces itself with the runtime; on Windows it runs the runtime as a child that shares the console, forwards interrupts and settles with its exit code. The runtime directory and the launcher directory lead the child's `PATH`, so every nested command resolves the same pinned runtime and the same `repo`.
+
+## 🧭️ Routes
+
+| Arguments | Route | What starts |
+|---|---|---|
+| `run`, `run-many`, `affected`, `exec`, `watch`, `dependencies`, `cargo`, `tools`, `reset`, `cache`, `preflight`, `show`, `graph`, `dashboard`, or a leading `--tool` | `build` | the build implementation (`implementation.entries.build`) |
+| `dev mcp stdio os …` | `workspace` | the OS MCP workspace script (`implementation.entries.workspace`) |
+| `[--watch] [--cwd <dir>] <file>.ts\|.mjs\|.js …` | `script` | that script through the runtime; the options map to the runtime's own flags (`launch.options`) |
+| `mcp` | `mcp` | the full native command (stand-alone launcher: refuses with the install command) |
+| anything else | `domain` | the full native command (stand-alone launcher: refuses with the install command) |
+
+The routes are the shared native entrypoint vectors (`⌨️cli/🧫️fixtures/🚪️entrypoint`); the Go full command and this launcher plan with the same function.
+
+## 🏷️ Versions and language
+
+`repo --version` prints the launcher version with its registry contract, every runtime the entries use (pinned version, and its path when provisioned; it is never fetched for this), and the implementation version (`🧰️framework/🛍️products/🦑️repo/package.json`). There is no default language: `--lang`, `SEMIO_LANGUAGE`, `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`, then the system language list decide (the shared protocol and fixture of the build language module). When none resolves, the launcher refuses in every offered language and says how to choose. A start with a provisioned runtime prints nothing and needs no language.
+
+## 📥️ Install
+
+One command per platform builds the launcher from the checkout. It needs only Go (the native bootstrap installs the pinned Go):
+
+- macOS, Linux, devcontainer: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh"`
+- Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1"`
+
+From a bare machine use the full bootstrap (`🔩️native/🥾️bootstrap/🐚️.sh setup` or `🔵️.ps1 setup`): it installs Node, Go, rustup and uv from pins, builds this launcher, and then runs `repo run repo-mcp:install`, which installs the full native `repo` command (that command embeds this launcher). No Bun is installed by hand anywhere.
+
+## 🔌️ Another runtime
+
+A runtime is a `runtimes.<name>` row: `version`, `executable` names, a `probe`, a `download` (https base, `zip`, the member inside the archive), `launch.before` (fixed leading arguments), `launch.options` (the flags of `watch` and `cwd`), `launch.environment`, and its `distributions`. Select it with `selected`, per entry with `entry.runtime`, or per run with `SEMIO_RUNTIME=<name>`. The launcher knows nothing else about Bun.
+
+## 🧪️ Tests
+
+Language-agnostic vectors: `🧫️fixtures/🔣️.json` (selection, script options, launch vectors, PATH, provisioning mutations), the shared entrypoint vectors, the shared language fixture and the shared workspace corpus. Third-party references: Ajv validates the registry against its schema (`🗂️registry-schema`), the SQLite and Ajv oracles of the entrypoint case judge the route, and the language case reads the same rows as the TypeScript resolver.
+
+`🗂️registry-contract`, `🗂️registry-schema`, `🧭️route-contract`, `🧭️root-contract`, `🗣️language-contract`, `📥️provision-contract`, `🏗️entry-contract`, `🔖️version-contract`.
+
+---
+
+# 🚀️ Launcher (Deutsch)
+
+`repo` ohne installierte JavaScript-Laufzeit. Der Launcher ist das kleine native Programm hinter dem Befehl `repo`: Er findet das Repository, stellt die gepinnte JavaScript-Laufzeit aus einer schema-deklarierten Registratur selbst bereit und übergibt den Prozess mit den genauen Argumenten an die Repository-Implementierung, mit PID, Strömen, Signalen und Exit-Code der Laufzeit. Niemand tippt mehr `bun`; die Laufzeit ist ein Adapter, den die Registratur austauschen kann.
+
+## 🧱️ Ablauf
+
+1. **Wurzel.** Das nächste übergeordnete Verzeichnis des Arbeitsverzeichnisses (Start: `SEMIO_WORKSPACE_ROOT`, `REPO_ROOT`, Arbeitsverzeichnis; höchstens 32 Ebenen) mit einer regulären `📋️project.json` neben einer `package.json`, die `workspaces` deklariert. Eine fehlerhafte `package.json` wird abgelehnt, nie übersprungen.
+2. **Registratur.** `🗂️registry/🔣️.json` (Schema daneben) pinnt jede Laufzeit: Version, das Archiv je Betriebssystem, Architektur und C-Bibliothek mit Größe und SHA-256, wie die Laufzeit ein Skript startet und welche Implementierungs-Einstiege es gibt. Sie enthält auch die EN/DE-Texte. Die Registratur gehört zum Checkout; ein Checkout pinnt also seine eigene Laufzeit, und ein Laufzeit-Update ist eine Änderung der Registratur.
+3. **Bereitstellen.** Die Laufzeit wird in der Werkzeug-Partition (`.cache/b/t/m/<Laufzeit>/<sha256>/`, geschrieben vom Werkzeug-Setup der Build-Implementierung) und dann im Benutzer-Cache gesucht (`SEMIO_RUNTIME_CACHE`, sonst das Cache-Verzeichnis des Betriebssystems unter `semio/runtimes/`). Fehlt sie, wird sie einmal geladen (Fortschritt auf stderr, Strg+C bricht ab, gleichzeitige Starts warten auf einen Download), Größe und SHA-256 werden vor dem Entpacken geprüft, die ausführbare Datei wird größenbegrenzt entpackt, ihre Version geprüft und das Verzeichnis mit einer atomaren Umbenennung veröffentlicht. Bei einer fehlgeschlagenen Prüfung wird nichts installiert. `SEMIO_RUNTIME_MIRROR` zeigt auf einen Spiegel (https oder Loopback-http); die Pins entscheiden weiterhin.
+4. **Übergabe.** Der Launcher startet `Laufzeit [feste Argumente] [abgebildete Optionen] Skript [Einstiegs-Präfix] Argumente…`. Auf macOS, Linux und im Devcontainer ersetzt er sich durch die Laufzeit; unter Windows läuft die Laufzeit als Kindprozess mit der Konsole des Launchers, Unterbrechungen werden weitergereicht und der Exit-Code übernommen. Das Laufzeit- und das Launcher-Verzeichnis stehen vorn im `PATH` des Kindes, damit jeder verschachtelte Befehl dieselbe gepinnte Laufzeit und dasselbe `repo` findet.
+
+## 🏷️ Versionen und Sprache
+
+`repo --version` nennt die Launcher-Version mit ihrem Registratur-Vertrag, jede Laufzeit der Einstiege (gepinnte Version und, wenn bereitgestellt, ihren Pfad; dafür wird sie nie geladen) und die Version der Implementierung. Es gibt keine Standardsprache: `--lang`, `SEMIO_LANGUAGE`, `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`, dann die Sprachliste des Systems entscheiden. Löst keine auf, verweigert der Launcher in jeder angebotenen Sprache und nennt die Wege zur Wahl. Ein Start mit bereitgestellter Laufzeit gibt nichts aus und braucht keine Sprache.
+
+## 📥️ Installation
+
+Ein Befehl je Plattform baut den Launcher aus dem Checkout; nötig ist nur Go (das native Bootstrap installiert das gepinnte Go): siehe die Befehle oben. Auf einem leeren Rechner nimm das vollständige Bootstrap (`🔩️native/🥾️bootstrap/🐚️.sh setup` oder `🔵️.ps1 setup`): Es installiert Node, Go, rustup und uv aus Pins, baut diesen Launcher und führt dann `repo run repo-mcp:install` aus, das den vollständigen nativen Befehl `repo` installiert (er enthält diesen Launcher). Nirgends wird Bun von Hand installiert.
+
+## 🔌️ Andere Laufzeit
+
+Eine Laufzeit ist eine Zeile `runtimes.<name>` mit `version`, `executable`, `probe`, `download`, `launch.before`, `launch.options`, `launch.environment` und `distributions`. Gewählt wird sie über `selected`, je Einstieg über `entry.runtime` oder je Lauf über `SEMIO_RUNTIME=<name>`. Der Launcher weiß sonst nichts über Bun.

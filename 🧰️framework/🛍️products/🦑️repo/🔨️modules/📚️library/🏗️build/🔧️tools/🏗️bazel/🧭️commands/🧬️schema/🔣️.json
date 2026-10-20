@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel Command Mapping",
+  "description": "How the neutral build operations become Bazel invocations: which targets run as Bazel tests with cached test results, which flags each verb carries, and which operations need no Bazel invocation at all. Cache, download and remote flags are never authored here: the caller passes them in `base` as an opaque, already closed list owned by the cache contract.",
+  "definitions": {
+    "Policy": {
+      "description": "Closed constants. Which task is a test is decided by the neutral coverage contract (family x disposition); a `test` member only selects the `test` verb. Size, timeout, shards and the input witness of a test are authored in the test class table next to this contract, never here. `testOutput` is the summary detail for failing and for verbose runs.",
+      "const": {
+        "version": 1,
+        "testOutput": { "default": "errors", "verbose": "all" }
+      }
+    },
+    "Operations": {
+      "description": "Every neutral operation and what it asks of Bazel. `none` means no Bazel process is started for it.",
+      "const": [
+        { "operation": "run", "bazel": "build-or-test", "plan": "neutral" },
+        { "operation": "run-many", "bazel": "build-or-test", "plan": "neutral" },
+        { "operation": "affected", "bazel": "query-then-build-or-test", "plan": "neutral" },
+        { "operation": "exec", "bazel": "build-or-test", "plan": "neutral" },
+        { "operation": "watch", "bazel": "none", "plan": "none" },
+        { "operation": "graph", "bazel": "none", "plan": "none" },
+        { "operation": "show", "bazel": "none", "plan": "none" },
+        { "operation": "cache-status", "bazel": "none", "plan": "none" },
+        { "operation": "cache-clear", "bazel": "none", "plan": "none" }
+      ]
+    },
+    "Task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "kind"],
+      "properties": {
+        "label": { "type": "string", "pattern": "^//:t_[0-9a-f]{16}$" },
+        "kind": { "enum": ["task", "hermetic", "test", "noop", "launch"] }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "base", "jobs", "bail", "verbose", "skipCache", "tasks"],
+      "properties": {
+        "mode": { "enum": ["execute", "plan"] },
+        "base": { "type": "array", "items": { "type": "string", "pattern": "^--[a-zA-Z][a-zA-Z0-9_]*(?:=.*)?$" } },
+        "jobs": { "type": "integer", "minimum": 1 },
+        "bail": { "type": "boolean" },
+        "verbose": { "type": "boolean" },
+        "skipCache": { "type": "boolean" },
+        "events": { "type": "string", "minLength": 1 },
+        "tasks": { "type": "array", "items": { "$ref": "#/definitions/Task" } }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verb", "targets", "options"],
+      "properties": {
+        "verb": { "enum": ["build", "test"] },
+        "targets": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^//:t_[0-9a-f]{16}$" } },
+        "options": { "type": "array", "items": { "type": "string", "pattern": "^--[a-zA-Z][a-zA-Z0-9_]*(?:=.*)?$" } }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "steps"],
+      "properties": {
+        "version": { "const": 1 },
+        "steps": { "type": "array", "maxItems": 1, "items": { "$ref": "#/definitions/Step" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+NAME = 'g2'
+TITLE = 'virtual statfs for directory partitions: the declared envelope minus the shared measured usage, Windows host paths without statfs; the contract helpers follow'
+REQUIRES = ['🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts']
+EDITS = [
+    ('🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'import {nativeDirectoryProtocolV1,observeNativeDirectoryStateV1,measureNativeDirectoryUsageV1} from "../../📁️directory/🟦️.ts";', 'import {nativeDirectoryProtocolV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1} from "../../📁️directory/🟦️.ts";\nimport {nativeDirectoryUsedBytesSyncV1} from "./📐️statfs/🟦️.ts";\nexport {nativeDirectoryUsedBytesSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";'),
+    ('🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'if(nativeImageDirectoryHostV1())return measureNativeDirectoryUsageV1(root).allocatedBytes;const filesystem=statfsSync(root,{bigint:true});', 'if(nativeImageDirectoryHostV1())return nativeDirectoryUsedBytesSyncV1(root,readNativeDirectoryAnchorFileV1(dirname(root)).maximumPhysicalBytes);const filesystem=statfsSync(root,{bigint:true});'),
+    ('🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'bavail:Math.max(0,Math.floor((declared-measureNativeDirectoryUsageV1(root).allocatedBytes)/bsize))', 'bavail:Math.max(0,Math.floor((declared-nativeDirectoryUsedBytesSyncV1(root,declared))/bsize))'),
+    ('🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'nativeImageUsedBytesV1, nativeProtectedArtifactInputGroupProtocolV1,', 'nativeImageUsedBytesV1, nativePartitionOfV1, nativeProtectedArtifactInputGroupProtocolV1,'),
+    ('🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'nativeProtectedMaintenanceRosterTransitionV1, readNativeImageMaintenanceRequestV1,', 'nativeProtectedMaintenanceRosterTransitionV1, nativeStatfsSyncV1, nativeStatfsV1, readNativeImageMaintenanceRequestV1,'),
+    ('🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts', 'export type { NativeImageMaintenanceCustodyV1,', 'export type { NativePartitionV1, NativeImageMaintenanceCustodyV1,'),
+]
+NEW = ['🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🟦️.ts',
+ '🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🟦️.ts',
+ '🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🧫️fixtures/🔣️.json']

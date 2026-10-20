@@ -1,0 +1,6 @@
+  if(options.selection.kind==="all"&&!options.baseline){
+    const producer=await import("./📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));
+    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure}) as BuildGraphV1;
+    if(process.env.SEMIO_BUILD_GRAPH_VERIFY==="1"&&!options.graph?.closure)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));
+    checkScriptInvocation(invocation);return graph;
+  }

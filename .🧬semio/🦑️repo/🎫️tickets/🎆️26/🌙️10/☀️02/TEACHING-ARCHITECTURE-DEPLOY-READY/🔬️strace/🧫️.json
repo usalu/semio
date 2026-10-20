@@ -272,6 +272,234 @@
         "executableBasename": "rosetta"
       },
       "accepted": true
+    },
+    {
+      "id": "wrong-container",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-key",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta",
+        "extra": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "pid-zero",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 0,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "pid-fraction",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 1.5,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "pid-bound",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 2147483648,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "start-number",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": 123,
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "comm-control",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun\n",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "comm-byte-bound",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-executable",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "node"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-key",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "executableBasename": "rosetta"
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-key",
+      "text": "{\"version\":1,\"containerIdentitySha256\":\"90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60\",\"pid\":902,\"starttime\":\"12345678\",\"comm\":\"bun\",\"executableBasename\":\"rosetta\",\"pid\":903}",
+      "accepted": false
+    },
+    {
+      "id": "over-cap",
+      "text": "{\"version\":1,\"containerIdentitySha256\":\"90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60\",\"pid\":902,\"starttime\":\"12345678\",\"comm\":\"bun\",\"executableBasename\":\"rosetta\"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ",
+      "accepted": false
+    },
+    {
+      "id": "wrong-sha",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "invalid-sha",
+      "value": {
+        "version": 1,
+        "containerIdentitySha256": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60",
+        "pid": 902,
+        "starttime": "12345678",
+        "comm": "bun",
+        "executableBasename": "rosetta"
+      },
+      "sha256": "bad",
+      "accepted": false
     }
-  ]
+  ],
+  "targetLeafCases": [
+    {
+      "id": "normal",
+      "accepted": true
+    },
+    {
+      "id": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "accepted": false
+    },
+    {
+      "id": "over-cap",
+      "accepted": false
+    },
+    {
+      "id": "descriptor-change",
+      "accepted": false
+    },
+    {
+      "id": "growth",
+      "accepted": false
+    },
+    {
+      "id": "ancestor-change",
+      "accepted": false
+    },
+    {
+      "id": "digest",
+      "accepted": false
+    }
+  ],
+  "targetInputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "containerIdentitySha256",
+      "pid",
+      "starttime",
+      "comm",
+      "executableBasename"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "containerIdentitySha256": {
+        "const": "90e45f2eba59e4986cc1099310a66f175d3b54ca3d74a24f4a6bfe584f084a60"
+      },
+      "pid": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 2147483647
+      },
+      "starttime": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]{0,29}$"
+      },
+      "comm": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[^\u0000-\u001f]+$"
+      },
+      "executableBasename": {
+        "const": "rosetta"
+      }
+    }
+  }
 }

@@ -1,0 +1,15 @@
+# Cargo Manifest Coordinate Admission
+
+Ordinary Source request30320 exited1 before any suite body at strict captureCargoLockInventoryV1: Source input must be repository relative. Its retained log ends20:29:56Z and points to the old inferProjectInputs lock call at line227. Current input and project-assembly owners were published20:30:05Z and use cargoManifestInputV1: the canonical project-root sentinel `.` projects to `Cargo.toml`, while nested and explicit native-root coordinates retain their exact repository-relative paths. The strict inventory validator is unchanged.
+
+The existing shared fixture has11 cases covering persisted/source root, nested/native override/Unicode and invalid relative, absolute, drive, backslash and empty roots. The actual inferProjectInputs body is extracted through TypeScript, then uses the actual strict inventory implementation. Ajv validates cases and independent SQLite derives the expected projection and coordinate grammar. The canonical Build TestScript invokes both the main build test entry and its graph suite; the graph suite imports this exact input test module. This is reviewed-source evidence; no actual test body pass is claimed.
+
+A read-only census of authored project metadata found no invalid native-root overrides. No additional production mutation was needed in this continuation. A fresh ordinary Source request will distinguish the already-published correction from further runtime failures. Controls64894 retains the sole Cargo slot; this verification will not start another native compiler.
+
+Fresh ordinary verification is owned TTY86615, with output `🗑️generated/e2e-source-00-coordinate.log` and artifacts s00c. It was admitted by host capacity and is presently a genuine shared dependency-image waiter behind an exclusive request. No body or success is inferred from admission.
+
+The fresh request86615 was interrupted through its exact owned PTY and fully settled exit1 before graph/test bodies, while still waiting for the dependency-image shared lease. This creates a quiet source boundary for the separately authorized filesystem hash dependency and paired lock publication. No foreign process was signaled; the correction remains runtime-unverified. A normal request must be repeated after that source boundary is frozen.
+
+## Actual Export Registration Failure
+
+Root request84209 reached selected normalization and exited1 before bodies because loaded.cargoManifestInputV1 was missing. The helper was exported from the input module, but neither the cold bootstrap loaded-record nor its revision reload assignment registered it. Both now use one schema-authored finite helper projection. Missing, nonfunction and accessor exports refuse before consumer execution. The regression imports the actual bootstrap cold record, imports the actual input module through the production revision loader using its content digest, and validates both through that same projection; Source assertions retain both real cold/reload callsites. This is authored coverage, not a runtime pass.

@@ -1,4 +1,5 @@
 import{test,expect}from"bun:test";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import*as owner from"../🟦️.ts";
@@ -31,7 +32,7 @@ import type{CacheScanTimingV1}from"../../⏱️measurement/🟦️.ts";
 
 test("actual metadata batches preserve full opposite-kind coverage, ties, symlinks and missing roots",async()=>{
  await receiveScriptProcessInvocation(process.env,async original=>{
-  const workspace=(original.capabilities as{workspaceRoot?:unknown}).workspaceRoot;if(typeof workspace!=="string"||!isAbsolute(workspace))throw Error("Actual finite metadata fixture root required");const control=createIssuedResourceControlV1(original,"test:metadata-batches",120000),artifacts=join(workspace,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated"),python=Bun.which("python3")??Bun.which("python");if(!python)throw Error("Independent metadata oracle required");await mkdir(artifacts,{recursive:true});const root=await mkdtemp(join(artifacts,"mb-")),external=await mkdtemp(join(artifacts,"mx-")),log=console.log,summaries:CacheScanTimingV1[]=[];
+  const workspace=(original.capabilities as{workspaceRoot?:unknown}).workspaceRoot;if(typeof workspace!=="string"||!isAbsolute(workspace))throw Error("Actual finite metadata fixture root required");const control=createIssuedResourceControlV1(original,"test:metadata-batches",120000),artifacts=join(workspace,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated"),python=testPythonV1()??Bun.which("python");if(!python)throw Error("Independent metadata oracle required");await mkdir(artifacts,{recursive:true});const root=await mkdtemp(join(artifacts,"mb-")),external=await mkdtemp(join(artifacts,"mx-")),log=console.log,summaries:CacheScanTimingV1[]=[];
   try{for(const file of fixture.files){const path=join(root,file.path);await mkdir(dirname(path),{recursive:true});await writeFile(path,"x".repeat(file.bytes),{flag:"wx"});await utimes(path,file.time,file.time);}await mkdir(join(external,"build/foreign/hash"),{recursive:true});await writeFile(join(external,"build/foreign/hash/hidden"),"not admitted");await symlink(external,join(root,"p/build/foreign"),"dir");await symlink(join(external,"absent"),join(root,"p/build/a/h/missing"));
    console.log=(...values:unknown[])=>{const text=String(values[0]),prefix="[DEBUG] Cargo scanner timing ";if(text.startsWith(prefix))summaries.push(JSON.parse(text.slice(prefix.length)));else log(...values);};const actual={build:await scanCargoBuildUnits(root,control,undefined,true,"initial"),...await scanCargoIncrementalUnits(root,control,undefined,true,"initial")};expect(summaries).toHaveLength(2);expect(summaries.every(row=>row.maximumInFlight<=8)).toBe(true);expect(summaries.some(row=>row.maximumInFlight>1)).toBe(true);
    const oracle=String.raw`import os,stat,json,sys

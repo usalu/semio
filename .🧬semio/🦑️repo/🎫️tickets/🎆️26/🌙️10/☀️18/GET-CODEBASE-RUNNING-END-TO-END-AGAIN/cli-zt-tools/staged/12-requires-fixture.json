@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "requires": {
+    "dependencies": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs"],
+    "none": ["reset", "tools", "preflight", "incremental", "dependencies", "cargo", "cache", "capacity", "remote-execution"]
+  },
+  "unknownOperation": "dependencies",
+  "ensure": {
+    "accepted": [{ "args": ["dependencies", "ensure"], "value": { "mode": "ensure", "selection": { "kind": "all" } } }],
+    "refused": [["dependencies", "ensure", "--all"], ["dependencies", "ensure", "--scope", "."], ["dependencies", "ensure", "extra"], ["ensure"], ["dependencies"]]
+  },
+  "repoScript": { "ensureGateText": "buildOperationRequiresV1(command)", "retiredText": "[\"tools\",\"reset\",\"cache\",\"remote-execution\"].includes(command)" }
+}

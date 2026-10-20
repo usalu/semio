@@ -1,0 +1,1720 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": "README.md",
+   "sha256": "f33539e214845a2fac0ad44cbfe5c665d10547dbe7b74ac54244e0a8a7d458fd",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx is the default backend and Bazel is selectable with `--tool=bazel` (or `SEMIO_BUILD_TOOL=bazel`, inherited by nested tasks)",
+     "new": "Bazel is the default backend and Nx is selectable with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`, inherited by nested tasks)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx (default) and Bazel execute the same graph.",
+     "new": "Bazel (default) and Nx execute the same graph.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-3",
+     "group": "flip",
+     "old": "Nx remains the default build tool (`defaultTool` in",
+     "new": "Bazel is the default build tool (`defaultTool` in",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-4",
+     "group": "flip",
+     "old": "Bazel qualification does not change the default automatically.",
+     "new": "Nx stays selectable with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "bun.lock",
+   "sha256": "281fb5934757d0889f5793579f28f4f9b622bb57cd67b083e60d45138cd948e5",
+   "edits": [
+    {
+     "id": "manifest-1",
+     "group": "manifest",
+     "old": "        \"@nxlv/python\": \"23.0.2\",\n        \"@semio-tech/framework-filesystem\": \"workspace:*\",\n        \"nx\": \"23.2.0\",",
+     "new": "        \"@nxlv/python\": \"23.0.2\",\n        \"nx\": \"23.2.0\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "nx.json",
+   "sha256": "8f34bc4f7d5e1cd6414ef685ac17903fff7e0da3514d82679c83ebcab512cf81",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "\"$schema\": \"./node_modules/nx/schemas/nx-schema.json\",",
+     "new": "\"$schema\": \"./.nx/installation/node_modules/nx/schemas/nx-schema.json\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "package.json",
+   "sha256": "725563679125b776ea42496708133f9e4369970839391c511dfdf226e4af6a01",
+   "edits": [
+    {
+     "id": "manifest2-1",
+     "group": "manifest2",
+     "old": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n",
+     "new": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools\",\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "manifest2-2",
+     "group": "manifest2",
+     "old": "    \"@iarna/toml\": \"2.2.5\",\n    \"@nx/devkit\": \"23.2.0\",\n    \"@nx/js\": \"23.2.0\",\n    \"@nxlv/python\": \"23.0.2\",\n    \"@playwright/test\"",
+     "new": "    \"@iarna/toml\": \"2.2.5\",\n    \"@playwright/test\"",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "manifest2-3",
+     "group": "manifest2",
+     "old": "    \"npm-run-path\": \"^6.0.0\",\n    \"nx\": \"23.2.0\",\n    \"opentype.js\"",
+     "new": "    \"npm-run-path\": \"^6.0.0\",\n    \"opentype.js\"",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎯️selected-runtime/🟦️.ts",
+   "sha256": "38f907e13ca5c38a9eb41d7c9a64a8e9bc30a4ce7026fa7f0271b6186d011d97",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "require(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts",
+   "sha256": "6dca14659f5faa544dbbec452c85ff68d86b23cd1827c027599d938487de994d",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "require(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      2
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "nx-2",
+     "group": "nx",
+     "old": "createRequire(import.meta.url)(\"nx/src/tasks-runner/create-task-graph\")",
+     "new": "createRequire(join(process.cwd(),\".nx/installation/package.json\"))(\"nx/src/tasks-runner/create-task-graph\")",
+     "counts": [
+      2
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "nx-3",
+     "group": "nx",
+     "old": "createRequire(import.meta.url)(\"nx/src/executors/run-commands/run-commands.impl\")",
+     "new": "createRequire(join(process.cwd(), \".nx/installation/package.json\"))(\"nx/src/executors/run-commands/run-commands.impl\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts",
+   "sha256": "5e03f212fab8eb81854ceaf3f940d4df5be7b1aa0bbc5ca08fb0815782443fab",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "bun repo${env.SEMIO_BUILD_TOOL === \"bazel\" ? \" --tool=bazel\" : \"\"} run",
+     "new": "bun repo${env.SEMIO_BUILD_TOOL === \"nx\" ? \" --tool=nx\" : \"\"} run",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts",
+   "sha256": "ac0a29fb46541934e311c49bd0cb89b88fa3a7520dd956922b7b384850d5dc8a",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "join(dirname(require.resolve(\"nx/package.json\")), require(\"nx/package.json\").bin.nx)",
+     "new": "(nxRequire => join(dirname(nxRequire.resolve(\"nx/package.json\")), nxRequire(\"nx/package.json\").bin.nx))(createRequire(join(process.cwd(), \".nx/installation/package.json\")))",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "sha256": "72e3618a26ffbe63156a9c7ad00e4c37492e2d910475230ab07794235c48b6fb",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "See Setup per platform below. |",
+     "new": "See Setup per platform below. `tools setup bazel` needs neither the JavaScript install nor Nx and opens only the tools and dependencies partitions; the products partition is opened by the first run. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "Siehe Einrichtung je Plattform unten. |",
+     "new": "Siehe Einrichtung je Plattform unten. `tools setup bazel` braucht weder die JavaScript-Installation noch Nx und öffnet nur die Partitionen für Werkzeuge und Abhängigkeiten; die Produkte-Partition öffnet erst der erste Lauf. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-3",
+     "group": "commands",
+     "old": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | no | |",
+     "new": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | no | Reads the portable graph; never starts Nx or Bazel, by design. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-4",
+     "group": "commands",
+     "old": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | no | |",
+     "new": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | no | Bun installs the JavaScript dependencies for both tools, by design. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-5",
+     "group": "commands",
+     "old": "| `cargo …` | neutral | neutral | no | |",
+     "new": "| `cargo …` | neutral | neutral | no | The repository's compile ingress; Bazel's Cargo actions call it, so it is the leaf of both tools, by design. Run Rust targets with `run <project>:build\\|check\\|test` to use Bazel's cache. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-6",
+     "group": "commands",
+     "old": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | nein | |",
+     "new": "| `graph`, `show projects\\|project <name>\\|targets` | neutral | neutral | nein | Liest den portablen Graphen; startet bewusst weder Nx noch Bazel. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-7",
+     "group": "commands",
+     "old": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | nein | |",
+     "new": "| `dependencies sync\\|lock --all\\|--scope <owner>` | neutral | neutral | nein | Bun installiert die JavaScript-Abhängigkeiten für beide Werkzeuge, bewusst. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "commands-8",
+     "group": "commands",
+     "old": "| `cargo …` | neutral | neutral | nein | |",
+     "new": "| `cargo …` | neutral | neutral | nein | Das Eingangstor des Repositorys zum Kompilieren; Bazels Cargo-Actions rufen es auf, es ist also das Blatt beider Werkzeuge, bewusst. Rust-Targets mit `run <project>:build\\|check\\|test` ausführen, um Bazels Cache zu nutzen. |",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-9",
+     "group": "flip",
+     "old": "**Nx with Bun** (default) and **Bazel** (`--tool=bazel`)",
+     "new": "**Bazel** (default) and **Nx with Bun** (`--tool=nx`)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-10",
+     "group": "flip",
+     "old": "then `defaultTool` of the policy (`nx`).",
+     "new": "then `defaultTool` of the policy (`bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-11",
+     "group": "flip",
+     "old": "(`--tool`, default `nx`).",
+     "new": "(`--tool`, default `bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-12",
+     "group": "flip",
+     "old": "Nx is the default (`defaultTool`). The repository does not use Nx project discovery;",
+     "new": "Nx is selected with `--tool=nx` (or `SEMIO_BUILD_TOOL=nx`); Bazel is the default (`defaultTool`). The repository does not use Nx project discovery;",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-13",
+     "group": "flip",
+     "old": "so each one works with `--tool=nx` (default) and `--tool=bazel`.",
+     "new": "so each one works with `--tool=bazel` (default) and `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-14",
+     "group": "flip",
+     "old": "**Nx mit Bun** (Standard) und **Bazel** (`--tool=bazel`)",
+     "new": "**Bazel** (Standard) und **Nx mit Bun** (`--tool=nx`)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-15",
+     "group": "flip",
+     "old": "dann `defaultTool` der Richtlinie (`nx`).",
+     "new": "dann `defaultTool` der Richtlinie (`bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-16",
+     "group": "flip",
+     "old": "(`--tool`, Standard `nx`).",
+     "new": "(`--tool`, Standard `bazel`).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-17",
+     "group": "flip",
+     "old": "Nx ist der Standard. Das Repository nutzt keine Nx-Projektentdeckung,",
+     "new": "Nx wird mit `--tool=nx` (oder `SEMIO_BUILD_TOOL=nx`) gewählt; Bazel ist der Standard (`defaultTool`). Das Repository nutzt keine Nx-Projektentdeckung,",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-18",
+     "group": "flip",
+     "old": "also mit `--tool=nx` (Standard) und `--tool=bazel`.",
+     "new": "also mit `--tool=bazel` (Standard) und `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-19",
+     "group": "flip",
+     "old": "then the policy default `nx`.",
+     "new": "then the policy default `bazel`.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide, EN, only once that set is applied"
+    },
+    {
+     "id": "flip-20",
+     "group": "flip",
+     "old": "| | Nx (default) | Bazel (`--tool=bazel`) |",
+     "new": "| | Nx (`--tool=nx`) | Bazel (default) |",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide table header"
+    },
+    {
+     "id": "flip-21",
+     "group": "flip",
+     "old": "Use Nx for the default flow. Choose Bazel when you want results shared across selections and machines, workers, or remote execution.",
+     "new": "Use Bazel for the default flow: results are shared across selections and machines, and workers and remote execution are available. Select Nx with `--tool=nx` when you want its task runner and cache.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide advice, EN"
+    },
+    {
+     "id": "flip-22",
+     "group": "flip",
+     "old": "dann der Standard der Richtlinie `nx`.",
+     "new": "dann der Standard der Richtlinie `bazel`.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide, DE"
+    },
+    {
+     "id": "flip-23",
+     "group": "flip",
+     "old": "| | Nx (Standard) | Bazel (`--tool=bazel`) |",
+     "new": "| | Nx (`--tool=nx`) | Bazel (Standard) |",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide table header, DE"
+    },
+    {
+     "id": "flip-24",
+     "group": "flip",
+     "old": "Nimm Nx für den Standardablauf. Wähle Bazel, wenn du Ergebnisse über Auswahlen und Rechner hinweg teilen, Worker oder Remote-Ausführung nutzen willst.",
+     "new": "Nimm Bazel für den Standardablauf: Ergebnisse werden über Auswahlen und Rechner hinweg geteilt, Worker und Remote-Ausführung stehen bereit. Wähle Nx mit `--tool=nx`, wenn du seinen Task-Runner und Cache willst.",
+     "counts": [
+      0,
+      1
+     ],
+     "optional": true,
+     "note": "docs-build guide advice, DE"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🥒️.feature",
+   "sha256": "eb45bf2a53eaf98b0de5a0d8fa2c5b6d3ae9f67a9de9537ab7101d96802aff20",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx remains the task execution authority.",
+     "new": "The selected build tool remains the task execution authority.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🥒️.feature",
+   "sha256": "285caa3c184815e1c0e541b86269305f882b15377557e797476abda64cfd501d",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "And Nx remains responsible for build and installation tasks",
+     "new": "And the selected build tool remains responsible for build and installation tasks",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+   "sha256": "3a7e7015a5af6068195bc58a7c65074beee08e8f0083f97a85e5d5c3d5153b51",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "join(root, \"node_modules/nx/schemas/nx-schema.json\")",
+     "new": "join(root, \".nx/installation/node_modules/nx/schemas/nx-schema.json\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go",
+   "sha256": "9eedc7040ee92a3119f612c37188b49addc51b0532b3daf8dd81d6fe502fecb2",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel.",
+     "new": "provision the default tool with repo tools setup and both tools with repo tools setup all. Bazel is the default; select Nx with --tool=nx.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+   "sha256": "87c3085bdb02136f4731ba2bea88ee442fa52ce18d03c1c98cf06510fac3372e",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "const require = createRequire(import.meta.url);",
+     "new": "const require = parserRequireV1(import.meta.url);",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/📋️orchestration/🟦️.ts",
+   "sha256": "ebc8dae186c1f987b8fbd2151ae7b5787d4ad97ca54a2efedf2f2810d4dc2ae4",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "import buildPolicy from \"../../../🏗️build/🔣️policy.json\" with { type: \"json\" };\nimport probeSchema",
+     "new": "import probeSchema",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "const selected = process.env.SEMIO_BUILD_TOOL ?? buildPolicy.defaultTool;",
+     "new": "const selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? \"nx\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the probe names its tool; the selected build tool no longer decides which cache is measured",
+     "supersededBy": "probe"
+    },
+    {
+     "id": "probe-3",
+     "group": "probe",
+     "old": "import { BundleScript } from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "new": "import { BundleScript, createIssuedResourceControlV1 } from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "probe-4",
+     "group": "probe",
+     "old": "import probeData from \"../🔣️probe.json\" with { type: \"json\" };",
+     "new": "import probeData from \"../🔣️probe.json\" with { type: \"json\" };\nimport buildPolicy from \"../../../🏗️build/🔣️policy.json\" with { type: \"json\" };",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "probe-5",
+     "group": "probe",
+     "old": "    const selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? \"nx\";\n    if (selected !== \"nx\") throw new Error(`No cache probe implements build tool ${selected}`);\n    if (validateJsonSchemaSubset(probeSchema, probeSpecification).length) throw new Error(\"Closed cache probe specification required\");\n    return (await import(\"../../🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts\")).nxCacheProbeV1(this.repoRoot);\n",
+     "new": "    const selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? process.env.SEMIO_BUILD_TOOL ?? buildPolicy.defaultTool;\n    if (validateJsonSchemaSubset(probeSchema, probeSpecification).length) throw new Error(\"Closed cache probe specification required\");\n    if (selected === \"nx\") {\n      await (await import(\"../../🚀️bootstrap/🛠️tools/🟦️.ts\")).prepareNxToolingStorageV1(this.repoRoot, this.invocation, createIssuedResourceControlV1(this.invocation, \"cache-verify:nx\", 0));\n      return (await import(\"../../🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts\")).nxCacheProbeV1(this.repoRoot);\n    }\n    if (selected !== \"bazel\") throw new Error(`No cache probe implements build tool ${selected}`);\n    const [{ withBazelSetupStorageV1 }, adapter, bootstrap, { bazelCacheProbeV1 }] = await Promise.all([import(\"../../../🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts\"), import(\"../../../🏗️build/🔧️tools/🏗️bazel/📜️script.ts\"), import(\"../../🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts\"), import(\"../../../🏗️build/🔧️tools/🏗️bazel/🔁️probe/🟦️.ts\")]);\n    return withBazelSetupStorageV1(this.repoRoot, this.invocation, createIssuedResourceControlV1(this.invocation, \"cache-verify:bazel\", 0), async (storage, phase) => {\n      const executable = await bootstrap.prepareBazel(this.repoRoot, storage.tools, phase, () => {}, false), modules = await adapter.prepareBazelModulesV1(this.repoRoot, executable, this.invocation, storage, phase);\n      return bazelCacheProbeV1({ version: bootstrap.BAZEL_VERSION, executable, installBase: join(storage.paths.install, bootstrap.BAZEL_VERSION, `${process.platform}-${process.arch}`), module: adapter.BAZEL_MODULE, lock: modules.lock, repository: modules.repository });\n    });\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "sha256": "45ed86b43807a92296b93f3d4789980781fc5edecca6568c14bb29def7951555",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "export type JavascriptDependencyStoreSelectionV1=Readonly<{kind:\"all\"}>|Readonly<{kind:\"scope\";owner:string}>;",
+     "new": "export type JavascriptDependencyStoreSelectionV1=Readonly<{kind:\"all\"}>|Readonly<{kind:\"scope\";owner:string}>|Readonly<{kind:\"scopes\";owners:readonly string[]}>;",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "requested=selection.kind===\"all\"?projection.plans.map(row=>row.scope):[selection.owner]",
+     "new": "requested=selection.kind===\"all\"?projection.plans.map(row=>row.scope):selection.kind===\"scopes\"?[...selection.owners]:[selection.owner]",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-3",
+     "group": "closure",
+     "old": "requested=selection.kind===\"all\"?projection.owners.scopes.map(row=>row.scope):[selection.owner]",
+     "new": "requested=selection.kind===\"all\"?projection.owners.scopes.map(row=>row.scope):selection.kind===\"scopes\"?[...selection.owners]:[selection.owner]",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+   "sha256": "f664649dc5802daec41a899f1eb7bca929e406eeb50e5234188abdf59a6cfcf7",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "\"owner\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}]},",
+     "new": "\"owner\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}, {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"kind\", \"owners\"], \"properties\": {\"kind\": {\"const\": \"scopes\"}, \"owners\": {\"type\": \"array\", \"minItems\": 1, \"maxItems\": 512, \"uniqueItems\": true, \"items\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 256}}}}]},",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "sha256": "dbd8ebd5e60d31b2d8b313b0871af8e8785f8cbfe9bbcb5588be73eacf8c726d",
+   "edits": [
+    {
+     "id": "manifest-1",
+     "group": "manifest",
+     "old": "    \"typescript\": \"5.9.3\",\n    \"@semio-tech/framework-filesystem\": \"workspace:*\"\n  },",
+     "new": "    \"typescript\": \"5.9.3\"\n  },",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the dependencies row broke the closed pinned recipe; the devDependencies row stays for the tests that import it"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts",
+   "sha256": "dd1de4949640275dfd3a75984b43b1a0a3138c760b279889b9761200546b7aeb",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/bin/nx\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/bin/nx\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts",
+   "sha256": "5413e986fe05b7b8cc5728c775c1b78de58a20db97787544bbdfcdde2581e79b",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "const sdk=openNxSdkV1(join(repositoryRoot,\"package.json\"));",
+     "new": "const sdk=openNxSdkV1(join(repositoryRoot,\".nx/installation/package.json\"));",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🧪️tests/🟦️.ts",
+   "sha256": "a3b7e1b07cdf1c6cefd1ce47bd7b9f92046f5b83961bbe37519c558b5892cdd2",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "openNxSdkV1(join(root,\"package.json\")).packageDirectory()",
+     "new": "openNxSdkV1(join(root,\".nx/installation/package.json\")).packageDirectory()",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "nx-2",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/bin/nx.js\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/bin/nx.js\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "nx-3",
+     "group": "nx",
+     "old": "createRequire(join(root,\"package.json\")).resolve(\"nx/package.json\")",
+     "new": "createRequire(join(root,\".nx/installation/package.json\")).resolve(\"nx/package.json\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🧪️tests/🟦️.ts",
+   "sha256": "118e6eddc388a7f86142c8edd7c88a6b0bf934bfcf4c58e929a0624bca43f12d",
+   "edits": [
+    {
+     "id": "nx-1",
+     "group": "nx",
+     "old": "const installed=createRequire(join(root,\"package.json\")),port=",
+     "new": "const installed=createRequire(join(root,\".nx/installation/package.json\")),port=",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "nx-2",
+     "group": "nx",
+     "old": "const base=join(root,\"package.json\"),installed=createRequire(base),sdk=openNxSdkV1(base);",
+     "new": "const base=join(root,\".nx/installation/package.json\"),installed=createRequire(base),sdk=openNxSdkV1(base);",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "sha256": "67f7e5de4f52cb4613a5ff57bb79a8e0a818cf74df0e95e70d160a9c68307ac9",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx with Bun (default) and Bazel.",
+     "new": "Bazel (default) and Nx with Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx mit Bun (Standard) und Bazel.",
+     "new": "Bazel (Standard) und Nx mit Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-3",
+     "group": "flip",
+     "old": "then the policy default (nx).",
+     "new": "then the policy default (bazel).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-4",
+     "group": "flip",
+     "old": "dann der Standard der Policy (nx).",
+     "new": "dann der Standard der Policy (bazel).",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json",
+   "sha256": "1869170d4ed46a66edb6f73054c2e8de7f6196e76f8611267f4e57dfecb031d8",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "Nx with Bun (default) and Bazel.",
+     "new": "Bazel (default) and Nx with Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx mit Bun (Standard) und Bazel.",
+     "new": "Bazel (Standard) und Nx mit Bun.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-3",
+     "group": "flip",
+     "old": "then the policy default (nx).",
+     "new": "then the policy default (bazel).",
+     "counts": [
+      43
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-4",
+     "group": "flip",
+     "old": "dann der Standard der Policy (nx).",
+     "new": "dann der Standard der Policy (bazel).",
+     "counts": [
+      43
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "sha256": "338b83bc0a06d611cf5c63c4d7dfab49e81dbc2d91db5937aa2750ba70e93957",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "{withBazelStorageV1}=await import(\"./🔧️tools/🏗️bazel/💾️storage/🟦️.ts\")",
+     "new": "{withBazelSetupStorageV1}=await import(\"./🔧️tools/🏗️bazel/💾️storage/🟦️.ts\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "await withBazelStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{",
+     "new": "await withBazelSetupStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-3",
+     "group": "closure",
+     "old": "if(buildOperationRequiresV1(command)===\"dependencies\"){const {ensureBuildEnvironmentV1}=await import(\"./🚀️bootstrap/🟦️.ts\");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}",
+     "new": "if(buildOperationRequiresV1(command)===\"dependencies\"){const {ensureBuildEnvironmentV1,buildEnvironmentPlanV1}=await import(\"./🚀️bootstrap/🟦️.ts\"),environmentPlan=buildEnvironmentPlanV1(root,selected.tool,process.env);await ensureBuildEnvironmentV1(root,invocation,phaseControl,environmentPlan.install,undefined,environmentPlan.scope);}",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-4",
+     "group": "closure",
+     "old": "if(untouched){console.log(\"[bazel] no affected tasks\");return;}",
+     "new": "if(untouched){console.log(\"[bazel] no affected tasks\");return;}\n    {const {ensureBuildClosureScopesV1}=await import(\"./🚀️bootstrap/🟦️.ts\");await ensureBuildClosureScopesV1(root,invocation,artifactPhase,()=>Object.values(adapter.planBazelTasksV1(graph,request).tasks).map(task=>task.root),process.env);}",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🔣️.json",
+   "sha256": "18e15621d6675b62a665eb7122b1e98084c406227e22180ea10267bac5f1e463",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "\"name\": \"alias-release\",\n      \"args\": [\n",
+     "new": "\"name\": \"alias-release\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert already-applied"
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "\"name\": \"opaque-tail\",\n      \"args\": [\n",
+     "new": "\"name\": \"opaque-tail\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert already-applied"
+    },
+    {
+     "id": "prep-3",
+     "group": "prep",
+     "old": "\"name\": \"reset\",\n      \"args\": [\n",
+     "new": "\"name\": \"reset\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert already-applied"
+    },
+    {
+     "id": "prep-4",
+     "group": "prep",
+     "old": "\"name\": \"watch\",\n      \"args\": [\n",
+     "new": "\"name\": \"watch\",\n      \"args\": [\n        \"--tool=nx\",\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "pin the Nx rows to the tool whose launches they assert already-applied"
+    },
+    {
+     "id": "prep-5",
+     "group": "prep",
+     "old": "      \"name\": \"dependencies\",\n      \"args\": [\n        \"dependencies\",\n        \"sync\",\n        \"--all\"\n      ],\n      \"mode\": \"release\",\n      \"main\": null,\n      \"javascript\": false\n    }\n  ],",
+     "new": "      \"name\": \"dependencies\",\n      \"args\": [\n        \"dependencies\",\n        \"sync\",\n        \"--all\"\n      ],\n      \"mode\": \"release\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"nx-tools-setup\",\n      \"args\": [\n        \"--tool=nx\",\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": [\n        \"nx\",\n        \"--version\"\n      ],\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-tools-setup\",\n      \"args\": [\n        \"--tool=bazel\",\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-tools-setup-bazel\",\n      \"args\": [\n        \"tools\",\n        \"setup\",\n        \"bazel\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel-reset\",\n      \"args\": [\n        \"--tool=bazel\",\n        \"reset\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    }\n  ],",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "tools setup never declares an Nx launch for bazel, whatever the default"
+    },
+    {
+     "id": "flip-6",
+     "group": "flip",
+     "old": "    {\n      \"name\": \"bazel\",\n      \"args\": [\n        \"--tool=bazel\",",
+     "new": "    {\n      \"name\": \"default-bazel-run\",\n      \"args\": [\n        \"run\",\n        \"app:build\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"default-bazel-tools-setup\",\n      \"args\": [\n        \"tools\",\n        \"setup\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"default-bazel-reset\",\n      \"args\": [\n        \"reset\"\n      ],\n      \"mode\": \"prototype\",\n      \"main\": null,\n      \"javascript\": false\n    },\n    {\n      \"name\": \"bazel\",\n      \"args\": [\n        \"--tool=bazel\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "the new default declares no Nx launch for run, tools setup and reset"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "sha256": "342de4491574f67329eb300951c1babee70d841154a30b0d9460e9466178fc52",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "\"defaultTool\": \"nx\",",
+     "new": "\"defaultTool\": \"bazel\",",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "  \"remoteCache\": {\n    \"version\": 1,\n    \"environment\": {",
+     "new": "  \"javascriptInstall\": \"all\",\n  \"javascriptInstallRoots\": [],\n  \"remoteCache\": {\n    \"version\": 1,\n    \"environment\": {",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts",
+   "sha256": "7fa10e02d21d011898149487ed7b13fb8d221d99efe898ee4adf73f15a86c729",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "actualPhase))));}\n\nconst cachePolicy=",
+     "new": "actualPhase))));}\n/** 🧳️ The two stores `tools setup bazel` writes: the executable and the module catalog never touch the products partition. */\nexport type BazelSetupStorageV1=Pick<BazelStorageV1,\"tools\"|\"dependencies\"|\"paths\">;\n/** 🛂️ Refuses fabricated setup contexts; the products root is a declared path here and is never opened. */\nexport async function requireBazelSetupStorageV1(root:string,storage:BazelSetupStorageV1):Promise<void>{for(const id of [\"tools\",\"dependencies\"] as const){const store=storage[id];requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(root,id))throw Error(\"Original declared Bazel partition required\");}const roots={tools:storage.tools.root,dependencies:storage.dependencies.root,products:repositoryCachePartitionRootV1(root,\"products\")},layout=bazelCacheLayoutV1(roots);if(JSON.stringify(layout)!==JSON.stringify(storage.paths))throw Error(\"Original Bazel partition layout required\");for(const key of [\"executable\",\"install\",\"modules\"] as const)requireNativeStoragePathV1(key===\"modules\"?roots.dependencies:roots.tools,layout[key]);}\n/** 🏬️ Keeps only the tools and dependencies stores alive while Bazel and its fixed module catalog are provisioned. */\nexport function withBazelSetupStorageV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(storage:BazelSetupStorageV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withRepositoryCacheStoreV1(root,\"tools\",invocation,phaseControl,(tools,toolPhase)=>withRepositoryCacheStoreV1(root,\"dependencies\",invocation,toolPhase,(dependencies,actualPhase)=>body(Object.freeze({tools,dependencies,paths:bazelCacheLayoutV1({tools:tools.root,dependencies:dependencies.root,products:repositoryCachePartitionRootV1(root,\"products\")})}),actualPhase)));}\n\nconst cachePolicy=",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "setup storage: tools + dependencies only"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts",
+   "sha256": "458251562a929d71aa255181ca58f56f57cfbe8aac12e1904327a12737ed5e84",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "import {spawnSync} from \"node:child_process\";",
+     "new": "import {spawnSync} from \"node:child_process\";\nimport ts from \"typescript\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "already-applied"
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "import fixture from \"./🧫️fixtures/🔣️.json\";",
+     "new": "import fixture from \"./🧫️fixtures/🔣️.json\";\nimport catalogue from \"../../../../⚙️operations/🔣️catalog.json\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-3",
+     "group": "setup",
+     "old": "guard=branches.find(node=>node.thenStatement.getText().includes(\"ensureBuildEnvironmentV1\"))!;",
+     "new": "guard=branches.find(node=>node.expression.getText().includes(\"buildOperationRequiresV1\"))!;",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-4",
+     "group": "setup",
+     "old": " const skipped:string[]=[],collect=(node:ts.Node)=>{if(ts.isArrayLiteralExpression(node))skipped.push(...node.elements.filter(ts.isStringLiteral).map(element=>element.text));ts.forEachChild(node,collect);};collect(guard.expression);\n expect(skipped.sort()).toEqual([...fixture.setup.installSkipped].sort());expect(guard.expression.getText()).toMatch(/^!\\[.*\\]\\.includes\\(command\\)$/u);\n",
+     "new": " const required=new Map(catalogue.operations.map(row=>[row.name,row.requires]));\n for(const name of fixture.setup.installSkipped)expect(required.get(name),name).toBe(\"none\");\n expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)===\"dependencies\"');expect(guard.thenStatement.getText()).toContain(\"ensureBuildEnvironmentV1\");\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "sha256": "6f50b0794059bc6532551ba1c34bcd7ff14d7af64e59c4400f812041d24d292f",
+   "edits": [
+    {
+     "id": "setup-1",
+     "group": "setup",
+     "old": "import {withBazelStorageV1,requireBazelStorageV1,bazelCacheFlagsV1,type BazelStorageV1} from \"./💾️storage/🟦️.ts\";",
+     "new": "import {withBazelStorageV1,requireBazelStorageV1,requireBazelSetupStorageV1,bazelCacheFlagsV1,type BazelStorageV1,type BazelSetupStorageV1} from \"./💾️storage/🟦️.ts\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-2",
+     "group": "setup",
+     "old": "storage:BazelStorageV1,phaseControl:ResourceLeaseControl):Promise<{lock:string;repository:string}>",
+     "new": "storage:BazelSetupStorageV1,phaseControl:ResourceLeaseControl):Promise<{lock:string;repository:string}>",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "setup-3",
+     "group": "setup",
+     "old": "await requireBazelStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const environment=issueBuildTaskEnvironmentV1(root,invocation,{kind:\"noop\"},[],storage.dependencies.environment)",
+     "new": "await requireBazelSetupStorageV1(root,storage);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const environment=issueBuildTaskEnvironmentV1(root,invocation,{kind:\"noop\"},[],storage.dependencies.environment)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "probe-4",
+     "group": "probe",
+     "old": "const BAZEL_MODULE='module(name = \"semio_tasks\", version = \"0.0.0\")\\n';",
+     "new": "export const BAZEL_MODULE='module(name = \"semio_tasks\", version = \"0.0.0\")\\n';",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "sha256": "89b48ce05adafe7db891ca23469dcaf8f67906de483b433df4f20e82715c857f",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs",
+   "sha256": "fd32f638c8a50b91fe59cce0b9a499535bf64a8e3b7378d8870fc6cc9c69b1ba",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "}))(createRequire(import.meta.url));",
+     "new": "}))(parserRequireV1(import.meta.url));",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+   "sha256": "59a4895bcb699cbb5b5862f38385b94b788e3b2d80fadfe5a0446b2b5352a9e5",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "sha256": "8b8db127d6afe9a3a6667a4f8fbf0223ed6ac7096124fc315eba9158a3d0b67e",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire, isBuiltin } from \"node:module\";",
+     "new": "import { isBuiltin } from \"node:module\";\nimport { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "sha256": "e1e6076672f96b01f3ec4cd653e034b59abb1afc303e882c8227f8d679d4fdad",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs",
+   "sha256": "f3af5d5fd3a41e25dbfd85833df331136dfecac399d7f9dcf6a0a5008192f866",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import { createRequire } from \"node:module\";",
+     "new": "import { parserRequireV1 } from \"../../../🚀️bootstrap/📦️parsers/🟨️.mjs\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "createRequire(import.meta.url)(\"typescript\")",
+     "new": "parserRequireV1(import.meta.url)(\"typescript\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts",
+   "sha256": "6987e95b6be644d629a61a2b7ed0213ee72292babbdb9754966615924a53c571",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(process.cwd(),[\"repo\",...args],{SEMIO_BUILD_MODE:\"prototype\"})",
+     "new": "createBuildBootstrapCapabilitiesV1(process.cwd(),[\"repo\",...args],{SEMIO_BUILD_MODE:\"prototype\",SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+   "sha256": "c078a42ebdc92682bd6de86c34f04e88f0ad5582706b6ba831a2ca23fb922d8b",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "import {createHash} from \"node:crypto\";",
+     "new": "import {createHash} from \"node:crypto\";\nimport {fileURLToPath} from \"node:url\";\nimport buildPolicy from \"../🔣️policy.json\" with {type:\"json\"};\nimport type {JavascriptDependencyStoreSelectionV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-2",
+     "group": "closure",
+     "old": "},publish:(root:string)=>void=publishBuildBootstrapSourcesV1):Promise<void> {",
+     "new": "},publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<void> {",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-3",
+     "group": "closure",
+     "old": "const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,workspace=",
+     "new": "const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,scope=requestedScope??bootstrap.scope,base=scope===\".\"?root:join(root,...scope.split(\"/\")),workspace=",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-4",
+     "group": "closure",
+     "old": "const manifestBytes=bounded(join(root,\"package.json\"),8388608)",
+     "new": "const manifestBytes=bounded(join(base,\"package.json\"),8388608)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-5",
+     "group": "closure",
+     "old": "if(!bounded(join(root,\"package.json\"),8388608).equals(manifestBytes)",
+     "new": "if(!bounded(join(base,\"package.json\"),8388608).equals(manifestBytes)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-6",
+     "group": "closure",
+     "old": "{version:1,scopes:custody.scopes},bootstrap.scope)",
+     "new": "{version:1,scopes:custody.scopes},scope)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-7",
+     "group": "closure",
+     "old": "fast=await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "fast=await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-8",
+     "group": "closure",
+     "old": "confirmed=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "confirmed=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-9",
+     "group": "closure",
+     "old": "settled=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,bootstrap.scope)",
+     "new": "settled=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope)",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-10",
+     "group": "closure",
+     "old": "if(!lstatSync(join(root,\"node_modules\")).isSymbolicLink())",
+     "new": "if(!lstatSync(join(base,\"node_modules\")).isSymbolicLink())",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-11",
+     "group": "closure",
+     "old": "const target=requireNativeStoragePathV1(store.root,realpathSync(join(root,\"node_modules\")))",
+     "new": "const target=requireNativeStoragePathV1(store.root,realpathSync(join(base,\"node_modules\")))",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-12",
+     "group": "closure",
+     "old": "if(binding.scope!==\".\"||binding.generation!==owner.receipts.find(row=>row.scope===\".\")?.generation",
+     "new": "if(binding.scope!==scope||binding.generation!==owner.receipts.find(row=>row.scope===scope)?.generation",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-13",
+     "group": "closure",
+     "old": "row.sourceDirectory===join(root,\"node_modules\")",
+     "new": "row.sourceDirectory===join(base,\"node_modules\")",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-14",
+     "group": "closure",
+     "old": "const require=createRequire(join(root,\"package.json\")),parsers=",
+     "new": "const require=createRequire(join(base,\"package.json\")),parsers=",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "closure-15",
+     "group": "closure",
+     "old": "export function adoptedCandidateV1(status:\"published\"|\"present\"|\"deferred\"|\"stale\"|\"failed\"):boolean{return status===\"published\"||status===\"present\";}",
+     "new": "export function adoptedCandidateV1(status:\"published\"|\"present\"|\"deferred\"|\"stale\"|\"failed\"):boolean{return status===\"published\"||status===\"present\";}\n\n/** 🎛️ Reads the JavaScript install mode: the environment wins over the build policy; anything but `all` and `closure` is refused. */\nexport function javascriptInstallModeV1(environment:Readonly<Record<string,string|undefined>>):\"all\"|\"closure\"{const mode=environment.SEMIO_JS_INSTALL??buildPolicy.javascriptInstall??\"all\";if(mode!==\"all\"&&mode!==\"closure\")throw new Error(`Unknown JavaScript install mode: ${mode}`);return mode;}\n\n/** 📦️ Names the parser package, the only dependency scope the graph inference needs, as a workspace-relative path derived from this module's own location. */\nexport const buildParserScopeV1=(root:string):string=>relative(root,fileURLToPath(new URL(\"./📦️parsers\",import.meta.url))).split(sep).join(\"/\");\n\n/** 🏗️ Builds the dependency installer of one selection, with the same exclusive-hold recheck as the complete installer. */\nexport function javascriptInstallerV1(selection:JavascriptDependencyStoreSelectionV1):BuildEnvironmentInstallerV1{\n return async(root,original,phase,recheck)=>{\n  const {prepareJavascriptDependencies,withJavascriptDependencyStorageV1}=await import(\"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\");\n  checkResourceLeaseControl(phase);await withJavascriptDependencyStorageV1(root,original,phase,(store,control)=>installUnlessReadyV1(store,control,recheck,()=>prepareJavascriptDependencies(\"sync\",root,store,control,selection)).then(()=>undefined));checkResourceLeaseControl(phase);\n };\n}\n\n/** 🧭️ Plans the first JavaScript install of one run: a Bazel run in closure mode needs only the parser package before the graph exists; every other run keeps the complete install. */\nexport type BuildEnvironmentPlanV1=Readonly<{closure:boolean;scope?:string;install?:BuildEnvironmentInstallerV1}>;\n\n/** 🗺️ Chooses the bootstrap scope and installer for a tool and an install mode. */\nexport function buildEnvironmentPlanV1(root:string,tool:\"nx\"|\"bazel\",environment:Readonly<Record<string,string|undefined>>):BuildEnvironmentPlanV1{\n if(tool!==\"bazel\"||javascriptInstallModeV1(environment)!==\"closure\")return Object.freeze({closure:false});\n const scope=buildParserScopeV1(root);return Object.freeze({closure:true,scope,install:javascriptInstallerV1({kind:\"scope\",owner:scope})});\n}\n\n/** 🧮️ Maps project roots onto the deepest declared dependency scope that contains each of them; the workspace root and roots no member contains belong to the root scope `.`. */\nexport function javascriptScopeOwnersV1(scopes:readonly string[],roots:readonly string[]):string[]{\n const declared=[...new Set(scopes)].filter(scope=>scope!==\".\").sort((left,right)=>right.length-left.length||(left<right?-1:1)),owners=new Set<string>();\n for(const raw of roots){const path=raw.replaceAll(\"\\\\\",\"/\").replace(/^(?:\\.\\/)+/u,\"\").replace(/\\/+$/u,\"\");owners.add(declared.find(scope=>path===scope||path.startsWith(scope+\"/\"))??\".\");}\n return [...owners].sort();\n}\n\n/** 🪜️ Installs the owners of a planned task closure after the graph exists; a no-op unless closure mode is selected. */\nexport async function ensureBuildClosureScopesV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,projectRoots:()=>readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<readonly string[]>{\n if(javascriptInstallModeV1(environment)!==\"closure\")return [];\n requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);\n const manifest=JSON.parse(readFileSync(join(root,\"package.json\"),\"utf8\")) as {workspaces?:string[]},owners=javascriptScopeOwnersV1([\".\",...(manifest.workspaces??[])],[...projectRoots(),...buildPolicy.javascriptInstallRoots]);\n if(!owners.length)return owners;\n const {prepareJavascriptDependencies,withJavascriptDependencyStorageV1}=await import(\"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts\");\n await withJavascriptDependencyStorageV1(root,invocation,phaseControl,(store,control)=>prepareJavascriptDependencies(\"sync\",root,store,control,{kind:\"scopes\",owners}));checkResourceLeaseControl(phaseControl);return owners;\n}\n",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts",
+   "sha256": "5db29ec41eb1e83ede068df00fcaf41726d3b1ad7ac4cc464a9eeef048758ddf",
+   "edits": [
+    {
+     "id": "prep-1",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(root,[\"repo\",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom)})",
+     "new": "createBuildBootstrapCapabilitiesV1(root,[\"repo\",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom),SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-2",
+     "group": "prep",
+     "old": "createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored)})",
+     "new": "createBuildBootstrapCapabilitiesV1(root,request,{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(authored),SEMIO_BUILD_TOOL:\"nx\"})",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "prep-3",
+     "group": "prep",
+     "old": "import {parseBuildInvocationV1,nxBuildArgumentsV1,resolveBuildInvocationV1} from \"../../../🧭️invocation/🟦️.ts\";",
+     "new": "import {parseBuildInvocationV1,nxBuildArgumentsV1,resolveBuildInvocationV1} from \"../../../🧭️invocation/🟦️.ts\";\nimport buildPolicy from \"../../../🔣️policy.json\";",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "already-applied"
+    },
+    {
+     "id": "prep-4",
+     "group": "prep",
+     "old": "expect(parseBuildInvocationV1([\"show\",\"projects\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"bazel\");",
+     "new": "expect(parseBuildInvocationV1([\"show\",\"projects\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"bazel\");\n  expect(parseBuildInvocationV1([\"run\",\"app:build\"],{}).tool).toBe(buildPolicy.defaultTool);expect(parseBuildInvocationV1([\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"nx\"}).tool).toBe(\"nx\");expect(parseBuildInvocationV1([\"--tool=nx\",\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"bazel\"}).tool).toBe(\"nx\");expect(parseBuildInvocationV1([\"--tool=bazel\",\"run\",\"app:build\"],{SEMIO_BUILD_TOOL:\"nx\"}).tool).toBe(\"bazel\");",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": "already-applied"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🔣️.json",
+   "sha256": "bec37e9a31e71e5bfc6dc90fc14e7f29806e14f7bf189f172e0ed5665d44c4ee",
+   "edits": [
+    {
+     "id": "closure-1",
+     "group": "closure",
+     "old": "\"defaultTool\": {\n          \"$ref\": \"#/$defs/BuildTool\"\n        }\n      },\n      \"additionalProperties\": true",
+     "new": "\"defaultTool\": {\n          \"$ref\": \"#/$defs/BuildTool\"\n        },\n        \"javascriptInstall\": {\n          \"enum\": [\n            \"all\",\n            \"closure\"\n          ]\n        },\n        \"javascriptInstallRoots\": {\n          \"type\": \"array\",\n          \"uniqueItems\": true,\n          \"items\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          }\n        }\n      },\n      \"additionalProperties\": true",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md",
+   "sha256": "f11c41fe197ce607de107585d2c257c05bf7a0b26f5d8a82770a33520bd575cb",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "bun repo --tool=bazel run <project>:<task>[:<configuration>]",
+     "new": "bun repo --tool=nx run <project>:<task>[:<configuration>]",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    },
+    {
+     "id": "flip-2",
+     "group": "flip",
+     "old": "Nx remains the configured default while Bazel qualification is in progress.",
+     "new": "Bazel is the configured default; Nx stays selectable with `--tool=nx`.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs",
+   "sha256": "c21128155e58ffc0d5b09c9b6310ed0bc65cbc563ed96822bd4233a0e9e48c7c",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "provision tools with repo tools setup all. Nx remains the default; select Bazel with --tool=bazel.",
+     "new": "provision the default tool with repo tools setup and both tools with repo tools setup all. Bazel is the default; select Nx with --tool=nx.",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🚪️entrypoint-contract.json",
+   "sha256": "1afddba1b2e14a36aab83239f512d5f2d95e50550685e54c583309a16e940786",
+   "edits": [
+    {
+     "id": "flip-1",
+     "group": "flip",
+     "old": "\"--tool=bazel\",\n    \"Nx remains the default\"",
+     "new": "\"--tool=nx\",\n    \"Bazel is the default\"",
+     "counts": [
+      1
+     ],
+     "optional": false,
+     "note": ""
+    }
+   ]
+  }
+ ],
+ "newFiles": [
+  {
+   "group": "probe",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🟦️.ts",
+   "sha256": "29cbbf89c8dc5f2d62355a88c3a5a8c44e7c0f0013100f2cf0ad6a56dd8fed55"
+  },
+  {
+   "group": "probe",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🏭️runner/🟦️.ts",
+   "sha256": "47aefe63590c3ec6ec18f106f8be4fb07d487060d937d92caae73edcd4d64dd6"
+  },
+  {
+   "group": "probe",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🟦️.ts",
+   "sha256": "00725a25ded2cfe8ef4e5ed6ebfb71a82213cf254a9ae1c3009f695db4e20c47"
+  },
+  {
+   "group": "probe",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🧫️fixtures/🔣️.json",
+   "sha256": "cada1faf26117a20e8b0e1c93e2ea1106b0a56f6e3e07067c18243cb0e1fee0e"
+  },
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs",
+   "sha256": "a3d1e4a8c8c71895f5546803970a9b981d9aad4d68c8c1bd21ce98295a50cde2"
+  },
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts",
+   "sha256": "e136e4a9d4f44d4c4882f72f13ed471b8a2e4d1dfe52997dd7d6f7e65aac8317"
+  },
+  {
+   "group": "closure",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🔣️.json",
+   "sha256": "9a628115e11366a1b0b6cf27d9f055e5a65a08231a51212bcb788dfce26cd68e"
+  },
+  {
+   "group": "manifest2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/package.json",
+   "sha256": "78ccafa4b5d51ad0c0907dc50f64d2b3ed02913e6799fb0b89709dbdfb3500ab"
+  }
+ ]
+}

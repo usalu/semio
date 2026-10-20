@@ -1,0 +1,105 @@
+{
+  "name": "@semio-tech/repo-cli-go",
+  "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "namedInputs": {
+    "goToolchain": [
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "goToolchain"
+      ],
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "build",
+            "title": {
+              "en": "Build Go Repository Commands",
+              "de": "Go-Repository-Befehle Bauen"
+            },
+            "description": {
+              "en": "Build the current Go implementation used by repository tasks in the dashboard.",
+              "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen."
+            }
+          },
+          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "goToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-entrypoint-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        { "env": "SEMIO_TEST_LEVEL" },
+        { "env": "SEMIO_TEST_BUDGET_MS" },
+        { "env": "SEMIO_BUILD_BUDGET_MS" }
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test-entrypoint-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Native Repository Entrypoint",
+              "de": "Nativen Repository-Einstieg Testen"
+            },
+            "description": {
+              "en": "Validate neutral native routing vectors against the independent SQLite oracle.",
+              "de": "Neutrale native Routing-Fälle mit dem unabhängigen SQLite-Orakel prüfen."
+            }
+          }
+        }
+      }
+    }
+  }
+}

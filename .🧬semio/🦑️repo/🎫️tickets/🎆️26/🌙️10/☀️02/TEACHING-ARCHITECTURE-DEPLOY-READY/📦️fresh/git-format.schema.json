@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "objects",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "bodyHex",
+          "sha1"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "commit",
+              "tree"
+            ]
+          },
+          "bodyHex": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{2})*$",
+            "maxLength": 16384
+          },
+          "sha1": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          }
+        }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "genuine-pack-index",
+              "pack-checksum-mutated",
+              "index-checksum-mutated",
+              "index-crc-mutated"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

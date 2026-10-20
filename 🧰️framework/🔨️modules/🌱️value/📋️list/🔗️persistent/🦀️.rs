@@ -141,7 +141,7 @@ impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSet<T>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<Page<T>>(false,&None,body);}
   if self.page.is_some(){return self.retirement.next_owner_demands::<Page<T>>(true,&None,body);}
   if self.candidate.is_some(){return self.retirement.next_owner_demands::<SealedShared<Page<T>>>(true,&None,body);}
-  let binding=if self.authored.is_some(){&self.authored}else{&self.original};Ok(RetirementDemand{copy_bytes:crate::retained_clone::RetainedCloneBinding::copy_demand(binding)?,capacity_bytes:crate::retained_clone::RetainedCloneBinding::capacity_demand(binding,body)?,release_bytes:crate::retained_clone::RetainedCloneBinding::release_demand(binding)?,depth:crate::retained_clone::RetainedCloneBinding::depth_demand(binding)?})
+  let binding=if self.authored.is_some(){&self.authored}else{&self.original};crate::retained_clone::RetainedCloneBinding::close_demand(binding,body)
  }
  /// 🪜️ Only completely settled pages and source bindings permit terminal cursor release.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{

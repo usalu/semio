@@ -9,7 +9,7 @@ fn original_shared_semantic_source_constructs_one_paired_issuer_and_closes_all_a
  type Owners=DocumentStoreOwners<DemoSnapshot,DemoMutation>;
  type Factory=FixtureAuthoringFactory<DemoMutation>;
  type Disposer=ArtifactStoreCursorDisposer<DemoSnapshot,DemoMutation>;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
  let row=&fixture["grant"];let n=|key:&str|row[key].as_u64().unwrap()as usize;
  let grant=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")};
  let children=semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes:0,depth:0};
@@ -29,6 +29,5 @@ fn original_shared_semantic_source_constructs_one_paired_issuer_and_closes_all_a
   for _ in 0..limit{if owners.constructor_is_complete(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owners.admit_constructor(grant));let p=step.unwrap_or_else(|_|panic!("original fixed catalog ticket issuance"));assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owners.original_semantic_issuer_is_shared());assert_eq!(Arc::as_ptr(owners.one_item_preparation.as_ref().unwrap())as*const(),publication);}
   let mut terminal=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if owners.uninstalled_owners_terminal_is_empty(){terminal=true;break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owners.close_uninstalled_owners_step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
   assert!(terminal);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owners));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,fixture["terminalDropBytes"].as_u64().unwrap()as usize));assert_eq!(born,released);
-  eprintln!("[DEBUG] Original paired catalog source cancel-prefix={limit} one-source/two-aliases born={born} released={released} terminalDrop=0");
  }
 }

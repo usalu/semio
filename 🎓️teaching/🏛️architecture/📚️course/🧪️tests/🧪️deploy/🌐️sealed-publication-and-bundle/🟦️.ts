@@ -1,12 +1,18 @@
 /** 🌐️ The sealed document, CDN artifact, stack bundle, readiness gate and response header tests. */
+import { createRequire } from "node:module";
+import type { Readable, Writable } from "node:stream";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import Ajv from "ajv";
 import { expect, it } from "vitest";
 import deployment from "../../../🚀️deploy/🔣️.json" with { type: "json" };
 import bundleCases from "../../../🧫️fixtures/🚛️bundle/🔣️.json" with { type: "json" };
-import { stackBundleImages, stackBundlePlan } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
+import bundlePolicySchema from "../../../🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json" with { type: "json" };
+import { saveStackBundleImages, verifyStackBundleArchive, stackBundleImages, stackBundlePlan } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
 import readiness from "../../../🧫️fixtures/🚀️readiness/🔣️.json" with { type: "json" };
 import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_ORIGIN, COURSE_STACK_CERTIFICATES, COURSE_STACK_FILES, hostZone } from "../../../🚀️deploy/🟦️.ts";
 import { siteArtifactProblems, siteDocumentProblems } from "../../../🚀️deploy/🌐️site/🟦️.ts";
@@ -14,6 +20,10 @@ import { stackBundleEnvironment, stackBundleReadme } from "../../../🚀️deplo
 import { deployCheckSteps } from "../../../🚀️deploy/⚖️readiness/🟦️.ts";
 import { BOOT, STYLE, compose, digest, read, released, sealed, site, tree } from "../🧰️deploy-fixtures/🟦️.ts";
 import type { Service } from "../🧰️deploy-fixtures/🟦️.ts";
+
+type BundleTarHeader={name:string;size?:number;type?:"file"|"directory";mode?:number;pax?:Record<string,string>};
+interface BundleTarWriter extends Readable {entry(header:BundleTarHeader,body:Buffer,complete:(error?:Error|null)=>void):void;finalize():void}
+const tarStream=createRequire(join(site,"📦️packages/🟦️typescript/package.json"))("tar-stream") as {pack():BundleTarWriter;extract():Writable};
 
 /** 🚛 Registers the sealed document, CDN artifact, stack bundle, readiness gate and response header tests. */
 export function registerSealedPublicationAndBundleTests(): void {
@@ -53,6 +63,8 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(settings("sha-0123456789ab").filter((line) => !line.startsWith("#"))).toEqual(["PROCTOR_TAG=sha-0123456789ab"]);
     expect(stackBundleEnvironment("latest")).toBe(`# Overrides of compose.yaml; both services read this file as their environment.\nPROCTOR_TAG=latest\n# PROCTOR_HOST=${deployment.proctor.host}\n# PROCTOR_ALLOWED_ORIGINS=${COURSE_SITE_ORIGIN}\n# COURSE_HTTP_PORT=80\n# COURSE_HTTPS_PORT=443\n`);
     const readme = stackBundleReadme("sha-0123456789ab", compose.services.caddy!.image, bundleCases.proxy.image);
+    const policy = new Ajv({ strict: true }).compile(bundlePolicySchema);
+    expect(policy({ proctor: bundleCases.proctor, proxy: bundleCases.proxy })).toBe(true);
     for (const row of bundleCases.cases) {
       const images = stackBundleImages(row.tag, read("compose.yaml"));
       expect(images).toEqual(row.images);
@@ -62,9 +74,11 @@ export function registerSealedPublicationAndBundleTests(): void {
       expect(plan.caddy).toBe(bundleCases.proxy.image);
       const staged = parse(plan.compose) as { services: Record<string, Service> };
       expect(staged.services.caddy).toEqual({ ...compose.services.caddy, ...bundleCases.proxy });
-      expect(staged.services.proctor).toEqual(compose.services.proctor);
+      expect(staged.services.proctor).toEqual({ ...compose.services.proctor, ...bundleCases.proctor });
+      expect(policy({ proctor: { pull_policy: staged.services.proctor!.pull_policy }, proxy: { image: staged.services.caddy!.image, pull_policy: staged.services.caddy!.pull_policy } })).toBe(true);
       for (const image of plan.images) expect(stackBundleReadme(row.tag, images[1], plan.caddy)).toContain(image);
     }
+    for (const row of bundleCases.invalidPolicies) expect(() => stackBundlePlan("latest", read("compose.yaml").replace(row.replace, row.with)), row.id).toThrow(row.error);
     for (const row of bundleCases.updates) {
       const guide = stackBundleReadme(row.tag, compose.services.caddy!.image, bundleCases.proxy.image);
       expect(guide).toContain("Update an existing stack from this bundle:");
@@ -112,14 +126,14 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(siteArtifactProblems(tree({ ...released(origin), [`${COURSE_BUNDLE_DIRECTORY}/probe.js`]: "fetch('http://localhost')", [`${COURSE_PAGES_DIRECTORY}/index.html`]: "<!doctype html>" }), origin)).toEqual([]);
     expect(siteArtifactProblems(tree({ ...released(origin), "elsewhere/probe.js": "fetch('http://localhost')" }), origin)).toEqual(["the site names localhost outside the baked proctor origin"]);
   });
-  it("checks the sources against the compiler early in the readiness gate, before anything is built, and ends with the end-to-end gate", () => {
+  it("reaches the compiler and the site through the graph before the readiness gate starts, and ends with the end-to-end gate", () => {
     const project = JSON.parse(readFileSync(join(site, "📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { options?: { command?: string }; dependsOn?: string[] }> };
     expect(project.targets.typecheck?.options?.command).toBe("bun ./📜️script.ts typecheck");
     expect(project.targets["deploy-check"]?.dependsOn).toContain(readiness.sourceProducer);
     expect(project.targets.typecheck?.dependsOn).toEqual(["@semio-tech/framework-rs:generate", "@semio-tech/ui-contract-rs:generate", "@semio-tech/ui-rs:generate", "@semio-tech/framework-actor-rs:typegen", "@semio-tech/ui-styling-tokens:generate", "@semio-tech/assets:build"]);
     const steps = deployCheckSteps(project.targets);
-    expect(steps).toEqual(["no drift from 🚀️deploy/🔣️.json", "sources type-checked", "course valid in the Rust core", "site built and verified as the CDN artifact", "proctor image built", "proctor image checked", "stack checked", "end-to-end gate"]);
-    expect(deployCheckSteps({})).toEqual(steps.filter((step) => step !== "sources type-checked" && step !== "end-to-end gate"));
+    expect(steps).toEqual(["no drift from 🚀️deploy/🔣️.json", "course valid in the Rust core", "proctor image built", "proctor image checked", "stack checked", "end-to-end gate"]);
+    expect(deployCheckSteps({})).toEqual(steps.filter((step) => step !== "end-to-end gate"));
     const readme = readFileSync(join(site, "README.md"), "utf8");
     const gate = readme.slice(readme.indexOf("### Readiness gate"));
     const told = gate.slice(0, gate.indexOf("\n#", 1)).match(/^\d+\. /gmu) ?? [];
@@ -136,4 +150,36 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(everywhere).not.toContain("Cache-Control");
     for (const header of ["X-Content-Type-Options: nosniff", "X-Frame-Options: DENY", "Content-Security-Policy: frame-ancestors 'none'", "Referrer-Policy: no-referrer"]) expect(everywhere).toContain(`  ${header}\n`);
   });
+  it("exports the inspected immutable image identities with their offline tags even across a mutable-tag ABA", async () => {
+    const fixture=bundleCases.imageExport,ajv=new Ajv({strict:true}),validate=ajv.compile(bundlePolicySchema.definitions.imageExportFixture),hash=(bytes:Uint8Array|string)=>Buffer.from(sha256(typeof bytes==="string"?Buffer.from(bytes):bytes)).toString("hex");
+    expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
+    expect(JSON.parse(fixture.proctor.config).config.Labels["org.opencontainers.image.revision"]).toMatch(/-dirty$/u);
+    type Entry={name:string;body:Buffer;type?:"directory";pax?:Record<string,string>};
+    const encode=async(entries:Entry[]):Promise<Buffer>=>{const writer=tarStream.pack(),chunks:Buffer[]=[],done=new Promise<Buffer>((accept,reject)=>{writer.on("data",(chunk:Buffer)=>chunks.push(Buffer.from(chunk)));writer.once("error",reject);writer.once("end",()=>accept(Buffer.concat(chunks)));});for(const entry of entries)await new Promise<void>((accept,reject)=>writer.entry({name:entry.name,size:entry.body.length,type:entry.type??"file",mode:0o644,...(entry.pax?{pax:entry.pax}:{})},entry.body,error=>error?reject(error):accept()));writer.finalize();return done;};
+    const decode=async(body:Buffer):Promise<Map<string,Buffer>>=>new Promise((accept,reject)=>{const reader=tarStream.extract(),entries=new Map<string,Buffer>();reader.on("entry",(header:BundleTarHeader,stream:Readable,next:()=>void)=>{const chunks:Buffer[]=[];stream.on("data",(chunk:Buffer)=>chunks.push(Buffer.from(chunk)));stream.once("error",reject);stream.once("end",()=>{if(entries.has(header.name))return reject(Error("duplicate entry"));if(header.type==="file")entries.set(header.name,Buffer.concat(chunks));next();});stream.resume();});reader.once("error",reject);reader.once("finish",()=>accept(entries));reader.end(body);});
+    for(const row of fixture.cases){
+      let proctorBody=Buffer.from(fixture.proctor.config),proxyBody=Buffer.from(fixture.proxy.config);if(row.id==="wrong-platform")proctorBody=Buffer.from(fixture.proctor.config.replace('"amd64"','"arm64"'));if(row.id==="shared-config-tags")proxyBody=proctorBody;
+      const selection={proctor:{reference:fixture.proctor.reference,id:"sha256:"+hash(proctorBody)},proxy:{source:fixture.proxy.source,reference:fixture.proxy.reference,id:"sha256:"+hash(proxyBody)}},images=[selection.proctor,selection.proxy],configPath=(body:Buffer)=>"blobs/sha256/"+hash(body),layer=Buffer.alloc(1024),layerPath="blobs/sha256/"+hash(layer),manifest=images.map((image,index)=>({Config:configPath(index?proxyBody:proctorBody),RepoTags:[image.reference],Layers:[layerPath]})),stored=new Map<string,Buffer>([[configPath(proctorBody),proctorBody],[configPath(proxyBody),proxyBody],[layerPath,layer]]);
+      if(row.id==="aba-during-save"){const changed=Buffer.from(fixture.proctor.config+" ");manifest[0]!.Config=configPath(changed);stored.set(configPath(changed),changed);}
+      if(row.id==="wrong-config-bytes")stored.set(configPath(proctorBody),Buffer.from("wrong bytes"));
+      if(row.id==="missing-config")stored.delete(configPath(proctorBody));
+      if(row.id==="missing-proctor-tag")manifest[0]!.RepoTags=[];
+      if(row.id==="missing-caddy-alias")manifest[1]!.RepoTags=[];
+      if(row.id==="duplicate-tag")manifest.push({...manifest[0]!});
+      const entries:Entry[]=[...stored].map(([name,body])=>({name,body}));
+      if(row.id==="duplicate-config-entry")entries.push({name:configPath(proctorBody),body:proctorBody});
+      if(row.id==="root-dot"||row.id==="root-dot-slash")entries.unshift({name:row.id==="root-dot"?".":"./",body:Buffer.alloc(0),type:"directory"});
+      if(row.id.startsWith("hybrid-")){
+        const descriptors=images.map((image,index)=>{const body=index?proxyBody:proctorBody,config={mediaType:"application/vnd.oci.image.config.v1+json",digest:image.id,size:body.length},leaf=Buffer.from(JSON.stringify({schemaVersion:2,mediaType:"application/vnd.oci.image.manifest.v1+json",config:row.id==="hybrid-wrong-config"&&index===0?{...config,digest:selection.proxy.id}:config,layers:[{mediaType:"application/vnd.oci.image.layer.v1.tar",digest:"sha256:"+hash(layer),size:layer.length}]}));const name=configPath(leaf);entries.push({name,body:leaf});const full=image.reference.startsWith("caddy:")?"docker.io/library/"+image.reference:image.reference;return{mediaType:"application/vnd.oci.image.manifest.v1+json",digest:"sha256:"+hash(leaf),size:leaf.length,annotations:{"io.containerd.image.name":row.id==="hybrid-wrong-tag"&&index===0?"other:wrong":full,"org.opencontainers.image.ref.name":image.reference.slice(image.reference.lastIndexOf(":")+1)}};});
+        entries.push({name:"index.json",body:Buffer.from(JSON.stringify({schemaVersion:2,mediaType:"application/vnd.oci.image.index.v1+json",manifests:descriptors}))},{name:"oci-layout",body:Buffer.from('{"imageLayoutVersion":"1.0.0"}')});
+      }
+      entries.push({name:"manifest.json",body:Buffer.from(JSON.stringify(manifest)),...(row.id==="timestamp-pax"?{pax:{mtime:"1.5"}}:row.id==="path-pax"?{pax:{path:"foreign.json"}}:{})});
+      let archive=await encode(entries);if(row.id==="bad-header-checksum"){archive=Buffer.from(archive);archive[0]^=1;}if(row.id==="truncated-archive")archive=archive.subarray(0,archive.length-600);
+      const output=join(tree({}),COURSE_BUNDLE_IMAGE),controller=new AbortController(),inspected:{reference:string;id:string}[]=[],saved:string[][]=[];let didSave=false,accepted=true;if(row.id==="cancel-before-save")controller.abort(Error("neutral before"));
+      try{await saveStackBundleImages(selection,output,{inspect:async reference=>{const expected=reference===selection.proctor.reference?selection.proctor.id:selection.proxy.id,id=row.id==="retag-before-save"&&!didSave||row.id==="retag-after-save"&&didSave?"sha256:"+"f".repeat(64):expected;inspected.push({reference,id});return id;},save:async references=>{saved.push([...references]);writeFileSync(output,archive);didSave=true;},verify:async(path,bindings,signal)=>verifyStackBundleArchive(path,bindings,signal,async()=>{if(row.id==="cancel-during-verification")controller.abort(Error("neutral during"));})},controller.signal);}catch{accepted=false;}
+      let oracle=false;try{const files=await decode(archive),records=JSON.parse(files.get("manifest.json")!.toString()),observed=records.flatMap((record:any)=>record.RepoTags.map((reference:string)=>({reference,id:"sha256:"+hash(files.get(record.Config)!),platform:JSON.parse(files.get(record.Config)!.toString())}))),binding=ajv.compile({type:"object",required:["reference","id"],properties:{reference:{enum:images.map(image=>image.reference)},id:{enum:[...new Set(images.map(image=>image.id))]}}});oracle=records.length<=2&&images.every(image=>observed.filter((entry:any)=>entry.reference===image.reference&&entry.id===image.id&&entry.platform.os==="linux"&&entry.platform.architecture==="amd64").length===1)&&observed.length===2&&observed.every((entry:any)=>binding(entry));if(files.has("index.json")){const index=JSON.parse(files.get("index.json")!.toString());oracle&&=index.manifests.length===2&&index.manifests.every((descriptor:any)=>{const body=files.get("blobs/sha256/"+descriptor.digest.slice(7))!,leaf=JSON.parse(body.toString()),name=descriptor.annotations["io.containerd.image.name"].replace(/^docker[.]io\/library\//u,""),image=images.find(image=>image.reference===name);return body.length===descriptor.size&&hash(body)===descriptor.digest.slice(7)&&image?.id===leaf.config.digest&&descriptor.annotations["org.opencontainers.image.ref.name"]===name.slice(name.lastIndexOf(":")+1);});}oracle&&=inspected.every(entry=>entry.id===(entry.reference===selection.proctor.reference?selection.proctor.id:selection.proxy.id))&&!controller.signal.aborted&&didSave;}catch{oracle=false;}
+      expect(accepted,row.id).toBe(row.accepted);expect(oracle,row.id+" independent tar-stream/noble/Ajv oracle").toBe(row.accepted);if(didSave)expect(saved).toEqual([[selection.proctor.reference,selection.proxy.reference]]);if(row.id==="cancel-before-save")expect(inspected).toEqual([]);
+    }
+  });
+
 }

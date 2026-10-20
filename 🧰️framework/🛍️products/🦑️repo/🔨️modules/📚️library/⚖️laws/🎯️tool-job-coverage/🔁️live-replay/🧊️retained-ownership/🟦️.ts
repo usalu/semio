@@ -1,3 +1,4 @@
+/** 🧊️ The cold layout relay and universal retained-ownership contract of the live replay law. */
 import { toolJobProductionProtocolSource, toolJobRustBlock } from "../../📋️inventory/🟦️.ts";
 
 export function toolJobLayoutColdRelayRetainedExact(layoutExport: string, layoutWasm: string, pluginHost: string): boolean {

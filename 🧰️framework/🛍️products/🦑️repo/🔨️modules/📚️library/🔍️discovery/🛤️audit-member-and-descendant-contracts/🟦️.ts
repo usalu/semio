@@ -1,4 +1,4 @@
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import type { SemanticDescendantNode } from "../📜️taxonomy-contracts/🟦️.ts";
 import { pathUtf16Units } from "../📏️path-budget/🟦️.ts";
 import type { TaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";

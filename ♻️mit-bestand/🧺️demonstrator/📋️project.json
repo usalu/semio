@@ -21,7 +21,7 @@
   "targets": {
     "prepare-prototype": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -55,14 +55,14 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
         }
       },
       "defaultConfiguration": "prototype"
     },
     "prepare-release": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
         "activationSources",
@@ -96,7 +96,7 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
         }
       },
       "defaultConfiguration": "release"
@@ -104,6 +104,7 @@
     "dev": {
       "metadata": {
         "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
           "dashboard": {
             "ready": {
               "port": 6029,
@@ -113,6 +114,12 @@
         }
       },
       "executor": "repo:script",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
       "dependsOn": [
         "activate-prototype"
       ],
@@ -144,16 +151,28 @@
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
-        "forwardAllArgs": false
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "release"
+        }
       },
       "cache": false,
       "outputs": [
         "{projectRoot}/.🧾️store/build.json"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" },
+          "buildMode": {
+            "fixed": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "release"
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -164,7 +183,7 @@
     },
     "activate-prototype": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
       ],
@@ -189,44 +208,28 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
         }
       },
       "defaultConfiguration": "prototype"
     },
     "activate-lanes-prototype": {
-      "executor": "repo:script",
-      "cache": false,
-      "outputs": [],
-      "inputs": [
-        {
-          "dependentTasksOutputFiles": "**/*",
-          "transitive": true
-        }
-      ],
+      "executor": "repo:noop",
       "dependsOn": [
         "@semio-tech/framework-os-dev:activate-energy-react-prototype",
         "@semio-tech/framework-os-dev:activate-fem3d-react-prototype",
         "@semio-tech/framework-os-dev:activate-generator-react-prototype"
       ],
-      "options": {
-        "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts complete",
-        "forwardAllArgs": false,
-        "env": {
-          "SEMIO_BUILD_MODE": "prototype"
-        }
-      },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "driver-owned", "reason": "freshness-owned-by-driver" }
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
         }
-      },
-      "defaultConfiguration": "prototype"
+      }
     },
     "serve": {
       "metadata": {
         "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
           "dashboard": {
             "ready": {
               "port": 6029,
@@ -236,6 +239,12 @@
         }
       },
       "executor": "repo:script",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
@@ -250,6 +259,12 @@
     },
     "prepare-e2e": {
       "executor": "repo:script",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -260,10 +275,21 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
       }
     },
     "serve-e2e": {
       "executor": "repo:script",
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -277,6 +303,7 @@
       "continuous": true,
       "metadata": {
         "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
           "continuousSharing": false
         }
       }
@@ -292,21 +319,39 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+        }
       }
     },
     "canonical-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ]
     },
     "test-runtime-catalog": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",

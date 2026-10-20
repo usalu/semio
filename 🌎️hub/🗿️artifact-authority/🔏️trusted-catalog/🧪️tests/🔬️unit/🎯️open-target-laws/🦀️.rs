@@ -31,7 +31,7 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
             let kind = descriptor.manifest.artifact_kinds[0].clone();
             descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
         }
-        let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+        let bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
         let answer: serde_json::Value = serde_json::from_slice(&descriptor_open_targets_answer(&bytes).expect("open-target answer")).expect("answer json");
         assert_eq!(answer["schema"], fixture["answerSchema"], "{name}");
         let targets = answer["targets"].as_array().unwrap();
@@ -303,7 +303,7 @@ use semio_hub_trusted_catalog_descriptor::{VerifiedTrustedPackage, decode_packag
                     let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();
                     fields.push(duplicate);
                 }
-                let mut bytes = os_pack::pack_rt::encode_wire_value(&value);
+                let mut bytes = directory::os_pack::pack_rt::encode_wire_value(&value);
                 if change == "gis-trailing-byte" {
                     bytes.push(0);
                 }

@@ -14,6 +14,10 @@ import type { TestRouteContext } from "../🧭️route-context/🟦️.ts";
 
 /** 🧱️ Runs the build surface, native dependency, canonical JSON, mutation authority, direction and corpus routes; true when one matched. */
 export async function runBuildAndDirectionRoutes(context: TestRouteContext, segments: string[]): Promise<boolean> {
+  if (segments.length === 1 && segments[0] === "build-mode") {
+    await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "build-mode"), budgetMs: 120_000 });
+    return true;
+  }
   if (segments.length === 1 && segments[0] === "build-surfaces") {
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "build-surfaces"), budgetMs: 120_000 });
     return true;

@@ -7,7 +7,12 @@
     "publish": {
       "executor": "repo:script",
       "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true },
-      "cache": false
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

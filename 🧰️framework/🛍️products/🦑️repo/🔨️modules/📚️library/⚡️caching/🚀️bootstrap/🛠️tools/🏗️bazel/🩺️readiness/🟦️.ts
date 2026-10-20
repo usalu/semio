@@ -5,13 +5,12 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
-import {readNativeWindowsLongPathsEnabledV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=schema.definitions.PlatformPolicy.const,version=schema.definitions.Release.const.version;
 
-export type BazelPlatformFactsV1={readonly platform:"win32"|"darwin"|"linux";readonly exchange:"supported"|"unsupported"|"unprobed";readonly caseSensitive:"yes"|"no"|"unprobed";readonly imageTool:boolean;readonly longPaths:"enabled"|"disabled"|"unprobed";readonly paths:readonly {readonly label:"workspace"|"tools"|"dependencies"|"products"|"temporary";readonly path:string;readonly blocking:boolean}[]};
+export type BazelPlatformFactsV1={readonly platform:"win32"|"darwin"|"linux";readonly exchange:"supported"|"unsupported"|"unprobed";readonly caseSensitive:"yes"|"no"|"unprobed";readonly imageTool:boolean;readonly paths:readonly {readonly label:"workspace"|"tools"|"dependencies"|"products"|"temporary";readonly path:string;readonly blocking:boolean}[]};
 export type BazelPlatformReportV1={readonly refusals:string[];readonly warnings:string[]};
 export type BazelReadinessV1={readonly version:1;readonly bazel:{readonly version:string;readonly platform:string;readonly arch:string;readonly sha256:string;readonly executable:string};readonly modules:{readonly lockSha256:string;readonly blobs:number}};
 export type BazelProgressEventV1={readonly phase:"waiting"|"verifying"|"downloading"|"ready";readonly bytes:number;readonly total:number};
@@ -28,7 +27,6 @@ export function bazelPlatformProblemsV1(facts:unknown):BazelPlatformReportV1{
  const actual=facts as BazelPlatformFactsV1,refusals:string[]=[],warnings:string[]=[];
  if(actual.platform==="win32"){
   for(const row of actual.paths){const bad=bazelNonAsciiV1(row.path);if(!bad)continue;(row.blocking?refusals:warnings).push(`Bazel ${version} cannot start on Windows under the non-ASCII ${row.label} path ${row.path} (U+${bad.codePoint.toString(16).toUpperCase().padStart(4,"0")} at index ${bad.index}): its native launcher fails with ${policy.windowsLauncherFailure}. An ASCII SUBST drive or junction does not help because the launcher resolves it back to the real path. Move the checkout to an ASCII-only directory such as C:\\semio and rerun.`);}
-  if(actual.longPaths==="disabled")refusals.push("Windows resolves every declared source through the Bazel execroot below the output root, which adds about 90 characters to tracked paths of up to 255 characters and so exceeds MAX_PATH 260 unless long paths are enabled machine-wide: run once in an elevated PowerShell, then open a new terminal: New-ItemProperty -Path HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force");
  }
 
  if(actual.platform==="win32"&&actual.exchange!=="supported")refusals.push("The journaled directory swap (write-through MoveFileExW renames of sibling directories) failed its probe beneath the workspace cache root, so the directory-backed cache partitions cannot be published. Use a local NTFS volume for the checkout; no elevation is needed.");
@@ -42,12 +40,11 @@ export function bazelPlatformProblemsV1(facts:unknown):BazelPlatformReportV1{
 export async function collectBazelPlatformFactsV1(workspace:string,roots:Readonly<Record<"tools"|"dependencies"|"products",string>>,signal:AbortSignal):Promise<BazelPlatformFactsV1>{
  signal.throwIfAborted();
  const resolved=await realpath(workspace).catch(()=>workspace),paths=[{label:"workspace" as const,path:resolved,blocking:true},...(["tools","dependencies","products"] as const).map(label=>({label,path:roots[label],blocking:true})),{label:"temporary" as const,path:tmpdir(),blocking:false}];
- let exchange:BazelPlatformFactsV1["exchange"]="unprobed",caseSensitive:BazelPlatformFactsV1["caseSensitive"]="unprobed",imageTool=true,longPaths:BazelPlatformFactsV1["longPaths"]="unprobed";
+ let exchange:BazelPlatformFactsV1["exchange"]="unprobed",caseSensitive:BazelPlatformFactsV1["caseSensitive"]="unprobed",imageTool=true;
  if(process.platform==="linux"||process.platform==="win32"){let host=roots.tools;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}try{probeNativeDirectoryExchangeV1(host);exchange="supported";}catch{exchange="unsupported";}try{caseSensitive=probeNativeDirectoryCaseCapabilityV1(host)?"yes":"no";}catch{caseSensitive="no";}}
  if(process.platform==="darwin")imageTool=await access(policy.darwinImageTool,constants.X_OK).then(()=>true,()=>false);
- if(process.platform==="win32")longPaths=readNativeWindowsLongPathsEnabledV1()?"enabled":"disabled";
  signal.throwIfAborted();
- return {platform:process.platform as BazelPlatformFactsV1["platform"],exchange,caseSensitive,imageTool,longPaths,paths};
+ return {platform:process.platform as BazelPlatformFactsV1["platform"],exchange,caseSensitive,imageTool,paths};
 }
 
 /** 🚧️ Refuses before any image is attached or byte is downloaded when Bazel cannot run on this platform. */

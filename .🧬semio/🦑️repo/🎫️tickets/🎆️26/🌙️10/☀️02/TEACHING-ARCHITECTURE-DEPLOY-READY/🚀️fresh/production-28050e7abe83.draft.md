@@ -1,0 +1,19 @@
+# Unsealed Initial Production Policy Draft
+
+**NOT EXECUTABLE. No production policy has been sealed or admitted.** The adjacent `.draft.json` is authored review input; its filename deliberately fails the parent CLI’s `fresh-parent-<32hex>.json` contract. Do not rename it into an executable policy. Root must create a NEW policy only after actual neutral passes and fresh reobservation of every authority below. No `readInitialPolicy`, command, test, builder, capture, provisioning,21-gate, facts, export or private effect was invoked while preparing this input.
+
+Draft: `production-28050e7abe83.draft.json`,30116B, raw-file SHA256`c63d4e1b5caa8fb350dc97f8bbe7111a437b15c5416a90c14d62383621b7af52`. This SHA identifies the draft bytes only; it is not a production seal or verdict. Ajv schema-only validation against the actual current InitialPolicy schema succeeded. No owner admission or execution validity is claimed.
+
+Observation interval: Source82 stable per-file reads began2026-10-20T20:41:18.309Z; module/Cargo/HEAD/native observations completed2026-10-20T20:41:54.710Z. Every observed file was ordinary, single-link, descriptor/name-stable with physical ancestor identity checks. Source82 and56 unique persistent Ticket files were read independently; this is NOT an atomic whole-tree snapshot or a future compiler/artifact Source attestation. Only paths, sizes, hashes and explicit initial scalars are saved; no Source bodies were copied.
+
+- Cohort/capture/runToken, seven operation IDs and tag are freshly generated **intended** values, not created resource identities. All ten ID strings are distinct. Private-engine container/volume/tag availability has NOT been probed.
+- engineId9ef0c850-ba59-4f21-bd6a-85515b34dd15 is the historically observed host DockerDesktop **EXPECTED PIN**, not current engine proof or private engine identity. Existing creation owner must revalidate it before effects.
+- Current observed symbolic HEAD resolves to bfe5c8314f50b3af9030752a2b896e3698fe919c. Genuine later Git capture/guest proof remain required. This initial observation does not prove any future Git/index or Source snapshot.
+- Root Cargo.toml122740B/SHA32adf4589be8502aa63dee245c500d5837d2495eaeaaec8a2a4c9f97f292f259 declares workspace.package.version0.1.0. verified:true refers only to that actual initial read; captured M must later match its bytes/hash.
+- Retained generated/n3/repo was freshly rehashed:11767992B/SHAa71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c, exactly the retained audited Linux ELF bytes admitted by the current schema. No guest copy, permission check, help0 or native Original has occurred.
+- python:`python3` is an intended system executable name. Its current availability/version/usability has NOT been probed by this read-only draft authoring; the owned neutral tests and Root’s final reobservation must establish that before production use.
+- Whole21/per-command draft ceilings choose the existing schema maxima12h/2h; facts5min/export10min/final10min remain bounded existing owner maxima. These do not expand inherited framework authority or prove any stage duration.
+
+No future container ID/created/user, Source manifest/Git archive/proof/provision/21/image/facts/export receipt or output hash is present. Those are derived only from genuine joined child0 plus stable current receipts. Missing optional boundary snapshots remain unavailable through the existing derivation; this draft does not relabel initial Source as final Source.
+
+Before a NEW executable policy: wait for actual neutral verdicts; independently refresh82 Source rows, all56 persistent module hashes and identities (including every aliased slot), Cargo/version, actual HEAD/ref, expected engine decision, retained native bytes and host Python choice; validate the final current schema and reviewed parent bytes; preserve fresh resource/output exclusivity. Keep this authored draft and sidecar as historical inputs.

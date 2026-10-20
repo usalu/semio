@@ -12,7 +12,8 @@
 // #region 🔌️Adapters
 import { useEffect, useState, type ReactElement } from "react";
 import { Button, useLabel } from "@semio-tech/ui-react";
-import { agentUiLabel, type PendingAgentApproval } from "../🔗️AgentBridge/🟦️.tsx";
+import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";
+import { type PendingAgentApproval } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 import { type ApprovalDecision, type ApprovalWithdrawal } from "@semio-tech/framework/mcp/bridge";
 // #endregion 🔌️Adapters
 

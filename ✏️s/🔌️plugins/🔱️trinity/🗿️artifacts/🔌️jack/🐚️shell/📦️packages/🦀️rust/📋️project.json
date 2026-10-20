@@ -22,6 +22,12 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
       }
     }
   }

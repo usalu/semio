@@ -438,7 +438,6 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
     b.detach_backbone().await.expect("release b");
     close_registered_fixture_app(&mut a, policy);
     close_registered_fixture_app(&mut b, policy);
-    println!("[DEBUG] FEM2d mounted two-actor reconnect: both disconnected commands persisted, event logs converged, repeated delivery added no nodes");
 }
 
 //#endregion 🔖️CrossCutting
@@ -563,7 +562,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     use semio_framework_plugin::artifact_app_laws::assert_registered_presence_round_trip;
     use semio_framework_plugin::artifact_app_laws::fixture_identity;
     use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][0]["value"])).expect("admitted shared camera");
     let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
     let node = boot.nodes.first().expect("bundled structural node");

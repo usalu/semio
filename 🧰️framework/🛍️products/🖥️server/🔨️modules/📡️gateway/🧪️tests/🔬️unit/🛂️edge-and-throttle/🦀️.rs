@@ -172,7 +172,7 @@ async fn a_refused_request_is_still_read_so_its_connection_can_go_on() {
 
 #[tokio::test]
 async fn oversized_bodies_discard_only_a_bounded_transport_tail(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧫️fixtures/📥️body/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📥️body/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let read=Arc::new(AtomicU64::new(0));let counter=Arc::clone(&read);
         let chunks=row["chunks"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().as_bytes().to_vec()).collect::<Vec<_>>();

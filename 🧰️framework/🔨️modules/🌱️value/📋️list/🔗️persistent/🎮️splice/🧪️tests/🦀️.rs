@@ -2,7 +2,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use super::super::tests::{grant,observe,original,close_source,row,list};
-fn close(plan:&mut PersistentSplice<i64>){plan.begin_close();for turn in 0..10000{if plan.terminal_is_empty(){return;}let g=grant(plan.close_demand(4096).unwrap());let(s,h)=observe(||plan.close_step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));assert!(s.progress()!=Default::default()||plan.terminal_is_empty(),"splice close inert: {g:?}");assert!(turn<9999);}}
+fn close(plan:&mut PersistentSplice<i64>){plan.begin_close();for turn in 0..10000{if plan.terminal_is_empty(){return;}let d=plan.close_demand(4096).unwrap();let g=grant(d);assert_eq!(plan.close_demand(g.maximum_copy_bytes).unwrap(),d);let(s,h)=observe(||plan.close_step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));assert!(s.progress()!=Default::default()||plan.terminal_is_empty(),"splice close inert: {g:?}");assert!(turn<9999);}}
 mod quick{
 use super::*;
 /// 🧫️ Neutral empty, split, partial-interior and removal vectors conserve immutable row authorities.

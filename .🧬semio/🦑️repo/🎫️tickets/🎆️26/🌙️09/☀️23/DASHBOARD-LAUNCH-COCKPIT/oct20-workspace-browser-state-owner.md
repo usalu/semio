@@ -1,0 +1,13 @@
+# Workspace Browser State Owner
+
+The terminal source estimate is261846bytes under its unchanged262144byte boundary. History paging and guided maintenance require real behavior and tests, so adding them directly to the existing terminal module would exceed that semantic unit. No limit increase, omitted behavior law or source-as-DATA treatment is proposed.
+
+The next bounded extraction can stay inside the existing first-party filesystem command crate without a new runtime dependency or Cargo package: a browser command/query model adjacent to DocumentBuffer. It owns directory/query/entry/visible state, the opaque entry-management form, authenticated-history navigation state and future opaque paging cursors. It returns existing typed Workspace requests or closed form errors. The dashboard retains windows, Tui widgets, localized rendering, configurable key binding resolution, dirty-buffer refusal, job/window/generation identity and bounded polling. This is one actual domain state owner, with no alias or old duplicate Files declaration.
+
+Pure operations to move together are ordinary-versus-history browse intent, bounded parent navigation, selected-entry activation, form destination/confirmation validation and request construction, and page/inspection adoption after the dashboard has checked operation identity. Filesystem revisions and inspection/cursor tokens remain issued objects; the model never reconstructs them from display strings or JSON. Display paths never grant mutation or history authority.
+
+This preserves desktop/mobile and non-Tui reuse: the browser model consumes semantic actions or strings and emits domain requests, while the application maps actual keys and paints generic widgets. Localized form errors stay closed identifiers, rendered through the existing labels owner. No external UI type enters the filesystem public API.
+
+The extraction should be schema/test-first with neutral navigation/confirmation/path-boundary and paging cuts, Rust domain replay, TypeScript projection plus independent SQLite, and all existing nine controller laws retained. It can proceed only after the backend history envelope is final and the current filesystem native capture releases its input boundary. No implementation, source-size gain or runtime pass is claimed by this design report.
+
+The final browser contract has 37 neutral cases, including backend-issued pending-transition confirmation and pending Archive refusal. BrowserState also owns filtered listing projection; the existing native browser law checks canonical parent rows and case-insensitive filtering. No new runtime dependencies or Cargo edges were added. This source is frozen for the first full filesystem gate; no new native pass is claimed.

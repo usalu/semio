@@ -42,6 +42,13 @@ test("affected translation follows the language-agnostic corpus and cache operat
  expect(nxAffectedArgumentsV1(["affected","--targets=build"])).toEqual(["affected","--targets=build","--base=HEAD"]);
 });
 
+test("inputs maps to the Nx command that prints the hash inputs of one task and refuses everything else",()=>{
+ for(const row of fixture.inputs)expect(nxOperationArgumentsV1(row.args),row.name).toEqual(row.nx);
+ for(const args of fixture.inputsRefused)expect(()=>nxOperationArgumentsV1(args),args.join(" ")).toThrow("Expected repo inputs");
+ const source=readFileSync(installed.resolve("nx/src/command-line/show/command-object.js"),"utf8");
+ expect(source).toContain("inputs [target]");expect(source).toContain("json");
+});
+
 test("dry-run and graph translate to the Nx graph on stdout or a file and exec exports the neutral names",()=>{
  const wrapper=nxExecWrapperV1();
  for(const row of fixture.planning)expect(nxOperationArgumentsV1(row.args),row.name).toEqual(row.nx);

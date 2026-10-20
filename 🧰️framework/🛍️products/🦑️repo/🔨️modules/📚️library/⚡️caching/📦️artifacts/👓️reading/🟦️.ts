@@ -1,10 +1,10 @@
 import {join,resolve,isAbsolute} from "node:path";
 import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
-import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
-import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withArtifactStorageOperationV1} from "../💾️storage/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

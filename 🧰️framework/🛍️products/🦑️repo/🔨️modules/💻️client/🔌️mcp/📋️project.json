@@ -42,7 +42,8 @@
         "verb": "setup",
         "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl Installieren" },
         "description": { "en": "Publish the native repo command and persist its user PATH selection.", "de": "Den nativen repo-Befehl veröffentlichen und seinen Benutzer-PATH dauerhaft auswählen." }
-      } } }
+      },
+      "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" } } }
     },
     "test-install": {
       "executor": "repo:script",
@@ -50,14 +51,35 @@
       "inputs": ["default", "^default"],
       "outputs": [],
       "options": { "command": "bun ./📜️script.ts test-install" },
-      "metadata": { "semio": {
-        "execution": { "version": 1, "kind": "source" },
-        "dashboard": {
-          "verb": "test",
-          "title": { "en": "Test Native Command Installation", "de": "Native Befehlsinstallation Testen" },
-          "description": { "en": "Check native installation, PATH and atomic publication against neutral vectors.", "de": "Native Installation, PATH und atomare Veröffentlichung mit neutralen Fällen prüfen." }
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Native Command Installation",
+              "de": "Native Befehlsinstallation Testen"
+            },
+            "description": {
+              "en": "Check native installation, PATH and atomic publication against neutral vectors.",
+              "de": "Native Installation, PATH und atomare Veröffentlichung mit neutralen Fällen prüfen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts"
+          ]
         }
-      } }
+      }
     },
     "test": {
       "executor": "repo:script",

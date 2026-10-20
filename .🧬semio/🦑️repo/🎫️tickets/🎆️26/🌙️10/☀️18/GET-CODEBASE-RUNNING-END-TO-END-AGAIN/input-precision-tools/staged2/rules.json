@@ -1,0 +1,3386 @@
+{
+ "version": 1,
+ "retained": [
+  "sharedGlobals",
+  "{projectRoot}/📋️project.json"
+ ],
+ "messages": {
+  "languages": [
+   "en",
+   "de"
+  ],
+  "texts": {
+   "deriving": {
+    "en": "Deriving the TypeScript program {tsconfig}: files without a valid receipt entry are analysed",
+    "de": "Leite das TypeScript-Programm {tsconfig} ab: Dateien ohne gültigen Belegeintrag werden analysiert"
+   },
+   "progress": {
+    "en": "{tsconfig}: {files} files visited, {derived} analysed, {reused} reused ({seconds} s)",
+    "de": "{tsconfig}: {files} Dateien besucht, {derived} analysiert, {reused} wiederverwendet ({seconds} s)"
+   },
+   "done": {
+    "en": "{tsconfig}: program complete, {files} files, {derived} analysed, {reused} reused ({seconds} s)",
+    "de": "{tsconfig}: Programm vollständig, {files} Dateien, {derived} analysiert, {reused} wiederverwendet ({seconds} s)"
+   }
+  }
+ },
+ "exclusions": [
+  "!{workspaceRoot}/**/node_modules/**",
+  "!{workspaceRoot}/**/.git/**",
+  "!{workspaceRoot}/**/.nx/**",
+  "!{workspaceRoot}/**/.cache/**",
+  "!{workspaceRoot}/**/target/**",
+  "!{workspaceRoot}/**/dist/**",
+  "!{workspaceRoot}/**/📤️dist/**",
+  "!{workspaceRoot}/**/build/**",
+  "!{workspaceRoot}/**/out/**",
+  "!{workspaceRoot}/**/coverage/**",
+  "!{workspaceRoot}/**/test-results/**",
+  "!{workspaceRoot}/**/playwright-report/**",
+  "!{workspaceRoot}/**/storybook-static/**",
+  "!{workspaceRoot}/**/.venv/**",
+  "!{workspaceRoot}/**/__pycache__/**",
+  "!{workspaceRoot}/**/bin/**",
+  "!{workspaceRoot}/**/obj/**",
+  "!{workspaceRoot}/**/⚡️cache/**",
+  "!{workspaceRoot}/**/🗑️generated/**",
+  "!{workspaceRoot}/**/.lake/**",
+  "!{workspaceRoot}/**/pkg/**"
+ ],
+ "profiles": {
+  "package-discovery": {
+   "description": "Every file the owner-route dispatcher reads when it scans the repository for packages: package manifests, direct package sources and the emoji-named entry files of each package, as observed by tracing a verify command and checked by the containment lane.",
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/**/📦️packages/*/{Cargo.toml,package.json,📋️project.json,📜️script.ts,pyproject.toml,go.mod}",
+      "{workspaceRoot}/**/📦️packages/*/*.{ts,tsx,mts,cts,js,mjs,cjs,rs,go,py,cs}",
+      "{workspaceRoot}/**/📦️packages/*/*/*.{rs,py}",
+      "{workspaceRoot}/**/📦️packages/**/{🟦️,🟨️,🦀️,🐹️,🐍️,🔷️}.{ts,tsx,mts,cts,d.ts,d.mts,d.cts,js,mjs,cjs,rs,go,py,cs}",
+      "{workspaceRoot}/**/📦️packages/**/📜️script.ts",
+      "{workspaceRoot}/**/📦️packages/🟦️typescript/app/**/*.{ts,tsx}",
+      "{workspaceRoot}/**/📦️packages/**/🧰️vitest.setup.ts",
+      "{workspaceRoot}/📋️project.json",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json"
+     ]
+    }
+   ]
+  },
+  "library-resources": {
+   "description": "Data files the repository library reads by computed path: its schemas and asset policies, and the taxonomy.",
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🧬️schema/**/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/**/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**/🔣️.json"
+     ]
+    }
+   ]
+  },
+  "repository-sources": {
+   "description": "The sources a repository-wide scanner reads: every file of the source kinds, the schema JSON and the package manifests; not images, documents, fixture data or build output.",
+   "reads": [
+    {
+     "kinds": [
+      "rust-source",
+      "typescript-source",
+      "javascript-source",
+      "go-source",
+      "python-source",
+      "dotnet-source",
+      "toml",
+      "gherkin-feature"
+     ],
+     "under": [
+      "."
+     ]
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/**/🧬️schema/**/🔣️.json",
+      "{workspaceRoot}/**/📋️project.json",
+      "{workspaceRoot}/**/package.json"
+     ]
+    }
+   ]
+  },
+  "manifests": {
+   "description": "Every package manifest of the repository.",
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/**/{Cargo.toml,package.json,📋️project.json,pyproject.toml,go.mod}"
+     ]
+    }
+   ]
+  },
+  "test-discovery": {
+   "description": "What test discovery reads: the taxonomy, feature files and the canonical emoji-named source of every language (the set the test domain's own discovery targets declare).",
+   "reads": [
+    {
+     "kinds": [
+      "rust-source",
+      "typescript-source",
+      "go-source",
+      "python-source",
+      "dotnet-source"
+     ],
+     "under": [
+      "."
+     ],
+     "named": true
+    },
+    {
+     "kinds": [
+      "gherkin-feature"
+     ],
+     "under": [
+      "."
+     ]
+    }
+   ]
+  },
+  "stdio-tree": {
+   "description": "The stdio plugin tree the ledger gates walk (STDIO_ROOT_REL) and the hub composition that consumes it.",
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/**/*"
+     ]
+    }
+   ]
+  }
+ },
+ "routes": [
+  {
+   "words": [
+    "cache-prune",
+    "--stale-incremental-only",
+    "--profile",
+    "debug"
+   ],
+   "project": "repo",
+   "target": "cache-prune-stale-incremental",
+   "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"
+  },
+  {
+   "words": [
+    "flow",
+    "add-widget-retained-check"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "add-widget-retained-check",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "flow",
+    "child-edit-check"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "child-edit-check",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "flow",
+    "child-identity-check"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "child-identity-check",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "flow",
+    "test-source"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "test-source",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "schema",
+    "runtime-graph"
+   ],
+   "project": "os-hub",
+   "target": "runtime-fixture-graph",
+   "root": "🌎️hub/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "stdio",
+    "package-contract"
+   ],
+   "project": "@semio-tech/stdio-js",
+   "target": "package-contract",
+   "root": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "stdio",
+    "package-graph"
+   ],
+   "project": "@semio-tech/stdio-js",
+   "target": "package-graph",
+   "root": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "test",
+    "native"
+   ],
+   "project": "@semio-tech/fem-material-rs",
+   "target": "test-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test",
+    "source"
+   ],
+   "project": "@semio-tech/fem-material-rs",
+   "target": "test-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-camera-presence",
+    "native"
+   ],
+   "project": "@semio-tech/framework-plugin",
+   "target": "test-camera-presence-native",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-camera-presence",
+    "source"
+   ],
+   "project": "@semio-tech/framework-plugin",
+   "target": "test-camera-presence-source",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-close-demand",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-close-demand-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-close-demand",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-close-demand-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-exact-key-lookup",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-exact-key-lookup-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-exact-key-lookup",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-exact-key-lookup-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-dofs",
+    "native"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "test-fixed-dofs-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-dofs",
+    "source"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "test-fixed-dofs-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-key-slots",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-fixed-key-slots-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-key-slots",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-fixed-key-slots-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-request-owners",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-fixed-request-owners-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-fixed-request-owners",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-fixed-request-owners-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-immutable-root-clone",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-immutable-root-clone-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-immutable-root-clone",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-immutable-root-clone-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-indexed-edit",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-indexed-edit-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-indexed-edit",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-indexed-edit-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-edit",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-edit-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-edit",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-edit-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-key-index",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-key-index-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-key-index",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-key-index-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-root-receive",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-root-receive-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-named-root-receive",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-named-root-receive-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-persistent-receive",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-persistent-receive-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-persistent-receive",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-persistent-receive-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-retirement-loan",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-retirement-loan-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-retirement-loan",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-retirement-loan-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-shared-receive",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-shared-receive-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-native-shared-receive",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-shared-receive-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-operation-diagnostics",
+    "native"
+   ],
+   "project": "@semio-tech/framework-actor-rs",
+   "target": "test-operation-diagnostics-native",
+   "root": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-operation-diagnostics",
+    "source"
+   ],
+   "project": "@semio-tech/framework-actor-rs",
+   "target": "test-operation-diagnostics-source",
+   "root": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-owned-projection",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-owned-projection-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-owned-projection",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-owned-projection-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-persistent-build",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-persistent-build-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-persistent-build",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-persistent-build-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-persistent-canonical",
+    "native"
+   ],
+   "project": "@semio-tech/framework-pack-json-rs",
+   "target": "test-persistent-canonical-native",
+   "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-persistent-canonical",
+    "source"
+   ],
+   "project": "@semio-tech/framework-pack-json-rs",
+   "target": "test-persistent-canonical-source",
+   "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-result-publication",
+    "native"
+   ],
+   "project": "@semio-tech/framework-plugin",
+   "target": "test-result-publication-native",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-result-publication",
+    "source"
+   ],
+   "project": "@semio-tech/framework-plugin",
+   "target": "test-result-publication-source",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-retained-diff-receiving",
+    "native"
+   ],
+   "project": "@semio-tech/framework-replication-rs",
+   "target": "test-retained-diff-receiving-native",
+   "root": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-retained-diff-receiving",
+    "source"
+   ],
+   "project": "@semio-tech/framework-replication-rs",
+   "target": "test-retained-diff-receiving-source",
+   "root": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-sealed-frontier",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-sealed-frontier-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-sealed-frontier",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-sealed-frontier-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-slice-equality",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-slice-equality-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "test-slice-equality",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-slice-equality-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "architect-program-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "verify-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "architect-program-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "architect-program-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "architect-program-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "architect-window-ownership"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "verify-architect-window-ownership",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "artifact-reference-retained-equality",
+    "native"
+   ],
+   "project": "@semio-tech/framework-artifact-reference-rs",
+   "target": "test-retained-equality-native",
+   "root": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "artifact-reference-retained-equality",
+    "source"
+   ],
+   "project": "@semio-tech/framework-artifact-reference-rs",
+   "target": "test-retained-equality-source",
+   "root": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-activation-source"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "verify-activation-source",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-document-contract"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "verify-cad-document-contract",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-owned-target"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "verify-owned-target",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-reference-owner-syntax"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "verify-reference-owner-syntax",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "verify-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "cad-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/cad-cad-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "contributions-receiver"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "test-contributions-receiver",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "contributions-syntax"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "test-contributions-syntax",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "curation-document-contract"
+   ],
+   "project": "@semio-tech/sourcing-curation-rs",
+   "target": "verify-curation-document-contract",
+   "root": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "dag-document-contract"
+   ],
+   "project": "@semio-tech/dag-dag-rs",
+   "target": "verify-dag-document-contract",
+   "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "dag-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/dag-dag-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "dag-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/dag-dag-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "dag-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/dag-dag-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "drawing-canvas-window-ownership"
+   ],
+   "project": "@semio-tech/draw-drawing-rs",
+   "target": "verify-drawing-canvas-window-ownership",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-assembly-physical-owners"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-assembly-physical-owners",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-combination-stress"
+   ],
+   "project": "@semio-tech/fem-js",
+   "target": "verify-combination-stress",
+   "root": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-live-visual-publication"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-live-visual-publication",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-mesh-preparation-owners"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-mesh-preparation-owners",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-numerical-microcursor"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-numerical-microcursor",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-numerical-page-owners"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-numerical-page-owners",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-pcg-publication-owners"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-pcg-publication-owners",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem-scalar-owners-native"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem-scalar-owners-native",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-invariants",
+    "mounted"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "verify-fem2d-mounted-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-invariants",
+    "native"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "verify-fem2d-invariants",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-invariants",
+    "numerical"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "verify-fem2d-numerical-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-invariants",
+    "presence"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "verify-fem2d-presence-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-invariants",
+    "source"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "verify-fem2d-invariants-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-material",
+    "native"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "test-material-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-material",
+    "source"
+   ],
+   "project": "@semio-tech/fem-2d-rs",
+   "target": "test-material-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem2d-window-config-contract"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem2d-window-config-contract",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-material",
+    "native"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "test-material-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-material",
+    "source"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "test-material-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-numerical-child-native"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-numerical-child-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-numerical-child-source"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-numerical-child-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-results",
+    "native"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-results-native",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-results",
+    "source"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-results-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-transform-intent",
+    "native"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-transform-intent",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-transform-intent",
+    "source"
+   ],
+   "project": "@semio-tech/fem-3d-rs",
+   "target": "verify-fem3d-transform-intent-source",
+   "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "fem3d-window-config-contract"
+   ],
+   "project": "@semio-tech/s-fem-composition-tests",
+   "target": "verify-fem3d-window-config-contract",
+   "root": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "flow-window-ownership"
+   ],
+   "project": "@semio-tech/flow-flow-rs",
+   "target": "verify-flow-window-ownership",
+   "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "forms-document-contract"
+   ],
+   "project": "@semio-tech/forms-forms-rs",
+   "target": "verify-forms-document-contract",
+   "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "forms-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/forms-forms-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "forms-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/forms-forms-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "forms-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/forms-forms-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "forms-try-window-ownership"
+   ],
+   "project": "@semio-tech/s-forms-composition-tests",
+   "target": "verify-forms-try-window-ownership",
+   "root": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "framework-flow-physical-retirement"
+   ],
+   "project": "@semio-tech/framework-flow-flow-rs",
+   "target": "verify-framework-flow-physical-retirement",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "framework-ui-protocol-ownership"
+   ],
+   "project": "@semio-tech/s-space-composition-tests",
+   "target": "verify-framework-ui-protocol-ownership",
+   "root": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "generation2d-window-camera-ownership"
+   ],
+   "project": "@semio-tech/procedural-generation2d-rs",
+   "target": "verify-generation2d-window-camera-ownership",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "generation3d-document-io"
+   ],
+   "project": "@semio-tech/procedural-generation3d-rs",
+   "target": "verify-generation3d-document-io",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "generation3d-preview-window-transient"
+   ],
+   "project": "@semio-tech/procedural-generation3d-rs",
+   "target": "verify-generation3d-preview-window-transient",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "generation3d-widget-inputs"
+   ],
+   "project": "@semio-tech/procedural-generation3d-rs",
+   "target": "verify-generation3d-widget-inputs",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "generation3d-widget-inputs",
+    "native"
+   ],
+   "project": "@semio-tech/procedural-generation3d-rs",
+   "target": "verify-generation3d-widget-inputs-native",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "geometry-context"
+   ],
+   "project": "@semio-tech/procedural-generation3d-rs",
+   "target": "verify-geometry-context",
+   "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "gis-inference-discovery-oracle"
+   ],
+   "project": "@semio-tech/gis-plugin",
+   "target": "inference-discovery-oracle",
+   "root": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "gis-map-window-ownership"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-gis-map-window-ownership",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "gis-terrain-window-config"
+   ],
+   "project": "@semio-tech/gis-gisterrain-rs",
+   "target": "verify-gis-terrain-window-config",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "home-host-panel-owner"
+   ],
+   "project": "@semio-tech/space-home-rs",
+   "target": "verify-home-host-panel-owner",
+   "root": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "inference-client"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-inference-client",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "inference-client",
+    "native"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-inference-client-native",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "inference-mcp"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-inference-mcp",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "inference-native-service"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-inference-native-service",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "jack-child-selection"
+   ],
+   "project": "@semio-tech/trinity-jack-rs",
+   "target": "verify-jack-child-selection",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "jack-document-contract"
+   ],
+   "project": "@semio-tech/trinity-jack-rs",
+   "target": "verify-jack-document-contract",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "jack-graph-query"
+   ],
+   "project": "@semio-tech/trinity-jack-rs",
+   "target": "verify-jack-graph-query",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "jack-query-ownership"
+   ],
+   "project": "@semio-tech/trinity-jack-rs",
+   "target": "verify-jack-query-ownership",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "layout-document-contract"
+   ],
+   "project": "@semio-tech/layout-layout-rs",
+   "target": "verify-layout-document-contract",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "layout-frame-selection"
+   ],
+   "project": "@semio-tech/layout-layout-rs",
+   "target": "verify-layout-frame-selection",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "layout-window-ownership"
+   ],
+   "project": "@semio-tech/layout-layout-rs",
+   "target": "verify-layout-window-ownership",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "map-document-contract"
+   ],
+   "project": "@semio-tech/gis-gismap-rs",
+   "target": "verify-map-document-contract",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "native-receiving-original-source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-native-receiving-original-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "norm-document-contract"
+   ],
+   "project": "@semio-tech/s-norm-composition-tests",
+   "target": "verify-norm-document-contract",
+   "root": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "norm-results-window-ownership"
+   ],
+   "project": "@semio-tech/s-norm-composition-tests",
+   "target": "verify-norm-results-window-ownership",
+   "root": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "note-document-contract"
+   ],
+   "project": "@semio-tech/s-note-composition-tests",
+   "target": "verify-note-document-contract",
+   "root": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "note-empty-config-ownership"
+   ],
+   "project": "@semio-tech/note-note-rs",
+   "target": "verify-note-empty-config-ownership",
+   "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "note-snapshot-guest"
+   ],
+   "project": "@semio-tech/note-note-rs",
+   "target": "verify-snapshot-guest",
+   "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "note-sqlite-snapshot-guest"
+   ],
+   "project": "@semio-tech/note-note-rs",
+   "target": "verify-sqlite-snapshot-guest",
+   "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "operation-diagnostic-host-check"
+   ],
+   "project": "@semio-tech/framework-renderer-react",
+   "target": "operation-diagnostic-host-check",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "playbook-document-contract"
+   ],
+   "project": "@semio-tech/playbook-playbook-rs",
+   "target": "verify-playbook-document-contract",
+   "root": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "presentation-document-contract"
+   ],
+   "project": "@semio-tech/animate-presentation-rs",
+   "target": "verify-presentation-document-contract",
+   "root": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "procedure-document-contract"
+   ],
+   "project": "@semio-tech/imperative-procedure-rs",
+   "target": "verify-procedure-document-contract",
+   "root": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "program-document-contract"
+   ],
+   "project": "@semio-tech/architect-program-rs",
+   "target": "verify-program-document-contract",
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "puzzle-fill-policy-self-tests"
+   ],
+   "project": "@semio-tech/s-puzzle-composition-tests",
+   "target": "verify-puzzle-fill-policy-self-tests",
+   "root": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "remodel-remodeling-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/remodel-remodeling-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "remodel-remodeling-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/remodel-remodeling-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "remodel-remodeling-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/remodel-remodeling-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "remodel-window-ownership"
+   ],
+   "project": "@semio-tech/remodel-remodeling-rs",
+   "target": "verify-remodel-window-ownership",
+   "root": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "retained-pack-encoding"
+   ],
+   "project": "@semio-tech/framework-rs",
+   "target": "test-retained-pack-encoding",
+   "root": "🧰️framework/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "rewriting-document-contract"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "verify-rewriting-document-contract",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "rewriting-map-ownership"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "verify-rewriting-map-ownership",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "rewriting-window-config"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "verify-rewriting-window-config",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "semio-member-store-producer-source"
+   ],
+   "project": "@semio-tech/stdio-js",
+   "target": "verify-semio-member-store-producer-source",
+   "root": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "sequence-window-ownership"
+   ],
+   "project": "@semio-tech/sequence-sequence-rs",
+   "target": "verify-sequence-window-ownership",
+   "root": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "sqlite-snapshot-native"
+   ],
+   "project": "@semio-tech/note-note-rs",
+   "target": "verify-sqlite-snapshot-native",
+   "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "staged-payload-funding"
+   ],
+   "project": "@semio-tech/framework-rs",
+   "target": "test-staged-payload-funding",
+   "root": "🧰️framework/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "stdio-document-contract"
+   ],
+   "project": "@semio-tech/stdio-semio-rs",
+   "target": "verify-stdio-document-contract",
+   "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "terrain-document-contract"
+   ],
+   "project": "@semio-tech/gis-gisterrain-rs",
+   "target": "verify-terrain-document-contract",
+   "root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "trinity-rewriting-test-snapshot-sqlite"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "test-snapshot-sqlite",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "trinity-rewriting-test-snapshot-sqlite-native"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "test-snapshot-sqlite-native",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "trinity-rewriting-test-snapshot-sqlite-source"
+   ],
+   "project": "@semio-tech/trinity-rewriting-rs",
+   "target": "test-snapshot-sqlite-source",
+   "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "value-admission-check"
+   ],
+   "project": "@semio-tech/value-derive-rs",
+   "target": "value-admission-check",
+   "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "value-admission-check",
+    "--native"
+   ],
+   "project": "@semio-tech/value-derive-rs",
+   "target": "value-admission-native-check",
+   "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "value-retained-equality",
+    "native"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-retained-equality-native",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "value-retained-equality",
+    "source"
+   ],
+   "project": "@semio-tech/value-rs",
+   "target": "test-retained-equality-source",
+   "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "viewport-presence-check"
+   ],
+   "project": "@semio-tech/framework-renderer-react",
+   "target": "viewport-presence-check",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "window-utility-check"
+   ],
+   "project": "@semio-tech/framework",
+   "target": "window-utility-check",
+   "root": "🧰️framework/📦️packages/🟦️typescript"
+  },
+  {
+   "words": [
+    "verify",
+    "window-utility-native"
+   ],
+   "project": "@semio-tech/framework-rs",
+   "target": "test-window-utility-native",
+   "root": "🧰️framework/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "wires-document-contract"
+   ],
+   "project": "@semio-tech/reasoning-wires-rs",
+   "target": "verify-wires-document-contract",
+   "root": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "wires-window-transient"
+   ],
+   "project": "@semio-tech/reasoning-wires-rs",
+   "target": "verify-wires-window-transient",
+   "root": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"
+  },
+  {
+   "words": [
+    "verify",
+    "writer-window-state"
+   ],
+   "project": "@semio-tech/writer-writer-rs",
+   "target": "verify-writer-window-state",
+   "root": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust"
+  }
+ ],
+ "rules": [
+  {
+   "id": "workspace-owner-delegates",
+   "evidence": "static",
+   "description": "A root verify command that forwards to an owner target reads what the dispatcher scan reads and what that owner reads: its project, its crate closure and its script closure.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "verify",
+      "architect-program-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "architect-program-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "architect-program-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "architect-program-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "architect-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "artifact-reference-retained-equality",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "artifact-reference-retained-equality",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-activation-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-owned-target"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-reference-owner-syntax"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "cad-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "contributions-receiver"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "contributions-syntax"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "curation-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "dag-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "dag-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "dag-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "dag-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "drawing-canvas-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-assembly-physical-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-combination-stress"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-live-visual-publication"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-mesh-preparation-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-numerical-microcursor"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-numerical-page-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-pcg-publication-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem-scalar-owners-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-invariants",
+      "mounted"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-invariants",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-invariants",
+      "numerical"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-invariants",
+      "presence"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-invariants",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-material",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-material",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem2d-window-config-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-material",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-material",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-numerical-child-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-numerical-child-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-results",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-results",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-transform-intent",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-transform-intent",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "fem3d-window-config-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "flow-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "forms-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "forms-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "forms-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "forms-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "forms-try-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "framework-flow-physical-retirement"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "framework-ui-protocol-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generation2d-window-camera-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generation3d-document-io"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generation3d-preview-window-transient"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generation3d-widget-inputs"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generation3d-widget-inputs",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "geometry-context"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "gis-inference-discovery-oracle"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "gis-map-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "gis-terrain-window-config"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "home-host-panel-owner"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "inference-client"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "inference-client",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "inference-mcp"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "inference-native-service"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "jack-child-selection"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "jack-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "jack-graph-query"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "jack-query-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "layout-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "layout-frame-selection"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "layout-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "map-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "native-receiving-original-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "norm-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "norm-results-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "note-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "note-empty-config-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "note-snapshot-guest"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "note-sqlite-snapshot-guest"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "operation-diagnostic-host-check"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "playbook-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "presentation-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "procedure-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "program-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "puzzle-fill-policy-self-tests"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "remodel-remodeling-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "remodel-remodeling-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "remodel-remodeling-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "remodel-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "retained-pack-encoding"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "rewriting-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "rewriting-map-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "rewriting-window-config"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "semio-member-store-producer-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "sequence-window-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "sqlite-snapshot-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "staged-payload-funding"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "stdio-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "terrain-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "trinity-rewriting-test-snapshot-sqlite"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "trinity-rewriting-test-snapshot-sqlite-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "trinity-rewriting-test-snapshot-sqlite-source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "value-admission-check"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "value-admission-check",
+      "--native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "value-retained-equality",
+      "native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "value-retained-equality",
+      "source"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "viewport-presence-check"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "window-utility-check"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "window-utility-native"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "wires-document-contract"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "wires-window-transient"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "writer-window-state"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "owner": "route"
+    }
+   ]
+  },
+  {
+   "id": "workspace-verify-manifest-scanners",
+   "evidence": "traced",
+   "description": "The package-purity, zero-touch and build-owners gates read the dispatcher scan and every package manifest (traced: 9.4k, 10.7k and 12.8k reads, all inside this set).",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "verify",
+      "package-purity"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "build-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "zero-touch"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "manifests"
+    }
+   ]
+  },
+  {
+   "id": "workspace-artifact-contract-ownership",
+   "evidence": "static",
+   "description": "The artifact contract ownership law tests the owner crates of every artifact schema its fixture lists (generated from the fixture, checked by the rules test).",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "verify",
+      "artifact-contract-ownership"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
+      "{workspaceRoot}/**/🏅️standards/**/🧬️schema/**/🔣️.json"
+     ]
+    },
+    {
+     "cargo": {
+      "directories": [
+       "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+       "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust"
+      ]
+     }
+    },
+    {
+     "dispatch": {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+      "after": [
+       "verify"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "workspace-verify-scanners",
+   "evidence": "bound",
+   "description": "A verify gate that scans the repository reads the sources of every source kind.",
+   "select": {
+    "project": "workspace",
+    "targets": [
+     "verify",
+     "verify-gate"
+    ],
+    "commands": [
+     [
+      "./📜️script.ts",
+      "verify",
+      "taxonomy"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "generated-corruption"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "typescript"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "rust-warnings"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "production-placeholders"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "docstrings"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "agnostic"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "mutation-caps"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "debug-tags"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "interface-owners"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "interactivity"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "dependencies"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "layering"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "canonical-architecture"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "history-closure"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "composed-child-refs"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "semantic-vocabulary"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "mutation-outcome-law"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "abstraction-ownership"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "policy-breach"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "gate"
+     ],
+     [
+      "./📜️script.ts",
+      "verify",
+      "artifact-field-parity"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "repository-sources"
+    }
+   ]
+  },
+  {
+   "id": "workspace-verify-laws",
+   "evidence": "static",
+   "description": "A verify law reads the dispatcher scan, the TypeScript entries and Cargo crates its dispatcher branch names and the closure of those.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "verify"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "dispatch": {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+      "after": [
+       "verify"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "workspace-lint-repo",
+   "evidence": "static",
+   "description": "`lint repo` only reports completion of the lint graph that its dependsOn already ran.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "lint",
+      "repo"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": []
+  },
+  {
+   "id": "workspace-lint",
+   "evidence": "static",
+   "description": "`lint` runs dependency-cruiser over the four source roots with the lint boundary configuration.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "lint"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "kinds": [
+      "typescript-source",
+      "javascript-source"
+     ],
+     "under": [
+      "🧰️framework",
+      "✏️s",
+      "🌎️hub",
+      "♻️mit-bestand"
+     ]
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/**/*",
+      "{workspaceRoot}/tsconfig.json"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "workspace-schema",
+   "evidence": "bound",
+   "description": "The schema family reads the schema directories its sibling generate, docs and check targets already declare (schemaSources) and tests the schema crate.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "schema"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "library-resources"
+    },
+    {
+     "input": "schemaSources"
+    },
+    {
+     "cargo": {
+      "packages": [
+       "semio-framework-schema"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "workspace-test-discovery",
+   "evidence": "static",
+   "description": "Test discovery reads the taxonomy, feature files and the canonical emoji-named sources, as the test domain's own discovery targets declare.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "test",
+      "discover"
+     ],
+     [
+      "./📜️script.ts",
+      "test",
+      "contract"
+     ],
+     [
+      "./📜️script.ts",
+      "test",
+      "oracle"
+     ],
+     [
+      "./📜️script.ts",
+      "test",
+      "subject"
+     ],
+     [
+      "./📜️script.ts",
+      "test",
+      "parity"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "test-discovery"
+    }
+   ]
+  },
+  {
+   "id": "workspace-test-canvas",
+   "evidence": "static",
+   "description": "The canvas test family runs the canvas module's native crate or React renderer tests.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "test",
+      "canvas"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/**/*"
+     ]
+    },
+    {
+     "cargo": {
+      "directories": [
+       "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "workspace-test-build-library",
+   "evidence": "bound",
+   "description": "The build library's own tests read the build library.",
+   "select": {
+    "project": "workspace",
+    "targets": [
+     "test-workspace-build",
+     "test-runtime-build-producer"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+      "{workspaceRoot}/📋️project.json"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "workspace-stdio-gates",
+   "evidence": "static",
+   "description": "The stdio structural gates walk the stdio plugin tree (STDIO_ROOT_REL) through the artifact ledger.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "stdio",
+      "quick"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "schema-parity"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "standards-coverage"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "codec"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "mutation-law"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "inference"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "runtime"
+     ],
+     [
+      "./📜️script.ts",
+      "stdio",
+      "cross-platform"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "stdio-tree"
+    }
+   ]
+  },
+  {
+   "id": "workspace-generate",
+   "evidence": "bound",
+   "description": "The generate config check reads the repository's tool configuration manifests.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "generate",
+      "config"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "manifests"
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/.github/**/*",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum",
+      "{workspaceRoot}/**/go.mod",
+      "{workspaceRoot}/**/pyproject.toml",
+      "{workspaceRoot}/**/*.csproj"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "workspace-test-entrypoint",
+   "evidence": "static",
+   "description": "The entrypoint test runs one test file of the root command startup; it reads that test and its import closure, the library resources and the command's own script closure.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "test",
+      "entrypoint"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "library-resources"
+    },
+    {
+     "script": {
+      "source": "🧪️tests/🧭️entrypoint/🟦️.ts"
+     }
+    }
+   ]
+  },
+  {
+   "id": "workspace-census",
+   "evidence": "whole",
+   "description": "The semantic census reads every component of the repository by design: the census lists and compares all of them, so every file of every kind is an input.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "generate",
+      "taxonomy"
+     ]
+    ]
+   },
+   "replaces": [],
+   "reads": []
+  },
+  {
+   "id": "workspace-reentrant",
+   "evidence": "assumed",
+   "description": "These root commands re-enter the build tool (`bun repo run` or `run-many`) and their result is a function of the inputs of the targets they launch, which no static read of this command bounds; the owner decision is an uncached aggregate or explicit dependsOn.",
+   "select": {
+    "project": "workspace",
+    "targets": [
+     "scale-fixture-check",
+     "stdio-long",
+     "stdio-exhaustive"
+    ]
+   },
+   "replaces": [],
+   "reads": [
+    {
+     "profile": "repository-sources"
+    }
+   ]
+  },
+  {
+   "id": "workspace-cpp",
+   "evidence": "assumed",
+   "description": "The C++ custody and test-toolchain commands drive the CMake build library; their reads of the C++ trees and toolchain files are not yet traced, so they keep the inherited inputs.",
+   "select": {
+    "project": "workspace",
+    "targets": [
+     "cpp-custody",
+     "cpp-test-toolchain"
+    ]
+   },
+   "replaces": [],
+   "reads": [
+    {
+     "profile": "repository-sources"
+    }
+   ]
+  },
+  {
+   "id": "workspace-storybook",
+   "evidence": "assumed",
+   "description": "The Storybook browser test reads every story and the components it imports; the story set is not yet derived from the Storybook configuration, so the inherited inputs stay.",
+   "select": {
+    "project": "workspace",
+    "targets": [
+     "build-storybook",
+     "test-storybook"
+    ]
+   },
+   "replaces": [],
+   "reads": [
+    {
+     "profile": "repository-sources"
+    }
+   ]
+  },
+  {
+   "id": "workspace-repository-wide",
+   "evidence": "bound",
+   "description": "Remaining root commands that scan or aggregate the repository read the source kinds, not the whole tree.",
+   "select": {
+    "project": "workspace",
+    "commands": [
+     [
+      "./📜️script.ts",
+      "test"
+     ],
+     [
+      "./📜️script.ts",
+      "examples"
+     ]
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "production",
+    "^production"
+   ],
+   "reads": [
+    {
+     "profile": "package-discovery"
+    },
+    {
+     "profile": "library-resources"
+    },
+    {
+     "profile": "repository-sources"
+    }
+   ]
+  },
+  {
+   "id": "os-hub-typecheck",
+   "evidence": "static",
+   "description": "The hub typecheck reads exactly its tsconfig program: the include globs, the imports they reach and the package manifests resolution consults.",
+   "select": {
+    "project": "os-hub-ts",
+    "targets": [
+     "typecheck"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "{workspaceRoot}/🌎️hub/**/*.{ts,tsx,json}",
+    "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+    "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}"
+   ],
+   "reads": [
+    {
+     "program": {
+      "tsconfig": "🌎️hub/📦️packages/🟦️typescript/tsconfig.json"
+     }
+    }
+   ]
+  },
+  {
+   "id": "s-dev-typecheck",
+   "evidence": "static",
+   "description": "The plugin layer typecheck reads exactly the program of ✏️s/tsconfig.json.",
+   "select": {
+    "project": "@semio-tech/s-dev-composition",
+    "targets": [
+     "typecheck"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+    "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}"
+   ],
+   "reads": [
+    {
+     "program": {
+      "tsconfig": "✏️s/tsconfig.json"
+     }
+    }
+   ]
+  },
+  {
+   "id": "s-dev-catalog-generate",
+   "evidence": "bound",
+   "description": "The catalog publication reads plugin manifests, TypeScript and TOML sources of the plugin layer and the registry projection.",
+   "select": {
+    "project": "@semio-tech/s-dev-composition",
+    "targets": [
+     "generate"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default"
+   ],
+   "reads": [
+    {
+     "kinds": [
+      "typescript-source",
+      "toml"
+     ],
+     "under": [
+      "✏️s"
+     ]
+    },
+    {
+     "kinds": [
+      "json"
+     ],
+     "under": [
+      "✏️s"
+     ],
+     "named": true
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/✏️s/**/{📋️project.json,package.json}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "stdio-plugin-native-check",
+   "evidence": "static",
+   "description": "The stdio native checks compile the stdio crate and its path dependencies, which is what ^default stands for here.",
+   "select": {
+    "project": "@semio-tech/stdio-plugin",
+    "targets": [
+     "home-io-surface-native-check"
+    ]
+   },
+   "replaces": [
+    "^default"
+   ],
+   "reads": [
+    {
+     "cargo": {
+      "directories": [
+       "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "plugin-composition-test",
+   "evidence": "assumed",
+   "description": "The cross-plugin composition laws read their own directory and the closure of the tests they run.",
+   "select": {
+    "project": "@semio-tech/s-plugin-composition",
+    "targets": [
+     "test"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "{workspaceRoot}/✏️s/🔌️plugins/**/*",
+    "{workspaceRoot}/🧰️framework/**/*"
+   ],
+   "reads": [
+    {
+     "script": {
+      "source": "✏️s/🧪️tests/🏘️plugin-composition/📜️script.ts"
+     }
+    }
+   ]
+  },
+  {
+   "id": "repo-lib-fixture-placement",
+   "evidence": "whole",
+   "description": "The fixture placement laws walk all nine physical scopes of the repository (every top-level source tree) and compare every fixture path, so the whole tree is an input by design.",
+   "select": {
+    "project": "@semio-tech/repo-lib",
+    "targets": [
+     "test-fixture-placement",
+     "test-mutation-fixture-placement"
+    ]
+   },
+   "replaces": [],
+   "reads": []
+  },
+  {
+   "id": "hub-stdio-oracles",
+   "evidence": "assumed",
+   "description": "The stdio hub oracles read the hub stdio composition and the stdio plugin tree, and for the native cohorts the stdio crate closure.",
+   "select": {
+    "project": "@semio-tech/hub-stdio-test-oracle",
+    "targets": [
+     "test-drawing-reader",
+     "test-composition",
+     "test-private-reader",
+     "test-type-ownership",
+     "test-production-preparation",
+     "test-native-oracles",
+     "test-native-drawing-reader"
+    ]
+   },
+   "replaces": [
+    "stdioSources",
+    "rustWorkspace"
+   ],
+   "reads": [
+    {
+     "profile": "stdio-tree"
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/**/*"
+     ]
+    },
+    {
+     "cargo": {
+      "directories": [
+       "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

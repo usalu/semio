@@ -20,44 +20,63 @@ const GROW_STEP: f64 = 0.1;
 const PREFIX_PATIENCE: std::time::Duration = std::time::Duration::from_secs(3);
 const ARMED_FIRST: &[&str] = &["show-help", "new-task", "show-tasks", "split-right", "split-down", "next-window", "zoom", "close-window", "detach"];
 
-/// 🎬️ Every action a keymap binding can name; the ids are data, this is the one place that knows what they do.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Action { InspectRecovery, ShowFiles, SaveDocument, ReloadDocument, DiscardDocument, CancelSource, NewTask, ShowTasks, ShowSettings, ShowHelp, ShowHiddenTasks, SearchOutput, RefreshCommands, CancelDiscovery, RestartTask, StopTask, KillTask, OpenReady, CancelOpenReady, CopySelection, ToggleInput, ToggleAppearance, ToggleLanguage, NextWindow, PreviousWindow, SplitDown, SplitRight, DockLeft, DockRight, DockTop, DockBottom, JoinWindow, TabTopLeft, TabTopRight, TabBottomLeft, TabBottomRight, TabLeft, TabRight, GrowWindow, ShrinkWindow, Zoom, CloseWindow, Detach, Shutdown, CancelPrefix, SendPrefix }
-
-impl Action {
-    /// 🪪️ The id a keymap binding names this action by.
-    pub fn id(self) -> &'static str {
-        match self {
-            Self::InspectRecovery => "inspect-recovery",
-            Self::ShowFiles => "show-files", Self::SaveDocument => "save-document", Self::ReloadDocument => "reload-document", Self::DiscardDocument => "discard-document", Self::CancelSource => "cancel-source",
-            Self::NewTask => "new-task", Self::ShowTasks => "show-tasks", Self::ShowSettings => "show-settings", Self::ShowHelp => "show-help", Self::ShowHiddenTasks => "show-hidden-tasks", Self::SearchOutput => "search-output",
-            Self::RefreshCommands => "refresh-commands", Self::CancelDiscovery => "cancel-discovery", Self::RestartTask => "restart-task", Self::StopTask => "stop-task", Self::KillTask => "kill-task",
-            Self::OpenReady => "open-ready", Self::CancelOpenReady => "cancel-open-ready",
-            Self::CopySelection => "copy-selection", Self::ToggleInput => "toggle-input", Self::ToggleAppearance => "toggle-appearance", Self::ToggleLanguage => "toggle-language",
-            Self::NextWindow => "next-window", Self::PreviousWindow => "previous-window", Self::SplitDown => "split-down", Self::SplitRight => "split-right", Self::GrowWindow => "grow-window",
-            Self::ShrinkWindow => "shrink-window", Self::Zoom => "zoom", Self::CloseWindow => "close-window", Self::Detach => "detach", Self::Shutdown => "shutdown", Self::CancelPrefix => "cancel-prefix",
-            Self::TabTopLeft => "tab-top-left", Self::TabTopRight => "tab-top-right", Self::TabBottomLeft => "tab-bottom-left", Self::TabBottomRight => "tab-bottom-right",
-            Self::SendPrefix => "send-prefix",
-            Self::DockLeft => "dock-left", Self::DockRight => "dock-right", Self::DockTop => "dock-top", Self::DockBottom => "dock-bottom", Self::JoinWindow => "join-window", Self::TabLeft => "tab-left", Self::TabRight => "tab-right",
-        }
-    }
-
-    pub fn parse(id: &str) -> Option<Self> {
-        Some(match id {
-            "inspect-recovery" => Self::InspectRecovery,
-            "show-files" => Self::ShowFiles, "save-document" => Self::SaveDocument, "reload-document" => Self::ReloadDocument, "discard-document" => Self::DiscardDocument, "cancel-source" => Self::CancelSource,
-            "new-task" => Self::NewTask, "show-tasks" => Self::ShowTasks, "show-settings" => Self::ShowSettings, "show-help" => Self::ShowHelp, "show-hidden-tasks" => Self::ShowHiddenTasks, "search-output" => Self::SearchOutput,
-            "refresh-commands" => Self::RefreshCommands, "cancel-discovery" => Self::CancelDiscovery, "restart-task" => Self::RestartTask, "stop-task" => Self::StopTask, "kill-task" => Self::KillTask,
-            "open-ready" => Self::OpenReady, "cancel-open-ready" => Self::CancelOpenReady,
-            "copy-selection" => Self::CopySelection, "toggle-input" => Self::ToggleInput, "toggle-appearance" => Self::ToggleAppearance, "toggle-language" => Self::ToggleLanguage,
-            "next-window" => Self::NextWindow, "previous-window" => Self::PreviousWindow, "split-down" => Self::SplitDown, "split-right" => Self::SplitRight, "grow-window" => Self::GrowWindow,
-            "shrink-window" => Self::ShrinkWindow, "zoom" => Self::Zoom, "close-window" => Self::CloseWindow, "detach" => Self::Detach, "shutdown" => Self::Shutdown, "cancel-prefix" => Self::CancelPrefix,
-            "tab-top-left" => Self::TabTopLeft, "tab-top-right" => Self::TabTopRight, "tab-bottom-left" => Self::TabBottomLeft, "tab-bottom-right" => Self::TabBottomRight,
-            "send-prefix" => Self::SendPrefix,
-            "dock-left" => Self::DockLeft, "dock-right" => Self::DockRight, "dock-top" => Self::DockTop, "dock-bottom" => Self::DockBottom, "join-window" => Self::JoinWindow, "tab-left" => Self::TabLeft, "tab-right" => Self::TabRight,
-            _ => return None,
-        })
-    }
+/// 🎬️ One authored action table emits enum, ids and exact match parsing.
+macro_rules! actions{($( $variant:ident => $id:literal ),+ $(,)?)=>{#[derive(Clone,Copy,Debug,PartialEq,Eq)] pub(super) enum Action{$($variant),+} impl Action{pub fn id(self)->&'static str{match self{$(Self::$variant=>$id),+}}pub fn parse(id:&str)->Option<Self>{match id{$($id=>Some(Self::$variant)),+, _=>None}}}}}
+actions!{
+    InspectHistory => "inspect-history",
+    ReconcileHistory => "reconcile-history",
+    ArchiveHistory => "archive-history",
+    NextHistoryPage => "next-history-page",
+    InspectRecovery => "inspect-recovery",
+    CreateFile => "create-file",
+    CreateDirectory => "create-directory",
+    RenameEntry => "rename-entry",
+    RetainEntry => "retain-entry",
+    ShowFiles => "show-files",
+    SaveDocument => "save-document",
+    ReloadDocument => "reload-document",
+    DiscardDocument => "discard-document",
+    CancelSource => "cancel-source",
+    NewTask => "new-task",
+    ShowTasks => "show-tasks",
+    ShowSettings => "show-settings",
+    ShowHelp => "show-help",
+    ShowHiddenTasks => "show-hidden-tasks",
+    SearchOutput => "search-output",
+    RefreshCommands => "refresh-commands",
+    CancelDiscovery => "cancel-discovery",
+    RestartTask => "restart-task",
+    StopTask => "stop-task",
+    KillTask => "kill-task",
+    OpenReady => "open-ready",
+    CancelOpenReady => "cancel-open-ready",
+    CopySelection => "copy-selection",
+    ToggleInput => "toggle-input",
+    ToggleAppearance => "toggle-appearance",
+    ToggleLanguage => "toggle-language",
+    NextWindow => "next-window",
+    PreviousWindow => "previous-window",
+    SplitDown => "split-down",
+    SplitRight => "split-right",
+    GrowWindow => "grow-window",
+    ShrinkWindow => "shrink-window",
+    Zoom => "zoom",
+    CloseWindow => "close-window",
+    Detach => "detach",
+    Shutdown => "shutdown",
+    CancelPrefix => "cancel-prefix",
+    TabTopLeft => "tab-top-left",
+    TabTopRight => "tab-top-right",
+    TabBottomLeft => "tab-bottom-left",
+    TabBottomRight => "tab-bottom-right",
+    SendPrefix => "send-prefix",
+    DockLeft => "dock-left",
+    DockRight => "dock-right",
+    DockTop => "dock-top",
+    DockBottom => "dock-bottom",
+    JoinWindow => "join-window",
+    TabLeft => "tab-left",
+    TabRight => "tab-right",
 }
 
 /// 🧩️ How a window takes input.
@@ -225,7 +244,7 @@ impl Dashboard {
         }
         match &self.windows[index].body {
             Body::Files(_) => { self.files_key(tui, index, key); return; }
-            Body::Document(_) => { if key.key == Key::Esc { if !self.dirty_close(index) { self.discard_document(tui, index); } } else { let signals = tui.dispatch(&Event::Key(*key)); self.on_signals(tui, signals); } return; }
+            Body::Document(_) => { if self.management_blocks_edit(index){self.notice=Some(self.text().source_busy.as_str().into());return;} if key.key == Key::Esc { if !self.dirty_close(index) { self.discard_document(tui, index); } } else { let signals = tui.dispatch(&Event::Key(*key)); self.on_signals(tui, signals); } return; }
             _ => {}
         }
         let action = self.keymap.resolve(Scope::View, spec).map(str::to_string);
@@ -276,6 +295,8 @@ impl Dashboard {
 
     fn on_paste(&mut self, tui: &mut Tui, event: &Event, text: &str) {
         let index = self.focused_index(tui);
+        if self.management_paste(tui,index,text){return;}
+        if self.management_blocks_edit(index){self.notice=Some(self.text().source_busy.as_str().into());return;}
         if let Body::Files(files) = &mut self.windows[index].body {
             for cluster in semio_framework_ui_tui_core::text::clusters(text) { if files.query.len() + cluster.len() <= 256 && !cluster.chars().any(char::is_control) { files.query.push_str(cluster); } }
             self.paint_files(tui, index); return;
@@ -332,7 +353,7 @@ impl Dashboard {
             let window = self.window_of(tui, node);
             match (signal, window) {
                 (WidgetSignal::TextEdited, Some(index)) => {
-                    if let Body::Document(Some(document)) = &mut self.windows[index].body { document.dirty = true; document.generation = document.generation.saturating_add(1); document.discard_confirmation = false; }
+                    if let Body::Document(Some(document)) = &mut self.windows[index].body { document.edited(); }
                 }
                 (WidgetSignal::Activated(row), Some(index)) if matches!(self.windows[index].body, Body::Files(_)) => self.activate_file(tui, index, row),
                 (WidgetSignal::ValueChanged(value), Some(index)) if self.windows[index].input == Some(node) => {
@@ -431,6 +452,14 @@ impl Dashboard {
     pub fn perform(&mut self, tui: &mut Tui, action: Action) -> Flow {
         let index = self.focused_index(tui);
         match action {
+            Action::CreateFile=>self.begin_management(tui,index,super::sources::management::EntryAction::CreateFile),
+            Action::CreateDirectory=>self.begin_management(tui,index,super::sources::management::EntryAction::CreateDirectory),
+            Action::RenameEntry=>self.begin_management(tui,index,super::sources::management::EntryAction::Rename),
+            Action::RetainEntry=>self.begin_management(tui,index,super::sources::management::EntryAction::Retain),
+            Action::InspectHistory=>self.begin_history(tui,index,None),
+            Action::ReconcileHistory=>self.begin_history(tui,index,Some(semio_framework_filesystem_workspace::commands::HistoryAction::Reconcile)),
+            Action::ArchiveHistory=>self.begin_history(tui,index,Some(semio_framework_filesystem_workspace::commands::HistoryAction::Archive)),
+            Action::NextHistoryPage=>self.next_history_page(index),
             Action::InspectRecovery => self.inspect_recovery(tui, index),
             Action::ShowFiles => self.open_files(tui),
             Action::SaveDocument => self.save_document(tui, index),
@@ -472,7 +501,7 @@ impl Dashboard {
             }
             Action::ToggleInput => { if self.windows[index].is_output() { self.input_mode = !self.input_mode; tui.set_focus(Some(self.windows[index].focus())); } }
             Action::ToggleAppearance => self.queue_preference(Change { appearance: Some(if self.light { "dark" } else { "light" }.into()), ..Default::default() }),
-            Action::ToggleLanguage => self.queue_preference(Change { language: Some(if self.preferences.language == "en" { "de" } else { "en" }.into()), ..Default::default() }),
+            Action::ToggleLanguage => self.queue_preference(Change { language: Some(if self.preferences.language.as_deref() == Some("en") { "de" } else { "en" }.into()), ..Default::default() }),
             Action::NextWindow => self.cycle_window(tui, 1),
             Action::PreviousWindow => self.cycle_window(tui, -1),
             Action::SplitDown | Action::SplitRight => { let created = self.create_window(tui, Kind::Launcher, Place::Split(if action == Action::SplitDown { "column" } else { "row" })); self.focus_window(tui, created); }
@@ -587,7 +616,7 @@ impl Dashboard {
             ARMED_FIRST.iter().filter_map(|action| hint(Scope::Prefix, action).map(strip)).chain(hint(Scope::Prefix, "cancel-prefix").map(strip)).collect()
         } else {
             let controls = KeyHint { key: self.keymap.prefix().label(), label: text.hint_controls.as_str().into() };
-            if matches!(self.windows[self.focused_index(tui)].body, Body::Document(_)) { std::iter::once(controls).chain(["save-document", "discard-document", "inspect-recovery", "cancel-source"].into_iter().filter_map(|action| hint(Scope::Prefix, action))).collect() } else if self.terminal_has_keyboard(tui) { std::iter::once(controls).chain(hint(Scope::Prefix, if self.opening_url.is_some() { "cancel-open-ready" } else { "open-ready" }).filter(|_| self.opening_url.is_some() || self.ready_address(self.focused_index(tui)).is_some())).collect() } else {
+            if matches!(self.windows[self.focused_index(tui)].body, Body::Files(_)) { std::iter::once(controls).chain(["create-file","create-directory","rename-entry","retain-entry","inspect-recovery","cancel-source"].into_iter().filter_map(|action|hint(Scope::Prefix,action))).collect() } else if matches!(self.windows[self.focused_index(tui)].body, Body::Document(_)) { std::iter::once(controls).chain(["save-document", "discard-document", "inspect-recovery", "cancel-source"].into_iter().filter_map(|action| hint(Scope::Prefix, action))).collect() } else if self.terminal_has_keyboard(tui) { std::iter::once(controls).chain(hint(Scope::Prefix, if self.opening_url.is_some() { "cancel-open-ready" } else { "open-ready" }).filter(|_| self.opening_url.is_some() || self.ready_address(self.focused_index(tui)).is_some())).collect() } else {
                 std::iter::once(controls).chain([(Scope::View, "activate"), (Scope::View, "back"), (Scope::View, "up"), (Scope::View, "down"), (Scope::Window, "next-window")].into_iter().filter_map(|(scope, action)| hint(scope, action).map(|found| if action == "activate" { KeyHint { label: text.hint_activate.as_str().to_string(), ..found } } else { found }))).collect()
             }
         };
