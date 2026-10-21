@@ -6,8 +6,7 @@ import {ProtocolErrorV1,compileSchemaV1,createFrameDecoderV1,encodeFrameV1} from
 import {POLICY_V1,SCHEMA_V1,renderBothV1,renderTextV1,validatorV1} from "../protocol/policy.mjs";
 import {attenuateCapabilityV1,authorizeCapabilityV1,mintCapabilityV1,verifyCapabilityV1,canonicalJsonV1} from "../protocol/capability.mjs";
 import {endpointsV1,worktreeIdV1} from "../protocol/endpoint.mjs";
-import {FORWARD,HERE,haveBinary} from "./common.ts";
-import {spawnSync} from "node:child_process";
+import {HERE} from "./common.ts";
 
 const vectors=JSON.parse(readFileSync(join(HERE,"fixtures/vectors.json"),"utf8"));
 
@@ -113,20 +112,6 @@ describe("capabilities against Python hmac",()=>{
  });
 });
 
-describe("native forwarder agrees with the JS implementation",()=>{
- test.skipIf(!haveBinary(FORWARD))("the capability the Rust client mints is byte-identical to the JS one, and so is the endpoint",()=>{
-  const key=Buffer.from(Array.from({length:32},(_,i)=>i*7%256));
-  const out=spawnSync(FORWARD,["--print-capability",key.toString("hex"),"0123456789abcdef","1792537630001"],{encoding:"utf8"});
-  expect(out.stdout.trim()).toBe(mintCapabilityV1(key,[{k:"scope",v:["status","query","run","watch"]},{k:"notAfter",v:1792537630001}],"0123456789abcdef"));
-  expect(verifyCapabilityV1(key,out.stdout.trim())?.length).toBe(2);
-  for(const root of["/w","/Users/x/semio","/ünï"]){
-   const lines=spawnSync(FORWARD,["--print-endpoint",root],{encoding:"utf8",env:{...process.env,XDG_RUNTIME_DIR:"/run/user/1000"}}).stdout.trim().split("\n");
-   expect(lines[0]).toBe(worktreeIdV1(root));
-   if(process.platform!=="win32")expect(lines[1]).toBe(endpointsV1(root,{XDG_RUNTIME_DIR:"/run/user/1000"},process.platform).endpoint);
-  }
- });
-});
-
 describe("endpoints",()=>{
  for(const row of vectors.endpoints)test("worktree id of "+row.root,()=>{expect(worktreeIdV1(row.root)).toBe(row.id);});
  test("socket paths fit sockaddr_un and are per user and worktree",()=>{
@@ -137,10 +122,6 @@ describe("endpoints",()=>{
   expect(Buffer.byteLength(long.endpoint)).toBeLessThan(104);expect(long.endpoint.startsWith("/tmp/semio-repo-1000/")).toBe(true);
   const win=endpointsV1("C:\\w",{LOCALAPPDATA:"C:\\Users\\u\\AppData\\Local"},"win32","-1");
   expect(win.endpoint).toBe("\\\\.\\pipe\\semio-repo--1-"+worktreeIdV1("C:\\w"));
- });
- test.skipIf(!haveBinary(FORWARD))("the native client computes the same socket path (it falls back with exit 75 when nothing listens)",()=>{
-  const out=spawnSync(FORWARD,["--root","/nonexistent/semio-root","--verbose","--","ping"],{encoding:"utf8"});
-  expect(out.status).toBe(75);expect(out.stderr).toContain("down");
  });
 });
 

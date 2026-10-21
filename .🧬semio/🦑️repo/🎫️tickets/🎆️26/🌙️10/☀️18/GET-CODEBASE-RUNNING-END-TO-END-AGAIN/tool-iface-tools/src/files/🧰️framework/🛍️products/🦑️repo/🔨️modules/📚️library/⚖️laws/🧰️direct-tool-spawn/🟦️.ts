@@ -6,14 +6,14 @@ import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts"
 import ledgerDocument from "./🧾️ledger/🔣️.json" with { type: "json" };
 import ledgerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
-/** 🧾️ One tolerated offender: a file that still starts a registered tool itself, counted per tool and form. */
-export type ToolSpawnLedgerEntryV1 = Readonly<{ path: string; tool: string; form: "spawn" | "shell"; scope: "prod" | "test"; count: number }>;
-/** 📋️ The tolerated commands declared in manifests, counted per tool and scope. */
-export type ToolSpawnDeclaredV1 = Readonly<{ tool: string; scope: "prod" | "test"; count: number }>;
-/** 🗂️ The ledger document of current offenders. */
-export type ToolSpawnLedgerV1 = Readonly<{ version: 1; entries: readonly ToolSpawnLedgerEntryV1[]; declared: readonly ToolSpawnDeclaredV1[] }>;
+/** 🧾️ One ledgered offender: a test file that still starts a registered tool itself, counted per tool and form. */
+export type ToolSpawnLedgerEntryV1 = Readonly<{ path: string; tool: string; form: "spawn" | "shell"; count: number }>;
+/** 🗂️ The test-code ledger: the direct spawns test files still make, with the reason they stay. Production code has no ledger; every production spawn outside an adapter is a finding. */
+export type ToolSpawnLedgerV1 = Readonly<{ version: 1; reason: Readonly<{ en: string; de: string }>; entries: readonly ToolSpawnLedgerEntryV1[] }>;
+/** 📋️ Every offending spawn site counted per file, tool, form and scope, and the commands manifests declare per tool and scope (reported, not enforced: the manifest wave rewrites them). */
+export type ToolSpawnSummaryV1 = Readonly<{ entries: readonly (ToolSpawnLedgerEntryV1 & Readonly<{ scope: "prod" | "test" }>)[]; declared: readonly Readonly<{ tool: string; scope: "prod" | "test"; count: number }>[] }>;
 /** 🚩️ One violated rule of the law. */
-export type ToolSpawnFindingV1 = Readonly<{ rule: "raw-spawn" | "declared-grew" | "caller-not-allowed" | "unknown-tool" | "registry"; path: string; tool: string; detail: string }>;
+export type ToolSpawnFindingV1 = Readonly<{ rule: "raw-spawn" | "caller-not-allowed" | "unknown-tool" | "registry"; path: string; tool: string; detail: string }>;
 
 /** 🏠️ The directory of this law, relative to the repository root. */
 export const TOOL_SPAWN_LAW_DIRECTORY_V1 = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn";
@@ -33,7 +33,7 @@ export const TOOL_SPAWN_LEDGER_V1: ToolSpawnLedgerV1 = readToolSpawnLedgerV1(led
 
 /** 🗒️ Lists the repository files git knows (tracked and not ignored), the set the law reads. */
 export function listToolSpawnFilesV1(root: string): readonly string[] {
-  const result = gitSyncV1(["ls-files", "-co", "--exclude-standard", "-z"], { cwd: root, maximumOutputBytes: 512 * 1024 * 1024 });
+  const result = gitSyncV1(["ls-files", "-co", "--exclude-standard", "-z"], { cwd: root, maxBuffer: 512 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`git ls-files failed: ${result.stderr.trim()}`);
   return result.stdout.split("\0").filter(Boolean);
 }
@@ -58,19 +58,19 @@ export function scanRepositoryToolSpawnsV1(root: string, files: readonly string[
   return { sites, calls, scanned };
 }
 
-/** 🧮️ Counts the offending sites (those outside the adapter scope of their tool) into ledger rows; declared manifest commands are counted per tool and scope. */
-export function summarizeToolSpawnsV1(sites: readonly ToolSpawnSiteV1[], registry: ToolRegistryV1 = TOOL_REGISTRY_V1): ToolSpawnLedgerV1 {
-  const entries = new Map<string, ToolSpawnLedgerEntryV1>(), declared = new Map<string, ToolSpawnDeclaredV1>();
+/** 🧮️ Counts the offending sites (those outside the adapter scope of their tool) per file, tool, form and scope; declared manifest commands are counted per tool and scope. */
+export function summarizeToolSpawnsV1(sites: readonly ToolSpawnSiteV1[], registry: ToolRegistryV1 = TOOL_REGISTRY_V1): ToolSpawnSummaryV1 {
+  const entries = new Map<string, ToolSpawnSummaryV1["entries"][number]>(), declared = new Map<string, ToolSpawnSummaryV1["declared"][number]>();
   for (const site of sites) {
     const entry = site.tool === null ? undefined : findToolV1(site.tool, registry);
     if (entry === undefined) continue;
     if (site.form === "declared") { const key = `${site.tool}\0${site.scope}`, row = declared.get(key); declared.set(key, { tool: site.tool!, scope: site.scope, count: (row?.count ?? 0) + 1 }); continue; }
     if (toolRawSpawnAllowedV1(entry, site.path)) continue;
-    const key = `${site.path}\0${site.tool}\0${site.form}`, row = entries.get(key);
+    const key = `${site.path}\0${site.tool}\0${site.form}\0${site.scope}`, row = entries.get(key);
     entries.set(key, { path: site.path, tool: site.tool!, form: site.form, scope: site.scope, count: (row?.count ?? 0) + 1 });
   }
   const order = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
-  return { version: 1, entries: [...entries.values()].sort((a, b) => order(a.path, b.path) || order(a.tool, b.tool) || order(a.form, b.form)), declared: [...declared.values()].sort((a, b) => order(a.tool, b.tool) || order(a.scope, b.scope)) };
+  return { entries: [...entries.values()].sort((a, b) => order(a.path, b.path) || order(a.tool, b.tool) || order(a.form, b.form)), declared: [...declared.values()].sort((a, b) => order(a.tool, b.tool) || order(a.scope, b.scope)) };
 }
 
 /** 🩺️ Checks the registry against the repository: adapters and installers exist, pinned tools have readable pins and digests, adapter scopes match files, calls name registered tools from allowed callers. */
@@ -92,18 +92,16 @@ export function toolRegistryProblemsV1(root: string, files: ReadonlySet<string>,
   return problems;
 }
 
-/** ⚖️ Compares the scan with the ledger: more spawns than tolerated, an uncalled-for caller or an unknown tool id are findings; a ledger larger than the truth is only stale. */
+/** ⚖️ Compares the scan with the ledger: every production spawn outside an adapter is a finding; a test spawn beyond its ledger row, an uncalled-for caller or an unknown tool id are findings too; a ledger larger than the truth is only stale. */
 export function toolSpawnFindingsV1(scan: Pick<ReturnType<typeof scanRepositoryToolSpawnsV1>, "sites" | "calls">, ledger: ToolSpawnLedgerV1, registry: ToolRegistryV1 = TOOL_REGISTRY_V1): Readonly<{ findings: readonly ToolSpawnFindingV1[]; stale: readonly string[] }> {
   const findings: ToolSpawnFindingV1[] = [], stale: string[] = [], actual = summarizeToolSpawnsV1(scan.sites, registry);
-  const tolerated = new Map(ledger.entries.map(row => [`${row.path}\0${row.tool}\0${row.form}`, row.count]));
+  const key = (row: ToolSpawnLedgerEntryV1): string => `${row.path}\0${row.tool}\0${row.form}`, tolerated = new Map(ledger.entries.map(row => [key(row), row.count]));
   for (const row of actual.entries) {
-    const allowed = tolerated.get(`${row.path}\0${row.tool}\0${row.form}`) ?? 0;
-    if (row.count > allowed) findings.push({ rule: "raw-spawn", path: row.path, tool: row.tool, detail: `${row.count - allowed} ${row.form} of ${row.tool} outside its adapter (${allowed} tolerated)` });
+    const allowed = row.scope === "prod" ? 0 : tolerated.get(key(row)) ?? 0;
+    if (row.count > allowed) findings.push({ rule: "raw-spawn", path: row.path, tool: row.tool, detail: `${row.count - allowed} ${row.form} of ${row.tool} outside its adapter${row.scope === "test" ? ` (${allowed} ledgered)` : ""}` });
   }
-  const seen = new Map(actual.entries.map(row => [`${row.path}\0${row.tool}\0${row.form}`, row.count]));
-  for (const row of ledger.entries) if ((seen.get(`${row.path}\0${row.tool}\0${row.form}`) ?? 0) < row.count) stale.push(`${row.path} ${row.tool} ${row.form} ${seen.get(`${row.path}\0${row.tool}\0${row.form}`) ?? 0}/${row.count}`);
-  const declared = new Map(ledger.declared.map(row => [`${row.tool}\0${row.scope}`, row.count]));
-  for (const row of actual.declared) if (row.count > (declared.get(`${row.tool}\0${row.scope}`) ?? 0)) findings.push({ rule: "declared-grew", path: "", tool: row.tool, detail: `${row.count} declared ${row.scope} commands run ${row.tool} directly (${declared.get(`${row.tool}\0${row.scope}`) ?? 0} tolerated)` });
+  const seen = new Map(actual.entries.filter(row => row.scope === "test").map(row => [key(row), row.count]));
+  for (const row of ledger.entries) if ((seen.get(key(row)) ?? 0) < row.count) stale.push(`${row.path} ${row.tool} ${row.form} ${seen.get(key(row)) ?? 0}/${row.count}`);
   for (const call of scan.calls) {
     const entry = findToolV1(call.tool, registry);
     if (entry === undefined) findings.push({ rule: "unknown-tool", path: call.path, tool: call.tool, detail: `line ${call.line}: ${call.callee}("${call.tool}") names no registered tool` });
@@ -113,17 +111,15 @@ export function toolSpawnFindingsV1(scan: Pick<ReturnType<typeof scanRepositoryT
 }
 
 /** 🪜️ Shrinks the ledger to the truth: counts only fall, rows vanish at zero, and new rows appear only when `acceptNew` says so. */
-export function pruneToolSpawnLedgerV1(ledger: ToolSpawnLedgerV1, actual: ToolSpawnLedgerV1, acceptNew = false): ToolSpawnLedgerV1 {
-  const now = new Map(actual.entries.map(row => [`${row.path}\0${row.tool}\0${row.form}`, row])), kept = new Map(ledger.entries.map(row => [`${row.path}\0${row.tool}\0${row.form}`, row]));
-  const entries = [...(acceptNew ? now.keys() : kept.keys())].flatMap(key => { const truth = now.get(key); if (truth === undefined) return []; const old = kept.get(key); return [{ ...truth, count: acceptNew || old === undefined ? truth.count : Math.min(old.count, truth.count) }]; });
-  const declaredNow = new Map(actual.declared.map(row => [`${row.tool}\0${row.scope}`, row])), declaredOld = new Map(ledger.declared.map(row => [`${row.tool}\0${row.scope}`, row]));
-  const declared = [...(acceptNew ? declaredNow.keys() : declaredOld.keys())].flatMap(key => { const truth = declaredNow.get(key); if (truth === undefined) return []; const old = declaredOld.get(key); return [{ ...truth, count: acceptNew || old === undefined ? truth.count : Math.min(old.count, truth.count) }]; });
-  return { version: 1, entries, declared };
+export function pruneToolSpawnLedgerV1(ledger: ToolSpawnLedgerV1, actual: ToolSpawnSummaryV1, acceptNew = false): ToolSpawnLedgerV1 {
+  const key = (row: ToolSpawnLedgerEntryV1): string => `${row.path}\0${row.tool}\0${row.form}`, now = new Map(actual.entries.filter(row => row.scope === "test").map(row => [key(row), row])), kept = new Map(ledger.entries.map(row => [key(row), row]));
+  const entries = [...(acceptNew ? now.keys() : kept.keys())].flatMap(name => { const truth = now.get(name); if (truth === undefined) return []; const old = kept.get(name); return [{ path: truth.path, tool: truth.tool, form: truth.form, count: acceptNew || old === undefined ? truth.count : Math.min(old.count, truth.count) }]; });
+  return { version: 1, reason: ledger.reason, entries };
 }
 
 /** 🖨️ Renders the ledger deterministically, one row per line, so a ledger diff shows exactly the rows that moved. */
 export function renderToolSpawnLedgerV1(ledger: ToolSpawnLedgerV1): string {
-  return `{"$schema": "../🧬️schema/🔣️.json", "version": 1,\n "entries": [\n${ledger.entries.map(row => "  " + JSON.stringify(row)).join(",\n")}\n ],\n "declared": [\n${ledger.declared.map(row => "  " + JSON.stringify(row)).join(",\n")}\n ]}\n`;
+  return `{"$schema": "../🧬️schema/🔣️.json", "version": 1,\n "reason": ${JSON.stringify(ledger.reason)},\n "entries": [\n${ledger.entries.map(row => "  " + JSON.stringify(row)).join(",\n")}\n ]}\n`;
 }
 
 /** 💾️ Writes the ledger through a temporary file and an atomic rename. */

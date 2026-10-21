@@ -214,13 +214,13 @@ impl<K:AsRef<str>+Ord+Sync+'static,V:ArtifactCanonicalJsonTree> ArtifactCanonica
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get_index(ordinal).map(|(key,_)|ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||refusal("canonical retained map key is absent"))}
 }
 /// 🗝️ Ordered immutable maps render as JSON objects in their own rank order, matching their `ToValue` wire; ordinal access is one bounded ranked visit.
-impl<V:ArtifactCanonicalJsonTree+Send> ArtifactCanonicalJsonTree for semio_framework_value::ordered::OrderedMap<V> {
+impl<V:ArtifactCanonicalJsonTree+Send> ArtifactCanonicalJsonTree for semio_framework_value_ordered::ordered::OrderedMap<V> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.entry_at_rank(ordinal).map(|(_,value)|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered root ordinal is absent"))}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.entry_at_rank(ordinal).map(|(key,_)|ArtifactCanonicalJsonText::from(key.as_str())).ok_or_else(||refusal("canonical ordered root key is absent"))}
 }
 /// 🗝️ Ordered immutable string sets render as JSON string arrays in rank order, matching their `ToValue` wire.
-impl ArtifactCanonicalJsonTree for semio_framework_value::ordered::OrderedSet {
+impl ArtifactCanonicalJsonTree for semio_framework_value_ordered::ordered::OrderedSet {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.key_at_rank(ordinal).map(|key|key as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered set ordinal is absent"))}
 }

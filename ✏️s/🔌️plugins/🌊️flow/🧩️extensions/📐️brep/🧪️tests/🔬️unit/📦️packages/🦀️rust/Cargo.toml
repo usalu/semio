@@ -21,7 +21,6 @@ semio-framework-3d-brep-tessellation = { path = "../../../../../../../../../🧰
 semio-framework-async = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step.workspace = true
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-framework-mesh-engine.workspace = true
@@ -41,6 +40,7 @@ semio-s-plugin-flow-brep = { path = "../../../../📦️packages/🦀️rust", f
 semio-s-plugin-flow-brep-mesh = { path = "../../../../🥽️mesh/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 parry3d = "0.17"
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

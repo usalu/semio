@@ -1,340 +1,6 @@
 {
  "version": 1,
  "groups": {
-  "launcher": {
-   "creates": [
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md",
-     "sha256": "cc019a630c435428d3e4b6f33d3be64996b49389c4dcaedbcb207e344eac4096",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
-     "sha256": "6b9d435602050512393688592a1f324ae68cd7aac8a3e49e5ac01078f06ee71e",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🧬️schema/🔣️.json",
-     "sha256": "0cc484f9a903923b82993dbb83d7050692253ac89f08f1605d5fa53823ac4960",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh",
-     "sha256": "da236c01d6a71e7b80123386fed4dfefaa739d2bf20aa6659d6354caf57c35ca",
-     "mode": 493
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🔵️.ps1",
-     "sha256": "ebbe181aa92e40c1d1f6522f478375ac356c71a7cce9bd1e806b5024092417bd",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go",
-     "sha256": "83419982dff22ce6abb0b88d959d0a1f3ae1b3c69d54083115e71af7722558fa",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🐹️.go",
-     "sha256": "f723235e235b942adc79daff9a92ece50c654b5d270f4b94cefbd8e4bd1a57c0",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🥒️.feature",
-     "sha256": "6ea66b5aadf37948d74cae0fd241d53068e890cc0a73991c83aa6a34260208b6",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go",
-     "sha256": "306da821555cd2f9cb9bb9db74c5ee37bc1ff7d22ce0392dc83df67d142e319d",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🥒️.feature",
-     "sha256": "73a9301a9c806f66fffe5eb580f3f3d7eaac5fd6baf1734287f3c302d78c5660",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🐹️.go",
-     "sha256": "e1161fa55b0985cb5e16c0fb82f3129c2f3cf77dba6564b121020198757eab96",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🥒️.feature",
-     "sha256": "3eb8624ee203272e2a7d4d005313a86c02566b597f333b622d77eb87f604eff8",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🐹️.go",
-     "sha256": "ca704be8ae92dba9f2ff063718067e4bb86a7d70a91f97f3f45ab682e1505cc3",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🥒️.feature",
-     "sha256": "4c6d1279c39f216b652b40b80ac176d58071959371164de35751cf8d561e1008",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🐹️.go",
-     "sha256": "7d081ecf46b01afaa87c4bf16d98c3868b180b83ac730e89a37cd0ae38f43463",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🥒️.feature",
-     "sha256": "61cfbe12fd72de3651690f4f0e3d2b7d734b276bea382d420facc4cdb7c29ce5",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🐹️.go",
-     "sha256": "1cf48db9b35cd999c5b83def26ba0391b1bd2dd9a2650bea7717b82b2e3ab5d9",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🥒️.feature",
-     "sha256": "5be5e1b9bf4c27f5e99781e85ce661378e02520004ccecce1617a2d123fd929a",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🐹️.go",
-     "sha256": "6cc84f68ccc9e29a5a0051868d9ad9f992fa22c55b02a690f4a44ab624b1687b",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🥒️.feature",
-     "sha256": "048684752ce88cb712bfeb4207520a494fda5315e99202fbf21aa8f717e56fd0",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-schema/🟦️.ts",
-     "sha256": "0f348fc4310769c7110db4983589a1060bc21e7c0244378d63915da7d5483fa6",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧫️fixtures/🔣️.json",
-     "sha256": "61769a522428aa9996be22d9f82b90ddb83c3d08a2b2e2f7269c57e09a506af9",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/go.mod",
-     "sha256": "c251d8b549f246166a3588909c664cede1851be9bd92066a40a5db709f45aa38",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐹️.go",
-     "sha256": "3e31e6f339311a3f898fbe8ef478fbb9b00fc7ea80b7382a8e7eb609d60d05cf",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📋️project.json",
-     "sha256": "57dac74b2c789d3994adc84a8245ea24e3cd0bfe2793b3f3dbd342e91865a433",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📜️script.ts",
-     "sha256": "156c2ba06d3335941dc392f7d1a6e29c0b95a3d9e5ec07bfe2d3bff349e5f178",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗣️language/🐹️.go",
-     "sha256": "449b313e00af014ec7127881afca5f39015478cbe23976ab4126c0118a07477b",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go",
-     "sha256": "a35511041ffdb5d5d392f1a849cd6898339968a55a515f89d0bc2fd1a7ba6d68",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go",
-     "sha256": "86519a8c6f00b5f06642d7335503b344951b3f49a51b7286d9a180f5f561d594",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🧭️workspace-root/🐹️.go",
-     "sha256": "a19ba7f5da722edabdb4ef91cbb034673759e508eb683398d57df91220a97c56",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛎️command/🐹️.go",
-     "sha256": "d6135ccdb87dfdcb1f263751eb58fbda4a9e22a85ea9cd6fac96634e336a782f",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/go.mod",
-     "sha256": "bc8e86abe84fdb94da0b616c71c2e80ed87c196f69519e2aa9684453947aecaf",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/🐹️.go",
-     "sha256": "0c5fa4aa5d8d818668c2c255843506cc2e81082888ca74c1c011549e743a7cc5",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go",
-     "sha256": "39e0b653544e4853f09ca6f4aba9333668d0f3ff18c83e489670cef467310dde",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go",
-     "sha256": "14d4ac4be4576d84541c6bd7a8cdd862fc4c6a2f8b60f111826a4ab122b425a1",
-     "mode": 420
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
-     "sha256": "544300bf1babe0ca50919b80806df9d6ee87bfdc6fa021fc7b731a72d5efc5db",
-     "mode": 420
-    }
-   ],
-   "edits": [
-    {
-     "path": "go.work",
-     "old": "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go\n",
-     "new": "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go\n\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go\n\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main\n",
-     "count": 1,
-     "sha256Before": "7161237250eb36523a23fefb6b7df7a5b13760eb120823de281cb3f2da3b286b"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/go.mod",
-     "old": "\tgithub.com/usalu/semio/repo/languages v0.0.0\n",
-     "new": "\tgithub.com/usalu/semio/repo/languages v0.0.0\n\tgithub.com/usalu/semio/repo/launcher v0.0.0\n",
-     "count": 1,
-     "sha256Before": "1867ef3124a1c7bb64b84e99c83bdbc865876a8e7b36d486c4c3b2044a8973fb"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/go.mod",
-     "old": "replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦️packages/🐹️go\n",
-     "new": "replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦️packages/🐹️go\n\nreplace github.com/usalu/semio/repo/launcher => ../../../🚀️launcher/📦️packages/🐹️go\n",
-     "count": 1,
-     "sha256Before": "1867ef3124a1c7bb64b84e99c83bdbc865876a8e7b36d486c4c3b2044a8973fb"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
-     "old": "// 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.\ntype NativeEntrypointPlan struct { Kind string; Arguments []string }\n\n// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary.\nfunc PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {\n arguments := append([]string{}, argv...)\n if len(argv) >= 4 && argv[0] == \"dev\" && argv[1] == \"mcp\" && argv[2] == \"stdio\" && argv[3] == \"os\" { return NativeEntrypointPlan{\"workspace\", arguments} }\n if len(argv) > 0 && argv[0] == \"mcp\" { return NativeEntrypointPlan{\"mcp\", arguments[1:]} }\n if len(argv) > 0 && argv[0] == \"dashboard\" { return NativeEntrypointPlan{\"build\", append([]string{\"run\", \"@semio-tech/repo-dashboard-rs:run\", \"--output=stream\", \"--\"}, argv[1:]...)} }\n index := 0\n for index < len(argv) {\n  if argv[index] == \"--tool\" { index += 2; continue }\n  if len(argv[index]) >= 7 && argv[index][:7] == \"--tool=\" { index++; continue }; break\n }\n if index > 0 { return NativeEntrypointPlan{\"build\", arguments} }\n if index < len(argv) { switch argv[index] { case \"run\", \"run-many\", \"affected\", \"exec\", \"watch\", \"dependencies\", \"cargo\", \"tools\", \"reset\", \"cache\", \"preflight\", \"show\", \"graph\", \"inputs\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"remote-execution\": return NativeEntrypointPlan{\"build\", arguments} } }\n return NativeEntrypointPlan{\"domain\", arguments}\n}\n\n// 🛠️NativeScriptTool is the tool-independent owned build process port.\ntype NativeScriptTool interface { Run(root string, arguments []string) error }\n\ntype nativeBunBuildTool struct{}\n\nfunc (nativeBunBuildTool) Run(root string, arguments []string) error {\n entry := filepath.Join(root, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts\")\n return runNativeScriptProcess(append([]string{entry, \"repo\"}, arguments...))\n}\n\ntype nativeRootScriptTool struct{}\nfunc (nativeRootScriptTool) Run(root string, arguments []string) error {\n return runNativeScriptProcess(append([]string{filepath.Join(root, \"📜️script.ts\")}, arguments...))\n}\n\n// 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.\nfunc RunNativeScript(arguments []string, tool NativeScriptTool) error {\n cwd, err := os.Getwd(); if err != nil { return err }\n return tool.Run(workspace.FindRepoRoot(cwd), arguments)\n}\n",
-     "new": "// 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.\ntype NativeEntrypointPlan = launcher.Plan\n\n// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary; the launcher module owns the one planner.\nfunc PlanNativeEntrypoint(argv []string) NativeEntrypointPlan { return launcher.PlanRoute(argv) }\n\n// 🛠️NativeScriptTool is the tool-independent owned build process port.\ntype NativeScriptTool interface { Run(root string, arguments []string) error }\n\ntype nativeLauncherTool struct{ entry string }\n\nfunc (tool nativeLauncherTool) Run(root string, arguments []string) error {\n ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\n code := launcher.DefaultHost().Execute(ctx, root, tool.entry, arguments)\n stop()\n if code != 0 { return workspace.ExitError{Code: code} }\n return nil\n}\n\n// 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.\nfunc RunNativeScript(arguments []string, tool NativeScriptTool) error {\n cwd, err := os.Getwd(); if err != nil { return err }\n return tool.Run(workspace.FindRepoRoot(cwd), arguments)\n}\n",
-     "count": 1,
-     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
-     "old": "\tgithub.com/usalu/semio/repo/cli v0.0.0\n",
-     "new": "\tgithub.com/usalu/semio/repo/cli v0.0.0\n\tgithub.com/usalu/semio/repo/launcher v0.0.0\n",
-     "count": 1,
-     "sha256Before": "7211480381ad07b6fb4dcbcdb54f9d770dfa07349caccd79bbdda1f7f0f9911f"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
-     "old": "replace github.com/usalu/semio/repo/cli => ../../⌨️cli/📦️packages/🐹️go\n",
-     "new": "replace github.com/usalu/semio/repo/cli => ../../⌨️cli/📦️packages/🐹️go\n\nreplace github.com/usalu/semio/repo/launcher => ../../🚀️launcher/📦️packages/🐹️go\n",
-     "count": 1,
-     "sha256Before": "7211480381ad07b6fb4dcbcdb54f9d770dfa07349caccd79bbdda1f7f0f9911f"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
-     "old": " if plan.Kind == \"build\" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }\n if plan.Kind == \"workspace\" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }\n",
-     "new": " if len(os.Args) > 1 && (os.Args[1] == \"--version\" || os.Args[1] == \"-V\") { if code := launcher.DefaultHost().Version(os.Args[1:]); code != 0 { return workspace.ExitError{Code: code} }; return nil }\n if plan.Kind == \"build\" || plan.Kind == \"workspace\" || plan.Kind == \"script\" { return RunNativeScript(plan.Arguments, nativeLauncherTool{plan.Kind}) }\n",
-     "count": 1,
-     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
-     "old": "\t\"os\"\n \"path/filepath\"\n\t\"time\"\n",
-     "new": "\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\t\"time\"\n",
-     "count": 1,
-     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
-     "old": "\tgraphqlpkg \"github.com/usalu/semio/repo/graphql\"\n",
-     "new": "\tgraphqlpkg \"github.com/usalu/semio/repo/graphql\"\n\tlauncher \"github.com/usalu/semio/repo/launcher\"\n",
-     "count": 1,
-     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
-     "old": "os.Exit(sandbox.Run(\"cli\", nil, m.Run))",
-     "new": "os.Exit(sandbox.Run(\"cli\", nil, func() int { launcher.BindRoot(sandbox.Origin()); return m.Run() }))",
-     "count": 1,
-     "sha256Before": "87d4563ddb386d0547edd670dbc0024525037500c42b177493540f6c82e0d675"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
-     "old": "\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
-     "new": "\tlauncher \"github.com/usalu/semio/repo/launcher\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
-     "count": 1,
-     "sha256Before": "87d4563ddb386d0547edd670dbc0024525037500c42b177493540f6c82e0d675"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
-     "old": "os.Exit(sandbox.Run(\"mcp\", nil, m.Run))",
-     "new": "os.Exit(sandbox.Run(\"mcp\", nil, func() int { launcher.BindRoot(sandbox.Origin()); return m.Run() }))",
-     "count": 1,
-     "sha256Before": "1767f7367b0efc9ee38859d0d252d9de8ac70051bd94f849156871c937453b3a"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
-     "old": "\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
-     "new": "\tlauncher \"github.com/usalu/semio/repo/launcher\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
-     "count": 1,
-     "sha256Before": "1767f7367b0efc9ee38859d0d252d9de8ac70051bd94f849156871c937453b3a"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go",
-     "old": " root := workspace.FindRepoRoot(func() string { value, _ := os.Getwd(); return value }())\n raw, err := os.ReadFile(root + \"/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json\")\n",
-     "new": " raw, err := os.ReadFile(sandbox.OriginPath(\"..\", \"..\", \"🧫️fixtures\", \"🚪️entrypoint\", \"🔣️.json\"))\n",
-     "count": 1,
-     "sha256Before": "a25d69ccf49340bca9079eb04c9b5883b3f938777ec603959fd9d02b2c755d09"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go",
-     "old": "\tworkspace \"github.com/usalu/semio/repo/workspace\"\n",
-     "new": "\tworkspace \"github.com/usalu/semio/repo/workspace\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
-     "count": 1,
-     "sha256Before": "a25d69ccf49340bca9079eb04c9b5883b3f938777ec603959fd9d02b2c755d09"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/README.md",
-     "old": "build verbs enter the owned build implementation through its tool-independent process port.",
-     "new": "build verbs enter the owned build implementation through its tool-independent process port, which is the `🚀️launcher` module: it provisions the pinned JavaScript runtime from its registry, so no runtime has to be installed, and `repo --version` names the launcher, the runtime and the implementation.",
-     "count": 1,
-     "sha256Before": "a7b2e75c2172bfe491d17d0a6a18359a9859882f386436c396ca61cabcdc7711"
-    }
-   ],
-   "rewrites": [
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json",
-     "sha256": "a58c220bc7e6557a716505be4318ae1cd517fdc2cf16e47c49cff00530bc0a2e",
-     "afterSha256": "360cf834a051c6fa1bae5ff6756b36fd341665b7bb6e5ca35116c4590a3d69a2",
-     "content": "{\n  \"buildVerbs\": [\n    \"run\",\n    \"run-many\",\n    \"affected\",\n    \"exec\",\n    \"watch\",\n    \"dependencies\",\n    \"cargo\",\n    \"tools\",\n    \"reset\",\n    \"cache\",\n    \"preflight\",\n    \"show\",\n    \"graph\",\n    \"inputs\",\n    \"incremental\",\n    \"concurrency\",\n    \"capacity\",\n    \"leases\",\n    \"remote-execution\"\n  ],\n  \"dashboardArguments\": [\n    \"run\",\n    \"@semio-tech/repo-dashboard-rs:run\",\n    \"--output=stream\",\n    \"--\"\n  ],\n  \"vectors\": [\n    {\n      \"id\": \"run\",\n      \"argv\": [\n        \"run\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"run-many\",\n      \"argv\": [\n        \"run-many\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run-many\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"affected\",\n      \"argv\": [\n        \"affected\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"affected\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"exec\",\n      \"argv\": [\n        \"exec\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"exec\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"watch\",\n      \"argv\": [\n        \"watch\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"watch\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"dependencies\",\n      \"argv\": [\n        \"dependencies\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"dependencies\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"cargo\",\n      \"argv\": [\n        \"cargo\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"cargo\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"tools\",\n      \"argv\": [\n        \"tools\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"tools\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"reset\",\n      \"argv\": [\n        \"reset\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"reset\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"cache\",\n      \"argv\": [\n        \"cache\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"cache\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"preflight\",\n      \"argv\": [\n        \"preflight\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"preflight\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"show\",\n      \"argv\": [\n        \"show\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"show\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"graph\",\n      \"argv\": [\n        \"graph\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"graph\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"inputs\",\n      \"argv\": [\n        \"inputs\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"inputs\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"incremental\",\n      \"argv\": [\n        \"incremental\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"incremental\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"concurrency\",\n      \"argv\": [\n        \"concurrency\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"concurrency\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"capacity\",\n      \"argv\": [\n        \"capacity\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"capacity\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"leases\",\n      \"argv\": [\n        \"leases\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"leases\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"remote-execution\",\n      \"argv\": [\n        \"remote-execution\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"remote-execution\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"root\",\n      \"argv\": [],\n      \"kind\": \"domain\",\n      \"arguments\": []\n    },\n    {\n      \"id\": \"help\",\n      \"argv\": [\n        \"--help\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--help\"\n      ]\n    },\n    {\n      \"id\": \"graphql\",\n      \"argv\": [\n        \"--json\",\n        \"graphql\",\n        \"--query\",\n        \"{}\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--json\",\n        \"graphql\",\n        \"--query\",\n        \"{}\"\n      ]\n    },\n    {\n      \"id\": \"mcp\",\n      \"argv\": [\n        \"mcp\"\n      ],\n      \"kind\": \"mcp\",\n      \"arguments\": []\n    },\n    {\n      \"id\": \"mcp-extra\",\n      \"argv\": [\n        \"mcp\",\n        \"client\"\n      ],\n      \"kind\": \"mcp\",\n      \"arguments\": [\n        \"client\"\n      ]\n    },\n    {\n      \"id\": \"dashboard\",\n      \"argv\": [\n        \"dashboard\",\n        \"commands\",\n        \"--check\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\",\n        \"commands\",\n        \"--check\"\n      ]\n    },\n    {\n      \"id\": \"dashboard-empty\",\n      \"argv\": [\n        \"dashboard\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\"\n      ]\n    },\n    {\n      \"id\": \"tool-first\",\n      \"argv\": [\n        \"--tool=bazel\",\n        \"run\",\n        \"x:y\",\n        \"--\",\n        \"--tool=child\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=bazel\",\n        \"run\",\n        \"x:y\",\n        \"--\",\n        \"--tool=child\"\n      ]\n    },\n    {\n      \"id\": \"tool-separated\",\n      \"argv\": [\n        \"--tool\",\n        \"nx\",\n        \"cargo\",\n        \"--\",\n        \"check\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\",\n        \"nx\",\n        \"cargo\",\n        \"--\",\n        \"check\"\n      ]\n    },\n    {\n      \"id\": \"unknown\",\n      \"argv\": [\n        \"wat\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"wat\"\n      ]\n    },\n    {\n      \"id\": \"opaque-tail\",\n      \"argv\": [\n        \"graphql\",\n        \"--\",\n        \"run\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"graphql\",\n        \"--\",\n        \"run\"\n      ]\n    },\n    {\n      \"id\": \"tool-help\",\n      \"argv\": [\n        \"--tool=bazel\",\n        \"--help\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=bazel\",\n        \"--help\"\n      ]\n    },\n    {\n      \"id\": \"tool-default-help\",\n      \"argv\": [\n        \"--tool\",\n        \"nx\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\",\n        \"nx\"\n      ]\n    },\n    {\n      \"id\": \"tool-missing-value\",\n      \"argv\": [\n        \"--tool\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp-options\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--folder\",\n        \"space with 🦑\",\n        \"--scopes\",\n        \"workspace.read,ui.observe\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--folder\",\n        \"space with 🦑\",\n        \"--scopes\",\n        \"workspace.read,ui.observe\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp-opaque-tail\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--\",\n        \"--tool=literal\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--\",\n        \"--tool=literal\"\n      ]\n    },\n    {\n      \"id\": \"not-os-mcp\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"client\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"client\"\n      ]\n    },\n    {\n      \"id\": \"not-stdio\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"http\",\n        \"os\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"http\",\n        \"os\"\n      ]\n    },\n    {\n      \"id\": \"incomplete-provider\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\"\n      ]\n    },\n    {\n      \"id\": \"script-plain\",\n      \"argv\": [\n        \"./📜️script.ts\",\n        \"build\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"./📜️script.ts\",\n        \"build\"\n      ]\n    },\n    {\n      \"id\": \"script-watch\",\n      \"argv\": [\n        \"--watch\",\n        \"./x.ts\",\n        \"a\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--watch\",\n        \"./x.ts\",\n        \"a\"\n      ]\n    },\n    {\n      \"id\": \"script-cwd-equals\",\n      \"argv\": [\n        \"--cwd=sub\",\n        \"x.mjs\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--cwd=sub\",\n        \"x.mjs\"\n      ]\n    },\n    {\n      \"id\": \"script-cwd-separate\",\n      \"argv\": [\n        \"--cwd\",\n        \"sub dir\",\n        \"--watch\",\n        \"x.js\",\n        \"--\",\n        \"z\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--cwd\",\n        \"sub dir\",\n        \"--watch\",\n        \"x.js\",\n        \"--\",\n        \"z\"\n      ]\n    },\n    {\n      \"id\": \"script-after-tool-is-build\",\n      \"argv\": [\n        \"--tool=nx\",\n        \"x.ts\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=nx\",\n        \"x.ts\"\n      ]\n    },\n    {\n      \"id\": \"script-argument-is-not-a-script\",\n      \"argv\": [\n        \"ticket\",\n        \"x.ts\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"ticket\",\n        \"x.ts\"\n      ]\n    },\n    {\n      \"id\": \"script-option-without-script\",\n      \"argv\": [\n        \"--watch\",\n        \"run\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--watch\",\n        \"run\"\n      ]\n    }\n  ],\n  \"rootScriptPrefixes\": [\n    [\n      \"dev\",\n      \"mcp\",\n      \"stdio\",\n      \"os\"\n    ]\n  ],\n  \"scriptExtensions\": [\n    \".ts\",\n    \".mjs\",\n    \".js\"\n  ],\n  \"scriptOptions\": [\n    \"watch\",\n    \"cwd\"\n  ]\n}\n"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🚪️entrypoint/🔣️.json",
-     "sha256": "9b3dc03e14c58aa57be768de5cb4e8787d2ddae3b727e28ff91f40c1f8f436fc",
-     "afterSha256": "7bec779ae9721720eed196f347ec3627398bb789d9ab1653b9222582955c8dd3",
-     "content": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"semio.repo.cli.entrypoint/1\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"buildVerbs\",\n    \"dashboardArguments\",\n    \"vectors\",\n    \"rootScriptPrefixes\",\n    \"scriptExtensions\",\n    \"scriptOptions\"\n  ],\n  \"properties\": {\n    \"buildVerbs\": {\n      \"const\": [\n        \"run\",\n        \"run-many\",\n        \"affected\",\n        \"exec\",\n        \"watch\",\n        \"dependencies\",\n        \"cargo\",\n        \"tools\",\n        \"reset\",\n        \"cache\",\n        \"preflight\",\n        \"show\",\n        \"graph\"\n      ]\n    },\n    \"dashboardArguments\": {\n      \"const\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\"\n      ]\n    },\n    \"vectors\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"id\",\n          \"argv\",\n          \"kind\",\n          \"arguments\"\n        ],\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"argv\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"kind\": {\n            \"enum\": [\n              \"domain\",\n              \"build\",\n              \"mcp\",\n              \"workspace\",\n              \"script\"\n            ]\n          },\n          \"arguments\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        }\n      }\n    },\n    \"rootScriptPrefixes\": {\n      \"const\": [\n        [\n          \"dev\",\n          \"mcp\",\n          \"stdio\",\n          \"os\"\n        ]\n      ]\n    },\n    \"scriptExtensions\": {\n      \"const\": [\n        \".ts\",\n        \".mjs\",\n        \".js\"\n      ]\n    },\n    \"scriptOptions\": {\n      \"const\": [\n        \"watch\",\n        \"cwd\"\n      ]\n    }\n  }\n}\n"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts",
-     "sha256": "9728c3f9287a708c55371429eaecd1ad7e65b4881e16fcb3b976d0c009bccd8f",
-     "afterSha256": "09690fe4232d6cdafec289692c38c11fc2ec907a7f1f82e238d576046edf4e8d",
-     "content": "import {test,expect} from \"bun:test\";\nimport {readFileSync} from \"node:fs\";\nimport {Database} from \"bun:sqlite\";\nimport Ajv from \"ajv/dist/2020\";\nconst schema=JSON.parse(readFileSync(new URL(\"../../🧬️schema/🚪️entrypoint/🔣️.json\",import.meta.url),\"utf8\")),fixture=JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🚪️entrypoint/🔣️.json\",import.meta.url),\"utf8\"));\nconst scriptArgument=(argv:string[]):boolean=>{let index=0;while(index<argv.length){if(argv[index]===\"--watch\"||argv[index]!.startsWith(\"--cwd=\"))index++;else if(argv[index]===\"--cwd\")index+=2;else break;}return index<argv.length&&(fixture.scriptExtensions as string[]).some(extension=>argv[index]!.endsWith(extension));};\ntest(\"native entrypoint neutral routes agree with the independent SQLite oracle\",()=>{\n const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);const db=new Database(\":memory:\");\n try{db.exec(\"CREATE TABLE verbs(name TEXT PRIMARY KEY)\");for(const name of fixture.buildVerbs)db.query(\"INSERT INTO verbs VALUES (?)\").run(name);\n for(const row of fixture.vectors){const selected=db.query(`WITH a AS (SELECT key i,value FROM json_each(?)), head AS (SELECT i,value FROM a WHERE value NOT LIKE '--tool=%' AND value<>'--tool' AND NOT EXISTS (SELECT 1 FROM a prev WHERE prev.i=a.i-1 AND prev.value='--tool') ORDER BY i LIMIT 1) SELECT CASE WHEN json_extract(?1,'$[0]')='dev' AND json_extract(?1,'$[1]')='mcp' AND json_extract(?1,'$[2]')='stdio' AND json_extract(?1,'$[3]')='os' THEN 'workspace' WHEN json_extract(?1,'$[0]')='--tool' OR json_extract(?1,'$[0]') LIKE '--tool=%' THEN 'build' WHEN (SELECT value FROM head)='mcp' AND (SELECT i FROM head)=0 THEN 'mcp' WHEN (SELECT value FROM head)='dashboard' AND (SELECT i FROM head)=0 THEN 'build' WHEN EXISTS (SELECT 1 FROM verbs WHERE name=(SELECT value FROM head)) THEN 'build' ELSE 'domain' END kind`).get(JSON.stringify(row.argv)) as {kind:string};\n const kind=row.argv[0]===\"dev\"||row.argv[0]===\"mcp\"||row.argv[0]===\"dashboard\"||!scriptArgument(row.argv)?selected.kind:\"script\";expect(kind,row.id).toBe(row.kind);const args=row.argv[0]===\"mcp\"?row.argv.slice(1):row.argv[0]===\"dashboard\"?[...fixture.dashboardArguments,...row.argv.slice(1)]:row.argv;expect(args,row.id).toEqual(row.arguments);}\n }finally{db.close();}\n});\n"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🥒️.feature",
-     "sha256": "35d9f49740372835568246619f6bb9f6f010f1a6892ef5b029ee0d46880d6523",
-     "afterSha256": "fc090bfbc7c8887b551fecd449585004e000ee96ffcb99d99c1fb717f4191882",
-     "content": "Feature: One Native Repository Entrypoint\n  Scenario: Build commands preserve their complete argument tail\n    Given the shared native entrypoint vectors\n    When each native implementation selects a route\n    Then build commands enter the owned build script unchanged\n    And only explicit mcp selects stdio protocol\n    And dashboard expands to its authored native run target\n    And domain commands retain their original arguments\n\n  Scenario: OS MCP keeps protocol stdout quiet\n    Given the explicit native dev mcp stdio os route\n    When its existing workspace script owner serves the protocol\n    Then its exact arguments and Original environment are retained\n    And progress remains on stderr\n    And stdout contains only the existing MCP protocol\n\n  Scenario: A script runs through the provisioned runtime\n    Given an argument vector that names a script file, optionally led by the neutral watch and cwd options\n    When the launcher plans the route\n    Then the script route keeps every argument unchanged\n    And the neutral options map to the flags of the selected runtime\n    And no runtime has to be installed because the launcher provisions the pinned one\n"
-    }
-   ],
-   "deletes": [
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_unix.go",
-     "sha256": "66ff551379d4d21539c3a77797f22db28e0b2ec2325af3b84b707e106e428b3b"
-    },
-    {
-     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_windows.go",
-     "sha256": "7edc5af962630d81caf2b029e25a170e28a28c4c53bfe3988efe4529d76c35f6"
-    }
-   ]
-  },
   "bootstrap": {
    "creates": [
     {
@@ -584,6 +250,340 @@
     }
    ]
   },
+  "launcher": {
+   "creates": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md",
+     "sha256": "cc019a630c435428d3e4b6f33d3be64996b49389c4dcaedbcb207e344eac4096",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh",
+     "sha256": "da236c01d6a71e7b80123386fed4dfefaa739d2bf20aa6659d6354caf57c35ca",
+     "mode": 493
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🔵️.ps1",
+     "sha256": "ebbe181aa92e40c1d1f6522f478375ac356c71a7cce9bd1e806b5024092417bd",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/go.mod",
+     "sha256": "c251d8b549f246166a3588909c664cede1851be9bd92066a40a5db709f45aa38",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+     "sha256": "bce9aade1ccac58c90391149ee67290dd82332b1a944c7b06ac66207128b5188",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go",
+     "sha256": "a35511041ffdb5d5d392f1a849cd6898339968a55a515f89d0bc2fd1a7ba6d68",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐹️.go",
+     "sha256": "3e31e6f339311a3f898fbe8ef478fbb9b00fc7ea80b7382a8e7eb609d60d05cf",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📋️project.json",
+     "sha256": "57dac74b2c789d3994adc84a8245ea24e3cd0bfe2793b3f3dbd342e91865a433",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📜️script.ts",
+     "sha256": "156c2ba06d3335941dc392f7d1a6e29c0b95a3d9e5ec07bfe2d3bff349e5f178",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go",
+     "sha256": "5124a13a33fda120d7fe5265b0d5fd498211052a794551db2a7a0fd30b71a765",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/go.mod",
+     "sha256": "bc8e86abe84fdb94da0b616c71c2e80ed87c196f69519e2aa9684453947aecaf",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/🐹️.go",
+     "sha256": "0c5fa4aa5d8d818668c2c255843506cc2e81082888ca74c1c011549e743a7cc5",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go",
+     "sha256": "56b9da7356e885997765de950b59b39500b008d22bcfb0e502f82a7cc189fb23",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗣️language/🐹️.go",
+     "sha256": "e0baf2aaf0296d660114853700483b1837997c3c126ecd5cbff020957321f2f3",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛎️command/🐹️.go",
+     "sha256": "dca3d31977bac5b42d7993068c216ec09d25aa33693785dd0fda832e226fa0e7",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🧭️workspace-root/🐹️.go",
+     "sha256": "fe8362811bd96cfbef76b030573be00c367b5de7c1659ab85b69c6b97b67e108",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go",
+     "sha256": "39e0b653544e4853f09ca6f4aba9333668d0f3ff18c83e489670cef467310dde",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+     "sha256": "790f2995b23e8e7a04d5cc1e7fb01c9c961c9b0842104cc9a53b726aae721359",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🧬️schema/🔣️.json",
+     "sha256": "0cc484f9a903923b82993dbb83d7050692253ac89f08f1605d5fa53823ac4960",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🐹️.go",
+     "sha256": "862e8b04c3921a8289d156b3bd080b5c96164c8e061cf1385b0608131fc97af8",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🥒️.feature",
+     "sha256": "5be5e1b9bf4c27f5e99781e85ce661378e02520004ccecce1617a2d123fd929a",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🐹️.go",
+     "sha256": "30feb8d0a41cb5750ceff8328054078604f0b0107047c8fc0ed8c4d1dbabb514",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🥒️.feature",
+     "sha256": "61cfbe12fd72de3651690f4f0e3d2b7d734b276bea382d420facc4cdb7c29ce5",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🐹️.go",
+     "sha256": "e1161fa55b0985cb5e16c0fb82f3129c2f3cf77dba6564b121020198757eab96",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🥒️.feature",
+     "sha256": "3eb8624ee203272e2a7d4d005313a86c02566b597f333b622d77eb87f604eff8",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🐹️.go",
+     "sha256": "e2dfdff7b97e58b306e0294ca2d7b4b548384541fb57e9c95a9dcb567c8d51d1",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🥒️.feature",
+     "sha256": "4c6d1279c39f216b652b40b80ac176d58071959371164de35751cf8d561e1008",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-schema/🟦️.ts",
+     "sha256": "0f348fc4310769c7110db4983589a1060bc21e7c0244378d63915da7d5483fa6",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go",
+     "sha256": "306da821555cd2f9cb9bb9db74c5ee37bc1ff7d22ce0392dc83df67d142e319d",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🥒️.feature",
+     "sha256": "73a9301a9c806f66fffe5eb580f3f3d7eaac5fd6baf1734287f3c302d78c5660",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🐹️.go",
+     "sha256": "f723235e235b942adc79daff9a92ece50c654b5d270f4b94cefbd8e4bd1a57c0",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🥒️.feature",
+     "sha256": "6ea66b5aadf37948d74cae0fd241d53068e890cc0a73991c83aa6a34260208b6",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🐹️.go",
+     "sha256": "6cc84f68ccc9e29a5a0051868d9ad9f992fa22c55b02a690f4a44ab624b1687b",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🥒️.feature",
+     "sha256": "048684752ce88cb712bfeb4207520a494fda5315e99202fbf21aa8f717e56fd0",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go",
+     "sha256": "83419982dff22ce6abb0b88d959d0a1f3ae1b3c69d54083115e71af7722558fa",
+     "mode": 420
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧫️fixtures/🔣️.json",
+     "sha256": "61769a522428aa9996be22d9f82b90ddb83c3d08a2b2e2f7269c57e09a506af9",
+     "mode": 420
+    }
+   ],
+   "edits": [
+    {
+     "path": "go.work",
+     "old": "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go\n",
+     "new": "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go\n\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go\n\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main\n",
+     "count": 1,
+     "sha256Before": "7161237250eb36523a23fefb6b7df7a5b13760eb120823de281cb3f2da3b286b"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/go.mod",
+     "old": "\tgithub.com/usalu/semio/repo/languages v0.0.0\n",
+     "new": "\tgithub.com/usalu/semio/repo/languages v0.0.0\n\tgithub.com/usalu/semio/repo/launcher v0.0.0\n",
+     "count": 1,
+     "sha256Before": "1867ef3124a1c7bb64b84e99c83bdbc865876a8e7b36d486c4c3b2044a8973fb"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/go.mod",
+     "old": "replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦️packages/🐹️go\n",
+     "new": "replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦️packages/🐹️go\n\nreplace github.com/usalu/semio/repo/launcher => ../../../🚀️launcher/📦️packages/🐹️go\n",
+     "count": 1,
+     "sha256Before": "1867ef3124a1c7bb64b84e99c83bdbc865876a8e7b36d486c4c3b2044a8973fb"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
+     "old": "// 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.\ntype NativeEntrypointPlan struct { Kind string; Arguments []string }\n\n// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary.\nfunc PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {\n arguments := append([]string{}, argv...)\n if len(argv) >= 4 && argv[0] == \"dev\" && argv[1] == \"mcp\" && argv[2] == \"stdio\" && argv[3] == \"os\" { return NativeEntrypointPlan{\"workspace\", arguments} }\n if len(argv) > 0 && argv[0] == \"mcp\" { return NativeEntrypointPlan{\"mcp\", arguments[1:]} }\n if len(argv) > 0 && argv[0] == \"dashboard\" { return NativeEntrypointPlan{\"build\", append([]string{\"run\", \"@semio-tech/repo-dashboard-rs:run\", \"--output=stream\", \"--\"}, argv[1:]...)} }\n index := 0\n for index < len(argv) {\n  if argv[index] == \"--tool\" { index += 2; continue }\n  if len(argv[index]) >= 7 && argv[index][:7] == \"--tool=\" { index++; continue }; break\n }\n if index > 0 { return NativeEntrypointPlan{\"build\", arguments} }\n if index < len(argv) { switch argv[index] { case \"run\", \"run-many\", \"affected\", \"exec\", \"watch\", \"dependencies\", \"cargo\", \"tools\", \"reset\", \"cache\", \"preflight\", \"show\", \"graph\", \"inputs\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"remote-execution\": return NativeEntrypointPlan{\"build\", arguments} } }\n return NativeEntrypointPlan{\"domain\", arguments}\n}\n\n// 🛠️NativeScriptTool is the tool-independent owned build process port.\ntype NativeScriptTool interface { Run(root string, arguments []string) error }\n\ntype nativeBunBuildTool struct{}\n\nfunc (nativeBunBuildTool) Run(root string, arguments []string) error {\n entry := filepath.Join(root, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts\")\n return runNativeScriptProcess(append([]string{entry, \"repo\"}, arguments...))\n}\n\ntype nativeRootScriptTool struct{}\nfunc (nativeRootScriptTool) Run(root string, arguments []string) error {\n return runNativeScriptProcess(append([]string{filepath.Join(root, \"📜️script.ts\")}, arguments...))\n}\n\n// 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.\nfunc RunNativeScript(arguments []string, tool NativeScriptTool) error {\n cwd, err := os.Getwd(); if err != nil { return err }\n return tool.Run(workspace.FindRepoRoot(cwd), arguments)\n}\n",
+     "new": "// 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.\ntype NativeEntrypointPlan = launcher.Plan\n\n// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary; the launcher module owns the one planner.\nfunc PlanNativeEntrypoint(argv []string) NativeEntrypointPlan { return launcher.PlanRoute(argv) }\n\n// 🛠️NativeScriptTool is the tool-independent owned build process port.\ntype NativeScriptTool interface { Run(root string, arguments []string) error }\n\ntype nativeLauncherTool struct{ entry string }\n\nfunc (tool nativeLauncherTool) Run(root string, arguments []string) error {\n ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\n code := launcher.DefaultHost().Execute(ctx, root, tool.entry, arguments)\n stop()\n if code != 0 { return workspace.ExitError{Code: code} }\n return nil\n}\n\n// 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.\nfunc RunNativeScript(arguments []string, tool NativeScriptTool) error {\n cwd, err := os.Getwd(); if err != nil { return err }\n return tool.Run(workspace.FindRepoRoot(cwd), arguments)\n}\n",
+     "count": 1,
+     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
+     "old": "\tgithub.com/usalu/semio/repo/cli v0.0.0\n",
+     "new": "\tgithub.com/usalu/semio/repo/cli v0.0.0\n\tgithub.com/usalu/semio/repo/launcher v0.0.0\n",
+     "count": 1,
+     "sha256Before": "7211480381ad07b6fb4dcbcdb54f9d770dfa07349caccd79bbdda1f7f0f9911f"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
+     "old": "replace github.com/usalu/semio/repo/cli => ../../⌨️cli/📦️packages/🐹️go\n",
+     "new": "replace github.com/usalu/semio/repo/cli => ../../⌨️cli/📦️packages/🐹️go\n\nreplace github.com/usalu/semio/repo/launcher => ../../🚀️launcher/📦️packages/🐹️go\n",
+     "count": 1,
+     "sha256Before": "7211480381ad07b6fb4dcbcdb54f9d770dfa07349caccd79bbdda1f7f0f9911f"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
+     "old": " if plan.Kind == \"build\" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }\n if plan.Kind == \"workspace\" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }\n",
+     "new": " if len(os.Args) > 1 && (os.Args[1] == \"--version\" || os.Args[1] == \"-V\") { if code := launcher.DefaultHost().Version(os.Args[1:]); code != 0 { return workspace.ExitError{Code: code} }; return nil }\n if plan.Kind == \"build\" || plan.Kind == \"workspace\" || plan.Kind == \"script\" { return RunNativeScript(plan.Arguments, nativeLauncherTool{plan.Kind}) }\n",
+     "count": 1,
+     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
+     "old": "\t\"os\"\n \"path/filepath\"\n\t\"time\"\n",
+     "new": "\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\t\"time\"\n",
+     "count": 1,
+     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
+     "old": "\tgraphqlpkg \"github.com/usalu/semio/repo/graphql\"\n",
+     "new": "\tgraphqlpkg \"github.com/usalu/semio/repo/graphql\"\n\tlauncher \"github.com/usalu/semio/repo/launcher\"\n",
+     "count": 1,
+     "sha256Before": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
+     "old": "os.Exit(sandbox.Run(\"cli\", nil, m.Run))",
+     "new": "os.Exit(sandbox.Run(\"cli\", nil, func() int { launcher.BindRoot(sandbox.Origin()); return m.Run() }))",
+     "count": 1,
+     "sha256Before": "87d4563ddb386d0547edd670dbc0024525037500c42b177493540f6c82e0d675"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
+     "old": "\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
+     "new": "\tlauncher \"github.com/usalu/semio/repo/launcher\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
+     "count": 1,
+     "sha256Before": "87d4563ddb386d0547edd670dbc0024525037500c42b177493540f6c82e0d675"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
+     "old": "os.Exit(sandbox.Run(\"mcp\", nil, m.Run))",
+     "new": "os.Exit(sandbox.Run(\"mcp\", nil, func() int { launcher.BindRoot(sandbox.Origin()); return m.Run() }))",
+     "count": 1,
+     "sha256Before": "1767f7367b0efc9ee38859d0d252d9de8ac70051bd94f849156871c937453b3a"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🛡️hermetic-root-guard/🐹️.go",
+     "old": "\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
+     "new": "\tlauncher \"github.com/usalu/semio/repo/launcher\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
+     "count": 1,
+     "sha256Before": "1767f7367b0efc9ee38859d0d252d9de8ac70051bd94f849156871c937453b3a"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go",
+     "old": " root := workspace.FindRepoRoot(func() string { value, _ := os.Getwd(); return value }())\n raw, err := os.ReadFile(root + \"/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json\")\n",
+     "new": " raw, err := os.ReadFile(sandbox.OriginPath(\"..\", \"..\", \"🧫️fixtures\", \"🚪️entrypoint\", \"🔣️.json\"))\n",
+     "count": 1,
+     "sha256Before": "a25d69ccf49340bca9079eb04c9b5883b3f938777ec603959fd9d02b2c755d09"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🔬️unit/🐹️.go",
+     "old": "\tworkspace \"github.com/usalu/semio/repo/workspace\"\n",
+     "new": "\tworkspace \"github.com/usalu/semio/repo/workspace\"\n\tsandbox \"github.com/usalu/semio/repo/workspace/sandbox\"\n",
+     "count": 1,
+     "sha256Before": "a25d69ccf49340bca9079eb04c9b5883b3f938777ec603959fd9d02b2c755d09"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/README.md",
+     "old": "build verbs enter the owned build implementation through its tool-independent process port.",
+     "new": "build verbs enter the owned build implementation through its tool-independent process port, which is the `🚀️launcher` module: it provisions the pinned JavaScript runtime from its registry, so no runtime has to be installed, and `repo --version` names the launcher, the runtime and the implementation.",
+     "count": 1,
+     "sha256Before": "a7b2e75c2172bfe491d17d0a6a18359a9859882f386436c396ca61cabcdc7711"
+    }
+   ],
+   "rewrites": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json",
+     "sha256": "a58c220bc7e6557a716505be4318ae1cd517fdc2cf16e47c49cff00530bc0a2e",
+     "afterSha256": "360cf834a051c6fa1bae5ff6756b36fd341665b7bb6e5ca35116c4590a3d69a2",
+     "content": "{\n  \"buildVerbs\": [\n    \"run\",\n    \"run-many\",\n    \"affected\",\n    \"exec\",\n    \"watch\",\n    \"dependencies\",\n    \"cargo\",\n    \"tools\",\n    \"reset\",\n    \"cache\",\n    \"preflight\",\n    \"show\",\n    \"graph\",\n    \"inputs\",\n    \"incremental\",\n    \"concurrency\",\n    \"capacity\",\n    \"leases\",\n    \"remote-execution\"\n  ],\n  \"dashboardArguments\": [\n    \"run\",\n    \"@semio-tech/repo-dashboard-rs:run\",\n    \"--output=stream\",\n    \"--\"\n  ],\n  \"vectors\": [\n    {\n      \"id\": \"run\",\n      \"argv\": [\n        \"run\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"run-many\",\n      \"argv\": [\n        \"run-many\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run-many\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"affected\",\n      \"argv\": [\n        \"affected\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"affected\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"exec\",\n      \"argv\": [\n        \"exec\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"exec\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"watch\",\n      \"argv\": [\n        \"watch\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"watch\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"dependencies\",\n      \"argv\": [\n        \"dependencies\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"dependencies\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"cargo\",\n      \"argv\": [\n        \"cargo\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"cargo\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"tools\",\n      \"argv\": [\n        \"tools\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"tools\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"reset\",\n      \"argv\": [\n        \"reset\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"reset\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"cache\",\n      \"argv\": [\n        \"cache\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"cache\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"preflight\",\n      \"argv\": [\n        \"preflight\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"preflight\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"show\",\n      \"argv\": [\n        \"show\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"show\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"graph\",\n      \"argv\": [\n        \"graph\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"graph\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"inputs\",\n      \"argv\": [\n        \"inputs\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"inputs\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"incremental\",\n      \"argv\": [\n        \"incremental\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"incremental\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"concurrency\",\n      \"argv\": [\n        \"concurrency\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"concurrency\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"capacity\",\n      \"argv\": [\n        \"capacity\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"capacity\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"leases\",\n      \"argv\": [\n        \"leases\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"leases\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"remote-execution\",\n      \"argv\": [\n        \"remote-execution\",\n        \"--opaque=value\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"remote-execution\",\n        \"--opaque=value\"\n      ]\n    },\n    {\n      \"id\": \"root\",\n      \"argv\": [],\n      \"kind\": \"domain\",\n      \"arguments\": []\n    },\n    {\n      \"id\": \"help\",\n      \"argv\": [\n        \"--help\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--help\"\n      ]\n    },\n    {\n      \"id\": \"graphql\",\n      \"argv\": [\n        \"--json\",\n        \"graphql\",\n        \"--query\",\n        \"{}\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--json\",\n        \"graphql\",\n        \"--query\",\n        \"{}\"\n      ]\n    },\n    {\n      \"id\": \"mcp\",\n      \"argv\": [\n        \"mcp\"\n      ],\n      \"kind\": \"mcp\",\n      \"arguments\": []\n    },\n    {\n      \"id\": \"mcp-extra\",\n      \"argv\": [\n        \"mcp\",\n        \"client\"\n      ],\n      \"kind\": \"mcp\",\n      \"arguments\": [\n        \"client\"\n      ]\n    },\n    {\n      \"id\": \"dashboard\",\n      \"argv\": [\n        \"dashboard\",\n        \"commands\",\n        \"--check\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\",\n        \"commands\",\n        \"--check\"\n      ]\n    },\n    {\n      \"id\": \"dashboard-empty\",\n      \"argv\": [\n        \"dashboard\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\"\n      ]\n    },\n    {\n      \"id\": \"tool-first\",\n      \"argv\": [\n        \"--tool=bazel\",\n        \"run\",\n        \"x:y\",\n        \"--\",\n        \"--tool=child\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=bazel\",\n        \"run\",\n        \"x:y\",\n        \"--\",\n        \"--tool=child\"\n      ]\n    },\n    {\n      \"id\": \"tool-separated\",\n      \"argv\": [\n        \"--tool\",\n        \"nx\",\n        \"cargo\",\n        \"--\",\n        \"check\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\",\n        \"nx\",\n        \"cargo\",\n        \"--\",\n        \"check\"\n      ]\n    },\n    {\n      \"id\": \"unknown\",\n      \"argv\": [\n        \"wat\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"wat\"\n      ]\n    },\n    {\n      \"id\": \"opaque-tail\",\n      \"argv\": [\n        \"graphql\",\n        \"--\",\n        \"run\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"graphql\",\n        \"--\",\n        \"run\"\n      ]\n    },\n    {\n      \"id\": \"tool-help\",\n      \"argv\": [\n        \"--tool=bazel\",\n        \"--help\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=bazel\",\n        \"--help\"\n      ]\n    },\n    {\n      \"id\": \"tool-default-help\",\n      \"argv\": [\n        \"--tool\",\n        \"nx\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\",\n        \"nx\"\n      ]\n    },\n    {\n      \"id\": \"tool-missing-value\",\n      \"argv\": [\n        \"--tool\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp-options\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--folder\",\n        \"space with 🦑\",\n        \"--scopes\",\n        \"workspace.read,ui.observe\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--folder\",\n        \"space with 🦑\",\n        \"--scopes\",\n        \"workspace.read,ui.observe\"\n      ]\n    },\n    {\n      \"id\": \"os-mcp-opaque-tail\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--\",\n        \"--tool=literal\"\n      ],\n      \"kind\": \"workspace\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"os\",\n        \"--\",\n        \"--tool=literal\"\n      ]\n    },\n    {\n      \"id\": \"not-os-mcp\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"client\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\",\n        \"client\"\n      ]\n    },\n    {\n      \"id\": \"not-stdio\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"http\",\n        \"os\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"http\",\n        \"os\"\n      ]\n    },\n    {\n      \"id\": \"incomplete-provider\",\n      \"argv\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"dev\",\n        \"mcp\",\n        \"stdio\"\n      ]\n    },\n    {\n      \"id\": \"script-plain\",\n      \"argv\": [\n        \"./📜️script.ts\",\n        \"build\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"./📜️script.ts\",\n        \"build\"\n      ]\n    },\n    {\n      \"id\": \"script-watch\",\n      \"argv\": [\n        \"--watch\",\n        \"./x.ts\",\n        \"a\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--watch\",\n        \"./x.ts\",\n        \"a\"\n      ]\n    },\n    {\n      \"id\": \"script-cwd-equals\",\n      \"argv\": [\n        \"--cwd=sub\",\n        \"x.mjs\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--cwd=sub\",\n        \"x.mjs\"\n      ]\n    },\n    {\n      \"id\": \"script-cwd-separate\",\n      \"argv\": [\n        \"--cwd\",\n        \"sub dir\",\n        \"--watch\",\n        \"x.js\",\n        \"--\",\n        \"z\"\n      ],\n      \"kind\": \"script\",\n      \"arguments\": [\n        \"--cwd\",\n        \"sub dir\",\n        \"--watch\",\n        \"x.js\",\n        \"--\",\n        \"z\"\n      ]\n    },\n    {\n      \"id\": \"script-after-tool-is-build\",\n      \"argv\": [\n        \"--tool=nx\",\n        \"x.ts\"\n      ],\n      \"kind\": \"build\",\n      \"arguments\": [\n        \"--tool=nx\",\n        \"x.ts\"\n      ]\n    },\n    {\n      \"id\": \"script-argument-is-not-a-script\",\n      \"argv\": [\n        \"ticket\",\n        \"x.ts\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"ticket\",\n        \"x.ts\"\n      ]\n    },\n    {\n      \"id\": \"script-option-without-script\",\n      \"argv\": [\n        \"--watch\",\n        \"run\"\n      ],\n      \"kind\": \"domain\",\n      \"arguments\": [\n        \"--watch\",\n        \"run\"\n      ]\n    }\n  ],\n  \"rootScriptPrefixes\": [\n    [\n      \"dev\",\n      \"mcp\",\n      \"stdio\",\n      \"os\"\n    ]\n  ],\n  \"scriptExtensions\": [\n    \".ts\",\n    \".mjs\",\n    \".js\"\n  ],\n  \"scriptOptions\": [\n    \"watch\",\n    \"cwd\"\n  ]\n}\n"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🚪️entrypoint/🔣️.json",
+     "sha256": "9b3dc03e14c58aa57be768de5cb4e8787d2ddae3b727e28ff91f40c1f8f436fc",
+     "afterSha256": "7bec779ae9721720eed196f347ec3627398bb789d9ab1653b9222582955c8dd3",
+     "content": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"semio.repo.cli.entrypoint/1\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"buildVerbs\",\n    \"dashboardArguments\",\n    \"vectors\",\n    \"rootScriptPrefixes\",\n    \"scriptExtensions\",\n    \"scriptOptions\"\n  ],\n  \"properties\": {\n    \"buildVerbs\": {\n      \"const\": [\n        \"run\",\n        \"run-many\",\n        \"affected\",\n        \"exec\",\n        \"watch\",\n        \"dependencies\",\n        \"cargo\",\n        \"tools\",\n        \"reset\",\n        \"cache\",\n        \"preflight\",\n        \"show\",\n        \"graph\"\n      ]\n    },\n    \"dashboardArguments\": {\n      \"const\": [\n        \"run\",\n        \"@semio-tech/repo-dashboard-rs:run\",\n        \"--output=stream\",\n        \"--\"\n      ]\n    },\n    \"vectors\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"id\",\n          \"argv\",\n          \"kind\",\n          \"arguments\"\n        ],\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"argv\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"kind\": {\n            \"enum\": [\n              \"domain\",\n              \"build\",\n              \"mcp\",\n              \"workspace\",\n              \"script\"\n            ]\n          },\n          \"arguments\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        }\n      }\n    },\n    \"rootScriptPrefixes\": {\n      \"const\": [\n        [\n          \"dev\",\n          \"mcp\",\n          \"stdio\",\n          \"os\"\n        ]\n      ]\n    },\n    \"scriptExtensions\": {\n      \"const\": [\n        \".ts\",\n        \".mjs\",\n        \".js\"\n      ]\n    },\n    \"scriptOptions\": {\n      \"const\": [\n        \"watch\",\n        \"cwd\"\n      ]\n    }\n  }\n}\n"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts",
+     "sha256": "9728c3f9287a708c55371429eaecd1ad7e65b4881e16fcb3b976d0c009bccd8f",
+     "afterSha256": "09690fe4232d6cdafec289692c38c11fc2ec907a7f1f82e238d576046edf4e8d",
+     "content": "import {test,expect} from \"bun:test\";\nimport {readFileSync} from \"node:fs\";\nimport {Database} from \"bun:sqlite\";\nimport Ajv from \"ajv/dist/2020\";\nconst schema=JSON.parse(readFileSync(new URL(\"../../🧬️schema/🚪️entrypoint/🔣️.json\",import.meta.url),\"utf8\")),fixture=JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🚪️entrypoint/🔣️.json\",import.meta.url),\"utf8\"));\nconst scriptArgument=(argv:string[]):boolean=>{let index=0;while(index<argv.length){if(argv[index]===\"--watch\"||argv[index]!.startsWith(\"--cwd=\"))index++;else if(argv[index]===\"--cwd\")index+=2;else break;}return index<argv.length&&(fixture.scriptExtensions as string[]).some(extension=>argv[index]!.endsWith(extension));};\ntest(\"native entrypoint neutral routes agree with the independent SQLite oracle\",()=>{\n const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);const db=new Database(\":memory:\");\n try{db.exec(\"CREATE TABLE verbs(name TEXT PRIMARY KEY)\");for(const name of fixture.buildVerbs)db.query(\"INSERT INTO verbs VALUES (?)\").run(name);\n for(const row of fixture.vectors){const selected=db.query(`WITH a AS (SELECT key i,value FROM json_each(?)), head AS (SELECT i,value FROM a WHERE value NOT LIKE '--tool=%' AND value<>'--tool' AND NOT EXISTS (SELECT 1 FROM a prev WHERE prev.i=a.i-1 AND prev.value='--tool') ORDER BY i LIMIT 1) SELECT CASE WHEN json_extract(?1,'$[0]')='dev' AND json_extract(?1,'$[1]')='mcp' AND json_extract(?1,'$[2]')='stdio' AND json_extract(?1,'$[3]')='os' THEN 'workspace' WHEN json_extract(?1,'$[0]')='--tool' OR json_extract(?1,'$[0]') LIKE '--tool=%' THEN 'build' WHEN (SELECT value FROM head)='mcp' AND (SELECT i FROM head)=0 THEN 'mcp' WHEN (SELECT value FROM head)='dashboard' AND (SELECT i FROM head)=0 THEN 'build' WHEN EXISTS (SELECT 1 FROM verbs WHERE name=(SELECT value FROM head)) THEN 'build' ELSE 'domain' END kind`).get(JSON.stringify(row.argv)) as {kind:string};\n const kind=row.argv[0]===\"dev\"||row.argv[0]===\"mcp\"||row.argv[0]===\"dashboard\"||!scriptArgument(row.argv)?selected.kind:\"script\";expect(kind,row.id).toBe(row.kind);const args=row.argv[0]===\"mcp\"?row.argv.slice(1):row.argv[0]===\"dashboard\"?[...fixture.dashboardArguments,...row.argv.slice(1)]:row.argv;expect(args,row.id).toEqual(row.arguments);}\n }finally{db.close();}\n});\n"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🥒️.feature",
+     "sha256": "35d9f49740372835568246619f6bb9f6f010f1a6892ef5b029ee0d46880d6523",
+     "afterSha256": "fc090bfbc7c8887b551fecd449585004e000ee96ffcb99d99c1fb717f4191882",
+     "content": "Feature: One Native Repository Entrypoint\n  Scenario: Build commands preserve their complete argument tail\n    Given the shared native entrypoint vectors\n    When each native implementation selects a route\n    Then build commands enter the owned build script unchanged\n    And only explicit mcp selects stdio protocol\n    And dashboard expands to its authored native run target\n    And domain commands retain their original arguments\n\n  Scenario: OS MCP keeps protocol stdout quiet\n    Given the explicit native dev mcp stdio os route\n    When its existing workspace script owner serves the protocol\n    Then its exact arguments and Original environment are retained\n    And progress remains on stderr\n    And stdout contains only the existing MCP protocol\n\n  Scenario: A script runs through the provisioned runtime\n    Given an argument vector that names a script file, optionally led by the neutral watch and cwd options\n    When the launcher plans the route\n    Then the script route keeps every argument unchanged\n    And the neutral options map to the flags of the selected runtime\n    And no runtime has to be installed because the launcher provisions the pinned one\n"
+    }
+   ],
+   "deletes": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_unix.go",
+     "sha256": "66ff551379d4d21539c3a77797f22db28e0b2ec2325af3b84b707e106e428b3b"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_windows.go",
+     "sha256": "7edc5af962630d81caf2b029e25a170e28a28c4c53bfe3988efe4529d76c35f6"
+    }
+   ]
+  },
   "taxonomy": {
    "creates": [],
    "edits": [
@@ -592,7 +592,7 @@
      "old": "        \"🌱️fixture-repository\"\n      ],",
      "new": "        \"🌱️fixture-repository\",\n        \"🗂️runtime-registry\",\n        \"🧭️workspace-root\",\n        \"🗣️language\",\n        \"📥️runtime-provision\",\n        \"🏗️entry\",\n        \"🐚️unix-host\",\n        \"🪟️windows-host\",\n        \"🛎️command\"\n      ],",
      "count": 1,
-     "sha256Before": "092c64a35f54b2e54e51008aa60980cfeed44a3eefbe6672efad49f5aa959f36"
+     "sha256Before": "f0f909a478f27afea1c8fa2173b4fff7602b9092b4338f5a27a98a0089e58378"
     }
    ],
    "rewrites": [],

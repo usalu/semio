@@ -1,0 +1,19 @@
+# Graph Image Headroom Cause and Owned Recovery Constraints
+
+Observed 2026-10-21T07:27:07.971Z. Root/Cargo report actual96421 terminal1/no cancellation before gates; bounded real log tail confirms available973414400 below minimum1073741824, retiredBytes0/retiredFiles0 at headroom source57. No commands/storage/native effects were performed by reviewer.
+
+Actual available(image) reads nativeImageSpaceV1(image.root,image.filesystemBytes), multiplies bavail*bsize and refuses nonsafe/negative values. On macOS nativeImageSpace uses statfsSync(root).bavail, not workspace free space. Partition path law resolves graph root to workspace/.cache/b/g/m; authored capacity4294967296. Independent mounted-root metadata:dev16777253/ino2,statfsbsize4096,blocks997110,bfree=bavail237644→973389824 at observation. Workspace filesystem dev16777229 has226907729920available. These distinguish image-local headroom from hostdisk capacity; changing bytes over time is not a fabricated exact terminal measurement.
+
+Existing recoverBuildGraphImageHeadroomV1 opens/rechecks genuine image, requires bounded request and actual exclusive maintenance custody, optionally retires an owned callback result under closed schema, then inventories bounded snapshots and complete selected/current publications. Snapshot names must be64hex.json and contenthash equalname; publication requires closed version3authorityreceipt and graphhash match. Leaves must be ordinarysinglelink/samedevice/bounded with nofollow descriptor/stamp rechecks. Candidates sort oldestmodification thenbytespath; every unlink follows freshimage/leafidentity checks. Opaque/unmatched/unowned files are not candidates; retired0 does not prove wholeimageempty or authorize deletion elsewhere.
+
+Selected-only recovery requires nonwaitingrequest, genuine image binding and exactworkspacegraphroot plus existing nonwaiting perpublicationwriter leases; active writers are skipped, stalechangedpair is skipped/refused, completeauthenticated idlepairs only. No blanket cache reset or peerlease deletion is supported by these functions. Cargo separately traces public repo-owned recoveryfrontend/callers; this report establishes source-of-value/rootfilesystem/retirement constraints, not a launched recovery or claim that eligiblebytes suffice.
+
+Source pin headroom 18440 / 52a959728e626b4e580212e1c5a2bce511b729c2d64b3455634afe4981659445.
+
+## Capacity Arithmetic and Source Coordinates
+
+Mounted graph statfs total997110blocks×4096=4084162560bytes (~3.804GiB), greater than requested1073741824floor. Thus floor does not mathematically exceed empty usablefilesystemcapacity. Observed used=(997110−237644)×4096=3110772736bytes; actualterminal available973414400shortfall100327424bytes (~95.68MiB). This indicates occupied mountedfilesystemcapacity/metadata, not proof that authenticated eligible candidates can fund shortfall.
+
+Budget source 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts:24 derives filesystemBytes=capacityBytes−1048576=4293918720 and maximumArtifactBytes defaults same; physicalmaximum4294967296. Actual statfs total4084162560 is measured formattedfilesystemcapacity, not assumed equal declaration. Contract 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts:61 totalbytes and:66 imageavailable use statfs on macOS. Headroom 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts:40 available;:57 refuses afterboundedownedretirement.
+
+Pins: budgetSource 5774/0b2c2d69f5eb8ee2f04ee080963bc80e3f1ae83ee879b32eaa9308ba784368bf; policy 1236/799af43627ccb92abcf3a7cad60c21c0784284ea987731a310a289877154939a; nativecontract 37959/782320e83f21bc42f9f37f2d6c5197ece3ff6c456e5a3d1ce823b10247406b12.

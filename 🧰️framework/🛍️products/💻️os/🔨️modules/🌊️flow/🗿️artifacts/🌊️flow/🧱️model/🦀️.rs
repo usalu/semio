@@ -1,6 +1,6 @@
 //! 🧱️ Flow document model: widgets, synapses, GUI projections, typed retirement and the component text codecs every Flow document representation shares.
 pub use neural_engine as neural;
-pub use protocol::value::ordered::{OrderedMap, OrderedSet};
+pub use semio_framework_value_ordered::ordered::{OrderedMap, OrderedSet};
 pub use semio_framework_os_kernel::os_dsl;
 pub use semio_framework_os_kernel::os_pack;
 pub use semio_framework_os_kernel::os_spr;

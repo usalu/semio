@@ -44,6 +44,7 @@ semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-tool-run-tick-wire = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-original-aliases = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio_framework_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }

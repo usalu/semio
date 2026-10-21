@@ -1,3 +1,4 @@
+import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{extractGraphPolicyV1}from"../🕸️graph/🕰️generations/🔌️load/🟨️.mjs";
 import dependencySchema from "../🧬️schema/📥️dependencies.json" with { type: "json" };
@@ -160,7 +161,7 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
   }
   if(tool!=="nx"&&tool!=="bazel")throw Error(`Unknown build tool: ${tool}`);
   readWorkerSwitchV1(workers);
-  return {tool,args:selected,...(graph.explicit?{graphPolicy:graph.policy}:{}),...(workers?{workers:workers as "on"|"off"}:{})};
+  return {tool,args:buildOperationArgumentsV1(selected),...(graph.explicit?{graphPolicy:graph.policy}:{}),...(workers?{workers:workers as "on"|"off"}:{})};
 }
 
 /** 🔌️ Translates portable CLI and environment options only at the Nx implementation boundary; `--graph` is the portable alias of `--dry-run` and always names stdout or a file. */

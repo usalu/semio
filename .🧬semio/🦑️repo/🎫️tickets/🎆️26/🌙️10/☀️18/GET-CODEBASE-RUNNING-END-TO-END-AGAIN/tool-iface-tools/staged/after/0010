@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -5,150 +7,142 @@ import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
-type ProbeReport = {
-  schema: "semio.repository-test.probe-report/v2";
-  probe: string;
-  probeVersion: string;
-  engine: { family: string; implementation: string; version: string };
-  status: "ok" | "failed" | "unsupported";
-  durationMs: number;
-  measurements: Record<string, unknown>;
-  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
-};
+const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
+const ORACLE_ID = "quick-xml-svg-1-1-mutate-reader";
+const ENGINE_FAMILY = "quick-xml";
+const ENGINE_VERSION = "0.42.0";
 
-const ENGINE = { family: "quick-xml", implementation: "quick-xml-svg-codec (quick-xml 0.42 + a generic element/text/cdata/comment/pi tree — no SVG semantics)", version: "quick-xml@0.42.0" } as const;
-const PROBE_VERSION = "quick-xml@0.42.0";
-const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
+type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
+
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one
+ *  `-applied` entry per declared `SvgMutation` kind. Every one of the 9 kinds is registered
+ *  `outcomes: ["applied"]` only in `../🔮️oracles/🔣️.json`: every `SvgMutation` leaf's own `diff()`
+ *  under `../🧬️schema/🧬️mutations/` unconditionally returns `MutationOutcome::new(..)`,
+ *  never `empty`/`error`/`fatal` — so there is no `-rejected-*` recipe to build here. */
+const RECIPES: readonly Recipe[] = [
+  { id: "set-declaration-applied", mutation: "set-declaration", notes: "The XML declaration gains a standalone=\"no\"; doctype/root untouched." },
+  { id: "set-doctype-applied", mutation: "set-doctype", notes: "The DOCTYPE is replaced with a simplified SYSTEM form; declaration/root untouched." },
+  { id: "insert-element-applied", mutation: "insert-element", notes: "A new <circle> is appended as the 3rd child of <g>." },
+  { id: "remove-element-applied", mutation: "remove-element", notes: "The <text> child of <g> (index 1) is removed entirely." },
+  { id: "set-element-name-applied", mutation: "set-element-name", notes: "<rect> is renamed to <ellipse> in place; attributes/children untouched." },
+  { id: "set-attribute-applied", mutation: "set-attribute", notes: "A new fill=\"red\" attribute is appended to <rect>." },
+  { id: "set-text-applied", mutation: "set-text", notes: "The text node inside <text> changes from \"Hello\" to \"World\"." },
+  { id: "set-view-box-applied", mutation: "set-view-box", notes: "Root <svg>'s own viewBox changes from \"0 0 100 100\" to \"0 0 200 200\" (raw string, not decomposed — see this subset's own reader-oracle rationale)." },
+  { id: "set-transform-applied", mutation: "set-transform", notes: "<g>'s own transform changes from \"translate(10,20)\" to \"translate(30,40) scale(2)\" (raw string, not decomposed)." },
+];
+const FIXTURE_DIRECTORY_NAMES: Readonly<Record<string, string>> = {
+  "insert-element-applied": "➕️insert-element-applied",
+  "remove-element-applied": "➖️remove-element-applied",
+  "set-attribute-applied": "🏷️set-attribute-applied",
+  "set-declaration-applied": "📣️set-declaration-applied",
+  "set-doctype-applied": "📜️set-doctype-applied",
+  "set-element-name-applied": "🔤️set-element-name-applied",
+  "set-text-applied": "✍️set-text-applied",
+  "set-transform-applied": "🔄️set-transform-applied",
+  "set-view-box-applied": "🖼️set-view-box-applied",
+};
+const BEFORE_FILE = "⬅️before.svg";
+const AFTER_FILE = "➡️after.svg";
 //#endregion 🧬️Contract
 
-//#region 📥️Model
-type RawNode =
-  | { kind: "text"; text: string }
-  | { kind: "cdata"; text: string }
-  | { kind: "comment"; text: string }
-  | { kind: "pi"; target: string; data: string }
-  | { kind: "element"; name: string; attrs: { name: string; value: string }[]; children: RawNode[] };
+//#region 🏭️Generate
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 
-/** 🌳 What `quick-xml-svg-codec project` emits verbatim — attributes still in SOURCE order. */
-type RawDoc = { declaration: { present: boolean; version?: string; encoding?: string | null; standalone?: boolean | null }; doctype: { present: boolean; raw?: string }; root: RawNode | null };
-
-/** ⚖️ The comparisonProfile's own projection: each element's attributes become a NAME-SORTED
- *  array of `[name, value]` pairs (never a raw source-order list) — `viewBox`/`transform`
- *  included as plain strings, never decomposed. */
-type ProjectedNode =
-  | { kind: "text"; text: string }
-  | { kind: "cdata"; text: string }
-  | { kind: "comment"; text: string }
-  | { kind: "pi"; target: string; data: string }
-  | { kind: "element"; name: string; attrs: [string, string][]; children: ProjectedNode[] };
-type SvgDoc = { declaration: RawDoc["declaration"]; doctype: RawDoc["doctype"]; root: ProjectedNode | null };
-//#endregion 📥️Model
-
-//#region 🔓️Read
-function projectNode(node: RawNode): ProjectedNode {
-  if (node.kind !== "element") return node;
-  const attrs: [string, string][] = node.attrs.map((a): [string, string] => [a.name, a.value]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-  return { kind: "element", name: node.name, attrs, children: node.children.map(projectNode) };
+function contentDigest(bytes: Buffer): string {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
 
-/** 📥️ Runs the standalone codec's `project` subcommand and turns its raw, source-order
- *  attributes into the profile's own name-sorted projection. */
-function readSvg(path: string): SvgDoc {
-  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  if (result.status !== 0) throw new Error(`quick-xml-svg-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
-  const raw = JSON.parse(result.stdout) as RawDoc;
-  return { declaration: raw.declaration, doctype: raw.doctype, root: raw.root === null ? null : projectNode(raw.root) };
+function platformId(): string {
+  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  return `${os}-${arch}`;
 }
-//#endregion 🔓️Read
 
-//#region ⚖️Compare
-/** ⚖️ Structural equality — element/text/cdata/comment/pi tree shape and content exact, children
- *  order-significant (document order is this format's own semantic identity for a node, same as
- *  this subset's own `semantic-svg-1-1-v1` profile), attributes already name-sorted by
- *  `projectNode` above so this is a plain recursive equality, not a second sort. */
-function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
-  if (Array.isArray(expected) && Array.isArray(actual)) {
-    const len = Math.max(expected.length, actual.length);
-    for (let i = 0; i < len; i += 1) diffAt(`${path}[${i}]`, expected[i], actual[i], diffs);
-    return;
+/** 🦀️ Shells out to the standalone `quick-xml-svg-codec` binary — the ONLY place this file
+ *  touches it. */
+function codecBuild(id: string, outDir: string, directory: string): void {
+  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir, directory, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
+  if (result.status !== 0) {
+    throw new Error(`quick-xml-svg-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
-  if (typeof expected === "object" && expected !== null && typeof actual === "object" && actual !== null && !Array.isArray(expected)) {
-    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
-    for (const key of keys) diffAt(`${path}.${key}`, (expected as Record<string, unknown>)[key], (actual as Record<string, unknown>)[key], diffs);
-    return;
+}
+
+function fileEntry(role: string, dir: string, filename: string, directory: string): { role: string; path: string; mediaType: string; sha256: string; bytes: number } {
+  const abs = join(dir, filename);
+  const bytes = readFileSync(abs);
+  return { role, path: `${FIXTURE_PATH_PREFIX}${directory}/${filename}`, mediaType: "image/svg+xml", sha256: contentDigest(bytes), bytes: bytes.length };
+}
+
+function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
+  const directory = FIXTURE_DIRECTORY_NAMES[recipe.id]!;
+  const dir = join(outDir, directory);
+  codecBuild(recipe.id, outDir, directory);
+  if (!existsSync(join(dir, BEFORE_FILE)) || !existsSync(join(dir, AFTER_FILE))) {
+    throw new Error(`recipe ${recipe.id} did not produce both ${BEFORE_FILE} and ${AFTER_FILE}`);
   }
-  if (JSON.stringify(expected) !== JSON.stringify(actual)) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
-}
+  const files = [fileEntry("expected-before-svg", dir, BEFORE_FILE, directory), fileEntry("expected-after-svg", dir, AFTER_FILE, directory)];
 
-function compareDocs(expected: SvgDoc, actual: SvgDoc): { equal: boolean; diffCount: number; diffs: string[] } {
-  const diffs: string[] = [];
-  diffAt("$", expected, actual, diffs);
-  return { equal: diffs.length === 0, diffCount: diffs.length, diffs: diffs.slice(0, 50) };
-}
-//#endregion ⚖️Compare
-
-//#region 🔬️Probes
-function requireInputs(inputs: readonly string[], count: number, probe: string): void {
-  if (inputs.length < count) throw new Error(`${probe} requires ${count} --input path(s), got ${inputs.length}`);
-}
-
-type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] };
-
-const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
-  "svg-import": async (inputs) => {
-    requireInputs(inputs, 1, "svg-import");
-    const perInput = inputs.map((input) => {
-      try {
-        readSvg(input);
-        return { path: input, ok: true, error: undefined as string | undefined };
-      } catch (error) {
-        return { path: input, ok: false, error: String((error as Error).message ?? error) };
-      }
-    });
-    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
-  },
-  "svg-project": async (inputs) => {
-    requireInputs(inputs, 1, "svg-project");
-    const doc = readSvg(inputs[0]!);
-    const countNodes = (node: ProjectedNode | null): number => (node === null ? 0 : node.kind === "element" ? 1 + node.children.reduce((total, child) => total + countNodes(child), 0) : 1);
-    return { status: "ok", measurements: { declarationPresent: doc.declaration.present, doctypePresent: doc.doctype.present, nodeCount: countNodes(doc.root), projection: doc } };
-  },
-  "svg-compare": async (inputs) => {
-    requireInputs(inputs, 2, "svg-compare");
-    const expected = readSvg(inputs[0]!);
-    const actual = readSvg(inputs[1]!);
-    const verdict = compareDocs(expected, actual);
-    return { status: "ok", measurements: { ...verdict, expected, actual } };
-  },
-};
-//#endregion 🔬️Probes
-
-//#region 🚀️Entry
-function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] } {
-  const [probe = "", ...rest] = argv;
-  const inputs: string[] = [];
-  for (let i = 0; i < rest.length; i += 1) if (rest[i] === "--input") inputs.push(rest[i + 1] ?? "");
-  return { probe, inputs };
+  return {
+    id: recipe.id,
+    class: "third-party-generated",
+    target: { artifact: "s.stdio.svg", standard: "1.1", subset: "base" },
+    mutation: recipe.mutation,
+    outcome: "applied",
+    units: { length: "unitless", angle: "degree" },
+    files,
+    generator: {
+      oracle: ORACLE_ID,
+      packageVersion: ENGINE_VERSION,
+      engineFamily: ENGINE_FAMILY,
+      engineVersion: ENGINE_VERSION,
+      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      platform: platformId(),
+    },
+    provenance: { source: "generated", license: "MIT OR Apache-2.0 (quick-xml)", attribution: "Generated with quick-xml (MIT OR Apache-2.0) via the standalone quick-xml-svg-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
+    comparisonProfile: "svg-1-1-quick-xml-reader-v1",
+    reproducible: true,
+    family: "structural",
+    notes: recipe.notes,
+  };
 }
 
 async function main(argv: readonly string[]): Promise<number> {
-  const { probe, inputs } = parseArgv(argv);
-  const started = Date.now();
-  const emit = (report: ProbeReport): number => {
-    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-    return report.status === "failed" ? 1 : 0;
+  const [command = "generate", ...rest] = argv;
+  const value = (flag: string): string | null => {
+    const index = rest.indexOf(flag);
+    return index === -1 ? null : (rest[index + 1] ?? null);
   };
-  const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);
-  const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
-  const run = PROBES[probe];
-  if (!run) return emit({ schema: "semio.repository-test.probe-report/v2", probe: probe || "(none)", probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${probe}`, detail: `known: ${Object.keys(PROBES).join(", ")}` }] });
-  try {
-    const result = await Promise.race([run(inputs), watchdog]);
-    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: result.status, durationMs: Date.now() - started, measurements: result.measurements, ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}) });
-  } catch (error) {
-    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: String((error as Error).message ?? error) }] });
+  const only = value("--only");
+  const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
+  if (recipes.length === 0) {
+    console.error(`[svg generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
+    return 1;
   }
+  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
+  mkdirSync(outDir, { recursive: true });
+
+  if (command !== "generate" && command !== "manifests") {
+    console.error(`[svg generator] unknown command ${JSON.stringify(command)} — expected generate | manifests`);
+    return 1;
+  }
+
+  const manifests: Record<string, unknown>[] = [];
+  let failed = 0;
+  for (const recipe of recipes) {
+    try {
+      manifests.push(generateOne(recipe, outDir));
+      console.error(`[svg generator] ${recipe.id} (${recipe.mutation}/applied)`);
+    } catch (error) {
+      failed += 1;
+      console.error(`[svg generator] ${recipe.id} FAILED — ${(error as Error).message}`);
+    }
+  }
+
+  if (command === "manifests") {
+    process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
+  }
+  console.error(`[svg generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
+  return failed > 0 ? 1 : 0;
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {

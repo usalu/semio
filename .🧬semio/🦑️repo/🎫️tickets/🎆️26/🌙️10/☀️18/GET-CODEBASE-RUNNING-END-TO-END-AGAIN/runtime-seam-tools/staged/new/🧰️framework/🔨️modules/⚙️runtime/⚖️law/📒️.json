@@ -2,6 +2,14 @@
  "version": 1,
  "rows": [
   {
+   "path": "🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🗄️bun-sqlite-statement/🟦️.d.ts",
+   "rule": "specifier",
+   "count": 2,
+   "class": "ambient-types",
+   "owner": "runtime-seam",
+   "reason": "type-only module augmentation of the bun sqlite statement; goes with the sqlite caller types"
+  },
+  {
    "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️host/🟦️.ts",
    "rule": "specifier",
    "count": 1,

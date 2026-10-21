@@ -11,7 +11,10 @@
       1,
       2
     ],
-    "capturedIssuerRetiresPayload": true
+    "capturedIssuerRetiresPayload": true,
+    "stepsPerPayloadByte": 256,
+    "fixedSteps": 1024,
+    "owningProjection": true
   },
   "cases": [
     {
@@ -92,6 +95,24 @@
       "expected": {
         "text": "same"
       }
+    }
+  ],
+  "workCases": [
+    {
+      "payloadBytes": 0,
+      "expectedSteps": 1280
+    },
+    {
+      "payloadBytes": 1,
+      "expectedSteps": 1536
+    },
+    {
+      "payloadBytes": 4096,
+      "expectedSteps": 1049856
+    },
+    {
+      "payloadBytes": 212992,
+      "expectedSteps": 54527232
     }
   ]
 }

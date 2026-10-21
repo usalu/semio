@@ -5,7 +5,8 @@
   "additionalProperties": false,
   "required": [
     "policy",
-    "cases"
+    "cases",
+    "workCases"
   ],
   "properties": {
     "policy": {
@@ -19,7 +20,10 @@
         "foreignKeyRefused",
         "returnBeforeMutation",
         "readBirthPrefixes",
-        "capturedIssuerRetiresPayload"
+        "capturedIssuerRetiresPayload",
+        "stepsPerPayloadByte",
+        "fixedSteps",
+        "owningProjection"
       ],
       "properties": {
         "maximumItems": {
@@ -48,6 +52,15 @@
           ]
         },
         "capturedIssuerRetiresPayload": {
+          "const": true
+        },
+        "stepsPerPayloadByte": {
+          "const": 256
+        },
+        "fixedSteps": {
+          "const": 1024
+        },
+        "owningProjection": {
           "const": true
         }
       }
@@ -80,6 +93,29 @@
           },
           "expected": {
             "type": "object"
+          }
+        }
+      }
+    },
+    "workCases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "payloadBytes",
+          "expectedSteps"
+        ],
+        "properties": {
+          "payloadBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "expectedSteps": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

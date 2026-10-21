@@ -1,177 +1,106 @@
 
-import { existsSync, readFileSync } from "node:fs";
-import { join, posix } from "node:path";
-import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
-import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
-import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
-import { execToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+import { createHash } from "node:crypto";
+import { lstatSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitLeafV1, type CargoArtifactObservationV1, type CargoInputObservationV1, type CargoProvenanceRootsV1, type CargoResourceWitnessV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+export type { CargoProvenanceRootsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, componentToolchainV1, encodeComponentReceiptV1, parseComponentReceiptV1 } from "./🧬️schema/🟦️.ts";
+import { type ComponentProfileV1, type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
+import { spawnToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+export {
+  COMPONENT_PROFILE_POLICIES,
+  COMPONENT_RECEIPT_FILE,
+  COMPONENT_RECEIPT_MAX_BYTES,
+  COMPONENT_RECEIPT_SCHEMA_ID,
+  COMPONENT_TARGET,
+  ITERATE_COMPONENT_MAX_BYTES,
+  ITERATE_COMPONENT_PROFILE,
+  SHIPPED_COMPONENT_MAX_BYTES,
+  SHIPPED_COMPONENT_PROFILE,
+  componentProfileV1,
+  componentReceiptBindsV1,
+  componentReceiptValueV1,
+  componentToolchainV1,
+  encodeComponentReceiptV1,
+  parseComponentReceiptV1,
+} from "./🧬️schema/🟦️.ts";
+export type { ComponentProfilePolicyV1, ComponentReceiptBindingV1 } from "./🧬️schema/🟦️.ts";
+export type { ComponentProfileV1, ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 
-const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
+/** 📂️ Where one profile's deliverable of one component crate lives: the component bytes and the receipt naming them. */
+export type ComponentDeliverableV1 = Readonly<{ profile: ComponentProfileV1; directory: string; wasm: string; receipt: string }>;
 
-/** 🔒️ The closed set of cache-correctness rules; every finding names exactly one. */
-export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] as const;
-export type CacheRuleV1 = (typeof CACHE_RULES_V1)[number];
-
-/** 🎯️ The resolved target facts a rule reads: the shape the inference gives a target after its cache policy. */
-export interface CacheTargetV1 {
-  cache?: boolean;
-  executor?: string;
-  inputs?: unknown[];
-  outputs?: string[];
-  options?: { command?: string; commands?: unknown[]; env?: Record<string, string> };
-  configurations?: Record<string, { env?: Record<string, string>; command?: string }>;
-  metadata?: { semio?: Record<string, any> };
+/** 📍️ The deliverable of `packageName` (a Cargo package name) under its crate root for one profile. */
+export function componentDeliverableV1(crateRoot: string, packageName: string, profile: ComponentProfileV1): ComponentDeliverableV1 {
+  const directory = join(crateRoot, COMPONENT_PROFILE_POLICIES[profile].directory);
+  return Object.freeze({ profile, directory, wasm: join(directory, `${packageName.replaceAll("-", "_")}.wasm`), receipt: join(directory, COMPONENT_RECEIPT_FILE) });
 }
 
-/** 🧾️ One resolved target together with the names its inputs may reference. */
-export interface CacheRecordV1 { id: string; root: string; authoredCache: boolean | null; target: CacheTargetV1; namedInputs: Record<string, unknown[]> }
-
-/** 🚩️ One violated rule on one target (or, for overlaps, on one pair). */
-export interface CacheFindingV1 { id: string; rule: CacheRuleV1; detail: string }
-
-const MANIFEST = "📋️project.json";
-const MUTATING = /(?:--fix(?![\w-])|--write(?![\w-])|\bpublish\b|\bdeploy\b|\bgit\s+(?:commit|push|add|checkout|stash|reset)\b)/u;
-const MUTATING_EXEMPT = /(?:--check\b|--dry-run\b|\bverify\b)/u;
-const NETWORK = /\b(?:curl|wget|git clone|git fetch|npm install|bun install|bun add|bunx|npx|cargo fetch|cargo install|pip install|uv sync|uv pip|apt-get|brew install|go get|go mod download)(?![-\w])/u;
-
-/** 🧷️ Matches a workspace-relative path against one input glob (`*`, `**`, `?`, `{a,b}`); the independent `minimatch` oracle checks it. */
-export function globMatchesV1(pattern: string, path: string): boolean {
-  const source = pattern.replace(/[.+^$()|\\[\]]/gu, "\\$&").replace(/\{([^{}]*)\}/gu, (_, alternatives: string) => `(?:${alternatives.split(",").join("|")})`).replace(/\*\*\/|\*\*|\*|\?/gu, (token) => token === "**/" ? "(?:.*/)?" : token === "**" ? ".*" : token === "*" ? "[^/]*" : "[^/]");
-  return new RegExp(`^${source}$`, "u").test(path);
+/** 📖️ Reads one receipt file, refusing a symlink or a non-file. */
+export function readComponentReceiptV1(path: string): ComponentReceiptV1 {
+  const info = lstatSync(path);
+  if (info.isSymbolicLink() || !info.isFile() || info.size > 4096) throw new Error(`component receipt ${path} must be a regular file of at most 4096 bytes`);
+  return parseComponentReceiptV1(readFileSync(path, "utf8"));
 }
 
-const ALWAYS_HASHED_ENV = new Set(["SEMIO_BUILD_MODE"]);
-const WORD = /^[A-Za-z][A-Za-z0-9_-]*$/u;
-const expandInputs = (inputs: readonly unknown[], names: Record<string, unknown[]>, seen: ReadonlySet<string> = new Set()): unknown[] => inputs.flatMap((input) => {
-  if (typeof input !== "string") return [input];
-  const word = input.startsWith("^") ? input.slice(1) : input;
-  if (!WORD.test(word)) return [input];
-  if (input.startsWith("^") || seen.has(word) || !Object.hasOwn(names, word)) return [];
-  return expandInputs(names[word]!, names, new Set([...seen, word]));
-});
+/** 💾️ Writes one receipt atomically beside the bytes it names. */
+export function writeComponentReceiptV1(path: string, receipt: ComponentReceiptV1): void {
+  const text = encodeComponentReceiptV1(receipt);
+  parseComponentReceiptV1(text);
+  const temporary = `${path}.${process.pid}.tmp`;
+  try {
+    writeFileSync(temporary, text, { flag: "wx" });
+    renameSync(temporary, path);
+  } finally {
+    rmSync(temporary, { force: true });
+  }
+}
 
-const projectPath = (pattern: string, root: string): string => pattern.replace(/^\{workspaceRoot\}\//u, "").replaceAll("{projectRoot}/", root === "." ? "" : `${root}/`).replaceAll("{projectRoot}", root);
-const coversManifest = (leaves: readonly unknown[], root: string): boolean => {
-  const path = root === "." ? MANIFEST : `${root}/${MANIFEST}`, patterns = leaves.filter((leaf): leaf is string => typeof leaf === "string");
-  return patterns.some((pattern) => !pattern.startsWith("!") && globMatchesV1(projectPath(pattern, root), path)) && !patterns.some((pattern) => pattern.startsWith("!") && globMatchesV1(projectPath(pattern.slice(1), root), path));
-};
+/** 🦀️ Projects `rustc -vV` onto the receipt's toolchain identity (`rustc <release> (<commit-hash>)`). */
+export function rustToolchainIdentityFromVersionV1(verbose: string): string {
+  const release = /^release: (\S+)$/mu.exec(verbose)?.[1], commit = /^commit-hash: ([0-9a-f]{40})$/mu.exec(verbose)?.[1];
+  const identity = `rustc ${release} (${commit})`;
+  if (!release || !commit || !componentToolchainV1(identity)) throw new Error("rustc -vV names no release and commit hash");
+  return identity;
+}
 
-const commandOf = (target: CacheTargetV1): string => target.options?.command ?? (Array.isArray(target.options?.commands) ? target.options.commands.map((operation) => typeof operation === "string" ? operation : (operation as { command?: string })?.command ?? "").join(" && ") : "");
-const outputPath = (output: string, root: string): string | undefined => {
-  const tokens = output.replaceAll(/\{options\.env\.(\w+)\}/gu, "<$1>");
-  if (tokens.includes("{options.")) return undefined;
-  return tokens.startsWith("/") ? tokens : posix.normalize(projectPath(tokens, root) || ".");
-};
+const toolchains = new Map<string, string>();
 
-/** 🔎️ Runs every per-target rule (the inference appends `{ env: SEMIO_BUILD_MODE }` to every replayed target, so the build mode is always hashed) on one resolved target; a target that never replays only answers for its classification and its authored cache. */
-export function cacheCorrectnessFindingsV1(record: CacheRecordV1): CacheFindingV1[] {
-  const { id, root, target } = record, findings: CacheFindingV1[] = [], found = (rule: CacheRuleV1, detail: string) => findings.push({ id, rule, detail });
-  const decision = target.metadata?.semio?.cache, semio = target.metadata?.semio ?? {};
-  if (decision?.class === "unclassified") found("unclassified-target", "no policy row, declaration or verifying command classifies this target");
-  if (target.cache === false && decision === undefined) found("uncached-without-reason", "cache false records no decision: declare metadata.semio.cache with the class and reason that forbid replay");
-  if (record.authoredCache === true && target.cache === false && decision?.class !== "continuous") found("authored-cache-overridden", `authored cache true, resolved ${decision ? `${decision.class}/${decision.reason}` : "uncached"}`);
-  if (target.cache !== true) return findings;
-  const leaves = expandInputs(target.inputs ?? ["default", "^default"], record.namedInputs);
-  if (leaves.some((leaf) => typeof leaf === "string" && !leaf.startsWith("!") && globSelectsRepositoryV1(projectPath(leaf, root))) && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-repository-input", "declares the whole repository as input and no input precision rule bounds it: add a rule to the input precision document that names what the task reads (traced, static or bound), or record why every file is read (whole, assumed)");
-  const wholeKeys = workspaceKeyViolationsV1(RESOLUTION, leaves, commandOf(target), id);
-  if (wholeKeys.length && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-workspace-rust-key", cargoResolutionTextV1(RESOLUTION, "workspaceKey", cargoResolutionLanguageV1(RESOLUTION, process.env), { subject: id, keys: wholeKeys.join(", ") }));
-  if (Array.isArray(target.inputs) && target.inputs.length === 0 && target.executor !== "repo:noop") found("empty-inputs", "inputs [] hashes nothing but the results of dependencies");
-  const declaredOutputs = Array.isArray(target.outputs) && target.outputs.length > 0;
-  if (decision?.class === "deterministic" && decision.reason === "pure-function-of-inputs" && !declaredOutputs && semio.rustBuildIntent === undefined && semio.rustUnitAggregate === undefined && semio.hostPlatformOutputsV1 === undefined && target.executor !== "repo:noop") found("producer-without-outputs", "a replayed producer declares no output, so a hit restores nothing");
-  const environment = new Set([...Object.keys(target.options?.env ?? {}), ...Object.values(target.configurations ?? {}).flatMap((configuration) => Object.keys(configuration.env ?? {}))]), hashed = new Set(leaves.flatMap((leaf) => typeof leaf === "object" && leaf !== null && typeof (leaf as { env?: unknown }).env === "string" ? [(leaf as { env: string }).env] : []));
-  if (environment.size && !coversManifest(leaves, root)) for (const key of [...environment].sort()) if (!hashed.has(key) && !ALWAYS_HASHED_ENV.has(key)) found("env-unhashed", `options.env.${key} is neither an {env} input nor covered by hashing the declaring manifest`);
-  for (const input of target.inputs ?? []) if (typeof input === "string") { const word = input.startsWith("^") ? input.slice(1) : input; if (WORD.test(word) && !Object.hasOwn(record.namedInputs, word)) found("named-input-undeclared", `input ${input} names no declared named input`); }
-  for (const output of target.outputs ?? []) { const path = outputPath(output, root); if (path !== undefined && (path.startsWith("/") || path === ".." || path.startsWith("../"))) found("output-escapes", `${output} resolves outside the workspace (${path})`); }
-  const command = commandOf(target);
-  if (MUTATING.test(command) && !MUTATING_EXEMPT.test(command)) found("command-mutating", command.slice(0, 160));
-  if (NETWORK.test(command)) found("command-network", command.slice(0, 160));
+/** 🔧️ The toolchain the repository's pinned `rust-toolchain.toml` resolves to, asked once per process. */
+export function rustToolchainIdentityV1(repoRoot: string): string {
+  const known = toolchains.get(repoRoot);
+  if (known) return known;
+  const result = spawnToolSyncV1("rustc", ["-vV"], { cwd: repoRoot, encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`rustc -vV failed: ${result.stderr}`);
+  const identity = rustToolchainIdentityFromVersionV1(result.stdout);
+  toolchains.set(repoRoot, identity);
+  return identity;
+}
+
+/** 🧬️ The observed units and build-script runs a component's provenance is derived from: exactly the units of its build (a narrow build's whole receipt, or the
+ * unit-graph closure of the component inside a release pass). */
+export type ComponentProvenanceObservationV1 = Readonly<{ units: readonly Readonly<{ inputs: readonly CargoInputObservationV1[]; artifacts: readonly CargoArtifactObservationV1[] }>[]; buildResources: readonly Readonly<{ path: string; sha256: string; resources: readonly CargoResourceWitnessV1[] }>[] }>;
+
+/** #️⃣ Derives a receipt's `sourceTreeDigest` and `provenanceSha256` from the units of one component's build: the first is every in-repository file input
+ * outside the build directory as sorted `[repo-relative path, sha256]` rows; the second is the RFC 6962 Merkle root over one leaf per unit (its path-normalized
+ * input and artifact rows) and one per build-script run (its capture and resource rows) — both free of time and of the machine's absolute layout, so equal
+ * sources and outputs give equal digests in every implementation, and a release driver that observed each unit once derives every component's root from
+ * the same leaves. */
+export function componentProvenanceDigestsV1(observed: ComponentProvenanceObservationV1, roots: CargoProvenanceRootsV1): Readonly<{ sourceTreeDigest: string; provenanceSha256: string }> {
+  const sources = new Map<string, string>();
+  for (const unit of observed.units) for (const input of unit.inputs) { const path = input.kind === "file" && input.sha256 !== null ? cargoProvenanceSourceV1(input.path, roots) : null; if (path) sources.set(path, input.sha256!); }
+  if (sources.size === 0) throw new Error("cargo provenance names no in-repository source");
+  return Object.freeze({ sourceTreeDigest: cargoProvenanceRowsDigestV1([...sources]), provenanceSha256: cargoProvenanceMerkleRootV1([...observed.units.map((unit) => cargoUnitLeafV1(unit, roots)), ...observed.buildResources.map((run) => cargoBuildRunLeafV1(run, roots))]) });
+}
+
+/** 🔎️ Every way one receipt disagrees with the bytes it is read beside: identity, profile, component bytes and the committed
+ * semantic descriptor pack. An empty list is a receipt that names exactly these bytes. */
+export function componentReceiptFindingsV1(receipt: ComponentReceiptV1, expected: Readonly<{ pluginId: string; packageId: string; profile: ComponentProfileV1 }>, wasm: Uint8Array, semanticPack: Uint8Array): readonly string[] {
+  const findings: string[] = [];
+  if (receipt.pluginId !== expected.pluginId || receipt.packageId !== expected.packageId) findings.push(`receipt names ${receipt.pluginId} (${receipt.packageId}), not ${expected.pluginId} (${expected.packageId})`);
+  if (receipt.profile !== expected.profile) findings.push(`receipt is a ${receipt.profile} receipt, not ${expected.profile}`);
+  if (receipt.wasmBytes !== wasm.byteLength || createHash("sha256").update(wasm).digest("hex") !== receipt.wasmSha256) findings.push("component bytes are not the bytes the receipt names");
+  if (createHash("sha256").update(semanticPack).digest("hex") !== receipt.semanticDescriptorSha256) findings.push("committed semantic descriptor is not the descriptor the receipt names");
   return findings;
-}
-
-const segments = (path: string) => path.replace(/\/(?:\*\*(?:\/\*)?)?$/u, "").split("/").filter(Boolean);
-const nests = (left: string[], right: string[]) => left.length <= right.length ? left.every((part, index) => part === right[index]) : right.every((part, index) => part === left[index]);
-
-/** 🧱️ Two replayed targets that declare the same output tree (or one inside the other) overwrite each other's restore. */
-export function cacheOutputOverlapFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
-  const owners: { id: string; path: string; parts: string[] }[] = [], findings: CacheFindingV1[] = [];
-  for (const record of records) if (record.target.cache === true) for (const output of new Set(record.target.outputs ?? [])) { const path = outputPath(output, record.root); if (path !== undefined && !path.startsWith("/") && !path.startsWith("..")) owners.push({ id: record.id, path, parts: segments(path) }); }
-  const byHead = new Map<string, typeof owners>();
-  for (const owner of owners) { const head = owner.parts[0] ?? ""; (byHead.get(head) ?? byHead.set(head, []).get(head)!).push(owner); }
-  for (const group of byHead.values()) for (let left = 0; left < group.length; left++) for (let right = left + 1; right < group.length; right++) {
-    const a = group[left]!, b = group[right]!;
-    if (a.id !== b.id && a.parts.length && b.parts.length && nests(a.parts, b.parts)) findings.push({ id: a.id, rule: "output-overlap", detail: `${a.path} overlaps ${b.id}: ${b.path}` });
-  }
-  return findings;
-}
-
-/** 🪜️ The exempt targets that no longer declare a whole-workspace Rust key (or no longer exist): the exemption list is a ratchet, so an owner who derives a narrower key must delete the entry. */
-export function staleRustKeyExemptionsV1(records: readonly CacheRecordV1[]): string[] {
-  const open = { ...RESOLUTION, workspaceKeys: { ...RESOLUTION.workspaceKeys, exemptTargets: [] } }, byId = new Map(records.map((record) => [record.id, record]));
-  return RESOLUTION.workspaceKeys.exemptTargets.flatMap((row) => row.targets).filter((id) => {
-    const record = byId.get(id);
-    return !record || record.target.cache !== true || workspaceKeyViolationsV1(open, expandInputs(record.target.inputs ?? ["default", "^default"], record.namedInputs), commandOf(record.target)).length === 0;
-  }).sort();
-}
-
-/** 🧮️ Every finding of every rule over a set of resolved targets. */
-export function cacheCorrectnessRepositoryFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
-  return [...records.flatMap(cacheCorrectnessFindingsV1), ...cacheOutputOverlapFindingsV1(records)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : a.detail < b.detail ? -1 : 1);
-}
-
-type PolicyV1 = { targetDefaults?: Record<string, Record<string, unknown>> };
-export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any, policy?: any): any }
-
-/** 📚️ Resolves every authored target of the tracked manifests through the production cache policy (targetDefaults, generator-contract outputs, classification) into the records the rules read. Inference-only projects have no manifest target and are covered by the production outputs gate. */
-const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
-const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
-
-/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
-function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
-  const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
-  if (!rule) return target;
-  const metadata = { ...target.metadata, semio: { ...target.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
-  if (BROAD_EVIDENCE.has(rule.evidence)) return { ...target, metadata };
-  return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
-}
-
-/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
-export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
-  const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
-  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;
-  const document = precision ?? (existsSync(join(repoRoot, library, PRECISION_FILE)) ? readInputPrecisionV1(read(`${library}/${PRECISION_FILE}`)) : undefined);
-  const injected = new Map<string, string[]>();
-  for (const contract of Object.values(contracts)) {
-    if (contract.ownership !== "owned") continue;
-    if (!injected.has(contract.target)) injected.set(contract.target, []);
-    for (const output of contract.outputRoots) { const target = output.producer?.target ?? contract.target; (injected.get(target) ?? injected.set(target, []).get(target)!).push(`{workspaceRoot}/${output.path}`); }
-  }
-  const manifests = (tracked ?? execToolSyncV1("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { cwd: repoRoot, maxBuffer: 1 << 28 }).toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
-  const records: CacheRecordV1[] = [];
-  for (const manifest of manifests.sort()) {
-    let json: any;
-    try { json = read(manifest); } catch { continue; }
-    const root = posix.dirname(manifest), names: Record<string, unknown[]> = { ...nx, ...json.namedInputs, ...Object.fromEntries(Object.keys(json.metadata?.sourceInputs ?? {}).map((key) => [key, []])) };
-    for (const [name, authored] of Object.entries<any>(json.targets ?? {})) {
-      const id = `${json.name ?? root}:${name}`, base = { ...(policy.targetDefaults?.[name] ?? {}), ...authored, ...(authored.cache === false && authored.inputs === undefined ? { inputs: ["default"] } : {}), options: { ...authored.options, ...(typeof authored.command === "string" && authored.options?.command === undefined ? { command: authored.command } : {}) } } as any;
-      const outputs = injected.get(id);
-      if (outputs?.length) base.outputs = outputs;
-      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: narrowedTargetV1(document, json.name ?? root, name, internals.targetPolicy(name, structuredClone(base))), namedInputs: names });
-    }
-  }
-  return records;
-}
-
-/** 🚨️ Turns the findings into policy breaches the verification lanes print. */
-export function policyCacheCorrectnessBreaches(findings: readonly CacheFindingV1[]): BreachRecord[] {
-  return findings.map((finding) => ({
-    id: `cache-correctness-${finding.rule}-${finding.id}`,
-    summary: `${finding.rule} ${finding.id}: ${finding.detail}`,
-    kind: "repo/cache-correctness",
-    scope: finding.id,
-    priority: "high",
-    autofixable: false,
-    reason: "A replayed task whose key omits an input, an environment value or an output restores a stale or empty result for every later build, and a shared remote cache would spread it to every machine.",
-    solution: "Declare the missing inputs or outputs on the target, classify it in `⚡️caching/🔣️policy.json` `targetClasses`, or set `cache: false` with the decision that names why it cannot replay.",
-  }));
 }

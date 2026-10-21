@@ -889,16 +889,6 @@
               "f3d"
             ],
             "continuous": true
-          },
-          {
-            "id": "gitkraken",
-            "verb": "run",
-            "command": [
-              "gitkraken",
-              "--path",
-              "{workspace}"
-            ],
-            "continuous": true
           }
         ],
         "compounds": [

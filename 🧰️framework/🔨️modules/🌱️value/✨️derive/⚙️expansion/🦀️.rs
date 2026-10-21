@@ -243,6 +243,7 @@ struct ContainerAttrs {
     default: bool,
     deny_unknown_fields: bool,
     transparent: bool,
+    send_only: bool,
     bound: Option<String>,
     crate_path: Option<String>,
     native_owned_path: Option<String>,
@@ -340,6 +341,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "default" => out.default = true,
             "deny_unknown_fields" => out.deny_unknown_fields = true,
             "transparent" => out.transparent = true,
+            "send_only" => out.send_only = true,
             "bound" => out.bound = value,
             "rename_all_fields" => out.rename_all_fields = value,
             "crate" => out.crate_path = value,
@@ -749,6 +751,8 @@ pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::Token
 
 /// 🧭️ Resolves the authored value namespace for an actual typed generator owner.
 pub fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}
+/// 🔐️ Reports whether the owner keeps exclusive Send-only custody and therefore issues no shared original retirement.
+pub fn declared_send_only(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.send_only)}
 /// 🟰️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
 pub fn declared_persistent_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_persistent_path(&parse_container_attrs(&input.attrs)?))}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;

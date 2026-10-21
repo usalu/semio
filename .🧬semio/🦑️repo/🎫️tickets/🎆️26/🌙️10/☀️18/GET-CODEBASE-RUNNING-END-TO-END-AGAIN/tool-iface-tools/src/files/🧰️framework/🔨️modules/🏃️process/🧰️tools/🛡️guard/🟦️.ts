@@ -1,15 +1,15 @@
-import { toolForCommandV1, toolLanguageV1, toolMessageV1, toolRawSpawnAllowedV1, TOOL_REGISTRY_V1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
+import { toolForCommandV1, toolGlobMatchesV1, toolLanguageV1, toolMessageV1, toolRawSpawnAllowedV1, TOOL_REGISTRY_V1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { ToolErrorV1, toolCallerFileV1 } from "../🏃️run/🟦️.ts";
 
 /** 🛡️ How the runtime guard answers a direct spawn of a registered tool: refuse it, warn once, or stay silent. */
 export type ToolGuardModeV1 = "refuse" | "warn" | "off";
-/** 🔌️ What the guard needs: the repository root, the mode, the spawns tolerated until they migrate (`<path>\0<tool>`) and where warnings go. */
-export type ToolGuardOptionsV1 = Readonly<{ root: string; mode?: ToolGuardModeV1; tolerated?: ReadonlySet<string>; write?: (line: string) => void; registry?: ToolRegistryV1; environment?: Readonly<Record<string, string | undefined>> }>;
+/** 🔌️ What the guard needs: the repository root, the mode and where warnings go. */
+export type ToolGuardOptionsV1 = Readonly<{ root: string; mode?: ToolGuardModeV1; write?: (line: string) => void; registry?: ToolRegistryV1; environment?: Readonly<Record<string, string | undefined>> }>;
 
-/** ⚖️ Decides one spawn: `allow` when the command is not registered, the caller is an adapter or tolerated, `refuse` or `warn` otherwise. */
-export function decideToolSpawnV1(command: string, caller: string | undefined, options: Pick<ToolGuardOptionsV1, "mode" | "tolerated" | "registry">): Readonly<{ action: "allow" | "warn" | "refuse"; tool: string | null }> {
+/** ⚖️ Decides one spawn: `allow` when the command is not registered or the caller is an adapter of the tool or test code, `refuse` or `warn` otherwise. */
+export function decideToolSpawnV1(command: string, caller: string | undefined, options: Pick<ToolGuardOptionsV1, "mode" | "registry">): Readonly<{ action: "allow" | "warn" | "refuse"; tool: string | null }> {
   const registry = options.registry ?? TOOL_REGISTRY_V1, entry = toolForCommandV1(command, registry), mode = options.mode ?? "refuse";
-  if (entry === undefined || caller === undefined || mode === "off" || toolRawSpawnAllowedV1(entry, caller) || options.tolerated?.has(`${caller}\0${entry.id}`)) return { action: "allow", tool: entry?.id ?? null };
+  if (entry === undefined || caller === undefined || mode === "off" || toolRawSpawnAllowedV1(entry, caller) || (registry.testCallers ?? []).some(pattern => toolGlobMatchesV1(pattern, caller))) return { action: "allow", tool: entry?.id ?? null };
   return { action: mode, tool: entry.id };
 }
 
@@ -27,7 +27,7 @@ export function installToolGuardV1(options: ToolGuardOptionsV1): () => void {
   const mode = options.mode ?? (environment.SEMIO_TOOL_GUARD as ToolGuardModeV1 | undefined) ?? "refuse", write = options.write ?? ((line: string) => { process.stderr.write(line + "\n"); }), warned = new Set<string>();
   const check = (command: string | undefined): void => {
     if (command === undefined) return;
-    const caller = toolCallerFileV1(options.root), decision = decideToolSpawnV1(command, caller, { mode, registry, ...options.tolerated === undefined ? {} : { tolerated: options.tolerated } });
+    const caller = toolCallerFileV1(options.root), decision = decideToolSpawnV1(command, caller, { mode, registry });
     if (decision.action === "allow") return;
     const values = { command, caller: caller!, tool: decision.tool! };
     if (decision.action === "refuse") throw new ToolErrorV1("caller-refused", decision.tool!, toolMessageV1("guardRefused", values, language, registry));

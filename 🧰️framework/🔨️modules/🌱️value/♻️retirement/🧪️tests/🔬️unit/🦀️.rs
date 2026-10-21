@@ -530,7 +530,9 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
         let mut cloned = false;
         for turn in 0..100000 {
             if turn == pause { break; }
-            let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
+            let demand=cursor.advance_demands(source.borrow(),budget).unwrap();
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(),budget,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.advance_demands(source.borrow(),budget).unwrap(),demand);}}
             let (step, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), budget, grant).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));
@@ -573,7 +575,8 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
             let mut retirement = result.unwrap_or_else(|_| panic!("completed clone native owner must retire directly"));
             let mut closed = false;
             for turn in 0..100000 {
-                let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
+                let demand=retirement.selected_demand(budget).unwrap();
+                let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(retirement.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);
                 let (step, allocation) = observe_retirement_allocations(|| retirement.step(grant).unwrap());
                 let progress = step.progress();
                 assert!(progress.fits(grant));

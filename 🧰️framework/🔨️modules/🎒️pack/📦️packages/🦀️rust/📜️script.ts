@@ -179,4 +179,14 @@ class OriginalRecordReceivingScript extends BundleScript{
  }
 }
 router.register("test-original-record-receiving",OriginalRecordReceivingScript);
+/** 🎟️ Checks immutable append extents against the closed corpus and independent SQL. */
+class CatalogReservationSourceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-catalog-reservation-source");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts")],this.repoRoot,"pack:catalog-reservation:source",scriptInvocationBudget(this.invocation,30_000),{signal:this.invocation.control.signal});}
+}
+router.register("test-catalog-reservation-source",CatalogReservationSourceScript);
+/** 🔣️ Checks inline symbols and caller wire ownership against the closed independent corpus. */
+class InlineSymbolSourceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-inline-symbol-source");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts")],this.repoRoot,"pack:inline-symbol:source",scriptInvocationBudget(this.invocation,30_000),{signal:this.invocation.control.signal});}
+}
+router.register("test-inline-symbol-source",InlineSymbolSourceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";
@@ -13,7 +14,7 @@ import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
 import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,resolveLaneIdV1} from "../🧵️lane/🟦️.ts";
 import {listObjectsV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
-import {focusFromCargoArgumentsV1,laneLanguageV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../🚪️launch/🟦️.ts";
+import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneLanguageV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
 
 /** 🏁️ Every Cargo child runs with the scratch workspace as its working directory, so no repository `.cargo/config.toml` can leak in. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../📜️script.ts"),worker=resolve(here,"📥️worker/🟦️.ts"),slow=resolve(here,"⏳️slow/🟦️.ts"),policy=UNIT_CACHE_POLICY_V1;
@@ -54,7 +55,7 @@ test("dependency files parse as the vectors say", () => {
 test("the first-level key equals an independent Python serialisation and moves with every input", () => {
  const input={toolchain:"rustc 1.99.0-nightly",normalized:["--crate-name","foo","--emit=link"],sourceSha256:"a".repeat(64),externs:[{name:"bar",sha256:"b".repeat(64)}],environment:[["CARGO_PKG_NAME","foo"]] as [string,string][]};
  const preimage=[policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment];
- const python=spawnSync("python3",["-I","-c","import hashlib,json,sys;v=json.load(sys.stdin);print(hashlib.sha256(json.dumps(v,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify(preimage),encoding:"utf8"});
+ const python=spawnSync(testPythonV1()??"python3",["-I","-c","import hashlib,json,sys;v=json.load(sys.stdin);print(hashlib.sha256(json.dumps(v,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify(preimage),encoding:"utf8"});
  expect(python.status).toBe(0);expect(unitKeyV1(input)).toBe(python.stdout.trim());
  const variants=[{...input,toolchain:"other"},{...input,normalized:[...input.normalized,"-O"]},{...input,sourceSha256:"c".repeat(64)},{...input,externs:[{name:"bar",sha256:"d".repeat(64)}]},{...input,environment:[["CARGO_PKG_NAME","baz"]] as [string,string][]}];
  for(const variant of variants)expect(unitKeyV1(variant)).not.toBe(unitKeyV1(input));
@@ -270,8 +271,11 @@ test("one Cargo process owns a lane at a time: concurrent commands of an agent o
 test("the launcher block selects the wrapper chain and the focus follows the package selection", () => {
  expect(focusFromCargoArgumentsV1(["check","-p","a","--package","b@1.0.0","--package=c","-pd","--","-p","zzz"])).toEqual(["a","b","c","d"]);
  expect(focusFromCargoArgumentsV1(["build","--workspace"])).toEqual([]);
- const block=unitCacheEnvironmentV1({cacheRoot:"/store/u",lane:"abc",laneRoot:"/store/u/l/abc",scheduler:"/t/scheduler",compiler:"rustc",toolchain:"tc",focus:["a","b"],slots:6,runtime:"/bin/bun"});
- expect(block.RUSTC_WRAPPER).toBe("/bin/bun");expect(block.RUSTC.endsWith("📜️script.ts")).toBe(true);
+ const cacheRoot=join(scratch(),"u"),block=unitCacheEnvironmentV1({cacheRoot,lane:"abc",laneRoot:join(cacheRoot,"l","abc"),scheduler:"/t/scheduler",compiler:"rustc",toolchain:"tc",focus:["a","b"],slots:6,runtime:"/bin/bun"});
+ expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
+ expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1("/bin/bun",script));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
+ expect(ensureUnitCacheShimV1(cacheRoot,"/bin/bun")).toBe(block.RUSTC_WRAPPER);
+ expect(unitCacheShimSourceV1("/o'p/bun","/s/it's.ts","linux")).toBe("#!/bin/sh\nexec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n");expect(unitCacheShimSourceV1("C:\\bun.exe","C:\\s.ts","win32")).toBe('@"C:\\bun.exe" "C:\\s.ts" %*\r\n');expect(unitCacheShimPathV1("/u","win32").endsWith("rustc-wrapper.cmd")).toBe(true);
  expect(JSON.parse(block.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc"]);expect(block.SEMIO_UNIT_CACHE_FOCUS).toBe("a,b");expect(block.SEMIO_UNIT_CACHE_SLOTS).toBe("6");
  expect(unitCacheRootV1("/store")).toBe("/store/u");
 });
@@ -390,3 +394,28 @@ test("cache hits are reported to the build broker with the measurements recorded
   expect(started.units().length,"replay off reports nothing").toBe(before);
  }finally{await started.close();}
 },240000);
+
+test("build scripts that exec $RUSTC work from a bare PATH and a non-executable tracked script, in a fresh lane and from the cache; the wrapper accepts Cargo's <rustc> argument",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");mkdirSync(join(workspace,"src"),{recursive:true});
+ writeFileSync(join(workspace,"Cargo.toml"),'[package]\nname = "probe"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n');
+ writeFileSync(join(workspace,"build.rs"),`use std::process::Command;
+fn main() {
+    let rustc = std::env::var("RUSTC").unwrap();
+    for arguments in [vec!["--version"], vec!["--print", "cfg"], vec!["-vV"]] {
+        let output = Command::new(&rustc).args(&arguments).output().expect("failed to check rustc");
+        assert!(output.status.success(), "{:?}", output);
+    }
+    println!("cargo:rerun-if-changed=build.rs");
+}
+`);
+ writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
+ const bare=`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,lanes:string[]=[];
+ expect(statSync(script).mode&0o111,"the tracked script itself is executable").not.toBe(0);
+ for(const lane of["x1","x2"]){
+  const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});lanes.push(lane);
+  const block=unitCacheEnvironmentV1({cacheRoot:cache,lane,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
+  const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:bare,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+  expect(run.code,run.output).toBe(0);
+ }
+ const second=events(cache,"x2");expect(count(second,"miss")+count(second,"failed")).toBe(0);expect(count(second,"hit")).toBeGreaterThan(0);
+},120000);

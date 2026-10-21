@@ -155,6 +155,21 @@
    "name": "a reset withdraws the generation",
    "function": "invalidateBuildGraphV1",
    "text": ".invalidate({reason:\"reset\""
+  },
+  {
+   "name": "the generation load runs pinned to the implementation it loaded",
+   "function": "loadBuildGraphV1",
+   "text": "withImplementationPinV1(()=>loadBuildGraphUnpinnedV1("
+  },
+  {
+   "name": "the host names the loaded graph implementation as facts",
+   "function": "generationHostV1",
+   "text": "...loadedGraphImplementationRowsV1,"
+  },
+  {
+   "name": "the host names the loaded inference implementation as facts",
+   "function": "generationHostV1",
+   "text": "producer.loadedImplementationRowsV1"
   }
  ],
  "absent": [
@@ -187,6 +202,21 @@
    "name": "the reset takes no second lease on the facts resource",
    "function": "invalidateBuildGraphV1",
    "text": "lease:"
+  },
+  {
+   "name": "the host identity never refuses an edited implementation",
+   "function": "generationHostV1",
+   "text": "requireCurrentGraphModuleV1()"
+  },
+  {
+   "name": "the host identity never hashes the implementation on disk",
+   "function": "generationHostV1",
+   "text": "currentImplementationRevisionV1"
+  },
+  {
+   "name": "the host identity never contains the module authority",
+   "function": "generationHostV1",
+   "text": "loadedGraphModuleAuthorityV1"
   }
  ]
 }

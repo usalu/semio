@@ -1114,6 +1114,85 @@
     }
    ],
    "expect": null
+  },
+  {
+   "id": "reentrant-shared-wedge",
+   "from": "1/2",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "G",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "1/2",
+     "holds": [],
+     "wait": {
+      "key": "G",
+      "mode": "shared",
+      "sinceMs": 500,
+      "queued": true
+     }
+    },
+    {
+     "id": "2/1",
+     "holds": [],
+     "wait": {
+      "key": "G",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": true
+     }
+    },
+    {
+     "id": "3/1",
+     "holds": [],
+     "wait": {
+      "key": "G",
+      "mode": "exclusive",
+      "sinceMs": 110,
+      "queued": true
+     }
+    }
+   ],
+   "expect": {
+    "members": [
+     "1/2",
+     "2/1",
+     "1/1"
+    ],
+    "victim": "1/2"
+   }
+  },
+  {
+   "id": "shared-holder-with-no-sibling-request-is-no-cycle",
+   "from": "2/1",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "G",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "2/1",
+     "holds": [],
+     "wait": {
+      "key": "G",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": true
+     }
+    }
+   ],
+   "expect": null
   }
  ],
  "messages": [

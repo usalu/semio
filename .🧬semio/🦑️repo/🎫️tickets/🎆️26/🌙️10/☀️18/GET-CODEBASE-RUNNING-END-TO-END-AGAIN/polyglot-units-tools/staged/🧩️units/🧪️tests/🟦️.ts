@@ -130,7 +130,7 @@ describe("keys and closures", () => {
 
 type Edit = {unit: string; effect: string};
 type State = {body: number; iface: number; input: number; broken: boolean; hard: boolean};
-/** The fake executor of the fixture text: sources hash to `path#body.iface`, inputs to `path#input`, outputs to `o|unit|body|iface|Broken`, the interface to `i|unit|iface` (none for a hard failure). */
+/** 🎭️ The fake executor of the fixture text: sources hash to `path#body.iface`, inputs to `path#input`, outputs to `o|unit|body|iface|Broken`, the interface to `i|unit|iface` (none for a hard failure). */
 const scenarioHost = (graph: UnitGraphV1, exposes: Record<string, string[]> | undefined) => {
   const state = new Map<string, State>(graph.units.map(unit => [unit.id, {body: 0, iface: 0, input: 0, broken: false, hard: false}])), initial = new Map([...state].map(([id, s]) => [id, {...s}]));
   const owner = new Map<string, {unit: string; input: boolean}>();
@@ -254,7 +254,7 @@ describe("emitters for Nx and Bazel", () => {
     for (const target of targets) {
       const unit = plan.byId.get(target.unit)!;
       expect(target.dependsOn).toEqual(unit.dependencies.map(dependency => unitTargetNameV1(dependency.unit)).sort());
-      const own = new Set([...unit.sources, ...unit.inputs].map(path => `{workspaceRoot}/${path}`));
+      const own = new Set([...unit.sources, ...unit.inputs, `specs/${target.name}.json`].map(path => `{workspaceRoot}/${path}`));
       for (const input of target.inputs) if (typeof input === "string") expect(own.has(input)).toBe(true);
       const patterns = target.inputs.filter(input => typeof input !== "string").map(input => (input as {dependentTasksOutputFiles: string}).dependentTasksOutputFiles);
       expect(patterns.includes("**/iface.json")).toBe(unit.dependencies.some(dependency => dependency.use === "interface"));
@@ -281,7 +281,15 @@ describe("emitters for Nx and Bazel", () => {
       }
       expect(block.includes("has_interface = True")).toBe(unit.interface !== null);
     }
+    const goText = text, pythonGraph: UnitGraphV1 = {version: 1, units: plan.graph.units.map(unit => ({...unit, language: "python" as const, id: unit.id.replace("go:", "python:"), interface: unit.interface ? {kind: "python-api"} : null, dependencies: unit.dependencies.map(dependency => ({...dependency, unit: dependency.unit.replace("go:", "python:")}))}))};
+    const pythonText = bazelUnitsV1(planUnitsV1(pythonGraph), {runner: "//:repo", load: "//:units.bzl", specRoot: "specs", policy});
+    expect(goText.includes("dep_srcs")).toBe(true);
+    expect(pythonText.includes("dep_srcs")).toBe(false);
+    const blockOf = (id: string): string => goText.split("\nrepo_unit(").find(block => block.includes(`unit = "${id}"`))!;
+    expect(blockOf("go:b")).toContain('"a.src"');
+    expect(blockOf("go:a")).not.toContain("dep_srcs");
     expect(UNITS_BZL_V1).toContain("repo_unit = rule(");
+    expect(UNITS_BZL_V1).toContain("use_default_shell_env = True");
     expect(UNITS_BZL_V1.split("(").length).toBe(UNITS_BZL_V1.split(")").length);
     expect(UNITS_BZL_V1.split("[").length).toBe(UNITS_BZL_V1.split("]").length);
   });
@@ -356,7 +364,7 @@ describe("go adapter", () => {
     const directory = temporary(), files: Record<string, string> = {
       "go.mod": "module example.com/tags\n\ngo 1.25\n",
       "t/a.go": "package t\n", "t/a_linux.go": "package t\n", "t/a_darwin_arm64.go": "package t\n", "t/a_windows.go": "package t\n", "t/b.go": "//go:build !linux && cgo\n\npackage t\n",
-      "t/c.go": "//go:build (darwin || ios) && go1.18 && !go1.99\n\npackage t\n", "t/d.go": "// +build linux darwin\n\npackage t\n", "t/e.go": "//go:build ignore\n\npackage main\n", "t/f_unix.go": "package t\n", "t/g.go": "package t\n\nimport \"C\"\n",
+      "t/c.go": "//go:build (darwin || ios) && go1.18 && !go1.99\n\npackage t\n", "t/e.go": "//go:build ignore\n\npackage main\n", "t/f_unix.go": "package t\n", "t/g.go": "package t\n\nimport \"C\"\n",
     };
     try {
       for (const [path, text] of Object.entries(files)) {mkdirSync(dirname(join(directory, path)), {recursive: true}); writeFileSync(join(directory, path), text);}
@@ -448,18 +456,17 @@ describe("go adapter", () => {
     const defaults = spawnSync("go", ["env", "GOOS", "GOARCH", "CGO_ENABLED"], {cwd: root, encoding: "utf8"}).stdout.trim().split("\n");
     const ctx: GoBuildContextV1 = {goos: defaults[0]!, goarch: defaults[1]!, goMinor: Number(/go1\.(\d+)/.exec(spawnSync("go", ["version"], {encoding: "utf8"}).stdout)![1]), cgo: defaults[2] === "1", tags: []};
     const cache = new Map<string, string>(), read = (path: string): string => {let text = cache.get(path); if (text === undefined) {text = readFileSync(join(root, path), "utf8"); cache.set(path, text);} return text;};
-    const goPlan: string = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts");
-    const {writeCanonicalGoWorkspaceOverlay} = await import(goPlan) as {writeCanonicalGoWorkspaceOverlay: (file: string, roots: readonly string[]) => string};
     const moduleDirs = tracked.filter(path => path === "go.mod" || path.endsWith("/go.mod")).map(path => path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "");
     const scratch = temporary(), overlayFile = join(scratch, "overlay.json");
     try {
-      writeCanonicalGoWorkspaceOverlay(overlayFile, moduleDirs.map(dir => join(root, dir)));
-      const replace = (JSON.parse(readFileSync(overlayFile, "utf8")) as {Replace: Record<string, string>}).Replace;
-      const snapshot = applyGoOverlayV1({files: tracked, read}, root, replace);
+      const {canonicalGoOverlayV1} = await import("../⌨️command/🟦️.ts");
+      const {replace, excludedDirectories} = await canonicalGoOverlayV1(root, moduleDirs.map(dir => join(root, dir)));
+      writeFileSync(overlayFile, JSON.stringify({Replace: replace}));
+      const snapshot = applyGoOverlayV1({files: tracked, read}, root, replace, excludedDirectories);
       const {packages, modules} = planGoPackagesV1(snapshot, {policy, context: ctx});
       let compared = 0, skipped = 0;
       for (const module of modules) {
-        const cwd = join(root, module.dir), list = spawnSync("go", ["list", `-overlay=${overlayFile}`, "-json", "-e", "./..."], {cwd, env: {...process.env, GOFLAGS: "", GOPROXY: "off", GOTOOLCHAIN: "local"}, encoding: "utf8", maxBuffer: 256 * 1024 * 1024});
+        const cwd = join(root, module.dir), list = spawnSync("go", ["list", `-overlay=${overlayFile}`, "-json", "-e", "./..."], {cwd, env: {...process.env, GOFLAGS: "", GOPROXY: "off", GOTOOLCHAIN: "local", ...(module.workspace ? {} : {GOWORK: "off"})}, encoding: "utf8", maxBuffer: 256 * 1024 * 1024});
         const items = list.stdout.replace(/}\s*{/g, "}\n{").split("\n{").map((text, index) => index === 0 ? text : "{" + text).filter(text => text.trim()).map(text => JSON.parse(text));
         const mine = packages.filter(item => item.module === module.path);
         const base = (paths: readonly string[]): string[] => paths.map(path => path.slice(path.lastIndexOf("/") + 1)).sort();

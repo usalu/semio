@@ -1,4 +1,4 @@
-use crate::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use crate::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("⚠️refusal/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn intrinsic(value: &serde_json::Value) -> DslValue { serde_json::from_value(value.clone()).unwrap() }

@@ -22,7 +22,6 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-2d-editor = { workspace = true }
 semio-s-artifact-block-2d-examples = { workspace = true }
 semio-s-artifact-block-2d-io = { workspace = true }

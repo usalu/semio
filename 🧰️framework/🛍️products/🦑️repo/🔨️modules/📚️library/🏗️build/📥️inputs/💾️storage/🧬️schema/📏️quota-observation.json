@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bounded Optional Graph Quota Observation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "observed",
+        "kind",
+        "fieldCount",
+        "schemaValid",
+        "maximumBytes",
+        "usedBytes",
+        "availableBytes",
+        "minimumAvailableBytes",
+        "reason",
+        "headroomSatisfied"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "observed": {
+          "const": true
+        },
+        "kind": {
+          "enum": [
+            "object",
+            "array",
+            "null",
+            "number",
+            "string",
+            "boolean",
+            "undefined",
+            "other"
+          ]
+        },
+        "fieldCount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "schemaValid": {
+          "type": "boolean"
+        },
+        "maximumBytes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "usedBytes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "availableBytes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "minimumAvailableBytes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "shape",
+            "retained",
+            null
+          ]
+        },
+        "headroomSatisfied": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "observed"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "observed": {
+          "const": false
+        }
+      }
+    }
+  ]
+}

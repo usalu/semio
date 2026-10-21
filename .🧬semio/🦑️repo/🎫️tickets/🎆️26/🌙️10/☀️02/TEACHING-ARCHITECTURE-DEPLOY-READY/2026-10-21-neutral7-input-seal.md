@@ -1,0 +1,13 @@
+# Neutral7 Reviewed Input Seal
+
+At 2026-10-21T01:38:38.758Z and 2026-10-21T01:39:23.626Z, Root freshly observed every83Ticket+59Source input (142total) against explicitly reviewed fingerprints. Per-file physical identity, bytes and SHA remained equal through both bounded ordinary/single-link/nofollow descriptor/name/ancestor observations. This is not an atomic host Source snapshot or a test result.
+
+New combined.inputs.json 27469B/rawSHA2560f093e8ce3ebb396961849e4bdf374e222db0940ab4612e138ae1b8a75df0310 binds the18-phase Source59 candidate and current95 production-critical roster policy. Previous262a manifest is retained in historical generated/2026-10-21-combined-before-self-producer-inputs.json and is revoked.
+
+First17 phases retain all prior selections, including21progress titles. Reader phase18 has6tests:3direct preexisting,2registered physical laws and the new async isolation regression. All phase copies and23synthetic collection admission vectors are independently reviewed. Child ceilings2490000ms,parent2580000ms,reserve90000ms. The generic runner12591B/e5c07ef6fb78fdc761bfa6a3e84a62d9d93a19f4a2ea75152ada1219b056d0cf is unchanged.
+
+Reader repair provenance: runtime8913/730a2ec303cd43e66f919e9e96086d128fe3ef3c0a32b1e30f09411f4255f523; schema6707/a01f271e9c76a46fce157bbab55619e0dfe0f1bf549945a8e6fca7a65f03e63c; corpus5995/5c8608c02d4acf78dd21ccc039014bfaf7273599353832fb001a3aed1d66184b; tests15990/0ee7dfad9f84a7ac4c19847c4c46c2f83acd20e720378194c66df6822801aa52. Builtin async-context token scopes the deliberate loaded implementation continuation; unrelated branches and expired descendants are no longer globally pinned. Actual tests remain unrun.
+
+Peer import literal precedence1c0628/2e364/f89ce is independently static-clear; Root retained-body comparison proves selected assembly test block and its complete declaredProjectScope fixtures unchanged. Inventory loader1b5d deliberately retains captured implementation semantics. Do not claim universal loaded-byte attestation: combined uses fresh child processes and exact physical input custody, with validated compiler snapshot metadata only where that route is actually used.
+
+Sole native executor cargo_facade_integration must independently reobserve all142 current inputs and the raw manifest SHA immediately before launching the exact supported repo exec --projects=workspace command. The reserved neutral7 log must remain ordinary0B at its known identity before launch. No owned native job is live at sealing; no test/course/production gate has passed. Source drift revokes the seal and is not permission to overwrite peer work or stop their processes.

@@ -1,0 +1,224 @@
+{
+  "$defs": {
+    "Policy": {
+      "const": {
+        "maximumFacts": 8,
+        "maximumPathUnits": 256,
+        "maximumFactBytes": 65536
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "required": [
+        "version",
+        "reason",
+        "before",
+        "after",
+        "facts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "reason": {
+          "enum": [
+            "membership",
+            "admission",
+            "observed-facts",
+            "producer-error",
+            "owner-registry",
+            "publication-facts"
+          ]
+        },
+        "before": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "facts": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "path",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "before": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "after": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "required": [
+        "name",
+        "reason",
+        "before",
+        "after",
+        "stale",
+        "current",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "enum": [
+            "membership",
+            "admission",
+            "observed-facts",
+            "producer-error",
+            "owner-registry",
+            "publication-facts"
+          ]
+        },
+        "before": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stale": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "path",
+              "fact"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "file"
+              },
+              "path": {
+                "type": "string"
+              },
+              "fact": {
+                "type": "object",
+                "required": [
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected": {
+          "$ref": "#/$defs/Diagnostic"
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "required": [
+        "version",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Case"
+          }
+        }
+      }
+    }
+  }
+}

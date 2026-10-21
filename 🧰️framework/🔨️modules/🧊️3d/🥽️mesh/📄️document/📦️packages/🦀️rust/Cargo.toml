@@ -19,10 +19,10 @@ path = "../../🦀️.rs"
 semio-framework-3d-mesh-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
-semio-framework-value-native-owned.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-value-derive.workspace = true
 [dev-dependencies]
+semio-framework-value-native-owned.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 parry3d = "0.17"

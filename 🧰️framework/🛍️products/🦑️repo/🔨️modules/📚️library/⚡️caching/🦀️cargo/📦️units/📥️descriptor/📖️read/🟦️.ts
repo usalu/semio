@@ -1,7 +1,7 @@
 /** 📖️ Read: module exporting `rustUnitDescriptorReadLimitsV2`, `rustUnitDescriptorReadBatchLimitsV1`, `RustUnitDescriptorV2`, `captureRustUnitDescriptorRequestV2` and more. */
 import{fileURLToPath}from"node:url";
 import{types}from"node:util";
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import{captureRepositorySourceRootV1,captureExactSourcePathV1}from"../../../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{withExactSourceReadBatchV1,readExactSourceJsonV1,readExactSourceFileV1,type ExactSourceReadBatchV1}from"../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -14,7 +14,7 @@ const sourcePath=fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.me
 export const rustUnitDescriptorReadLimitsV2=Object.freeze({...schema.definitions.Policy.const});
 export const rustUnitDescriptorReadBatchLimitsV1=Object.freeze({...schema.definitions.MatchBatch.const});
 const policy=rustUnitDescriptorReadLimitsV2;
-function requireCurrent():void{if(captureBoundedSourceRevisionV1(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||captureBoundedSourceRevisionV1(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256)throw Error("Stale loaded Rust descriptor reader; restart required");}
+function requireCurrent():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||captureBoundedSourceRevisionV1(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256)throw Error("Stale loaded Rust descriptor reader; restart required");}
 interface Request{readonly root:string;readonly name:string;readonly mode:"prototype"|"release";readonly outputRoot:string;readonly leaseDirectory:string;readonly maximumBytes:number}
 /** 📦️ Holds selected/direct predecessor DATA only; it does not attest a complete ancestor DAG or Native custody. */
 export interface RustUnitDescriptorV2{readonly sha256:string;readonly byteLength:number;readonly totalBytes:number;readonly node:RustUnitDescriptorNodeV2;readonly predecessors:readonly RustUnitDescriptorNodeV2[]}

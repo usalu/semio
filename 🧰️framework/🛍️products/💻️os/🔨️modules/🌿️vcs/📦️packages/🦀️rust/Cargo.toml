@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:serde"]
 
 [dependencies]
+semio-framework-value-original-slot = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 protocol = { path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

@@ -224,7 +224,7 @@ pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value_intrinsic::F
 }
 
 /// 🎟️ Authorizes one typed original retained commit after its caller admitted the finite work grant.
-pub fn with_retained_apply_capability<P,D:MutationDiff<P>,T>(diff:semio_framework_value_clone_source::RetainedCloneRef<'_,D>,grant:semio_framework_value_intrinsic::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
+pub fn with_retained_apply_capability<D,T>(diff:semio_framework_value_clone_source::RetainedCloneRef<'_,D>,grant:semio_framework_value_intrinsic::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
     if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained diff capability requires original source and admitted commit grant"));}
     let _original=diff;
     commit(mint_capability())

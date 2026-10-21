@@ -25,10 +25,10 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pixels = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../◻️2d/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 percent-encoding = "2.3.2"

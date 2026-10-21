@@ -27,7 +27,5 @@ def main():
     found = scan(root)
     print(len(found), "files,", sum(found.values()), "literals")
     if "--write" in sys.argv:
-        logical = paths.MANAGERS + "/🧪️tests/⚖️ratchet/🔣️.json"
-        payload = json.dumps({"version": 1, "files": found}, ensure_ascii=False, indent=1) + "\n"
-        place(paths.NEW, logical, payload.encode("utf-8"))
+        paths.seam_write(paths.MANAGERS + "/🧪️tests/⚖️ratchet/🔣️.json", json.dumps({"version": 1, "files": found}, ensure_ascii=False, indent=1) + "\n")
 main()

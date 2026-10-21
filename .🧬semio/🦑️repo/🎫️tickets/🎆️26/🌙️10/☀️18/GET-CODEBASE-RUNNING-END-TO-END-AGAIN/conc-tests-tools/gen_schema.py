@@ -18,7 +18,7 @@ proto=obj({
  "ports":obj({"minimum":{"type":"integer","minimum":1024,"maximum":65535},"maximum":{"type":"integer","minimum":1024,"maximum":65535},"attempts":{"type":"integer","minimum":1,"maximum":1000},"directory":S}),
  "guard":obj({"modes":{"type":"array","items":{"enum":["off","report","enforce"]}},"defaultMode":{"enum":["off","report","enforce"]},
   "writeTargets":{"type":"object","additionalProperties":{"type":"array","minItems":1,"items":{"type":"integer","minimum":0,"maximum":3}}},
-  "openFunctions":{"type":"array","items":S},"kernelPrograms":{"type":"array","items":S},"killPrograms":{"type":"array","items":S},"kernelVerbs":{"type":"array","items":S},
+  "openFunctions":{"type":"array","items":S},"sqliteTargets":{"type":"object","additionalProperties":{"type":"array","minItems":1,"items":{"type":"integer","minimum":0,"maximum":3}}},"kernelPrograms":{"type":"array","items":S},"killPrograms":{"type":"array","items":S},"kernelVerbs":{"type":"array","items":S},
   "protectedCheckoutPrefixes":{"type":"array","items":S},"allowedCheckoutPrefixes":{"type":"array","items":S},"scratchRoots":{"type":"array","items":S}}),
  "scan":obj({"testSegment":S,"skipSegments":{"type":"array","items":S},"extensions":{"type":"object","additionalProperties":{"type":"array","items":S},"required":["ts","go","rs","py","sh"],"properties":{k:{"type":"array","items":S} for k in ["ts","go","rs","py","sh"]}},"maximumBytes":{"type":"integer","minimum":1024},"suite":lang_map(),"commentLine":lang_map()}),
  "rules":{"type":"array","minItems":1,"items":rule}})

@@ -2,7 +2,8 @@ use semio_framework_test_fixtures::fixture_text;
 use super::{source,grant,close_source,observe};
 use crate::retained::{RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,RetainedDiffPreflightStep,retained_diff_birth_demand,begin_retained_diff,preflight_retained_diff,commit_retained_diff};
 use crate::{ApplyCapability,MutationMessage};
-use semio_framework_value::{RetirementDemand, ValueError, retirement::{RetireOwned, shared::sealed::SealedShared}, retained_clone::{RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneClose}};
+use semio_framework_value::{RetirementDemand, ValueError, retirement::{RetireOwned}, retained_clone::{RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneClose}};
+use semio_framework_value::shared_issuance::SealedShared;
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::owned::NativeIntrinsicSharedField};
 use std::{cell::Cell,mem::{ManuallyDrop,size_of}};
 #[derive(semio_framework_value::RetireOwned)]

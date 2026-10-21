@@ -46,6 +46,60 @@
       "status": "pending",
       "command": "repo run repo:test-devcontainer-lifecycle --skip-cache --output=stream",
       "scope": "Finite direct lifecycle suite with owned artifact root, recording-host start/attach and independent jsdom/lodash oracles; no broad wasm cache contracts."
+    },
+    {
+      "project": "@semio-tech/framework-replication",
+      "target": "test-retained-wire-field",
+      "status": "pending",
+      "command": "repo run @semio-tech/framework-replication:test-retained-wire-field --skip-cache --output=stream",
+      "scope": "Existing retained-wire Source oracle: exact release quote schema/SQLite and native receipt contracts; actual owned async Bun/Original runner. Source bodies and whole unrun."
+    },
+    {
+      "project": "semio-framework-os-flow-browser-package",
+      "target": "test-producer-source",
+      "status": "pending",
+      "command": "repo run semio-framework-os-flow-browser-package:test-producer-source --skip-cache --output=stream",
+      "scope": "Exact registered sole browser-Wasm producer Source closure; generated self-output refusal remains mandatory. Current assembly self-filter observation is pending peer correction; no body/whole acceptance inferred from registration."
+    },
+    {
+      "project": "@semio-tech/value-rs",
+      "target": "test-paged-reservation-source",
+      "status": "pending",
+      "command": "repo run @semio-tech/value-rs:test-paged-reservation-source --skip-cache --output=stream",
+      "scope": "Genuine registered closed Source leaf for page reservation schema/fixture/list-Rust ownership and independent SQL oracle; Low source accepted, actual body/whole pending."
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "test-ci-source",
+      "status": "pending",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-ci-source --skip-cache --output=stream",
+      "scope": "Five authored CI Source laws validate real native/developer-container workflow declarations and the exact early owned test route. Hosted workflows, actual container build, Source bodies and whole remain unrun."
+    },
+    {
+      "project": "@semio-tech/framework-original-slot",
+      "target": "verify-source",
+      "status": "pending"
+    },
+    {
+      "project": "@semio-tech/value-rs",
+      "target": "test-exclusive-retirement-source",
+      "status": "pending",
+      "command": "repo run @semio-tech/value-rs:test-exclusive-retirement-source --skip-cache --output=stream",
+      "scope": "Three actual mutex/shared-query TS oracle bodies through the genuine closed noarg Source owner. Physical declaration and dispatcher independently reviewed; bodies and whole remain unrun."
+    },
+    {
+      "project": "@semio-tech/framework-pack-rs",
+      "target": "test-catalog-reservation-source",
+      "status": "pending",
+      "command": "repo run @semio-tech/framework-pack-rs:test-catalog-reservation-source --skip-cache --output=stream",
+      "scope": "Actual closed noarg Source owner runs the catalog reservation TS oracle with four portable append/final-extent neutral SQLite vectors. Physical declaration and genuine paired Cargo tuples independently accepted; Source body/whole remain unrun."
+    },
+    {
+      "project": "@semio-tech/framework-pack-rs",
+      "target": "test-inline-symbol-source",
+      "status": "pending",
+      "command": "repo run @semio-tech/framework-pack-rs:test-inline-symbol-source --skip-cache --output=stream",
+      "scope": "Two actual inline-symbol TS oracle bodies, including bounded aliases and separately funded caller-owned wire retirement. Physical noarg Source declaration/dispatcher independently reviewed; body and whole remain unrun."
     }
   ]
 }

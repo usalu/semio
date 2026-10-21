@@ -1,7 +1,7 @@
 //! 👁️ Attention: what a pet does with its eyes, its head and the way it faces — how visible it wants to be under the pointer, the way it ought to face and the turn towards it, the gaze spring, the blink schedule, perking up at a pointer that has come to rest, and the lean and the squeeze a frame draws.
 //!
 //! Whatever the pointer does to one pet belongs here; its horizons (`POINTER_TICKS`, `TURN_REST`, `PERK_LINGER`) are read by the clock and by the frame.
-//! A part of the stage, not of the crate: everything is `pub(crate)` at most.
+//! A part of the stage, not of the package: the items the parts of the stage in `pets-staging` call are `pub`, the rest stays private to this crate.
 //!
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../👀️attention/🟦️.ts — the TypeScript twin
@@ -26,6 +26,13 @@ use semio_framework_pets_contract::schema::PressPhase;
 use semio_framework_pets_contract::schema::Over;
 use semio_framework_pets_contract::schema::Rect;
 use semio_framework_pets_contract::schema::Slug;
+use crate::draft::{TURN_TICKS, douse, enter, feel, ignite, perform, present, purr, standing, turn};
+use crate::locomotion::{give_back, hold, let_go, lift, toss, toss_target};
+use semio_framework_pets_character::feeling::{performed, settled, shown_mood, state_after_trick, tricks_for};
+use semio_framework_pets_interaction::gesture::{Guards, hover_step, no_hover, no_shaking, press_step, shake_step};
+use semio_framework_pets_kinematics::animation::clip_ticks;
+use semio_framework_pets_kinematics::terrain::WALL_LIP;
+use semio_framework_pets_traversal::swing::{RELEASE_WEIGHTS, release_velocity};
 
 //#region 🔖️Constants
 pub const POINTER_TICKS: Ticks = 256;
@@ -38,7 +45,7 @@ const GAZE_FALL: f64 = 0.8;
 const EYE_HEIGHT: f64 = 0.6;
 const BLINK_AGAIN: Ticks = 7;
 const WAKE_REACH: f64 = 1.5;
-const SHY_OPACITY: f64 = 0.35;
+pub const SHY_OPACITY: f64 = 0.35;
 pub const PURR_TICKS: Ticks = 192;
 pub const TURN_REST: Ticks = 56;
 const TURN_CLEAR: f64 = 12.0;
@@ -338,7 +345,7 @@ pub fn shaken(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// ✊️ Step the resting press and follow held pets, pointer trails and shakes.
-pub(crate) fn handle(draft: &mut Draft<'_>, now: Ticks) {
+pub fn handle(draft: &mut Draft<'_>, now: Ticks) {
     let guards = Guards { control: false, scrolled: false, quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still };
     let step = press_step(draft.stage.press, PressInput::Ticked, now, guards);
     draft.stage.press = step.state;
@@ -372,7 +379,7 @@ fn guards_of(draft: &Draft<'_>, now: Ticks) -> Guards {
 }
 
 /// 🌀️ Perched actors recognise pointer gestures before the stage beat.
-pub(crate) fn hovers(draft: &mut Draft<'_>, now: Ticks) {
+pub fn hovers(draft: &mut Draft<'_>, now: Ticks) {
     let Some(pointer) = draft.stage.pointer.filter(|_| draft.stage.play && draft.stage.press.phase == PressPhase::Idle) else { return; };
     let guards = guards_of(draft, now);
     for index in 0..draft.stage.actors.len() {

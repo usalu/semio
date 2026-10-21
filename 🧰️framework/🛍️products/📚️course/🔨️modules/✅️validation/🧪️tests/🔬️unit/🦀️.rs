@@ -682,3 +682,17 @@ fn shared_identity_shapes_of_the_python_reference_hold() {
         assert_close(&format!("shapes/{}", vector["id"]), &json(&rejection), &vector["expected"]);
     }
 }
+
+#[test]
+fn course_aggregate_owns_quiz_components() {
+    use course_schema::testkit::{assert_close, fixture, json, typed};
+    let vector = fixture("course-model");
+    let course = typed::<Course>(&vector["course"]);
+    let quizzes = typed::<Vec<Quiz>>(&vector["quizzes"]);
+    assert_eq!(json(&course_issues(&course, &quizzes)), vector["expected"]["courseIssues"]);
+    assert_eq!(json(&quiz_issues(&quizzes[0])), vector["expected"]["quizIssues"]);
+    assert_close("course-model/course", &json(&typed::<Course>(&vector["course"])), &vector["course"]);
+    let view = crate::views::course_view(&course, &quizzes);
+    assert!(course_view_issues(&view).is_empty());
+    assert_eq!(view.topics.as_ref().unwrap()[0].quizzes, vec!["warmup"]);
+}

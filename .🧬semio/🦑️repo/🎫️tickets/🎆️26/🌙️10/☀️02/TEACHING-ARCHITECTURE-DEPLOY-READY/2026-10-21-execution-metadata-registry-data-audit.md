@@ -1,0 +1,7 @@
+# Execution Metadata Registry Data Audit
+
+Data-only read-only audit from authored root 📋️build-owners.json (1630367B), using its explicit manifest coordinates; no Source filesystem scan, repository API import/evaluation or native command. Current closed draft07 execution schema loaded as JSON from build/🏃️execution/🧬️schema/🔣️.json and validated by existing third-party Ajv8.20.0 strict compiler. Registry and manifest reads bounded2MiB with ordinary singlelink nofollow stable descriptor/name checks.
+
+Registry has3734owners. Successfully parsed1471JSON manifests; validated171 explicit target.metadata.semio.execution objects:125source,16native,30orchestration. Zero schema mismatches, zero JSON manifest read/parse failures. The other2263registry coordinates are nonJSON Cargo.toml manifests; these were not interpreted as target JSON. Initial generic JSON attempts rejected those TOML bodies, which is a format boundary, not a repository defect. No TOML inference, generated target declarations, dynamic native-derived values, registry completeness or later peer changes are covered.
+
+Current schema requires version1 for source/native/orchestration; native scope is production|test, all objects close unknown fields, orchestration children close project/target/configuration literals and finite unique cardinality. At this observation no additional missingversion/invalidliteral explicit JSON declaration was found. This does not prove native global graph admission or substitute for supported verification.

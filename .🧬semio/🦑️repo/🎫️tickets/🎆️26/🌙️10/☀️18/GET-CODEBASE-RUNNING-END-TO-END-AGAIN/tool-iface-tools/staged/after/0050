@@ -1,256 +1,317 @@
-/** 🧭️ Thin hub gate commands: source-gate runners, setup, the cargo test lanes and the hostile-input and CAS checks.
+/** 🧭️ Build, build-dev, publish and dev commands and the local bootstrap launch gate.
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
-import { runLiveSignInV1 } from "../../🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { withRepositoryDevelopmentStateV1 } from "@semio-tech/repo-lib/storage";
+import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
 import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
-import { resolveTestLevel } from "@semio-tech/process/test-budget";
 import { buildBudgetMs } from "@semio-tech/process/budget";
-import { mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-
-import Ajv from "ajv";
-import { runCargo, runRepositoryCommand } from "@semio-tech/process/execution";
-import { runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
+import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
+import { randomBytes } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { type ChildProcess } from "node:child_process";
+import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
+import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
+import { packageNativeRelease, signExecutableForDistribution } from "@semio-tech/process/native-build";
+import { OS_HUB_PORT, OS_HUB_PORT_ENV } from "@semio-tech/repo-lib/dev";
+import { runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
 import { BundleScript } from "@semio-tech/process/routing";
-import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
-import { HUB_TEST_PACKAGES } from "../../🧪️testing/📖️source-readers/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { deliverNativeCredentialEnvelope } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
+import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
+import { issueLocalCredential, parseLocalAdminCapabilityV1, withLocalSessionBrokerV1 } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { type LocalProfile } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
+import { ensureHubBackend, finishLocalHub, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubDevBinaryPath, LOCAL_HUB_ADMINISTRATOR_PROFILE, LOCAL_HUB_ADMINISTRATOR_SUBJECT, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, stopLocalHubV1, waitForLocalHubExitV1, withPublishedDevelopmentLocalHubHostV1, startLocalHub, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { trustedBootstrapBuildControl, UNLIMITED_TRUSTED_BUILD_DEADLINE_MS } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
+import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
+import { trustedBootstrapCurrent } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts";
+import { trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
+import { buildAdminSpa, nativeWgpuExecutable, openExternalBrowser, startMcpWorkspaceChild, waitForUiReadiness } from "../../🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts";
+import { type LocalAdminRelay, type LocalBrowserRelay, startLocalAdminRelay, startLocalBrowserRelay } from "../../🚀️local-relay/🛰️servers/🟦️.ts";
+import { spawnToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-//#region 🧱️SourceGateRunners
-/** 🕸️ Supplies Hub's actual actor publication capability to the neutral runtime graph verifier. */
-export class RuntimeFixtureGraphScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    const {verifyRuntimeFixtureGraphV1}=await import("@semio-tech/repo-lib/inventory");
-    const {hubRuntimeActorPublicationPortV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts");
-    await verifyRuntimeFixtureGraphV1(this.repoRoot,segments,hubRuntimeActorPublicationPortV1(this.repoRoot),["🧰️framework","✏️s","🌎️hub"],this.invocation);
-  }
-}
-
-/** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
-export class HubDocumentSweepScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");const {withIssuedResourceControlV1}=await import("@semio-tech/process/routing");await withIssuedResourceControlV1(this.invocation,"hub:document-sweep",0,phase=>runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments,this.invocation,phase));}
-}
-export class HubIoMatrixScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const {runIoMatrixCli}=await import("../../🧪️tests/🚪️io-matrix/🟦️.ts");await runIoMatrixCli(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"io-matrix",0),this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🚪️io-matrix"),segments);}
-}
-
-export class HubFoundationSourceScript extends BundleScript {
+/** ⏳️ Proves the two launch-route boundaries a fresh `OS_HUB_DATA` boot depends on: an unset
+ * `SEMIO_BUILD_BUDGET_MS` (the repository's unlimited budget, `0`) never presents as an already expired
+ * deadline, and a missing staged executable is staged through its own build target before it is reported. */
+export class LocalBootstrapLaunchCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("foundation-source-check accepts no arguments");
-    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")],this.repoRoot,"hub-foundation-source",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
-  }
-}
-
-/** 🌳️ Runs the hub prebuild unit census: every crate of the planned component closure compiles once per profile
- * (https://doc.rust-lang.org/cargo/reference/unstable.html#unit-graph). */
-export class HubUnitCensusScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("unit-census-check accepts no arguments");
-    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🌳️unit-census/🟦️.ts")],this.repoRoot,"hub-unit-census",{version:1,maximumElapsedMilliseconds:1_800_000,output:{maximumBytes:134217728,maximumLines:65536}});
-  }
-}
-
-/** 🧱️ Runs the bounded socket-grant command ownership contract. */
-export class HubSocketGrantCommandSourceScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("socket-grant-command-source-check accepts no arguments");
-    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")],this.repoRoot,"hub-socket-grant-command-source",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
-  }
-}
-
-/** 🤝️ Runs the live sign-in gate: a real `os-hub` child against a fresh data root, the operator bootstrap verb, and the whole
- * two-principal session lifecycle over HTTP. Credential sign-in is enabled for the child here because the gate exists to
- * exercise exactly that policy — it is not a default any other route inherits. */
-export class HubLiveSignInScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("live-sign-in-check accepts no arguments");
-    await runLiveSignInV1(this.invocation,exactCargoCallerControlV1(this.invocation,"hub:live-sign-in",300000),false);
-  }
-}
-//#endregion 🧱️SourceGateRunners
-
-export class SetupScript extends BundleScript {
-  run(): void {
-    runCargo(["fetch", "--manifest-path", "Cargo.toml"], this.root);
-  }
-}
-
-/** 🗂️ The package-owned artifact root the descriptor-rooted hub laws demand when no ticket supplies one:
- * `fixture_root()` in the trusted-catalog, publication and browser-actor suites reads
- * `SEMIO_TEST_ARTIFACT_DIR` and panics without it, so a plain `bun repo run os-hub:test` would report panics
- * instead of assertions. */
-function hubTestArtifactRoot(root: string): string {
-  const path = join(root, "../../🧪️tests/🗂️artifact-root/📦️packages/🦀️rust/🗑️generated/test-artifacts");
-  mkdirSync(path, { recursive: true, mode: 0o700 });
-  return path;
-}
-
-/** 🧱️ Checks Hub's projections and GIS witnesses against their general client contracts. */
-export class InferenceClientContractTestScript extends BundleScript {
-  async run(): Promise<void> {
-    
-    
-    
-    
-    
-      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),progress: event => console.log(`inference-client-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [{ package: "semio-hub", target: { kind: "test", name: "inference_client_contract" }, laws: [
-          "the_published_error_vocabulary_is_exactly_the_neutral_fixtures_and_status_alone_is_ambiguous",
-          "the_client_mirrors_the_neutral_fixtures_exact_fixed_limits",
-          "an_offered_page_carries_the_corpus_preview_and_a_forged_or_open_ring_is_refused",
-          "the_neutral_lifecycles_decode_into_the_closed_event_page_in_order",
-          "a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity",
-          "the_hub_approval_request_consumes_the_framework_contract",
-        ] }]});
-      console.log(`inference-client-contract: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
-    
-  }
-}
-
-/** 🧩️ Checks actual composed component codecs against the caller's schema and budgets. */
-export class ComponentCodecCheckScript extends BundleScript {
-  async run(segments:string[]):Promise<void> {
-    const fixture=JSON.parse(readFileSync(join(this.repoRoot,"🌎️hub/🧪️tests/🧩️component-codecs/🧫️fixtures/🔣️.json"),"utf8"));
-    const schema=JSON.parse(readFileSync(join(this.repoRoot,"🌎️hub/🧬️schema/🧩️component-codecs/🔣️.json"),"utf8"));
-    const oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
-    if(!oracle(fixture)) throw new Error(JSON.stringify(oracle.errors));
-    resolveTestLevel([],segments[0]==="budget"?"exhaustive":"quick");
-    const filter=segments[0]==="budget"?"actual_gis_owned_codec_honors":"actual_component_codec_exports";
-    await runAdmittedCargoPackageTestsV1(["semio-hub-component-codec-laws"], this.repoRoot, this.invocation, ["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
-  }
-}
-
-export class TestScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    const [head, ...tail] = rest;
-    const allFeatures = head === "all-features";
-    process.env.SEMIO_TEST_ARTIFACT_DIR ??= hubTestArtifactRoot(this.root);
-    await runAdmittedCargoPackageTestsV1([...HUB_TEST_PACKAGES], this.repoRoot, this.invocation, allFeatures ? ["--all-features", ...tail] : rest);
-  }
-}
-
-/** 🐘️ The directory backends' LIVE lanes: the `postgres` and `neo4j` laws of `directory::postgres` / `directory::neo4j`
- * (incl. the backend-neutral share-scope and space-administration corpora and the DB3 document-storage law) against the ONE
- * shared development server claimed by `os-hub-ts backend run <postgres|neo4j> -- …` — each postgres law in a database
- * of its own on the claim, the neo4j laws one at a time over the claim's emptied graph (`db_storage::claimed_backend`).
- * They are `#[ignore]`d outside a claim and never start a server of their own (preamble rule 22).
- * `directory-live-lanes [postgres|neo4j]`: without a lane, every lane whose claim environment is present. */
-const DIRECTORY_LIVE_LANES: Readonly<Record<string, Readonly<{ filters: ReadonlyArray<readonly [string, string]>; claimed: string; threads: number }>>> = {
-  postgres: { filters: [["semio-hub-directory-backend-laws", "postgres_tests"], ["semio-hub-directory-laws", "postgres_creation_tests"]], claimed: "OS_HUB_DATABASE_URL", threads: 2 },
-  neo4j: { filters: [["semio-hub-directory-backend-laws", "neo4j_tests"], ["semio-hub-directory-laws", "neo4j_creation_tests"]], claimed: "OS_HUB_NEO4J_URI", threads: 1 },
-};
-
-export class DirectoryLiveLanesScript extends BundleScript {
-  run(segments: string[]): void {
-    const lanes = segments.length ? segments : Object.keys(DIRECTORY_LIVE_LANES).filter((name) => process.env[DIRECTORY_LIVE_LANES[name]!.claimed]);
-    const unknown = lanes.filter((name) => !(name in DIRECTORY_LIVE_LANES));
-    if (unknown.length || lanes.length === 0) throw new Error(`directory-live-lanes accepts ${Object.keys(DIRECTORY_LIVE_LANES).join(" | ")} and runs only under a claim: \`os-hub-ts backend run <postgres|neo4j> -- …\`${unknown.length ? `, got ${unknown.join(",")}` : ""}`);
-    const unclaimed = lanes.filter((name) => !process.env[DIRECTORY_LIVE_LANES[name]!.claimed]);
-    if (unclaimed.length) throw new Error(`directory-live-lanes ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
-    for (const lane of lanes) {
-      const { filters, threads } = DIRECTORY_LIVE_LANES[lane]!;
-      for (const [owner, filter] of filters) runCargo(["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", filter, "--", "--include-ignored", `--test-threads=${threads}`], this.root);
+    if (segments.length) throw new Error("local-bootstrap-launch-check accepts no arguments");
+    const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
+    const { tmpdir } = await import("node:os");
+    const configured = process.env.SEMIO_BUILD_BUDGET_MS;
+    delete process.env.SEMIO_BUILD_BUDGET_MS;
+    try {
+      assert.equal(buildBudgetMs(), 0);
+      const unlimited = trustedBootstrapBuildControl(buildBudgetMs());
+      try {
+        assert.equal(unlimited.control.cancelled(), false);
+        const remaining = unlimited.control.remainingMs();
+        assert(remaining > 0 && Number.isSafeInteger(remaining) && remaining <= UNLIMITED_TRUSTED_BUILD_DEADLINE_MS);
+        assert(remaining > UNLIMITED_TRUSTED_BUILD_DEADLINE_MS - 60_000);
+      } finally {
+        unlimited.close();
+      }
+      const opted = trustedBootstrapBuildControl(5_000);
+      try {
+        assert(opted.control.remainingMs() > 0 && opted.control.remainingMs() <= 5_000);
+      } finally {
+        opted.close();
+      }
+      const expired = trustedBootstrapBuildControl(-1);
+      try {
+        assert(expired.control.remainingMs() > 0);
+      } finally {
+        expired.close();
+      }
+    } finally {
+      if (configured === undefined) delete process.env.SEMIO_BUILD_BUDGET_MS;
+      else process.env.SEMIO_BUILD_BUDGET_MS = configured;
     }
-  }
-}
-
-/** 🏳️ The value following `flag` in a verb's segments, or `undefined` when absent or followed by another flag. */
-function flagValue(segments: readonly string[], flag: string): string | undefined {
-  const index = segments.indexOf(flag);
-  const value = index >= 0 ? segments[index + 1] : undefined;
-  return value === undefined || value.startsWith("--") ? undefined : value;
-}
-
-/** 🎲️ The hostile-input laws the check runs: the language-neutral draw vectors, the fixture's coverage of every registered
- * route, the enumerated typed refusals, and the generative law (drawn mutations of every route's own request and drawn
- * frame sequences on both sockets, shrunk findings) — the last once per seed. */
-const HOSTILE_INPUT_LAWS = {
-  draws: ["semio-hub-hostile-input-laws", "hostile_generative::long::hostile_draws_reproduce_the_language_neutral_vectors"],
-  coverage: ["semio-hub-boot-laws", "the_hostile_input_fixture_covers_every_registered_route"],
-  refusals: ["semio-hub-boot-laws", "every_route_answers_hostile_input_with_a_typed_signed_refusal"],
-  generative: ["semio-hub-hostile-input-laws", "hostile_generative::long::every_route_and_socket_survives_generated_hostile_input"],
-} as const;
-
-/** 🎲️ `hostile-input-check [--seeds <n,…> | --seed-range <from>..<to>] [--locale en|de]` — the hub's hostile-input
- * gate as one record: the fixture's language-neutral oracle (`os-hub-ts` `🚧️hostile-input`, Ajv), the enumerated laws, and
- * the generative law once per seed (`SEMIO_HUB_HOSTILE_SEED`; default the fixture's own seeds, a range turns it into a
- * longer fuzz run). Each seed's requests, socket sequences and findings are measured; any finding fails the record with
- * its seed. Ctrl-C stops the running law. */
-export class HostileInputCheckScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🧪️tests/🧫️fixtures/🚧️hostile-input-v1/🔣️.json"), "utf8"));
-    const range = flagValue(segments, "--seed-range")?.match(/^(\d+)\.\.(\d+)$/u);
-    const seeds: number[] = range ? Array.from({ length: Math.max(0, Number(range[2]) - Number(range[1]) + 1) }, (_, index) => Number(range[1]) + index) : (flagValue(segments, "--seeds")?.split(",").map(Number) ?? (fixture.generative.seeds as number[]));
-    if (seeds.length === 0 || seeds.some((seed) => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("hostile-input-check needs non-negative integer seeds: --seeds <n,…> | --seed-range <from>..<to>");
-    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess, withAcceptanceRecord } = await import("@semio-tech/repo-test/acceptance/orchestration");
-    const startedAt = new Date();
-    let cancelled = false;
-    const interrupt = (): void => {
-      cancelled = true;
-    };
-    process.once("SIGINT", interrupt);
-    await withAcceptanceRecord(this.repoRoot, "hub-hostile-input", async () => {
-      const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
-      const oracle = spawnToolSyncV1("bun", ["x", "vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
-      const law = ([owner, name]: readonly [string, string], seed?: number): Promise<{ status: number; lines: string[] }> =>
-        runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
-      const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));
-      const enumerated: Record<string, boolean> = {};
-      for (const name of ["draws", "coverage", "refusals"] as const) {
-        if (cancelled) break;
-        enumerated[name] = passes(await law(HOSTILE_INPUT_LAWS[name]));
-      }
-      let requests = 0;
-      let sequences = 0;
-      const findings: string[] = [];
-      const failedSeeds: number[] = [];
-      for (const seed of seeds) {
-        if (cancelled) break;
-        const run = await law(HOSTILE_INPUT_LAWS.generative, seed);
-        const counted = run.lines.map((line) => /hostile-generative: (\d+) requests, (\d+) socket sequences, (\d+) findings/u.exec(line)).find((match) => match !== null);
-        requests += Number(counted?.[1] ?? 0);
-        sequences += Number(counted?.[2] ?? 0);
-        if (!passes(run)) {
-          failedSeeds.push(seed);
-          findings.push(...run.lines.filter((line) => line.startsWith("seed ")).slice(0, 8));
-        }
-      }
-      const enumeratedPassed = Object.values(enumerated).filter(Boolean).length;
-      const status = cancelled ? "skipped" : oracle.status === 0 && enumeratedPassed === 3 && failedSeeds.length === 0 ? "pass" : "fail";
-      const summary = {
-        en: `oracle ${oracle.status === 0 ? "passes" : "fails"}; enumerated laws ${enumeratedPassed}/3; generative ${seeds.length - failedSeeds.length}/${seeds.length} seeds clean over ${requests} requests and ${sequences} socket sequences${failedSeeds.length ? `; findings at seeds ${failedSeeds.join(", ")}` : ""}`,
-        de: `Orakel ${oracle.status === 0 ? "bestanden" : "fehlgeschlagen"}; aufgezählte Gesetze ${enumeratedPassed}/3; generativ ${seeds.length - failedSeeds.length}/${seeds.length} Startwerte ohne Befund über ${requests} Anfragen und ${sequences} Socket-Folgen${failedSeeds.length ? `; Befunde bei Startwerten ${failedSeeds.join(", ")}` : ""}`,
-      };
-      console.log(`[hostile-input] ${summary[locale]}`);
-      for (const finding of findings) console.log(`[hostile-input] ${finding}`);
-      publishAcceptanceCheckResult(
-        this.repoRoot,
-        acceptanceCheckResult({
-          check: "hub-hostile-input",
-          status,
-          startedAt,
-          measured: { seeds: seeds.join(","), oracle: oracle.status === 0, draws: enumerated.draws ?? false, coverage: enumerated.coverage ?? false, refusals: enumerated.refusals ?? false, requests, socketSequences: sequences, failedSeeds: failedSeeds.join(",") },
-          summary,
-        }),
+    const stagingRoot = mkdtempSync(join(tmpdir(), "hub-dev-binary-"));
+    try {
+      const staged = join(stagingRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+      let attempts = 0;
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 1 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET) && error.message.includes(staged) && error.message.includes("status 1"),
       );
-      if (status !== "pass") process.exitCode = 1;
+      assert.equal(attempts, 1);
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 0 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET),
+      );
+      assert.equal(attempts, 2);
+      assert.equal(
+        hubDevBinaryPath(stagingRoot, {
+          stage: () => {
+            attempts += 1;
+            mkdirSync(dirname(staged), { recursive: true });
+            writeFileSync(staged, "staged");
+            return 0;
+          },
+        }),
+        staged,
+      );
+      assert.equal(attempts, 3);
+      assert.equal(hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 0 }), staged);
+      assert.equal(attempts, 4);
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 1 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET) && error.message.includes("status 1"),
+      );
+      assert.equal(attempts, 5);
+    } finally {
+      rmSync(stagingRoot, { recursive: true, force: true });
+    }
+    const brokerCases = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🚀️local-bootstrap/🧪️tests/🧫️fixtures/🎫️session-broker-v1/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly def: "LocalSessionBrokerRecordV1" | "LocalSessionRequestV1" | "LocalSessionV1" | "LocalAdminCapabilityV1"; readonly value: unknown; readonly valid: boolean }[] };
+    const brokerParsers = { LocalSessionBrokerRecordV1: parseLocalSessionBrokerRecordV1, LocalSessionRequestV1: parseLocalSessionRequestV1, LocalSessionV1: parseLocalSessionV1, LocalAdminCapabilityV1: parseLocalAdminCapabilityV1 } as const;
+    for (const row of brokerCases.cases) {
+      const ajv = hubSchemaExport(this.repoRoot, `schema://hub.local-bootstrap/${row.def}`)(row.value) === true;
+      let parsed = true;
+      try {
+        brokerParsers[row.def](row.value);
+      } catch {
+        parsed = false;
+      }
+      assert.equal(ajv, row.valid, `session broker case ${row.id}: Ajv disagrees with the fixture`);
+      assert.equal(parsed, row.valid, `session broker case ${row.id}: TypeScript parser disagrees with the fixture`);
+    }
+    assert(brokerCases.cases.some((row) => row.valid) && brokerCases.cases.some((row) => !row.valid));
+    console.log(`local-bootstrap-launch: unlimited-budget=1 opted-budget=1 negative-budget=1 staging-cases=5 session-broker-cases=${brokerCases.cases.length} (ajv+parser agree) passed`);
+  }
+}
+
+/** 📦️ Stages the release-profile `os-hub` binary as the project's `dist/build` deliverable. The hub owns
+ * this the same way it owns `build-dev`, so `📋️project.json` names only this package's `📜️script.ts`. */
+export class BuildScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Select build through the build tool without additional arguments");
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
+  }
+}
+
+/** 🚚️ Packages `build`'s staged release binary as a versioned, checksummed tarball under
+ * `dist/publish` — the missing link between "a release binary compiles" and "an operator can be
+ * handed one". Local artifact only: nothing is uploaded or pushed anywhere, and where the tarball
+ * goes next is a deployment decision this repository does not take. Reached through the root
+ * `bun ./📜️script.ts publish os-hub`. */
+export class PublishScript extends BundleScript {
+  run(args: string[]): void {
+    if (args.length) throw new Error("Select publish through the build tool without additional arguments");
+    packageNativeRelease({
+      binary: join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"),
+      name: "os-hub",
+      version: workspaceCargoVersion(this.repoRoot),
+      output: join(this.root, "dist", "publish"),
     });
-    process.removeListener("SIGINT", interrupt);
   }
 }
 
-export class ArtifactCasCheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-artifact-authority", "-p", "semio-hub-directory-laws", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-hostile-input-laws", "--lib", "artifact_cas_maintenance", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
-    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
+/** 🏗️ Stages the dev-profile `os-hub` binary as a cached package deliverable, mirroring
+ * `framework-renderer-wgpu:native-build`'s `dist/native-<profile>` pattern, so `DevScript` execs a
+ * built artifact instead of running `cargo build` inline on every launch. */
+export class BuildDevScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Select build-dev through the build tool without additional arguments");
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
-/** 🤝️ Executes the hub-owned two-browser collaboration acceptance suite. */
-export class DevCollaborationScript extends BundleScript {
-  async run(segments: string[]): Promise<void> { await (await import("../../🧪️tests/🤝️dev-collaboration/🟦️.ts")).runCollabE2eCli(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"collaboration",0),segments); }
+/** 🐘️ Points BOTH durable halves of a `dev postgres` / `dev neo4j` launch at that backend.
+ *
+ * Zero-touch: without a caller-named server (`OS_HUB_DATABASE_URL` for postgres, `OS_HUB_NEO4J_URI` for neo4j) the
+ * launch reuses — or starts — the persistent development server `os-hub-ts:backend-up` manages
+ * (`ensureHubBackend`, `🌎️hub/compose.yaml`), and takes every hub variable it declares. A caller-named server keeps
+ * the caller's variables; only the directory half is filled from the storage half when unset.
+ *
+ * 🧵️ Both halves reach `sqlx`/`neo4rs` through `db_storage::DbIoAsyncDriverRuntime`, the bounded runtime the
+ * storage layer owns: a driver future is never polled on a `WorkerPool` worker, which has no Tokio context and
+ * aborted the process before that seam existed (ticket 26/09/18 D4). */
+async function applyExternalBackendEnvironment(repoRoot: string, name: HubBackendName): Promise<void> {
+  const named = name === "postgres" ? process.env.OS_HUB_DATABASE_URL : process.env.OS_HUB_NEO4J_URI;
+  if (!named) {
+    const server = await ensureHubBackend(repoRoot, hubBackendIdentity(name), { onProgress: (progress) => console.log(`[INFO] ${progress.name} backend ${progress.phase} ${progress.elapsedSeconds} s`) });
+    for (const [key, value] of Object.entries(server.env)) process.env[key] ??= value;
+    console.log(`[INFO] dev ${name}: backend server ${server.host}:${server.port} (container ${server.identity.container}; remove with os-hub-ts:backend-down)`);
+    return;
+  }
+  process.env.OS_HUB_STORAGE_BACKEND = name;
+  process.env.OS_HUB_DIRECTORY_BACKEND ??= name;
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "postgres") process.env.OS_HUB_DIRECTORY_DATABASE_URL ??= process.env.OS_HUB_DATABASE_URL;
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j") {
+    process.env.OS_HUB_DIRECTORY_NEO4J_URI ??= process.env.OS_HUB_NEO4J_URI;
+    process.env.OS_HUB_DIRECTORY_NEO4J_USER ??= process.env.OS_HUB_NEO4J_USER;
+    process.env.OS_HUB_DIRECTORY_NEO4J_PASSWORD ??= process.env.OS_HUB_NEO4J_PASSWORD;
+  }
+  if (!process.env.OS_HUB_DIRECTORY_DATABASE_URL && process.env.OS_HUB_DIRECTORY_BACKEND === "postgres") throw new Error("OS_HUB_DIRECTORY_BACKEND=postgres needs OS_HUB_DIRECTORY_DATABASE_URL");
+  if (!process.env.OS_HUB_DIRECTORY_NEO4J_URI && process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j") throw new Error("OS_HUB_DIRECTORY_BACKEND=neo4j needs OS_HUB_DIRECTORY_NEO4J_URI (for example bolt://127.0.0.1:7687)");
+}
+
+/** 🔗️ `runCargo`'s `env` arg replaces `process.env` wholesale (see `runCmdInternal`'s
+ * `opts.env ?? process.env`), so this inherits the full process env and only defaults the port —
+ * otherwise the launcher's `OS_HUB_PORT`/`OS_HUB_DATA` (and `PATH`) would be silently dropped. */
+export class DevScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    buildAdminSpa(this.repoRoot);
+    const external = segments[0] === "postgres" || segments[0] === "neo4j" ? hubBackendName(segments[0]) : undefined;
+    const phaseControl=exactCargoCallerControlV1(this.invocation,"hub:development",0);
+    if (external) await applyExternalBackendEnvironment(this.repoRoot, external);
+    const secureSuite = segments[0] === "secure-suite";
+    const secureNative = secureSuite || segments[0] === "secure-native";
+    const secureMcp = secureSuite || segments[0] === "secure-mcp";
+    const secureAdmin = secureSuite || segments[0] === "secure-admin";
+    if (secureNative) {
+      proveNativeCredentialSourceOrder(this.repoRoot);
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--", process.env.SEMIO_PLUGIN ?? "s"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    }
+    if (secureMcp) {
+      proveMcpCredentialSourceOrder(this.repoRoot);
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-mcp-rs:build"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    }
+    process.env.OS_HUB_CREDENTIAL_SIGN_IN = process.env.OS_HUB_CREDENTIAL_SIGN_IN ?? "1";
+    process.env.OS_HUB_ADMIN_TOKEN = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
+    const profiles: readonly LocalProfile[] = [
+      ...LOCAL_HUB_DEVELOPMENT_PROFILES,
+      ...(secureAdmin ? [LOCAL_HUB_ADMINISTRATOR_PROFILE] : []),
+    ];
+    await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["--bin","os-hub"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,consume:verifyCapturedCargoArtifactsV1});
+    return withRepositoryDevelopmentStateV1(this.invocation,phaseControl,(state,statePhase)=>withPublishedDevelopmentLocalHubHostV1(this.invocation,statePhase,state,async(host,context)=>{
+    const {dataRoot}=context;
+    let trustedCatalog = trustedBootstrapCurrent(dataRoot);
+    if (!trustedCatalog) {
+      await withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES),async(receipt,actualPhase)=>{
+      await validateAndPublishTrustedStdioGisCandidate(host,actualPhase,receipt);
+      trustedCatalog = trustedBootstrapCurrent(dataRoot);
+      if (!trustedCatalog) throw new Error("trusted stdio+GIS candidate did not publish an exact current generation");
+      });
+    }
+    const run = await startLocalHub(host,profiles,{
+      port: Number(process.env[OS_HUB_PORT_ENV] ?? OS_HUB_PORT),
+      ...(secureAdmin?{adminSubjects:[LOCAL_HUB_ADMINISTRATOR_SUBJECT]}:{}),
+      capture: true,
+      ...(process.env.OS_HUB_ADMIN_TOKEN?{adminToken:process.env.OS_HUB_ADMIN_TOKEN}:{}),
+      credentialSignIn:true,
+    });
+    let relay: LocalBrowserRelay | undefined;
+    let adminRelay: LocalAdminRelay | undefined;
+    let stopping:ReturnType<typeof stopLocalHubV1>|undefined;
+    let ui: ChildProcess | undefined;
+    let native: ChildProcess | undefined;
+    let mcp: ChildProcess | undefined;
+    const stop = (): void => {
+      void relay?.stop();
+      void adminRelay?.stop();
+      for (const child of [ui, native, mcp]) if (child) terminateOwnedChildTree(child);
+      stopping??=stopLocalHubV1(run,"graceful");void stopping.catch(()=>{});
+    };
+    process.once("SIGINT", stop);
+    process.once("SIGTERM", stop);
+    try {
+      await waitForReadiness(run);
+      console.log(`[INFO] secure local hub ready at http://127.0.0.1:${run.port}`);
+      if (secureNative) {
+        const envelope = await issueLocalCredential(run, "developer", "native");
+        native = await deliverNativeCredentialEnvelope(nativeWgpuExecutable(this.repoRoot), ["--plugin", process.env.SEMIO_PLUGIN ?? "s"], envelope, `http://127.0.0.1:${run.port}`);
+        native.stdout?.pipe(process.stdout);
+        native.stderr?.pipe(process.stderr);
+        console.log("[INFO] secure native WGPU child started with an fd3 credential endpoint");
+      }
+      if (secureMcp) {
+        const envelope = await issueLocalCredential(run, "developer", "mcp", secureNative ? 3 : 2);
+        ({ child: mcp } = await startMcpWorkspaceChild(this.repoRoot, run, envelope));
+        mcp.stdout?.pipe(process.stdout);
+        mcp.stderr?.pipe(process.stderr);
+        console.log("[INFO] secure MCP child started with an fd3 credential endpoint");
+      }
+      if (secureAdmin) {
+        const envelope = await issueLocalCredential(run, "administrator", "admin-relay", secureSuite ? 5 : 2);
+        const adminProof = randomBytes(32);
+        const adminProofHex = adminProof.toString("hex");
+        adminRelay = startLocalAdminRelay(`http://127.0.0.1:${run.port}`, envelope, adminProof);
+        openExternalBrowser(`${adminRelay.url}/admin/#semio-admin=${adminProofHex}`);
+        console.log(`[INFO] secure local admin starting at ${adminRelay.url}/admin/`);
+      }
+      if (secureSuite) {
+        const uiPort = Number(process.env.S_OS_PORT ?? 6066);
+        const uiOrigin = `http://127.0.0.1:${uiPort}`;
+        const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
+        relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
+        const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
+        ui = spawnToolV1(process.execPath, [uiScript, "serve", "s", "react", "dev"], {
+          cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
+          env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
+          shell: false,
+          stdio: "inherit",
+        });
+        await waitForUiReadiness(uiOrigin, ui);
+        const browserProof = relay.takeBrowserBootstrapProof();
+        const browserProofHex = browserProof.toString("hex");
+        browserProof.fill(0);
+        openExternalBrowser(`${uiOrigin}/#semio-broker=${browserProofHex}`);
+        console.log(`[INFO] secure local OS profile starting at ${uiOrigin}`);
+      }
+      await withLocalSessionBrokerV1(run,profiles,2+[secureNative,secureMcp,secureSuite,secureAdmin].filter(Boolean).length,undefined,async broker=>{
+      console.log(`[INFO] local session broker for ${broker.record.profiles.join(",")} — every \`dev s\` row signs in through it`);
+      await new Promise<void>((resolveExit, rejectExit) => {
+        void waitForLocalHubExitV1(run).then(result=>result.status===0&&result.signal===null?resolveExit():rejectExit(Error(`hub child exited with status ${result.status} signal ${result.signal}`)),rejectExit);
+        ui?.once("exit", (code) => (code === 0 ? resolveExit() : rejectExit(new Error(`secure local UI child exited with status ${code}`))));
+        native?.once("exit", (code) => (code === 0 ? resolveExit() : rejectExit(new Error(`secure native WGPU child exited with status ${code}`))));
+        mcp?.once("exit", (code) => (code === 0 ? resolveExit() : rejectExit(new Error(`secure MCP child exited with status ${code}`))));
+      });
+      });
+    } finally {
+      process.off("SIGINT", stop);
+      process.off("SIGTERM", stop);
+      await relay?.stop();
+      await adminRelay?.stop();
+      for (const child of [ui, native, mcp]) if (child) terminateOwnedChildTree(child);
+      await stopping;
+      await finishLocalHub(run);
+    }
+    }));
+  }
 }

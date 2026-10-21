@@ -1,8 +1,24 @@
 //! 📚️ Compile source-authored JSON into intrinsic value expressions.
+#![feature(proc_macro_tracked_path, proc_macro_tracked_env)]
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use std::collections::HashSet;
 use syn::LitStr;
+
+use semio_framework_native_build_compiler_resources as compiler_resources;
+
+/// 📚️ Compiles a package-relative source JSON asset into an owned intrinsic value.
+#[proc_macro]
+pub fn owned_json_file(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    observe_compiler_resources(|| {
+        let path = syn::parse_macro_input!(input as syn::LitStr);
+        expand(&path).unwrap_or_else(|error| error.to_compile_error()).into()
+    })
+}
+
+fn observe_compiler_resources<R>(run: impl FnOnce() -> R) -> R {
+    compiler_resources::with_compiler_resources_v1(env!("CARGO_MANIFEST_DIR"), concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"), proc_macro::Span::call_site().local_file(), proc_macro::tracked::env_var("SEMIO_COMPILER_RESOURCE_ROOT").ok(), |path| proc_macro::tracked::path(path), run)
+}
 
 pub(crate) fn expand(path: &LitStr) -> syn::Result<TokenStream> {
     let relative = path.value();

@@ -52,14 +52,17 @@ semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️t
 semio-framework-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
-semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-os-command = { path = "../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

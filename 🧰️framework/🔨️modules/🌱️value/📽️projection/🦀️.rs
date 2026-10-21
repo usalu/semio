@@ -11,18 +11,21 @@ pub use owned::OwnedFieldProjection;
 mod output_placement{pub trait Sealed<T>{}impl<T> Sealed<T> for T{}impl<T> Sealed<T> for Box<T>{}}
 /// 🪑️ Only the firstparty value and boxed-value output forms can initialize an admitted field.
 /// The private seal fixes placement behavior; refusals return the same owner and leave the destination unchanged.
-pub trait ProjectionOutput<T>:output_placement::Sealed<T>+RetireOwned+Sized{
+pub trait ProjectionOutput<T>:output_placement::Sealed<T>+RetireOwned+Sync+Sized{
  fn projected_value(&self)->&T;
+ fn projected_value_mut(&mut self)->&mut T;
  fn placement_demand()->RetirementDemand;
  fn place(self,target:&mut MaybeUninit<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Self)>;
 }
-impl<T:RetireOwned> ProjectionOutput<T> for T{
+impl<T:RetireOwned+Sync> ProjectionOutput<T> for T{
  fn projected_value(&self)->&T{self}
+ fn projected_value_mut(&mut self)->&mut T{self}
  fn placement_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>()*2,depth:1,..Default::default()}}
  fn place(self,target:&mut MaybeUninit<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Self)>{let d=<Self as ProjectionOutput<T>>::placement_demand();if !retained_clone_grant_admits(grant,d){return Err((invalid("original projection field placement is not funded"),self));}target.write(self);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})}
 }
-impl<T:RetireOwned> ProjectionOutput<T> for Box<T>{
+impl<T:RetireOwned+Sync> ProjectionOutput<T> for Box<T>{
  fn projected_value(&self)->&T{self.as_ref()}
+ fn projected_value_mut(&mut self)->&mut T{self.as_mut()}
  fn placement_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>()*2+size_of::<Self>()*2,release_bytes:size_of::<T>(),depth:1,..Default::default()}}
  fn place(self,target:&mut MaybeUninit<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Self)>{let d=<Self as ProjectionOutput<T>>::placement_demand();if !retained_clone_grant_admits(grant,d){return Err((invalid("original boxed projection placement is not funded"),self));}target.write(*self);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})}
 }

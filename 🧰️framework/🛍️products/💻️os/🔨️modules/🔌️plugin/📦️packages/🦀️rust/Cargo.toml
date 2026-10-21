@@ -54,7 +54,6 @@ semio-framework-job-worker-authority = { path = "../../../../../../🔨️module
 
 semio-framework-composition-admission = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
-semio-framework-value-retirement-owner = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -70,7 +69,6 @@ semio-framework-schema-composition = { path = "../../../../../../🔨️modules/
 semio-framework-schema-registry = { path = "../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-registry = { path = "../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
@@ -205,6 +203,7 @@ semio-framework-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️
 semio-framework-plugin-reactor-wit-bridge = { path = "../../⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-registry = { path = "../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-framework-plugin-surface-fixture = { path = "../../🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }

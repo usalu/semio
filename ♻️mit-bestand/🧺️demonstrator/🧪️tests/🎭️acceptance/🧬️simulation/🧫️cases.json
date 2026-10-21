@@ -3,11 +3,12 @@
     "paneId": "energie",
     "toolTabId": "tool.energySimulation",
     "toolCategoryId": "framework.category.tool",
-    "complete": "^(Complete, ready to finalize|Fertig, bereit zum Abschließen) ·",
     "finalized": "^(Finalized|Abgeschlossen) ·",
     "aborted": "^(Aborted, nothing was changed|Abgebrochen, nichts wurde geändert) ·",
     "finalStep": "(?:Final: .* kWh after [0-9]+ of [0-9]+ timesteps|Endgültig: .* kWh nach [0-9]+ von [0-9]+ Zeitschritten)",
-    "noResult": "No result was accepted|Kein Ergebnis wurde übernommen"
+    "noResult": "No result was accepted|Kein Ergebnis wurde übernommen",
+    "completion": "automatic",
+    "acceptedResult": "The final result is accepted; the simulation never writes the document|Das Endergebnis ist übernommen; die Simulation schreibt nie ins Dokument"
   },
   "fem": {
     "paneId": "statik",
@@ -18,9 +19,56 @@
     "initialScale": 300,
     "changedScale": 600,
     "steps": [
-      { "action": "change", "scale": 600 },
-      { "action": "undo", "scale": 300 },
-      { "action": "redo", "scale": 600 }
+      {
+        "action": "change",
+        "scale": 600
+      },
+      {
+        "action": "undo",
+        "scale": 300
+      },
+      {
+        "action": "redo",
+        "scale": 600
+      }
     ]
-  }
+  },
+  "restarts": [
+    {
+      "name": "new group",
+      "previous": "framework.toolRun.1",
+      "candidate": "framework.toolRun.2",
+      "accepted": true
+    },
+    {
+      "name": "empty intermediate projection",
+      "previous": "framework.toolRun.1",
+      "candidate": "",
+      "accepted": false
+    },
+    {
+      "name": "same group",
+      "previous": "framework.toolRun.1",
+      "candidate": "framework.toolRun.1",
+      "accepted": false
+    },
+    {
+      "name": "non-numeric group",
+      "previous": "framework.toolRun.1",
+      "candidate": "framework.toolRun.ready",
+      "accepted": false
+    },
+    {
+      "name": "child is not a group",
+      "previous": "framework.toolRun.1",
+      "candidate": "framework.toolRun.2.status",
+      "accepted": false
+    },
+    {
+      "name": "initial group",
+      "previous": "",
+      "candidate": "framework.toolRun.1",
+      "accepted": true
+    }
+  ]
 }

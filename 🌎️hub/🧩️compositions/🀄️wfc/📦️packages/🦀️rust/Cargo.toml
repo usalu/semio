@@ -18,7 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-2d = { workspace = true }
 semio-s-artifact-wfc-3d = { workspace = true }
 semio-s-artifact-wfc-bitmap = { workspace = true }

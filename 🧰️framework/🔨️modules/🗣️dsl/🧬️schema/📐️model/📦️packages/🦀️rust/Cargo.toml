@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-diagnostic = { path="../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path="../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-paged-text = { path = "../../../../../🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-dsl = { path="../../../../📦️packages/🦀️rust" }

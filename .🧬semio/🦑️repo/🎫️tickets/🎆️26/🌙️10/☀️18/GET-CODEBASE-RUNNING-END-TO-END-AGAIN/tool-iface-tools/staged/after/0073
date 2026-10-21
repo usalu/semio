@@ -1,108 +1,2364 @@
-import { describe, expect, test } from "bun:test";
-import registryDocument from "../../🔣️.json" with { type: "json" };
-import { findToolV1, probeToolV1, readToolRegistryV1, resolveToolV1, runToolSyncV1, runToolV1, systemToolHostV1, toolCallerFileV1, ToolErrorV1, type ToolAdmissionV1, type ToolProgressV1 } from "../../🟦️.ts";
-
-const row = (id: string, command: string, capacity: unknown, callers: string[]) => ({
-  id, kind: "runtime", summary: { en: "Probe tool.", de: "Prüfwerkzeug." }, capabilities: ["run"], commands: [command], platforms: ["darwin", "linux", "win32"], pin: { state: "system" },
-  provision: { kind: "system", command: "install it" }, locate: [{ kind: "environment", name: "PROBE_" + id.toUpperCase() }], probe: { arguments: ["--version"], pattern: "^([0-9]+\\.[0-9]+\\.[0-9]+)" },
-  adapter: "x/adapter.ts", adapterScope: [], allowedCallers: callers, environment: { mode: "inherit", pass: [], deny: ["LEAK_*"], set: { FIXED: "yes" } }, capacity,
-});
-const document = JSON.parse(JSON.stringify(registryDocument));
-document.tools.push(row("heavy", "heavy-tool", { mode: "admit", operation: "command", kind: "build" }, ["only/here/**"]), row("light", "light-tool", { mode: "none" }, ["**"]));
-const registry = readToolRegistryV1(document);
-const environment = { ...process.env, PROBE_HEAVY: process.execPath, PROBE_LIGHT: process.execPath, LEAK_ME: "1", SEMIO_LANGUAGE: "en" };
-const options = { registry, environment, trusted: true, root: process.cwd() };
-const program = (source: string) => ["-e", source];
-
-describe("runToolV1", () => {
-  test("captures output under the sanitized environment of the registry", async () => {
-    const result = await runToolV1("heavy", program("console.log(process.env.FIXED, process.env.SEMIO_TOOL_RUN, process.env.LEAK_ME)"), { ...options, capture: true, admission: false });
-    expect(result.stdout.trim()).toBe("yes heavy undefined");
-    expect(result.status).toBe(0);
-    expect(result.resolution.source).toBe("environment");
-  });
-  test("throws on a failure by default and reports it with check false", async () => {
-    await expect(runToolV1("light", program("process.exit(3)"), { ...options, capture: true })).rejects.toMatchObject({ code: "failed", status: 3 });
-    expect((await runToolV1("light", program("process.exit(3)"), { ...options, capture: true, check: false })).status).toBe(3);
-    expect((await runToolV1("light", program("process.exit(4)"), { ...options, check: false, stdout: "ignore" })).status).toBe(4);
-  });
-  test("streams lines of a tool to the caller", async () => {
-    const lines: string[] = [];
-    await runToolV1("light", program("console.error('from the tool')"), { ...options, stdout: "ignore", onLine: (line, stream) => lines.push(`${stream}:${line}`) });
-    expect(lines).toEqual(["stderr:from the tool"]);
-  });
-  test("refuses an unknown tool and a caller the registry does not allow, in the chosen language", async () => {
-    await expect(runToolV1("nope", [], options)).rejects.toMatchObject({ code: "unknown-tool" });
-    const refused = await runToolV1("heavy", [], { ...options, trusted: false, caller: "other/place.ts", admission: false }).catch(error => error as ToolErrorV1);
-    expect(refused).toMatchObject({ code: "caller-refused" });
-    expect(refused.message).toContain("other/place.ts may not run heavy");
-    const german = await runToolV1("heavy", [], { ...options, trusted: false, caller: "other/place.ts", environment: { ...environment, SEMIO_LANGUAGE: "de" } }).catch(error => error as ToolErrorV1);
-    expect(german.message).toContain("darf heavy nicht ausführen");
-    await expect(runToolV1("heavy", program("0"), { ...options, trusted: false, caller: "only/here/a.ts", capture: true, admission: false })).resolves.toMatchObject({ status: 0 });
-    await expect(runToolV1("heavy", program("0"), { ...options, trusted: false, caller: "other/place.ts", environment: { ...environment, SEMIO_TOOL_GUARD: "off" }, capture: true, admission: false })).resolves.toMatchObject({ status: 0 });
-  });
-  test("names the provisioning command when a tool is missing", async () => {
-    const missing = await runToolV1("light", [], { ...options, environment: { SEMIO_LANGUAGE: "de" } }).catch(error => error as ToolErrorV1);
-    expect(missing).toMatchObject({ code: "tool-missing" });
-    expect(missing.message).toContain("nicht gefunden");
-    expect(missing.message).toContain("install it");
-  });
-  test("cancels a running tool and its process tree", async () => {
-    for (const capture of [true, false]) {
-      const controller = new AbortController(), started = performance.now();
-      setTimeout(() => controller.abort(), 150);
-      await expect(runToolV1("light", program("setTimeout(() => {}, 30000)"), { ...options, capture, signal: controller.signal, stdout: "ignore" })).rejects.toMatchObject({ code: "cancelled" });
-      expect(performance.now() - started).toBeLessThan(10000);
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "version": 1,
+ "languages": [
+  "en",
+  "de"
+ ],
+ "partitions": {
+  "tools": ".cache/b/t/m"
+ },
+ "packageRoots": [
+  "node_modules",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/node_modules",
+  ".cache/b/t/m/nx/*/node_modules"
+ ],
+ "funnels": [
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+   "marker": "routeRegisteredCommandV1"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts",
+   "marker": "routeRegisteredCommandV1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "marker": "routeRegisteredCommandV1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🌿️git/🐹️.go",
+   "marker": "routeRegisteredTool"
+  }
+ ],
+ "testCallers": [
+  "**/🧪️tests/**",
+  "**/🧫️fixtures/**",
+  "**/🧪️testing/**"
+ ],
+ "environment": {
+  "base": [
+   "PATH",
+   "HOME",
+   "USER",
+   "LOGNAME",
+   "SHELL",
+   "TMPDIR",
+   "TMP",
+   "TEMP",
+   "TERM",
+   "COLORTERM",
+   "NO_COLOR",
+   "FORCE_COLOR",
+   "LANG",
+   "LC_*",
+   "TZ",
+   "SYSTEMROOT",
+   "WINDIR",
+   "COMSPEC",
+   "PATHEXT",
+   "APPDATA",
+   "LOCALAPPDATA",
+   "USERPROFILE",
+   "HOMEDRIVE",
+   "HOMEPATH",
+   "PROGRAMFILES*",
+   "PROGRAMDATA",
+   "NUMBER_OF_PROCESSORS",
+   "PROCESSOR_ARCHITECTURE",
+   "XDG_*",
+   "CI",
+   "DEVCONTAINER",
+   "SEMIO_*",
+   "REPO_ROOT"
+  ],
+  "deny": [
+   "NODE_OPTIONS",
+   "ELECTRON_RUN_AS_NODE",
+   "ELECTRON_NO_ATTACH_CONSOLE",
+   "VSCODE_*",
+   "CURSOR_*",
+   "TERM_PROGRAM",
+   "TERM_PROGRAM_VERSION",
+   "JAVA_TOOL_OPTIONS",
+   "npm_config_*",
+   "npm_lifecycle_*",
+   "npm_package_*"
+  ]
+ },
+ "scan": {
+  "callees": [
+   {
+    "name": "spawn",
+    "language": "ts",
+    "shape": "command"
+   },
+   {
+    "name": "spawnSync",
+    "language": "ts",
+    "shape": "command"
+   },
+   {
+    "name": "execFile",
+    "language": "ts",
+    "shape": "command"
+   },
+   {
+    "name": "execFileSync",
+    "language": "ts",
+    "shape": "command"
+   },
+   {
+    "name": "fork",
+    "language": "ts",
+    "shape": "command"
+   },
+   {
+    "name": "exec",
+    "language": "ts",
+    "shape": "shell-string"
+   },
+   {
+    "name": "execSync",
+    "language": "ts",
+    "shape": "shell-string"
+   },
+   {
+    "name": "Bun.spawn",
+    "language": "ts",
+    "shape": "array"
+   },
+   {
+    "name": "Bun.spawnSync",
+    "language": "ts",
+    "shape": "array"
+   },
+   {
+    "name": "$",
+    "language": "ts",
+    "shape": "template"
+   },
+   {
+    "name": "Command::new",
+    "language": "rust",
+    "shape": "command"
+   },
+   {
+    "name": "exec.Command",
+    "language": "go",
+    "shape": "command"
+   },
+   {
+    "name": "exec.CommandContext",
+    "language": "go",
+    "shape": "command"
+   },
+   {
+    "name": "subprocess.run",
+    "language": "python",
+    "shape": "array"
+   },
+   {
+    "name": "subprocess.Popen",
+    "language": "python",
+    "shape": "array"
+   },
+   {
+    "name": "subprocess.check_output",
+    "language": "python",
+    "shape": "array"
+   },
+   {
+    "name": "subprocess.check_call",
+    "language": "python",
+    "shape": "array"
+   },
+   {
+    "name": "subprocess.call",
+    "language": "python",
+    "shape": "array"
+   }
+  ],
+  "shellWrappers": [
+   "sh",
+   "bash",
+   "zsh",
+   "cmd",
+   "cmd.exe",
+   "powershell",
+   "pwsh"
+  ],
+  "selfExpressions": [
+   "process.execPath",
+   "process.argv0",
+   "Bun.argv0"
+  ],
+  "testSegments": [
+   "🧪️tests",
+   "🧫️fixtures",
+   "🧰️testing",
+   "tests",
+   "e2e"
+  ],
+  "ignoredSegments": [
+   "node_modules",
+   ".cache",
+   ".git",
+   ".🧬semio",
+   "target",
+   "dist",
+   "🗑️generated",
+   "bazel-out"
+  ],
+  "extensions": {
+   "ts": [
+    ".ts",
+    ".tsx",
+    ".mts",
+    ".cts",
+    ".js",
+    ".mjs",
+    ".cjs"
+   ],
+   "rust": [
+    ".rs"
+   ],
+   "go": [
+    ".go"
+   ],
+   "python": [
+    ".py"
+   ],
+   "shell": [
+    ".sh",
+    ".bash",
+    ".zsh",
+    ".ps1",
+    ".cmd",
+    ".bat"
+   ]
+  },
+  "declaredNames": [
+   "📋️project.json",
+   "package.json"
+  ]
+ },
+ "messages": {
+  "unknownTool": {
+   "en": "Unknown tool {tool}. Registered tools: {known}.",
+   "de": "Unbekanntes Werkzeug {tool}. Registrierte Werkzeuge: {known}."
+  },
+  "toolMissing": {
+   "en": "Tool {tool} not found (tried {tried}). Provision it with: {command}.",
+   "de": "Werkzeug {tool} nicht gefunden (versucht: {tried}). Bereitstellen mit: {command}."
+  },
+  "callerRefused": {
+   "en": "{caller} may not run {tool}; allowed callers: {allowed}. Go through the adapter {adapter}.",
+   "de": "{caller} darf {tool} nicht ausführen; erlaubte Aufrufer: {allowed}. Den Adapter {adapter} verwenden."
+  },
+  "syncRefused": {
+   "en": "{tool} is a heavy tool and cannot run synchronously; use runToolV1.",
+   "de": "{tool} ist ein schweres Werkzeug und kann nicht synchron laufen; runToolV1 verwenden."
+  },
+  "versionMismatch": {
+   "en": "{tool} {found} differs from the pinned {pinned}.",
+   "de": "{tool} {found} weicht vom gepinnten {pinned} ab."
+  },
+  "cancelled": {
+   "en": "{tool} stopped: cancelled.",
+   "de": "{tool} gestoppt: abgebrochen."
+  },
+  "failed": {
+   "en": "{tool} failed ({status}).",
+   "de": "{tool} fehlgeschlagen ({status})."
+  },
+  "execUsage": {
+   "en": "Expected repo tools exec [--cwd=<path>] [--memory=<megabytes>] <tool> -- <arguments>.",
+   "de": "Erwartet: repo tools exec [--cwd=<Pfad>] [--memory=<Megabyte>] <Werkzeug> -- <Argumente>."
+  },
+  "listHeader": {
+   "en": "Registered tools (id, pin, state, path):",
+   "de": "Registrierte Werkzeuge (Id, Pin, Zustand, Pfad):"
+  },
+  "verifyOk": {
+   "en": "All {count} registered tools resolve on this host.",
+   "de": "Alle {count} registrierten Werkzeuge werden auf diesem Rechner gefunden."
+  },
+  "verifyProblem": {
+   "en": "{tool}: {problem}",
+   "de": "{tool}: {problem}"
+  },
+  "admitting": {
+   "en": "[tools] {tool} waits for machine capacity.",
+   "de": "[tools] {tool} wartet auf Rechnerkapazität."
+  },
+  "running": {
+   "en": "[tools] {tool} running ({seconds} s).",
+   "de": "[tools] {tool} läuft ({seconds} s)."
+  },
+  "finished": {
+   "en": "[tools] {tool} finished ({status}).",
+   "de": "[tools] {tool} beendet ({status})."
+  },
+  "guardRefused": {
+   "en": "Direct spawn of {command} by {caller} is refused: use runToolV1(\"{tool}\", ...).",
+   "de": "Direkter Start von {command} durch {caller} wird verweigert: runToolV1(\"{tool}\", ...) verwenden."
+  },
+  "guardWarned": {
+   "en": "Direct spawn of {command} by {caller}: use runToolV1(\"{tool}\", ...).",
+   "de": "Direkter Start von {command} durch {caller}: runToolV1(\"{tool}\", ...) verwenden."
+  },
+  "capacityMissing": {
+   "en": "No machine capacity gate is installed; {tool} runs unadmitted.",
+   "de": "Kein Kapazitätstor des Rechners installiert; {tool} läuft ohne Zulassung."
+  }
+ },
+ "tools": [
+  {
+   "id": "repo",
+   "kind": "entry",
+   "summary": {
+    "en": "The repository command line: the one door through which people and agents start work.",
+    "de": "Die Kommandozeile des Repositorys: die eine Tür, durch die Menschen und Agenten Arbeit starten."
+   },
+   "capabilities": [
+    "run",
+    "build",
+    "verify",
+    "tools",
+    "capacity"
+   ],
+   "commands": [
+    "repo"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "internal"
+   },
+   "provision": {
+    "kind": "internal",
+    "command": "bootstrap",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_REPO"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin",
+      "~/.local/share/semio/launcher/bin"
+     ]
+    },
+    {
+     "kind": "script",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+     "via": "bun",
+     "prefix": [
+      "repo"
+     ]
     }
-  });
-  test("ends a captured run at its deadline", async () => {
-    const result = await runToolV1("light", program("setTimeout(() => {}, 30000)"), { ...options, capture: true, timeoutMs: 200, check: false });
-    expect(result.status).toBeNull();
-    expect(result.signal).not.toBeNull();
-  });
-  test("waits for machine capacity before a heavy tool starts and runs it with the grant", async () => {
-    const asks: string[] = [], events: ToolProgressV1["phase"][] = [];
-    const admission: ToolAdmissionV1 = async (ask, body) => { asks.push(`${ask.tool}:${ask.operation}:${ask.kind}`); return body({ environment: { SEMIO_GRANT: "granted" }, jobs: 2 }); };
-    const result = await runToolV1("heavy", program("console.log(process.env.SEMIO_GRANT)"), { ...options, capture: true, admission, onProgress: event => events.push(event.phase) });
-    expect(result.stdout.trim()).toBe("granted");
-    expect(asks).toEqual(["heavy:command:build"]);
-    expect(events).toEqual(["admitting", "running", "finished"]);
-    await runToolV1("light", program("0"), { ...options, capture: true, admission });
-    expect(asks.length).toBe(1);
-  });
-  test("passes a cancellation that arrives while waiting for capacity to the gate", async () => {
-    const controller = new AbortController();
-    const admission: ToolAdmissionV1 = (_ask, _body, signal) => new Promise((_, reject) => signal!.addEventListener("abort", () => reject(new ToolErrorV1("cancelled", "heavy", "waiting cancelled"))));
-    setTimeout(() => controller.abort(), 50);
-    await expect(runToolV1("heavy", program("0"), { ...options, capture: true, admission, signal: controller.signal })).rejects.toMatchObject({ code: "cancelled" });
-  });
-});
-
-describe("runToolSyncV1", () => {
-  test("runs a light tool and refuses a heavy one", () => {
-    const result = runToolSyncV1("light", program("console.log('sync')"), options);
-    expect(result.stdout.trim()).toBe("sync");
-    expect(() => runToolSyncV1("heavy", program("0"), options)).toThrow("cannot run synchronously");
-    expect(runToolSyncV1("light", program("process.exit(2)"), options).status).toBe(2);
-    expect(() => runToolSyncV1("light", program("process.exit(2)"), { ...options, check: true })).toThrow("light failed");
-  });
-});
-
-describe("caller and probe", () => {
-  test("accepts the declared caller as a path, a file URL or an absolute path", async () => {
-    const allowed = { ...options, trusted: false, capture: true, admission: false };
-    for (const caller of ["only/here/a.ts", "file://" + process.cwd() + "/only/here/a.ts", process.cwd() + "/only/here/a.ts"]) await expect(runToolV1("heavy", program("0"), { ...allowed, caller })).resolves.toMatchObject({ status: 0 });
-    await expect(runToolV1("heavy", program("0"), { ...allowed, caller: process.cwd() + "/elsewhere/a.ts" })).rejects.toMatchObject({ code: "caller-refused" });
-    await expect(runToolV1("heavy", program("0"), { ...allowed, caller: "elsewhere/a.ts", environment: { ...environment, SEMIO_TOOL_GUARD: "warn" } })).resolves.toMatchObject({ status: 0 });
-  });
-  test("finds the first stack frame outside the tools module relative to the root", () => {
-    const stack = ["Error", "    at runToolV1 (/r/🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts:1:1)", "    at job (file:///r/a/b%20c.ts:3:4)", "    at x (/other/z.ts:1:1)"].join("\n");
-    expect(toolCallerFileV1("/r", stack)).toBe("a/b c.ts");
-    expect(toolCallerFileV1("/elsewhere", "    at f (/r/a.ts:1:1)")).toBeUndefined();
-    expect(toolCallerFileV1("/r", "")).toBeUndefined();
-  });
-  test("asks a resolved tool for its version", () => {
-    const entry = findToolV1("light", registry)!, resolution = resolveToolV1(entry, systemToolHostV1(process.cwd(), environment), registry);
-    expect(probeToolV1(entry, resolution, environment)).toBe(Bun.version);
-  });
-});
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit"
+   }
+  },
+  {
+   "id": "bun",
+   "kind": "runtime",
+   "summary": {
+    "en": "JavaScript and TypeScript runtime, test runner and package installer.",
+    "de": "Laufzeit, Test-Runner und Paketinstallation für JavaScript und TypeScript."
+   },
+   "capabilities": [
+    "run-typescript",
+    "test",
+    "install",
+    "bundle"
+   ],
+   "commands": [
+    "bun",
+    "bunx"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+     "format": "json",
+     "pointer": "/definitions/Release/const/version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Release/const/distributions",
+     "where": {},
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "archive",
+     "bytes": "bytes",
+     "extras": [
+      "musl"
+     ]
+    }
+   },
+   "provision": {
+    "kind": "release-archive",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_BUN"
+    },
+    {
+     "kind": "runtime"
+    },
+    {
+     "kind": "provisioned",
+     "partition": "tools",
+     "segments": [
+      "bun",
+      "{sha256}"
+     ],
+     "executable": "bun"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.bun/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "BUN_*"
+    ],
+    "deny": [
+     "BUN_INSPECT*",
+     "BUN_OPTIONS"
+    ],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "script"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "node",
+   "kind": "runtime",
+   "summary": {
+    "en": "Node.js runtime for tools that do not run on Bun.",
+    "de": "Node.js-Laufzeit für Werkzeuge, die nicht auf Bun laufen."
+   },
+   "capabilities": [
+    "run-javascript"
+   ],
+   "commands": [
+    "node",
+    "npm",
+    "npx"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "format": "rows",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "node"
+     },
+     "field": "version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "node"
+     },
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "url"
+    }
+   },
+   "provision": {
+    "kind": "bootstrap-asset",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_NODE"
+    },
+    {
+     "kind": "runtime"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/node/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "NODE_*",
+     "NPM_*"
+    ],
+    "deny": [
+     "NODE_OPTIONS",
+     "NODE_INSPECT*"
+    ],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "script"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^v([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "bazel",
+   "kind": "build-system",
+   "summary": {
+    "en": "Hermetic build system selected with --tool=bazel.",
+    "de": "Hermetisches Build-System, gewählt mit --tool=bazel."
+   },
+   "capabilities": [
+    "build",
+    "test",
+    "cache"
+   ],
+   "commands": [
+    "bazel",
+    "bazelisk"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json",
+     "format": "json",
+     "pointer": "/definitions/Release/const/version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Release/const/distributions",
+     "where": {},
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "file",
+     "bytes": "bytes"
+    }
+   },
+   "provision": {
+    "kind": "release-archive",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_BAZEL"
+    },
+    {
+     "kind": "provisioned",
+     "partition": "tools",
+     "segments": [
+      "bazel",
+      "bin",
+      "{sha256:16}"
+     ],
+     "executable": "bazel"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "BAZEL_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "bazel ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "nx",
+   "kind": "build-system",
+   "summary": {
+    "en": "Task graph and cache runner selected with --tool=nx.",
+    "de": "Task-Graph- und Cache-Runner, gewählt mit --tool=nx."
+   },
+   "capabilities": [
+    "build",
+    "test",
+    "cache",
+    "graph"
+   ],
+   "commands": [
+    "nx"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+     "format": "json",
+     "pointer": "/dependencies/nx"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_NX"
+    },
+    {
+     "kind": "package-script",
+     "package": "nx",
+     "script": "dist/bin/nx.js",
+     "via": "node"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "NX_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "cargo",
+   "kind": "compiler",
+   "summary": {
+    "en": "Rust toolchain: package manager, compiler front ends and formatter.",
+    "de": "Rust-Werkzeugkette: Paketmanager, Compiler-Frontends und Formatierer."
+   },
+   "capabilities": [
+    "build",
+    "test",
+    "check",
+    "format"
+   ],
+   "commands": [
+    "cargo",
+    "rustc",
+    "rustfmt",
+    "rustdoc",
+    "clippy-driver"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "rust-toolchain.toml",
+     "format": "toml",
+     "table": "toolchain",
+     "key": "channel"
+    }
+   },
+   "provision": {
+    "kind": "toolchain-file",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_CARGO"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.cargo/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/**",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/**",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**",
+    "🧰️framework/🔨️modules/🏃️process/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "CARGO_*",
+     "RUST*",
+     "SEMIO_CARGO_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "cargo",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^cargo ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "rustup",
+   "kind": "package-manager",
+   "summary": {
+    "en": "Rust toolchain installer.",
+    "de": "Installationsprogramm der Rust-Werkzeugkette."
+   },
+   "capabilities": [
+    "install",
+    "toolchain"
+   ],
+   "commands": [
+    "rustup"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "format": "rows",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "rustup"
+     },
+     "field": "version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "rustup"
+     },
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "url"
+    }
+   },
+   "provision": {
+    "kind": "bootstrap-asset",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_RUSTUP"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.cargo/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "RUSTUP_*",
+     "CARGO_HOME"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "none"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^rustup ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "go",
+   "kind": "compiler",
+   "summary": {
+    "en": "Go toolchain.",
+    "de": "Go-Werkzeugkette."
+   },
+   "capabilities": [
+    "build",
+    "test",
+    "modules"
+   ],
+   "commands": [
+    "go",
+    "gofmt"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "format": "rows",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "go"
+     },
+     "field": "version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "go"
+     },
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "url"
+    }
+   },
+   "provision": {
+    "kind": "bootstrap-asset",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_GO"
+    },
+    {
+     "kind": "provisioned",
+     "partition": "tools",
+     "segments": [
+      "native",
+      "go",
+      "{version}",
+      "{host}-{sha256:16}",
+      "bin"
+     ],
+     "executable": "go"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/go/bin",
+      "/usr/local/go/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/**",
+    "🧰️framework/🔨️modules/🏃️process/**",
+    "🧰️framework/🛍️products/🦑️repo/**/🐹️go/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "GO*",
+     "CGO_*"
+    ],
+    "deny": [],
+    "set": {},
+    "cacheDirectories": {
+     "GOCACHE": [
+      "go"
+     ]
+    }
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "version"
+    ],
+    "pattern": "go version go([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "uv",
+   "kind": "package-manager",
+   "summary": {
+    "en": "Python package and environment manager.",
+    "de": "Python-Paket- und Umgebungsverwaltung."
+   },
+   "capabilities": [
+    "install",
+    "run-python",
+    "lock"
+   ],
+   "commands": [
+    "uv",
+    "uvx"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "format": "rows",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "uv"
+     },
+     "field": "version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "uv"
+     },
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "url"
+    }
+   },
+   "provision": {
+    "kind": "bootstrap-asset",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_UV"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin",
+      "~/.cargo/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "UV_*",
+     "VIRTUAL_ENV"
+    ],
+    "deny": [],
+    "set": {
+     "UV_PYTHON_DOWNLOADS": "never"
+    }
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "dependencies",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^uv ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "python",
+   "kind": "runtime",
+   "summary": {
+    "en": "Python interpreter for generators and oracles.",
+    "de": "Python-Interpreter für Generatoren und Orakel."
+   },
+   "capabilities": [
+    "run-python"
+   ],
+   "commands": [
+    "python3",
+    "python",
+    "py"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "constrained",
+    "version": {
+     "file": "pyproject.toml",
+     "format": "toml",
+     "table": "project",
+     "key": "requires-python"
+    }
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "brew install python@3.14",
+     "linux": "apt-get install python3",
+     "win32": "winget install Python.Python.3.14"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_PYTHON"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin"
+     ],
+     "names": [
+      "python3",
+      "python",
+      "py"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "PYTHON*",
+     "VIRTUAL_ENV"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "script"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^Python ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "dotnet",
+   "kind": "compiler",
+   "summary": {
+    "en": ".NET SDK.",
+    "de": ".NET-SDK."
+   },
+   "capabilities": [
+    "build",
+    "test",
+    "restore"
+   ],
+   "commands": [
+    "dotnet"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "floating",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "format": "rows",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "dotnet-install"
+     },
+     "field": "version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Pins/const/assets",
+     "where": {
+      "tool": "dotnet-install"
+     },
+     "platform": "platform",
+     "architecture": "arch",
+     "sha256": "sha256",
+     "name": "url"
+    },
+    "gap": {
+     "en": "Only the installer script is pinned; the SDK channel floats. Pin the SDK with a global.json.",
+     "de": "Nur das Installationsskript ist gepinnt; der SDK-Kanal schwimmt. Das SDK mit einer global.json pinnen."
+    }
+   },
+   "provision": {
+    "kind": "bootstrap-asset",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_DOTNET"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.dotnet"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "**/🔷️dotnet/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "DOTNET_*",
+     "NUGET_*"
+    ],
+    "deny": [],
+    "set": {
+     "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+    }
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "cmake",
+   "kind": "compiler",
+   "summary": {
+    "en": "C and C++ project configuration and test driver.",
+    "de": "Konfiguration und Test-Treiber für C- und C++-Projekte."
+   },
+   "capabilities": [
+    "configure",
+    "build",
+    "test"
+   ],
+   "commands": [
+    "cmake",
+    "ctest",
+    "cpack"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "system",
+    "minimum": {
+     "file": "CMakePresets.json",
+     "format": "json",
+     "pointer": "/cmakeMinimumRequired"
+    }
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "brew install cmake",
+     "linux": "apt-get install cmake",
+     "win32": "winget install Kitware.CMake"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_CMAKE"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "CMAKE_*",
+     "CTEST_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "cmake version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "ninja",
+   "kind": "compiler",
+   "summary": {
+    "en": "Build executor for CMake projects.",
+    "de": "Build-Ausführer für CMake-Projekte."
+   },
+   "capabilities": [
+    "build"
+   ],
+   "commands": [
+    "ninja"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "floating",
+    "gap": {
+     "en": "Installed from the operating system package manager without a version pin.",
+     "de": "Wird ohne Versionspin aus der Paketverwaltung des Betriebssystems installiert."
+    }
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "brew install ninja",
+     "linux": "apt-get install ninja-build",
+     "win32": "winget install Ninja-build.Ninja"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_NINJA"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "NINJA_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "tsc",
+   "kind": "compiler",
+   "summary": {
+    "en": "TypeScript type checker.",
+    "de": "TypeScript-Typprüfer."
+   },
+   "capabilities": [
+    "typecheck"
+   ],
+   "commands": [
+    "tsc"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+     "format": "json",
+     "pointer": "/dependencies/typescript"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_TSC"
+    },
+    {
+     "kind": "package-script",
+     "package": "typescript",
+     "script": "bin/tsc",
+     "via": "bun"
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "check"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "Version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "vite",
+   "kind": "bundler",
+   "summary": {
+    "en": "Development server and bundler for web targets.",
+    "de": "Entwicklungsserver und Bundler für Web-Ziele."
+   },
+   "capabilities": [
+    "serve",
+    "bundle"
+   ],
+   "commands": [
+    "vite"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "constrained",
+    "version": {
+     "file": "package.json",
+     "format": "json",
+     "pointer": "/devDependencies/vite"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_VITE"
+    },
+    {
+     "kind": "package-script",
+     "package": "vite",
+     "script": "bin/vite.js",
+     "via": "bun"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "VITE_*",
+     "WATCHPACK_*",
+     "CHOKIDAR_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "service"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "vite/([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "vitest",
+   "kind": "test-runner",
+   "summary": {
+    "en": "Unit test runner for browser and component tests.",
+    "de": "Test-Runner für Browser- und Komponententests."
+   },
+   "capabilities": [
+    "test"
+   ],
+   "commands": [
+    "vitest"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "constrained",
+    "version": {
+     "file": "package.json",
+     "format": "json",
+     "pointer": "/devDependencies/vitest"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_VITEST"
+    },
+    {
+     "kind": "package-script",
+     "package": "vitest",
+     "script": "vitest.mjs",
+     "via": "bun"
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "VITEST_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "test"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "vitest/([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "playwright",
+   "kind": "test-runner",
+   "summary": {
+    "en": "Browser automation for end-to-end and parity checks.",
+    "de": "Browser-Automatisierung für End-to-End- und Paritätsprüfungen."
+   },
+   "capabilities": [
+    "browser-test",
+    "screenshot"
+   ],
+   "commands": [
+    "playwright"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "constrained",
+    "version": {
+     "file": "package.json",
+     "format": "json",
+     "pointer": "/devDependencies/playwright"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_PLAYWRIGHT"
+    },
+    {
+     "kind": "package-script",
+     "package": "playwright",
+     "script": "cli.js",
+     "via": "bun"
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🎭️playwright/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/🧰️tools/🎭️playwright/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎭️playwright/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "PLAYWRIGHT_*",
+     "DISPLAY"
+    ],
+    "deny": [],
+    "set": {},
+    "cacheDirectories": {
+     "PLAYWRIGHT_BROWSERS_PATH": [
+      "tools",
+      "ms-playwright"
+     ]
+    }
+   },
+   "capacity": {
+    "mode": "inherit",
+    "operation": "command",
+    "kind": "test"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "Version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "tectonic",
+   "kind": "typesetter",
+   "summary": {
+    "en": "TeX engine for reports and print pipelines.",
+    "de": "TeX-Engine für Berichte und Druckpipelines."
+   },
+   "capabilities": [
+    "typeset"
+   ],
+   "commands": [
+    "tectonic"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
+     "format": "json",
+     "pointer": "/version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
+     "pointer": "/platforms",
+     "where": {},
+     "platform": "platform",
+     "architecture": "architecture",
+     "sha256": "sha256",
+     "name": "archive",
+     "bytes": "bytes"
+    }
+   },
+   "provision": {
+    "kind": "release-archive",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_TECTONIC"
+    },
+    {
+     "kind": "provisioned",
+     "partition": "tools",
+     "segments": [
+      "tectonic",
+      "{sha256}"
+     ],
+     "executable": "tectonic"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/📓️print/**",
+    "♻️mit-bestand/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "Tectonic ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "wasm-opt",
+   "kind": "optimizer",
+   "summary": {
+    "en": "WebAssembly optimizer (Binaryen).",
+    "de": "WebAssembly-Optimierer (Binaryen)."
+   },
+   "capabilities": [
+    "optimize"
+   ],
+   "commands": [
+    "wasm-opt"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",
+     "format": "json",
+     "pointer": "/definitions/Release/const/version"
+    },
+    "digests": {
+     "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",
+     "pointer": "/definitions/Release/const/platforms",
+     "where": {},
+     "platform": "platform",
+     "architecture": "architecture",
+     "sha256": "sha256",
+     "name": "archive",
+     "bytes": "bytes"
+    }
+   },
+   "provision": {
+    "kind": "release-archive",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_WASM_OPT"
+    },
+    {
+     "kind": "provisioned",
+     "partition": "tools",
+     "segments": [
+      "wasm-opt",
+      "{sha256}",
+      "bin"
+     ],
+     "executable": "wasm-opt"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**",
+    "🧰️framework/🛍️products/💻️os/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "version_?([0-9]+)"
+   }
+  },
+  {
+   "id": "jco",
+   "kind": "compiler",
+   "summary": {
+    "en": "JavaScript component toolchain for WebAssembly components.",
+    "de": "JavaScript-Komponentenwerkzeug für WebAssembly-Komponenten."
+   },
+   "capabilities": [
+    "transpile",
+    "componentize"
+   ],
+   "commands": [
+    "jco"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "pinned",
+    "version": {
+     "file": "package.json",
+     "format": "json",
+     "pointer": "/devDependencies/@bytecodealliance~1jco"
+    }
+   },
+   "provision": {
+    "kind": "package",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_JCO"
+    },
+    {
+     "kind": "package-script",
+     "package": "@bytecodealliance/jco",
+     "script": "dist/jco.js",
+     "via": "node"
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/**",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/💻️os/**",
+    "🌎️hub/**",
+    "**/🧪️tests/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "wasm-pack",
+   "kind": "bundler",
+   "summary": {
+    "en": "Rust to WebAssembly packager.",
+    "de": "Rust-zu-WebAssembly-Paketierer."
+   },
+   "capabilities": [
+    "package"
+   ],
+   "commands": [
+    "wasm-pack"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "floating",
+    "gap": {
+     "en": "Version 0.15.0 is a literal in the dependency installer, not in a pin file.",
+     "de": "Version 0.15.0 steht als Literal im Abhängigkeitsinstaller, nicht in einer Pin-Datei."
+    }
+   },
+   "provision": {
+    "kind": "toolchain-file",
+    "command": "repo tools setup all",
+    "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts"
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_WASM_PACK"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.cargo/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "🧰️framework/🔨️modules/🏃️process/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "CARGO_*",
+     "RUST*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "build"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "wasm-pack ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "hdiutil",
+   "kind": "disk-image",
+   "summary": {
+    "en": "macOS disk image tool for the build store images.",
+    "de": "macOS-Disk-Image-Werkzeug für die Build-Store-Images."
+   },
+   "capabilities": [
+    "image-create",
+    "image-attach",
+    "image-detach"
+   ],
+   "commands": [
+    "hdiutil"
+   ],
+   "platforms": [
+    "darwin"
+   ],
+   "pin": {
+    "state": "system"
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "Included with macOS."
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_HDIUTIL"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "/usr/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/**",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**"
+   ],
+   "environment": {
+    "mode": "allowlist",
+    "pass": [],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "none"
+   }
+  },
+  {
+   "id": "docker",
+   "kind": "container",
+   "summary": {
+    "en": "Container engine for deployment and remote execution.",
+    "de": "Container-Engine für Deployment und Remote-Ausführung."
+   },
+   "capabilities": [
+    "container-run",
+    "image-build"
+   ],
+   "commands": [
+    "docker",
+    "docker-compose"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "system"
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "brew install --cask docker",
+     "linux": "apt-get install docker.io",
+     "win32": "winget install Docker.DockerDesktop"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_DOCKER"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "/usr/local/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🐳️service/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🐳️service/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/**"
+   ],
+   "allowedCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
+    "🎓️teaching/**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "DOCKER_*"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "admit",
+    "operation": "command",
+    "kind": "service"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "Docker version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "git",
+   "kind": "vcs",
+   "summary": {
+    "en": "Version control.",
+    "de": "Versionsverwaltung."
+   },
+   "capabilities": [
+    "status",
+    "diff",
+    "log",
+    "rev-parse"
+   ],
+   "commands": [
+    "git"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "system"
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "xcode-select --install",
+     "linux": "apt-get install git",
+     "win32": "winget install Git.Git"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_GIT"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "/opt/homebrew/bin",
+      "/usr/local/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️git/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/🧰️tools/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/🔒️git/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "GIT_SSH",
+     "GIT_SSH_COMMAND",
+     "GIT_ASKPASS",
+     "GIT_TERMINAL_PROMPT",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "GIT_CONFIG_NOSYSTEM",
+     "GIT_AUTHOR_*",
+     "GIT_COMMITTER_*",
+     "SSH_AUTH_SOCK"
+    ],
+    "deny": [
+     "VSCODE_GIT_*"
+    ],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "none"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "git version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  },
+  {
+   "id": "gh",
+   "kind": "vcs",
+   "summary": {
+    "en": "GitHub command line for issues, pull requests and repository facts.",
+    "de": "GitHub-Kommandozeile für Issues, Pull Requests und Repository-Fakten."
+   },
+   "capabilities": [
+    "issue",
+    "pull-request",
+    "repo-view"
+   ],
+   "commands": [
+    "gh"
+   ],
+   "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+   ],
+   "pin": {
+    "state": "system"
+   },
+   "provision": {
+    "kind": "system",
+    "command": "repo tools verify",
+    "hints": {
+     "darwin": "brew install gh",
+     "linux": "apt-get install gh",
+     "win32": "winget install GitHub.cli"
+    }
+   },
+   "locate": [
+    {
+     "kind": "environment",
+     "name": "SEMIO_TOOL_GH"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "/opt/homebrew/bin",
+      "/usr/local/bin"
+     ]
+    }
+   ],
+   "adapter": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🐙️github/🟦️.ts",
+   "adapterScope": [
+    "🧰️framework/🔨️modules/🏃️process/🧰️tools/🐙️github/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/🎄️github/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+   ],
+   "allowedCallers": [
+    "**"
+   ],
+   "environment": {
+    "mode": "inherit",
+    "pass": [
+     "GH_*",
+     "GITHUB_TOKEN",
+     "GITHUB_ENTERPRISE_TOKEN",
+     "SSH_AUTH_SOCK"
+    ],
+    "deny": [],
+    "set": {}
+   },
+   "capacity": {
+    "mode": "none"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ],
+    "pattern": "gh version ([0-9]+\\.[0-9]+\\.[0-9]+)"
+   }
+  }
+ ]
+}

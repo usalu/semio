@@ -6,7 +6,7 @@ pub fn parse(value:&str)->Result<Paint,String>{
     let invalid=||format!("invalid colour: {value}");
     if value=="transparent"{return Ok(Paint{hex:"000000".into(),alpha:0.0});}
     static NAMES:std::sync::OnceLock<semio_framework_value::DslValue>=std::sync::OnceLock::new();
-    let names=NAMES.get_or_init(||semio_framework_value_derive::owned_json_file!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json"));
+    let names=NAMES.get_or_init(||semio_framework_value_derive_resources::owned_json_file!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json"));
     let hex=names["x-semio-named-colors"].get(&value).and_then(semio_framework_value::DslValue::as_str).or_else(||value.strip_prefix('#'));
     if let Some(hex)=hex{
         if ![3,4,6,8].contains(&hex.len())||!hex.chars().all(|c|c.is_ascii_hexdigit()){return Err(invalid());}

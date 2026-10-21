@@ -16,7 +16,6 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model = { workspace = true }
 semio-s-artifact-energy-model-editor = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
@@ -36,7 +35,6 @@ semio-framework-plugin = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 # 🏢️ Architecturally pinned, not "not yet converted": `🗿️artifacts/🔋️model/🦀️.rs`'s
 #    `energy_structure_from_model`/`energy_model_from_structure` (the sole lossless `Model` <->

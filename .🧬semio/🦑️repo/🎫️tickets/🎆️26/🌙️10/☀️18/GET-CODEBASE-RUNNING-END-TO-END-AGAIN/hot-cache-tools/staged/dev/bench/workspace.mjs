@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 
 function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 
-/** Builds the workspace under `root`; returns the graph description. */
+/** 🏗 Builds the workspace under `root`; returns the graph description. */
 export function buildWorkspace({root,owners=1500,filesPerOwner=20,layers=8,depsPerOwner=2,nodeModulesFiles=12,outputNoise=10,seed=7}){
  rmSync(root,{recursive:true,force:true});mkdirSync(root,{recursive:true});
  const random=rng(seed),perLayer=Math.ceil(owners/layers),list=[];

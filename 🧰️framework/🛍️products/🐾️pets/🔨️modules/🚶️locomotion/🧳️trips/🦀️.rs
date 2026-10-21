@@ -7,10 +7,15 @@ use semio_framework_pets_contract::schema::Arrival;
 use semio_framework_pets_contract::schema::Trip;
 use semio_framework_pets_contract::schema::Pitch;
 use semio_framework_pets_contract::schema::Ladder;
+use crate::draft::{actor_key, feel, turn};
+use semio_framework_pets_clearance::released;
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
+use semio_framework_pets_traversal::climbing::{GRIP_BUDGET, GRIP_HANG, HOOK_RETURN, HOOK_SPEED, LADDER_IDLE, LADDER_LIFE, MUZZLE_FORWARD, MUZZLE_HEIGHT, ROPE_REST, chain_of, foot_of, hook_ticks, rim_of};
+use semio_framework_pets_contract::schema::Rope;
 
 //#region 🔖️Gear
 /// 🦥️ Rest on a wall or ladder while reserving enough grip to leave the wall.
-pub(crate) fn rest(draft: &mut Draft<'_>, index: usize, span: Ticks, now: Ticks) {
+pub fn rest(draft: &mut Draft<'_>, index: usize, span: Ticks, now: Ticks) {
     shift(draft, index, Activity::Climb, now);
     let kind = draft.kinds[index];
     let body = &mut draft.stage.actors[index];
@@ -29,7 +34,7 @@ pub(crate) fn rest(draft: &mut Draft<'_>, index: usize, span: Ticks, now: Ticks)
 }
 
 /// 🛑️ Release an interrupted trip and rest wherever its current footing permits.
-pub(crate) fn halt(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn halt(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let body = &draft.stage.actors[index];
     let owner = body.species.clone();
     if trip_of(&draft.stage.trips, &owner).is_none() { return; }
@@ -44,7 +49,7 @@ pub(crate) fn halt(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🚂️ Step an installed gear trip along its exact footholds and rope geometry.
-pub(crate) fn travel(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn travel(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     let Some(trip) = trip_of(&draft.stage.trips, &draft.stage.actors[index].species) else { return true; };
     let at = now - trip.from;
     if at < 0 { return true; }
@@ -152,7 +157,7 @@ fn onward(draft: &mut Draft<'_>, index: usize, ladder: Option<&Ladder>, now: Tic
 }
 
 /// 🐨️ Rest on a held wall or ladder until it is time to move on.
-pub(crate) fn cling(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn cling(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     let body = &draft.stage.actors[index];
     let ladder = (body.footing == Footing::Ladder).then(|| draft.stage.ladders.iter().find(|entry| entry.rider.as_deref() == Some(&body.species)).cloned()).flatten();
     if (body.footing == Footing::Wall && body.pitch.is_none()) || (body.footing == Footing::Ladder && ladder.is_none()) { unfoot(draft, index, 0.0, 0.0, Activity::Fall, now); return plunge(draft, index, now); }

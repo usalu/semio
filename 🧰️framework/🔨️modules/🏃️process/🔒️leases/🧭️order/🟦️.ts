@@ -12,7 +12,7 @@ export type LeaseOrderRuleV1="enforce"|"observe"|"off";
 /** 🏷️ One lock class: a rank in the declared order and the resource names that belong to it. */
 export type LeaseClassV1=Readonly<{id:string;rank:number;scope:"machine"|"checkout"|"project"|"crate"|"generation"|"path"|"session";owner:string;title:Readonly<{en:string;de:string}>;match:readonly Readonly<{kind:"prefix"|"exact";value:string}>[]}>;
 /** 📜️ The authored lock order policy (`Policy` of the schema). */
-export type LeaseOrderPolicyV1=Readonly<{version:1;rules:Readonly<{outOfOrder:LeaseOrderRuleV1;holdAndWait:LeaseOrderRuleV1;selfDeadlock:LeaseOrderRuleV1;cycle:LeaseOrderRuleV1}>;holdAndWait:Readonly<{graceMilliseconds:number;pollMilliseconds:number}>;cycle:Readonly<{intervalMilliseconds:number}>;registry:Readonly<{flushMilliseconds:number;maximumEntryBytes:number;maximumViolations:number}>;fairness:Readonly<{queuedWithResourceLeases:boolean}>;media:readonly Readonly<{prefix:string}>[];gate:Readonly<{releaseWhileWaiting:boolean;pollInitialMilliseconds:number;pollMaximumMilliseconds:number}>;classes:readonly LeaseClassV1[];allowed:readonly Readonly<{from:string;to:string;reason:Readonly<{en:string;de:string}>}>[]}>;
+export type LeaseOrderPolicyV1=Readonly<{version:1;rules:Readonly<{outOfOrder:LeaseOrderRuleV1;holdAndWait:LeaseOrderRuleV1;selfDeadlock:LeaseOrderRuleV1;cycle:LeaseOrderRuleV1}>;holdAndWait:Readonly<{graceMilliseconds:number;pollMilliseconds:number}>;cycle:Readonly<{intervalMilliseconds:number}>;registry:Readonly<{flushMilliseconds:number;maximumEntryBytes:number;maximumViolations:number}>;fairness:Readonly<{queuedWithResourceLeases:boolean;reentrantShared?:boolean}>;media:readonly Readonly<{prefix:string}>[];gate:Readonly<{releaseWhileWaiting:boolean;pollInitialMilliseconds:number;pollMaximumMilliseconds:number}>;classes:readonly LeaseClassV1[];allowed:readonly Readonly<{from:string;to:string;reason:Readonly<{en:string;de:string}>}>[]}>;
 /** 🧾️ One violation (`Violation` of the schema), in data form so tools can render it in any language. */
 export type LeaseViolationV1=Readonly<{version:1;kind:"out-of-order"|"hold-and-wait"|"self-deadlock"|"cycle";held:string;heldMode:LeaseModeV1;heldRank:number;heldClass:string;requested:string;requestedMode:LeaseModeV1;requestedRank:number;requestedClass:string;waitedMilliseconds?:number;blockerPid?:number;blockerHeldSeconds?:number;cycle?:readonly string[];atMs:number;pid:number;enforced?:boolean}>;
 /** 🎒️ One lease a task currently holds. */
@@ -136,12 +136,19 @@ export function leaseBlockersV1(nodes:readonly LeaseNodeV1[],node:LeaseNodeV1):r
  return [...found].sort();
 }
 
+/** 🔁️ The participants a node's own process waits on for the node to finish: a task that holds a lease shared depends on a sibling task of the same process that is queued for the same lease shared, because that is a re-entrant request stuck behind writers that wait for the very hold; the process cannot finish either. */
+export function leaseProcessDependenciesV1(nodes:readonly LeaseNodeV1[],node:LeaseNodeV1):readonly string[]{
+ const owner=node.id.slice(0,node.id.indexOf("/")),found=new Set<string>();
+ for(const hold of node.holds)if(hold.mode==="shared")for(const other of nodes)if(other.id!==node.id&&other.id.slice(0,other.id.indexOf("/"))===owner&&other.wait?.queued&&other.wait.mode==="shared"&&other.wait.key===hold.key)found.add(other.id);
+ return [...found].sort();
+}
+
 /** 🕸️ Finds a deadlock cycle through a node, if any. The victim is the participant that began waiting last (the highest id on a tie), so exactly one member fails and the others proceed. */
 export function findLeaseCycleV1(nodes:readonly LeaseNodeV1[],from:string):LeaseCycleV1|undefined{
  const byId=new Map(nodes.map(node=>[node.id,node] as const)),path:string[]=[from],seen=new Set<string>([from]);
  if(!byId.has(from))return undefined;
  const walk=(id:string):boolean=>{
-  for(const next of leaseBlockersV1(nodes,byId.get(id)!)){
+  for(const next of [...leaseBlockersV1(nodes,byId.get(id)!),...leaseProcessDependenciesV1(nodes,byId.get(id)!)]){
    if(next===from)return true;
    if(seen.has(next)||!byId.has(next))continue;
    seen.add(next);path.push(next);if(walk(next))return true;path.pop();
@@ -149,7 +156,7 @@ export function findLeaseCycleV1(nodes:readonly LeaseNodeV1[],from:string):Lease
   return false;
  };
  if(!walk(from))return undefined;
- const victim=[...path].sort((left,right)=>{const a=byId.get(left)!.wait!.sinceMs,b=byId.get(right)!.wait!.sinceMs;return b-a||(left<right?1:left>right?-1:0);})[0]!;
+ const victim=[...path].filter(id=>byId.get(id)!.wait).sort((left,right)=>{const a=byId.get(left)!.wait!.sinceMs,b=byId.get(right)!.wait!.sinceMs;return b-a||(left<right?1:left>right?-1:0);})[0]!;
  return Object.freeze({members:Object.freeze([...path]),victim});
 }
 
@@ -261,6 +268,11 @@ export function beginLeaseOrderV1(request:Request&Readonly<{task:number;ancestor
   lease.release=function(){try{release.call(lease);}finally{drop();}};
  };
  return Object.freeze({contention,finish,hold});
+}
+
+/** ♻️ Whether this process, or the parent that started it, already holds a lease shared: a further shared request for it is re-entrant and must be granted at once, never queued behind writers that wait for the very hold. */
+export function holdsSharedInProcessV1(directory:string,resource:string):boolean{
+ return [...holds.values()].some(row=>row.mode==="shared"&&row.directory===directory&&row.resource===resource)||inheritedLeasesV1().some(row=>row.mode==="shared"&&row.directory===directory&&row.resource===resource);
 }
 
 /** 🔓️ Drops the bookkeeping of a lease that was consumed without its own release, such as a queued upgrade. */

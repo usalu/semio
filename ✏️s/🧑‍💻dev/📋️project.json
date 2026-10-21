@@ -10,7 +10,7 @@
     "default": [
       "{workspaceRoot}/✏️s/**/*",
       "{workspaceRoot}/✏️s/**/*.{ts,tsx,json,semio,wit,sql}",
-      "{workspaceRoot}/✏️s/tsconfig.json/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/tsconfig.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/**/*"
@@ -46,7 +46,11 @@
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -88,7 +92,11 @@
         "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
         "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
         "{workspaceRoot}/tsconfig.json",
-        {"externalDependencies":["typescript"]}
+        {
+          "externalDependencies": [
+            "typescript"
+          ]
+        }
       ],
       "cache": true,
       "dependsOn": [
@@ -145,7 +153,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts catalog-publication verify"
+        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts verify"
       }
     },
     "test-catalog-publication": {
@@ -155,6 +163,46 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication-test"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
+        "{workspaceRoot}/🌎️hub/**/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/**/📋️project.json",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/📇️catalog/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🔁️rebuild/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+              "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
+              "{workspaceRoot}/🌎️hub/📇️catalog/🔣️.json",
+              "{workspaceRoot}/🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+            ]
+          }
+        }
       }
     },
     "generate": {
@@ -165,11 +213,16 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts catalog-publication generate"
+        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts generate"
       },
       "outputs": [
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness"
+        }
+      }
     },
     "check-generated": {
       "executor": "repo:script",
@@ -177,7 +230,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts catalog-publication check"
+        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts check"
       }
     },
     "preview-generated": {
@@ -185,11 +238,15 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts catalog-publication preview"
+        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts preview"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "reads-caller-input"
+          }
         }
       }
     }

@@ -25,6 +25,7 @@
     ]
   },
   "targets": {
+    "test-ci-source": {"executor":"repo:script","cache":false,"dependsOn":[],"inputs":["{workspaceRoot}/package.json","{workspaceRoot}/bun.lock","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json","{workspaceRoot}/.github/actions/native-repo/action.yml","{workspaceRoot}/.github/actions/devcontainer-repo/action.yml","{workspaceRoot}/.github/workflows/dashboard.yml","{workspaceRoot}/.github/workflows/build-system.yml"],"outputs":[],"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust","command":"bun ./📜️script.ts test ci-source","forwardAllArgs":false},"metadata":{"semio":{"execution":{"version":1,"kind":"source"},"sourceInputObservation":"freshness","runtimeSourceEntries":["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts"],"dashboard":{"title":{"en":"Verify Dashboard Automation","de":"Dashboard-Automatisierung Prüfen"},"description":{"en":"Verify native workflow and owned container bootstrap declarations.","de":"Native Arbeitsabläufe und verwaltete Container-Startdeklarationen prüfen."}}}}},
     "test-dispatch": {
       "executor": "repo:script",
       "inputs": [

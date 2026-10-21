@@ -47,7 +47,8 @@ fn borrowed_projected_pack_standard_map_statements_wire_match_portable_oracle(){
 
 #[test]
 fn borrowed_projected_pack_native_paged_key_and_text_cross_unicode_pages(){
- use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,RetainedCloneStep,paged_text::{PagedText,TextReadSource}};
+ use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, RetainedCloneStep};
+ use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌿️native-text/🔣️.json")).unwrap();let marker=fixture["scalar"].as_str().unwrap().as_bytes();let split=fixture["split"].as_u64().unwrap()as usize;let length=fixture["bytes"].as_u64().unwrap()as usize;
  struct Bytes<'a>{marker:&'a[u8],split:usize,length:usize}impl TextReadSource for Bytes<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.length{None}else if index>=self.split&&index<self.split+self.marker.len(){Some(self.marker[index-self.split])}else{Some(b'x')}}}
  struct Source{value:PagedText<8194>}impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(match path{[]=>V::Record(&[1]),[0]=>V::Map(1),[0,0]=>V::TextSource(self.value.read_view()?),_=>return Err(invalid("native text path"))})}fn projection_key_view(&self,path:&[usize],index:usize)->Result<TextReadView<'_>,ValueError>{if path!=[0]||index!=0{return Err(invalid("native key path"));}self.value.read_view()}}

@@ -4,7 +4,7 @@ use semio_framework_dsl_record::{BorrowedShape as B,BorrowedRecordSpec as S};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
 use super::retained_symbols::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
 use semio_framework_value_persistent::list::PagedList;
-use semio_framework_value::paged_text::TextReadView;
+use semio_framework_value_paged_text::paged_text::TextReadView;
 const ORDER_CAPACITY:usize=isize::MAX as usize;
 
 fn mismatch()->PackRefusal{ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Pack source disagrees with declared field").into()}

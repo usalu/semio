@@ -2,6 +2,7 @@ import {createHash,randomBytes} from "node:crypto";
 import {closeSync,mkdirSync,openSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
+import {readFileSync as readSystemFile} from "node:fs";
 import {processAliveV1,tryClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 
@@ -14,17 +15,61 @@ export type AncestorV1=Readonly<{pid:number;started:string;command:string}>;
 export type AncestryPortV1=()=>readonly AncestorV1[];
 const clients=/(claude|codex|cursor|windsurf|copilot|antigravity|droid|kiro)/iu;
 
-/** 🪪️ Reads the parent chain with `ps` where it exists; platforms without it report no ancestry and fall back to the default lane. */
-export function systemAncestryV1():readonly AncestorV1[]{
- if(process.platform==="win32")return[];
- const rows:AncestorV1[]=[];let pid=process.ppid;
+/** 🧬️ Parses a Linux `/proc/<pid>/stat` line into the parent and the start tick; the command name sits in parentheses and may itself contain spaces and parentheses, so the fields are read after the last closing parenthesis. */
+export function parseProcStatV1(text:string):Readonly<{parent:number;started:string}>|undefined{
+ const close=text.lastIndexOf(")");if(close<0)return undefined;
+ const fields=text.slice(close+2).trim().split(/\s+/u),parent=Number(fields[1]),started=fields[19];
+ return Number.isSafeInteger(parent)&&started!==undefined&&/^[0-9]+$/u.test(started)?Object.freeze({parent,started:"tick:"+started}):undefined;
+}
+
+/** 🐧️ Walks the parent chain through `/proc` with an injected reader: no external tool, no spawn, the start tick distinguishes a recycled pid. */
+export function linuxAncestryV1(read:(path:string)=>string|null,first:number=process.ppid):readonly AncestorV1[]{
+ const rows:AncestorV1[]=[];let pid=first;
  for(let depth=0;depth<16&&pid>1;depth++){
-  const result=spawnSync("ps",["-o","ppid=,lstart=,command=","-p",String(pid)],{encoding:"utf8"});if(result.status!==0)break;
-  const match=/^\s*(\d+)\s+(.{24})\s+(.*)$/u.exec(result.stdout.trim());if(!match)break;
+  const stat=read("/proc/"+pid+"/stat"),parsed=stat===null?undefined:parseProcStatV1(stat);if(!parsed)break;
+  const line=(read("/proc/"+pid+"/cmdline")??"").replace(/\0+$/u,"").split("\0").join(" ");
+  rows.push({pid,started:parsed.started,command:line||(read("/proc/"+pid+"/comm")??"").trim()});pid=parsed.parent;
+ }
+ return rows;
+}
+
+/** 🍎️ Walks the parent chain with `ps`, whose `lstart` column is the start time. */
+export function psAncestryV1(run:(pid:number)=>string|null,first:number=process.ppid):readonly AncestorV1[]{
+ const rows:AncestorV1[]=[];let pid=first;
+ for(let depth=0;depth<16&&pid>1;depth++){
+  const output=run(pid);if(output===null)break;
+  const match=/^\s*(\d+)\s+(.{24})\s+(.*)$/u.exec(output.trim());if(!match)break;
   rows.push({pid,started:match[2]!,command:match[3]!});pid=Number(match[1]);
  }
  return rows;
 }
+
+/** 🪟️ The PowerShell program that lists every process once: id, parent, UTC start as ISO text, and the command line followed by the image name, so a client matches by either. */
+export const WINDOWS_PROCESS_LISTING_V1="Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid=[int]$_.ProcessId; ppid=[int]$_.ParentProcessId; started=$_.CreationDate.ToUniversalTime().ToString('o'); command=([string]$_.CommandLine + ' ' + [string]$_.Name).Trim() } } | ConvertTo-Json -Compress";
+
+/** 🪟️ Walks the parent chain of a Windows process listing; a parent that started after its child is a recycled id and ends the chain. */
+export function windowsAncestryV1(listing:string,first:number=process.ppid):readonly AncestorV1[]{
+ let table:unknown;try{table=JSON.parse(listing);}catch{return[];}
+ const rows=(Array.isArray(table)?table:[table]).filter((row):row is {pid:number;ppid:number;started:string;command:string}=>!!row&&typeof row==="object"&&Number.isSafeInteger((row as {pid?:unknown}).pid)&&Number.isSafeInteger((row as {ppid?:unknown}).ppid)&&typeof (row as {started?:unknown}).started==="string"&&typeof (row as {command?:unknown}).command==="string");
+ const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found:AncestorV1[]=[];let pid=first,child:string|undefined;
+ for(let depth=0;depth<16&&pid>4;depth++){
+  const row=byPid.get(pid);if(!row||child!==undefined&&row.started>child)break;
+  found.push({pid,started:row.started,command:row.command});child=row.started;pid=row.ppid;
+ }
+ return found;
+}
+
+/** 🪪️ Reads the parent chain of the current process: `/proc` on Linux, `ps` on macOS, one PowerShell CIM listing on Windows; a platform or a read that fails reports no ancestry and the default lane applies. */
+export function systemAncestryV1(platform:NodeJS.Platform=process.platform):readonly AncestorV1[]{
+ if(platform==="linux")return linuxAncestryV1(path=>{try{return readSystemFile(path,"utf8");}catch{return null;}});
+ if(platform==="win32"){
+  const root=process.env.SystemRoot,program=root?join(root,"System32","WindowsPowerShell","v1.0","powershell.exe"):"powershell.exe";
+  const result=spawnSync(program,["-NoProfile","-NonInteractive","-Command",WINDOWS_PROCESS_LISTING_V1],{encoding:"utf8",windowsHide:true,timeout:20000,maxBuffer:33554432});
+  return result.status===0?windowsAncestryV1(result.stdout):[];
+ }
+ return psAncestryV1(pid=>{const result=spawnSync("ps",["-o","ppid=,lstart=,command=","-p",String(pid)],{encoding:"utf8"});return result.status===0?result.stdout:null;});
+}
+
 
 /** 🏷️ Chooses the lane: an explicit flag, then `SEMIO_CARGO_LANE`, then the nearest agent-client ancestor (one lane per agent session), then the default lane. Lanes never share Cargo build directories, so Cargo's own locks never span two agents. */
 export function resolveLaneIdV1(input:Readonly<{flag?:string;environment:Readonly<Record<string,string|undefined>>;ancestry:AncestryPortV1}>):string{

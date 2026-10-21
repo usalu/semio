@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entries",
+    "cases",
+    "controls",
+    "freshnessDataInputs",
+    "dataResources"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^\\{projectRoot\\}/.+\\.ts$"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "executionVersion",
+          "executionKind",
+          "observation",
+          "command"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "test",
+              "canonical-architecture"
+            ]
+          },
+          "executionKind": {
+            "const": "source"
+          },
+          "observation": {
+            "const": "freshness"
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "executionVersion": {
+            "const": 1
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "executionKind",
+          "observation"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "build",
+              "test-e2e"
+            ]
+          },
+          "executionKind": {
+            "type": "null"
+          },
+          "observation": {
+            "enum": [
+              null,
+              "freshness"
+            ]
+          }
+        }
+      }
+    },
+    "freshnessDataInputs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^\\{workspaceRoot\\}/.+\\.(ts|json)$"
+      }
+    },
+    "dataResources": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^\\{(workspaceRoot|projectRoot)\\}/.+\\.(json|rs|ts)$"
+      }
+    }
+  }
+}

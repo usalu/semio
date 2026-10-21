@@ -156,7 +156,7 @@ pub struct EnergySimulationRunJob {
     pub(super) snapshot: Option<Arc<EnergyModelSnapshot>>,
     pub(super) template: Option<SimulationConfig>,
     template_close:Option<ControlledRetirement<SimulationConfig>>,
-    snapshot_close:Option<semio_framework_value::retirement::shared::SharedControlledRetirement<EnergyModelSnapshot>>,
+    snapshot_close:Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<EnergyModelSnapshot>>,
     phase: EnergyRunPhase,
     census: CaptureCensus,
     capture: Option<ModelCapture>,
@@ -400,8 +400,8 @@ impl EnergySimulationRunJob {
         if let Some(close) = self.capture_close.as_ref() {
             return Ok(close.close_demands());
         }
-        if let Some(close)=self.snapshot_close.as_ref(){return if close.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<EnergyModelSnapshot>>>(),depth:1,..Default::default()})}else{close.next_demand(usize::MAX)}}
-        if self.snapshot.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<EnergyModelSnapshot>>()+size_of::<Option<Arc<EnergyModelSnapshot>>>(),depth:1,..Default::default()})}
+        if let Some(close)=self.snapshot_close.as_ref(){return if close.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<EnergyModelSnapshot>>>(),depth:1,..Default::default()})}else{close.next_demand(usize::MAX)}}
+        if self.snapshot.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<EnergyModelSnapshot>>()+size_of::<Option<Arc<EnergyModelSnapshot>>>(),depth:1,..Default::default()})}
         if let Some(close)=self.template_close.as_ref(){return if close.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<SimulationConfig>>>(),depth:1,..Default::default()})}else{close.selected_demand(usize::MAX)}}
         if self.template.is_some(){return Ok(RetirementDemand{copy_bytes:2*size_of::<ControlledRetirement<SimulationConfig>>()+size_of::<Option<SimulationConfig>>(),depth:1,..Default::default()})}
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
@@ -549,7 +549,7 @@ impl InteractiveJob for EnergySimulationRunJob {
                 if close.terminal_is_empty(){self.snapshot_close=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
                 else{close.step(grant)?.progress()}
             }else if let Some(snapshot)=self.snapshot.take(){
-                self.snapshot_close=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(snapshot));
+                self.snapshot_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(snapshot));
                 RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}
             }else if let Some(close)=self.template_close.as_mut(){
                 if close.terminal_is_empty(){self.template_close=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}

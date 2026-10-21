@@ -63,8 +63,6 @@ for rows in fixtures.values():
     for row in rows.values():
         if "composed" in row["provenance"] or "replaced by real" in row["provenance"]:
             row["provenance"] += "; hash values are test data"
-path = os.path.join(paths.NEW, paths.MANAGERS, "🧪️tests", "🧫️fixtures", "🔣️.json")
-os.makedirs(os.path.dirname(path), exist_ok=True)
-with open(path, "w", encoding="utf-8") as handle:
-    json.dump(fixtures, handle, ensure_ascii=False, indent=2); handle.write("\n")
-print(os.path.getsize(path))
+text = json.dumps(fixtures, ensure_ascii=False, indent=2) + "\n"
+paths.seam_write(paths.MANAGERS + "/🧪️tests/🧫️fixtures/🔣️.json", text)
+print(len(text))

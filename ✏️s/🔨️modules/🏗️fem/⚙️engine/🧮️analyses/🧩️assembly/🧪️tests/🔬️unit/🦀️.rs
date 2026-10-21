@@ -6,8 +6,12 @@ use semio_s_fem_test_support::seen_of;
 use semio_s_fem_test_support::test_operation;
 use semio_s_fem_test_support::Seen;
 use semio_s_fem_test_support::TEST_GRANT;
+use semio_s_fem_analyses_model::MOUNTED_ANALYSIS_BACKING_BYTES;
 use semio_s_fem_analyses_model::MountedAnalysisSupport;
+use semio_s_fem_model::AxialSpring;
+use semio_s_fem_model::NodalLoad;
 use semio_s_fem_model::Support;
+use semio_s_fem_sparse::CsrTripletBuildStage;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {
@@ -63,25 +67,10 @@ fn assembly_physical_fixture() -> serde_json::Value {
 }
 
 fn assembly_physical_empty_build(matrix: Option<Csr>) -> AssemblyCsrBuild {
-    AssemblyCsrBuild {
-        assembly: None,
-        entries: PagedList::default(),
-        stage: AssemblyCsrBuildStage::Complete,
-        sort_outer: 0,
-        sort_inner: 0,
-        count_cursor: 0,
-        unique_count: 0,
-        count_key: None,
-        merge_cursor: 0,
-        row_cursor: 0,
-        row_counts: PagedList::default(),
-        indptr: PagedList::default(),
-        indices: PagedList::default(),
-        values: PagedList::default(),
-        last_key: None,
-        matrix,
-        n: 0,
-    }
+    let mut csr = CsrTripletBuild::new(0, PagedList::default());
+    csr.stage = CsrTripletBuildStage::Complete;
+    csr.matrix = matrix;
+    AssemblyCsrBuild { assembly: None, csr }
 }
 
 /// 🪶 Clearing an inline assembly record has no physical backing release of its own.
@@ -159,8 +148,8 @@ fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
     }
 }
 
-fn merge_fixture_triplet(value: &serde_json::Value) -> AssemblyTriplet {
-    AssemblyTriplet {
+fn merge_fixture_triplet(value: &serde_json::Value) -> SparseTriplet {
+    SparseTriplet {
         sequence: value["sequence"].as_u64().expect("triplet sequence"),
         row: value["row"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet row"),
         col: value["column"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet column"),
@@ -184,7 +173,7 @@ fn assembly_triplet_pages_merge_refusal_retains_candidate_for_retry() {
         let source = if full { &mut partition.full } else { &mut partition.free };
         source.push_reserved(candidate).expect("source candidate fits admitted partition");
         let destination = if full { &mut job.state.merged_full } else { &mut job.state.merged_free };
-        let filler = AssemblyTriplet { sequence: 0, row: 0, col: 0, value: 0.0 };
+        let filler = SparseTriplet { sequence: 0, row: 0, col: 0, value: 0.0 };
         while destination.has_reserved_slot() {
             destination.push_reserved(filler).expect("destination filler fits advertised slot");
         }
@@ -749,4 +738,64 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
     let second = run(test_operation(307));
     assert_eq!((first.0, first.1), (second.0, second.1));
     assert!(first.2.max(second.2) < 8_000);
+}
+
+/// 🗂️ The neutral NumPy matrix order crosses DOF, index and compact pages with exact funded admission.
+#[test]
+fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json")).unwrap();
+    let order = fixture["order"].as_u64().unwrap() as usize;
+    let model = Arc::new(AnalysisModel {
+        nodes: (0..order / 3).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+        elements: (1..order / 3).map(|index| BeamEb2 { id: format!("e{index}"), start: format!("n{}", index - 1), end: format!("n{index}"), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into()).collect(),
+        supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+    });
+    let pointer = Arc::as_ptr(&model);
+    let mut construction = AssemblyJobConstruction::new_owned(model, test_operation(88), 1);
+    for _ in 0..1_000_000 {
+        if construction.stage == AssemblyConstructionStage::ReserveDofs && construction.plan.dof_map.order.capacity() < order * 2 {
+            let before = (construction.stage, construction.plan.dof_map.order.capacity(), construction.plan.dof_map.order.allocated_bytes());
+            let copy = construction.plan.dof_map.order.next_capacity_copy_byte_demand(order * 2).unwrap();
+            let capacity = construction.plan.dof_map.order.next_capacity_allocation_bytes(order * 2).unwrap().unwrap();
+            let depth = construction.plan.dof_map.order.next_capacity_depth_demand(order * 2).unwrap();
+            let mut denied = vec![RetainedCloneGrant { maximum_items: 0, ..TEST_GRANT }, RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..TEST_GRANT }, RetainedCloneGrant { maximum_depth: depth - 1, ..TEST_GRANT }];
+            if copy != 0 { denied.push(RetainedCloneGrant { maximum_copy_bytes: copy - 1, ..TEST_GRANT }); }
+            for grant in denied {
+                assert_eq!(construction.step_one_funded(grant).unwrap(), (false, RetainedCloneProgress::default()));
+                assert_eq!((construction.stage, construction.plan.dof_map.order.capacity(), construction.plan.dof_map.order.allocated_bytes()), before);
+            }
+            let (_, receipt) = construction.step_one_funded(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_depth: depth, ..TEST_GRANT }).unwrap();
+            assert_eq!(receipt.retained_capacity_bytes, capacity);
+            assert_eq!(receipt.copied_bytes, copy);
+            assert_eq!(receipt.copied_items, 1);
+        } else if construction.step_one_funded(TEST_GRANT).unwrap().0 { break; }
+    }
+    let mut job = construction.take_complete().expect("paged assembly order terminates");
+    assert_eq!(job.plan.ndof, order);
+    for bytes in [job.plan.dof_map.order.allocated_bytes(), job.plan.dof_map.slots.allocated_bytes(), job.plan.inv_perm.allocated_bytes(), job.plan.compact_of_new.allocated_bytes()] { assert!(bytes > MOUNTED_OWNER_PAGE_BYTES); }
+    for index in 0..order / 3 {
+        for (axis, dof) in [Dof::Tx, Dof::Ty, Dof::Rz].into_iter().enumerate() {
+            let full = index * 3 + axis;
+            assert_eq!(job.visual_equation_indices(&format!("n{index}"), dof), Some((full, full.checked_sub(3))));
+        }
+    }
+    assert!(matches!(&job.model, AnalysisModelOwner::Owned(model) if Arc::as_ptr(model) == pointer));
+    let mut preparation_closed = false;
+    for _ in 0..100_000 {
+        let (terminal, items, bytes) = construction.close_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(items <= 1 && bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal { preparation_closed = true; break; }
+    }
+    assert!(preparation_closed && construction.constrained_old.terminal_is_empty());
+    assert_eq!(job.close_retained_step(0), (false, 0, 0));
+    let mut closed = false;
+    for _ in 0..1_000_000 {
+        let (terminal, items, bytes) = job.close_retained_step(1 << 20);
+        assert!(items <= 1);
+        if terminal { closed = true; break; }
+        if job.close_lane <= 10 { assert!(bytes <= MOUNTED_OWNER_PAGE_BYTES); }
+    }
+    assert!(closed, "paged order releases all original backing");
+    assert!(job.plan.dof_map.order.terminal_is_empty() && job.plan.dof_map.slots.terminal_is_empty() && job.plan.inv_perm.terminal_is_empty() && job.plan.free_new.terminal_is_empty() && job.plan.compact_of_new.terminal_is_empty());
+    eprintln!("[DEBUG] FEM assembly paged order={order}, exact item/copy/capacity/depth refusals preserved source={pointer:p}, closed={closed}");
 }

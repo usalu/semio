@@ -74,9 +74,12 @@ if (which === "python") {
   step("cold");
   step("again");
   step("body edit of a", () => write("a/a.go", files["a/a.go"]!.replace("ToUpper", "ToLower")));
+  step("signature edit of a", () => write("a/a.go", files["a/a.go"]!.replace("ToUpper", "ToLower").replace("func Big(s string) string", "func Big(s string, n int) string")));
   const expect = (label: string, ids: string[], code = 0): void => {const r = results[label]!; const ok = JSON.stringify(r.executed) === JSON.stringify(ids.sort()) && r.code === code; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); if (!ok) process.exitCode = 1;};
   expect("cold", ["go:example.com/lab/a", "go:example.com/lab/a#test", "go:example.com/lab/b", "go:example.com/lab/c"]);
   expect("again", []);
-  console.log("go body edit executes (sources mode, no build-tool cutoff):", results["body edit of a"]!.executed.join(", "));
+  expect("body edit of a", ["go:example.com/lab/a", "go:example.com/lab/a#test", "go:example.com/lab/c"]);
+  const signature = results["signature edit of a"]!;
+  console.log(`${signature.code !== 0 ? "PASS" : "FAIL"} signature edit breaks b (Use calls Big with one argument): exit ${signature.code}; executed ${signature.executed.join(", ")}`);
 }
 void existsSync; void appendFileSync;

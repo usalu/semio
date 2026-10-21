@@ -30,6 +30,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
         if self.spent {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional clone cursor is spent"));
         }
+        if !retained_clone_grant_admits(grant,self.advance_demands(source,body)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }

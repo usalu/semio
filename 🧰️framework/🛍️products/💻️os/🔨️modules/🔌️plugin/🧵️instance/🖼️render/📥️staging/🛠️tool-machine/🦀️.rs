@@ -46,7 +46,7 @@ use semio_framework_tool_machine::ToolStep;
 use semio_framework_tool_machine::TypingInput;
 use std::collections::BTreeMap;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
+use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;

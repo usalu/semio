@@ -15,8 +15,8 @@ pub enum ToolRunPayloadUpdate{
 }
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
 impl ToolRunPayloadUpdate{
- pub(crate) fn wire_field_count(self)->usize{match self{Self::Replace=>1,Self::Range{..}=>6}}
- pub(crate) fn wire_field(self,id:usize)->Option<u64>{match(self,id){(Self::Replace,1)=>Some(0),(Self::Range{..},1)=>Some(1),(Self::Range{publication,..},2)=>Some(publication),(Self::Range{total_bytes,..},3)=>Some(total_bytes),(Self::Range{offset,..},4)=>Some(offset),(Self::Range{chunk_bytes,..},5)=>Some(u64::from(chunk_bytes)),(Self::Range{final_chunk,..},6)=>Some(u64::from(final_chunk)),_=>None}}
+ pub fn wire_field_count(self)->usize{match self{Self::Replace=>1,Self::Range{..}=>6}}
+ pub fn wire_field(self,id:usize)->Option<u64>{match(self,id){(Self::Replace,1)=>Some(0),(Self::Range{..},1)=>Some(1),(Self::Range{publication,..},2)=>Some(publication),(Self::Range{total_bytes,..},3)=>Some(total_bytes),(Self::Range{offset,..},4)=>Some(offset),(Self::Range{chunk_bytes,..},5)=>Some(u64::from(chunk_bytes)),(Self::Range{final_chunk,..},6)=>Some(u64::from(final_chunk)),_=>None}}
  /// 🛡️ A transport payload must end exactly at its declared final extent and use full intermediate pages.
  pub fn validate(self,length:usize)->Result<(),ValueError>{
   if let Self::Range{publication,total_bytes,offset,chunk_bytes,final_chunk}=self{

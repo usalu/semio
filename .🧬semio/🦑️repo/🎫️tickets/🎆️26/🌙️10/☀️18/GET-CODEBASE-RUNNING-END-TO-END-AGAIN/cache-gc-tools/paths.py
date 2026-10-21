@@ -54,6 +54,20 @@ TARGET = {
     "help-snapshots": J(B, OPERATIONS, TESTS, FIXTURES, HELPDIR, JSON_),
     "providers-test": J(PROCESS_LIBRARY, PROVIDERS, TESTS, TS),
     "nx-json": "nx.json",
+    "budget-policy": J(L, CACHING, STORAGE, ENFORCEMENT, BUDGET, POLICYFILE),
+    "budget-schema": J(L, CACHING, STORAGE, ENFORCEMENT, BUDGET, SCHEMA, JSON_),
+    "budget-fixture": J(L, CACHING, STORAGE, ENFORCEMENT, BUDGET, TESTS, FIXTURES, JSON_),
+    "graph-storage": J(L, BUILD, E(0x1F4E5) + "inputs", STORAGE, E(0x1F7E8) + ".mjs"),
 }
 
 NEW2 = {name: NEW[name] for name in ("ledger-schema.json", "ledger-policy.json", "ledger-texts.json", "ledger-index.ts", "ledger-test.ts", "ledger-fixtures.json", "gc-runner.ts", "gc-command.ts", "gc-test.ts")}
+
+LAUNCH, RECLAIM = E(0x1F680) + "launch", E(0x1F6B0) + "reclaim"
+NEW3 = {
+    **{name: NEW[name] for name in NEW2 if name != "ledger-policy.json"},
+    "ledger-policy.json": NEW["ledger-policy.json"],
+    "gc-launch.ts": J(GCD, LAUNCH, TS),
+    "gc-reclaim.ts": J(GCD, RECLAIM, TS),
+    "gc-launch-test.ts": J(GCD, TESTS, LAUNCH, TS),
+    "ledger-needs-test.ts": J(LED, TESTS, E(0x1F4CF) + "needs", TS),
+}

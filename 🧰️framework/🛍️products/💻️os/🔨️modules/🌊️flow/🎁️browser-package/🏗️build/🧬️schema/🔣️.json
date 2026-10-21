@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "entry",
+          "target",
+          "generated",
+          "refused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entry": {
+            "enum": [
+              "producer",
+              "consumer"
+            ]
+          },
+          "target": {
+            "enum": [
+              "wasm",
+              "declarations"
+            ]
+          },
+          "generated": {
+            "type": "boolean"
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

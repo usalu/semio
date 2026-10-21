@@ -8,7 +8,7 @@ export{forwardRepoCommandV1,serviceEligibleV1,serviceModeV1}from"./client/repo.m
 export{encodeFrameV1,createFrameDecoderV1,compileSchemaV1,ProtocolErrorV1}from"./protocol/frames.mjs";
 export{POLICY_V1,SCHEMA_V1,renderTextV1,renderBothV1,validatorV1}from"./protocol/policy.mjs";
 export{mintCapabilityV1,attenuateCapabilityV1,verifyCapabilityV1,authorizeCapabilityV1,createRootKeyV1}from"./protocol/capability.mjs";
-export{endpointsV1,worktreeIdV1}from"./protocol/endpoint.mjs";
+export{endpointsV1,worktreeIdV1,canonicalRootV1}from"./protocol/endpoint.mjs";
 export{createWarmPoolV1,createDelegatedExecutionPortV1,writeWarmPreloadV1}from"./delegate/index.mjs";
 export{stateConfigurationFromBuildGraphV1,createBuildGraphPortV1}from"./ports/graph.mjs";
 export{scanListingV1}from"./ports/listing.mjs";

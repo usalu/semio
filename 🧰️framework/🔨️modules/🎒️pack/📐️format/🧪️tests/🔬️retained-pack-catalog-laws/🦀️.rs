@@ -254,13 +254,14 @@ fn retained_pack_catalog_exact_utf8_allocation_refusal_and_release_are_conserved
 fn retained_symbol_table_crosses_a_leaf_with_target_aware_demands_and_checked_coordinates() {
     let mut table = RetainedPackSymbolTable::try_new(1_024, 16, 4, 256 * 1024).expect("symbol-table credits");
     assert_eq!(table.allocated_bytes(), 0);
+    let reservation_target=table.maximum_symbols();
     let mut allocated = 0;
     while table.symbol_capacity() == 0 {
-        let exact = table.next_symbol_allocation_bytes(1, 0).expect("first span demand").expect("first span backing");
+        let exact = table.next_symbol_allocation_bytes(reservation_target, 0).expect("first span demand").expect("first span backing");
         let before = (table.symbol_capacity(), table.allocated_bytes());
-        assert_eq!(table.reserve_symbol_capacity(1, exact - 1, 0).expect("subexact span refusal"), RetainedPackCatalogAllocationStep::default());
+        assert_eq!(table.reserve_symbol_capacity(reservation_target, exact - 1, 0).expect("subexact span refusal"), RetainedPackCatalogAllocationStep::default());
         assert_eq!((table.symbol_capacity(), table.allocated_bytes()), before);
-        let step = table.reserve_symbol_capacity(1, exact, 0).expect("first span backing admission");
+        let step = table.reserve_symbol_capacity(reservation_target, exact, 0).expect("first span backing admission");
         assert!(step.progressed);
         allocated += step.allocated_bytes;
     }
@@ -268,9 +269,9 @@ fn retained_symbol_table_crosses_a_leaf_with_target_aware_demands_and_checked_co
     let target = first_leaf_capacity + 1;
     assert!(target <= table.maximum_symbols());
     while table.symbol_capacity() < target {
-        let exact = table.next_symbol_allocation_bytes(target, 1).expect("next span demand").expect("target remains above capacity");
+        let exact = table.next_symbol_allocation_bytes(reservation_target, 1).expect("next span demand").expect("target remains above capacity");
         assert!(exact > 0);
-        let step = table.reserve_symbol_capacity(target, exact, 1).expect("next span backing admission");
+        let step = table.reserve_symbol_capacity(reservation_target, exact, 1).expect("next span backing admission");
         assert!(step.progressed);
         allocated += step.allocated_bytes;
     }

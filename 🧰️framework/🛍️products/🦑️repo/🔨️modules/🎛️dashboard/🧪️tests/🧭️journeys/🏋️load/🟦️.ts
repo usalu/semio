@@ -5,6 +5,10 @@
  */
 import { afterAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { Database } from "bun:sqlite";
+import Ajv from "ajv";
+import searchFixture from "./🔎️search/🔣️.json";
+import searchSchema from "./🔎️search/🧬️schema/🔣️.json";
 import { join } from "node:path";
 import { Workspace, plain, pool, slug, sleep, type Task } from "../🧰️support/🟦️.ts";
 
@@ -54,7 +58,9 @@ describe("cli load", () => {
   }, 900_000);
 
   test("Searching fifty thousand commands answers within the latency budget", async () => {
-    const ws = await Workspace.open("search", { bulkTools: 50_000 });
+    expect(new Ajv({strict:true}).validate(searchSchema,searchFixture)).toBe(true);
+    const oracle=new Database(":memory:");try{for(const row of searchFixture.cases){const count=oracle.query("with recursive n(i) as(values(0) union all select i+1 from n where i+1<?1) select count(*) hits from n where case ?2 when 'word' then i%4=1 when 'rare prefix' then i=49999 else 0 end").get(searchFixture.commands,row.label) as {hits:number};expect(count.hits,row.label).toBe(row.hits);}}finally{oracle.close();}
+    const ws = await Workspace.open("search", { bulkTools: searchFixture.commands });
     opened.push(ws);
     const budget = Number(process.env.SEMIO_SEARCH_BUDGET_MS ?? 5_000);
     const first = Date.now();
@@ -62,13 +68,13 @@ describe("cli load", () => {
     console.log(`[load] check of ${/(\d+) commands/.exec(check)?.[1]} commands in ${Date.now() - first} ms`);
     expect(check).toMatch(/5\d{4} commands, 0 problems/);
     const timings: Record<string, number> = {};
-    for (const [label, words, hits] of [["word", ["bulk", "build"], 12_500], ["rare prefix", ["bulk-049999"], 1], ["nothing", ["zzzz-nothing"], 0]] as const) {
+    for (const {label,words,hits,comparison,expectedId} of searchFixture.cases) {
       const began = Date.now();
       const out = await ws.ok(["commands", ...words, "--json"]);
       timings[label] = Date.now() - began;
       const found = JSON.parse(out) as { id: string }[];
-      expect(found.length, label).toBeGreaterThanOrEqual(hits === 12_500 ? 12_500 : hits);
-      if (hits === 1) expect(found[0]!.id).toBe("tool:bulk/bulk-049999");
+      if(comparison==="exact")expect(found.length,label).toBe(hits);else expect(found.length,label).toBeGreaterThanOrEqual(hits);
+      if(expectedId!==null)expect(found[0]!.id).toBe(expectedId);
       expect(timings[label], `${label} search took ${timings[label]} ms`).toBeLessThan(budget);
     }
     console.log(`[load] search timings ${JSON.stringify(timings)} ms (budget ${budget})`);

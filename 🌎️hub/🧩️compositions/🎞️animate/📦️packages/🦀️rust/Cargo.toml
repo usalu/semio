@@ -27,7 +27,6 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-animate-presentation = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gif = { workspace = true }
@@ -52,7 +51,6 @@ semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️m
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 # 🎬️ animate engine topic file
 semio-framework-typeset = { path = "../../../../../🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust", package = "semio-framework-typeset" }

@@ -3,7 +3,7 @@ pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket};
 pub use semio_framework_value_shared_issuance as shared_issuance;
-use semio_framework_value_retirement::RetireOwned;
+use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
 static RETAINED_CLONE_SOURCE_IDS:AtomicU64=AtomicU64::new(1);
 #[path="../../🦀️.rs"]
@@ -40,20 +40,21 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
   let(alias,progress)=self.lease.try_duplicate(grant)?;*binding=Some(RetainedCloneBinding::new(alias,self.projection));Ok(Some(progress))
  }
 }
-pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<crate::retirement::controlled::ControlledRetirement<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>,projection:RetainedCloneProjection}
+fn close_query_busy()->crate::ValueError{crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original close query already holds exclusive cursor custody")}
+pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<RetainedOwnerGate<crate::retirement::controlled::ControlledRetirement<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>,projection:RetainedCloneProjection}
 impl RetainedCloneBinding{
  pub fn alias_copy_bytes()->usize{0}
  fn new(lease:crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
  pub fn close_one(binding:&mut Option<Self>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{
   let Some(owner)=binding.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if owner.close.is_none(){if grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}if let Some(lease)=owner.lease.take(){*owner.close=Some(crate::retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
-  let close=owner.close.as_mut().unwrap();let step=close.step(grant)?;if close.terminal_is_empty(){*owner.close=None;*binding=None;}Ok(step)
+  if owner.close.is_none(){if grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}if let Some(lease)=owner.lease.take(){*owner.close=Some(RetainedOwnerGate::new(crate::retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer"))));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
+  let close=owner.close.as_mut().unwrap().get_mut();let step=close.step(grant)?;if close.terminal_is_empty(){*owner.close=None;*binding=None;}Ok(step)
  }
- pub fn copy_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
- pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
- pub fn release_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.next_release_byte_demand())}
- pub fn depth_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand()))}
- pub fn close_demand(binding:&Option<Self>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(crate::RetirementDemand{depth:1,..Default::default()}),|owner|owner.selected_demand(body)))}
+ pub fn copy_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_copy_byte_demand())}
+ pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_capacity_byte_demand(body))}
+ pub fn release_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_release_byte_demand())}
+ pub fn depth_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_depth_demand()))}
+ pub fn close_demand(binding:&Option<Self>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(crate::RetirementDemand{depth:1,..Default::default()}),|owner|owner.try_lock().map_err(|_|close_query_busy())?.selected_demand(body)))}
  pub fn terminal_is_empty(&self)->bool{self.lease.is_none()&&self.close.is_none()}
 }
 impl Drop for RetainedCloneBinding{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"projected original source requires genuine alias closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.lease);ManuallyDrop::drop(&mut self.close);}}}}
@@ -76,8 +77,9 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn next_take_release_byte_demand(&self)->Result<usize,crate::ValueError>{self.source.next_take_release_byte_demand()}
  pub fn next_take_depth_demand(&self)->Result<usize,crate::ValueError>{self.source.next_take_depth_demand()}
  /// 🎯️ Quotes the one actual original-authority return with every independent physical currency.
- pub fn next_take_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.source.next_take_copy_byte_demand()?,capacity_bytes:self.source.next_take_capacity_byte_demand(body)?,release_bytes:self.source.next_take_release_byte_demand()?,depth:self.source.next_take_depth_demand()?})}
+ pub fn next_take_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.source.next_take_demand(body)}
  pub fn take_authority(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneSourceTake<A>,crate::ValueError>{self.source.take_authority(grant)}
+ pub fn try_authority(&self)->Result<&A,crate::ValueError>{self.source.try_authority()}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }
 #[cfg(test)]
@@ -91,3 +93,7 @@ mod original_sealed_custody_tests;
 #[cfg(test)]
 #[path="../../🧪️tests/🎟️header/🦀️.rs"]
 mod original_zero_header_tests;
+
+#[cfg(test)]
+#[path="../../🧪️tests/🔐️query/🦀️.rs"]
+mod shared_query_tests;

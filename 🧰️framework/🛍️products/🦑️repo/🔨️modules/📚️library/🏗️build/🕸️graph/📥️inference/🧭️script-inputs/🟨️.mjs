@@ -1,4 +1,4 @@
-import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1} from "../../🚪️admission/🟦️.ts";
+import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
 /** 🧭️ Tracks the literal import closure of command scripts and the packages they consume. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
@@ -41,9 +41,10 @@ export function scriptProviderImportsV1(cache) {
 
 /** 🧿️ Keeps a logical import's interpretation separate from its physical file identity. */
 export function buildImportResourceV1(containing,specifier){
- if(!specifier.startsWith("."))return {specifier,suffix:"",source:true};
- const url=new URL(specifier,pathToFileURL(containing)),query=url.searchParams;
- return {specifier:fileURLToPath(url),suffix:url.search+url.hash,source:!query.has("raw")&&(!query.has("url")||query.has("worker")||query.has("sharedworker"))};
+ if(/^[a-z][a-z0-9+.-]*:/iu.test(specifier))return {specifier,suffix:"",source:true};
+ const relative=specifier.startsWith(".");if(relative){const physical=resolve(dirname(containing),specifier);if(existsSync(physical))return {specifier:physical,suffix:"",source:true};}
+ const start=specifier.startsWith("#")?1:0,index=specifier.slice(start).search(/[?#]/u),boundary=index<0?specifier.length:start+index,base=specifier.slice(0,boundary),url=new URL(relative?specifier:"./resource"+specifier.slice(boundary),pathToFileURL(containing)),query=url.searchParams;
+ return {specifier:relative?fileURLToPath(url):base,suffix:url.search+url.hash,source:!query.has("raw")&&(!query.has("url")||query.has("worker")||query.has("sharedworker"))};
 }
 
 /** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
@@ -65,12 +66,12 @@ function declaredModuleInputV1(input, workspaceRoot, projectRoot) {
 }
 
 /** 🔗️ Resolves a literal `new URL("…", import.meta.url)` reference to the workspace file it names, which is how a script points at the test files it runs and the data it reads. */
-function workspaceUrlTargetV1(containing, literal, workspaceRoot) {
+function workspaceUrlTargetV1(containing, literal, workspaceRoot, physical=true) {
   let url;
   try { url = new URL(literal, pathToFileURL(containing)); } catch { return undefined; }
   if (url.protocol !== "file:") return undefined;
   const path = fileURLToPath(url), local = relative(workspaceRoot, path);
-  if (local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") || !existsSync(path) || !statSync(path).isFile()) return undefined;
+  if (local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") || physical&&(!existsSync(path) || !statSync(path).isFile())) return undefined;
   return { path, source: /\.[cm]?[jt]sx?$/u.test(path) };
 }
 
@@ -221,8 +222,8 @@ function generatedTargetsV1(cache, closure, workspaceRoot) {
 }
 
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
-export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false) {
-  const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources);
+export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[]) {
+  const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey);
   let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
   return memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
   const compiler = createRequire(import.meta.url)("typescript"), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set();
@@ -238,12 +239,13 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
     if(compiled.has(path))return;
     compiled.add(path);cache.modules.add(path);
     const loadsProviders = path === join(LIBRARY_ROOT, SCRIPT_PROVIDER_LOADER_MODULE);
-    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,loadsProviders?cache.providerDesignation??null:undefined]),async()=>{
+    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,loadsProviders?cache.providerDesignation??null:undefined,resourceKey]),async()=>{
       const imports = loadsProviders ? scriptProviderImportsV1(cache) : [];
+      const generated=specifier=>{const produced=cache.generatedOutput?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);return true;};
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         const resource=buildImportResourceV1(path,entry);
-        const produced=cache.generatedOutput?.(resource.specifier);if(produced){const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);continue;}
+        if(generated(resource.specifier))continue;
         let resolved;
         try { resolved = observedRequireResolve(path, resource.specifier); }
         catch (error) {
@@ -262,8 +264,8 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
       }
       for (const literal of references.urls) {
         await checkpoint();
-        const target = workspaceUrlTargetV1(path, literal, workspaceRoot);
-        if (target) imports.push(target);
+        const target = workspaceUrlTargetV1(path, literal, workspaceRoot,false);if(!target||generated(target.path))continue;const resource=resources.has(resolve(target.path));if(!resource&&(!existsSync(target.path)||!statSync(target.path).isFile()))continue;
+        imports.push({...target,source:target.source&&!resource});
       }
       return imports;
     },checkpoint);
@@ -297,7 +299,8 @@ export async function nativeCommandInputs(workspaceRoot, scripts) {
 
 /** 🧭️ Captures outer scripts and explicitly declared child scripts in their own working directories. */
 export async function targetScriptSources(target, workspaceRoot, scripts, projectRoot = ".",nativeManifest) {
- const entries=new Set();let fallback=false;
+  const resources=readBuildSourceResourceEntriesV1(target.metadata?.semio?.closure?.resources).map(input=>{const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}",".")),local=relative(workspaceRoot,path);if(path.length>256||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bounded physical Source resource required");return path;});if(new Set(resources).size!==resources.length)throw Error("Unique physical Source resource entries required");
+  const entries=new Set();let fallback=false;
  const retain=bound=>{if(bound.script){requirePhysicalSourceV1(bound.script);entries.add(bound.script);}else fallback=true;};
  const local=path=>{const value=buildPath(relative(workspaceRoot,path));if(value===".."||value.startsWith("../")||isAbsolute(value))throw Error("Declared command Source escapes workspace");return value||".";};
  for(const options of targetCommandRecipes(target)){
@@ -312,11 +315,11 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
  }
- const baseSize=entries.size,base=baseSize?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined;
+ const baseSize=entries.size,base=baseSize?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources):undefined;
  if(buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation])==="compile")for(const declared of declaredModuleInputsV1(target.inputs,workspaceRoot,projectRoot,scripts,base&&scripts.compiledNames.get(base)))entries.add(declared);
  for(const declared of declaredModuleGlobEntriesV1(target.metadata?.semio?.closure?.modules,workspaceRoot,projectRoot,scripts))entries.add(declared);
  for(const input of readBuildRuntimeSourceEntriesV1(target.metadata?.semio?.runtimeSourceEntries)){const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}","."));if(path.length>256)throw Error("Bounded physical runtime Source entry required");const entry=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(!entry)throw Error("Bounded physical runtime Source entry required");entries.add(entry);}
- let closure=entries.size===baseSize?base:entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
+ let closure=entries.size===baseSize?base:entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
  if(project){closure=project.closure;generatedDependencies=[...new Set([...(scripts.generatedImports.size?generatedTargetsV1(scripts,closure,workspaceRoot):[]),...project.generatedDependencies])].sort();}
  return {closure,fallback,...(generatedDependencies.length?{generatedDependencies}:{}),...(project?.packages.length?{packages:project.packages,projectConfig:project.config}:{})};
 }

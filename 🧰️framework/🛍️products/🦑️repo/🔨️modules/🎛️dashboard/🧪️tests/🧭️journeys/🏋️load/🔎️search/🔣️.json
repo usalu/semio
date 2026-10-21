@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "commands": 50000,
+  "cases": [
+    {
+      "label": "word",
+      "words": [
+        "bulk",
+        "build"
+      ],
+      "hits": 12500,
+      "comparison": "at-least",
+      "expectedId": null
+    },
+    {
+      "label": "rare prefix",
+      "words": [
+        "bulk-049999"
+      ],
+      "hits": 1,
+      "comparison": "exact",
+      "expectedId": "tool:bulk/bulk-049999"
+    },
+    {
+      "label": "nothing",
+      "words": [
+        "zzzz-nothing"
+      ],
+      "hits": 0,
+      "comparison": "exact",
+      "expectedId": null
+    }
+  ]
+}

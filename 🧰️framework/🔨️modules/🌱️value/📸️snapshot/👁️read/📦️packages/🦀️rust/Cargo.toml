@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:semio-framework-trace", "dep:semio-framework-value-testing-presence-retirement"]
 
 [dependencies]
+semio-framework-value-factory = { path = "../../../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-testing-presence-retirement = { path = "../../../../🧪️testing/👥️presence-retirement/📦️packages/🦀️rust", optional = true }

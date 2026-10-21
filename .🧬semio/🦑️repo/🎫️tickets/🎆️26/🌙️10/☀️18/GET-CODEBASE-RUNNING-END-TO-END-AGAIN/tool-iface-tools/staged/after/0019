@@ -10,161 +10,205 @@ import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const SUBSET = "base";
-const REFERENCE_ENGINE = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const MUTATION_ENGINE = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
+const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
+const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
-const ORACLE_ID = "lopdf-pdf-1-7-base-mutate-reader";
-const COMPARISON_PROFILE = "semantic-pdf-structural-base-v1";
-const ASSET_RECIPE = "report-strip";
-const ASSET_DIRECTORY = "📊️report-strip";
-const ASSET_FILE = "📊️report-strip.pdf";
-/** 🧾️ Kept in step with `🔁️codec/🦀️.rs::KINDS`. */
-const KINDS: readonly string[] = ["insert-page", "remove-page", "move-page", "set-page-media-box", "set-page-crop-box", "set-page-rotation", "set-page-content", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "set-page-box", "set-page-user-unit", "insert-content", "remove-content", "replace-content", "insert-annotation", "remove-annotation", "set-annotation", "set-font", "remove-font", "set-image", "remove-image", "set-form", "remove-form", "set-ext-g-state", "remove-ext-g-state", "set-shading", "remove-shading", "set-pattern", "remove-pattern", "set-color-space", "remove-color-space", "set-properties", "remove-properties", "set-embedded-file", "remove-embedded-file", "set-outlines", "set-named-destination", "remove-named-destination", "set-page-labels", "set-output-intents", "set-acro-form", "set-optional-content", "set-page-layout", "set-page-mode", "set-viewer-preferences", "set-open-action", "set-language", "set-mark-info", "set-metadata", "set-document-id", "set-encryption", "set-catalog-entry", "remove-catalog-entry"];
+const SUBSET = "a";
+const ORACLE_ID = "lopdf-pdf-1-7-a-mutate-reader";
+const COMPARISON_PROFILE = "semantic-pdf-conformance-a-v1";
+// 🧾️ Kept in step with `🔁️codec/🏗️generate/🦀️.rs::KINDS` (itself the same list as
+// `../🔣️oracle.json`'s `pdf-1-7-a` catalog) — `manifests` walks whichever recipe directories the
+// engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
+// missing-directory error instead of silently under-registering a kind.
+const KINDS: readonly string[] = ["insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
 const FIXTURE_DIRECTORY_BY_KIND: Readonly<Record<string, string>> = {
-  "insert-page": "📥️insert-page",
-  "remove-page": "🗑️remove-page",
-  "move-page": "🔀️move-page",
-  "set-page-media-box": "📐️set-page-media-box",
-  "set-page-crop-box": "✂️set-page-crop-box",
-  "set-page-rotation": "🔄️set-page-rotation",
-  "set-page-content": "✏️set-page-content",
-  "append-page-content": "➕️append-page-content",
-  "set-info": "ℹ️set-info",
-  "insert-object": "📦️insert-object",
-  "remove-object": "🧹️remove-object",
-  "set-object-value": "🔧️set-object-value",
-  "set-dict-entry": "🔑️set-dict-entry",
-  "remove-dict-entry": "🚫️remove-dict-entry",
-  "set-trailer-entry": "🧳️set-trailer-entry",
-  "remove-trailer-entry": "🧽️remove-trailer-entry",
-  "set-page-box": "🖼️set-page-box",
-  "set-page-user-unit": "📏️set-page-user-unit",
-  "insert-content": "🖋️insert-content",
-  "remove-content": "🧻️remove-content",
-  "replace-content": "🔁️replace-content",
-  "insert-annotation": "📌️insert-annotation",
-  "remove-annotation": "📍️remove-annotation",
-  "set-annotation": "📝️set-annotation",
-  "set-font": "🔤️set-font",
-  "remove-font": "🅾️remove-font",
-  "set-image": "🏞️set-image",
-  "remove-image": "🌫️remove-image",
-  "set-form": "📄️set-form",
-  "remove-form": "🗞️remove-form",
-  "set-ext-g-state": "🎛️set-ext-g-state",
-  "remove-ext-g-state": "🎚️remove-ext-g-state",
-  "set-shading": "🌅️set-shading",
-  "remove-shading": "🌄️remove-shading",
-  "set-pattern": "🧩️set-pattern",
-  "remove-pattern": "🪡️remove-pattern",
-  "set-color-space": "🌈️set-color-space",
-  "remove-color-space": "🎨️remove-color-space",
-  "set-properties": "🏷️set-properties",
-  "remove-properties": "🔖️remove-properties",
-  "set-embedded-file": "📎️set-embedded-file",
-  "remove-embedded-file": "🗃️remove-embedded-file",
-  "set-outlines": "📑️set-outlines",
-  "set-named-destination": "🎯️set-named-destination",
-  "remove-named-destination": "🎪️remove-named-destination",
-  "set-page-labels": "🔢️set-page-labels",
-  "set-output-intents": "🏳️set-output-intents",
-  "set-acro-form": "📋️set-acro-form",
-  "set-optional-content": "👁️set-optional-content",
-  "set-page-layout": "📖️set-page-layout",
-  "set-page-mode": "🖥️set-page-mode",
-  "set-viewer-preferences": "🛠️set-viewer-preferences",
-  "set-open-action": "🚪️set-open-action",
-  "set-language": "🗣️set-language",
-  "set-mark-info": "🔏️set-mark-info",
-  "set-metadata": "🧾️set-metadata",
-  "set-document-id": "🆔️set-document-id",
-  "set-encryption": "🔐️set-encryption",
-  "set-catalog-entry": "🗂️set-catalog-entry",
-  "remove-catalog-entry": "🧺️remove-catalog-entry",
+  "insert-javascript-action": "📜️insert-javascript-action",
+  "remove-javascript-action": "🚫️remove-javascript-action",
+  "insert-launch-action": "🚀️insert-launch-action",
+  "remove-launch-action": "🛬️remove-launch-action",
+  "insert-embedded-file": "📎️insert-embedded-file",
+  "remove-embedded-file": "🗑️remove-embedded-file",
+  "set-af-relationship": "🔗️set-af-relationship",
+  "remove-af-relationship": "✂️remove-af-relationship",
+  "set-output-intent": "🏳️set-output-intent",
+  "remove-output-intent": "🧽️remove-output-intent",
+  "embed-font-file": "🔤️embed-font-file",
+  "remove-font-file": "🧺️remove-font-file",
+  "insert-encryption-dictionary": "🔒️insert-encryption-dictionary",
+  "remove-encryption-dictionary": "🔓️remove-encryption-dictionary",
 };
 const BEFORE_FILENAME = "⬅️before.pdf";
 const AFTER_FILENAME = "➡️after.pdf";
 //#endregion 🧬️Contract
 
 //#region 🔨️Build
-function build(dir: string): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(dir, "Cargo.toml")], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`cargo build failed for ${dir} with status ${result.status}`);
+/** ⚙️ Builds the reference-crate-backed generator binary if it is missing or stale. */
+function ensureBuilt(): void {
+  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 
 async function sha256(path: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", readFileSync(path));
+  const bytes = readFileSync(path);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
   return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 //#endregion 🔨️Build
 
 //#region 🚪️Commands
 async function generate(outRoot: string): Promise<void> {
-  build(REFERENCE_ENGINE);
-  build(MUTATION_ENGINE);
-  mkdirSync(join(outRoot, ASSET_DIRECTORY), { recursive: true });
-  const asset = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(outRoot, ASSET_DIRECTORY, ASSET_FILE)], { stdio: "inherit" });
-  if (asset.status !== 0) throw new Error(`asset engine failed with status ${asset.status}`);
-  const mutations = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
-  if (mutations.status !== 0) throw new Error(`mutation engine failed with status ${mutations.status}`);
+  ensureBuilt();
+  mkdirSync(outRoot, { recursive: true });
+  const result = spawnSync(ENGINE_BIN, [outRoot], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`generator binary failed with status ${result.status}`);
+  for (const kind of KINDS) {
+    const directory = FIXTURE_DIRECTORY_BY_KIND[kind]!;
+    const beforePath = join(outRoot, directory, BEFORE_FILENAME);
+    const afterPath = join(outRoot, directory, AFTER_FILENAME);
+    if (!existsSync(beforePath) || !existsSync(afterPath)) continue;
+    console.log(`${kind}: before=${await sha256(beforePath)} after=${await sha256(afterPath)}`);
+  }
 }
 
 async function manifests(): Promise<void> {
-  const entries: unknown[] = [];
-  entries.push({
-    id: ASSET_RECIPE,
-    class: "third-party-generated",
-    target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },
-    units: { length: "unitless", angle: "degree" },
-    files: [{ role: "seed-pdf", path: `../🧫️fixtures/${ASSET_DIRECTORY}/${ASSET_FILE}`, mediaType: "application/pdf", sha256: await sha256(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)), bytes: readFileSync(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)).length }],
-    provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
-    comparisonProfile: COMPARISON_PROFILE,
-    reproducible: true,
-    family: "mechanical",
-    notes: "The shared seed ASSET other pdf subsets reuse, written entirely by lopdf 0.44. Not a mutation fixture — it declares no mutation and is judged by nothing.",
-  });
+  const entries = [];
   for (const kind of KINDS) {
     const directory = FIXTURE_DIRECTORY_BY_KIND[kind]!;
     const dir = join(FIXTURES_DIR, directory);
-    if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run generate first`);
-    const files = [];
-    for (const [role, name] of [["base-pdf", BEFORE_FILENAME], ["mutated-pdf", AFTER_FILENAME]] as const) {
-      const path = join(dir, name);
-      files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "application/pdf", sha256: await sha256(path), bytes: readFileSync(path).length });
-    }
+    const beforePath = join(dir, BEFORE_FILENAME);
+    const afterPath = join(dir, AFTER_FILENAME);
+    if (!existsSync(beforePath) || !existsSync(afterPath)) throw new Error(`${dir} does not contain the generated pair — run "generate" first`);
     entries.push({
-      id: `${SUBSET}-${kind}`,
+      id: `a-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },
       mutation: kind,
       outcome: "applied",
       units: { length: "unitless", angle: "degree" },
-      files,
+      files: [
+        { role: "base-pdf", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: "application/pdf", sha256: await sha256(beforePath), bytes: readFileSync(beforePath).length },
+        { role: "mutated-pdf", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: "application/pdf", sha256: await sha256(afterPath), bytes: readFileSync(afterPath).length },
+      ],
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
-      comparisonPipeline: "pdf-1-7-base-lopdf-compare-v1",
+      generator: {
+        oracle: ORACLE_ID,
+        packageVersion: "0.44",
+        engineFamily: "lopdf",
+        engineVersion: "0.44",
+        command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts generate",
+        platform: currentPlatform(),
+      },
+      comparisonPipeline: "pdf-1-7-a-lopdf-compare-v1",
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
-      notes: `A two-page lopdf-built seed with the ${kind} mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ${BEFORE_FILENAME} is the arranged seed and ${AFTER_FILENAME} is the result lopdf wrote. Observability is checked before a pair is written.`,
+      notes: `A minimal lopdf-built seed with the ${kind} mutation applied THROUGH lopdf's own public COS API (🔁️codec/🦀️.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
     });
   }
   console.log(JSON.stringify(entries, null, 2));
 }
+//#endregion 🚪️Commands
+
+//#region 🚪️Entry
+async function main(argv: readonly string[]): Promise<number> {
+  const [command = "", ...rest] = argv;
+  const outFlagIndex = rest.indexOf("--out");
+  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
+  const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (fixtureOutRoot ?? FIXTURES_DIR);
+  if (command === "generate") {
+    await generate(outRoot);
+    return 0;
+  }
+const ENCRYPTION_WRITER = String.raw`
+import os, sys
+from pypdf import PdfWriter
+
+seed, out, kind, directory = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+
+def plain(path):
+    w = PdfWriter(clone_from=seed)
+    w.write(path)
+
+def encrypted(path):
+    w = PdfWriter(clone_from=seed)
+    w.encrypt('', algorithm='RC4-128')
+    w.write(path)
+
+d = os.path.join(out, directory); os.makedirs(d, exist_ok=True)
+before = os.path.join(d, '⬅️before.pdf'); after = os.path.join(d, '➡️after.pdf')
+if kind == 'insert-encryption-dictionary':
+    plain(before); encrypted(after)
+elif kind == 'remove-encryption-dictionary':
+    encrypted(before); plain(after)
+else:
+    raise SystemExit('unknown kind ' + kind)
+print(kind + ': written')
+`;
+
+async function encryptionMode(emitManifests: boolean, root: string): Promise<number> {
+  const { existsSync: exists, readFileSync: read } = await import("node:fs");
+  const { join: j } = await import("node:path");
+  const { spawnSync: run } = await import("node:child_process");
+  const KINDS = ["insert-encryption-dictionary", "remove-encryption-dictionary"];
+  const here = import.meta.dir;
+  const probes = j(here, "..", "..", "🧾️vt", "🔬️probes", "📜️script.ts");
+  const seedDir = j(here, "..", "🧪️tests/🧫️fixtures");
+  const seedKind = ["set-output-intent", "insert-javascript-action", "embed-font-file"].find((kind) => exists(j(seedDir, FIXTURE_DIRECTORY_BY_KIND[kind]!, BEFORE_FILENAME)));
+  if (!seedKind) throw new Error(`no committed ${BEFORE_FILENAME} to seed the encryption pair from`);
+  const seed = j(seedDir, FIXTURE_DIRECTORY_BY_KIND[seedKind]!, BEFORE_FILENAME);
+  if (!emitManifests) {
+    const failures: string[] = [];
+    for (const kind of KINDS) {
+      const directory = FIXTURE_DIRECTORY_BY_KIND[kind]!;
+      const written = run("python3", ["-c", ENCRYPTION_WRITER, seed, root, kind, directory], { stdio: "inherit" });
+      if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
+      const cmp = run("bun", [probes, "pdf-encryption-compare", "--input", j(root, directory, BEFORE_FILENAME), "--input", j(root, directory, AFTER_FILENAME)], { encoding: "utf8" });
+      if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
+      if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind}: not observable in the encryption projection`);
+    }
+    for (const failure of failures) console.error(`[generator] ${failure}`);
+    return failures.length > 0 ? 1 : 0;
+  }
+  const entries = [];
+  for (const kind of KINDS) {
+    const directory = FIXTURE_DIRECTORY_BY_KIND[kind]!;
+    const files = [];
+    for (const [role, name] of [["base-pdf", BEFORE_FILENAME], ["mutated-pdf", AFTER_FILENAME]] as const) {
+      const bytes = read(j(root, directory, name));
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "application/pdf", sha256: `sha256:${[...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")}`, bytes: bytes.length });
+    }
+    entries.push({
+      id: `encryption-${kind}`,
+      class: "third-party-generated",
+      target: { artifact: "s.stdio.pdf", standard: "1.7", subset: "a" },
+      mutation: kind,
+      outcome: "applied",
+      units: { length: "unitless", angle: "degree" },
+      files,
+      provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+      generator: { oracle: "pypdf-pdf-1-7-encryption-reader", packageVersion: "6.14.2", engineFamily: "pypdf", engineVersion: "6.14.2", command: "bun 📜️script.ts encryption", platform: currentPlatform() },
+      comparisonProfile: "semantic-pdf-encryption-v1",
+      reproducible: true,
+      family: "mechanical",
+      notes: `This subset's own committed base document, written twice by pypdf 6.14 — once plain and once with a standard security handler. lopdf, which judges every other kind here, decrypts transparently on load and reports is_encrypted() false on a genuinely encrypted file, and cannot write an encryption dictionary at all. Observability was checked through the pypdf reader before the pair was written.`,
+    });
+  }
+  process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
+  return 0;
+}
+
+  if (command === "encryption") return await encryptionMode(false, outRoot);
+  if (command === "encryption-manifests") return await encryptionMode(true, outRoot);
+  if (command === "manifests") {
+    await manifests();
+    return 0;
+  }
+  console.error(`usage: 📜️script.ts <generate|manifests> [--out <dir>]`);
+  return 2;
+}
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {
-  //#endregion 🚪️Commands
   
-  //#region 🚀️Entry
-  const [command, ...rest] = process.argv.slice(2);
-  const outFlagIndex = rest.indexOf("--out");
-  const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR);
-  if (command === "generate") await generate(outRoot);
-  else if (command === "manifests") await manifests();
-  else {
-    console.error("usage: bun 📜️script.ts <generate [--out <dir>]|manifests>");
-    process.exit(2);
-  }
+  if (true) process.exitCode = await main(process.argv.slice(2));
 }

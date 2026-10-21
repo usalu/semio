@@ -73,6 +73,14 @@
    "path": "a/z.md",
    "text": "spawnSync(\"git\", [])",
    "expected": []
+  },
+  {
+   "path": "a/z.rs",
+   "text": "fn run(){ Command::new(\"git\").arg(\"x\"); let c = Command::new(\"repo\", \"Monorepo CLI\"); }\n#[cfg(test)]\nmod tests { fn t(){ Command::new(\"bun\"); } }",
+   "expected": [
+    "1 spawn git",
+    "3 spawn bun"
+   ]
   }
  ]
 }

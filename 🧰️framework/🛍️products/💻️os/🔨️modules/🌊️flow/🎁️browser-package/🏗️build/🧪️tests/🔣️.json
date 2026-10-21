@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "producer-has-no-generated-self-input",
+      "entry": "producer",
+      "target": "wasm",
+      "generated": false,
+      "refused": false
+    },
+    {
+      "id": "real-consumer-cannot-be-its-own-producer",
+      "entry": "consumer",
+      "target": "wasm",
+      "generated": true,
+      "refused": true
+    },
+    {
+      "id": "distinct-consumer-keeps-real-producer",
+      "entry": "consumer",
+      "target": "declarations",
+      "generated": true,
+      "refused": false
+    }
+  ]
+}

@@ -40,8 +40,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../🧰️fr
 semio-framework-schema-state = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-playbook-playbook-examples = { path = "../../🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-playbook-playbook-inferences = { path = "../../🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-playbook-playbook-schema = { path = "../../🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
@@ -53,6 +51,7 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

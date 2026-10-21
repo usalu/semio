@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "project": "workspace",
+  "command": [
+    "repo",
+    "exec",
+    "--projects=workspace",
+    "--",
+    "git",
+    "show",
+    "HEAD:🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json",
+    "HEAD:🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🧫️fixtures/🔣️.json"
+  ],
+  "environment": {
+    "GIT_PAGER": "cat"
+  },
+  "readonly": true,
+  "output": "tool memory only; no versioned source bodies copied into ticket",
+  "checks": {
+    "jsonObjects": 2,
+    "originalCaseCount": 6,
+    "requiredFixtureFields": [
+      "base",
+      "wideText",
+      "cases"
+    ],
+    "caseFields": [
+      "name",
+      "edits",
+      "accepted",
+      "messageCount"
+    ],
+    "acceptedCaseFields": [
+      "expected"
+    ],
+    "schemaValidation": "existing closed schema against original fixture using Ajv; inspect current TS/native consumer shape",
+    "provenance": "HEAD is repository provenance, not proof of exact prior uncommitted bytes; preserve current peer extensions and only restore established six-case contract",
+    "digests": "retain SHA256 of exact captured JSON object spans and canonical decoded JSON, explicitly distinguish those from whole Git blob hashes if outer process output framing obscures trailing whitespace",
+    "capture": "select exactly one closed-schema JSON and one six-case fixture JSON from completed owned stdout; refuse missing/duplicate/incompatible objects, never treat progress JSON as source"
+  },
+  "extension": {
+    "name": "outputHandoff",
+    "retainOriginalCases": true,
+    "sourceOracle": "existing sequence tests TS",
+    "nativeGate": "retained_diff_sequence three authentic laws"
+  },
+  "status": "mandatory blocked on actual supported provenance recovery; no corpus restored",
+  "attempts": [
+    {
+      "session": 97662,
+      "status": "whole1 before Git body",
+      "primary": "authenticated graph headroom below required1GiB, no bytes retired",
+      "recoveredBlob": false
+    },
+    {
+      "session": 40698,
+      "status": "naturalwhole1 beforeGitbody",
+      "recoveredBlob": false,
+      "capture": "functions memory store corpusRecoveryRetryOutput",
+      "primary": "Original resource loan deadline exhausted in process invocation routing remaining/arm",
+      "capturedCharacters": 128122
+    }
+  ],
+  "currentAttempt": {
+    "session": 21940,
+    "status": "live; capacity-only before Git body",
+    "capture": "memory only; no Source snapshot files",
+    "wholeExit": null
+  }
+}

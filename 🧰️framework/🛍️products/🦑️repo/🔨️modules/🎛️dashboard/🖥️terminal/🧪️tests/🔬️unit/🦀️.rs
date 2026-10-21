@@ -8,7 +8,8 @@ use dashboard_wire::client::Message;
 use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
 use std::sync::Arc;
 use ui_styling::appearance::AppearanceName;
-use semio_framework_ui_tui_frame::chrome::ChromeState;
+use semio_framework_ui_tui_frame::{chrome::ChromeState,scene::NodeContent};
+use semio_framework_ui_tui_widgets::widget::{TreeState,WidgetState};
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Size};
@@ -59,8 +60,8 @@ fn press(dashboard: &mut Dashboard, tui: &mut Tui, events: &[Event]) -> Flow {
     flow
 }
 
-fn tree_of<R>(dashboard: &Dashboard, tui: &mut Tui, index: usize, read: impl FnOnce(&semio_framework_ui_tui_widgets::widget::TreeState) -> R) -> R {
-    match &tui.scene.node(dashboard.windows[index].tree.expect("a launcher has a tree")).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Tree(tree)) => read(tree), _ => panic!("tree expected") }
+fn tree_of<R>(dashboard: &Dashboard, tui: &mut Tui, index: usize, read: impl FnOnce(&TreeState) -> R) -> R {
+    match &tui.scene.node(dashboard.windows[index].tree.expect("a launcher has a tree")).content { NodeContent::Widget(WidgetState::Tree(tree)) => read(tree), _ => panic!("tree expected") }
 }
 
 fn visible(dashboard: &Dashboard, tui: &mut Tui, index: usize) -> Vec<String> {

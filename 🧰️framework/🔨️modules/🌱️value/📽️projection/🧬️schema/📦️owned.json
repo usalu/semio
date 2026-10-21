@@ -5,7 +5,8 @@
     "cases",
     "cancelCuts",
     "expected",
-    "nestedBodyQuotes"
+    "nestedBodyQuotes",
+    "outputHandoffs"
   ],
   "properties": {
     "cases": {
@@ -102,6 +103,63 @@
           "spent": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      }
+    },
+    "outputHandoffs": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ready",
+          "closing",
+          "hasOutput",
+          "items",
+          "outputBytes",
+          "copyBudget",
+          "depth",
+          "admitted",
+          "retained"
+        ],
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          },
+          "closing": {
+            "type": "boolean"
+          },
+          "hasOutput": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "outputBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "copyBudget": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "retained": {
+            "type": "boolean"
           }
         }
       }

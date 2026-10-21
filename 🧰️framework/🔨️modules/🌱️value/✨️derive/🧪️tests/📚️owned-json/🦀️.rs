@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn compile_source_asset_without_runtime_json_decode() {
-    let actual = semio_framework_value_derive::owned_json_file!("../../🧫️fixtures/📚️owned-json/🔣️.json");
+    let actual = semio_framework_value_derive_resources::owned_json_file!("../../🧪️tests/🧫️fixtures/📚️owned-json/🔣️.json");
     let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📚️owned-json/🔣️.json")).unwrap();
     assert_eq!(serde_json::Value::from(&actual),expected);
     let array = actual.get("array").unwrap().as_array().unwrap();

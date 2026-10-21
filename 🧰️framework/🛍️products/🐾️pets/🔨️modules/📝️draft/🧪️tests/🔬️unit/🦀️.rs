@@ -5,6 +5,9 @@
 
 use semio_framework_pets_staging_draft::draft::*;
 use crate::stage::tests::{meadow, troupe};
+use semio_framework_pets_contract::schema::{Activity, Facing};
+use semio_framework_pets_kinematics::randomness::unit_of;
+use semio_framework_pets_staging_draft::draft::{carve, clips_of, facing_to};
 
 #[test]
 fn a_draft_keeps_one_actor_per_known_species() {

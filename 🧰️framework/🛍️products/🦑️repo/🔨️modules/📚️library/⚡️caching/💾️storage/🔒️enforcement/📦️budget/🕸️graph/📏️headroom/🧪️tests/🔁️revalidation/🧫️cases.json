@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "minimumAvailableBytes": 10,
+  "maximumRevalidations": 8,
+  "cases": [
+    {
+      "name": "withdraw then fresh shared floor",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 10,
+          "outcome": "deferred",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "funded",
+        "opens": 2,
+        "closes": 2,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 10
+      },
+      "wait": true
+    },
+    {
+      "name": "funded observation never admits deficient fresh image",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 20,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "acquired",
+          "observation": 0,
+          "bodyAvailable": 10,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "funded",
+        "opens": 2,
+        "closes": 2,
+        "bodies": 1,
+        "retiredFiles": 1,
+        "available": 10
+      },
+      "wait": true
+    },
+    {
+      "name": "repeated recovery is independently revalidated",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 10,
+          "outcome": "deferred",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "funded",
+        "opens": 3,
+        "closes": 3,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 10
+      },
+      "wait": true
+    },
+    {
+      "name": "ordinary busy remains deferred",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "deferred",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "deferred",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "native primary beats close failure",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "error",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": true
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "error",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "undefined primary beats close failure",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "undefined",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": true
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "undefined",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "parent cancellation beats withdrawal and close",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": true
+        }
+      ],
+      "abortAfterWithdrawal": "cancel",
+      "expected": {
+        "status": "cancel",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "parent deadline beats withdrawal and close",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": true
+        }
+      ],
+      "abortAfterWithdrawal": "deadline",
+      "expected": {
+        "status": "deadline",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "withdrawal cleanup failure refuses revalidation",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": true
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "close",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "fresh shared admission failure cannot admit observation",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "open-error",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "open-error",
+        "opens": 2,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "bounded churn refuses safely",
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        },
+        {
+          "available": 0,
+          "outcome": "withdrawn",
+          "observation": 10,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "churn",
+        "opens": 9,
+        "closes": 9,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      },
+      "wait": true
+    },
+    {
+      "name": "nonwaiting cleanup omits queued observer",
+      "wait": false,
+      "steps": [
+        {
+          "available": 0,
+          "outcome": "deferred",
+          "observation": 0,
+          "bodyAvailable": 0,
+          "closeFailure": false
+        }
+      ],
+      "abortAfterWithdrawal": "none",
+      "expected": {
+        "status": "deferred",
+        "opens": 1,
+        "closes": 1,
+        "bodies": 0,
+        "retiredFiles": 0,
+        "available": 0
+      }
+    }
+  ],
+  "nativeCases": [
+    {
+      "reconsumeBeforeFresh": false,
+      "expectedOpens": 2,
+      "expectedWithdrawals": 1
+    },
+    {
+      "reconsumeBeforeFresh": true,
+      "expectedOpens": 3,
+      "expectedWithdrawals": 2
+    }
+  ]
+}

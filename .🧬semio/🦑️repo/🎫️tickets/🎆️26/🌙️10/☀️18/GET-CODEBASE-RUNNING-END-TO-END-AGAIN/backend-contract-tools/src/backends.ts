@@ -4,7 +4,7 @@ import {validateJsonSchemaSubset} from "@@VALID@@";
 import type {ScriptInvocation} from "@@PROC@@/@@ROUTING@@/@@TS@@";
 import type {ResourceLeaseControl} from "@@PROC@@/@@LEASES@@/@@TS@@";
 import type {BuildGraphV1} from "@@UP@@@@GRAPH@@/@@TS@@";
-import type {BuildCacheToolV1} from "@@UP@@@@OPERATIONS@@/@@TS@@";
+import type {BuildCacheToolV1,CacheProbeToolV1} from "@@UP@@@@OPERATIONS@@/@@TS@@";
 import type {RemoteCacheToolV1} from "@@UP@@@@REMOTECACHE@@/@@COMMAND@@/@@TS@@";
 
 /** 🆔️ The identity of a build backend: any id the registry declares, never a closed list in code. */
@@ -16,7 +16,7 @@ export type BackendCapabilityV1=typeof schema.definitions.Capability.enum[number
 /** 🌍️ A text in both supported languages. */
 export type BackendTextV1=Readonly<{en:string;de:string}>;
 /** 🗒️ One backend as the registry declares it. */
-export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";module:string;driver:string;dependencyModel:"all"|"consumers";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
+export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
 
 /** 📜️ Reads the authored registry once and refuses a row set that breaks its schema, repeats an id or names a missing default. */
 export function readBackendRegistryV1(value:unknown=registry):readonly BackendRowV1[]{
@@ -24,6 +24,7 @@ export function readBackendRegistryV1(value:unknown=registry):readonly BackendRo
  if(issues.length)throw Error(`Closed build backend registry required: ${issues.slice(0,3).join("; ")}`);
  const rows=(value as {backends:BackendRowV1[]}).backends,ids=rows.map(row=>row.id);
  if(new Set(ids).size!==ids.length)throw Error("Unique build backend ids required");
+ if(rows.filter(row=>row.default===true).length!==1)throw Error("Exactly one default build backend required");
  return Object.freeze(rows.map(row=>Object.freeze(row)));
 }
 
@@ -33,6 +34,8 @@ const rows=readBackendRegistryV1();
 export function buildBackendRowsV1():readonly BackendRowV1[]{return rows;}
 /** 🔢️ The registered backend ids in registry order. */
 export function buildBackendIdsV1():readonly BuildBackendIdV1[]{return rows.map(row=>row.id);}
+/** ⭐️ The backend that runs when nothing selects one: the registry row marked as default. */
+export function buildBackendDefaultIdV1():BuildBackendIdV1{return rows.find(row=>row.default===true)!.id;}
 /** 🧾️ The ids as a help-text alternation such as `a|b|c`. */
 export function buildBackendAlternationV1():string{return buildBackendIdsV1().join("|");}
 /** 🔎️ Finds one registered backend or refuses an unknown name with the list of valid ones. */
@@ -64,6 +67,7 @@ export interface BuildBackendV1{
  execute(context:BackendExecutionContextV1):Promise<void>;
  affectedProjects?(context:BackendExecutionContextV1,files:readonly string[]):Promise<readonly string[]>;
  bootstrapArguments?(args:readonly string[]):readonly string[]|undefined;
+ cacheProbe?(context:Readonly<{root:string;invocation:ScriptInvocation}>):Promise<CacheProbeToolV1>;
 }
 
 const loaded=new Map<string,Promise<BuildBackendV1>>();

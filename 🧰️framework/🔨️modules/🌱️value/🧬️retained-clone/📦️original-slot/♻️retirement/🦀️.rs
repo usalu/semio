@@ -1,6 +1,8 @@
 //! ♻️ Original slot retirement returns its immutable source before paying the captured payload issuer.
 use super::*;
-use crate::{retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneClose,FactoryAuthority,ErasedSnapshotRetirement};
+use semio_framework_value_retirement::{RetireOwned,retirement::{RetirementCursor,RetirementStep}};
+use semio_framework_value_retained_clone::RetainedCloneClose;
+use crate::{FactoryAuthority,ErasedSnapshotRetirement};
 struct OriginalSlotRetirement<T:RetireOwned+Sync>{slot:ManuallyDrop<Option<RetainedOriginalSlot<T>>>,payload:ManuallyDrop<Option<T>>,factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,intrinsic:RetainedCloneClose,factory_close:Option<FactoryAuthority>}
 impl<T:RetireOwned+Sync> OriginalSlotRetirement<T>{
  fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{

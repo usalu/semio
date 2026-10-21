@@ -521,5 +521,99 @@
         "manifest": null
       }
     ]
+  },
+  "cargoOwner": {
+    "witnessContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "testProject",
+        "subjectRoot",
+        "dependency",
+        "dependencyRoot",
+        "row"
+      ],
+      "properties": {
+        "owner": {
+          "const": "🧰️framework/🛍️products/📓️print"
+        },
+        "testProject": {
+          "const": "test-framework-products-print-da77cb"
+        },
+        "subjectRoot": {
+          "const": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust"
+        },
+        "dependency": {
+          "const": "semio-framework-value-derive-resources"
+        },
+        "dependencyRoot": {
+          "const": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust"
+        },
+        "row": {
+          "const": {
+            "name": "semio-framework-value-derive-resources",
+            "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
+            "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+            "packages": []
+          }
+        }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "membership",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "membership": {
+          "enum": [
+            "current",
+            "missing",
+            "alias"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "witness": {
+      "owner": "🧰️framework/🛍️products/📓️print",
+      "testProject": "test-framework-products-print-da77cb",
+      "subjectRoot": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+      "dependency": "semio-framework-value-derive-resources",
+      "dependencyRoot": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
+      "row": {
+        "name": "semio-framework-value-derive-resources",
+        "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
+        "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "packages": []
+      }
+    },
+    "cases": [
+      {
+        "id": "real-cargo-owner-admitted",
+        "membership": "current",
+        "accepted": true
+      },
+      {
+        "id": "prior-missing-owner-refused",
+        "membership": "missing",
+        "accepted": false
+      },
+      {
+        "id": "renamed-alias-does-not-own-package",
+        "membership": "alias",
+        "accepted": false
+      }
+    ]
   }
 }

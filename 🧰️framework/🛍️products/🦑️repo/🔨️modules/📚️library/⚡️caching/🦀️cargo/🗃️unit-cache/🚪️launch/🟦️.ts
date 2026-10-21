@@ -1,6 +1,8 @@
 import {availableParallelism} from "node:os";
 import {fileURLToPath} from "node:url";
-import {join} from "node:path";
+import {chmodSync,mkdirSync,readFileSync,renameSync,writeFileSync} from "node:fs";
+import {dirname,join} from "node:path";
+import {randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
@@ -20,11 +22,28 @@ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
  return[...new Set(names)].sort();
 }
 
-/** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs `bun <script> <rustc arguments>` and the script falls back to the memory-admitting scheduler for every miss. A launcher adds this after its storage admission and never before. */
+/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. */
+export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform):string{return join(cacheRoot,"bin",platform==="win32"?"rustc-wrapper.cmd":"rustc-wrapper");}
+
+/** 📜️ The text of the stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. */
+export function unitCacheShimSourceV1(runtime:string,script:string,platform:NodeJS.Platform=process.platform):string{
+ if(platform==="win32")return `@"${runtime}" "${script}" %*\r\n`;
+ const quote=(text:string)=>"'"+text.replaceAll("'","'\\''")+"'";
+ return `#!/bin/sh\nexec ${quote(runtime)} ${quote(script)} "$@"\n`;
+}
+
+/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
+export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform):string{
+ const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script,platform);
+ let current:string|undefined;try{current=readFileSync(path,"utf8");}catch{}
+ if(current!==text){mkdirSync(dirname(path),{recursive:true});const temporary=path+"."+randomBytes(4).toString("hex");writeFileSync(temporary,text);chmodSync(temporary,0o755);renameSync(temporary,path);}
+ return path;
+}
+
+/** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before. */
 export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
  return{
-  RUSTC_WRAPPER:input.runtime??process.execPath,
-  RUSTC:UNIT_CACHE_SCRIPT_V1,
+  RUSTC_WRAPPER:ensureUnitCacheShimV1(input.cacheRoot,input.runtime),
   SEMIO_UNIT_CACHE_ROOT:input.cacheRoot,
   SEMIO_UNIT_CACHE_LANE:input.lane,
   SEMIO_UNIT_CACHE_LANE_ROOT:input.laneRoot,

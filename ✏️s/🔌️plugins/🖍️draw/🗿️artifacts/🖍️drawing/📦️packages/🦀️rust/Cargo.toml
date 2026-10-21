@@ -31,7 +31,6 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-descriptor = { workspace = true }
 semio-s-artifact-draw-drawing-editor = { workspace = true }
 semio-s-artifact-draw-drawing-editor-commands = { workspace = true }

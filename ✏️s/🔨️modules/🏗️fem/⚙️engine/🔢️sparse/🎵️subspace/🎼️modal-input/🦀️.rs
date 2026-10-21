@@ -185,7 +185,7 @@ impl ModalInputConstruction {
                     self.mass_indptr.push((self.row + 1) as u32);
                     self.row += 1;
                 } else {
-                    let stiffness = CscSym { n, colptr: std::mem::take(&mut self.colptr), rowind: std::mem::take(&mut self.rowind), vals: std::mem::take(&mut self.values) };
+                    let stiffness = CscSym::from_owned_parts(n, std::mem::take(&mut self.colptr), std::mem::take(&mut self.rowind), std::mem::take(&mut self.values));
                     let mass = Csr::from_owned_parts(n, std::mem::take(&mut self.mass_indptr), std::mem::take(&mut self.mass_indices), std::mem::take(&mut self.mass_values));
                     self.complete = Some((stiffness, mass));
                     self.stage = ModalInputStage::Complete;

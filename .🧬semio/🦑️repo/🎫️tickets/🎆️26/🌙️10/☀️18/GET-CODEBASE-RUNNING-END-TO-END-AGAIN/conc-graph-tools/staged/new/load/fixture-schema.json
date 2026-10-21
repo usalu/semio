@@ -5,7 +5,9 @@
   "version",
   "policy",
   "language",
-  "shape"
+  "shape",
+  "shapeImplementation",
+  "implementation"
  ],
  "properties": {
   "version": {
@@ -86,6 +88,70 @@
     },
     "expected": {
      "type": "object"
+    }
+   }
+  },
+  "shapeImplementation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "workspaceRoot",
+    "part",
+    "stubs",
+    "implementation",
+    "expected"
+   ],
+   "properties": {
+    "workspaceRoot": {
+     "type": "string"
+    },
+    "part": {
+     "type": "object"
+    },
+    "stubs": {
+     "type": "object"
+    },
+    "implementation": {
+     "type": "object"
+    },
+    "expected": {
+     "type": "object"
+    }
+   }
+  },
+  "implementation": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "rows",
+     "expected"
+    ],
+    "properties": {
+     "rows": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "kind",
+        "path",
+        "fact"
+       ],
+       "properties": {
+        "kind": {
+         "type": "string"
+        },
+        "path": {
+         "type": "string"
+        },
+        "fact": {}
+       }
+      }
+     },
+     "expected": {
+      "type": "object"
+     }
     }
    }
   }

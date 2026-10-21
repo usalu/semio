@@ -26,13 +26,14 @@ schema = {
   "Sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
   "Name": {"type": "string", "minLength": 1, "maxLength": 256},
   "Template": {"type": "string", "minLength": 1, "maxLength": 256},
-  "Recipe": {"type": "object", "required": ["version", "kind", "backends", "clearEnvironmentPrefixes", "clearEnvironmentKeys", "cache", "global", "bin", "temporary", "home", "config"],
+  "Recipe": {"type": "object", "required": ["version", "kind", "backends", "clearEnvironmentPrefixes", "clearEnvironmentKeys", "cache", "global", "bin", "temporary", "home", "config", "directoryRoles", "maximumEnvironmentEntries", "maximumEnvironmentBytes", "maximumEnvironmentValueUnits", "borrowedProviders"],
              "properties": {"version": {"type": "integer", "minimum": 1}, "kind": ident, "backends": {"type": "object", "additionalProperties": {"type": "string"}},
                             "clearEnvironmentPrefixes": strs, "clearEnvironmentKeys": strs,
                             "cache": name, "global": name, "bin": name, "temporary": name, "home": name, "config": name}},
-  "Operation": obj({"arguments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Template"}}}),
+  "Argument": {"anyOf": [{"$ref": "#/$defs/Template"}, obj({"optional": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Template"}}})]},
+  "Operation": obj({"arguments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Argument"}}, "scopes": {"type": "object", "additionalProperties": {"type": "array", "items": {"$ref": "#/$defs/Template"}}}}, ["arguments"]),
   "Descriptor": obj({
-    "version": {"const": 1}, "id": ident, "ecosystem": ident, "toolchain": ident, "executable": name,
+    "version": {"const": 1}, "id": ident, "label": name, "ecosystem": ident, "toolchain": ident, "executable": name,
     "runtime": obj({"hostVersionKey": {"type": ["string", "null"]}, "probe": obj({"arguments": strs, "pattern": {"type": "string", "minLength": 1}})}),
     "manifests": {"type": "array", "minItems": 1, "items": name},
     "manifestIdentity": obj({"excludedTopLevelFields": strs, "bootstrapFields": strs}),
@@ -45,10 +46,11 @@ schema = {
                    "properties": {"lock": {"$ref": "#/$defs/Operation"}, "sync": {"$ref": "#/$defs/Operation"}, "verify": {"$ref": "#/$defs/Operation"}}},
     "installed": obj({"containers": {"type": "array", "minItems": 1, "items": name}, "entry": {"$ref": "#/$defs/Template"}, "match": {"enum": ["exact", "listed"]},
                       "nameTransform": {"enum": ["identity", "lowercase", "go-escape", "pep-escape"]}, "nameEscape": {"type": "object", "additionalProperties": {"type": "string"}}, "fold": {"enum": ["identity", "lowercase", "go-escape", "pep-escape"]}, "suffix": {"type": ["string", "null"]}, "sourcePrefix": {"type": ["string", "null"]}}),
-    "resolution": obj({"profiles": strs, "strictPrefix": {"type": ["string", "null"]}}),
+    "resolution": obj({"profiles": strs, "strictPrefix": {"type": ["string", "null"]}, "oracle": name, "conditions": {"type": "object", "additionalProperties": strs}}),
+    "producerInputs": obj({"scopeFiles": strs, "ambientHomeFiles": strs, "ambientConfigFiles": strs, "ambientConfigFallback": name, "environmentPrefixes": strs, "environmentIgnored": strs}),
     "generationDirectory": ident, "graphComponent": {"type": ["string", "null"]}}),
   "Selection": obj({"version": {"const": 1}, "selection": {"type": "object", "additionalProperties": ident}}),
-  "Request": obj({"platform": name, "cache": name, "directory": name, "manifest": name, "settings": {"type": "object", "additionalProperties": {"type": "string"}}}, ["platform"]),
+  "Request": obj({"platform": name, "cache": name, "directory": name, "manifest": name, "scope": name, "settings": {"type": "object", "additionalProperties": {"type": "string"}}}, ["platform"]),
   "Invocation": obj({"executable": name, "arguments": {"type": "array", "items": {"type": "string"}}, "directory": {"type": ["string", "null"]}}),
   "LockPackage": obj({"name": name, "version": {"type": "string"}, "key": {"type": "string"}, "source": {"type": ["string", "null"]}, "integrity": {"type": ["string", "null"]}}),
   "LockMember": obj({"name": name, "path": {"type": ["string", "null"]}}),
@@ -59,8 +61,6 @@ schema = {
     "generation": obj({"key": {"$ref": "#/$defs/Sha256"}, "location": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}/[a-f0-9]{20}$"}}),
     "lock": obj({"name": name, "sha256": {"$ref": "#/$defs/Sha256"}}), "providers": obj({"examined": {"type": "integer", "minimum": 0}}), "sha256": {"$ref": "#/$defs/Sha256"}}),
  }}
-path = os.path.join(paths.NEW, paths.MANAGERS, "🧬️schema", "🔣️.json")
-os.makedirs(os.path.dirname(path), exist_ok=True)
-with open(path, "w", encoding="utf-8") as handle:
-    json.dump(schema, handle, ensure_ascii=False, indent=2); handle.write("\n")
-print(path.split("/")[-2], os.path.getsize(path))
+text = json.dumps(schema, ensure_ascii=False, indent=2) + "\n"
+paths.seam_write(paths.MANAGERS + "/🧬️schema/🔣️.json", text)
+print("schema", len(text))

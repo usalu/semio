@@ -23,7 +23,284 @@
         "maximumSnapshotBytes": 536870912,
         "maximumReceiptBytes": 67108864,
         "chunkBytes": 65536,
-        "receiptHeapMiB": 512
+        "receiptHeapMiB": 512,
+        "selectedDirectory": "selected",
+        "maximumRevalidations": 8
+      }
+    },
+    "SelectedPublicationFile": {
+      "type": "string",
+      "pattern": "^([a-f0-9]{64})(?:\\.authority)?\\.json$"
+    },
+    "CleanupCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "close",
+        "expected"
+      ],
+      "properties": {
+        "primary": {
+          "enum": [
+            "none",
+            "error",
+            "undefined"
+          ]
+        },
+        "close": {
+          "type": "boolean"
+        },
+        "expected": {
+          "enum": [
+            "success",
+            "primary",
+            "undefined",
+            "close"
+          ]
+        }
+      }
+    },
+    "SelectedRetirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "minimum",
+        "callbackBytes",
+        "publications",
+        "retired",
+        "callbacks"
+      ],
+      "properties": {
+        "available": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "callbackBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "publications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "modified",
+              "bytes"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "modified": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "retired": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "callbacks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "OptionalRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retiredBytes",
+        "retiredFiles"
+      ],
+      "properties": {
+        "retiredBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PressureContinuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "snapshotBytes",
+        "minimumAvailableBytes",
+        "chunkBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "const": 1207959552
+        },
+        "maximumPhysicalBytes": {
+          "const": 1233125376
+        },
+        "snapshotBytes": {
+          "const": 201326592
+        },
+        "minimumAvailableBytes": {
+          "const": 1073741824
+        },
+        "chunkBytes": {
+          "const": 65536
+        }
+      }
+    },
+    "SelectedRecoveryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acquired",
+        "availableBytes",
+        "retiredBytes",
+        "retiredFiles"
+      ],
+      "properties": {
+        "acquired": {
+          "const": true
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retiredBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ConcurrentSelectedCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "minimum",
+        "busy",
+        "retired",
+        "remaining"
+      ],
+      "properties": {
+        "available": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "busy": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "retired": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ConcurrentSelectedFailure": {
+      "enum": [
+        "corrupt",
+        "cancel",
+        "changed",
+        "primary-undefined",
+        "published-again",
+        "already-retired"
+      ]
+    },
+    "CompositorOrdering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectedFunds",
+        "events",
+        "scopedFunds"
+      ],
+      "properties": {
+        "selectedFunds": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "selected",
+              "optional",
+              "close",
+              "coarse",
+              "scoped"
+            ]
+          }
+        },
+        "scopedFunds": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PartitionBridgeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "accepted"
+      ],
+      "properties": {
+        "owner": {
+          "enum": [
+            "factory",
+            "copy",
+            "closed"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
       }
     }
   }

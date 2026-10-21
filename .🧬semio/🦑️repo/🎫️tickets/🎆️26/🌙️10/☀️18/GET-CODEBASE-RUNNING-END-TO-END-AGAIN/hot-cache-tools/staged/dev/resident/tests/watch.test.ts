@@ -123,7 +123,7 @@ describe.skipIf(!native)("native watcher",()=>{
  });
 });
 
-/** A scripted stand-in for the watcher process. */
+/** 🎭 A scripted stand-in for the watcher process. */
 function fakeChild(script:(child:any)=>void){
  const child:any=new EventEmitter();child.stdout=new PassThrough();child.stdin={end(){}};child.kill=()=>child.emit("exit",null);
  queueMicrotask(()=>script(child));return child;

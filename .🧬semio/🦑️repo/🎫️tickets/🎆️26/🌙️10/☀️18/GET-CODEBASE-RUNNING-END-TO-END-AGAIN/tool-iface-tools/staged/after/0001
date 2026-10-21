@@ -1,75 +1,70 @@
-
-import { join } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { currentPlatform } from "@semio-tech/framework/test/adapter";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
-type ProbeReport = {
-  schema: "semio.repository-test.probe-report/v2";
-  probe: string;
-  probeVersion: string;
-  engine: { family: string; implementation: string; version: string };
-  status: "ok" | "failed" | "unsupported";
-  durationMs: number;
-  measurements: Record<string, unknown>;
-  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
-};
-
-const ENGINE = { family: "burntsushi-csv", implementation: "rust-csv reader", version: "1.4.0" } as const;
-const PROBE_VERSION = "csv@1.4.0";
-const CRATE_BIN = "semio-equation-oracle-probe";
-const KNOWN_PROBES = new Set(["csv-rows", "csv-compare", "gate-inputs", "fixtures"]);
+const HERE = import.meta.dir;
+const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
+const TARGET = cargoTargetDirectory(findWorkspaceRoot());
+const OWNER = join(HERE, "..", "..", "➗️equation");
+const FIXTURES_DIR = join(OWNER, "🧪️tests/🧫️fixtures");
+const CATALOG = join(OWNER, "🔮️oracles", "🔣️.json");
+const ORACLE_ID = "json-rust-equation-carrier-reader";
+const GENERATOR = { oracle: ORACLE_ID, packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate" } as const;
 //#endregion 🧬️Contract
 
-//#region 🚀️Entry
-function emit(report: ProbeReport): number {
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  return report.status === "failed" ? 1 : 0;
+//#region 🔨️Build
+function build(): void {
+  const result = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(ENGINE, "Cargo.toml")], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 
-function main(argv: readonly string[]): number {
-  const [probe = "", ...rest] = argv;
-  const started = Date.now();
-  const envelope = (status: ProbeReport["status"], measurements: Record<string, unknown>, diagnostics?: ProbeReport["diagnostics"]): ProbeReport => ({
-    schema: "semio.repository-test.probe-report/v2",
-    probe,
-    probeVersion: PROBE_VERSION,
-    engine: ENGINE,
-    status,
-    durationMs: Date.now() - started,
-    measurements,
-    ...(diagnostics ? { diagnostics } : {}),
-  });
+async function sha256(path: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", readFileSync(path));
+  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+//#endregion 🔨️Build
 
-  if (!KNOWN_PROBES.has(probe)) {
-    return emit(envelope("failed", {}, [{ severity: "error", message: `unknown probe ${probe || "(none)"}`, detail: `known: ${[...KNOWN_PROBES].join(", ")}` }]));
-  }
+//#region 🚪️Commands
+function generate(outRoot: string): number {
+  build();
+  const result = spawnSync(join(TARGET, "release", "generate"), [outRoot], { stdio: "inherit" });
+  return result.status ?? 1;
+}
 
-  const args = [...rest];
-  if ((probe === "fixtures" || probe === "gate-inputs") && !args.includes("--out")) {
-    const fallback = probe === "fixtures" ? join(import.meta.dir, "..", "🧫️fixtures") : join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust", "target", "gate-inputs");
-    args.push("--out", process.env.SEMIO_FIXTURE_OUT ?? fallback);
+async function manifests(): Promise<void> {
+  const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { testEvidence?: { generator?: { oracle?: string; platform?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+  const owned = (catalog.testEvidence ?? []).filter((entry) => entry.generator?.oracle === ORACLE_ID);
+  if (owned.length === 0) throw new Error(`no fixture manifest names ${ORACLE_ID}`);
+  for (const entry of owned) {
+    for (const file of entry.files) {
+      const path = join(dirname(CATALOG), file.path);
+      file.sha256 = await sha256(path);
+      file.bytes = readFileSync(path).length;
+    }
+    entry.generator = { ...GENERATOR, platform: currentPlatform() };
   }
-
-  const run = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...args], {
-    cwd: join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust"),
-    encoding: "utf8",
-  });
-  if (run.status !== 0) {
-    return emit(envelope("failed", {}, [{ severity: "error", message: `${CRATE_BIN} exited ${run.status}`, detail: (run.stderr ?? "").trim().split("\n").slice(-6).join("\n") }]));
-  }
-  let parsed: { status: ProbeReport["status"]; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] };
-  try {
-    parsed = JSON.parse((run.stdout ?? "").trim().split("\n").at(-1) ?? "") as typeof parsed;
-  } catch (error) {
-    return emit(envelope("failed", {}, [{ severity: "error", message: "probe output was not JSON", detail: String((error as Error).message ?? error) }]));
-  }
-  return emit(envelope(parsed.status, parsed.measurements, parsed.diagnostics));
+  writeFileSync(CATALOG, `${JSON.stringify(catalog, null, 2)}\n`);
+  console.log(`${owned.length} fixture manifest(s) refreshed in ${CATALOG}`);
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {
+  //#endregion 🚪️Commands
   
-  if (true) process.exit(main(process.argv.slice(2)));
+  //#region 🚀️Entry
+  const [command, ...rest] = process.argv.slice(2);
+  const outFlagIndex = rest.indexOf("--out");
+  const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR);
+  if (command === "generate") process.exit(generate(outRoot));
+  else if (command === "manifests") await manifests();
+  else {
+    console.error("usage: bun 📜️script.ts <generate [--out <dir>]|manifests>");
+    process.exit(2);
+  }
 }

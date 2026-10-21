@@ -5,6 +5,12 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 /** 🛗️ What an operation needs before it starts: `none` runs on a fresh clone with only Bun, `dependencies` needs the locked dependencies, which the CLI ensures first; an unknown name needs them, so a typo never skips the provisioning. */
 export function buildOperationRequiresV1(name:string):"none"|"dependencies"{return (catalogue.operations as readonly {name:string;requires:"none"|"dependencies"}[]).find(row=>row.name===name)?.requires??"dependencies";}
 
+/** 🧭️ A dependency-free neutral operation owns its bootstrap and never needs another build tool's task graph. */
+export function buildOperationHasNeutralBootstrapV1(name:string):boolean{
+ const operation=catalogue.operations.find(row=>row.name===name);
+ return operation?.requires==="none"&&operation.implementations.nx==="neutral"&&operation.implementations.bazel==="neutral";
+}
+
 /** 🛠️ Names the build tools that implement the neutral operations. */
 export type BuildToolNameV1="nx"|"bazel";
 

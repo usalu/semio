@@ -35,6 +35,7 @@ semio-framework-plugin-window-config-replace = { path = "../../🧬️preparatio
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-retirement-queue = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 

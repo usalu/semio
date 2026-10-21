@@ -11,6 +11,7 @@ pub struct ToolRunStepRingInsertDemand{pub retirement:RetirementDemand,pub compa
 pub struct ToolRunStepRingInsertProgress{pub retirement:RetainedCloneProgress,pub comparison:BoundedOrdProgress,pub moved_items:usize,pub moved_bytes:usize}
 impl ToolRunStepRingInsertProgress{pub fn fits(self,grant:ToolRunStepRingInsertGrant)->bool{self.retirement.fits(grant.retirement)&&self.comparison.fits(grant.comparison)&&self.moved_items<=grant.maximum_moved_items&&self.moved_bytes<=grant.maximum_moved_bytes}}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct State{ring:Option<ToolRunStepRing>,input:Option<ToolRunStep>,displaced:Option<ToolRunStep>,close:Option<ControlledRetirement<ToolRunStep>>,index:usize,phase:u8,equal:bool,cancelled:bool}
 pub struct ToolRunStepRingInsert{state:ManuallyDrop<State>,transferred:bool}
 impl ToolRunStepRingInsert{

@@ -1,0 +1,75 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "cases",
+    "generator"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "const": "./🧩️catalog/📣️publication/📜️script.ts"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "operation"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "generate",
+              "check-generated",
+              "preview-generated",
+              "verify-catalog"
+            ]
+          },
+          "operation": {
+            "enum": [
+              "generate",
+              "check",
+              "preview",
+              "verify"
+            ]
+          }
+        }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ownerPath",
+        "entryPath",
+        "previewArguments"
+      ],
+      "properties": {
+        "id": {
+          "const": "plugin-registry"
+        },
+        "ownerPath": {
+          "const": "✏️s/🧑‍💻dev"
+        },
+        "entryPath": {
+          "const": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts"
+        },
+        "previewArguments": {
+          "const": [
+            "preview"
+          ]
+        }
+      }
+    }
+  }
+}

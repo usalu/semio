@@ -1,1 +1,67 @@
-{"name":"repo-graph-maintenance", "namedInputs": { "reads": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"], "testEnv": [{ "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }, { "env": "SEMIO_BUILD_BUDGET_MS" }] },"tags":["scope:repo","language:typescript"],"targets":{"test":{"executor":"repo:script","cache":true,"inputs":["default", "^default", "testEnv", "reads"],"outputs":[],"options":{"command":"bun ./📜️script.ts test","forwardAllArgs":false},"defaultConfiguration":"prototype","configurations":{"prototype":{"env":{"SEMIO_BUILD_MODE":"prototype"}},"release":{"env":{"SEMIO_BUILD_MODE":"release"}}}}}}
+{
+  "name": "repo-graph-maintenance",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ]
+  },
+  "tags": [
+    "scope:repo",
+    "language:typescript"
+  ],
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🟦️.ts",
+            "{projectRoot}/🧪️tests/📒️ledger/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    }
+  }
+}

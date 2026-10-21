@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "owner": "observed-chunks",
+      "countKnown": false,
+      "maximum": 5,
+      "pageItems": 4,
+      "appends": 5,
+      "expectedTargets": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "expectedPayloads": [
+        4,
+        1
+      ]
+    },
+    {
+      "owner": "symbol-scalars",
+      "countKnown": false,
+      "maximum": 8,
+      "pageItems": 4,
+      "appends": 6,
+      "expectedTargets": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "expectedPayloads": [
+        4,
+        4
+      ]
+    },
+    {
+      "owner": "chunk-ids",
+      "countKnown": false,
+      "maximum": 8,
+      "pageItems": 4,
+      "appends": 5,
+      "expectedTargets": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "expectedPayloads": [
+        4,
+        4
+      ]
+    },
+    {
+      "owner": "symbol-spans",
+      "countKnown": true,
+      "maximum": 8,
+      "pageItems": 4,
+      "appends": 2,
+      "expectedTargets": [
+        2,
+        2
+      ],
+      "expectedPayloads": [
+        2
+      ]
+    }
+  ]
+}

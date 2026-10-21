@@ -17,17 +17,17 @@ macro_rules! native_material_row{
   #[derive(Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
   #[canonical_json(owner=semio_framework_pack_json)]
   #[value(rename_all="camelCase")]
-  pub struct $row{pub id:semio_framework_value::retirement::shared::sealed::SealedShared<String>,pub name:semio_framework_value::retirement::shared::sealed::SealedShared<String>,$(pub $field:f64),+}
+  pub struct $row{pub id:semio_framework_value::shared_issuance::SealedShared<String>,pub name:semio_framework_value::shared_issuance::SealedShared<String>,$(pub $field:f64),+}
   impl semio_framework_value_native_owned::native_decoding::owned::NativeFlatRecord<2,$count> for $row{
    const TEXT_FIELDS:[semio_framework_value_native_owned::native_decoding::owned::NativeRecordField;2]=[semio_framework_value_native_owned::native_decoding::owned::NativeRecordField{name:"id",ordinal:0},semio_framework_value_native_owned::native_decoding::owned::NativeRecordField{name:"name",ordinal:1}];
    const NUMBER_FIELDS:[semio_framework_value_native_owned::native_decoding::owned::NativeRecordField;$count]=[$(semio_framework_value_native_owned::native_decoding::owned::NativeRecordField{name:stringify!($field),ordinal:$ordinal}),+];
    fn validation_demand(_:[&str;2],_:[semio_framework_value::Number;$count])->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<&str>()+2*$count*std::mem::size_of::<f64>(),depth:1,..Default::default()}}
    fn validate_parts(texts:[&str;2],numbers:[semio_framework_value::Number;$count])->Result<(),semio_framework_value::ValueError>{$crate::validate_parts(texts[0],Self::NUMBER_FIELDS,numbers)}
-   fn from_parts([id,name]:[semio_framework_value::retirement::shared::sealed::SealedShared<String>;2],numbers:[semio_framework_value::Number;$count])->Self{Self{id,name,$($field:numbers[$ordinal-2].as_f64()),+}}
+   fn from_parts([id,name]:[semio_framework_value::shared_issuance::SealedShared<String>;2],numbers:[semio_framework_value::Number;$count])->Self{Self{id,name,$($field:numbers[$ordinal-2].as_f64()),+}}
   }
   semio_framework_value_native_owned::native_flat_record_receive!($row,2,$count);
   impl $crate::patch::NativeMaterialRow<$count> for $row{
-   fn texts(&self)->[&semio_framework_value::retirement::shared::sealed::SealedShared<String>;2]{[&self.id,&self.name]}
+   fn texts(&self)->[&semio_framework_value::shared_issuance::SealedShared<String>;2]{[&self.id,&self.name]}
    fn numbers(&self)->[semio_framework_value::Number;$count]{[$(semio_framework_value::Number::Float(self.$field)),+]}
   }
   impl semio_framework_value_native_owned::native_decoding::owned::NativeRecordSource for $value{

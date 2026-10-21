@@ -7,13 +7,13 @@ pub mod paint;
 
 pub fn validate_chart(snapshot: &ChartSnapshot) -> Result<(), String> {
     static VALIDATOR: std::sync::OnceLock<Result<semio_framework_schema_validator::OwnedJsonSchemaValidator, String>> = std::sync::OnceLock::new();
-    let validator = VALIDATOR.get_or_init(|| semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&semio_framework_value_derive::owned_json_file!("../../🧬️schema/📸️snapshot/📊️chart/🔣️.json"), &[semio_framework_value_derive::owned_json_file!("../../🧬️schema/📸️snapshot/🔣️.json"),semio_framework_value_derive::owned_json_file!("../../🧬️schema/🔣️.json")]).map_err(|error| error.to_string()));
+    let validator = VALIDATOR.get_or_init(|| semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&semio_framework_value_derive_resources::owned_json_file!("../../🧬️schema/📸️snapshot/📊️chart/🔣️.json"), &[semio_framework_value_derive_resources::owned_json_file!("../../🧬️schema/📸️snapshot/🔣️.json"),semio_framework_value_derive_resources::owned_json_file!("../../🧬️schema/🔣️.json")]).map_err(|error| error.to_string()));
     validator.as_ref().map_err(Clone::clone)?.validate_intrinsic(&snapshot.chart).map(|_| ()).map_err(|error| error.to_string())
 }
 
 pub fn catalog() -> Result<&'static DslValue, String> {
     static CATALOG: std::sync::OnceLock<DslValue> = std::sync::OnceLock::new();
-    Ok(CATALOG.get_or_init(|| semio_framework_value_derive::owned_json_file!("../../🖼️assets/🔣️viz-catalog.json")))
+    Ok(CATALOG.get_or_init(|| semio_framework_value_derive_resources::owned_json_file!("../../🖼️assets/🔣️viz-catalog.json")))
 }
 
 #[derive(Clone, Debug, PartialEq)]

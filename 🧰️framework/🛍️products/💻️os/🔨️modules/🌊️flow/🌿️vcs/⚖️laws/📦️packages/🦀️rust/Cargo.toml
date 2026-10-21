@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-os-flow-vcs = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 

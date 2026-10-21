@@ -88,7 +88,7 @@ impl<T> ArtifactFixedQueue<T> {
 
 /// 🎟️ Funds one normal-operation turn on every independent axis for a caller no scheduler grants.
 fn plugin_page_grant(page_bytes: usize) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: page_bytes, maximum_capacity_bytes: page_bytes, maximum_release_bytes: page_bytes, maximum_depth: semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 }
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: page_bytes, maximum_capacity_bytes: page_bytes, maximum_release_bytes: page_bytes, maximum_depth: semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 }
 }
 
 /// 🎟️ Self-funds exactly one quoted turn for a caller whose owner publishes an honest demand.

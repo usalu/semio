@@ -1,0 +1,274 @@
+[
+ {
+  "id": "script-hook",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+  "anchor": " if(selected.args[0]===\"concurrency\"){const{runConcurrencyV1}=await import(\"./📏️incremental/🤝️concurrent/⌨️command/🟦️.ts\");await runConcurrencyV1(root,selected.args,parent);return;}\n",
+  "mode": "insert_after",
+  "text": " if(selected.args[0]===\"service\"){const{resolveLanguageV1}=await import(\"../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts\"),{runResidentCommandV1}=await import(\"./🏡️resident/⌨️command/🟨️.mjs\"),{createForegroundRunnerV1}=await import(\"./🏡️resident/🏗️composition/🟨️.mjs\"),{loadBuildInvocationGraphV1}=await import(\"./🧭️invocation/🟦️.ts\"),{fileURLToPath}=await import(\"node:url\"),{createHash}=await import(\"node:crypto\"),{readFileSync}=await import(\"node:fs\");if(selected.args[1]===\"executor\"){const{openRepositoryCustodySessionV1}=await import(\"../⚡️caching/💾️storage/🔒️enforcement/🧵️session/🟦️.ts\"),{serveExecutorV1,readLinesV1}=await import(\"./🏡️resident/🏭️executor/🟨️.mjs\"),{holdServiceInvocationV1,createServiceAuditV1}=await import(\"./📥️caller/🛰️service/🟦️.ts\"),{createRevocationRegistryV1,endpointsV1,canonicalRootV1,readServiceKeyV1}=await import(\"./📥️caller/🛰️service/🔑️session/🟨️.mjs\"),{taskClosureV1}=await import(\"./🏡️resident/🔌️ports/🗺️graph/🟨️.mjs\"),{createReadStream,writeSync}=await import(\"node:fs\"),runtime=endpointsV1(canonicalRootV1(root),process.env);let closureGraph:unknown;const admission=holdServiceInvocationV1(root,parent,{key:readServiceKeyV1(runtime.key),revocations:createRevocationRegistryV1(runtime.revoked),audit:createServiceAuditV1(parent,runtime.audit),closure:async(named:readonly string[])=>taskClosureV1(closureGraph??=await loadBuildInvocationGraphV1(root,[\"graph\",\"--graph-policy=current\"],parent,parent,phaseControl,true),named)});await admission.warm();await serveExecutorV1({lines:readLinesV1(createReadStream(\"\",{fd:3,autoClose:false,encoding:\"utf8\"})),write:(text:string)=>writeSync(3,text),limits:{maximumRequests:200,maximumAgeMilliseconds:600000,idleMilliseconds:20000},openSession:()=>openRepositoryCustodySessionV1({workspace:root,invocation:parent,control:phaseControl,partitions:[\"leases\",\"diagnostics\",\"dependencies\",\"tools\",\"graph\"]}),run:(request:{argv:string[];cwd:string;client?:{token?:string;agent?:string;named?:string[]}},control:typeof phaseControl)=>admission.run({token:request.client?.token??\"\",agent:request.client?.agent??\"\",cwd:request.cwd,args:request.argv,named:request.client?.named},()=>runOwnedBuildInvocationV1(root,request.argv,parent,control))});return;}const language=resolveLanguageV1([\"en\",\"de\"],selected.args,process.env).language,script=fileURLToPath(import.meta.url),library=resolve(dirname(script),\"..\"),warm=JSON.parse(readFileSync(new URL(\"./🏡️resident/🏗️composition/🔣️.json\",import.meta.url),\"utf8\")).modules.map((module:string)=>join(library,module)),watcherBinary=await(async()=>{try{return await(await import(\"./🏡️resident/🔭️watch/🏗️provision/🔌️tools/🟨️.mjs\")).ensureResidentWatcherV1(root);}catch{return process.env.SEMIO_REPO_WATCH_BINARY;}})();process.exitCode=await runResidentCommandV1({root,args:selected.args.slice(1),languages:[language,...[\"en\",\"de\"].filter((other:string)=>other!==language)],environment:process.env,scriptArguments:[script,\"repo\"],runForeground:createForegroundRunnerV1({loadGraph:()=>loadBuildInvocationGraphV1(root,[\"graph\",\"--graph-policy=current\"],parent,parent,phaseControl,true),script,warmModules:warm,watcherBinary,salt:()=>createHash(\"sha256\").update(JSON.stringify([process.env.SEMIO_BUILD_TOOL??\"\",(parent.capabilities as {tool?:string}).tool??\"\"])).digest(\"hex\"),environmentPaths:[\"package.json\",\"bun.lock\",\"nx.json\",\"tsconfig.json\",\"MODULE.bazel\",\"Cargo.toml\",\"Cargo.lock\",\"rust-toolchain.toml\",\"go.work\",\"bunfig.toml\"]})});return;}\n"
+ },
+ {
+  "id": "repo-script-forward",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+  "anchor": "  async run(args:string[]):Promise<void> { await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,\"repository:command\",0)); }\n",
+  "mode": "replace",
+  "text": "  async run(args:string[]):Promise<void> { const{forwardRepoCommandV1}=await import(\"./🏡️resident/🚪️client/🔁️repo/🟨️.mjs\"),{resolveLanguageV1}=await import(\"../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts\");const forwarded=await forwardRepoCommandV1({root:this.repoRoot,args,environment:process.env,languageOf:()=>resolveLanguageV1([\"en\",\"de\"],args,process.env).language});if(forwarded!==undefined){process.exitCode=forwarded;return;} await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,\"repository:command\",0)); }\n"
+ },
+ {
+  "id": "invocation-strips-service",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": "    if(argument.startsWith(\"--workers=\")){workers=argument.slice(10);continue;}\n",
+  "mode": "insert_after",
+  "text": "    if(argument===\"--service\"){index++;continue;}\n    if(argument.startsWith(\"--service=\")){continue;}\n"
+ },
+ {
+  "id": "gitignore",
+  "file": ".gitignore",
+  "anchor": ".🧬semio/🦑️repo/⚡️cache/\n",
+  "mode": "insert_after",
+  "text": ".🧬semio/🦑️repo/🏡️resident-fence/\n"
+ },
+ {
+  "id": "catalog-operation",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+  "anchor": "    {\n      \"name\": \"remote-execution\",\n",
+  "mode": "insert_before",
+  "text": "    {\n      \"name\": \"service\",\n      \"requires\": \"none\",\n      \"synopsis\": \"service status|start|stop|restart|issue|revoke|drop-caches|probe\",\n      \"summary\": {\n        \"en\": \"Run, inspect or stop the resident service of this worktree that keeps the graph, file digests and task results warm and answers every agent over one local socket.\",\n        \"de\": \"Startet, prüft oder beendet den residenten Dienst dieses Worktrees, der Graph, Datei-Prüfsummen und Aufgabenergebnisse warm hält und alle Agenten über einen lokalen Socket bedient.\"\n      },\n      \"implementations\": {\n        \"nx\": \"neutral\",\n        \"bazel\": \"neutral\"\n      },\n      \"dryRun\": false,\n      \"progress\": true,\n      \"cancellable\": true,\n      \"subcommands\": [\n        {\n          \"name\": \"status\",\n          \"synopsis\": \"service status [--json]\",\n          \"summary\": {\n            \"en\": \"Print the process, the file watcher backend and trust, the graph generation, queue and memory of the service.\",\n            \"de\": \"Gibt Prozess, Backend und Vertrauensstufe des Dateibeobachters, Graph-Generation, Warteschlange und Speicher des Dienstes aus.\"\n          }\n        },\n        {\n          \"name\": \"start\",\n          \"synopsis\": \"service start [--foreground]\",\n          \"summary\": {\n            \"en\": \"Start the service detached and wait until it answers; with --foreground run it in this terminal.\",\n            \"de\": \"Startet den Dienst losgelöst und wartet, bis er antwortet; mit --foreground läuft er in diesem Terminal.\"\n          }\n        },\n        {\n          \"name\": \"stop\",\n          \"synopsis\": \"service stop\",\n          \"summary\": {\n            \"en\": \"Drain running requests and stop the service.\",\n            \"de\": \"Lässt laufende Anfragen auslaufen und beendet den Dienst.\"\n          }\n        },\n        {\n          \"name\": \"restart\",\n          \"synopsis\": \"service restart\",\n          \"summary\": {\n            \"en\": \"Stop the service and start it again.\",\n            \"de\": \"Beendet den Dienst und startet ihn erneut.\"\n          }\n        },\n        {\n          \"name\": \"issue\",\n          \"synopsis\": \"service issue --agent <id> [--classes <classes>] [--for <projects>] [--ttl <seconds>]\",\n          \"summary\": {\n            \"en\": \"Print a capability token for one agent session, bound to this worktree and restricted to command classes, projects and lifetime; hand it to an agent that must not do more (SEMIO_SERVICE_TOKEN).\",\n            \"de\": \"Gibt eine Berechtigung für eine Agenten-Sitzung aus, an diesen Worktree gebunden und beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf (SEMIO_SERVICE_TOKEN).\"\n          }\n        },\n        {\n          \"name\": \"revoke\",\n          \"synopsis\": \"service revoke <session|token> | --agent <id>\",\n          \"summary\": {\n            \"en\": \"Revoke one agent session or every session of an agent: running commands of it are cancelled and later requests are refused.\",\n            \"de\": \"Widerruft eine Agenten-Sitzung oder alle Sitzungen eines Agenten: laufende Befehle werden abgebrochen und spätere Anfragen abgelehnt.\"\n          }\n        },\n        {\n          \"name\": \"drop-caches\",\n          \"synopsis\": \"service drop-caches\",\n          \"summary\": {\n            \"en\": \"Forget digests and task results; the next request re-proves everything.\",\n            \"de\": \"Vergisst Prüfsummen und Aufgabenergebnisse; die nächste Anfrage belegt alles neu.\"\n          }\n        },\n        {\n          \"name\": \"probe\",\n          \"synopsis\": \"service probe\",\n          \"summary\": {\n            \"en\": \"Exit 0 when the service answers, 1 otherwise; prints nothing.\",\n            \"de\": \"Endet mit 0, wenn der Dienst antwortet, sonst mit 1; gibt nichts aus.\"\n          }\n        }\n      ],\n      \"flags\": [\n        \"--json\",\n        \"--foreground\",\n        \"--classes\",\n        \"--for\",\n        \"--ttl\"\n      ],\n      \"examples\": [\n        {\n          \"command\": \"repo service start\",\n          \"description\": {\n            \"en\": \"Keep this worktree's graph and results warm for every agent.\",\n            \"de\": \"Hält Graph und Ergebnisse dieses Worktrees für alle Agenten warm.\"\n          }\n        },\n        {\n          \"command\": \"repo service issue --classes=run --for=lib-a --ttl=3600\",\n          \"description\": {\n            \"en\": \"A token that may only run tasks of lib-a for one hour.\",\n            \"de\": \"Eine Berechtigung, die eine Stunde lang nur Aufgaben von lib-a ausführen darf.\"\n          }\n        }\n      ],\n      \"notes\": [\n        {\n          \"en\": \"With a service running, run and affected answer from its results in milliseconds when nothing relevant changed; --service=off or SEMIO_BUILD_SERVICE=off always runs in this process, --service=require fails when no service answers.\",\n          \"de\": \"Läuft ein Dienst, antworten run und affected in Millisekunden aus seinen Ergebnissen, wenn sich nichts Relevantes geändert hat; --service=off oder SEMIO_BUILD_SERVICE=off läuft immer in diesem Prozess, --service=require schlägt fehl, wenn kein Dienst antwortet.\"\n        },\n        {\n          \"en\": \"Only the owner of the checkout can reach the service: its runtime directory is private to the user and every request carries a capability token.\",\n          \"de\": \"Nur der Eigentümer des Checkouts erreicht den Dienst: Sein Laufzeitverzeichnis ist privat für den Benutzer und jede Anfrage trägt eine Berechtigung.\"\n        }\n      ]\n    },\n"
+ },
+ {
+  "id": "catalog-flags",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+  "anchor": "    { \"name\": \"--help\", \"aliases\": [\"-h\"],",
+  "mode": "insert_before",
+  "text": "    {\"name\": \"--service\", \"value\": \"required\", \"valueName\": \"auto|off|require\", \"description\": {\"en\": \"Use the resident service (auto: when one answers), never use it (off), or fail when none answers (require); otherwise SEMIO_BUILD_SERVICE, then auto.\", \"de\": \"Nutzt den residenten Dienst (auto: wenn einer antwortet), nutzt ihn nie (off) oder schlägt fehl, wenn keiner antwortet (require); sonst SEMIO_BUILD_SERVICE, dann auto.\"}},\n    {\"name\": \"--foreground\", \"value\": \"none\", \"operations\": [\"service\"], \"description\": {\"en\": \"service start: run the service in this terminal instead of detached.\", \"de\": \"service start: führt den Dienst in diesem Terminal statt losgelöst aus.\"}},\n    {\"name\": \"--agent\", \"value\": \"required\", \"valueName\": \"id\", \"operations\": [\"service\"], \"description\": {\"en\": \"service issue: the agent the token is issued to; service revoke: revoke every session of this agent.\", \"de\": \"service issue: der Agent, dem die Berechtigung ausgestellt wird; service revoke: widerruft alle Sitzungen dieses Agenten.\"}},\n    {\"name\": \"--classes\", \"value\": \"required\", \"valueName\": \"classes\", \"operations\": [\"service\"], \"description\": {\"en\": \"service issue: comma separated command classes the token allows (status, query, run, watch, admin).\", \"de\": \"service issue: kommagetrennte Befehlsklassen, die die Berechtigung erlaubt (status, query, run, watch, admin).\"}},\n    {\"name\": \"--for\", \"value\": \"required\", \"valueName\": \"names\", \"operations\": [\"service\"], \"description\": {\"en\": \"service issue: comma separated project names or prefixes ending in * the token is limited to.\", \"de\": \"service issue: kommagetrennte Projektnamen oder Präfixe mit * am Ende, auf die die Berechtigung beschränkt ist.\"}},\n    {\"name\": \"--ttl\", \"value\": \"required\", \"valueName\": \"seconds\", \"operations\": [\"service\"], \"description\": {\"en\": \"service issue: lifetime of the token in seconds (default 3600, at most 86400).\", \"de\": \"service issue: Lebensdauer der Berechtigung in Sekunden (Standard 3600, höchstens 86400).\"}},\n"
+ },
+ {
+  "id": "catalog-json-flag",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+  "anchor": "\"operations\": [\"graph\", \"show\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"cache\"]",
+  "mode": "replace",
+  "text": "\"operations\": [\"graph\", \"show\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"cache\", \"service\"]"
+ },
+ {
+  "id": "catalog-schema-operation",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧬️schema/🔣️.json",
+  "anchor": "\"remote-execution\"]\n    },\n    \"Operation\": {",
+  "mode": "replace",
+  "text": "\"remote-execution\", \"service\"]\n    },\n    \"Operation\": {"
+ },
+ {
+  "id": "graph-host-import",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+  "anchor": "import{deriveEnvironmentV1,environmentRowHoldsV1}from\"./🕰️generations/🌍️environment/🟨️.mjs\";\n",
+  "mode": "insert_after",
+  "text": "import{residentGraphSeamsV1}from\"../🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs\";\n"
+ },
+ {
+  "id": "graph-host-holds",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+  "anchor": "  const holds=async(rows:readonly {kind:string;path:string;fact:any}[],signal?:AbortSignal):Promise<boolean>=>{",
+  "mode": "replace",
+  "text": "  const holdsByStat=async(rows:readonly {kind:string;path:string;fact:any}[],signal?:AbortSignal):Promise<boolean>=>{"
+ },
+ {
+  "id": "graph-host-membership",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+  "anchor": "  const membership=async(previous:{manifest:{membership:string};frontier:any}|undefined,signal?:AbortSignal)=>{",
+  "mode": "replace",
+  "text": "  const membershipByStat=async(previous:{manifest:{membership:string};frontier:any}|undefined,signal?:AbortSignal)=>{"
+ },
+ {
+  "id": "graph-host-seams",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+  "anchor": "  return {\n    workspaceRoot:root,separator:sep,",
+  "mode": "insert_before",
+  "text": "  const seams=residentGraphSeamsV1({root,membership:membershipByStat,holds:holdsByStat,adopt:(files:string[])=>{state.files=files;}}),membership=seams.membership,holds=seams.holds;\n"
+ },
+ {
+  "id": "launcher-host-field",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+  "anchor": "\tSelf    func() string\n}",
+  "mode": "replace",
+  "text": "\tSelf    func() string\n\tForward func(ctx context.Context, root, kind string, args []string) (handled bool, code int)\n}",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go"
+ },
+ {
+  "id": "launcher-default-host-start",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+  "anchor": "func DefaultHost() Host {\n\treturn Host{",
+  "mode": "replace",
+  "text": "func DefaultHost() Host {\n\thost := Host{",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go"
+ },
+ {
+  "id": "launcher-default-host-end",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+  "anchor": "Self:    func() string { path, _ := os.Executable(); return path },\n\t}\n}",
+  "mode": "replace",
+  "text": "Self:    func() string { path, _ := os.Executable(); return path },\n\t}\n\thost.Forward = host.ForwardResident\n\treturn host\n}",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go"
+ },
+ {
+  "id": "launcher-execute-hook",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+  "anchor": "\tname, rt, err := registry.Pick(entry, h.Env)\n",
+  "mode": "replace",
+  "text": "\tif h.Forward != nil && kind == \"build\" {\n\t\tif handled, code := h.Forward(ctx, root, kind, args); handled {\n\t\t\treturn code\n\t\t}\n\t}\n\tname, rt, err := registry.Pick(entry, h.Env)\n",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go"
+ },
+ {
+  "id": "launcher-plan-service-option",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+  "anchor": "\t\tif strings.HasPrefix(argv[index], \"--tool=\") {\n\t\t\tindex++\n\t\t\tcontinue\n\t\t}\n",
+  "mode": "insert_after",
+  "text": "\t\tif strings.HasPrefix(argv[index], \"--service=\") {\n\t\t\tindex++\n\t\t\tcontinue\n\t\t}\n",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go"
+ },
+ {
+  "id": "tools-registry-entry",
+  "file": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json",
+  "anchor": "   }\n  }\n ]\n}\n",
+  "mode": "replace",
+  "text": "   }\n  },\n  {\n   \"id\": \"repo-watch\",\n   \"kind\": \"file-watcher\",\n   \"summary\": {\n    \"en\": \"Native file event watcher of the resident repo service: FSEvents, inotify or ReadDirectoryChangesW behind one NDJSON protocol, built from one pinned source file.\",\n    \"de\": \"Nativer Dateiereignis-Beobachter des residenten Repo-Dienstes: FSEvents, inotify oder ReadDirectoryChangesW hinter einem NDJSON-Protokoll, gebaut aus einer festgeschriebenen Quelldatei.\"\n   },\n   \"capabilities\": [\n    \"watch\",\n    \"scan\"\n   ],\n   \"commands\": [\n    \"semio-repo-watch\"\n   ],\n   \"platforms\": [\n    \"darwin\",\n    \"linux\",\n    \"win32\"\n   ],\n   \"pin\": {\n    \"state\": \"pinned\",\n    \"version\": {\n     \"file\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json\",\n     \"format\": \"json\",\n     \"pointer\": \"/version\"\n    },\n    \"digests\": {\n     \"file\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json\",\n     \"pointer\": \"/sources\",\n     \"where\": {},\n     \"platform\": \"platform\",\n     \"architecture\": \"architecture\",\n     \"sha256\": \"sha256\",\n     \"name\": \"source\",\n     \"bytes\": \"bytes\"\n    }\n   },\n   \"provision\": {\n    \"kind\": \"source-build\",\n    \"command\": \"repo service start\",\n    \"installer\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🏗️provision/🟨️.mjs\"\n   },\n   \"locate\": [\n    {\n     \"kind\": \"environment\",\n     \"name\": \"SEMIO_TOOL_REPO_WATCH\"\n    },\n    {\n     \"kind\": \"provisioned\",\n     \"partition\": \"tools\",\n     \"segments\": [\n      \"repo-watch\",\n      \"{sha256:16}\"\n     ],\n     \"executable\": \"semio-repo-watch\"\n    }\n   ],\n   \"adapter\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🏗️provision/🟨️.mjs\",\n   \"adapterScope\": [\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/**\",\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/**\"\n   ],\n   \"allowedCallers\": [\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/**\",\n    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts\"\n   ],\n   \"environment\": {\n    \"mode\": \"inherit\",\n    \"pass\": [],\n    \"deny\": [],\n    \"set\": {}\n   },\n   \"capacity\": {\n    \"mode\": \"none\"\n   },\n   \"probe\": {\n    \"arguments\": [\n     \"version\"\n    ],\n    \"pattern\": \"\\\"protocol\\\":(1)\"\n   }\n  }\n ]\n}\n",
+  "requires": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json"
+ },
+ {
+  "id": "tools-schema-kind",
+  "file": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧬️schema/🔣️.json",
+  "anchor": "\"typesetter\", \"optimizer\", \"vcs\", \"container\", \"disk-image\", \"bundler\"]",
+  "mode": "replace",
+  "text": "\"typesetter\", \"optimizer\", \"vcs\", \"container\", \"disk-image\", \"bundler\", \"file-watcher\"]",
+  "requires": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json"
+ },
+ {
+  "id": "tools-schema-provision",
+  "file": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧬️schema/🔣️.json",
+  "anchor": "\"toolchain-file\", \"system\"]",
+  "mode": "replace",
+  "text": "\"toolchain-file\", \"system\", \"source-build\"]",
+  "requires": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json"
+ },
+ {
+  "id": "entrypoint-fixture-verb",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json",
+  "anchor": "    \"leases\",\n    \"remote-execution\"\n  ],",
+  "mode": "replace",
+  "text": "    \"leases\",\n    \"remote-execution\",\n    \"service\"\n  ],",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json"
+ },
+ {
+  "id": "entrypoint-fixture-vectors",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json",
+  "anchor": "      \"arguments\": [\n        \"remote-execution\",\n        \"--opaque=value\"\n      ]\n    },\n",
+  "mode": "insert_after",
+  "text": "    {\n      \"id\": \"service-status\",\n      \"argv\": [\"service\", \"status\"],\n      \"kind\": \"build\",\n      \"arguments\": [\"service\", \"status\"]\n    },\n    {\n      \"id\": \"service-leading-option\",\n      \"argv\": [\"--service=off\", \"run\", \"a:b\"],\n      \"kind\": \"build\",\n      \"arguments\": [\"--service=off\", \"run\", \"a:b\"]\n    },\n",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json"
+ },
+ {
+  "id": "entrypoint-rust-service-option",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs",
+  "anchor": "else if argv[index].starts_with(\"--tool=\") { index += 1; } else { break; }",
+  "mode": "replace",
+  "text": "else if argv[index].starts_with(\"--tool=\") { index += 1; } else if argv[index].starts_with(\"--service=\") { index += 1; } else { break; }",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs"
+ },
+ {
+  "id": "entrypoint-oracle-service-option",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts",
+  "anchor": "WHERE value NOT LIKE '--tool=%' AND value<>'--tool'",
+  "mode": "replace",
+  "text": "WHERE value NOT LIKE '--tool=%' AND value NOT LIKE '--service=%' AND value<>'--tool'",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts"
+ },
+ {
+  "id": "entrypoint-oracle-build-marker",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts",
+  "anchor": "OR json_extract(?1,'$[0]') LIKE '--tool=%' THEN 'build'",
+  "mode": "replace",
+  "text": "OR json_extract(?1,'$[0]') LIKE '--tool=%' OR json_extract(?1,'$[0]') LIKE '--service=%' THEN 'build'",
+  "requires": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts"
+ },
+ {
+  "id": "service-schema-caller",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json",
+  "anchor": "    \"tool\": {\n      \"type\": \"string\",\n      \"pattern\": \"^(nx|bazel)$\"\n    }\n  }\n}",
+  "mode": "replace",
+  "text": "    \"tool\": {\n      \"type\": \"string\",\n      \"pattern\": \"^(nx|bazel)$\"\n    },\n    \"service\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"version\",\n        \"worktree\",\n        \"keyDigest\",\n        \"operations\",\n        \"maximumRequests\",\n        \"maximumConcurrent\"\n      ],\n      \"properties\": {\n        \"version\": {\n          \"const\": 1\n        },\n        \"worktree\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{12}$\"\n        },\n        \"keyDigest\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{64}$\"\n        },\n        \"operations\": {\n          \"type\": \"array\",\n          \"minItems\": 1,\n          \"maxItems\": 3,\n          \"uniqueItems\": true,\n          \"items\": {\n            \"enum\": [\n              \"run\",\n              \"run-many\",\n              \"affected\"\n            ]\n          }\n        },\n        \"maximumRequests\": {\n          \"type\": \"integer\",\n          \"minimum\": 1,\n          \"maximum\": 1048576\n        },\n        \"maximumConcurrent\": {\n          \"type\": \"integer\",\n          \"minimum\": 1,\n          \"maximum\": 64\n        }\n      }\n    }\n  }\n}"
+ },
+ {
+  "id": "service-caller-import",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+  "anchor": "import {isStoreRepairSelectionV1} from \"../🧾️store-receipt/🟨️.mjs\";\n",
+  "mode": "insert_after",
+  "text": "import {declaredCapabilitiesV1} from \"./🛰️service/🟦️.ts\";\n"
+ },
+ {
+  "id": "service-caller-owned-invocation",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+  "anchor": "const original=readIssuedScriptProcessEnvelopeV1(invocation),capabilities=original.capabilities as NativeBuildCallerCapabilitiesV1;if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root)||capabilities.arguments[0]!==\"repo\")throw Error(\"Original Repo build caller required\");",
+  "mode": "replace",
+  "text": "const original=readIssuedScriptProcessEnvelopeV1(invocation),capabilities=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1);if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root)||capabilities.arguments[0]!==\"repo\")throw Error(\"Original Repo build caller required\");"
+ },
+ {
+  "id": "service-caller-nx-envelope",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+  "anchor": "role=original.capabilities as NativeBuildCallerCapabilitiesV1,selection=[\"nx\",...selected];let capabilities:object;",
+  "mode": "replace",
+  "text": "role=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1),selection=[\"nx\",...selected];let capabilities:object;"
+ },
+ {
+  "id": "service-caller-task-environment",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+  "anchor": "  const capabilities=invocation.capabilities as NativeBuildCallerCapabilitiesV1;\n  if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root))throw Error(\"Original build caller authority required\");",
+  "mode": "replace",
+  "text": "  const capabilities=declaredCapabilitiesV1(invocation.capabilities as NativeBuildCallerCapabilitiesV1);\n  if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root))throw Error(\"Original build caller authority required\");"
+ },
+ {
+  "id": "service-caller-orchestration",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+  "anchor": "const original=readIssuedScriptProcessEnvelopeV1(invocation),caller=original.capabilities as NativeBuildCallerCapabilitiesV1;",
+  "mode": "replace",
+  "text": "const original=readIssuedScriptProcessEnvelopeV1(invocation),caller=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1);"
+ },
+ {
+  "id": "service-child-grant",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+  "anchor": "  return expandBuildBootstrapCapabilitiesV1(root,selected.args,effective,grant);\n",
+  "mode": "replace",
+  "text": "  const expanded=await expandBuildBootstrapCapabilitiesV1(root,selected.args,effective,grant);\n  if(selected.args[0]!==\"service\"||selected.args[1]!==\"executor\")return expanded;\n  const{createServiceGrantV1}=await import(\"../🛰️service/🟦️.ts\"),holder={...expanded,service:createServiceGrantV1(root,effective)};\n  if(validateJsonSchemaSubset(callerSchema,holder).length)throw Error(\"Closed build service capabilities required\");return holder;\n"
+ },
+ {
+  "id": "service-invocation-import",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": "import {readWorkerSwitchV1} from \"../👷️workers/🟦️.ts\";\n",
+  "mode": "insert_after",
+  "text": "import {declaredCapabilitiesV1} from \"../📥️caller/🛰️service/🟦️.ts\";\n"
+ },
+ {
+  "id": "service-invocation-ancestor",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": " const caller=value as {workspaceRoot?:unknown;native?:unknown;arguments?:string[];selection?:string[];launches?:string[][];buildMode?:string;tool?:string}|undefined;",
+  "mode": "replace",
+  "text": " const caller=(value===null||typeof value!==\"object\"?value:declaredCapabilitiesV1(value)) as {workspaceRoot?:unknown;native?:unknown;arguments?:string[];selection?:string[];launches?:string[][];buildMode?:string;tool?:string}|undefined;"
+ },
+ {
+  "id": "service-invocation-stat-import",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": "import {readFileSync} from \"node:fs\";\n",
+  "mode": "replace",
+  "text": "import {readFileSync,statSync} from \"node:fs\";\n"
+ },
+ {
+  "id": "service-invocation-registry-once",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": "/** 🗂️ Reads one exact canonical run declaration before issuing original compiler authority. */\nexport function readSelectedBuildTargetModesV1(root:string,args:readonly string[],read:(path:string)=>string=path=>readFileSync(path,\"utf8\")):readonly SelectedBuildTargetModeV1[]{",
+  "mode": "replace",
+  "text": "const buildOwnerRegistries=new Map<string,{readonly signature:string;readonly registry:ReturnType<typeof readBuildOwnerRegistryV1>}>();\nfunction readBuildFileV1(path:string):string{return readFileSync(path,\"utf8\");}\n\n/** 🗄️ Reads and validates the build owner registry once per file state: the key is size, modification time and inode, and a file written in the last two seconds is never trusted, so a resident process pays the parse once and every edit is seen. */\nfunction readBuildOwnerRegistryOnceV1(root:string,read:(path:string)=>string):ReturnType<typeof readBuildOwnerRegistryV1>{\n const path=join(root,\"📋️build-owners.json\");let signature:string|undefined;\n if(read===readBuildFileV1)try{const status=statSync(path);if(Date.now()-status.mtimeMs>2000)signature=status.size+\":\"+status.mtimeMs+\":\"+status.ino;}catch{}\n const hit=signature===undefined?undefined:buildOwnerRegistries.get(path);if(hit!==undefined&&hit.signature===signature)return hit.registry;\n const registry=readBuildOwnerRegistryV1(JSON.parse(read(path)));if(signature!==undefined)buildOwnerRegistries.set(path,{signature,registry});return registry;\n}\n\n/** 🗂️ Reads one exact canonical run declaration before issuing original compiler authority. */\nexport function readSelectedBuildTargetModesV1(root:string,args:readonly string[],read:(path:string)=>string=readBuildFileV1):readonly SelectedBuildTargetModeV1[]{"
+ },
+ {
+  "id": "service-invocation-registry-use",
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+  "anchor": " const registry=readBuildOwnerRegistryV1(JSON.parse(read(join(root,\"📋️build-owners.json\")))),owner=registry.owners.find(row=>row.name===project);",
+  "mode": "replace",
+  "text": " const registry=readBuildOwnerRegistryOnceV1(root,read),owner=registry.owners.find(row=>row.name===project);"
+ }
+]

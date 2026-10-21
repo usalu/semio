@@ -321,6 +321,25 @@ function retiredManifestReferences(manifest:Record<string,any>,ticket=false):str
   return [...new Set(manifestControlStrings(manifest,false,ticket).filter(row=>!(row.input&&row.value.trimStart().startsWith("!"))&&retiredIdePath(row.value,"file",true)==="retired").map(row=>row.value))].sort();
 }
 
+
+const guiRegistrySchema=JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"));
+const guiExecutable=new RegExp(guiRegistrySchema.$defs.SecondaryDeveloperGuiExecutable.pattern),guiLauncher=new RegExp(guiRegistrySchema.$defs.SecondaryDeveloperGuiLauncher.pattern);
+function acceptedDashboardToolCommand(command:readonly string[]):boolean{return !guiExecutable.test(command[0]??"")&&!(guiLauncher.test(command[0]??"")&&command.slice(1).some(word=>guiExecutable.test(word)));}
+function declaredDashboardToolCommands(manifest:Record<string,any>,ticket=false):string[][]{
+  const commands:string[][]=[],add=(declaration:any):void=>{for(const tool of declaration?.tools??[])if(Array.isArray(tool.command)&&tool.command.every((word:unknown)=>typeof word==="string"))commands.push(tool.command);};
+  if(ticket)add(manifest);else{add(manifest.metadata?.semio?.dashboard);for(const collection of [manifest.targets,manifest.targetDefaults,manifest.tasks])for(const target of Object.values(collection??{})as any[])add(target?.metadata?.semio?.dashboard);if(manifest.nx&&typeof manifest.nx==="object")commands.push(...declaredDashboardToolCommands(manifest.nx));}return commands;
+}
+
+test("dashboard tool commands refuse secondary developer GUI handoffs while retaining domain tools",()=>{
+  const fixtureOracle=new Ajv({strict:false}).compile(censusSchema);expect(fixtureOracle(censusFixture),JSON.stringify(fixtureOracle.errors)).toBe(true);
+  const commandSchema={...guiRegistrySchema,$ref:"#/$defs/DashboardToolCommand"},oracle=new Ajv2020({strict:false}).compile(commandSchema),database=new Database(":memory:");
+  try{
+    const sql=(command:readonly string[]):boolean=>(database.query("WITH RECURSIVE paths(ordinal,rest,part) AS (SELECT cast(key AS integer),lower(replace(value,char(92),'/'))||'/','' FROM json_each(?1) UNION ALL SELECT ordinal,substr(rest,instr(rest,'/')+1),substr(rest,1,instr(rest,'/')-1) FROM paths WHERE rest<>''),names AS (SELECT ordinal,CASE WHEN substr(part,-4) IN ('.exe','.cmd','.app') THEN substr(part,1,length(part)-4) ELSE part END name FROM paths WHERE rest='') SELECT NOT EXISTS(SELECT 1 FROM names WHERE ordinal=0 AND name IN (SELECT value FROM json_each(?2))) AND NOT (EXISTS(SELECT 1 FROM names WHERE ordinal=0 AND name IN ('open','start','cmd','powershell','pwsh')) AND EXISTS(SELECT 1 FROM names WHERE ordinal>0 AND name IN (SELECT value FROM json_each(?2)))) accepted").get(JSON.stringify(command),JSON.stringify(guiRegistrySchema.$defs.SecondaryDeveloperGuiName.enum))as{accepted:number}).accepted===1;
+    for(const row of censusFixture.developerGuiCases){expect(acceptedDashboardToolCommand(row.command),row.name).toBe(row.accepted);expect(oracle(row.command),row.name).toBe(row.accepted);expect(sql(row.command),row.name).toBe(row.accepted);}for(const name of guiRegistrySchema.$defs.SecondaryDeveloperGuiName.enum){for(const command of [[name],["C:\\Tools\\"+name.toUpperCase()+".EXE"],["open","-a",name]]){expect(acceptedDashboardToolCommand(command),name).toBe(false);expect(oracle(command),name).toBe(false);expect(sql(command),name).toBe(false);}}
+    const project=JSON.parse(read("📋️project.json")),commands=declaredDashboardToolCommands(project);expect(commands.length).toBeGreaterThan(0);for(const command of commands){expect(acceptedDashboardToolCommand(command),command.join(" ")).toBe(true);expect(oracle(command),command.join(" ")).toBe(true);expect(sql(command),command.join(" ")).toBe(true);}expect(project.metadata.semio.dashboard.tools.some((tool:any)=>tool.id==="gitkraken")).toBe(false);
+  }finally{database.close();}
+});
+
 test("physical IDE census and manifest references refuse unknown ignored owner controls",async()=>{
   const own=compileJsonSchemaSubset(censusSchema),schemaOracle=new Ajv({strict:false}).compile(censusSchema),database=new Database(":memory:");
   expect(schemaOracle(censusFixture),JSON.stringify(schemaOracle.errors)).toBe(true);expect(own.validate(censusFixture)).toEqual([]);
@@ -366,7 +385,7 @@ test("physical IDE census and manifest references refuse unknown ignored owner c
         if(!censusFixture.manifestNames.includes(name)||censusManifestRole(path,null)==="retained")continue;
         let status:string|null=null;if(name===censusFixture.semanticRoles.ticketCommandName){const ticket=join(dirname(file),censusFixture.semanticRoles.ticketDocumentName);if(existsSync(ticket)){const metadata=censusManifestDocument(censusReadText(ticket).text,"active")!;status=typeof metadata.status==="string"?metadata.status:null;}}
         const role=censusManifestRole(path,status);expect(roleOracle(path,status),path).toBe(role);if(role==="neutral")continue;
-        const document=censusManifestDocument(censusReadText(file).text,role)!;manifests++;const values=retiredManifestReferences(document,role==="ticket");expect(manifestOracle(document,role==="ticket"),path).toEqual(values);if(values.length)references.push({file:path,values});
+        const document=censusManifestDocument(censusReadText(file).text,role)!;manifests++;const values=retiredManifestReferences(document,role==="ticket");expect(manifestOracle(document,role==="ticket"),path).toEqual(values);for(const command of declaredDashboardToolCommands(document,role==="ticket"))if(!acceptedDashboardToolCommand(command))values.push(command.join(" "));if(values.length)references.push({file:path,values});
       }
       const after=lstatSync(absolute);if(before.dev!==after.dev||before.ino!==after.ino||after.isSymbolicLink())throw Error("Authored directory changed identity during IDE census: "+relative);
     }

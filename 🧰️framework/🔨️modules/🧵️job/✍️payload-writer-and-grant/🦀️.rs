@@ -4,11 +4,11 @@ use super::*;
 
 //#region 📄️RetainedPayload
 pub struct RetainedJobPayloadWriter {
-    pub(super) payload: ManuallyDrop<Option<RetainedJobPayload>>,
-    pub(super) rejected: ManuallyDrop<Option<JobPayloadPageSource>>,
-    pub(super) staged: ManuallyDrop<Option<(Arc<JobPayloadOperationLedger>, JobPayloadPageSource, usize)>>,
-    pub(super) closing_ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
-    pub(super) sealed: bool,
+    pub payload: ManuallyDrop<Option<RetainedJobPayload>>,
+    pub rejected: ManuallyDrop<Option<JobPayloadPageSource>>,
+    pub staged: ManuallyDrop<Option<(Arc<JobPayloadOperationLedger>, JobPayloadPageSource, usize)>>,
+    pub closing_ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
+    pub sealed: bool,
 }
 
 impl std::fmt::Debug for RetainedJobPayloadWriter {
@@ -125,7 +125,7 @@ pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFa
         Ok(*cursor == bytes.len())
     }
 
-    pub(super) fn reserve_page(&self, ledger: &JobPayloadOperationLedger, extent: usize) -> Result<(), JobPayloadAdmissionFault> {
+    pub fn reserve_page(&self, ledger: &JobPayloadOperationLedger, extent: usize) -> Result<(), JobPayloadAdmissionFault> {
         if self.sealed {
             return Err(JobPayloadAdmissionFault::WriterSealed);
         }
@@ -139,7 +139,7 @@ pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFa
         ledger.reserve(payload.stream,extent)
     }
 
-    pub(super) fn begin_page(&mut self, ledger: Arc<JobPayloadOperationLedger>, source: JobPayloadPageSource) -> JobPayloadPageGrant<'_> {
+    pub fn begin_page(&mut self, ledger: Arc<JobPayloadOperationLedger>, source: JobPayloadPageSource) -> JobPayloadPageGrant<'_> {
         JobPayloadPageGrant { writer: self, ledger: Some(ledger), source: Some(source), length: 0, committed: false }
     }
 }
@@ -162,10 +162,10 @@ impl Drop for RetainedJobPayloadWriter {
 }
 
 pub struct JobPayloadPageGrant<'a> {
-    pub(super) writer: &'a mut RetainedJobPayloadWriter,
-    pub(super) ledger: Option<Arc<JobPayloadOperationLedger>>,
-    pub(super) source: Option<JobPayloadPageSource>,
-    pub(super) length: usize,
+    pub writer: &'a mut RetainedJobPayloadWriter,
+    pub ledger: Option<Arc<JobPayloadOperationLedger>>,
+    pub source: Option<JobPayloadPageSource>,
+    pub length: usize,
     committed: bool,
 }
 

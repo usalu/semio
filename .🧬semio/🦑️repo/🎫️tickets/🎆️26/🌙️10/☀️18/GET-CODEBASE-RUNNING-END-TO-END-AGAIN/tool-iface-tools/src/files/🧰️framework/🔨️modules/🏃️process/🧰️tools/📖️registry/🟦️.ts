@@ -48,7 +48,7 @@ export type ToolRegistryV1 = Readonly<{
   tools: readonly ToolEntryV1[];
 }>;
 /** 🧱️ The names of every registry message. */
-export type ToolMessageKeyV1 = "unknownTool" | "toolMissing" | "callerRefused" | "syncRefused" | "versionMismatch" | "cancelled" | "failed" | "execUsage" | "listHeader" | "verifyOk" | "verifyProblem" | "admitting" | "running" | "finished" | "guardRefused" | "guardWarned" | "capacityMissing";
+export type ToolMessageKeyV1 = "unknownTool" | "toolMissing" | "callerRefused" | "versionMismatch" | "cancelled" | "failed" | "execUsage" | "listHeader" | "verifyOk" | "verifyProblem" | "admitting" | "running" | "finished" | "guardRefused" | "guardWarned";
 
 const freeze = <T>(value: T): T => {
   if (typeof value === "object" && value !== null && !Object.isFrozen(value)) { Object.freeze(value); for (const child of Object.values(value)) freeze(child); }

@@ -2,379 +2,378 @@
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Hook command and execution.
+// Mermaid LOC diagrams, provider registry, management and agent-client providers.
 
 // #endregion 🧲️Header
 
 package client
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	command "github.com/usalu/semio/repo/client/internal/command"
-	"io"
-	"os"
-	"path/filepath"
+	"bytes"
 	"strings"
-	"time"
+	"testing"
 )
 
-// 🔤️ValidateHookEvent checks if the given string is a valid hook event.
-func ValidateHookEvent(s string) (HookEvent, error) {
-	for _, e := range AllHookEvents {
-		if string(e) == s {
-			return e, nil
-		}
+// 🧜️#region ⏲️Mermaid
+func TestExhaustiveMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("walks all bundles for LOC treemap; too slow for -short runs on large monorepos")
 	}
-	return "", fmt.Errorf("invalid hook event %q, valid events: %s", s, strings.Join(hookEventStrings(), ", "))
-}
-
-func hookEventStrings() []string {
-	result := make([]string, len(AllHookEvents))
-	for i, e := range AllHookEvents {
-		result[i] = string(e)
+	withExhaustiveRepo(t)
+	result := MermaidLocByTechnologiesBundlesFoldersFiles()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
 	}
-	return result
-}
-
-// 🏃️runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
-func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	return runHookExecutionCtx(context.Background(), client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
-}
-
-func runHookExecutionCtx(ctx context.Context, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	done := make(chan error, 1)
-	go func() {
-		done <- runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
-	}()
-	select {
-	case err := <-done:
-		return err
-	case <-ctx.Done():
-		return fmt.Errorf("hook timed out: %w", ctx.Err())
+	if !strings.Contains(result, "\"Lines of Code\"") {
+		t.Error("expected 'Lines of Code' title")
 	}
-}
-
-func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	if toolName == "" {
-		if tn := extractToolNameFromStdin(input); tn != "" {
-			toolName = tn
-		}
+	if !strings.Contains(result, EmojiTechnologyUser) {
+		t.Error("expected user technology emoji")
 	}
-	event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
-	if err != nil {
-		return err
+	if !strings.Contains(result, EmojiTechnologyInfra) {
+		t.Error("expected infra technology emoji")
 	}
-	if parentInfo == "" {
-		parentInfo = resolvedParent
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 5 {
+		t.Errorf("expected at least 5 lines, got %d", len(lines))
 	}
-	hctx := HookContext{
-		Event:      event,
-		Client:     client,
-		Second:     time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:   repoRoot,
-		ToolName:   toolName,
-		ToolArgs:   toolArgs,
-		FilePath:   filePath,
-		ParentInfo: parentInfo,
-		Input:      input,
-	}
-	result := RunHook(hctx)
-	provider := GetAgentClientProvider(client)
-	if provider != nil && provider.Kind() == "copilot-chat" {
-		hookEventName := extractHookEventNameFromStdin(input)
-		if hookEventName == "" {
-			hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
-		}
-		out := provider.FormatHookOutput(hookEventName, result)
-		fmt.Fprintln(stdout, out)
-		return nil
-	}
-	if jsonMode {
-		out, _ := json.Marshal(result)
-		fmt.Fprintln(stdout, string(out))
-		return nil
-	}
-	if !result.IsAllowed() {
-		fmt.Fprintln(stderr, result.GetMessage())
-		return ExitError{Code: 2}
-	}
-	msg := result.GetMessage()
-	if msg != "" {
-		fmt.Fprintln(stdout, msg)
-	}
-	return nil
-}
-
-// 🆕️hookCommand creates the `hook <event> <client>` command command.
-func hookCommand(factory EngineFactory, config *Config) *command.Command {
-	cmd := &command.Command{
-		Use:   "hook <event> <client>",
-		Short: "Run a lifecycle hook (git or agent)",
-		Long: `Run a lifecycle hook for a given event and client.
-Accepts neutral repo events or native client events (inlet adapter resolves to neutral).
-
-📦️ Version hooks:
-  version.checkpoint.starting  Run before a version checkpoint
-  version.checkpoint.ended     Run after a version checkpoint (e.g. post-checkpoint)
-  version.checkin.starting     Run before a version checkin (e.g. fast-forward to main)
-  version.checkin.ended        Run after a version checkin
-  version.checkout.starting    Run before a version checkout (e.g. squash merge)
-  version.checkout.ended       Run after a version checkout
-
-🤖️ Neutral agent hooks:
-  agent.started                Agent session started
-  agent.ended                  Agent session stopped
-  agent.prompt.submitting      User submitting a prompt
-  agent.compacting             Context compaction event
-  agent.tool.starting          Tool starting (generic, excludes plan, search, code, test, build, terminal)
-  agent.tool.ended             Tool completed (generic, excludes plan, search, code, test, build, terminal)
-  agent.tool.plan.updating.starting  Plan/task list updating start
-  agent.tool.plan.updating.ended     Plan/task list updating end
-  agent.file.read.starting     Code search/read starting
-  agent.file.read.ended        Code search/read ended
-  agent.tool.code.edit.starting Code edit starting
-  agent.tool.code.edit.ended   Code edit completed
-  agent.tool.test.starting     Test starting
-  agent.tool.test.ended        Test completed
-  agent.tool.build.starting    Build starting
-  agent.tool.build.ended       Build completed
-  agent.tool.terminal.starting Terminal command starting (supports blocking)
-  agent.tool.terminal.ended    Terminal command completed
-  agent.thinking.starting      Agent thinking started
-  agent.thinking.ended         Agent thinking completed (cursor: afterAgentThought)
-
-🏢️ Native client events (resolved by inlet adapter):
-  copilot-chat:    SessionStart, Stop, SubagentStart, SubagentStop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse
-  cursor-chat:     sessionStart, sessionEnd, stop, subagentStart, subagentStop, beforeSubmitPrompt, preCompact, preToolUse, postToolUse, beforeReadFile, afterFileEdit, beforeShellExecution, afterShellExecution, beforeMCPExecution, afterMCPExecution
-  windsurf-chat:   pre_user_prompt, post_cascade_response, post_setup_worktree, pre_mcp_tool_use, post_mcp_tool_use, pre_read_code, post_read_code, pre_write_code, post_write_code, pre_run_command, post_run_command
-  claude-code/droid/codex/antigravity: SessionStart, SessionEnd, SubagentStart, SubagentStop, Stop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, PostToolUseFailure, TaskCompleted, Notification
-  kiro-cli:        agentSpawn, userPromptSubmit, preToolUse, postToolUse, stop`,
-		Args: command.RangeArgs(1, 2),
-		RunE: func(cmd *command.Command, args []string) error {
-			eventStr := args[0]
-			client := ""
-			if len(args) > 1 {
-				client = args[1]
-			}
-			toolName, _ := cmd.Flags().GetString("tool-name")
-			toolArgs, _ := cmd.Flags().GetString("tool-args")
-			filePath, _ := cmd.Flags().GetString("file")
-			parentInfo, _ := cmd.Flags().GetString("parent")
-			repoRoot := config.Repo
-			if repoRoot == "" {
-				cwd, _ := os.Getwd()
-				repoRoot = findRepoRoot(cwd)
-			}
-			var input json.RawMessage
-			stdinReader := cmd.InOrStdin()
-			if stdinReader == os.Stdin {
-				if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
-					if data, err := io.ReadAll(os.Stdin); err == nil && len(data) > 0 {
-						input = json.RawMessage(data)
-					}
-				}
-			} else {
-				if data, err := io.ReadAll(stdinReader); err == nil && len(data) > 0 {
-					input = json.RawMessage(data)
+	hasValue := false
+	for _, line := range lines {
+		if strings.Contains(line, ": ") {
+			parts := strings.Split(strings.TrimSpace(line), ": ")
+			if len(parts) == 2 {
+				val := strings.TrimSpace(parts[1])
+				if val != "0" {
+					hasValue = true
 				}
 			}
-			ctx := cmd.Context()
-			if config.Timeout > 0 {
-				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
-				defer cancel()
-				ctx = ctxWithTimeout
-			}
-			return runHookExecutionCtx(ctx, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, config.IsJSON(), cmd.OutOrStdout(), cmd.ErrOrStderr())
-		},
-	}
-	cmd.Flags().String("tool-name", "", "Tool name for tool-related events")
-	cmd.Flags().String("tool-args", "", "Tool arguments for tool-related events")
-	cmd.Flags().String("file", "", "File path for code events")
-	cmd.Flags().String("parent", "", "Parent agent info for agent events")
-	return cmd
-}
-
-// 🔶️ResolveHookEvent resolves a hook event.
-func ResolveHookEvent(name string, client string, toolName string, input json.RawMessage) (HookEvent, string, error) {
-	if event, err := ValidateHookEvent(name); err == nil {
-		return event, "", nil
-	}
-	kind := ToolKindGeneric
-	if strings.TrimSpace(toolName) != "" {
-		kind = classifyTool(toolName)
-	}
-	if command := extractCommandFromStdin(input); command != "" {
-		segment, _ := extractTestSegmentFromCommand(command)
-		commandKind := classifyCommandKind(firstNonEmpty(segment, command))
-		if kind == ToolKindGeneric || kind == ToolKindTerminal || commandKind == ToolKindTest || commandKind == ToolKindBuild || commandKind == ToolKindCodeSearch || commandKind == ToolKindCodeEdit {
-			kind = commandKind
 		}
 	}
-	if toolName == "Glob" && len(input) > 0 {
-		kind = ToolKindGeneric
-	}
-	provider := GetAgentClientProvider(client)
-	if provider != nil {
-		return provider.ResolveNativeEvent(name, kind)
-	}
-	return resolveClaudeCompatibleEvent(name, kind)
-}
-
-// 🔹️RunHook runs a hook.
-func RunHook(ctx HookContext) HookResult {
-	previousRoot := rootDir
-	defer func() {
-		rootDir = previousRoot
-		invalidateGitignore()
-		InvalidateTechnologyCache()
-	}()
-	result := runHookCore(ctx)
-	writeHookArtifacts(ctx, result)
-	trackHookInOpenTicket(ctx, result)
-	return result
-}
-
-func runHookCore(ctx HookContext) HookResult {
-	repoRoot := ctx.RepoRoot
-	if repoRoot == "" {
-		repoRoot = GetRootDir()
-	}
-	if repoRoot != "" {
-		SetRootDir(repoRoot)
-	}
-	result := dispatchHook(ctx)
-	hookResult, ok := result.(HookResult)
-	if !ok {
-		return HookResultBase{Allowed: false, Message: "invalid hook result"}
-	}
-	return hookResult
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		value = strings.TrimSpace(value)
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
-
-func writeHookArtifacts(ctx HookContext, result HookResult) {
-	if HookEventKind(ctx.Event) == HookKindVersion {
-		return
-	}
-	repoRoot := ctx.RepoRoot
-	if repoRoot == "" {
-		repoRoot = GetRootDir()
-	}
-	if repoRoot == "" {
-		return
-	}
-	repoRoot = findRepoRoot(repoRoot)
-	SetRootDir(repoRoot)
-	cfg := LoadRepoConfig(repoRoot)
-	if !cfg.Logging.Session {
-		return
-	}
-	now := time.Now().UTC()
-	sessionID := extractSessionIDFromInput(ctx.Input)
-	if sessionID == "" && ctx.Client == "kiro-cli" {
-		sessionID = fmt.Sprintf("kiro-%d", os.Getppid())
-	}
-	if sessionID == "" {
-		sessionID = "unknown"
-	}
-	logDir := sessionLogDir(repoRoot, now.Year(), int(now.Month()), now.Day(), sessionID)
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
-		return
-	}
-	writeSessionHookLog(ctx, result, logDir, sessionID, cfg.Logging)
-	if cfg.Logging.Operations {
-		logRepoOperationHook(ctx, result, logDir, now, sessionID, cfg.Logging)
+	if !hasValue {
+		t.Error("expected at least one file with non-zero LOC value")
 	}
 }
 
-// 📁️sessionLogDir answers the directory a session log lives in.
-func sessionLogDir(repoRoot string, year int, month int, day int, sessionID string) string {
-	return filepath.Join(RepoMetaDirForRoot(repoRoot), "⚡️cache", "🤖️generated", FormatYearDir(year%100), FormatMonthDir(month), FormatDayDir(day), sessionID)
+func TestExhaustiveMermaidLocByLanguage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-language test in short mode")
+	}
+	withExhaustiveRepo(t)
+	result := MermaidLocByLanguage()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
+	}
+	if !strings.Contains(result, "\"Lines of Code by Language\"") {
+		t.Error("expected 'Lines of Code by Language' title")
+	}
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 3 {
+		t.Errorf("expected at least 3 lines (header + title + at least 1 language), got %d", len(lines))
+	}
+	hasLanguage := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.Contains(trimmed, ": ") && strings.HasPrefix(trimmed, "\"") {
+			hasLanguage = true
+		}
+	}
+	if !hasLanguage {
+		t.Error("expected at least one language entry with LOC")
+	}
 }
 
-func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string, lg LoggingConfig) {
-	metaPath := filepath.Join(logDir, "session.json")
-	var meta SessionMeta
-	if data, err := os.ReadFile(metaPath); err == nil {
-		_ = json.Unmarshal(data, &meta)
+func TestExhaustiveMermaidLocByContributors(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-contributors test in short mode")
 	}
-	inputMap := decodeHookInputMap(ctx.Input)
-	second := firstNonEmpty(ctx.Second, findNestedStringValue(inputMap, "second"))
-	checkpoint := resolveEventCheckpointID(extractCheckpointSHAFromInput(ctx.Input))
-	transcript := extractTranscriptFromInput(ctx.Input)
-	if meta.ID == "" {
-		meta.ID = sessionID
-		meta.URI = "repo://session/" + sessionID
-		meta.Client = ctx.Client
-		meta.Second = second
-		meta.Checkpoint = checkpoint
-		meta.Contributor = "unknown"
-		meta.Transcript = transcript
-	} else {
-		if meta.Client == "" {
-			meta.Client = ctx.Client
+	withExhaustiveRepo(t)
+	result := MermaidLocByContributors()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
+	}
+	if !strings.Contains(result, "\"Lines of Code by Contributor\"") {
+		t.Error("expected 'Lines of Code by Contributor' title")
+	}
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 3 {
+		t.Errorf("expected at least 3 lines (header + title + at least 1 contributor), got %d", len(lines))
+	}
+}
+
+func TestExhaustiveMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc command test in short mode")
+	}
+	withExhaustiveRepo(t)
+	cmd := NewRoot(testEngineFactory)
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	cmd.SetArgs([]string{"mermaid", "loc-by-technologies-bundles-folders-files"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("command failed: %v", err)
+	}
+	output := buf.String()
+	if !strings.HasPrefix(output, "treemap-beta\n") {
+		t.Errorf("expected treemap-beta output, got: %s", output[:min(len(output), 100)])
+	}
+}
+
+func TestExhaustiveMermaidCommandLocByLanguage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-language command test in short mode")
+	}
+	withExhaustiveRepo(t)
+	cmd := NewRoot(testEngineFactory)
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	cmd.SetArgs([]string{"mermaid", "loc-by-language"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("command failed: %v", err)
+	}
+	output := buf.String()
+	if !strings.HasPrefix(output, "treemap-beta\n") {
+		t.Errorf("expected treemap-beta output, got: %s", output[:min(len(output), 100)])
+	}
+}
+
+func TestMermaidEscapeLabel(t *testing.T) {
+	if got := mermaidEscapeLabel("hello \"world\""); got != "hello 'world'" {
+		t.Errorf("expected hello 'world', got: %s", got)
+	}
+	if got := mermaidEscapeLabel("no quotes"); got != "no quotes" {
+		t.Errorf("expected no quotes, got: %s", got)
+	}
+}
+
+// 🔌️#region 🏷️Provider
+func TestProviderRegistry(t *testing.T) {
+	mp := DefaultManagementProvider()
+	if mp == nil {
+		t.Fatal("DefaultManagementProvider() returned nil")
+	}
+	if mp.Kind() != "github" {
+		t.Errorf("expected github, got %s", mp.Kind())
+	}
+	vcp := DefaultVersionControlProvider()
+	if vcp == nil {
+		t.Fatal("DefaultVersionControlProvider() returned nil")
+	}
+	if vcp.Kind() != "git" {
+		t.Errorf("expected git, got %s", vcp.Kind())
+	}
+	sp := DefaultSandboxProvider()
+	if sp == nil {
+		t.Fatal("DefaultSandboxProvider() returned nil")
+	}
+	if sp.Kind() != "devcontainer" {
+		t.Errorf("expected devcontainer, got %s", sp.Kind())
+	}
+}
+
+func TestGetManagementProvider(t *testing.T) {
+	mp := GetManagementProvider()
+	if mp == nil {
+		t.Fatal("GetManagementProvider() returned nil")
+	}
+	if mp.Kind() != "github" {
+		t.Errorf("expected github, got %s", mp.Kind())
+	}
+}
+
+func TestGoalIDForFilesystem(t *testing.T) {
+	withGoalPath(t, "AI-OPTIMIZED-REPO/REPO-CLIENT")
+
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"AI-OPTIMIZED-REPO/REPO-CLIENT", "AI-OPTIMIZED-REPO/REPO-CLIENT"},
+		{"🎯️aioptimizedrepo🎯️repoclient", "AI-OPTIMIZED-REPO/REPO-CLIENT"},
+	}
+	for _, tt := range tests {
+		got := goalIDForFilesystem(tt.in)
+		if got != tt.want {
+			t.Errorf("goalIDForFilesystem(%q) = %q, want %q", tt.in, got, tt.want)
 		}
-		if meta.Second == "" {
-			meta.Second = second
-		}
-		if meta.Checkpoint == "" {
-			meta.Checkpoint = checkpoint
-		}
-		if meta.Transcript == "" {
-			meta.Transcript = transcript
-		}
 	}
-	eventMap := map[string]interface{}{
-		"kind":        string(ctx.Event),
-		"client":      ctx.Client,
-		"session":     resolveEventSessionID(sessionID),
-		"second":      resolveEventSecondID(second),
-		"checkpoint":  checkpoint,
-		"contributor": "unknown",
+}
+
+func TestGhExtractIssueURL(t *testing.T) {
+	const url = "https://github.com/usalu/semio/issues/42"
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{url + "\n", url},
+		{"Created " + url + " in repo", url},
+		{"", ""},
 	}
-	if transcript != "" {
-		eventMap["transcript"] = transcript
-	}
-	eventJSON, _ := json.Marshal(eventMap)
-	entry := EventEntry{Event: eventJSON}
-	if lg.includeNative() && len(ctx.Input) > 0 {
-		entry.Native = &struct {
-			Event json.RawMessage `json:"event"`
-		}{Event: ctx.Input}
-	}
-	if lg.includeResponse() {
-		entry.Response = &struct {
-			Blocked *bool  `json:"blocked,omitempty"`
-			Message string `json:"message,omitempty"`
-			Reason  string `json:"reason,omitempty"`
-		}{}
-		if !result.IsAllowed() {
-			blocked := true
-			entry.Response.Blocked = &blocked
-			entry.Response.Message = result.GetMessage()
-			entry.Response.Reason = result.GetMessage()
+	for _, tt := range tests {
+		if got := ghExtractIssueURL(tt.in); got != tt.want {
+			t.Errorf("ghExtractIssueURL(%q) = %q, want %q", tt.in, got, tt.want)
 		}
 	}
-	meta.Events = append(meta.Events, entry)
-	if lg.Plan && ctx.Event == HookAgentToolPlanUpdatingEnded {
-		steps := extractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)
-		if len(steps) > 0 {
-			var existing []TicketAgentPlanStep
-			if meta.Plan != nil {
-				existing = meta.Plan.Steps
-			}
-			meta.Plan = &TicketAgentPlan{Steps: mergeTicketAgentPlanSteps(existing, steps, firstNonEmpty(second, time.Now().UTC().Format(time.RFC3339)))}
+}
+
+func TestNullManagementProvider(t *testing.T) {
+	p := &NullManagementProvider{}
+	if p.Kind() != "none" {
+		t.Errorf("expected none, got %s", p.Kind())
+	}
+	if err := p.Configure("/tmp"); err != nil {
+		t.Errorf("Configure should not error: %v", err)
+	}
+	url, err := p.CreateIssue("test", "body", nil)
+	if err != nil || url != "" {
+		t.Errorf("CreateIssue should return empty string, got %q, err=%v", url, err)
+	}
+	if err := p.CloseIssue("url"); err != nil {
+		t.Errorf("CloseIssue should not error: %v", err)
+	}
+	if err := p.ReopenIssue("url"); err != nil {
+		t.Errorf("ReopenIssue should not error: %v", err)
+	}
+	if err := p.DeleteIssue("url"); err != nil {
+		t.Errorf("DeleteIssue should not error: %v", err)
+	}
+	if err := p.UpdateIssueTitle("url", "title"); err != nil {
+		t.Errorf("UpdateIssueTitle should not error: %v", err)
+	}
+	if err := p.UpdateIssueBody("url", "body"); err != nil {
+		t.Errorf("UpdateIssueBody should not error: %v", err)
+	}
+	details, err := p.GetIssueDetails("url")
+	if err != nil || details != nil {
+		t.Errorf("GetIssueDetails should return nil, got %v, err=%v", details, err)
+	}
+	nodeID, err := p.GetIssueNodeID("url")
+	if err != nil || nodeID != "" {
+		t.Errorf("GetIssueNodeID should return empty, got %q, err=%v", nodeID, err)
+	}
+	parentURL, err := p.GetIssueParentURL("url")
+	if err != nil || parentURL != "" {
+		t.Errorf("GetIssueParentURL should return empty, got %q, err=%v", parentURL, err)
+	}
+	if err := p.AddComment("url", "comment"); err != nil {
+		t.Errorf("AddComment should not error: %v", err)
+	}
+	if err := p.AddLabels("url", []string{"a"}); err != nil {
+		t.Errorf("AddLabels should not error: %v", err)
+	}
+	if err := p.RemoveLabels("url", []string{"a"}); err != nil {
+		t.Errorf("RemoveLabels should not error: %v", err)
+	}
+	p.AddIssueToProject("url")
+	p.AssignIssueToCurrentUser("url")
+	if err := p.AddSubIssue("parent", "child"); err != nil {
+		t.Errorf("AddSubIssue should not error: %v", err)
+	}
+	if err := p.UpdateIssueMilestone("url", "title"); err != nil {
+		t.Errorf("UpdateIssueMilestone should not error: %v", err)
+	}
+	if err := p.ClearIssueMilestone("url"); err != nil {
+		t.Errorf("ClearIssueMilestone should not error: %v", err)
+	}
+	num, err := p.CreateMilestone("title", "desc")
+	if err != nil || num != 0 {
+		t.Errorf("CreateMilestone should return 0, got %d, err=%v", num, err)
+	}
+	if err := p.UpdateMilestone(1, "t", "d", "s", "due"); err != nil {
+		t.Errorf("UpdateMilestone should not error: %v", err)
+	}
+	if err := p.DeleteMilestone(1); err != nil {
+		t.Errorf("DeleteMilestone should not error: %v", err)
+	}
+	m, err := p.GetMilestone(1)
+	if err != nil || m != nil {
+		t.Errorf("GetMilestone should return nil, got %v, err=%v", m, err)
+	}
+	title, err := p.GetMilestoneTitle(1)
+	if err != nil || title != "" {
+		t.Errorf("GetMilestoneTitle should return empty, got %q, err=%v", title, err)
+	}
+	found, err := p.FindMilestoneByTitle("title")
+	if err != nil || found != nil {
+		t.Errorf("FindMilestoneByTitle should return nil, got %v, err=%v", found, err)
+	}
+	issues, err := p.ListIssuesForLabelSync()
+	if err != nil || issues != nil {
+		t.Errorf("ListIssuesForLabelSync should return nil, got %v, err=%v", issues, err)
+	}
+	urls, err := p.ListOpenIssuesWithLabel("label")
+	if err != nil || urls != nil {
+		t.Errorf("ListOpenIssuesWithLabel should return nil, got %v, err=%v", urls, err)
+	}
+	labels, err := p.ListRepoLabels()
+	if err != nil || labels != nil {
+		t.Errorf("ListRepoLabels should return nil, got %v, err=%v", labels, err)
+	}
+	if err := p.CreateRepoLabel("name"); err != nil {
+		t.Errorf("CreateRepoLabel should not error: %v", err)
+	}
+	if err := p.DeleteRepoLabel("name"); err != nil {
+		t.Errorf("DeleteRepoLabel should not error: %v", err)
+	}
+	if err := p.SyncRepoLabelCatalog(map[string]bool{"a": true}); err != nil {
+		t.Errorf("SyncRepoLabelCatalog should not error: %v", err)
+	}
+	goalURL, err := p.CreateGoalIssue("title", "desc", nil)
+	if err != nil || goalURL != "" {
+		t.Errorf("CreateGoalIssue should return empty, got %q, err=%v", goalURL, err)
+	}
+	if err := p.UpdateGoalIssue("url", "t", "d"); err != nil {
+		t.Errorf("UpdateGoalIssue should not error: %v", err)
+	}
+	if user := p.GetCurrentUser(); user != "" {
+		t.Errorf("GetCurrentUser should return empty, got %q", user)
+	}
+}
+
+func TestAllAgentClientProviders(t *testing.T) {
+	providers := AllAgentClientProviders()
+	if len(providers) == 0 {
+		t.Fatal("AllAgentClientProviders() returned empty")
+	}
+	kinds := make(map[string]bool)
+	for _, p := range providers {
+		if p.Kind() == "" {
+			t.Error("agent-client provider has empty Kind()")
+		}
+		kinds[p.Kind()] = true
+	}
+	for _, expected := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
+		if !kinds[expected] {
+			t.Errorf("missing agent-client provider for %s", expected)
 		}
 	}
-	_ = WriteJSONFile(metaPath, meta)
+}
+
+func TestGetAgentClientProvider(t *testing.T) {
+	for _, client := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
+		p := GetAgentClientProvider(client)
+		if p == nil {
+			t.Errorf("GetAgentClientProvider(%s) returned nil", client)
+			continue
+		}
+		if p.Kind() != client {
+			t.Errorf("expected Kind()=%s, got %s", client, p.Kind())
+		}
+	}
+	if p := GetAgentClientProvider("nonexistent"); p != nil {
+		t.Errorf("expected nil for unknown client, got %v", p)
+	}
+}
+
+func TestGitVersionControlProviderKind(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if p.Kind() != "git" {
+		t.Errorf("expected git, got %s", p.Kind())
+	}
+}
+
+func TestGitVersionControlProviderConfigure(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if err := p.Configure("/tmp"); err != nil {
+		t.Errorf("Configure should not error: %v", err)
+	}
 }

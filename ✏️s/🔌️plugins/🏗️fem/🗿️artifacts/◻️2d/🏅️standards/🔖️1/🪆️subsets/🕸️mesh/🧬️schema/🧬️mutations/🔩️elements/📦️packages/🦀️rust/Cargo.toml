@@ -21,12 +21,12 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-fem-2d-mutations = { workspace = true }
 serde_json = { workspace = true }

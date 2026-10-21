@@ -30,7 +30,7 @@ pub const REQUIRED_FOOTER_CHAIN: u32 = 1 << 3;
 pub const REQUIRED_KNOWN_MASK: u32 = REQUIRED_COMPRESSED | REQUIRED_CHUNKED | REQUIRED_ENCRYPTED | REQUIRED_FOOTER_CHAIN;
 
 pub fn chunk_custody_matches(required_flags:u32,chunk_count:u64,table_span:ByteRange)->bool{(required_flags&REQUIRED_CHUNKED!=0)==(table_span.len!=0)&&(chunk_count!=0)==(table_span.len!=0)}
-fn validate_chunk_custody(required_flags:u32,chunk_count:u64,table_span:ByteRange)->Result<(),PackRefusal>{if !chunk_custody_matches(required_flags,chunk_count,table_span){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"required_chunked",offset:12,detail:"REQUIRED_CHUNKED disagrees with declared chunk table custody"});}Ok(())}
+pub(super) fn validate_chunk_custody(required_flags:u32,chunk_count:u64,table_span:ByteRange)->Result<(),PackRefusal>{if !chunk_custody_matches(required_flags,chunk_count,table_span){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"required_chunked",offset:12,detail:"REQUIRED_CHUNKED disagrees with declared chunk table custody"});}Ok(())}
 /// 🧮️ Optional flag bit: the document body was encoded in canonical form.
 pub const OPTIONAL_CANONICAL: u32 = 1 << 0;
 

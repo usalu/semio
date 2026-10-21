@@ -6,6 +6,7 @@ import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,statSync,lstatSync} from "node:fs";
 import {readdir,lstat} from "node:fs/promises";
 import {tmpdir} from "node:os";
+import {createHash} from "node:crypto";
 import {dirname,join,relative,sep} from "node:path";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -62,6 +63,18 @@ describe("package manager seam: registry and schema",()=>{
   const names=builtInPackageManagersV1.flatMap(manager=>manager.lockFileNames());
   expect(new Set(names).size).toBe(names.length);
   expect(packageManagerRegistryV1.lockFileNames()).toEqual([...new Set(names)].sort());
+ });
+ test("the bun keys equal the formulas the live code used before the seam (no cold re-install from the swap itself)",()=>{
+  const bun=packageManagerRegistryV1.get("bun"),recipe=installSchema.$defs.ProducerRecipeProtocol.const,hostNow=currentHostV1(),manifest={dependencies:{a:"1"},devDependencies:{b:"2"},patchedDependencies:{"c@1":"p"}},lock=bytes("lock\n");
+  const liveBootstrap=createHash("sha256").update(JSON.stringify([manifest.dependencies,manifest.devDependencies,undefined,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest("hex");
+  expect(core.bootstrapKeyV1(bun,{manifest,host:hostNow,lock})).toBe(liveBootstrap);
+  const members=[{path:"w/0/package.json"}],material=[{path:"/r/package.json",bytes:bytes("{}")},{path:"/r/bun.lock",bytes:bytes("x")}],modes=installSchema.$defs.SourceOwnerInputGroupProtocol.const.modeIdentity;
+  const live=createHash("sha256").update(JSON.stringify([recipe,"/r",process.versions.bun,process.platform,process.arch,modes.sync,members]));
+  for(const row of material)live.update(JSON.stringify([row.path,row.bytes.length])).update(row.bytes);
+  expect(core.generationKeyV1(bun,{root:"/r",host:hostNow,mode:modes.sync,members,material})).toBe(live.digest("hex"));
+  const rendered=(mode:"sync"|"lock")=>bun.render(mode,{platform:process.platform,cache:"/cache"}).arguments;
+  expect(rendered("sync")).toEqual(["install","--frozen-lockfile","--"+recipe.lifecycle,"--linker="+recipe.linker,"--backend="+(recipe.backends as Record<string,string>)[process.platform],"--cache-dir","/cache"]);
+  expect(rendered("lock")[1]).toBe("--lockfile-only");
  });
  test("selection follows the policy and the neutral environment override, and refuses a manager of another ecosystem",()=>{
   expect(Object.keys(policy.selection).sort()).toEqual([...packageManagerRegistryV1.ecosystems()]);

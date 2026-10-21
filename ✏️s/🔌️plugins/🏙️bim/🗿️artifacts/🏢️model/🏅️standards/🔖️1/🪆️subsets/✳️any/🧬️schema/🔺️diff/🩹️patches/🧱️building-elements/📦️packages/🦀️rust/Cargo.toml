@@ -45,8 +45,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-bim-model-formula = { path = "../../../../../📏️authored/📝️formula/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../../💡️inferences/🏢️storey-levels/📦️packages/🦀️rust" }

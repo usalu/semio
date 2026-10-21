@@ -31,7 +31,7 @@ impl LdltJob {
             }
 
             if context.should_yield() {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             if self.checkpoint_writer.is_none() {
                 self.checkpoint_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, context)?;
@@ -47,7 +47,7 @@ impl LdltJob {
             }
             let complete = Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer, context)?;
             if !complete {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             return Ok(NumericalRun::Yield);
         }
@@ -81,7 +81,7 @@ impl LdltJob {
             }
             let complete = Self::advance_output_entry(&mut self.state, self.operation, writer, context)?;
             if !complete {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             return Ok(NumericalRun::Yield);
         }

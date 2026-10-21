@@ -6,6 +6,10 @@ use semio_framework_pets_contract::schema::Gear;
 use semio_framework_pets_contract::schema::Waypoint;
 use semio_framework_pets_contract::schema::Course;
 use semio_framework_pets_clearance::Body as Solid;
+use crate::spacing::{bodies_of, extent_at};
+use semio_framework_pets_clearance::{MARGIN, STEERINGS, claim_clear, column_over, head_under, lift_onto, obstacles_of};
+use semio_framework_pets_kinematics::trigonometry::smoothstep;
+use semio_framework_pets_traversal::swing::{CHUTE_HEADROOM, CHUTE_OPENING, CHUTE_REFLEX, HARD_LANDING, canopy_of, chute_of, chute_step, chute_wind};
 
 //#region 🔖️Courses
 /// 🪟️ Distance above the first footprint-sized perch or motionless head below the feet.

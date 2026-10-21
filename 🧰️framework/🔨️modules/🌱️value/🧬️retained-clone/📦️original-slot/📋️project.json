@@ -16,6 +16,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
         "command": "bun ./📜️script.ts verify source"
+      },
+      "metadata": {
+        "semio": {
+          "executionKind": "Source",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     },
     "verify-native": {

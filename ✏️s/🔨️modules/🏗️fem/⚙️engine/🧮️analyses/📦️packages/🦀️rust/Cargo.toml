@@ -37,4 +37,3 @@ semio-s-fem-elements3d = { workspace = true }
 semio-s-fem-static = { workspace = true }
 semio-s-fem-test-support = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-async = { workspace = true }

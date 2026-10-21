@@ -10,7 +10,7 @@ use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 use protocol::causal::transition::HistoryFoldIndex;
-use protocol::value::ordered::OrderedMap;
+use semio_framework_value_ordered::ordered::OrderedMap;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
 

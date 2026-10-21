@@ -2,6 +2,7 @@
   "version": 1,
   "limit": 4,
   "scenarios": [
+    { "name": "collected-errors-are-final", "rounds": [{ "outcome": "failure", "message": "Error collection finished", "code": "BUILD_COLLECTED_ERRORS", "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 1, "failure": "Error collection finished", "events": [] } },
     { "name": "accepted-first-round", "rounds": [{ "outcome": "value" }], "expect": { "settled": "value", "rounds": 1, "events": [] } },
     { "name": "conflict-then-value", "rounds": [{ "outcome": "conflict" }, { "outcome": "value" }], "expect": { "settled": "value", "rounds": 2, "events": ["conflict"] } },
     { "name": "genuine-old-failure", "rounds": [{ "outcome": "failure", "message": "E1", "young": false }], "expect": { "settled": "failure", "rounds": 1, "failure": "E1", "events": [] } },

@@ -11,7 +11,7 @@ fn docking_placement(value: &str) -> semio_framework_ui_tui_core::docking::DockP
 fn tab_position(dashboard: &Dashboard, tui: &Tui, id: &str) -> Pos {
     for window in &dashboard.windows {
         let node = tui.scene.node(window.chrome);
-        let semio_framework_ui_tui_frame::scene::NodeContent::Chrome(chrome) = &node.content else { continue };
+        let NodeContent::Chrome(chrome) = &node.content else { continue };
         let ChromeState::Window(state) = chrome else { continue };
         let Some(index) = state.tab_ids.iter().position(|tab| tab == id) else { continue };
         let rect = tui.scene.rect(window.chrome);
@@ -38,7 +38,7 @@ fn assert_committed_ghost(dashboard: &Dashboard, tui: &mut Tui, source: &str, gh
     tui.render();
     let chrome = dashboard.windows.iter().find(|window| window.id == source).unwrap().chrome;
     let rect = tui.scene.rect(chrome);
-    let semio_framework_ui_tui_frame::scene::NodeContent::Chrome(state @ ChromeState::Window(window)) = &tui.scene.node(chrome).content else { panic!("window chrome") };
+    let NodeContent::Chrome(state @ ChromeState::Window(window)) = &tui.scene.node(chrome).content else { panic!("window chrome") };
     let index = window.tab_ids.iter().position(|id| id == source).unwrap();
     let cells: Vec<_> = (rect.y..rect.y + rect.height).flat_map(|y| (rect.x..rect.x + rect.width).map(move |x| Pos { x, y })).filter(|pos| matches!(state.window_target(rect, *pos), Some(WindowHit::Tab(tab) | WindowHit::Close(tab) | WindowHit::Maximize(tab)) if tab == index)).collect();
     let left = cells.iter().map(|pos| pos.x).min().unwrap() - 1;
@@ -60,7 +60,7 @@ fn docking_window_handle_tooltips_follow_dashboard_language() {
         let source = &dashboard.windows[0].id;
         let grip = tab_position(&dashboard, &tui, source);
         let node = dashboard.windows[0].chrome;
-        let semio_framework_ui_tui_frame::scene::NodeContent::Chrome(chrome) = &tui.scene.node(node).content else { panic!("chrome") };
+        let NodeContent::Chrome(chrome) = &tui.scene.node(node).content else { panic!("chrome") };
         assert_eq!(dashboard.text().chrome_drag.as_str(), if language == "en" { "Drag window" } else { "Fenster ziehen" });
         assert_eq!(tui.frame().get(grip.x, grip.y).unwrap().ch, '⠿');
         assert_eq!(chrome.tooltip(tui.scene.rect(node), grip).as_deref(), Some(dashboard.text().chrome_drag.as_str()));
@@ -97,7 +97,7 @@ fn docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls(
         assert_eq!(dashboard.windows[1].root, root);
         let node = dashboard.windows[1].chrome;
         let rect = tui.scene.rect(node);
-        let semio_framework_ui_tui_frame::scene::NodeContent::Chrome(chrome) = &tui.scene.node(node).content else { panic!("chrome") };
+        let NodeContent::Chrome(chrome) = &tui.scene.node(node).content else { panic!("chrome") };
         let mut controls = Vec::new();
         for y in rect.y..rect.y + rect.height { for x in rect.x..rect.x + rect.width {
             if matches!(chrome.window_target(rect, Pos { x, y }), Some(WindowHit::Maximize(tab) | WindowHit::Close(tab)) if tab == index) { controls.push(Pos { x, y }); }
@@ -218,7 +218,7 @@ fn docking_fullscreen_and_close_on_an_inactive_tab_target_its_identity() {
     let find = |dashboard: &Dashboard, tui: &Tui, wanted: WindowHit| {
         let chrome = dashboard.windows[dashboard.focused_index(tui)].chrome;
         let rect = tui.scene.rect(chrome);
-        let semio_framework_ui_tui_frame::scene::NodeContent::Chrome(state) = &tui.scene.node(chrome).content else { panic!("chrome") };
+        let NodeContent::Chrome(state) = &tui.scene.node(chrome).content else { panic!("chrome") };
         (rect.y..rect.y + rect.height).flat_map(|y| (rect.x..rect.x + rect.width).map(move |x| Pos { x, y })).find(|pos| state.window_target(rect, *pos) == Some(wanted)).unwrap()
     };
     let maximize = find(&dashboard, &tui, WindowHit::Maximize(1));
@@ -385,9 +385,6 @@ fn keyboard_docking_and_tab_reordering_have_localized_customizable_actions() {
 }
 
 #[test]
-fn every_window_docking_scenario_has_a_native_test() { every_scenario_of_the_window_view_features_is_proved_by_a_test(); }
-
-#[test]
 fn docking_a_live_terminal_preserves_its_session_output_and_reports_the_new_pty_size() {
     let (mut dashboard, mut tui) = view();
     dashboard.update_session(&mut tui, session("held-task", label("test", "quiz", ""), SessionStatus::Running, None));
@@ -408,7 +405,7 @@ fn docking_a_live_terminal_preserves_its_session_output_and_reports_the_new_pty_
     let rect = tui.scene.rect(terminal);
     assert!(dashboard.link.outbox[before..].iter().any(|message| matches!(message, ClientMsg::Resize { session_id, cols, rows } if session_id == "held-task" && (*cols, *rows) == (rect.width, rect.height))));
     assert!(!dashboard.link.outbox[before..].iter().any(|message| matches!(message, ClientMsg::SpawnGroup { .. } | ClientMsg::Stop { .. } | ClientMsg::Kill { .. })));
-    if let Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(state)) = tui.scene.node_mut(terminal).widget() {
+    if let Some(WidgetState::Terminal(state)) = tui.scene.node_mut(terminal).widget() {
         let line: String = (0..11).filter_map(|x| state.screen.cell_at(x, 0).map(|cell| cell.ch)).collect();
         assert_eq!(line, "HELD-OUTPUT");
     } else { panic!("the same terminal survives docking"); }

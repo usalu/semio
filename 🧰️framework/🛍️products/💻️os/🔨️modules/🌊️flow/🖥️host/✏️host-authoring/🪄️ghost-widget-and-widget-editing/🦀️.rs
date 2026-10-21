@@ -7,7 +7,7 @@ impl FlowHost {
         let descriptor: WidgetDescriptor = semio_framework_pack_json::from_json_str(descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let id: String = "__ghost__".into();
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
-        let mut layout = protocol::value::ordered::OrderedMap::new();
+        let mut layout = semio_framework_value_ordered::ordered::OrderedMap::new();
         layout.insert(id, WidgetLayout { x: world_x, y: world_y });
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &self.kind_infos, widget_node_size(&widget, &[], &self.kind_infos));
         widget.retire_cold();

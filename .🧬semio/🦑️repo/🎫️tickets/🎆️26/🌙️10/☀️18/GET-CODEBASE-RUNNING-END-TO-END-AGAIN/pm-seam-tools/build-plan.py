@@ -48,21 +48,17 @@ edit(STORE, "storage-ambient-roles", "storage",
      '[[installSchema.$defs.ProducerRecipeProtocol.const.home,[".bunfig.toml",".npmrc"]],[installSchema.$defs.ProducerRecipeProtocol.const.config,[".bunfig.toml"]]]as const',
      '[[installSchema.$defs.ProducerRecipeProtocol.const.home,packageManagerV1.configurationNames("home")],[installSchema.$defs.ProducerRecipeProtocol.const.config,packageManagerV1.configurationNames("config")]]as const')
 edit(STORE, "storage-lock-name", "storage", '"bun.lock"', 'lockNameV1', 17)
-edit(STORE, "storage-runtime-identity", "storage", 'process.versions.bun', 'packageManagerRuntimeV1()', 2)
+edit(STORE, "storage-runtime-identity", "storage", 'sourceRoot,process.versions.bun,process.platform,process.arch', 'sourceRoot,packageManagerRuntimeV1(),process.platform,process.arch')
 edit(STORE, "storage-lock-document", "storage", 'Bun.JSONC.parse(', 'readLockDocumentV1(', 3)
-edit(STORE, "storage-generation-directory", "storage", '"j"', 'generationDirectoryV1', 36)
-edit(STORE, "storage-generation-root", "storage", 'roots:["j/"+plan.generation.slice(0,20)]', 'roots:[generationDirectoryV1+"/"+plan.generation.slice(0,20)]')
-edit(STORE, "storage-profiles", "storage", 'for(const profile of["bun-import","bun-require"]as const){', 'for(const profile of packageManagerV1.resolutionProfiles()){')
 edit(D + "/🧾️generation/🧪️tests/🟦️.ts", "storage-pin-ambient-roles", "storage",
      '[[installSchema.$defs.ProducerRecipeProtocol.const.home,[".bunfig.toml",".npmrc"]],[installSchema.$defs.ProducerRecipeProtocol.const.config,[".bunfig.toml"]]]',
      '[[installSchema.$defs.ProducerRecipeProtocol.const.home,packageManagerV1.configurationNames("home")],[installSchema.$defs.ProducerRecipeProtocol.const.config,packageManagerV1.configurationNames("config")]]')
-READING = D + "/💾️storage/🧪️tests/👓️reading/🟦️.ts"
-edit(READING, "storage-pin-generation-binding", "storage",
-     'posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,"")).join("\\n")+";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};"',
-     'generationDirectoryV1:"j",posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,"")).join("\\n")+";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};"')
 edit(D + "/🧪️tests/🟦️.ts", "storage-bundle-prelude", "storage",
      'await build({ stdin: { contents: "const installSchema="+JSON.stringify(dependencyInstallSchema)+";"+operation.getText(source), loader: "ts" }, outfile: module,',
      'await build({ bundle: true, stdin: { contents: "import {selectPackageManagerV1} from "+JSON.stringify(join(owner, "🔌️managers/📚️catalog/🟦️.ts"))+";const packageManagerV1=selectPackageManagerV1(\\"javascript\\");const installSchema="+JSON.stringify(dependencyInstallSchema)+";"+operation.getText(source), loader: "ts", resolveDir: owner }, outfile: module,')
+edit(D + "/🧾️generation/🧪️tests/🟦️.ts", "storage-pin-environment-candidates", "storage",
+     'expect(source).toContain("for(const candidate of[path.join(home,\\".bunfig.toml\\"),path.join(config,\\".bunfig.toml\\"),path.join(home,\\".npmrc\\")])");',
+     'expect(source).toContain("for(const candidate of[...packageManagerV1.configurationNames(\\"home\\").map(name=>path.join(home,name)),...packageManagerV1.configurationNames(\\"config\\").map(name=>path.join(config,name))])");')
 INC = D + "/🧾️incremental/💾️storage/🟦️.ts"
 edit(INC, "incremental-import", "storage", 'import {javascriptDependencySourceOwnerRuntimeV1,', 'import {javascriptDependencyGenerationDirectoryV1,javascriptDependencySourceOwnerRuntimeV1,')
 edit(INC, "incremental-generation-directory", "storage", '"j"', 'javascriptDependencyGenerationDirectoryV1', 2)
@@ -96,8 +92,8 @@ def main():
     for relative in iter_logical(paths.NEW):
         new_files.append({"path": relative, "group": "ratchet" if "⚖️ratchet" in relative else "seam"})
     new_files.sort(key=lambda row: row["path"])
-    plan = {"version": 1, "files": [{"path": path, "edits": rows} for path, rows in by_path.items()], "newFiles": new_files}
-    out = os.path.join(paths.HERE, "staged", "plan.json")
+    plan = {"version": 1, "groups": ["seam", "bootstrap", "graph", "storage", "register", "ratchet"], "files": [{"path": path, "edits": rows} for path, rows in by_path.items()], "newFiles": new_files}
+    out = os.path.join(paths.STAGE, "plan.json")
     json.dump(plan, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("edits", sum(len(rows) for rows in by_path.values()), "files", len(by_path), "new", len(new_files))
 main()

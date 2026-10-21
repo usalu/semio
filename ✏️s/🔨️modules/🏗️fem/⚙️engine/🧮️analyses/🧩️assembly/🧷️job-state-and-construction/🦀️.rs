@@ -37,14 +37,6 @@ pub struct AssemblyPreview {
     pub assembled_element_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct AssemblyTriplet {
-    pub(super) sequence: u64,
-    pub(super) row: u32,
-    pub(super) col: u32,
-    pub(super) value: f64,
-}
-
 #[derive(Clone, Default)]
 pub(super) struct AssemblyPartitionBuffer {
     pub(super) full: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
@@ -355,7 +347,7 @@ pub struct AssemblyJobConstruction {
     partition_reserve_cursor: usize,
     partition_reserve_lane: u8,
     pub(super) plan: AssemblyPlan,
-    constrained_old: AssemblyOrder<bool>,
+    pub(super) constrained_old: AssemblyOrder<bool>,
     pub(super) partitions: Vec<AssemblyPartitionBuffer>,
     pub(super) merged_full: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     pub(super) merged_free: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
@@ -509,8 +501,8 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::ValidateNodePairs;
             }
-            AssemblyConstructionStage::ValidateNodePairs => self.assembly_validate_node_pairs(),
-            AssemblyConstructionStage::ValidateElementReferences => self.assembly_validate_element_references(),
+            AssemblyConstructionStage::ValidateNodePairs => self.assembly_validate_node_pairs()?,
+            AssemblyConstructionStage::ValidateElementReferences => self.assembly_validate_element_references()?,
             AssemblyConstructionStage::ValidateSupportReferences => {
                 let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
                 if self.support_cursor >= model.supports_len() {
@@ -525,14 +517,18 @@ impl AssemblyJobConstruction {
                     self.support_node_cursor += 1;
                 }
             }
-            AssemblyConstructionStage::DiscoverDofs => self.assembly_discover_dofs(),
-            AssemblyConstructionStage::EmitDofs => self.assembly_emit_dofs(),
+            AssemblyConstructionStage::DiscoverDofs => self.assembly_discover_dofs()?,
+            AssemblyConstructionStage::EmitDofs => self.assembly_emit_dofs()?,
             AssemblyConstructionStage::CommitDofOwner => {
                 let owner = self.pending_dof_owner.as_ref().ok_or(FemError::Singular)?;
                 if owner.0.capacity() > MOUNTED_OWNER_PAGE_BYTES {
                     return Err(FemError::Singular);
                 }
-                self.plan.dof_map.push(self.pending_dof_owner.take().ok_or(FemError::Singular)?);
+                let owner = self.pending_dof_owner.take().ok_or(FemError::Singular)?;
+                if let Err(owner) = self.plan.dof_map.push(owner) {
+                    self.pending_dof_owner = Some(owner);
+                    return Err(FemError::ResourceAdmission);
+                }
                 self.dof_emit_cursor += 1;
                 self.stage = AssemblyConstructionStage::EmitDofs;
             }
@@ -562,7 +558,7 @@ impl AssemblyJobConstruction {
                     self.stage = AssemblyConstructionStage::MarkConstraints;
                 }
             }
-            AssemblyConstructionStage::MarkConstraints => self.assembly_mark_constraints(),
+            AssemblyConstructionStage::MarkConstraints => self.assembly_mark_constraints()?,
             AssemblyConstructionStage::ReserveFree => {
                 self.plan.free_new.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.plan.free_new.capacity() < self.plan.ndof { return Ok(false); }
@@ -606,7 +602,7 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::BuildPartitions;
             }
-            AssemblyConstructionStage::BuildPartitions => self.assembly_build_partitions(),
+            AssemblyConstructionStage::BuildPartitions => self.assembly_build_partitions()?,
             AssemblyConstructionStage::ReserveMergedFull => {
                 self.merged_full.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.merged_full.capacity() >= self.maximum_triplets {
@@ -637,14 +633,14 @@ impl AssemblyJobConstruction {
                 }
                 self.stage = AssemblyConstructionStage::BuildMergeCursors;
             }
-            AssemblyConstructionStage::BuildMergeCursors => self.assembly_build_merge_cursors(),
+            AssemblyConstructionStage::BuildMergeCursors => self.assembly_build_merge_cursors()?,
             AssemblyConstructionStage::Complete => return Ok(true),
         }
         Ok(false)
     }
 
     /// 🪵️ Runs the `validate node pairs` stage of `step_one`.
-    fn assembly_validate_node_pairs(&mut self) -> Result<bool, FemError> {
+    fn assembly_validate_node_pairs(&mut self) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.node_outer >= model.nodes_len() {
             self.stage = AssemblyConstructionStage::ValidateElementReferences;
@@ -659,10 +655,11 @@ impl AssemblyJobConstruction {
             }
             self.node_inner += 1;
         }
+        Ok(())
     }
 
     /// 🔩️ Runs the `validate element references` stage of `step_one`.
-    fn assembly_validate_element_references(&mut self) -> Result<bool, FemError> {
+    fn assembly_validate_element_references(&mut self) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.element_cursor >= model.elements_len() {
             self.stage = AssemblyConstructionStage::ValidateSupportReferences;
@@ -684,10 +681,11 @@ impl AssemblyJobConstruction {
         } else {
             self.reference_node_cursor += 1;
         }
+        Ok(())
     }
 
     /// ⚙️ Runs the `discover dofs` stage of `step_one`.
-    fn assembly_discover_dofs(&mut self) -> Result<bool, FemError> {
+    fn assembly_discover_dofs(&mut self) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.dof_node_cursor >= model.nodes_len() {
             self.stage = AssemblyConstructionStage::ReservePermutation;
@@ -706,10 +704,11 @@ impl AssemblyJobConstruction {
             }
             self.dof_reference_cursor += 1;
         }
+        Ok(())
     }
 
     /// 🧲️ Runs the `emit dofs` stage of `step_one`.
-    fn assembly_emit_dofs(&mut self) -> Result<bool, FemError> {
+    fn assembly_emit_dofs(&mut self) -> Result<(), FemError> {
         if self.dof_emit_cursor >= self.active_dofs.len() {
             self.dof_node_cursor += 1;
             self.dof_element_cursor = 0;
@@ -721,14 +720,15 @@ impl AssemblyJobConstruction {
                 let node_id = self.model.as_ref().and_then(|model| model.node(self.dof_node_cursor)).ok_or(FemError::EmptyModel)?.id.clone();
                 self.pending_dof_owner = Some((node_id, dof));
                 self.stage = AssemblyConstructionStage::CommitDofOwner;
-                return Ok(false);
+                return Ok(());
             }
             self.dof_emit_cursor += 1;
         }
+        Ok(())
     }
 
     /// 🪛️ Runs the `mark constraints` stage of `step_one`.
-    fn assembly_mark_constraints(&mut self) -> Result<bool, FemError> {
+    fn assembly_mark_constraints(&mut self) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.constraint_support_cursor >= model.supports_len() {
             self.stage = AssemblyConstructionStage::ReserveFree;
@@ -749,10 +749,11 @@ impl AssemblyJobConstruction {
                 self.constraint_order_cursor += 1;
             }
         }
+        Ok(())
     }
 
     /// 🔧️ Runs the `build partitions` stage of `step_one`.
-    fn assembly_build_partitions(&mut self) -> Result<bool, FemError> {
+    fn assembly_build_partitions(&mut self) -> Result<(), FemError> {
         if self.partitions.len() < self.partition_count {
             self.partitions.push(AssemblyPartitionBuffer::default());
         } else if self.partition_reserve_cursor < self.partitions.len() {
@@ -761,13 +762,13 @@ impl AssemblyJobConstruction {
             if self.partition_reserve_lane == 0 {
                 partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if partition.full.capacity() < per_partition {
-                    return Ok(false);
+                    return Ok(());
                 }
                 self.partition_reserve_lane = 1;
             } else {
                 partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if partition.free.capacity() < per_partition {
-                    return Ok(false);
+                    return Ok(());
                 }
                 self.partition_reserve_lane = 0;
                 self.partition_reserve_cursor += 1;
@@ -775,10 +776,11 @@ impl AssemblyJobConstruction {
         } else {
             self.stage = AssemblyConstructionStage::ReserveMergedFull;
         }
+        Ok(())
     }
 
     /// 🔨️ Runs the `build merge cursors` stage of `step_one`.
-    fn assembly_build_merge_cursors(&mut self) -> Result<bool, FemError> {
+    fn assembly_build_merge_cursors(&mut self) -> Result<(), FemError> {
         if self.full_merge_cursors.len() < self.partition_count {
             self.full_merge_cursors.push(0);
         } else if self.free_merge_cursors.len() < self.partition_count {
@@ -820,6 +822,7 @@ impl AssemblyJobConstruction {
             });
             self.stage = AssemblyConstructionStage::Complete;
         }
+        Ok(())
     }
 
     pub fn take_complete(&mut self) -> Option<AssemblyJob<'static>> {

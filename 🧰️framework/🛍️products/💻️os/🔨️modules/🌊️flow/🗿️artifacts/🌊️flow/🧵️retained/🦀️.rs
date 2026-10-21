@@ -1,7 +1,8 @@
 //! 🧵️ Shared typed Flow ownership frontiers for resumable copying and retirement.
 
 use crate::{neural, FlowArtifact, FlowHostComponents, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_value::{ValueError,retirement_queue::RetirementQueue,retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError, retirement::{RetireOwned, RetirementCursor, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_retirement_queue::RetirementQueue;
 
 //#region 📑️SelectedCopy
 #[path = "🧬️fields/🦀️.rs"]

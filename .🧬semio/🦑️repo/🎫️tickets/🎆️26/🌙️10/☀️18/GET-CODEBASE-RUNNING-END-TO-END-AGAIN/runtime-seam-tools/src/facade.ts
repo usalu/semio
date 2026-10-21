@@ -1,8 +1,9 @@
-import type { RuntimeBundleOptionsV1, RuntimeBundleResultV1, RuntimeChildV1, RuntimeFamilyV1, RuntimeFileV1, RuntimeGlobScanOptionsV1, RuntimeGlobV1, RuntimeIdentityV1, RuntimeLoaderV1, RuntimeNativeCallbackV1, RuntimeNativeLibraryV1, RuntimeNativePointerV1, RuntimeNativeReadV1, RuntimeNativeSymbolV1, RuntimeNativeSystemV1, RuntimeNativeTypeV1, RuntimeServeOptionsV1, RuntimeServerV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeSqliteDatabaseV1, RuntimeSqliteOptionsV1, RuntimeSupportV1, RuntimeTranspilerOptionsV1, RuntimeTranspilerV1, RuntimeWhichOptionsV1, RuntimeImportRecordV1 } from "./📋️contract/🟦️.ts";
+import type { RuntimeBundlePluginV1, RuntimeTestCommandOptionsV1, RuntimeByteStreamV1, RuntimeBundleOptionsV1, RuntimeBundleResultV1, RuntimeChildV1, RuntimeFamilyV1, RuntimeFileV1, RuntimeGlobScanOptionsV1, RuntimeGlobV1, RuntimeIdentityV1, RuntimeLoaderV1, RuntimeNativeCallbackV1, RuntimeNativeLibraryV1, RuntimeNativePointerV1, RuntimeNativeReadV1, RuntimeNativeSymbolV1, RuntimeNativeSystemV1, RuntimeNativeTypeV1, RuntimeServeOptionsV1, RuntimeServerV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeSqliteDatabaseV1, RuntimeSqliteOptionsV1, RuntimeSupportV1, RuntimeTranspilerOptionsV1, RuntimeTranspilerV1, RuntimeWhichOptionsV1, RuntimeImportRecordV1 } from "./📋️contract/🟦️.ts";
+export { RuntimeCapabilityMissingV1 } from "./🚫️missing/🟦️.ts";
 import { RUNTIME_REGISTRY_V1, requireRuntimeMemberV1, runtimeAdapterV1, runtimeSupportV1 } from "./🧭️selection/🟦️.ts";
 
-export * from "./📋️contract/🟦️.ts";
-export { RUNTIME_REGISTRY_V1, detectRuntimeIdV1, runtimeSupportV1, selectRuntimeAdapterV1 } from "./🧭️selection/🟦️.ts";
+export type * from "./📋️contract/🟦️.ts";
+export { RUNTIME_REGISTRY_V1, detectRuntimeIdV1, loadRuntimeAdapterV1, runtimeSupportV1, selectRuntimeAdapterV1 } from "./🧭️selection/🟦️.ts";
 
 /** 🪪️ Identifies the hosting runtime. */
 export function runtimeIdentityV1(): RuntimeIdentityV1 { return runtimeAdapterV1().identity(); }
@@ -40,7 +41,7 @@ export function runtimeSpawnSyncV1(command: readonly string[], options?: Runtime
 /** 📥️ Reads standard input as text. */
 export function runtimeStdinTextV1(): Promise<string> { return requireRuntimeMemberV1("stdinText")(); }
 /** 📥️ Exposes standard input as a byte stream. */
-export function runtimeStdinStreamV1(): ReadableStream<Uint8Array> { return requireRuntimeMemberV1("stdinStream")(); }
+export function runtimeStdinStreamV1(): RuntimeByteStreamV1 { return requireRuntimeMemberV1("stdinStream")(); }
 /** 📄️ Describes a file for reading or serving. */
 export function runtimeFileV1(path: string): RuntimeFileV1 { return requireRuntimeMemberV1("file")(path); }
 /** 🌍️ Serves HTTP. */
@@ -56,13 +57,15 @@ export function runtimeNativeCallbackV1(body: (...arguments_: any[]) => any, sig
 const NATIVE_TYPES: Readonly<Record<RuntimeNativeTypeV1, RuntimeNativeTypeV1>> = Object.freeze({ void: "void", bool: "bool", i8: "i8", u8: "u8", i16: "i16", u16: "u16", i32: "i32", u32: "u32", i64: "i64", u64: "u64", f32: "f32", f64: "f64", ptr: "ptr", cstring: "cstring" });
 /** 🔌️ Gives the whole native-binding surface as one object, for modules that bind many symbols. */
 export function runtimeNativeSystemV1(): RuntimeNativeSystemV1 {
-  return Object.freeze({
+  const system: RuntimeNativeSystemV1 = {
     FFIType: NATIVE_TYPES,
     dlopen: runtimeNativeOpenV1,
     read: runtimeNativeReadV1(),
     ptr: runtimeNativePointerV1,
+    toArrayBuffer: (pointer, byteOffset, byteLength) => requireRuntimeMemberV1("ffiToArrayBuffer")(pointer, byteOffset, byteLength),
     JSCallback: class { readonly pointer: RuntimeNativePointerV1; private readonly handle: RuntimeNativeCallbackV1; constructor(body: (...arguments_: any[]) => any, signature: RuntimeNativeSymbolV1) { this.handle = runtimeNativeCallbackV1(body, signature); this.pointer = this.handle.pointer; } close(): void { this.handle.close(); } },
-  });
+  };
+  return Object.freeze(system);
 }
 /** 📦️ Bundles entry points. */
 export function runtimeBundleV1(options: RuntimeBundleOptionsV1): Promise<RuntimeBundleResultV1> { return requireRuntimeMemberV1("bundle")(options); }
@@ -74,6 +77,10 @@ export function runtimeSemverOrderV1(left: string, right: string): -1 | 0 | 1 { 
 export function isMainModuleV1(metaUrl: string): boolean { return requireRuntimeMemberV1("main")(metaUrl); }
 /** 🧹️ Hints a garbage collection. */
 export function runtimeCollectGarbageV1(synchronous?: boolean): void { requireRuntimeMemberV1("gc")(synchronous); }
+/** 🧪️ Builds the arguments that start the hosting runtime's test runner on files; flags in `items` pass through. */
+export function runtimeTestArgumentsV1(items: readonly string[], options?: RuntimeTestCommandOptionsV1): string[] { return [...requireRuntimeMemberV1("testCommand")(items, options)]; }
+/** 🔌️ Registers a plugin as a module resolution and loading hook of this process. */
+export function runtimeLoaderPluginV1(plugin: RuntimeBundlePluginV1): void { requireRuntimeMemberV1("loaderPlugin")(plugin); }
 /** 🧱️ Tells whether a specifier names a module that some registered runtime provides itself; it is a fact about source text, so every registry row counts, not only the host. */
 export function isRuntimeBuiltinSpecifierV1(specifier: string): boolean {
   return RUNTIME_REGISTRY_V1.runtimes.some(row => row.builtins.names.includes(specifier) || row.builtins.prefixes.some(prefix => specifier.startsWith(prefix)));

@@ -90,3 +90,37 @@ Root quiet final: Low accepted the archived-input witness correction. Full autho
 ## Resolver Quiet Settlement and Canonical Probe Registration
 
 Controls exact owned94746 settled whole1 by Ctrl-C while capacity-only, with no Cargo body. Independent TOML before/after audit proves Root1562packages/706registry and framework1066/612 exactly unchanged. This is cancellation, not refresh success; Root OS child allocator edge remains pending genuine resolution. High then placed the reviewed canonical MCP test driver/schema/corpus and exact no-argument lazy test branch/target; Low accepted ordinary physical imports, same received Original and requested issued budget, test-only SDK/Ajv/SQLite, uncached/outputs-empty/forwardfalse declaration with actual OS native build +official repo-mcp installation prerequisites. Native20 remains pending; Source34 and FS53 remain pending. Awaiting final stable-input release before a fresh sole Root resolver.
+
+Genuine28597 whole0 Root resolver accepted independently: one new local allocator package0.1.0/no deps and one OS-store-child dev edge,706registry coordinates unchanged, framework1066/612 exact projection unchanged. Root released fresh Source21/34 and sole NativeFS53. FS actual owned PTY87435 uses native repo prototype, locked filesystem library, same128MiB Rust stack, generated/hsg2 and e2e-filesystem-segmented-history-final.log. Inputs freeze through actual whole. No current compiler/body/pass is inferred from launch.
+
+Actual46478 progressed through repository inference and selected Source/compile closure construction before natural whole1 at the bounded optional-ledger guard. The earlier buildSourceDemandV1 module-link failure did not recur on this invocation; this is narrow startup progress, not a Source-suite pass. No test bodies ran. High now owns schema-first bounded refusal diagnostics (unchanged predicate/primary error) to identify the actual live failing leaf, plus bounded presentation for the five rotating selection-bookkeeping stages. Current healthy database observations do not diagnose the historical refusal. Root .take()/nine qualification repair was independently accepted; full FS53 rerun remains required.
+
+
+## 21 October — Current Filesystem Runtime Gate
+
+Actual repository-owned process35120 settled with exit0 on21October2026. The current full filesystem library compiled in2.12seconds and ran53 tests:53passed,0failed,0ignored,0filtered,30.74seconds. This supersedes the earlier87435 compile-only refusal after the precise `last.take()` ownership repair. The actual roster includes browser/buffer/worker, segmented recovery/history, two-chain-walk paging counters and18sealed-record callback cuts. One existing unused `remove_empty_in` warning remains.
+
+Evidence: `🗑️generated/e2e-filesystem-segmented-history-hsg3.log`, artifacts `🗑️generated/hsg3`. Whole settlement was observed through the owned execution API, not inferred from the trailing progress event. MacOS runtime only; Windows/Linux checks, Source34, value lifecycle matrix, canonical installation and installed journeys remain pending. Native compiler custody was handed to Controls after actual settlement; selected source remains frozen for the concurrent Source21.
+
+
+## 21 October — Collection And Source Acceptance Boundary
+
+Controls6114 completed the affected eight-library Value gate with whole exit0 and159 passed,0failed,0ignored,0filtered. Actual owner counts were derive4, retained-clone28, public integration9, retained-map14, retirement18, shared9, projection8 and companion69. This supersedes earlier compiler-only and121/12 outcomes for this affected slice. It does not establish the original16-owner/69-advertised-case full matrix or the new PageList/wire supplemental libraries; those remain separate gates.
+
+The genuine Source plan currently has36 registered leaves: original26 plus10 supplemental. The PageList reservation Source candidate remains unregistered until the active selected metadata boundary is quiet; it must not be counted as a37th leaf before actual registration. No Source21/36 body pass is established. High72855 is the genuine traced Source21 retry after owned61470 cancellation; Root55876 is the separate genuine Wasm producer boundary gate. Each requires its own whole terminal and named bodies.
+
+Standalone journey lock61235 is a genuine resolver whole0 with42 package rows and no compiler/test bodies. Canonical build/install, installed34 journeys, actual debugger/terminal/MCP workflows, load/performance and native host portability remain open. Native20 records the Windows cross-target attempt30084 whole101 as missing managed std capability, not a source-branch pass.
+
+
+## Current Supplemental Native Green
+
+Controls14865 actual whole0 ran the full retained-wire46 and PageList18 libraries:64passed,0failed,0ignored,0filtered. The actual new wire-retirement body and all three PageList allocator quarantine/handback bodies passed. This supersedes69748 compile-only E0599 after the exact test-local helper repair. Log: 🗑️generated/e2e-value-paged-wire-current.log, artifacts pw18b. This64-body supplemental slice remains separate from affected8/159 and the still-pending original full16-owner matrix. Controls continues sole native admission for RootOS→facade docs→full matrix; Root has no native compiler.
+
+
+## Current Source38 And Genuine Diagnostic Refusal
+
+High72855 naturally settled whole1 before test bodies: Closed optional graph cache quota required. Its bounded trace retained one observed-facts invalidation at the project schema; workspace membership stayed equal. The historical quota values were not logged, so present values or a peer semantics correction do not establish the exact old quota term. Current peer constructor accepts a valid low-headroom observation while reserve still refuses new publication below the floor. High preserved that owner correction and added bounded diagnostic/14neutral laws within existing Source0; no cap/floor relaxation or runtime pass is inferred.
+
+The current Source roster is now38 actual registered leaves: original26 plus12 supplemental, including reservation37 and dashboard CI38. CI has five actual authored Bun laws, no native prereq on that early Source branch. Root6CI paths and High registration were independently reviewed; realhosted/nativecontainer jobs remain unrun. A new single traced Source21 p21g retry is being dispatched; its exact owned session/whole is still required.
+
+Root55876 remains actualLIVE at02:37Z, last log modification02:04:19Z/484582B after SDK namespace progress. No primary/body/whole is established. A bounded source trace cannot distinguish the last namespace filesystem await from later store recheck/body; no deadlock or PID ownership is inferred, and no foreign process, lease, store or status-prune action was taken. It does not block scoped unrelated source fixes or native progress.

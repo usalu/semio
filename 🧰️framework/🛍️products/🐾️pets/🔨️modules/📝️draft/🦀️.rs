@@ -1,7 +1,7 @@
 //! ✏️ The draft of the stage: the working copy that `advance` folds events into — the actors in `menagerie.species` order, each beside its species and its random stream — with what every part of the stage needs of it: the lookups of surfaces, clips and actors, the keys of the counter-based draws, the stretches of a perch, and the smallest changes of an actor (taking up an activity, coming to rest, letting go of its partner, leaving the draft).
 //!
 //! What the fold must know beside the stage itself belongs to `Draft`; what a new part of the stage needs of every other part belongs here, below all of them.
-//! A part of the stage, not of the crate: everything is `pub(crate)` at most.
+//! A part of the stage, not of the package: the items the parts of the stage in `pets-staging` call are `pub`, the rest stays private to this crate.
 //!
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../📝️draft/🟦️.ts — the TypeScript twin
@@ -13,6 +13,10 @@ use semio_framework_pets_kinematics::randomness::{random_words, unit_of, STAGE_S
 use std::borrow::Borrow;
 use semio_framework_pets_contract::schema::Trick;
 use semio_framework_pets_character::feeling::Occasion;
+use semio_framework_pets_character::feeling::{Standing, appraised, settled, state_at};
+use semio_framework_pets_contract::schema::Feeling;
+use semio_framework_pets_interaction::effects::emitter_ends;
+use semio_framework_pets_contract::schema::Plume;
 
 //#region 🔖️Constants
 pub const RATE: f64 = TICKS_PER_SECOND as f64;
@@ -24,29 +28,29 @@ pub(crate) const ORIGIN: Point = Point { x: 0.0, y: 0.0 };
 //#region 🔖️Draft
 /// 🗒️ A stage being folded: its actors in `menagerie.species` order, each beside its species and its stream.
 pub struct Draft<'a> {
-    pub(crate) stage: Stage,
-    pub(crate) kinds: Vec<&'a Species>,
-    pub(crate) streams: Vec<u32>,
-    pub(crate) menagerie: &'a Menagerie,
+    pub stage: Stage,
+    pub kinds: Vec<&'a Species>,
+    pub streams: Vec<u32>,
+    pub menagerie: &'a Menagerie,
 }
 
 /// 🛖️ A perch (its index among the perches of the stage) with the stretches (pairs of ends) a species can arrive on, their summed length and how many actors stand on it.
-pub(crate) struct Room {
-    pub(crate) perch: usize,
-    pub(crate) stretches: Vec<[f64; 2]>,
-    pub(crate) span: f64,
-    pub(crate) crowd: usize,
+pub struct Room {
+    pub perch: usize,
+    pub stretches: Vec<[f64; 2]>,
+    pub span: f64,
+    pub crowd: usize,
 }
 
 /// 🚀️ A flight an actor could take: the x it ends at, its launch velocity and its ticks in the air.
 #[derive(Clone)]
-pub(crate) struct Launch {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) surface: String,
-    pub(crate) vx: f64,
-    pub(crate) vy: f64,
-    pub(crate) ticks: Ticks,
+pub struct Launch {
+    pub x: f64,
+    pub y: f64,
+    pub surface: String,
+    pub vx: f64,
+    pub vy: f64,
+    pub ticks: Ticks,
 }
 
 /// 📝️ A working copy of a stage: its actors in `menagerie.species` order, each beside its species and its stream; of two actors of one species the first stays, and an actor of a species the menagerie does not have is dropped.
@@ -92,7 +96,7 @@ pub fn surface_of<'s>(surfaces: &'s [Surface], id: &str) -> Option<&'s Surface> 
 }
 
 /// 🗃️ The clips a species plays for an activity: its own, else the hop clips for the walk of a hopping gait, else the idle clips (a pet that has no motion of its own for something keeps breathing), else none.
-fn clips_of(kind: &Species, activity: Activity) -> &[Slug] {
+pub fn clips_of(kind: &Species, activity: Activity) -> &[Slug] {
     if let Some(own) = kind.repertoire.clips(activity).filter(|own| !own.is_empty()) {
         return own;
     }
@@ -142,7 +146,7 @@ pub fn stage_key(draft: &mut Draft<'_>) -> [u32; 3] {
 }
 
 /// 🧷️ The way an actor at `x` faces something at `towards`: right when that is not to its left (the twin's `towards >= x ? 1 : -1`), else left.
-pub(crate) fn facing_to(towards: f64, x: f64) -> Facing {
+pub fn facing_to(towards: f64, x: f64) -> Facing {
     if towards >= x {
         Facing::Right
     } else {
@@ -161,7 +165,7 @@ pub fn shoulders(one: &Species, other: &Species) -> f64 {
 }
 
 /// 🎵️ The ticks of one hop of a hopping gait while it walks with `clip` — the gait covers ground in whole hops — and 1 for every other gait.
-pub(crate) fn beat_of(kind: &Species, clip: Option<&Clip>) -> Ticks {
+pub fn beat_of(kind: &Species, clip: Option<&Clip>) -> Ticks {
     match clip {
         Some(clip) if kind.locomotion.gait == Gait::Hop => clip_ticks(clip),
         _ => 1,
@@ -248,12 +252,12 @@ pub(crate) fn turn(body: &mut Actor, way: Facing, now: Ticks) {
 }
 
 /// 🏃️ Whether an actor moves of its own accord, including a trip with gear.
-pub(crate) fn astir(draft: &Draft<'_>, body: &Actor) -> bool {
+pub fn astir(draft: &Draft<'_>, body: &Actor) -> bool {
     matches!(body.activity, Activity::Walk | Activity::Hop) || draft.stage.trips.iter().any(|trip| trip.owner == body.species)
 }
 
 /// 🃏️ The species' authored trick with an id.
-pub(crate) fn trick_of<'a>(kind: &'a Species, id: Option<&str>) -> Option<&'a Trick> {
+pub fn trick_of<'a>(kind: &'a Species, id: Option<&str>) -> Option<&'a Trick> {
     id.and_then(|id| kind.tricks.iter().find(|trick| trick.id == id))
 }
 
@@ -294,7 +298,7 @@ pub(crate) fn douse(draft: &mut Draft<'_>, index: usize, emitter: Option<&str>, 
 }
 
 /// 🔦️ Enter an authored state, retaining the previous look and moving its emitters.
-pub(crate) fn enter(draft: &mut Draft<'_>, index: usize, state: &str, since: Ticks, now: Ticks) {
+pub fn enter(draft: &mut Draft<'_>, index: usize, state: &str, since: Ticks, now: Ticks) {
     let kind = draft.kinds[index];
     let Some(next) = kind.states.iter().find(|entry| entry.id == state) else { return; };
     let body = &draft.stage.actors[index];
@@ -312,7 +316,7 @@ pub(crate) fn enter(draft: &mut Draft<'_>, index: usize, state: &str, since: Tic
 }
 
 /// ⌛️ Catch the stored state and its emitters up with timed transitions.
-pub(crate) fn stand(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn stand(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let current = standing(draft, index, now);
     let body = &draft.stage.actors[index];
     if current.state != body.state || current.since != body.state_since { enter(draft, index, &current.state, current.since, now); }
@@ -351,7 +355,7 @@ pub fn purr(draft: &mut Draft<'_>, index: usize, ticks: Ticks, now: Ticks) {
 
 //#region 🔖️Stretches
 /// 🔪️ Stretches (pairs of ends) without the interval `(low, high)`.
-pub(crate) fn carve(stretches: &[[f64; 2]], low: f64, high: f64) -> Vec<[f64; 2]> {
+pub fn carve(stretches: &[[f64; 2]], low: f64, high: f64) -> Vec<[f64; 2]> {
     let mut kept = Vec::with_capacity(stretches.len() + 1);
     for &[x0, x1] in stretches {
         if high <= x0 || low >= x1 {

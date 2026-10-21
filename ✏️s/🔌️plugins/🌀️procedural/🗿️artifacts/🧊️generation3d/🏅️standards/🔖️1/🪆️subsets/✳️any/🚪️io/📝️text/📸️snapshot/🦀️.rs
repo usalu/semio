@@ -95,7 +95,7 @@ pub fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generati
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as ProjectionView, projection_path_error};
 use semio_framework_artifact_flow_flow::{FlowUi, FlowNodeGui, NodeChrome, FlowPreviewGui, FlowChannelRef};
 use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
-use semio_framework_value::ordered::{OrderedMap, OrderedSet};
+use semio_framework_value_ordered::ordered::{OrderedMap, OrderedSet};
 use semio_framework_value::{DslValue, Number, ValueError};
 
 enum SnapshotTextBlock<'a> { Camera(&'a CameraJson), Widgets(&'a [Widget]), Value(&'a NeuralValue) }

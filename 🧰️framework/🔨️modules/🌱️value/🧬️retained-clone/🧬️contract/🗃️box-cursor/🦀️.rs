@@ -30,6 +30,9 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         if self.spent {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained box clone cursor is spent"));
         }
+        let demand=self.advance_demands(source,body)?;
+        if grant.maximum_items!=0&&grant.maximum_depth<demand.depth{return Err(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"retained box clone structural depth limit exceeded"));}
+        if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }

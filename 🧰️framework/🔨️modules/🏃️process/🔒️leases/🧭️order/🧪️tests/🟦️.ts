@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import authored from "../🔣️policy.json";
-import {checkHoldAndWaitV1,checkLeaseOrderV1,checkSelfDeadlockV1,classifyLeaseResourceV1,findLeaseCycleV1,formatLeaseViolationV1,leaseBlockersV1,leaseOrderPolicyV1,readLeaseOrderPolicyV1,type LeaseNodeV1,type LeaseViolationV1} from "../🟦️.ts";
+import {checkHoldAndWaitV1,checkLeaseOrderV1,checkSelfDeadlockV1,classifyLeaseResourceV1,findLeaseCycleV1,formatLeaseViolationV1,leaseBlockersV1,leaseOrderPolicyV1,leaseProcessDependenciesV1,readLeaseOrderPolicyV1,type LeaseNodeV1,type LeaseViolationV1} from "../🟦️.ts";
 
 const policy=readLeaseOrderPolicyV1(fixture.policy);
 const ajv=new Ajv({strict:true,allowUnionTypes:true});
@@ -69,7 +69,7 @@ test("rules set to observe or off still classify but the pure checks honour off"
 const oracle=(nodes:readonly LeaseNodeV1[],from:string):boolean=>{
  const database=new Database(":memory:");database.exec("CREATE TABLE edge(a TEXT,b TEXT)");
  const insert=database.prepare("INSERT INTO edge VALUES(?,?)");
- for(const node of nodes)for(const to of leaseBlockersV1(nodes,node))insert.run(node.id,to);
+ for(const node of nodes)for(const to of [...leaseBlockersV1(nodes,node),...leaseProcessDependenciesV1(nodes,node)])insert.run(node.id,to);
  const row=database.query("WITH RECURSIVE walk(node,depth) AS (SELECT b,1 FROM edge WHERE a=? UNION SELECT edge.b,walk.depth+1 FROM edge JOIN walk ON edge.a=walk.node WHERE walk.depth<64) SELECT COUNT(*) AS found FROM walk WHERE node=?").get(from,from) as {found:number};
  database.close();return row.found>0;
 };

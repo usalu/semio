@@ -26,8 +26,6 @@ semio-framework-job-worker-authority = { path = "../../../../../../../🧰️fra
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-plugin-wfc-engine-foundation = { path = "../../../🏛️foundation/📦️packages/🦀️rust" }
 
 [dev-dependencies]

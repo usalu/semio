@@ -429,3 +429,405 @@ The draft uses actual owned-channel signatures and correlates method replies, ha
 ### Registered Canonical MCP Gate
 
 Final physical placement is source-coherent: all relative imports resolve to ordinary files within156UTF16 path units, schema budget export is consumed by the exact no-argument lazy router branch, one actual receiver passes the same Original through issued then requested bounded phases. The uncached target retains real OS native build and official frontend install prerequisites, outputs empty, argument forwarding disabled and exact runtime entry. SDK/Ajv/SQLite remain test-driver imports. Native plan20 is registered/pending; no runtime result follows.94746 was owned-cancelled capacity-only with unchanged locks, so genuine Root refresh is still required before combined gates.
+
+
+### Actual Root Resolver Settlement
+
+28597 owned offline workspace refresh settled whole0. Independent version/source-qualified before/after comparison confirms Root1562→1563 solely adds local semio-framework-value-testing-allocator0.1.0 with no dependencies and the explicitly declared OS-store-child dev edge. All706 registry tuples remain identical, no package identities or edges are removed, and framework entire1066/612 projection is unchanged. Lock readiness is accepted for subsequent gates; no Source/Native test body follows from resolver success.
+
+
+### Actual Filesystem Compiler Gate87435
+
+87435 settled whole101 before test bodies. Actual compiler reports E0382 for moving last Option<HistoryCursor> in nested history_page loop; source-candidate review independently predicted the same. Using last.take() preserves intended consumed cursor without clone. Nine other diagnostics are unused-qualification warnings in authored test modules only, not additional compile or authority failures. FS53 remains pending.
+
+
+### Quiet Post-Compiler and Ledger Review
+
+Fresh Root history code uses last.take() and removes exactly the nine compiler-reported unnecessary test qualifications, preserving all53 authored laws. High ledger diagnostic preserves the original five-term guard and adds only a bounded basename/facts/first-reason observation, with actual regular-body and independent SQL neutral checks. Five exact plain selected-stage frames use fixed five-slot250ms presentation and existing ordered drainage; authority callbacks remain unchanged. Both slices are source-ready for justified reruns. Actual prior ledger cause and Source21 pass remain unestablished.
+
+
+### Final Retained Plan Check
+
+Native20 includes actual cold lazy install, controller/language, developer tools, compiled OS MCP and separate installed canonical probe, installed authority/execution/journeys/load plus cross-target type gates. One stale count remains: inferred retained-clone integration owner expects four tests, while the accepted public standard-collection ownership carve mounts four additional laws in the same library. Expect eight actual bodies and retain the original four named requirements as a subset. This is a plan correction, not a new feature or runtime pass.
+
+
+### Filesystem53 Actual Green and Aggregate Boundaries
+
+35120 actual hsg3 whole0 confirmed by owner; independent retained log reads53 passed,0 failed/ignored/filtered in30.74s, including paging work and callback witness laws. This supersedes87435 compiler-red only for current filesystem gate. Source21 diagnostic retry and complete Source34, Controls current combined selectors/stable-original affected owners/docs/full advertised69, installed dashboard/cold/PTY/performance/debugger/canonical OS probes and native Windows/Linux execution remain separate acceptance gates. Current attribution list contains751 unique normalized paths, maximum193UTF16 units, no AGENTS/generated paths; intentional58 absences remain retained removal/relocation evidence, not missing implementation to restore.
+
+
+### Skill Validator Gate60894
+
+Owner reports60894 whole1 before the validator: loaded graph implementation changed70a9136f→b9552c60 while publicationa4e8 remained unchanged. No validator body or skill validation pass occurred. Selected owned sources were frozen; this evidence does not identify another writer. Keep a genuine retry after current producers settle without bypassing freshness.
+
+
+### Bounded Required Retirement Method Screening
+
+Read only the exact Controls315 authored inventory Rust files, excluding the problematic retained-clone contract root. Lexical balanced-impl candidate screening found75 literal RetirementCursor/RetireOwned implementations and no currently missing next_demand/controlled_retirement_supported. This is not macro expansion, whole dependency-closure completeness or compiler acceptance. Actual69671 and19181 were compiler-only failures; current fixes still require genuine compilation and body gates.
+
+
+### Actual Affected-Eight Green6114
+
+6114 owner whole0; independent retained log confirms8 complete library summaries4/28/9/14/18/9/8/69, total159 passed and0 failed/ignored/filtered. Actual new public BorrowAuthority handback, generic optional/tuple compounds, all map14 including insertion, and refusal corpus plus independent oracle pass. This is affected-owner success, not the distinct advertised69 full-matrix, Root OS, facade doctest, PageList/wire or installed acceptance gates.
+
+
+### Final Completion Coverage Boundary
+
+Actual control vocabulary and Native20 cover file/tree/history management, owned terminal/debug/service workflows, language/settings/cancel, installed startup/editor/load and canonical MCP. No new missing workflow feature is established by this bounded reread. Accessibility remains a specific acceptance limit: visible PTY/vt100 focus markers and docking laws do not independently establish screen-reader announcement output, and no current retained step explicitly names that oracle. Preserve this limit or mount an existing accessibility-specific gate; do not infer certification from visual tests.
+
+
+### Accessibility Source Follow-Up
+
+Bounded native backend/focus review finds concrete terminal affordances: both hosts present actual CursorSpec through shared FramePresenter/CursorEmitter; focus excludes hidden/removed nodes, emits gained/lost widget focus and traps/restores modal focus with visible interactive navigation. Capability projection degrades ANSI output. No specific blocked keyboard/editor interaction is established. Absence of speech-specific testing alone does not justify inventing an announcement feature; retain limited runtime claims and existing actual interaction gates.
+
+
+### Actual CI Native-Host Coverage
+
+Only .github/workflows/build-system.yml and architecture-course.yml exist. Build-system has Linux/macOS/Windows smoke/affected matrices but generic build,test selection and a teaching proof target do not explicitly run dashboard controller/language/cold/installed journey/load or current FS53 gates. No devcontainer job is authored. Its bun-repo composite action provisions pinned Node/Bun only, while workflow still calls bun repo and does not provision the native repo entry. Clean completion needs an authored native-bootstrap CI entry and explicit existing repo-owned dashboard/filesystem native-host gates, plus devcontainer lifecycle verification. Existing source is CI design, not any successful hosted execution. Local missing Windows std is not cross-host evidence.
+
+
+### Actual45514 Graph Hold-and-Wait
+
+Actual whole1 SEMIO_LEASE_ORDER records held EX repository-graph-facts shard5 and requested graphimage SH blocked15719ms; no Source bodies. Current storage writer acquires facts EX at138, then both maintenance graphopen143 and store graphopen147 occur before lease release161. Stack proves forbidden nesting, not which graphopen was reached. Clean correction must perform maintenance outside facts custody and acquire graphimage SH before facts EX. Low-water retries must unwind facts and image reader before maintenance, then reacquire fresh custody and preserve before/final checks. Moving only initial maintenance leaves the second open-under-EX frontier. No cap/rank/floor/threshold waiver or holder attribution is justified.
+
+
+### Graph Writer Layout Correction
+
+The prior line138/143/147 nesting description used an earlier cached source snapshot. Fresh physical source now opens the graph store before facts EX, a peer correction that must be preserved. Actual remaining risk is maintenance(false/true) inside facts EX, including maintenance reader reacquisition. Correct only that live lifetime: leave ledger/facts/store before maintenance, then reacquire fresh custody. Actual45514 proves the held/requested violation but does not identify an unavailable full caller stack or justify attributing the removed prior layout to current bytes.
+
+
+### Refreshed Active Configuration Audit
+
+Current root IDE/editor candidates remain absent (VSCode/JetBrains/Fleet/Zed/VS/Vim/Nvim/Emacs/Helix/Nova/Cursor active rules/MCP). .codex/config.toml and .mcp.json contain native repo MCP and repo dev mcp stdio os agent/tool interfaces only, with no IDE or external-editor launch. .editorconfig is currently absent, not an active IDE control. Historical plans, generated workspaces and negative fixtures were excluded and untouched.
+
+
+### Source80585 Bounded Latency Audit
+
+Current log counts selected-declaration1823, catalogue1764, command1765, native1770 and compile1816 across actual observed-fact retries. Two emitted facts identify removed pack document directory and a restamped same-hash decode Cargo manifest; these do not imply identical retry causes or an infinite loop. closeBuildOwnerAdmission already memoizes owner active-target/input revisions, but base and selected observations are distinct. Concrete duplicate work remains: Cargo owner initialization calls cargoTargets, then the unconditional target merge calls it again in the same observation; each owner observation also rebuilds package/root indexes and sorts the immutable registry roots. Candidate optimizations are once-per-observation native-target construction and once-per-admission immutable indexes, preserving captured observations and current/final rechecks. No source edit or runtime producer was launched.
+
+
+Exact latency anchors: library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs163 builds Cargo declarations with cargoTargets;165 calls cargoTargets again for the same owner;176 reconstructs byPackage/byRoot/longest-root owner indexes. library/🏗️build/🕸️graph/🚪️admission/🟦️.ts85–114 owns fixed-point traversal, with base facts at94 and exact [active,requestedInputs] revision memo at96. Preserve optional task filtering, target/input upgrades, generated producer dependencies and Source role behavior.
+
+Test-first boundary: instrument the actual discovery function ports to assert one cargoTargets call per Cargo observation, unchanged native-target merge precedence and identical facts; include JSON owner with real Cargo overlap. Independently validate registry-index outputs and longest-root tie order against SQLite sorted data, then actual base→selected/input-upgrade→stable revisitation laws retain existing inspect counts. If indexes are reused, scope only to the immutable admitted registry/context; no filesystem fact/read memo crosses source epochs. Measure same actual Source21 request stages/time after a quiet implementation; no speedup is claimed from source arithmetic.
+
+
+### Repeated Inference and Local Cargo Scope
+
+Exact80585 line sequence: inference0/1038 at812→complete1557, stale retry3719; second0 at5966→complete6011, stale retry8296; third0 at10709→complete10746. Project-nodes has one phase begin percall, so these are fresh graph attempts after real fact invalidation, not two distinct semantic inference phases perattempt. Project inference reuse still validates observations. component-targets/🟨️.mjs52–64 cargoTargets probes/parses only its local manifest and constructs build/check/test DTOs; it does not walk the whole Cargo workspace. Removing its duplicate saves local work, not1038 workspace scans, so no broad speedup estimate is warranted.
+
+
+### Fresh Active GitKraken Escape (2026-10-21)
+
+A fresh physical JSON parse finds `$.metadata.semio.dashboard.tools[34]` in root `📋️project.json` (lines 894–902): `id: gitkraken`, `verb: run`, command `gitkraken --path {workspace}`, `continuous: true`. This is an active dashboard tool declaration and therefore a concrete secondary human GUI launch route. It is distinct from negative policy fixtures, passive VSIX build products, compiler tools, agent MCP profiles, and devcontainer account naming. No source was changed and no writer attribution is inferred. Source repair and its permanent policy regression remain owner work; no runtime claim is made.
+
+
+### Shared Image Reentry Boundary (Fresh Source, No Runtime Attribution)
+
+`process/🔒️leases/🟦️.ts:420` bypasses the queued arrival path for shared access when the same directory/resource is already held shared in the process (or declared inherited), an exclusive ticket is queued, and the closed reentrant policy permits it. `🧭️order/🟦️.ts:274–275` reads local holds plus inherited lease declarations. Therefore canonical registered same-module reentry has an explicit starvation/deadlock avoidance path; Original identity alone is not its criterion. The order ALS and hold maps are module-local (`:184`, `:193`), so an independently instantiated module copy cannot obtain another copy’s live hold merely from sharing the Original. Cross-copy safety requires a proven canonical module identity or explicit inherited-custody projection; this bounded read has not proved the active SDK path satisfies either. A real cross-module reentry law with an outer SH, earlier EX, and inner same-path SH would distinguish that boundary. No live process, holder, deadlock, or stale-ticket identity is inferred. The observed predecessor process is a queued request, not an established OS lock holder.
+
+
+### Installed Journey/Load/Cold Preconditions (Fresh Read, Unrun)
+
+The canonical battle dispatcher holds `withInstalledDashboardV1` around both Bun and Rust suites and supplies its selected path as `SEMIO_TEST_CLI`; Rust `workspace::binary` requires that path rather than discovering an arbitrary PATH binary. PTY steps invoke that binary directly with public keys and parse portable-pty/vt100 screens. Cold acceptance refuses a warm precondition, calls the actual lazy launcher, validates the receipt/schema/freshness, hashes the reader-held executable, and requires warm receipt bytes and physical stamp unchanged. This is genuine strict setup, not a skip or fabricated publication. The 1MiB editor journey reads closed 4096/5000ms/1000ms fixture budgets and tests actual public interactions. No runtime result is inferred.
+
+One concrete false-positive exists in `dashboard/🧪️tests/🧭️journeys/🏋️load/🟦️.ts`, search test: the `nothing` query declares `hits=0`, but its common assertion is `found.length >= hits`; that accepts any number of false matches. Require exact zero for that row (and exact one for the rare-prefix row if that is the declared contract). The 12,500 broad result case can retain its explicitly qualified lower bound. This is an assertion repair, not a product conclusion.
+
+The general load latency gates permit `SEMIO_SEARCH_BUDGET_MS` and `SEMIO_TYPE_BUDGET_MS` overrides; default values are 5000ms and 1500ms. An acceptance report must retain the effective values, or the owning gate must fix them to its declared acceptance durations, before claiming those exact durations. The Rust load file has an explicitly ignored exploration-only screen-printing test; its three behavioral tests are not ignored. That ignored aid is separate from the installed journey count and must not be counted as an executed law.
+
+
+### Paired Pack Resolver Projection Verification
+
+Independent before/after projection comparison confirms framework 1066 packages/612 registry coordinates and Root 1563/706 unchanged in identities and complete registry rows. Neither workspace removes a package or dependency. Each changes only existing `semio-framework-pack-record-retained` by adding `semio-framework-hash` and `semio-framework-pack-format`; the current lower decoder manifest declares both. Controls reports actual resolver wholes 44110 and 93969 as zero. This establishes the exact resolver delta only, not compiler or Native body success.
+
+
+### Controller 78296: Compound History Failure Is Not Yet a Stale-State Diagnosis
+
+Actual log `e2e-terminal-source-controller-tdc4.log` has whole101, nine bodies/eight pass/one fail; the corrected rename model/widget law passes. The history law proves Archive was submitted and independently observes backend active selection changed. Its failing final assertion combines history mode, `entries[0].path == retained`, and inspection active equality. The notice alone does not distinguish these predicates. Fresh production code directly assigns `HistoryChanged` inspection, starts a fresh HistoryPage, and `BrowserState::adopt_page` preserves that inspection. No stale-active product defect is established by this source trace. Split these facts before changing product behavior. The actual page owner enumerates authenticated `.retained`, `.new`, and `.before` entries by segment/name, so retained path membership and first-row ordering are different contracts; preserve whichever explicit ordering contract exists rather than guessing. No Rust source or assertions changed in this audit.
+
+
+The load search assertion repair is now freshly reviewed: closed three-row search DATA selects exact zero and exact one while preserving broad 12,500 lower-bound semantics. Existing body validates Ajv and independent recursive SQLite counts before the same actual Workspace/binary queries, expected ID, and effective latency budget assertions. This resolves the identified vacuity at source level; the installed load gate has not been executed by this audit.
+
+
+### Explicit Language 17454: Obsolete Neutral Expected Value
+
+Actual whole101 ran nine preference laws (eight pass/one fail); terminal language package did not run after the first failure. The failing shared row supplies only `LANGUAGE: de` and expects English. The shipped closed declaration recognizes `LC_ALL`, `LC_MESSAGES`, and `LANG` only; neither Rust resolve nor the independent Intl.Locale Source resolver selects a choice absent a supported declared system setting. Both therefore return null, consistent with the user’s no-default contract. The row’s English expectation is obsolete and must be null; no production fallback or new variable is justified. Source oracle shares the same row and would also expose it.
+
+
+### Quiet Corrections Reviewed Before Rerun
+
+Fresh physical root dashboard tools now contain 34 entries and no GitKraken command; permanent registry command policy is attached to Tool.command and explicitly covers executable names/paths and launcher wrappers. Sampled mixed-case native suffix/path matching is coherent. The LANGUAGE-only neutral row now expects null. The history controller law now separately checks mode, backend active equality, complete authentic page equality, ascending paths and retained membership, then opens the actual retained row. These are source-ready corrections, with genuine controller/language and policy Source runtime gates still required.
+
+
+### Joint Quiet Source Review
+
+GUI policy source attachment and the twelve scoped acceptance/refusal vectors are coherent: exact executable or known launcher operands are classified, preserving repo data arguments and permitted domain viewers/CLI controls; actual root and nofollow physical manifest census invoke it. Ajv2020/SQLite methods are authored, not executed. Controls’ scoped corpus report separates normal dependency compilation from dependency cfg(test); the retained owner’s tests are cfg(test) mounts, so isolated Pack and Root OS whole-library roots do not themselves select the retained/sequence tests. This does not accept the overwritten sequence corpus or replace its dedicated integration/Source gates.
+
+
+### Minimal Owner Observation Optimization: Source Ready
+
+Fresh owner-discovery code captures `nativeDeclarations` once per complete observation and reuses it for Cargo owner base plus native/authored/component merge. It preserves precedence and all subsequent filesystem/source checks; no mutable-registry index cache or cross-attempt facts cache was added. Four closed Cargo/JSON overlap/component cases execute the extracted complete actual owner function with explicit ports, require one local cargoTargets call and one physical declaration read, unchanged files/dependencies/input projection, and compare SQLite precedence. Existing Source0 imports this law. This proves a bounded authored regression design, not executed behavior or measured latency improvement. Joint source freeze was reported ready to Root.
+
+
+### Bounded Windows/Linux Native Port Review (Uncompiled Branches)
+
+Fresh workspace native module inspection finds Windows ABI records explicitly repr(C), aligned rename storage based on usize and offset_of, byte-counted UTF-16 names, no-reparse checks and parent handles denying delete sharing. Management fingerprints/tree observation release temporary source handles before actual move; staged create-file closes its write handle first. Linux uses anchored openat/no-follow parents, atomic renameat2 no-replace/exchange and actual parent sync; no missing selected-platform symbol/import was established in this bounded source review. This is not cross-host compilation or runtime proof.
+
+Windows final-path observation uses flags0 GetFinalPathNameByHandleW, a257-unit buffer, then applies the256-unit policy to the verbatim physical spelling. Microsoft documents that the default DOS result uses the extended path prefix and returns length excluding NUL: [GetFinalPathNameByHandleW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew). A Windows exact-boundary test must therefore use the same canonical spelling as Workspace::new and projected paths; treating an unprefixed display path as the bound would invent a different limit. No prefix-stripping or guard relaxation is proposed. Windows sync_parents remains explicitly a no-op in current owner, so host durability certification remains open and must not be inferred from macOS53pass. Native Windows/Linux CI and actual installed launch/journey gates remain the required proof.
+
+
+### Source 83655 Physical Headroom Refusal and Recovery Coverage
+
+Actual natural whole1 is prebody: available971608064 below required1073741824, retiredBytes0/files0. This is a strict physical-capacity refusal, not a Source test failure or measured retained-directory census. Fresh queued recovery inventories only digest-authenticated snapshots and paired current canonical/authority; optional inference reclamation uses exact optionalPath grammar, bounded nofollow same-device nlink1 leaves, oldest-first identity recheck and fresh physical free-space checks, but requests wait:false. A deferred opportunistic attempt is not retried by the queued snapshot-only fallback. That establishes a missing reclamation opportunity, not proof those leaves explain this actual pressure.
+
+A clean repair should let the existing optional owner reclaim its exact recognized hints under the already acquired genuine image EX maintenance lifetime, avoiding nested image opens or recursive exclusive admission. Closures/selected/admission are not interchangeable disposable directories. The optional ledger accounts logical file sizes under1GiB and remeasures physical optional inventory on opening; free-space admission is separate actual bavail*bsize with1GiB floor. Preserve these distinct currencies, ledger remeasurement, partial accepted effects, cancellation and current leaf identities. Unknown files, source facts, live-reader custody, lease databases and publication authority must not gain retirement authority from a directory name. No source or store changes made by this audit.
+
+Pack phase repair: actual RetainedRecordBodyPhase type is now pub(super), matching its existing parent-visible field and sibling close-phase enum; no public export/state/currency change. Actual2477 remains compiler-only, and a new real gate is required.
+
+
+### Original Slot Dedicated Owner: Preimplementation Boundary
+
+The existing physical original-slot owner already has a cfg(test) mount, four authentic native laws, neutral schema/fixtures and dedicated Source routing. A standalone Rust package over that same implementation is coherent; current crate/super imports must resolve explicit contract and factory owners in its actual package root, with a one-way direct VCS dependency. No facade compatibility reexport or duplicate physical source is needed. Final Cargo DAG, actual verify-native selection and paths await authored package wiring; this is not runtime acceptance.
+
+
+### Current Headroom Draft: Two Concrete Composition Blockers
+
+Fresh platform registry writer checker correctly binds the actual registered immutable image, captured backing directory/lease directory, refined control and live exact kernel EX proof. However the current optional core still throws when optional leaves alone cannot reach the floor; queued recovery awaits it before inventorying snapshots/selected/canonical, so a mixed recoverable case prematurely fails. Core must return pressure DATA, with opportunistic wrapper preserving its final refusal and queued owner deciding only after all authenticated classes. The optional callback currently returns Promise<void>, also losing accepted optional retirement file/byte counts from the outer result. Propagate actual effects with explicitly consistent allocated/logical currencies. Both reported to High/Root; current integration draft not released.
+
+
+Original-slot final package wiring freshly reviewed: correct six-up framework workspace, same physical semantic lib via ../../, explicit direct contract/factory/retirement/clone owners, four exact native law names selected from the new package/lib, existing strict TSC Source path and genuine Original control retained. No facade compatibility layer or source duplication. Finite guard additions, real paired resolver and actual four-law bodies remain pending.
+
+
+### Headroom Composition Blockers Resolved at Source
+
+Fresh correction returns closed optional pressure/count DATA without early floor refusal; ordinary opportunistic wrapper alone retains its final refusal, while queued recovery accumulates validated allocated byte/file counts, rechecks actual free space and continues other authenticated classes before final floor decision. No new failure property or primary-error rewriting. Actual-function cancellation/request rows and the genuine optional-queued scenario cover reader deferral, no deletion before acquired custody, one accepted counted optional deletion afterward, and preserved snapshots/current publication. Exact raw image registry+writer proof association remains in place. Source freeze accepted; all new runtime bodies remain unrun.
+
+
+### Final Quiet Release Verification
+
+Independent projection recomputation accepts framework1066→1067/612 and Root1563→1564/706: registry rows exact, one new local original-slot package with four normal and allocator/serde_json dev dependencies; only existing VCS and Value gain its dependency, with no removals. The fresh Value facade reexport aggregates the single canonical domain implementation and does not establish legacy intent. Controls reports genuine resolver wholes15657/71499 zero. Five original-slot cleanup while loops now consume checked fixture-scaled work initialized outside heap observations, retaining four original law names/grants/assertions.
+
+Source0 now explicitly imports full storage writer-proof tests, physical headroom suite and extracted core suite. New final-insufficient/cancellation regression checks accepted optional counts, unchanged final floor refusal, exact cancellation identity, close execution and zero snapshot inventory after cancellation. Final source acceptance reported ready; new runtime bodies and Source extent admission remain unproven.
+
+
+### Current Retained Acceptance Roster Reconciliation
+
+Fresh plans contain23 physical Native owners and23 distinct selected whole-library package identities across stages, with no physical owner missing. All69 advertised triples are unique and each package is selected; original framework15+RootOS1 remains distinct from seven supplemental owners. Dedicated sequence integration remains an explicit additional blocked control, not silently replaced by whole-library selection. Source original26 plus13extras equals39 distinct project:target pairs, preserving the original roster. This is plan coverage only: exact admitted bodies/ignores/filter counts and genuine whole results remain required. No new runtime success is inferred.
+
+
+### Managed Native Host Capability Recheck
+
+Fresh rust-toolchain.toml and Rust generation owner require exactly the two wasm targets. Distribution provisioning separately always includes rustc/cargo/rust-std for the actual bootstrap host, and compiler identity accepts that host plus those two wasm triples. Therefore the local macOS Windows/Linux std E0463 is an unavailable cross-target capability, not evidence that Windows/Linux native host provisioning is absent. The genuine owned verification route is current Native Dashboard CI matrix on ubuntu/macOS/windows through pinned native-repo publication and normal repo gates, with real devcontainer build/up/exec action separately. Dockerfile provisions system build dependencies and pinned Bun/Node; managed Rust supplies host std itself. These hosted paths are authored and remain unexecuted; no ad hoc target installation/policy expansion is justified.
+
+
+### Retained Sequence Gate Provenance Correction
+
+The names `@semio-tech/framework-replication-rs:test-retained-diff-sequence-{source,native}` above came from the retained Controls plan/report. This audit proved their absence from Source39 but did not verify a current physical project declaration/dispatcher. High’s fresh declaration search found neither. Therefore classify a registration gap pending exact source evidence, rather than an existing executable control. The actual integration source/three law names do not themselves prove a runnable repo target. No runtime execution or acceptance is claimed from plan names. Root/High/Controls notified.
+
+
+### Original Slot Current Authority API Port Advice
+
+Fresh canonical Source already provides `RetainedCloneSource<T,A>::admit_borrowed`, `try_authority`/`original_authority`, `retain_original`/`project_owned`, scoped borrow and funded handback. The BorrowAuthority wrapper has scoped borrow and take but lacks the stale consumer try_authority/retain_projection methods. Port the owner to the actual Source with captured FactoryOwnedSourceAuthority or use supported scoped factory reads; do not add legacy wrapper/Ref methods. Owned projected leases must derive from the actual owning Source API, preserving captured factory identity and no-mutation while readers remain. Actual corrected port awaits review/runtime.
+
+
+### Long-Lived SDK Reader: Source Control and Silent Fence Boundary
+
+Fresh derivative reader refines the actual parent control through withRequestedIssuedResourceControlV1(control,0), retains base SH through body/final checks, and checks control before/after metadata reads, each namespace row and directory entry. Namespace progress emits every128 observations; bounded layer workers drain accepted operations. No missing configured deadline or code-level deadlock is proved. The last observed milestone does not identify the current await/holder.
+
+A concrete bounded progress gap exists in derivative/index/tree final recheck (TS34–36): it rechecks all captured directories in layers, with per-filesystem-await cancellation checks, but no progress publication or yieldContinuation milestone. The final namespace verification thus can enter substantial silent directory fences before context.recheck/body. A test-first progress cadence for these fences could preserve every identity/control check; no abandonment race or lease-policy change is justified. Individual filesystem awaits are not signal-cancelable but cancellation is checked immediately afterward and accepted operations drain. This source observation does not explain the duration of Root55876 or prove its present frontier.
+
+
+Original-slot canonical port freshly accepted: owner now uses actual Source<T,FactoryOwnedSourceAuthority<T>>, exact borrowed constructor queries and paid parent overhead, immutable captured factory identity, singular Source handback and key-checked genuine retained Source alias. Foreign/item0/depth0 denials preserve pointer/source identity and zero heap; paid alias checks receipt and matches_source. Public imports and derive crate string are correct; no compatibility API or dependency added. Actual compiler/four-law rerun remains required.
+
+
+### Sequence Route Physical Declaration Found
+
+Fresh exact Rust-package inspection resolves the prior uncertainty: replication/📦packages/🦀rust/📋project.json actually declares both sequence Source/native targets under @semio-tech/framework-replication-rs, and adjacent script596–605 runs strict TSC, Bun and the exact retained_diff_sequence integration3 under the same Original signal/budgets. The earlier absence search covered different package locations; no writer attribution is inferred. Current declarations lack modern explicit Source runtime-entry/role metadata and are not among39. Corpus recovery remains blocked independently; actual route existence does not accept fixture correctness or execution. High/Root notified to replace the conditional registration-gap statement with this verified route.
+
+
+### Expected Pressure Refusal Must Not Reject Borrower Enrollment
+
+A new bounded source trace confirms an integration risk separate from successful pressure DATA composition: ordinary prepare wrapper still throws expected insufficient-floor error inside withExclusiveMaintenance callback. Actual Native borrower operation stores rejected work in scope.failures even when an external caller catches it, so later same-Original recovery can retain the prior failure. Move the unchanged expected floor assertion after fulfilled maintenance (and verify no enclosing enrolled boundary rejects before the recovery catch), or carry expected pressure as DATA until handled. Actual I/O/cancellation remain errors. Require a genuine same-Original continuation regression, not only callback extraction. No current runtime cause or source mutation is claimed.
+
+
+### Actual Original Slot Canonical Port: 99223
+
+Independent log read of `e2e-original-slot-native-current.log` matches all four required original_slot::tests full law names, each ok; summary4passed/0failed/0ignored/0filtered, compilation2.75s/body0.01s. Root/Controls provide actual owned99223 whole0. This accepts this exact native port gate only; no Source oracle, sequence corpus or full matrix result is inferred. Source87378 separately owner-cancelled whole1 prebody/post25stable, not recovery acceptance.
+
+
+### Expected-Pressure Relocation: Production Source Accepted
+
+Fresh tiny production change now fulfills maintenance with pressure DATA, returns false on nonacquisition, then applies the unchanged ordinary max/floor assertion and error after the awaited maintenance operation. Actual Nx caller catches this immediately before closing the image, so expected pressure does not reject enrolled borrower work. Accepted/frozen independently of the larger genuine1.2GiB continuation regression, which remains authored/unrun. Terminal/language Rust roots are unchanged; no whole-repo freeze is inferred solely from separate Source test authoring. Actual Native ingress capture remains authoritative.
+
+
+Full same-Original pressure continuation regression freshly source-reviewed: genuine artifact1152/1176MiB image, streamed192MiB SHA+Bun hash snapshot, real prepressure and unchanged1GiB floor, complete actual Nx caller under actual issued operation, expected refusal exactly once, close-before queued real recovery, counted snapshot removal and sameOriginal issued reopen/platform operation. Factory/path selectors are explicit test DATA ports; real maintenance/borrower/proof retained. Darwin skip qualifies platform, no runtime claim.
+
+Terminal vocabulary carve is source-coherent: shared actual firstparty type imports in lexical unit owner replace repeated qualifications in included test leaves, with reverse-expanded equality evidence preserving all behavior/assertions/names. Actual10019 was precompiler extent refusal; no cap relaxation or calculated-size admission pass is inferred.
+
+
+### Actual90857 Thread Contract Compile Frontier
+
+Root reports whole101 before bodies with76 repeated E0277 after extent admission. Fresh declarations show RetireOwned:Send, while RetirementCursor currently requires Send+Sync; generic owned Leaf/Deferred and erased Send-only queue frames cannot satisfy this stronger contract. Mutable cursor steps require exclusive &mut ownership; Controlled owns boxed cursors, ErasedControlledRetirement is Send, and RetainedOwnerGate already serializes mutable state with atomic occupied/UnsafeCell, providing Sync for T:Send. Mutex retirement extracts owned T, so blanket T:Sync would incorrectly exclude valid Send-notSync payloads. Shared factory interfaces and shared-original hooks genuinely require Sync separately. Recommended coherent boundary: owned cursorSend with actual Send-notSync gated regression, preserve factory/shared constraints, inspect any specific shared-cursor exposure; no unsafeSync or76site blanket bounds. This classifies current source only, without actor attribution or reverting peers blindly.
+
+
+Owned CursorSend correction and actual Cell gate regression freshly source-reviewed: Send-notSync cursor and controlled owner cross threads only through actual exclusive gate; scoped contention holds guard, then funded closure on another scoped thread with128finite bound, feasible-axis/zeroitems denial0heap/samequote, paid physical conservation and terminaldrop. Setup allocations remain outside observed work. Shared factory/shared-originalSync constraints unchanged; actual extent/compiler/newlaw acceptance pending.
+
+
+### Actual48031 Controller: Backend Retained Membership Frontier
+
+Root reports9bodies8pass1fail after production compilation: split mode, active equality, authentic full-page equality and ascending-order assertions pass; retained path membership alone fails. This excludes the earlier stale-UI interpretation. Fresh backend page code skips every noncancel recovery-proof error, so an authentic page may omit a retained root when namespace/receipt/object proof refuses. Archive publishes seal/new segment without moving payload. No exact refusing predicate is yet established from source alone. Recommended bounded next observation: public load_recovery of that exact retained path in the existing owned controller fixture, preserving membership assertion and full guards, to surface the actual refusal. Do not weaken assertions or accept all omitted roots.
+
+
+### Actual Explicit Language 41120/lng3 Accepted
+
+Independent settled log read matches all nine preference and eight terminal language law names as ok. Summary9/0fail/0ignored/16filtered in0.13s, terminal8/0fail/0ignored/73filtered in0.02s, compiler5.34s; Root provides owned whole0. Includes no-default chain, journal compaction, explicit event, real cancel lock-wait/late commit, chooser cancel, bilingual hints/tooltips/errors/usage. This accepts the exact17 selected current language cases; filters are explicit and no installed/PT Y/entire terminal suite result is inferred.
+
+
+### Actual Retirement Exclusive Thread Gate58755
+
+Independent log read matches whole-library19passed/0failed/0ignored/0filtered0.01s, compile12.92s, including exact `retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate` as ok. Controls reports owned58755 whole0. This accepts actual Send-only gate/body and eighteen prior retirement laws; Source neutral route and broader matrix remain separate. Usage fixture correction also freshly resolves to existing canonical dashboard usage owner/terminalHeader, with actual lng3 usage law green.
+
+
+### Actual Pack24819 Body Frontier
+
+Independent log read confirms compiler success, then intrinsic announces18 but first paid-frontier law fails finite close and nonterminal RecordBody Drop aborts signal6. Record-retained announces21, sparse-table law passes, completePack next fails Unsupported codec1 with retained receipt, then segment Drop aborts signal6. Remaining named bodies are unreached, not successes or39individual failures. Exact whole101 is Controls-owned evidence. Preserve primary codec/finite-close failure separately from unwind cleanup abort; no cap/assertion/Drop weakening is justified.
+
+
+Pack diagnosis independently corroborated: intrinsic cleanup helper reconstructs separate currency observers and pads copy.max3, whereas actual owner already offers a complete selected close quote. Test caller should use exact selected4096 event/grant/fixedpoint with existing bounds/physical assertions. Separate completePack Unsupported codec1 arises from explicit cfg(not deflate) branch; normal decoder dependency must declare existing firstparty deflate capability to consume default encoder output. Do not rewrite fixture to identity codec. These are distinct caller/capability causes, requiring genuine resolver and runtime bodies.
+
+
+Pack physical repair source-reviewed: four funded intrinsic cleanup paths now select exact original_close_demands4096, map all axes without padding, verify selection fixed point, execute matching token-draining close_original_step and retain physical/fits/finite assertions. Existing normal format-retained dependency explicitly enables its firstparty deflate capability. Actual --locked admission determines resolver need; no static or Source/runtime pass inferred.
+
+
+### Controller15309: Retained Child/Root Classification Corrected
+
+Actual diagnostic NotFile identifies the captured retained path as `.retained/a.txt`, a file, not the directory root. Fresh UI source proves inspect_recovery with a nonempty recovery location runs Recovery(directory) and adopts a child listing with history=true/history_root; the test captured entries[0], therefore a descendant file. Archive intentionally refreshes HistoryPage(None), which lists retained roots. Child membership in that root page is an invalid test assumption. My earlier directory diagnostic classification was wrong; generic skipped-proof code did not establish the actual cause. No backend guard defect is proved. Preserve the actual root from directory/history_root, assert root membership, Enter directory, find a.txt, Enter file and assert original read-only text. High owns correction; no FS production change is justified.
+
+
+Pack owner-resolution correction: actual persistent list reexports the canonical PagedList whose release_empty_page already releases empty payload before metadata. My earlier metadata-only inference from its method name was unsupported and is retracted. No ids/list behavior change follows. Controls found actual catalog depth observers eagerly query inactive/nonempty release or unreserved push selectors; existing correlated retirement_demands should govern the actual close event. Forward phase-specific admission requires actual executed-event depth, not blanket observer calls.
+
+
+History root→child law fresh correction accepted: captures actual history_root plus saved child separately, preserves authentic backend active/full root-page/order/root membership, then enters retained root and resolves saved child through actual visible index plus parent-row1 before checking read-only kept text. Removes only wrong-type child diagnostic. No product/FS change; genuine9 rerun required. Pack selected phase/reservation mapping also freshly matches actual parser push events; complete close selectors used, old independent observer API not claimed fixed.
+
+
+### Actual Controller10528/tdc9 Accepted
+
+Independent log read matches all nine source controller names as ok, including actual root→visible-child archive/history workflow, rename late-cancel/uncertainty, dirty/nonempty guards, guided commands, spawn/disconnect and bounded worker quantum. Summary9passed/0failed/0ignored/72filtered1.26s, compile23.29s; Root/High provide owned10528 whole0. Earlier membership failure was test root/child scope mismatch; no FS/UI production fix was needed. No installed PTY/full terminal/other-host acceptance is inferred.
+
+
+### Local Unsafe Sync Close-State Boundary After Owned CursorSend
+
+Fresh Source unsafeSync implementation permits sharing `&RetainedCloneSource` when T/A are Sync, but owner_close holds an ungated ControlledRetirement whose active cursor is onlySend. Public shared next_close_demand/axis observers directly invoke that cursor’s &self methods; a valid Sync authority may return a Cell-bearing Send-only retirement cursor. This creates a concrete concurrent shared-query safety gap after funded mutable close construction. RetainedOwnedProjection unsafeSync and its binding.close selected observer require the same audit; gating only Source.owner_close is insufficient if an owned projection has entered closure before sharing. Preserve ownedCursorSend; gate locally exposed mutable-close state or tighten sharing. Private LeaseOwner payload shared surface is narrower (id only; retirement consumes unique owner), so its unsafeSync needs proof rather than automatic width-inflating change. Controls/Root notified; no live source edits.
+
+
+### Current Pack38985 Dynamic Capacity Mismatch
+
+Fresh catalog allocation_need shows ObservedChunks and SymbolScalars request len+1 final-capacity growth on each append; reserve_capacity_one(target) funds a final partial page, after which canonical list correctly refuses extension/reallocation. Known count-header SymbolSpans/Chunks have a true final capacity and differ semantically. Unknown-final append paths (including Document ids) need matching append/full-page reservation/query, qualified by authored maxima for a final partial page. No canonical list guard weakening or blanket reallocation is justified. Actual inline-symbol receipt mismatch remains a separate observed frontier until its exact event is traced.
+
+
+Local shared-query gate patch freshly source-reviewed: Source.owner_close and Binding.close now use existing allocation-free RetainedOwnerGate; all ten shared quote observers acquire nonblocking typedWorkLimit gate, exclusive mutable steps use get_mut. Actual source-owner/source-lease/projection regression pays construction to real Send-onlyCell cursor, blocks firstquery before Celltouch, requires secondBusy0heap, then first/retry success and128finite exactcleanup. PrivateLeaseOwner width unchanged. Inline gate sizes affect metadata and must be verified by actual affected currency/extent tests; source acceptance is not runtime acceptance.
+
+
+### Actual Source44547 Maintenance Deadline
+
+Independent fresh source/log trace confirms closed ordinaryMaintenance maximumWaitMilliseconds1800000 passed unchanged into queued recovery requested child control. Actual EX wait1798572ms then remaining/arm deadline exhausted aligns the intended30minute maintenance phase; outer6hour invocation does not replace this tighter cap. Whole1 is natural prebody failure, not missing timeout/testbody/redpass. Queued predecessor remains not an identified OS holder, no deadlock/current actor is proved, and no budget/floor/lease weakening follows. Post25stable is separate physical Source observation, not runtime success.
+
+
+### Source40 Registration and Finite Caller Review
+
+Fresh physical review accepts test-exclusive-retirement-source as an actual registered Source route: owned no-argument Bun invocation, 30-second Original-capped budget and signal, freshness observation, exact mutex TS runtime entry and five DATA companions. Cache, dependencies and outputs remain disabled/empty. The two existing custody/header test files now use complete selected quotes, exact grants and fixedpoints; finite 10,000-step bounds and terminal/physical-accounting assertions remain. This is source acceptance only. Native 21822 was owner-cancelled after compilation, five announced tests and zero passed bodies; neither the new shared-query law nor Source40 has executed successfully yet.
+
+
+### Shared Source Query Native Result
+
+Independent bounded log read of e2e-source-shared-query-selected-native.log confirms compilation in 3.07 seconds and all five named whole-library bodies passed, zero failed/ignored/filtered, in 0.01 seconds. The new shared_source_and_projection_quotes_gate_actual_send_only_cell_cursors law and all four existing custody/header laws are explicitly green. Controls reports exact owned session 99877 whole exit zero; log body verification agrees. This accepts this Native owner at captured inputs; Source40 and the wider matrix remain unrun.
+
+
+### Pack Append Reservation and Physical Observer Review
+
+Fresh source review accepts immutable authored maximum targets for unknown-total observed chunks and symbol scalars: the next actual count is checked against the maximum before reservation, and selector/reserve share the same target. Known-final symbol spans and chunk tables retain their final counts. Document chunk IDs now use the canonical append allocation/reserve-copy/reserve-depth and reserve_one protocol, avoiding growth of a funded final partial extent across declarations. Canonical fixed-list policy is unchanged. Catalog gains the actual first-party testing allocator dev edge; inline-symbol tests now compare genuine physical allocation/release tuple fields against receipts, rather than explicit trace witnesses. Selected Source cleanup and finite bounds remain. Four closed neutral append vectors have an independent SQLite oracle; actual Source41 registration has the exact runtime entry, DATA, no-argument owned Bun/Original 30-second route, freshness, and no cache/dependency/output side effects. All of this is source acceptance only: the neutral model does not execute Rust, and Pack3/Source41 must still run.
+
+
+### Bounded Shared-Cursor Custodian Follow-up
+
+Reviewed Rust inputs from the refreshed 391-path Controls inventory, without a repository-wide scan. No further concrete public shared-query exposure was established. PersistentListRead delegates closure to the now-gated Binding. Read registry mutable state is guarded; its active retirement wrappers lack an unsafe Sync assertion. History fold retains its exclusive queue guard through shared demand and mutable close callbacks. SharedOriginal allocation contains initialized T rather than a retirement cursor, with destructive field access restricted to explicit unsafe/exclusive operations. This is a bounded source finding, not a compiler or concurrency proof for all owners. The private fold guard could structurally auto-implement Sync, but no public guard escape or concurrent-reference path was found in the inspected owner, so no new reachable defect is claimed. The five current Source Native laws prove the repaired gate behavior; no old unsafe data race was deliberately executed.
+
+
+### Normal Writer Pressure Boundary Qualification
+
+Fresh storage lines 144–145 and 165 show ordinary/forced optional maintenance propagates insufficient-floor refusal from writer admission; the writer does not route it to snapshot recovery. High traced the complete normal-run ingress: build Script line 210 prepares build-tool storage, Nx delegates to the broader prepareNxGraphCacheStorageV1, and only then line 211 loads the graph and its writers. Therefore the local propagation is a safe revalidation boundary for intervening pressure, not proof of absent normal-ingress recovery and not the cause of the observed p21k queued-recovery deadline. The separate graph/show branch skips normal-run preparation and has not been accepted as equivalent by this review. No new source repair is proposed.
+
+
+### Catalog Allocator Paired Resolver Audit
+
+Independently recomputed all identity/checksum tuples and dependency sets from retained before/after projections. Framework remains 1,068 packages/612 registry packages; Root remains 1,565/706. No package identity/checksum additions, removals or upgrades occurred. Framework changes are exactly catalog→testing-allocator and concurrent retirement-queue→test-fixtures/value-factory dev edges. Root changes are exactly concurrent flow-document→value-native-owned and child-group-wire-laws→value-paged-text. Fresh physical manifests declare those edges; peer changes are preserved without exclusive authorship. Controls reports genuine framework 48799 and Root 92144 whole-zero offline resolutions. This accepts lock coherence for the next actual Pack validation, not compilation or test execution.
+
+
+### Pack Cross-leaf Reservation Caller Diagnosis
+
+Actual Pack 81082 reached compilation and bodies but failed; no whole-owner acceptance. Bounded source review confirms the catalog cross-leaf test initially passes target 1 to target-aware SymbolTable reservation (catalog-laws lines 258–265), creating a final partial span extent, then asks for first-capacity+1 at lines 268–275. The table delegates to canonical target-aware reserve_capacity_one; this target denotes the final count, and the production decoder supplies a validated final Count. The test should retain one immutable authored reservation target (the existing maximum_symbols=1024) for every quote/reserve, while first_leaf_capacity+1 remains the populated cross-leaf count. Existing underfunded, pointer, release and terminal assertions remain required. This is a test-caller mismatch, not evidence that canonical partial extents should reallocate. Controls owns the repair and five other distinct actual primary failures; their execution remains pending.
+
+
+### Pack Diagnostic Retry Source Review
+
+Accepted the normal intrinsic format dependency deflate feature, immutable cross-leaf span target, eager list reservation target 16384 with actual queried depth/copy, feasible positive-axis denials, and finite cleanup loops. A fresh read caught the same unknown-total scalar issue in storage symbols: three calls still used consumed+1. Controls corrected all three to the constructor-authored maximum 8; fresh verification confirms query, demand and admit agree, with no consumed+1 remaining there. Receiving generic-retirement failure assertion remains intact with outside-heap diagnostic context. Inline Source close retains exact selected/fixedpoint/heap/fits and 10,000-step bound; temporary DEBUG is globally limited to eight late-loop records. Actual Pack3 retry remains necessary; no new success inferred.
+
+
+### Inline Source Close Cardinality Qualification
+
+The current inline-symbol corpus includes a 140,000-byte large word payload (20,000 repetitions), and prepared(...) invokes the same close_source helper for that large wire. Collection<u8>::next_demand selects its minimum one-byte work atom even when queried with body 4096. The helper grants exactly that one byte, and Collection close_step truncates the Vec by that paid count. Repeated item1/copy1 receipts therefore indicate genuine bounded byte retirement, not by themselves an unchanged-state loop. Ten thousand such turns cannot close the large wire. Before diagnosing production nonprogress, record the exact closing Source length or invocation identity; the three-byte sources occur earlier in the same test and may already have succeeded. Whether to expose a batch-sized selected quote or retain minimum-demand semantics with a payload-qualified finite caller requires explicit contract review; no grant padding or larger fixed bound is accepted by this observation.
+
+
+### Pack Selected Admission Final Review
+
+Fresh review accepts SymbolStorage admission quotes using canonical target-specific depth, with scalar normalized target shared across copy, capacity, depth and funded reservation. The inline Source helper now uses checked actual payload length plus 1024 finite scaffold allowance, retaining exact grants/body4096, heap/fixedpoint/fits assertions and a strict 16-turn unchanged-empty-receipt guard; temporary DEBUG was removed. Generic Record denial permits only the established axis-depth typed DepthLimit or zero Progress, followed by unchanged zero physical heap, selected demand, source bytes and pointer assertions. These repairs are source-ready for another genuine Pack3 run; independent retirement-axis assembly remains separate and unaccepted until its actual frontier is reached.
+
+
+### Large Original Wire Ownership Boundary
+
+Actual Pack 50437 reached all 48 bodies with 47 passes: intrinsic 18/18 and record 21/21 green; catalog 8/9 fails only the Source helper combined 4096 assertion when retiring the original 140004-byte Vec backing. A native Vec allocation has one physical release and cannot be partially freed under 4096. The inline-symbol fixture declares maximumTurnBytes4096 for its feature; the wire itself is created externally and admitted with its pointer retained. Recommended clean boundary: close inline cursor aliases under the existing bound, perform exact selected Source authority handback and assert the same original Vec pointer/length/bytes, close remaining Source headers under4096, then separately retire the caller-owned external Vec using its exact actual extent-qualified selected demand and measured physical release. No hidden drop, piecemeal free or global bound increase is acceptable. Closed neutral policy and oracle must explicitly represent that ownership distinction before authoring. The current failed run is not accepted as full Pack success.
+
+
+### Explicit Original Wire Settlement Source Acceptance
+
+Fresh hand_back_source_wire review verifies selected Source take queries/grants/fixedpoints, actual returned pointer/capacity/bytes, and terminal Source ownership. The returned original Vec is separately retired with real Controlled quotes and physical heap receipts: copy+capacity remain within4096, while a larger release is accepted only when equal to its measured original backing extent. Conservation includes the original backing, Source constructor and paid retirement scaffolds; terminal drop is measured zero. Closed sourceOwnership policy and three abstract model rows have Ajv, JSON-patch transfer and independent SQLite output checks. The model backing values8/262144 are DATA, not inferred native allocator capacities; the actual native helper measures capacity. This is source acceptance for another Pack3 run, not full acceptance or Source42 execution. Independent previous log read confirms 50437 intrinsic18/18 and record21/21 green, catalog8/9, all48 reached with sole external-wire bound failure.
+
+
+### Actual Whole Pack Three-owner Success
+
+Independent log read of e2e-pack-wire-handback-native.log confirms compilation29.00s and all48 announced bodies reached: catalog9/9 in0.19s, intrinsic18/18 in1.14s, record21/21 in0.02s, each zero failed/ignored/filtered. The inline-symbol original-wire handback law is explicitly green; no panic/abort or failed summary appears. Controls reports exact owned46746 whole exit zero. This accepts these three Native owners at captured inputs; Source42 and the wider original69/whole-owner matrix remain separate pending gates.
+
+
+### Final Twenty-five-owner and Doctest Roster Screen
+
+Current retained plan has25 physical owners, exactly equal to the union of staged package selections and fullMatrixWorkspaces; no physical owner is omitted. All69 advertised triples are unique and their packages are selected. Required-body records carrying source/law identify actual current functions. Four facade doctests retain two positive/negative controls: custom Drop is the material negative difference for shared-original derive; missing close_demands is the sole required-method omission against the corresponding positive cursor implementation. A dedicated locked unfiltered --doc stage remains distinct from whole --lib stages. This bounded source screen establishes no additional roster gap; it is not a rustdoc/compiler pass or current full25/69 runtime acceptance.
+
+
+### Coordinator Resume: Current Proof Inventory
+
+Verified current successes include filesystem53; terminal source controllers9; explicit language17; retirement whole19 with Send-only Cell gate; clone Source whole5 with actual shared-query gate; original-slot4 at its captured inputs; and Pack catalog9+intrinsic18+record21=48 after explicit original-wire handback. These remain scoped to their captured inputs rather than blanket current-tree acceptance.
+
+Active owners reported by coordinator: Controls9284 sole Native RootOS; High19378 current Source41. Neither has a terminal result accepted here. Source42 inline-symbol route remains held candidate. Source overall runtime acceptance remains pending: no preceding Source21 request delivered test bodies successfully. The sequence corpus is still unrecovered; its real Rust-package Source/native integration3 route exists but remains blocked/excluded from accepted Source roster. Four facade doctests, full25 owner selection/original69 reconciliation and remaining Native20 workflow gates remain required. Native cross-host/devcontainer CI is authored but hosted execution is unproved; local Windows crosscompile remains genuine missing-target capability refusal.
+
+No unreviewed authored source slice remains in this audit lane: latest Pack ownership boundary, source shared-query gates/callers, Source40/41 physical registration and paired lock deltas were reviewed; actual Pack48 and Source5 were independently read. The Source42 registration itself is not yet placed/accepted. Latest bounded plan screen found25 selected physical owners and69 unique advertised triples, with no omitted declared owner; this is source coverage only. No new producer, source edit, lease/state manipulation or runtime claim was made by the audit lane.
+
+
+### Root OS Compiler-only Test Wiring Frontier
+
+Controls9284 whole101 reached compiler only, zero bodies: unresolved OriginalJobFixtureCaller and root derive macro used as a trait. Fresh source review resolves Root workspace job dependency to the existing job owner; OriginalJobFixtureCaller is exported only under test/testkit, and its published testkit feature already exists. Enabling that feature on the existing OS child dev dependency is the correct test capability declaration. The receiving helper generic bound must name semio_framework_value::retirement::RetireOwned, the actual trait; root RetireOwned is the derive macro. No compatibility export or runtime edge is needed. Actual subsequent compiler/body gate remains pending.
+
+
+### Source41 Attempt 19378 Terminal Distinction
+
+High reports natural whole exit1 for19378, before test bodies. Exact primary is Resource lease timed out: resource-directory-admission:v1 at UngatedLease TS228. An earlier owner-discovery observed-facts refresh and subsequent graph shared queue are context, not substituted as the primary or attributed to any holder/deadlock. Post-run25 static observations are stable with zero errors; they do not establish runtime success. No blind retry, lease waiver or budget change is accepted. Source42 metadata remains subject to the current Native capture boundary.
+
+
+### Physical Source42 Registration Acceptance
+
+Fresh Pack Rust project/dispatcher read accepts test-inline-symbol-source: exact inline-symbol TS runtime entry and schema, fixture, Native law and implementation DATA; closed Source/freshness metadata; cachefalse, empty dependencies/outputs, no forwarded arguments; actual registered no-argument owned Bun invocation with Original signal and30-second capped budget; English/German labels. Its two Bun bodies exercise independent protobuf/SQL canonical UTF8 and Ajv/JSON-patch/SQLite handback policy. Source42 is now physically registered/source-ready, with no execution pass claimed. Source19378 remains the exact prebody admission-timeout failure.
+
+
+### Directory Admission Timeout Semantics
+
+Fresh process leases source read establishes that acquireUngatedResourceLease192–237 retries only SQLite BUSY after rollback, with actual signal/Original deadline and optional request timeout checked throughout. Line228 throws when that same request budget expires after BUSY. resource-directory-admission:v1 is a reserved SQLite namespace gate, not the graph image itself; shared open custody and exclusive retirement protect database creation/unlink. Current generic acquireHoldingGate305 normalizes this internal timeout to its requested resource, whereas queueClaimCatalog343 directly acquires the directory gate and preserves its primary. awaitQueuedTurn477 invokes reapQueueTicket404, whose catalog acquisition is outside its later exclusive claim-probe catch, so a raw directory-admission timeout can legitimately surface during predecessor inspection. The19378 stack does not retain enough caller/budget/directory context to prove that exact path, nor identify a holder or deadlock. Queue DTO names describe a queued predecessor, not kernel custody.
+
+Recommended next step is a closed bounded admission-context diagnostic (operation/resource class, mode, requested budget and elapsed; no private store enumeration) and a genuine contended catalog/read gate regression proving cancellation, primary identity and exact cleanup. This preserves limits/custody and precedes another supported normal invocation. No passive holder-identification capability was established from the enabled tool metadata; no status/prune/private-store/process action was invoked.

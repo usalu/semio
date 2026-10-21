@@ -177,6 +177,7 @@ impl Drop for RetainedWireFieldDecode{fn drop(&mut self){assert!(std::thread::pa
 
 struct RetainedWireFieldRetirement(RetainedWireFieldDecode);
 impl semio_framework_value::retirement::RetirementCursor for RetainedWireFieldRetirement{
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.0.close_demands())}
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
   self.0.cancel();self.0.take_receipt();

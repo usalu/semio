@@ -26,4 +26,7 @@ doctest = false
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-os-io = { path = "../../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

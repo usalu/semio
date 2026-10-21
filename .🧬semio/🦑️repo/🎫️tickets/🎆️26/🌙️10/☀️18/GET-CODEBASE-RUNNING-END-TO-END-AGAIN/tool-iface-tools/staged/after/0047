@@ -1,201 +1,196 @@
-#!/usr/bin/env bun
-//#region 🧲️Header
-
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// 🏭️ Third-party fixture generator for `s.note.note@1/✳️any`.
-//
-// Every BEFORE/AFTER byte pair is built by `./🦀️note-oracle-codec` — a standalone Rust binary that
-// links `dxf` 0.6, `quick-xml` 0.42 and `lopdf` 0.44 DIRECTLY (the SAME crates already registered as
-// this subset's oracle in `../🔮️oracles/🔣️.json`), never note's own (currently non-building)
-// production serializers. This file only marshals: it shells out to `cargo run`, computes digests
-// over what the crate wrote, and emits/merges the `testEvidence` index — exactly the split
-// `…✳️mesh/🏭️generator/📜️script.ts` and `…✳️cad/🏭️generator/📜️script.ts` already use.
-//
-// Generation and execution are SEPARATE operations: a normal test run must never be able to rewrite
-// the expectation it is measured against.
-//
-//   bun 📜️script.ts generate [--only <recipe-id>]...   — writes each subset's handpicked physical fixture paths
-//   bun 📜️script.ts manifests [--only <recipe-id>]...  — emits the testEvidence block to stdout
-//
-// `SEMIO_FIXTURE_OUT` (set by `test fixture generate|reproduce`) is a FIXTURES ROOT; every recipe
-// writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
-//
-// @see ./🔁️codec/🧫️recipes/🦀️.rs — the 16 recipes (one per witnessable mutation)
-// @see ../🔬️probes/📜️script.ts — the sibling that reads/compares what this file writes
-// @see ../🔮️oracles/🔣️.json — the testEvidence this file's `manifests` output is pasted into
-// @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-1-any-fixture-corpus.md
-
-//#endregion 🧲️Header
-
-//#region 🔌️Adapters
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-
-import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
+import { join } from "node:path";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
+
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-type EvidenceFile = { role: string; path: string; mediaType: string; sha256: string; bytes: number };
-type Recipe = { id: string; mutation: string; subset: string; subsetDirectoryName: string; directoryName: string; files: readonly { carrier: "dxf" | "svg" | "pdf"; before: string; after: string }[] };
-
-/** 🎯️ id, mutation kind, and which of dxf/svg/pdf carriers this recipe covers — MIRRORS
- * `🔁️codec/🧫️recipes/🦀️.rs::recipes()`. Duplicated here (never imported — TS cannot import
- * Rust) so this file can compute file roles/paths/media-types without re-invoking the crate to ask;
- * kept in the SAME order and content as the Rust source, which is the single source of truth for what
- * bytes actually get written. A recipe added on one side and not the other is caught immediately by
- * `generate` (the crate refuses an unknown `--only` id) or by `fixture reproduce` (a missing file).
- */
-const RECIPES: readonly Recipe[] = [
-  { id: "retitles-the-document", mutation: "rename-note", subset: "document", subsetDirectoryName: "📜️document", directoryName: "🏷️retitles", files: [{ carrier: "pdf", before: "⬅️before.pdf", after: "➡️after.pdf" }] },
-  { id: "adds-the-diagram-asset", mutation: "create-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "➕️adds-the-diagram-asset", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "swaps-the-logo-payload", mutation: "replace-asset-payload", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🔁️swaps-the-logo-payload", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "removes-the-logo-asset", mutation: "delete-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🗑️removes", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "creates-an-ink-block", mutation: "create-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🖋️creates-an-ink-block", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
-  { id: "deletes-the-intro-text-block", mutation: "delete-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "✂️deletes-the-intro-text-block", files: [{ carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
-  { id: "deletes-the-ink-and-text-blocks", mutation: "delete-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🗑️deletes-the-ink-and-text-blocks", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
-  { id: "duplicates-the-ink-block", mutation: "duplicate-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "📋️duplicates-the-ink-block", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
-  { id: "duplicates-the-ink-and-text-blocks", mutation: "duplicate-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "👥️duplicates-the-ink-and-text-blocks", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
-  { id: "drags-the-callout-group-subtree", mutation: "drag-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🤏️drags-the-callout-group-subtree", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "moves-the-math-block", mutation: "move-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🚚️moves-the-math-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "resizes-the-image-block", mutation: "resize-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "↔️resizes-the-image-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "hides-the-intro-text-block", mutation: "change-block-visible", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🙈️hides-the-intro-text-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "edits-the-intro-paragraph", mutation: "edit-block-text", subset: "text", subsetDirectoryName: "📝️text", directoryName: "✏️edits-the-intro-paragraph", files: [{ carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
-  { id: "thickens-the-sketch-stroke", mutation: "change-block-ink-width", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🖊️thickens", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "redraws-the-sketch-polyline", mutation: "edit-block-ink-stroke", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🎨️redraws", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
-] as const;
-
-const MEDIA_TYPE: Record<string, string> = { dxf: "image/vnd.dxf", svg: "image/svg+xml", pdf: "application/pdf" };
-const CRATE_DIR = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust");
-const SUBSETS_DIR = join(import.meta.dir, "..", "..");
-const COMMITTED_FIXTURES = join(import.meta.dir, "../🧪️tests/🧫️fixtures");
-const ORACLE_BY_CARRIER: Record<string, string> = { dxf: "dxf-crate-note-ink-reader", svg: "quick-xml-note-drawing-reader", pdf: "lopdf-note-text-reader" };
-const ENGINE_BY_CARRIER: Record<string, { family: string; version: string; packageVersion: string }> = {
-  dxf: { family: "dxf-rs", version: "0.6", packageVersion: "0.6" },
-  svg: { family: "quick-xml", version: "0.42", packageVersion: "0.42" },
-  pdf: { family: "lopdf", version: "0.44", packageVersion: "0.44" },
+/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
+type ProbeReport = {
+  schema: "semio.repository-test.probe-report/v2";
+  probe: string;
+  probeVersion: string;
+  engine: { family: string; implementation: string; version: string };
+  status: "ok" | "failed" | "unsupported";
+  durationMs: number;
+  measurements: Record<string, unknown>;
+  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
 };
+
+const ENGINE = { family: "image-rs", implementation: "image-bmp-codec (image 0.25's own bmp feature)", version: "image@0.25.10" } as const;
+const PROBE_VERSION = "image@0.25.10";
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
-//#region 🏭️Generate
-async function sha256(bytes: Uint8Array): Promise<string> {
-  const hash = await crypto.subtle.digest("SHA-256", bytes as BufferSource);
-  return `sha256:${[...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+//#region 📥️Model
+type RawDoc = { format: "bmp"; width: number; height: number; storage: "indexed" | "direct"; palette: { r: number; g: number; b: number }[] | null; indicesHex: string | null; pixelsHex: string | null };
+
+/** ⚖️ The comparisonProfile's own projection: the (potentially large) index/pixel buffer becomes
+ *  size+digest, never raw hex — the palette table stays a real typed array so a diff names the
+ *  exact entry, per this ticket's own opaque-payload convention. */
+type BmpDoc = { format: "bmp"; width: number; height: number; storage: "indexed" | "direct"; palette: { r: number; g: number; b: number }[] | null; indices: { size: number; digest: string } | null; pixels: { size: number; digest: string } | null };
+//#endregion 📥️Model
+
+//#region 🔓️Read
+function digestHex(hex: string): { size: number; digest: string } {
+  const bytes = Buffer.from(hex, "hex");
+  return { size: bytes.length, digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}` };
 }
 
-/** 🦀️ Shells `cargo run` in the crate directory — cargo needs to run FROM there, so every path this
- * file passes it (`--out`) is resolved to an absolute path first. */
-function runCodec(args: readonly string[]): { status: number | null; stderr: string } {
-  const run = spawnToolSyncV1("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
-  return { status: run.status, stderr: (run.stderr ?? "").trim() };
-}
-
-async function fixtureManifestFor(recipe: Recipe, outDir: string, committed: boolean): Promise<Record<string, unknown>> {
-  const dir = committed ? join(outDir, recipe.subsetDirectoryName, "🧫️fixtures", recipe.directoryName) : join(outDir, recipe.id);
-  const files: EvidenceFile[] = [];
-  for (const physical of recipe.files) {
-    const carrier = physical.carrier;
-    for (const label of ["before", "after"] as const) {
-      const filename = physical[label];
-      const path = join(dir, filename);
-      const bytes = readFileSync(path);
-      files.push({ role: `${label}-${carrier}`, path: `../🧫️fixtures/${recipe.directoryName}/${filename}`, mediaType: MEDIA_TYPE[carrier]!, sha256: await sha256(bytes), bytes: bytes.length });
-    }
-  }
-  const primaryCarrier = recipe.files[0]!.carrier;
+/** 📥️ Runs the standalone codec's `project` subcommand and turns its raw hex payload into the
+ *  profile's own size+digest projection — never raw bytes past this function. */
+function readBmp(path: string): BmpDoc {
+  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`image-bmp-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
+  const raw = JSON.parse(result.stdout) as RawDoc;
   return {
-    id: recipe.id,
-    class: "third-party-generated",
-    target: { artifact: "s.note.note", standard: "1", subset: recipe.subset },
-    mutation: recipe.mutation,
-    outcome: "applied",
-    units: { length: "unitless", angle: "degree", handedness: "right", up: "y" },
-    files,
-    generator: {
-      oracle: ORACLE_BY_CARRIER[primaryCarrier]!,
-      packageVersion: ENGINE_BY_CARRIER[primaryCarrier]!.packageVersion,
-      engineFamily: ENGINE_BY_CARRIER[primaryCarrier]!.family,
-      engineVersion: ENGINE_BY_CARRIER[primaryCarrier]!.version,
-      command: `bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
-      seed: 0,
-      platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
-    },
-    provenance: {
-      source: "generated",
-      license: "MIT",
-      attribution: `Built and written by the ${recipe.files.map(({ carrier }) => ({ dxf: "dxf 0.6", svg: "quick-xml 0.42", pdf: "lopdf 0.44" })[carrier]).join(" + ")} crate(s) — no byte of ${recipe.files.map(({ carrier }) => carrier).join("/").toUpperCase()} here originates in this repository.`,
-      security: "scanned-clean",
-      privacy: "no-personal-data",
-    },
-    comparisonProfile: { dxf: "semantic-note-dxf-ink-v1", svg: "semantic-note-svg-drawing-v1", pdf: "semantic-note-pdf-text-v1" }[primaryCarrier],
-    reproducible: true,
-    family: recipe.files.map(({ carrier }) => carrier).join("+"),
-    notes: `Witnesses ${recipe.mutation} via the ${recipe.files.map(({ carrier }) => carrier).join("+")} carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind.`,
+    format: raw.format,
+    width: raw.width,
+    height: raw.height,
+    storage: raw.storage,
+    palette: raw.palette,
+    indices: raw.indicesHex === null ? null : digestHex(raw.indicesHex),
+    pixels: raw.pixelsHex === null ? null : digestHex(raw.pixelsHex),
   };
+}
+//#endregion 🔓️Read
+
+//#region ⚖️Compare
+/** ⚖️ Structural equality over the whole projected document — mirrors `semantic-bmp-reader-v1`'s
+ *  own rule that a palette is an ORDERED array (palette-entry position is semantic identity for
+ *  `insert-palette-entry`/`remove-palette-entry`, which shift every entry after the touched index). */
+function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    const len = Math.max(expected.length, actual.length);
+    for (let i = 0; i < len; i += 1) diffAt(`${path}[${i}]`, expected[i], actual[i], diffs);
+    return;
+  }
+  if (typeof expected === "object" && expected !== null && typeof actual === "object" && actual !== null && !Array.isArray(expected)) {
+    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
+    for (const key of keys) diffAt(`${path}.${key}`, (expected as Record<string, unknown>)[key], (actual as Record<string, unknown>)[key], diffs);
+    return;
+  }
+  if (JSON.stringify(expected) !== JSON.stringify(actual)) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
+}
+
+function compareDocs(expected: BmpDoc, actual: BmpDoc): { equal: boolean; diffCount: number; diffs: string[] } {
+  const diffs: string[] = [];
+  diffAt("$", expected, actual, diffs);
+  return { equal: diffs.length === 0, diffCount: diffs.length, diffs: diffs.slice(0, 50) };
+}
+//#endregion ⚖️Compare
+
+//#region 🔬️Probes
+function requireInputs(inputs: readonly string[], count: number, probe: string): void {
+  if (inputs.length < count) throw new Error(`${probe} requires ${count} --input path(s), got ${inputs.length}`);
+}
+
+type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"]; engine?: ProbeReport["engine"]; probeVersion?: string };
+
+const HEADER_ENGINE = { family: "pillow", implementation: "Pillow 11.3.0 BMP BITMAPINFOHEADER reader", version: "11.3.0" } as const;
+const HEADER_PROBE_VERSION = "pillow@11.3.0";
+
+/** 🧾️ The BITMAPINFOHEADER fields. `image`-rs decodes a BMP to PIXELS: the header's resolution fields
+ *  and colour-table bookkeeping are consumed on the way and never surfaced, which is why
+ *  `change-header-fields` was `-uncarried` against it. Pillow both WRITES them (`dpi=` sets
+ *  biXPelsPerMeter / biYPelsPerMeter) and READS them back (`im.info['dpi']`). */
+const HEADER_READER = String.raw`
+import json, struct, sys
+from PIL import Image
+
+def project(path):
+    raw = open(path, 'rb').read()
+    # 📐️BITMAPINFOHEADER begins at byte 14; these ten fields are its whole fixed layout.
+    width, height, planes, bpp, compression, image_size, xppm, yppm, used, important = struct.unpack('<iihhIIiiII', raw[18:54])
+    im = Image.open(path)
+    return {
+        "width": width, "height": height, "planes": planes, "bitsPerPixel": bpp,
+        "compression": compression, "imageSize": image_size,
+        "xPixelsPerMetre": xppm, "yPixelsPerMetre": yppm,
+        "coloursUsed": used, "coloursImportant": important,
+        "mode": im.mode, "size": list(im.size),
+    }
+
+paths = sys.argv[1:]
+if len(paths) == 1:
+    print(json.dumps(project(paths[0]), sort_keys=True))
+else:
+    a, b = project(paths[0]), project(paths[1])
+    print(json.dumps({"equal": a == b, "expected": a, "actual": b}, sort_keys=True))
+`;
+
+function headerRun(paths: readonly string[]): Record<string, unknown> {
+  const result = spawnToolSyncV1("python3", ["-c", HEADER_READER, ...paths], { encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`pillow bmp header reader failed: ${result.stderr}`);
+  return JSON.parse(result.stdout) as Record<string, unknown>;
+}
+
+const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
+  "bmp-header-project": async (inputs) => {
+    requireInputs(inputs, 1, "bmp-header-project");
+    return { status: "ok", engine: HEADER_ENGINE, probeVersion: HEADER_PROBE_VERSION, measurements: headerRun([inputs[0]!]) } as never;
+  },
+  "bmp-header-compare": async (inputs) => {
+    requireInputs(inputs, 2, "bmp-header-compare");
+    return { status: "ok", engine: HEADER_ENGINE, probeVersion: HEADER_PROBE_VERSION, measurements: headerRun([inputs[0]!, inputs[1]!]) } as never;
+  },
+
+  "bmp-import": async (inputs) => {
+    requireInputs(inputs, 1, "bmp-import");
+    const perInput = inputs.map((input) => {
+      try {
+        readBmp(input);
+        return { path: input, ok: true, error: undefined as string | undefined };
+      } catch (error) {
+        return { path: input, ok: false, error: String((error as Error).message ?? error) };
+      }
+    });
+    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
+  },
+  "bmp-project": async (inputs) => {
+    requireInputs(inputs, 1, "bmp-project");
+    const doc = readBmp(inputs[0]!);
+    return { status: "ok", measurements: { storage: doc.storage, width: doc.width, height: doc.height, paletteEntries: doc.palette?.length ?? 0, projection: doc } };
+  },
+  "bmp-compare": async (inputs) => {
+    requireInputs(inputs, 2, "bmp-compare");
+    const expected = readBmp(inputs[0]!);
+    const actual = readBmp(inputs[1]!);
+    const verdict = compareDocs(expected, actual);
+    return { status: "ok", measurements: { ...verdict, expected, actual } };
+  },
+};
+//#endregion 🔬️Probes
+
+//#region 🚀️Entry
+function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] } {
+  const [probe = "", ...rest] = argv;
+  const inputs: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) if (rest[i] === "--input") inputs.push(rest[i + 1] ?? "");
+  return { probe, inputs };
 }
 
 async function main(argv: readonly string[]): Promise<number> {
-  const [command = "generate"] = argv;
-  if (command !== "generate" && command !== "manifests") {
-    console.error(`[note generator] unknown command ${JSON.stringify(command)} — expected generate | manifests [--only <recipe-id>]...`);
-    return 2;
+  const { probe, inputs } = parseArgv(argv);
+  const started = Date.now();
+  const emit = (report: ProbeReport): number => {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return report.status === "failed" ? 1 : 0;
+  };
+  const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);
+  const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
+  const run = PROBES[probe];
+  if (!run) return emit({ schema: "semio.repository-test.probe-report/v2", probe: probe || "(none)", probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${probe}`, detail: `known: ${Object.keys(PROBES).join(", ")}` }] });
+  try {
+    const result = await Promise.race([run(inputs), watchdog]);
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: (result as { probeVersion?: string }).probeVersion ?? PROBE_VERSION, engine: (result as { engine?: typeof ENGINE }).engine ?? ENGINE, status: result.status, durationMs: Date.now() - started, measurements: result.measurements, ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}) });
+  } catch (error) {
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: String((error as Error).message ?? error) }] });
   }
-  const only: string[] = [];
-  for (let i = 0; i < argv.length; i += 1) if (argv[i] === "--only" && argv[i + 1]) only.push(argv[i + 1]!);
-  const known = new Set(RECIPES.map((r) => r.id));
-  const unknown = only.filter((id) => !known.has(id));
-  if (unknown.length > 0) {
-    console.error(`[note generator] unknown recipe(s) ${unknown.join(", ")} — known: ${RECIPES.map((r) => r.id).join(", ")}`);
-    return 2;
-  }
-  const committed = process.env.SEMIO_FIXTURE_OUT === undefined;
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? SUBSETS_DIR;
-  mkdirSync(outDir, { recursive: true });
-
-  const codecArgs = ["generate", "--out", outDir, ...(committed ? ["--physical-directories"] : []), ...only.flatMap((id) => ["--only", id])];
-  const result = runCodec(codecArgs);
-  if (result.status !== 0) {
-    console.error(`[note generator] note-oracle-codec exited ${result.status}: ${result.stderr.split("\n").slice(-12).join("\n")}`);
-    return 1;
-  }
-
-  const selected = only.length === 0 ? RECIPES : RECIPES.filter((r) => only.includes(r.id));
-  const manifests: Record<string, unknown>[] = [];
-  for (const recipe of selected) {
-    manifests.push(await fixtureManifestFor(recipe, outDir, committed));
-    console.error(`[note generator] ${recipe.id} (${recipe.files.map(({ carrier }) => carrier).join("+")})`);
-  }
-
-  if (command === "manifests") {
-    process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
-    return 0;
-  }
-
-  const indexPath = committed ? join(COMMITTED_FIXTURES, "🔣️.json") : join(outDir, "🔣️.json");
-  const previous = (() => {
-    if (only.length === 0 || !existsSync(indexPath)) return [];
-    try {
-      return JSON.parse(readFileSync(indexPath, "utf8")) as Record<string, unknown>[];
-    } catch {
-      return [];
-    }
-  })();
-  const indexed: Record<string, unknown>[] = committed
-    ? manifests.map((manifest) => {
-        const recipe = RECIPES.find(({ id }) => id === manifest.id)!;
-        return { ...manifest, files: (manifest.files as EvidenceFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
-      })
-    : manifests;
-  const produced = new Set(indexed.map((m) => m.id as string));
-  const merged = [...previous.filter((m) => !produced.has(m.id as string)), ...indexed].sort((a, b) => String(a.id).localeCompare(String(b.id)));
-  mkdirSync(dirname(indexPath), { recursive: true });
-  writeFileSync(indexPath, `${JSON.stringify(merged, null, 2)}\n`);
-  console.error(`[note generator] ${manifests.length}/${selected.length} bundle(s) generated into ${outDir}${only.length > 0 ? ` (merged into ${merged.length} total)` : ""}`);
-  return 0;
 }
-
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
-export { RECIPES };
-//#endregion 🏭️Generate
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  
+  if (true) process.exit(await main(process.argv.slice(2)));
+}

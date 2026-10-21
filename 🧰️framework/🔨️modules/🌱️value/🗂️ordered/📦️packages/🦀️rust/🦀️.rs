@@ -7,6 +7,9 @@ pub use serde;
 #[path="../../🦀️.rs"]
 pub mod ordered;
 pub use ordered::*;
+use semio_framework_value_intrinsic::{DecodedValue,DslValue,FromValue,NativeEncodeControl,ToValue};
+#[path="../../🌐️wire/🦀️.rs"]
+mod ordered_value_wire;
 #[cfg(test)]
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]

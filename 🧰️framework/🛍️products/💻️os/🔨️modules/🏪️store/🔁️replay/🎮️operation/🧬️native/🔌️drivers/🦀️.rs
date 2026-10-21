@@ -1,6 +1,7 @@
 //! 🔌️ Shared semantic preparation delegates to original native projection and edit cursors.
 use super::*;
-use semio_framework_value::{retained_clone::{RetainedClone,RetainedCloneCursor},snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor}};
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor};
 use semio_framework_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};
 use semio_framework_os_store_snapshot_clone::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
 use super::super::{ArtifactReplayPreparation,ArtifactReplayPreparationFactory};

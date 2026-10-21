@@ -213,6 +213,31 @@ test("sibling tasks of one process that hold one lease each and wait for the oth
  expect(outcomes.sort()).toEqual(["cycle","ok"]);
 });
 
+const wedge=async(reentrantShared:boolean)=>{
+ const {directory,env}=scenario({fairness:{queuedWithResourceLeases:true,reentrantShared},holdAndWait:{graceMilliseconds:60000,pollMilliseconds:50}});configure(env);
+ const shared=(owner:string)=>acquireQueuedResourceLease({directory,resource:"free:g",mode:"shared",sharedCohort:true,owner,signal:signal()});
+ const first=await withLeaseTaskV1(()=>shared("held"));
+ const writers=[0,1,2].map(()=>start({mode:"wait",queued:true,directory,resource:"free:g",access:"exclusive",timeoutMs:40000},env));
+ await tick(900);
+ const started=Date.now(),second=await withLeaseTaskV1(()=>shared("second")).then(lease=>lease,error=>error);
+ return {first,second,writers,elapsed:Date.now()-started};
+};
+
+test("re-entrant shared: a process that holds a shared lease gets a second shared request at once, even with exclusive requests queued on it",async()=>{
+ const {first,second,writers,elapsed}=await wedge(true);
+ expect(second).not.toBeInstanceOf(Error);expect(elapsed).toBeLessThan(800);
+ second.release();first.release();
+ for(const writer of writers)await writer.next("ACQUIRED");
+});
+
+test("the exact wedge shape without re-entrancy is detected as a deadlock cycle through the queued-ahead writers, and only the stuck second request fails",async()=>{
+ const {first,second,writers,elapsed}=await wedge(false);
+ expect(second).toBeInstanceOf(LeaseOrderErrorV1);expect(second.violation.kind).toBe("cycle");expect(elapsed).toBeLessThan(8000);
+ expect(second.violation.cycle.length).toBeGreaterThanOrEqual(3);
+ first.release();
+ for(const writer of writers)await writer.next("ACQUIRED");
+});
+
 test("a child started with the inherited environment starts from its parent's position in the lock order",async()=>{
  const {directory,env}=scenario();configure(env);
  const held=await acquireResourceLease({directory,resource:"inner:b",mode:"exclusive",signal:signal()});

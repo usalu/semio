@@ -22,6 +22,7 @@ semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-mutations = { workspace = true }

@@ -27,7 +27,7 @@ use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,arc_custody::{SharedControlledRetirement,shared_retirement_birth_bytes}};
 use std::{mem::ManuallyDrop,sync::Arc};
-use protocol::value::ordered::SharedOwner;
+use semio_framework_value_ordered::ordered::SharedOwner;
 use semio_framework_job::StepContext;
 #[path="🌊️wave/🦀️.rs"]
 pub mod wave;

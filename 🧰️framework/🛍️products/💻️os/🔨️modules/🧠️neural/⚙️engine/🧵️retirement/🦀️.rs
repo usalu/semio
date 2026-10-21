@@ -1,11 +1,11 @@
 //! 🧹️ Exact nested-value retirement and explicitly synchronous construction owners.
 
 use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, Operator, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
-use protocol::value::ordered::{OrderedMap, RetirementStep,SharedOwner,UpdateCursor};
+use semio_framework_value_ordered::ordered::{OrderedMap, RetirementStep, SharedOwner, UpdateCursor};
 use semio_framework_value_persistent::list::PagedList;
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::retirement_queue::RetirementQueue;
+use semio_framework_value_retirement_queue::RetirementQueue;
 use semio_framework_value::retirement::{controlled::ControlledRetirement,RetireOwned,RetirementCursor};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close};
 use std::collections::VecDeque;

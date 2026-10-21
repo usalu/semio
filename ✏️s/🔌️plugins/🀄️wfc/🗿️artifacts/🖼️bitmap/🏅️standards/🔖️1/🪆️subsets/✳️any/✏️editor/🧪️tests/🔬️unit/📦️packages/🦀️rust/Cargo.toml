@@ -39,8 +39,6 @@ semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-wfc-bitmap-bitmap = { path = "../../../../📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-mut-family = { path = "../../../../../🧬️schema/🧬️mutations/📐️resize-input/📦️packages/🦀️rust" }
@@ -51,6 +49,7 @@ semio-s-artifact-wfc-bitmap-transient = { path = "../../../../🫧️transient/�
 semio-s-plugin-wfc-engine = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

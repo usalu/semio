@@ -188,10 +188,10 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
         }
     }
 
-    fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value::ordered::SharedOwner<String> {
+    fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value_ordered::ordered::SharedOwner<String> {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         let birth = page;
         let (mut copy, _) = ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32, parts, birth).unwrap().unwrap();
         assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -210,11 +210,12 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
 
     #[test]
     fn latest_wins_owned_key_retains_zero_and_subexact_headers() {
-        use semio_framework_value::{ordered::SharedOwner, retained_clone::RetainedCloneGrant};
+        use semio_framework_value::retained_clone::RetainedCloneGrant;
+        use semio_framework_value_ordered::ordered::SharedOwner;
         let fixture:Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
-        let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         let birth=RetainedCloneGrant{maximum_capacity_bytes:parts.iter().map(|part|part.len()*2).sum::<usize>()+72,..page};
         let (mut copy,_)=ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32,parts,birth).unwrap().unwrap();
         for turn in 0..100_000 {if matches!(copy.advance(parts,page).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}

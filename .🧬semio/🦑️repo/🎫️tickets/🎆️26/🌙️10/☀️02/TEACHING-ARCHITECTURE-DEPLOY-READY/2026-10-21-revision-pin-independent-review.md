@@ -1,0 +1,17 @@
+# Independent Revision Implementation Pin Review
+
+Read-only current filesystem review. No Source edit, commands, helper/function evaluation or test execution. Current pins: reader8795B/610fd892040131dd79f3b66d1c0fd4b3bafcb794c22883660913502a3a721cb6; schema4248B/7b3ea8fa7bc73784e04c2f4f66d73375539257489941b089c2361c5b79717b7b; tests12087B/6df576c5a8ffe9083c6c1f2d92405ea4102c53c792daf646ebf307a28b4e9454; corpus3021B/a0ec0e169d4c7e585a57bd91e9e5ad9bcbcd1cf3a7cb5704c8a4aae854ee35e5.
+
+## Concrete Blocking Scope Defect
+
+withImplementationPinV1 stores an integer on globalThis[Symbol.for("semio.implementationPin.v1")], increments before awaiting arbitrary body, and decrements on settlement. implementationPinnedV1 reads that global integer without invocation identity or async lineage. Therefore branch A holding a pin while awaiting permits unrelated concurrent branch B outside that body to pass current() without loaded-reader/schema validation. The documented contract describes an invocation committed to what it loaded, but implementation applies process-wide to every invocation and every module copy sharing the symbol. A body that never settles leaves all such checks suppressed. Nest/failure tests exercise only serial lexical cases and cannot detect this cross-invocation leakage. Even if loaded-byte continuation is deliberately authorized, scope must be bound to the actual admitted invocation/async context rather than ambient process state.
+
+## Authority Semantics Are Changed, Not Optimized
+
+The prior physical capture logic remains for requested target bytes, including captured-source SHA comparison, descriptor/ancestry checks and bounded reads; the new pin skips own loaded-reader/schema self validation. Current consumers additionally skip exact Source reader, inventory, observation, Graph consumer/policies/module, Store, Cargo reader/config/publication and Rust assembly checks. Canonical build script wraps runAdmittedBuildInvocationV1/runAdmittedBuildCliV1 in withImplementationPinV1; inference implementationRevision returns its cached loadedRevision while pinned. Hence a physical implementation or policy edit can survive the previous stale-authority boundary and a graph generation can continue naming a prior implementation epoch. This is a substantive authority-contract change requiring Root disposition before another native run, not merely reduced repeated hashing.
+
+## Tests and Neutral Contracts
+
+New test copies reader/schema into system temporary directory, edits reader maximumSettledRevisions4096to4097 with equal length, expects refusal outside pin but acceptance inside pin, checks nested serial pins and rejection cleanup. This affirmatively codifies guard suppression and does not prove physical implementation freshness, policy stability or concurrent invocation isolation. It also writes scratch outside caller-owned ticket artifacts. Existing language-neutral corpus and schema cover byte/text bounds, physical ancestry/links/read failure/closure and captured-read diagnostics; they contain no pin scope/admission/epoch publication contract or independent oracle for the new behavior. Existing physical tests do not exercise edits while a separate async branch holds a pin.
+
+No executed outcome or passing contract is asserted. Preserve peer bytes; do not restore/refresh silently. Root should obtain coherent intended pin semantics and resolve concrete ambient-scope leak plus guard-authority policy before supported retry.

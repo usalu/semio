@@ -12,7 +12,7 @@ impl ToolJobAdmissionDemand {
     /// 📦️ A new typed frame adopts the original payload value and releases its original Box backing.
     pub fn boxed_job<P,J>()->Self{Self{items:1,copy_bytes:0,capacity_bytes:size_of::<J>(),release_bytes:size_of::<P>(),depth:1}}
     /// 🔗️ A new typed frame and shared payload allocate their actual declared native layouts.
-    pub fn shared_payload<P,J>()->Result<Self,ValueError>{let mut demand=Self::boxed_job::<P,J>();demand.capacity_bytes=demand.capacity_bytes.checked_add(semio_framework_value::retirement::shared::arc_bytes::<P>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool factory allocation extent overflow"))?;Ok(demand)}
+    pub fn shared_payload<P,J>()->Result<Self,ValueError>{let mut demand=Self::boxed_job::<P,J>();demand.capacity_bytes=demand.capacity_bytes.checked_add(semio_framework_value::retirement::arc_custody::arc_bytes::<P>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool factory allocation extent overflow"))?;Ok(demand)}
     /// 🎒️ An already born job changes custody without allocating or releasing a replacement frame.
     pub fn reused_job()->Self{Self{items:1,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:1}}
     /// 🎟️ Every native axis must fit the actual original remaining turn before any slot transfers.

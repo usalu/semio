@@ -279,7 +279,7 @@ function workspaceNegationClosed(inputs) {
 
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
 export async function projectInputs(json, root, workspaceRoot, facts, scripts=createScriptInputCache(), sourceRepresentation = "hash", sourceGroups,inputNames=[],commandGroups={}) {
-  return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root,namedInputs)=>declaredSourceInputs({...json,namedInputs:{...namedInputs,...commandGroups}},root,scripts.context,inputNames):()=>sourceGroups, owned, sourceRepresentation });
+  return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root,namedInputs)=>declaredSourceInputs({...json,namedInputs:{...namedInputs,...Object.fromEntries(Object.keys(commandGroups).map(name=>[name,[]]))}},root,scripts.context,inputNames):()=>sourceGroups, owned, sourceRepresentation });
 }
 
 /**
@@ -374,7 +374,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
       if (policy.cache) policy = withCacheDecision(policy, "deterministic", "check-without-outputs");
     }
     if(policy.metadata?.semio?.wasmPackageSourceV1)policy = receiptedStoreTargetV1(policy, name, "outputs-in-managed-store");
-    const source=await targetScriptSources(target,workspaceRoot,scripts,root,nativeProject?nativeManifest:undefined);if(source.generatedDependencies?.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:source.generatedDependencies}).targets[name];
+    const source=await targetScriptSources(inherited,workspaceRoot,scripts,root,nativeProject?nativeManifest:undefined);const produced=(source.generatedDependencies??[]);if(produced.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:produced}).targets[name];
     if (POLICY.serialTargets?.includes(name)) policy.parallelism = false;
     if (policy.cache && policy.inputs) policy = await preciseInputsV1(json.name, name, inherited.options?.command ?? inherited.command, policy, workspaceRoot, facts, scripts, internCommandSources);
     normalized[name] = loaded.targetBuildModes(name, cachedOutputsAdmittedV1(policy));

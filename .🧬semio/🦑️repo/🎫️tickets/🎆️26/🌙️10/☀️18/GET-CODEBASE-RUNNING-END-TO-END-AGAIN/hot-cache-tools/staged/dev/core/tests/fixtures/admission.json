@@ -1,0 +1,1040 @@
+{
+ "version": 1,
+ "description": "Language-agnostic corpus of the service invocation admission: symbolic requests with the decision every implementation must reach. @root, @outside, @other-worktree and @worktree stand for the paths and the id of the test worktrees, {\"@now\":n} for the clock plus n milliseconds. Tokens are minted by the test from the symbolic description; the reference decision of oracle.py is computed independently of the expectations stored here.",
+ "clock": 1000000,
+ "requests": [
+  {
+   "name": "a genuine token",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "a genuine token with narrower scope still containing run",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "scope",
+      "v": [
+       "run",
+       "status"
+      ]
+     }
+    ]
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "a project caveat that names the project",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "app"
+      ]
+     }
+    ]
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "a project caveat with a prefix",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "ap*"
+      ]
+     }
+    ]
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "a directory caveat above the directory",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "cwd",
+      "v": "@root/pkgs"
+     }
+    ]
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "empty token",
+   "token": {
+    "kind": "empty"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "garbage token",
+   "token": {
+    "kind": "garbage"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "forged MAC",
+   "token": {
+    "kind": "forged-mac"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "widened payload under the old MAC",
+   "token": {
+    "kind": "tampered-scope"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "dropped expiry under the old MAC",
+   "token": {
+    "kind": "tampered-expiry"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "token of another key",
+   "token": {
+    "kind": "other-key"
+   },
+   "expect": "token"
+  },
+  {
+   "name": "expired",
+   "token": {
+    "kind": "genuine",
+    "extra": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": -1
+      }
+     }
+    ]
+   },
+   "expect": "expired"
+  },
+  {
+   "name": "expired a millisecond ago in a long token",
+   "token": {
+    "kind": "genuine",
+    "extra": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": -1
+      }
+     }
+    ],
+    "attenuate": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": 3600000
+      }
+     }
+    ]
+   },
+   "expect": "expired"
+  },
+  {
+   "name": "no expiry",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "notAfter"
+    ]
+   },
+   "expect": "caveats"
+  },
+  {
+   "name": "no worktree",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "worktree"
+    ]
+   },
+   "expect": "caveats"
+  },
+  {
+   "name": "no agent",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "agent"
+    ]
+   },
+   "expect": "caveats"
+  },
+  {
+   "name": "no scope",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "scope"
+    ]
+   },
+   "expect": "caveats"
+  },
+  {
+   "name": "lifetime beyond the authored maximum",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "notAfter"
+    ],
+    "extra": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": 90000000
+      }
+     }
+    ]
+   },
+   "expect": "unbounded"
+  },
+  {
+   "name": "lifetime of exactly the authored maximum",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "notAfter"
+    ],
+    "extra": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": 86400000
+      }
+     }
+    ]
+   },
+   "expect": "ok"
+  },
+  {
+   "name": "scope without run",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "scope",
+      "v": [
+       "status"
+      ]
+     }
+    ]
+   },
+   "expect": "scope"
+  },
+  {
+   "name": "another agent",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "agent",
+   "agent": "intruder"
+  },
+  {
+   "name": "token bound to another agent",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "agent"
+    ],
+    "extra": [
+     {
+      "k": "agent",
+      "v": "someone-else"
+     }
+    ]
+   },
+   "expect": "agent"
+  },
+  {
+   "name": "token of another worktree",
+   "token": {
+    "kind": "genuine",
+    "drop": [
+     "worktree"
+    ],
+    "extra": [
+     {
+      "k": "worktree",
+      "v": "@other-worktree"
+     }
+    ]
+   },
+   "expect": "worktree"
+  },
+  {
+   "name": "directory outside the worktree",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "worktree",
+   "cwd": "outside"
+  },
+  {
+   "name": "directory of the other worktree",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "worktree",
+   "cwd": "other-worktree"
+  },
+  {
+   "name": "symlink out of the worktree",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "worktree",
+   "cwd": "symlink-out"
+  },
+  {
+   "name": "missing directory",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "worktree",
+   "cwd": "missing"
+  },
+  {
+   "name": "directory narrower than the token",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "cwd",
+      "v": "@root/pkgs/b"
+     }
+    ]
+   },
+   "expect": "scope"
+  },
+  {
+   "name": "a directory caveat that is only a name prefix of the directory",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "cwd",
+      "v": "@root/pkgs/a/sub"
+     }
+    ]
+   },
+   "expect": "scope"
+  },
+  {
+   "name": "project outside the token",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "lib"
+      ]
+     }
+    ]
+   },
+   "expect": "scope"
+  },
+  {
+   "name": "project outside a prefix token",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "li*"
+      ]
+     }
+    ]
+   },
+   "expect": "scope"
+  },
+  {
+   "name": "unknown caveat kind",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "mystery",
+      "v": 1
+     }
+    ]
+   },
+   "expect": "token"
+  },
+  {
+   "name": "revoked session",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "revoked",
+   "revoked": "session"
+  },
+  {
+   "name": "revoked agent",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "revoked",
+   "revoked": "agent"
+  },
+  {
+   "name": "an operation outside the grant",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "scope",
+   "args": [
+    "exec",
+    "app:build"
+   ]
+  },
+  {
+   "name": "a refusal of the arguments comes before the token scope",
+   "token": {
+    "kind": "genuine",
+    "attenuate": [
+     {
+      "k": "scope",
+      "v": [
+       "status"
+      ]
+     }
+    ]
+   },
+   "expect": "arguments",
+   "args": [
+    "run"
+   ]
+  },
+  {
+   "name": "a directory outside wins over bad arguments",
+   "token": {
+    "kind": "genuine"
+   },
+   "expect": "worktree",
+   "cwd": "outside",
+   "args": [
+    "run"
+   ]
+  },
+  {
+   "name": "an expired token wins over a bad directory",
+   "token": {
+    "kind": "genuine",
+    "extra": [
+     {
+      "k": "notAfter",
+      "v": {
+       "@now": -1
+      }
+     }
+    ]
+   },
+   "expect": "expired",
+   "cwd": "outside"
+  },
+  {
+   "name": "a forged token wins over everything",
+   "token": {
+    "kind": "forged-mac"
+   },
+   "expect": "token",
+   "cwd": "outside",
+   "args": [
+    "run"
+   ],
+   "agent": "intruder"
+  }
+ ],
+ "arguments": [
+  {
+   "args": [
+    "exec",
+    "app:build"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "watch"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "tools",
+    "setup"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "service",
+    "executor"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "reset"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "dependencies",
+    "sync"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "cache"
+   ],
+   "expect": "scope"
+  },
+  {
+   "args": [
+    "bogus"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "a:build",
+    "b:build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "a:build;rm"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "$(x):build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    ":build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "a:b:c:d"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--graph=x"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--graph"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--",
+    "--x"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "-x"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--bogus"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--dry-run=1"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--output"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--output",
+    "--bail"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--help"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--workers=on"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--lang=de"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--projects=a"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--files=x"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run-many",
+    "app:build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "affected",
+    "--base"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "affected",
+    "app:build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--tool=bazel"
+   ],
+   "expect": "tool"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--tool",
+    "bazel"
+   ],
+   "expect": "tool"
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--tool="
+   ],
+   "expect": "tool"
+  },
+  {
+   "args": [
+    "run",
+    "app0:build",
+    "app1:build",
+    "app2:build",
+    "app3:build",
+    "app4:build",
+    "app5:build",
+    "app6:build",
+    "app7:build",
+    "app8:build",
+    "app9:build",
+    "app10:build",
+    "app11:build",
+    "app12:build",
+    "app13:build",
+    "app14:build",
+    "app15:build",
+    "app16:build",
+    "app17:build",
+    "app18:build",
+    "app19:build",
+    "app20:build",
+    "app21:build",
+    "app22:build",
+    "app23:build",
+    "app24:build",
+    "app25:build",
+    "app26:build",
+    "app27:build",
+    "app28:build",
+    "app29:build",
+    "app30:build",
+    "app31:build",
+    "app32:build",
+    "app33:build",
+    "app34:build",
+    "app35:build",
+    "app36:build",
+    "app37:build",
+    "app38:build",
+    "app39:build",
+    "app40:build",
+    "app41:build",
+    "app42:build",
+    "app43:build",
+    "app44:build",
+    "app45:build",
+    "app46:build",
+    "app47:build",
+    "app48:build",
+    "app49:build",
+    "app50:build",
+    "app51:build",
+    "app52:build",
+    "app53:build",
+    "app54:build",
+    "app55:build",
+    "app56:build",
+    "app57:build",
+    "app58:build",
+    "app59:build",
+    "app60:build",
+    "app61:build",
+    "app62:build",
+    "app63:build",
+    "app64:build",
+    "app65:build",
+    "app66:build",
+    "app67:build",
+    "app68:build",
+    "app69:build"
+   ],
+   "expect": "arguments"
+  },
+  {
+   "args": [
+    "run",
+    "app:build"
+   ],
+   "expect": "ok",
+   "named": [
+    "app"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "@semio-tech/x:build:release",
+    "--output=stream",
+    "--configuration=release",
+    "--tool=nx",
+    "--skip-cache",
+    "--bail"
+   ],
+   "expect": "ok",
+   "named": [
+    "@semio-tech/x"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--tool",
+    "nx",
+    "--parallel",
+    "2"
+   ],
+   "expect": "ok",
+   "named": [
+    "app"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "app:build",
+    "--output",
+    "stream"
+   ],
+   "expect": "ok",
+   "named": [
+    "app"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "a"
+   ],
+   "expect": "ok",
+   "named": [
+    "a"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "a.b-c_d:e+f"
+   ],
+   "expect": "ok",
+   "named": [
+    "a.b-c_d"
+   ]
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build",
+    "--projects=a,b"
+   ],
+   "expect": "ok",
+   "named": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build"
+   ],
+   "expect": "ok",
+   "named": []
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets",
+    "build",
+    "--projects",
+    "a"
+   ],
+   "expect": "ok",
+   "named": [
+    "a"
+   ]
+  },
+  {
+   "args": [
+    "affected",
+    "--targets=build",
+    "--base=main",
+    "--head=HEAD"
+   ],
+   "expect": "ok",
+   "named": []
+  },
+  {
+   "args": [
+    "affected",
+    "--targets=build",
+    "--uncommitted"
+   ],
+   "expect": "ok",
+   "named": []
+  },
+  {
+   "args": [
+    "affected",
+    "--targets=build",
+    "--files=a.ts,b.ts"
+   ],
+   "expect": "ok",
+   "named": []
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build",
+    "--projects=a,b"
+   ],
+   "expect": "scope",
+   "token": {
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "a"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build",
+    "--projects=a"
+   ],
+   "expect": "ok",
+   "named": [
+    "a"
+   ],
+   "token": {
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "a"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build",
+    "--projects=a"
+   ],
+   "expect": "scope",
+   "grantOperations": [
+    "run"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "app:build"
+   ],
+   "expect": "ok",
+   "named": [
+    "app"
+   ],
+   "grantOperations": [
+    "run"
+   ]
+  },
+  {
+   "args": [
+    "affected",
+    "--targets=build",
+    "--base=main"
+   ],
+   "expect": "scope",
+   "token": {
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "a"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=build"
+   ],
+   "expect": "scope",
+   "token": {
+    "attenuate": [
+     {
+      "k": "projects",
+      "v": [
+       "a"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "args": [
+    "affected",
+    "--targets=build",
+    "--base=main"
+   ],
+   "expect": "ok",
+   "named": []
+  }
+ ]
+}

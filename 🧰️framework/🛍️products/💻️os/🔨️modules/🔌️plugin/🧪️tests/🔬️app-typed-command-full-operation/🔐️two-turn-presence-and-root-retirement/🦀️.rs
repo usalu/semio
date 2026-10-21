@@ -186,7 +186,7 @@ use semio_framework_plugin_retained_command::typed_operation::MountedTypedComman
     }
 
     fn advance_registry(registry: &mut ToolLatestWinsRegistry, context: &str) {
-        let quoted = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let quoted = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
         let (semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) = registry.advance(quoted).unwrap();
         assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");

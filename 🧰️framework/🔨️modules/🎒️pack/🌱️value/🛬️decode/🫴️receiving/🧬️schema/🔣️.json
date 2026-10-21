@@ -9,7 +9,8 @@
     "items",
     "turn",
     "laws",
-    "documentReceiving"
+    "documentReceiving",
+    "correlatedRetirement"
   ],
   "properties": {
     "text": {
@@ -121,6 +122,39 @@
         },
         "firstCloseHeapBytes": {
           "const": 0
+        }
+      }
+    },
+    "correlatedRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bodies",
+        "cancelCuts",
+        "maximumTurns",
+        "sourcePreserved"
+      ],
+      "properties": {
+        "bodies": {
+          "const": [
+            0,
+            1,
+            4096
+          ]
+        },
+        "cancelCuts": {
+          "const": [
+            0,
+            1,
+            8,
+            64
+          ]
+        },
+        "maximumTurns": {
+          "const": 100000
+        },
+        "sourcePreserved": {
+          "const": true
         }
       }
     }

@@ -29,7 +29,7 @@ fn p1_6_the_tasks_list_keeps_its_selection_on_the_same_task_and_shows_status_per
     dashboard.frame(&mut tui);
     let window = &dashboard.windows[overview];
     assert!(matches!(window.pane.current(), Some(super::panes::RowAction::Session(id)) if id == "d"), "the selection stays on task d although a row appeared above it and its status changed");
-    let statuses = match &tui.scene.node(window.list).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.statuses.clone(), _ => Vec::new() };
+    let statuses = match &tui.scene.node(window.list).content { NodeContent::Widget(WidgetState::List(list)) => list.statuses.clone(), _ => Vec::new() };
     assert!(statuses.contains(&Some(Status::Success)) && statuses.contains(&Some(Status::Running)), "{statuses:?}");
 }
 
@@ -61,7 +61,7 @@ fn p1_8_the_launcher_filter_pages_jumps_edits_and_previews() {
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
     let _ = tui.render();
     press(&mut dashboard, &mut tui, &type_text("quiz test"));
-    let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
+    let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { NodeContent::Widget(WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
     let text = caption(&dashboard, &mut tui);
     assert!(text.contains("1 of") && text.contains("bun repo run @fx/quiz:test"), "match count and preview: {text}");
     press(&mut dashboard, &mut tui, &[Event::Key(KeyEvent { key: Key::Backspace, mods: mods::ALT })]);

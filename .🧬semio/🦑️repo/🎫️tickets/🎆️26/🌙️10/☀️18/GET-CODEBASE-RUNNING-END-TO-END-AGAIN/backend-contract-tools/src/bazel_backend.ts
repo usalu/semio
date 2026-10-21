@@ -1,5 +1,6 @@
 import {join} from "node:path";
 import {readBuildMode} from "@@PROC@@/@@BUILDMOD@@/@@MODEMOD@@/@@TS@@";
+import {createIssuedResourceControlV1} from "@@PROC@@/@@ROUTING@@/@@TS@@";
 import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "@@UP@@@@BACKENDS@@/@@TS@@";
 
 /** 🔌️ bazel behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
@@ -21,6 +22,7 @@ export const backend:BuildBackendV1=Object.freeze({
   const {withBazelStorageV1}=await import("@@UP@@🔧️tools/🏗️bazel/💾️storage/@@TS@@");void snapshotBytes;await withBazelStorageV1(root,invocation,phaseControl,async storage=>{await storage.tools.recheck();await storage.dependencies.recheck();await storage.products.recheck();});
  },
  async cache(){return (await import("@@UP@@🔧️tools/🏗️bazel/⚙️operations/@@TS@@")).bazelBuildCacheToolV1();},
+ async cacheProbe(context){const {root,invocation}=context,[{withBazelSetupStorageV1},adapter,bootstrap,{bazelCacheProbeV1}]=await Promise.all([import("@@UP@@🔧️tools/🏗️bazel/💾️storage/@@TS@@"),import("@@UP@@🔧️tools/🏗️bazel/@@SCRIPT@@"),import("@@UP@@../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/@@SCRIPT@@"),import("@@UP@@🔧️tools/🏗️bazel/🔁️probe/@@TS@@")]);return withBazelSetupStorageV1(root,invocation,createIssuedResourceControlV1(invocation,"cache-verify:bazel",0),async(storage,phase)=>{const executable=await bootstrap.prepareBazel(root,storage.tools,phase,()=>{},false),modules=await adapter.prepareBazelModulesV1(root,executable,invocation,storage,phase);return bazelCacheProbeV1({version:bootstrap.BAZEL_VERSION,executable,installBase:join(storage.paths.install,bootstrap.BAZEL_VERSION,`${process.platform}-${process.arch}`),module:adapter.BAZEL_MODULE,lock:modules.lock,repository:modules.repository});});},
  async remoteCache(){return (await import("@@UP@@🔧️tools/🏗️bazel/🌐️remote-cache/@@TS@@")).bazelRemoteCacheToolV1();},
  async execute(context:BackendExecutionContextV1){const {root,invocation,graph}=context,resolved={args:[...context.args],watch:context.watch},artifactPhase=context.phase,command=context.args[0]!;
     if(command==="inputs")throw new Error("repo inputs is implemented for Nx; Bazel records the inputs of its spawns for repo verify build-parity");

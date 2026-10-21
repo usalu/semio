@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "bodies": {
+      "const": [
+        0,
+        1,
+        4096
+      ]
+    },
+    "cuts": {
+      "const": [
+        0,
+        1,
+        2,
+        32
+      ]
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "capacityBytes": {
+      "const": 0
+    },
+    "liveDepth": {
+      "const": 1
+    },
+    "release": {
+      "const": "owned-buffer-capacity"
+    },
+    "terminal": {
+      "const": {
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 0
+      }
+    }
+  },
+  "required": [
+    "bodies",
+    "cuts",
+    "copyBytes",
+    "capacityBytes",
+    "liveDepth",
+    "release",
+    "terminal"
+  ],
+  "additionalProperties": false
+}

@@ -26,6 +26,7 @@ impl semio_framework_value::retirement::RetireOwned for FixedCommandPage{
 impl semio_framework_value::retirement::RetirementCursor for FixedCommandPageRetirement{
  fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as Step;if self.bytes.is_none(){return Step::Complete}if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<COMMAND_PAGE_MAXIMUM_BYTES{return Step::BudgetExhausted}drop(self.bytes.take());Step::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:COMMAND_PAGE_MAXIMUM_BYTES,..Default::default()})}
  fn terminal_is_empty(&self)->bool{self.bytes.is_none()}
+ fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if self.bytes.is_some(){COMMAND_PAGE_MAXIMUM_BYTES}else{0},depth:usize::from(self.bytes.is_some()),..Default::default()})}
  fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn next_close_byte_demand(&self)->Option<usize>{Some(if self.bytes.is_some(){COMMAND_PAGE_MAXIMUM_BYTES}else{0})}

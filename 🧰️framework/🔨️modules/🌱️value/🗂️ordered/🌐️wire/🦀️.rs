@@ -1,5 +1,5 @@
 //! 🌐️ Canonical Value traits encode the actual downward immutable ordered producer.
-use semio_framework_value_ordered::ordered::*;
+use crate::ordered::*;
 use crate::retained_clone::RetainedCloneGrant;
 //#region 🔁️Value
 /// 🌱️ First-party replacement for the `#[cfg(test)]`-only `Serialize`/`Deserialize` above — see

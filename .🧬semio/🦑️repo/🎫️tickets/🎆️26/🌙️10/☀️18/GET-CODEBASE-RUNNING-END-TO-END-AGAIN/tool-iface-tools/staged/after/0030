@@ -1,240 +1,169 @@
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
-import { currentPlatform } from "@semio-tech/framework/test/adapter";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
-const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
-const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
-const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";
-const ENGINE_VERSION = "0.6.1";
-const SUBSET_IDS: Readonly<Record<string, string>> = { "📰️header": "header", "📊️tables": "tables", "🧩️entities": "entities", "🧱️blocks": "blocks" };
-
-const FIXTURE_COORDINATES: Readonly<Record<string, readonly [string, string]>> = {
-  "drafting-plate": ["📰️header", "📐️drafting-plate"],
-  "no-mutation-no-op": ["📰️header", "⏸️no-mutation-no-op"],
-  "set-header-var-applied": ["📰️header", "🏷️set-header-var-applied"],
-  "remove-header-var-applied": ["📰️header", "🧹️remove-header-var-applied"],
-  "remove-header-var-rejected-missing": ["📰️header", "🔍️remove-header-var-rejected-missing"],
-  "insert-layer-applied": ["📊️tables", "🧱️insert-layer-applied"],
-  "insert-layer-rejected-duplicate": ["📊️tables", "🚫️insert-layer-rejected-duplicate"],
-  "remove-layer-applied": ["📊️tables", "🪨️remove-layer-applied"],
-  "remove-layer-rejected-missing": ["📊️tables", "🔍️remove-layer-rejected-missing"],
-  "set-layer-applied": ["📊️tables", "🎚️set-layer-applied"],
-  "set-layer-rejected-missing": ["📊️tables", "❓️set-layer-rejected-missing"],
-  "insert-style-applied": ["📊️tables", "🎨️insert-style-applied"],
-  "insert-style-rejected-duplicate": ["📊️tables", "👯️insert-style-rejected-duplicate"],
-  "remove-style-applied": ["📊️tables", "🧽️remove-style-applied"],
-  "remove-style-rejected-missing": ["📊️tables", "🫥️remove-style-rejected-missing"],
-  "set-style-applied": ["📊️tables", "🖌️set-style-applied"],
-  "set-style-rejected-missing": ["📊️tables", "❌️set-style-rejected-missing"],
-  "insert-linetype-applied": ["📊️tables", "🧵️insert-linetype-applied"],
-  "insert-linetype-rejected-duplicate": ["📊️tables", "🪢️insert-linetype-rejected-duplicate"],
-  "remove-linetype-applied": ["📊️tables", "🪚️remove-linetype-applied"],
-  "remove-linetype-rejected-missing": ["📊️tables", "🕳️remove-linetype-rejected-missing"],
-  "set-linetype-applied": ["📊️tables", "🪡️set-linetype-applied"],
-  "set-linetype-rejected-missing": ["📊️tables", "📭️set-linetype-rejected-missing"],
-  "insert-entity-applied": ["🧩️entities", "➕️insert-entity-applied"],
-  "insert-entity-rejected-out-of-bounds": ["🧩️entities", "🚧️insert-entity-rejected-out-of-bounds"],
-  "remove-entity-applied": ["🧩️entities", "➖️remove-entity-applied"],
-  "remove-entity-rejected-missing": ["🧩️entities", "🔍️remove-entity-rejected-missing"],
-  "set-entity-applied": ["🧩️entities", "🧩️set-entity-applied"],
-  "set-entity-rejected-out-of-bounds": ["🧩️entities", "⛔️set-entity-rejected-out-of-bounds"],
-  "insert-block-applied": ["🧱️blocks", "➕️insert-block-applied"],
-  "insert-block-rejected-out-of-bounds": ["🧱️blocks", "🚧️insert-block-rejected-out-of-bounds"],
-  "remove-block-applied": ["🧱️blocks", "➖️remove-block-applied"],
-  "remove-block-rejected-missing": ["🧱️blocks", "🔍️remove-block-rejected-missing"],
-  "set-block-applied": ["🧱️blocks", "🧱️set-block-applied"],
-  "set-block-rejected-out-of-bounds": ["🧱️blocks", "⛔️set-block-rejected-out-of-bounds"],
+/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
+type ProbeReport = {
+  schema: "semio.repository-test.probe-report/v2";
+  probe: string;
+  probeVersion: string;
+  engine: { family: string; implementation: string; version: string };
+  status: "ok" | "failed" | "unsupported";
+  durationMs: number;
+  measurements: Record<string, unknown>;
+  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
 };
 
-type Outcome = "applied" | "no-op" | "rejected";
-type Recipe = Readonly<{ id: string; kind: "single" | "pair"; mutation: string | null; outcome: Outcome | null; notes: string }>;
-
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🧫️fixtures/🦀️.rs` verbatim — `drafting-plate` (the
- *  pre-existing single-document fixture, untouched) plus one entry per witnessable `(mutation,
- *  outcome)` coordinate this retrofit adds. `set-header-var` carries `-applied` only — see that
- *  file's own comment for the reachability proof (no fixture-less claim: verified from the real
- *  validation code, not asserted). */
-const RECIPES: readonly Recipe[] = [
-  { id: "drafting-plate", kind: "single", mutation: null, outcome: null, notes: "Pre-existing base document for the cross-semio-implementation oracle's own testing shape. Untouched in content by this retrofit." },
-  { id: "no-mutation-no-op", kind: "pair", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after are the same document, encoded independently." },
-  { id: "set-header-var-applied", kind: "pair", mutation: "set-header-var", outcome: "applied", notes: "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save." },
-  { id: "remove-header-var-applied", kind: "pair", mutation: "remove-header-var", outcome: "applied", notes: "$INSBASE resets to the origin." },
-  { id: "remove-header-var-rejected-missing", kind: "pair", mutation: "remove-header-var", outcome: "rejected", notes: "Target name is genuinely absent from header_vars — invalid-remove-target, carrier-independent." },
-  { id: "insert-layer-applied", kind: "pair", mutation: "insert-layer", outcome: "applied", notes: "A new named LAYER row is inserted at a valid index." },
-  { id: "insert-layer-rejected-duplicate", kind: "pair", mutation: "insert-layer", outcome: "rejected", notes: "Target name already exists in the base layer table — invalid-add-target." },
-  { id: "remove-layer-applied", kind: "pair", mutation: "remove-layer", outcome: "applied", notes: "The named LAYER row is removed." },
-  { id: "remove-layer-rejected-missing", kind: "pair", mutation: "remove-layer", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
-  { id: "set-layer-applied", kind: "pair", mutation: "set-layer", outcome: "applied", notes: "The named LAYER row's colour and linetype are whole-value replaced." },
-  { id: "set-layer-rejected-missing", kind: "pair", mutation: "set-layer", outcome: "rejected", notes: "Target name is absent — invalid-modify-target (diff_set_layer always emits a modified entry, unlike set-header-var)." },
-  { id: "insert-style-applied", kind: "pair", mutation: "insert-style", outcome: "applied", notes: "A new named STYLE row is inserted at a valid index." },
-  { id: "insert-style-rejected-duplicate", kind: "pair", mutation: "insert-style", outcome: "rejected", notes: "Target name already exists — invalid-add-target." },
-  { id: "remove-style-applied", kind: "pair", mutation: "remove-style", outcome: "applied", notes: "The named STYLE row is removed." },
-  { id: "remove-style-rejected-missing", kind: "pair", mutation: "remove-style", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
-  { id: "set-style-applied", kind: "pair", mutation: "set-style", outcome: "applied", notes: "The named STYLE row's font is whole-value replaced." },
-  { id: "set-style-rejected-missing", kind: "pair", mutation: "set-style", outcome: "rejected", notes: "Target name is absent — invalid-modify-target." },
-  { id: "insert-linetype-applied", kind: "pair", mutation: "insert-linetype", outcome: "applied", notes: "A new named LTYPE row is inserted at a valid index." },
-  { id: "insert-linetype-rejected-duplicate", kind: "pair", mutation: "insert-linetype", outcome: "rejected", notes: "Target name already exists — invalid-add-target." },
-  { id: "remove-linetype-applied", kind: "pair", mutation: "remove-linetype", outcome: "applied", notes: "The named LTYPE row is removed." },
-  { id: "remove-linetype-rejected-missing", kind: "pair", mutation: "remove-linetype", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
-  { id: "set-linetype-applied", kind: "pair", mutation: "set-linetype", outcome: "applied", notes: "The named LTYPE row's description is whole-value replaced." },
-  { id: "set-linetype-rejected-missing", kind: "pair", mutation: "set-linetype", outcome: "rejected", notes: "Target name is absent — invalid-modify-target." },
-  { id: "insert-entity-applied", kind: "pair", mutation: "insert-entity", outcome: "applied", notes: "A new entity is inserted at a valid middle index." },
-  { id: "insert-entity-rejected-out-of-bounds", kind: "pair", mutation: "insert-entity", outcome: "rejected", notes: "Index exceeds the evolving sequence length — invalid-add-index." },
-  { id: "remove-entity-applied", kind: "pair", mutation: "remove-entity", outcome: "applied", notes: "The entity at a valid middle index is removed." },
-  { id: "remove-entity-rejected-missing", kind: "pair", mutation: "remove-entity", outcome: "rejected", notes: "Index does not exist — invalid-remove-index." },
-  { id: "set-entity-applied", kind: "pair", mutation: "set-entity", outcome: "applied", notes: "The entity at a present index is whole-value replaced (the genuine modify branch, not the insert fallback)." },
-  { id: "set-entity-rejected-out-of-bounds", kind: "pair", mutation: "set-entity", outcome: "rejected", notes: "Index is absent AND beyond the evolving length, so even the insert fallback rejects it — invalid-add-index." },
-  { id: "insert-block-applied", kind: "pair", mutation: "insert-block", outcome: "applied", notes: "A new BLOCK is inserted at a valid index." },
-  { id: "insert-block-rejected-out-of-bounds", kind: "pair", mutation: "insert-block", outcome: "rejected", notes: "Index exceeds the evolving sequence length — invalid-add-index." },
-  { id: "remove-block-applied", kind: "pair", mutation: "remove-block", outcome: "applied", notes: "The BLOCK at a valid index is removed." },
-  { id: "remove-block-rejected-missing", kind: "pair", mutation: "remove-block", outcome: "rejected", notes: "Index does not exist — invalid-remove-index." },
-  { id: "set-block-applied", kind: "pair", mutation: "set-block", outcome: "applied", notes: "The BLOCK at a present index has its base point and nested entities whole-value replaced." },
-  { id: "set-block-rejected-out-of-bounds", kind: "pair", mutation: "set-block", outcome: "rejected", notes: "Index is absent AND beyond the evolving length — invalid-add-index via the insert fallback." },
-];
+const ENGINE = { family: "riff", implementation: "riff-avi-codec (riff 2.0 + this artifact's own AVI-1.0 field layout)", version: "riff@2.0.0" } as const;
+const PROBE_VERSION = "riff@2.0.0";
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
-//#region 🔨️Build
-function ensureBuilt(): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
+//#region 📥️Model
+type StreamFormat =
+  | { format: "bitmapInfo"; size: number; width: number; height: number; planes: number; bitCount: number; compression: string; sizeImage: number; xPelsPerMeter: number; yPelsPerMeter: number; colorsUsed: number; colorsImportant: number }
+  | { format: "waveFormat"; formatTag: number; channels: number; samplesPerSec: number; avgBytesPerSec: number; blockAlign: number; bitsPerSample: number; extraHex: string }
+  | { format: "raw"; dataHex: string };
+
+type StreamHeader = { fccType: string; fccHandler: string; flags: number; priority: number; language: number; initialFrames: number; scale: number; rate: number; start: number; length: number; suggestedBufferSize: number; quality: number; sampleSize: number; rcFrameLeft: number; rcFrameTop: number; rcFrameRight: number; rcFrameBottom: number };
+
+type RawChunk = { fourcc: string; keyframe: boolean; dataHex: string };
+type Stream = { strh: StreamHeader; strf: StreamFormat; chunks: RawChunk[] };
+type UnknownChunk = { fourcc: string; dataHex: string };
+type MainHeader = { microSecPerFrame: number; maxBytesPerSec: number; paddingGranularity: number; flags: number; totalFrames: number; initialFrames: number; streams: number; suggestedBufferSize: number; width: number; height: number; reserved: number[] };
+
+/** 🌳 What `riff-avi-codec project` emits verbatim — raw `dataHex` still present. */
+type RawDoc = { mainHeader: MainHeader; idx1Present: boolean; streams: Stream[]; unknownChunks: UnknownChunk[] };
+
+/** ⚖️ The comparisonProfile's own projection: movi/unknown chunk PAYLOADS become size+digest, never
+ *  raw bytes — the same opaque-binary-payload treatment the BCF probe gives a PNG snapshot. */
+type ProjectedChunk = { fourcc: string; keyframe: boolean; size: number; digest: string };
+type ProjectedUnknown = { fourcc: string; size: number; digest: string };
+type ProjectedStream = { strh: StreamHeader; strf: Exclude<StreamFormat, { format: "waveFormat" } | { format: "raw" }> | { format: "waveFormat"; formatTag: number; channels: number; samplesPerSec: number; avgBytesPerSec: number; blockAlign: number; bitsPerSample: number; extraSize: number; extraDigest: string } | { format: "raw"; size: number; digest: string }; chunks: ProjectedChunk[] };
+type AviDoc = { mainHeader: MainHeader; idx1Present: boolean; streams: ProjectedStream[]; unknownChunks: ProjectedUnknown[] };
+//#endregion 📥️Model
+
+//#region 🔓️Read
+function digestHex(hex: string): { size: number; digest: string } {
+  const bytes = Buffer.from(hex, "hex");
+  return { size: bytes.length, digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}` };
 }
 
-async function sha256(bytes: Buffer): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes));
-  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
-}
-
-function platformId(): string {
-  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
-  const arch = process.arch === "arm64" ? "arm64" : "x64";
-  return `${os}-${arch}`;
-}
-
-/** 🦀️ Shells out to the standalone engine binary — the ONLY place this file touches it. */
-function engineBuild(id: string, outDir: string): void {
-  const result = spawnSync(ENGINE_BIN, ["build", id, outDir], { encoding: "utf8" });
-  if (result.status !== 0) {
-    throw new Error(`engine build ${id} failed (exit ${result.status}): ${result.stderr}`);
+function projectStrf(strf: StreamFormat): ProjectedStream["strf"] {
+  if (strf.format === "bitmapInfo") return strf;
+  if (strf.format === "waveFormat") {
+    const { extraHex, ...rest } = strf;
+    const extra = digestHex(extraHex);
+    return { ...rest, extraSize: extra.size, extraDigest: extra.digest };
   }
-}
-//#endregion 🔨️Build
-
-//#region 🏭️Generate
-async function fileEntry(role: string, dir: string, filename: string, id: string): Promise<{ role: string; path: string; mediaType: string; sha256: string; bytes: number }> {
-  const abs = join(dir, filename);
-  const bytes = readFileSync(abs);
-  return { role, path: `${FIXTURE_PATH_PREFIX}${id}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length };
+  const d = digestHex(strf.dataHex);
+  return { format: "raw", size: d.size, digest: d.digest };
 }
 
-async function manifestForSingle(recipe: Recipe, outDir: string): Promise<Record<string, unknown>> {
-  const name = FIXTURE_COORDINATES[recipe.id]![1];
-  const dir = join(outDir, name);
-  const filename = "📐️drafting-plate.dxf";
-  engineBuild(recipe.id, dir);
-  const bytes = readFileSync(join(dir, filename));
+/** 📥️ Runs the standalone codec's `project` subcommand and turns its raw hex payloads into the
+ *  profile's own size+digest projection — never raw bytes past this function. */
+function readAvi(path: string): AviDoc {
+  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`riff-avi-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
+  const raw = JSON.parse(result.stdout) as RawDoc;
   return {
-    id: recipe.id,
-    class: "third-party-generated",
-    family: "mechanical",
-    files: [{ role: "primary-dxf", path: `${FIXTURE_PATH_PREFIX}${name}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length }],
-    provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: currentPlatform() },
-    reproducible: true,
+    mainHeader: raw.mainHeader,
+    idx1Present: raw.idx1Present,
+    streams: raw.streams.map((s) => ({ strh: s.strh, strf: projectStrf(s.strf), chunks: s.chunks.map((c) => ({ fourcc: c.fourcc, keyframe: c.keyframe, ...digestHex(c.dataHex) })) })),
+    unknownChunks: raw.unknownChunks.map((u) => ({ fourcc: u.fourcc, ...digestHex(u.dataHex) })),
   };
 }
+//#endregion 🔓️Read
 
-async function manifestForPair(recipe: Recipe, outDir: string): Promise<Record<string, unknown>> {
-  const [subset, name] = FIXTURE_COORDINATES[recipe.id]!;
-  const dir = join(outDir, name);
-  engineBuild(recipe.id, dir);
-  const files: Awaited<ReturnType<typeof fileEntry>>[] = [await fileEntry("expected-before-dxf", dir, "⬅️before.dxf", name)];
-  const hasAfter = existsSync(join(dir, "➡️after.dxf"));
-  if (recipe.outcome === "rejected") {
-    if (hasAfter) throw new Error(`recipe ${recipe.id} is declared rejected but the engine produced an after.dxf anyway`);
-  } else {
-    if (!hasAfter) throw new Error(`recipe ${recipe.id} is declared ${recipe.outcome} but the engine produced no after.dxf`);
-    files.push(await fileEntry("expected-after-dxf", dir, "➡️after.dxf", name));
+//#region ⚖️Compare
+/** ⚖️ Positional structural equality — mirrors `semantic-avi-v1`'s own `arrays: "ordered"` rule
+ *  (stream index and movi-chunk position are semantic identity in AVI, per that profile's own
+ *  description; unlike BCF's guid-keyed set comparison, nothing here is reordered before diffing). */
+function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    const len = Math.max(expected.length, actual.length);
+    for (let i = 0; i < len; i += 1) diffAt(`${path}[${i}]`, expected[i], actual[i], diffs);
+    return;
   }
-
-  return {
-    id: recipe.id,
-    class: "third-party-generated",
-    target: { artifact: "s.stdio.dxf", standard: "r12", subset: SUBSET_IDS[subset] },
-    mutation: recipe.mutation,
-    outcome: recipe.outcome,
-    units: { length: "unitless", angle: "degree" },
-    files,
-    generator: {
-      oracle: READER_ORACLE_ID,
-      packageVersion: "0.6",
-      engineFamily: "dxf-rs",
-      engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
-      platform: platformId(),
-    },
-    provenance: { source: "generated", license: "MIT (dxf)", attribution: "Generated with dxf (MIT) via the standalone engine binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
-    comparisonProfile: "semantic-dxf-r12-v1",
-    reproducible: true,
-    family: "structural",
-    notes: recipe.notes,
-  };
+  if (typeof expected === "object" && expected !== null && typeof actual === "object" && actual !== null && !Array.isArray(expected)) {
+    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
+    for (const key of keys) diffAt(`${path}.${key}`, (expected as Record<string, unknown>)[key], (actual as Record<string, unknown>)[key], diffs);
+    return;
+  }
+  if (JSON.stringify(expected) !== JSON.stringify(actual)) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
 }
-//#endregion 🏭️Generate
 
-//#region 🚪️Entry
+function compareDocs(expected: AviDoc, actual: AviDoc): { equal: boolean; diffCount: number; diffs: string[] } {
+  const diffs: string[] = [];
+  diffAt("$", expected, actual, diffs);
+  return { equal: diffs.length === 0, diffCount: diffs.length, diffs: diffs.slice(0, 50) };
+}
+//#endregion ⚖️Compare
+
+//#region 🔬️Probes
+function requireInputs(inputs: readonly string[], count: number, probe: string): void {
+  if (inputs.length < count) throw new Error(`${probe} requires ${count} --input path(s), got ${inputs.length}`);
+}
+
+type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] };
+
+const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
+  "avi-import": async (inputs) => {
+    requireInputs(inputs, 1, "avi-import");
+    const perInput = inputs.map((input) => {
+      try {
+        readAvi(input);
+        return { path: input, ok: true, error: undefined as string | undefined };
+      } catch (error) {
+        return { path: input, ok: false, error: String((error as Error).message ?? error) };
+      }
+    });
+    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
+  },
+  "avi-project": async (inputs) => {
+    requireInputs(inputs, 1, "avi-project");
+    const doc = readAvi(inputs[0]!);
+    return { status: "ok", measurements: { streamCount: doc.streams.length, chunkCount: doc.streams.reduce((total, s) => total + s.chunks.length, 0), unknownChunkCount: doc.unknownChunks.length, projection: doc } };
+  },
+  "avi-compare": async (inputs) => {
+    requireInputs(inputs, 2, "avi-compare");
+    const expected = readAvi(inputs[0]!);
+    const actual = readAvi(inputs[1]!);
+    const verdict = compareDocs(expected, actual);
+    return { status: "ok", measurements: { ...verdict, expected, actual } };
+  },
+};
+//#endregion 🔬️Probes
+
+//#region 🚀️Entry
+function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] } {
+  const [probe = "", ...rest] = argv;
+  const inputs: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) if (rest[i] === "--input") inputs.push(rest[i + 1] ?? "");
+  return { probe, inputs };
+}
+
 async function main(argv: readonly string[]): Promise<number> {
-  const [command = "", ...rest] = argv;
-  const outFlagIndex = rest.indexOf("--out");
-  const onlyIndex = rest.indexOf("--only");
-  const only = onlyIndex === -1 ? null : (rest[onlyIndex + 1] ?? null);
-  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
-  const outDir = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : fixtureOutRoot !== undefined && fixtureOutRoot.length > 0 ? fixtureOutRoot : null;
-
-  if (command !== "generate" && command !== "manifests") {
-    console.error(`usage: 📜️script.ts <generate|manifests> [--only <recipe-id>] [--out <dir>]`);
-    return 2;
+  const { probe, inputs } = parseArgv(argv);
+  const started = Date.now();
+  const emit = (report: ProbeReport): number => {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return report.status === "failed" ? 1 : 0;
+  };
+  const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);
+  const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
+  const run = PROBES[probe];
+  if (!run) return emit({ schema: "semio.repository-test.probe-report/v2", probe: probe || "(none)", probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${probe}`, detail: `known: ${Object.keys(PROBES).join(", ")}` }] });
+  try {
+    const result = await Promise.race([run(inputs), watchdog]);
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: result.status, durationMs: Date.now() - started, measurements: result.measurements, ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}) });
+  } catch (error) {
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: String((error as Error).message ?? error) }] });
   }
-
-  const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
-  if (recipes.length === 0) {
-    console.error(`[dxf generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
-    return 1;
-  }
-
-  if (outDir !== null) mkdirSync(outDir, { recursive: true });
-  ensureBuilt();
-
-  const manifests: Record<string, unknown>[] = [];
-  let failed = 0;
-  for (const recipe of recipes) {
-    try {
-      const coordinate = FIXTURE_COORDINATES[recipe.id];
-      if (!coordinate) throw new Error(`Missing authored fixture coordinate: ${recipe.id}`);
-      const destination = outDir ?? join(HERE, "..", "..", coordinate[0], "🧪️tests/🧫️fixtures");
-      const manifest = recipe.kind === "single" ? await manifestForSingle(recipe, destination) : await manifestForPair(recipe, destination);
-      manifests.push(manifest);
-      console.error(`[dxf generator] ${recipe.id}${recipe.mutation ? ` (${recipe.mutation}/${recipe.outcome})` : ""}`);
-    } catch (error) {
-      failed += 1;
-      console.error(`[dxf generator] ${recipe.id} FAILED — ${(error as Error).message}`);
-    }
-  }
-
-  if (command === "manifests") {
-    process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
-  }
-  console.error(`[dxf generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
-  return failed > 0 ? 1 : 0;
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {

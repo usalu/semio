@@ -1,4 +1,4 @@
-"""Independent model of the owner row claims of the graph shaping (stdlib only): the naive scan the sorted range lookup must equal.
+"""🧲️ Independent model of the owner row claims of the graph shaping (stdlib only): the naive scan the sorted range lookup must equal.
 
 usage: oracle.py expect FIXTURE   prints, for every world, the rows of every owner (indices into the world's row list) and the rows of the environment"""
 import json, sys

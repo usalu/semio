@@ -77,5 +77,321 @@
     "canonicalBytes": 1048576,
     "requiredRecoveryBytes": 3145728,
     "unknownBytes": 131072
-  }
+  },
+  "selectedNames": [
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "name": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.authority.json",
+      "scope": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.json",
+      "scope": null
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "scope": null
+    },
+    {
+      "name": "../aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "scope": null
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.authority.json.pending",
+      "scope": null
+    },
+    {
+      "name": "unknown.json",
+      "scope": null
+    }
+  ],
+  "cleanup": [
+    {
+      "primary": "none",
+      "close": false,
+      "expected": "success"
+    },
+    {
+      "primary": "none",
+      "close": true,
+      "expected": "close"
+    },
+    {
+      "primary": "error",
+      "close": false,
+      "expected": "primary"
+    },
+    {
+      "primary": "error",
+      "close": true,
+      "expected": "primary"
+    },
+    {
+      "primary": "undefined",
+      "close": false,
+      "expected": "undefined"
+    },
+    {
+      "primary": "undefined",
+      "close": true,
+      "expected": "undefined"
+    }
+  ],
+  "selectedRetirement": [
+    {
+      "available": 0,
+      "minimum": 10,
+      "callbackBytes": 0,
+      "publications": [
+        {
+          "scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "modified": 1,
+          "bytes": 6
+        },
+        {
+          "scope": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "modified": 3,
+          "bytes": 6
+        },
+        {
+          "scope": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "modified": 2,
+          "bytes": 6
+        }
+      ],
+      "retired": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      ],
+      "callbacks": 1
+    },
+    {
+      "available": 10,
+      "minimum": 10,
+      "callbackBytes": 0,
+      "publications": [
+        {
+          "scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "modified": 1,
+          "bytes": 6
+        }
+      ],
+      "retired": [],
+      "callbacks": 0
+    },
+    {
+      "available": 0,
+      "minimum": 10,
+      "callbackBytes": 10,
+      "publications": [
+        {
+          "scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "modified": 1,
+          "bytes": 6
+        }
+      ],
+      "retired": [],
+      "callbacks": 1
+    },
+    {
+      "available": 0,
+      "minimum": 10,
+      "callbackBytes": 4,
+      "publications": [
+        {
+          "scope": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "modified": 1,
+          "bytes": 6
+        }
+      ],
+      "retired": [
+        "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      ],
+      "callbacks": 1
+    }
+  ],
+  "optionalResults": [
+    {
+      "value": {
+        "retiredBytes": 0,
+        "retiredFiles": 0
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "retiredBytes": 9007199254740991,
+        "retiredFiles": 9007199254740991
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "retiredBytes": -1,
+        "retiredFiles": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 0,
+        "retiredFiles": -1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 9007199254740992,
+        "retiredFiles": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 0,
+        "retiredFiles": 9007199254740992
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 1.5,
+        "retiredFiles": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 0,
+        "retiredFiles": 0,
+        "extra": true
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "retiredFiles": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {},
+      "accepted": false
+    },
+    {
+      "value": null,
+      "accepted": false
+    }
+  ],
+  "pressureContinuation": {
+    "filesystemBytes": 1207959552,
+    "maximumPhysicalBytes": 1233125376,
+    "snapshotBytes": 201326592,
+    "minimumAvailableBytes": 1073741824,
+    "chunkBytes": 65536
+  },
+  "concurrentSelected": [
+    {
+      "available": 0,
+      "minimum": 10,
+      "busy": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "retired": [
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "remaining": 12
+    },
+    {
+      "available": 10,
+      "minimum": 10,
+      "busy": [],
+      "retired": [],
+      "remaining": 10
+    },
+    {
+      "available": 0,
+      "minimum": 20,
+      "busy": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      ],
+      "retired": [
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "remaining": 6
+    },
+    {
+      "available": 0,
+      "minimum": 6,
+      "busy": [],
+      "retired": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "remaining": 6
+    }
+  ],
+  "concurrentFailures": [
+    "corrupt",
+    "cancel",
+    "changed",
+    "primary-undefined",
+    "published-again",
+    "already-retired"
+  ],
+  "compositorOrdering": [
+    {
+      "selectedFunds": true,
+      "scopedFunds": false,
+      "events": [
+        "selected",
+        "close"
+      ]
+    },
+    {
+      "selectedFunds": false,
+      "scopedFunds": true,
+      "events": [
+        "selected",
+        "scoped",
+        "close"
+      ]
+    },
+    {
+      "selectedFunds": false,
+      "scopedFunds": false,
+      "events": [
+        "selected",
+        "scoped",
+        "optional",
+        "close",
+        "coarse",
+        "close"
+      ]
+    }
+  ],
+  "partitionBridge": [
+    {
+      "owner": "factory",
+      "accepted": true
+    },
+    {
+      "owner": "copy",
+      "accepted": false
+    },
+    {
+      "owner": "closed",
+      "accepted": false
+    }
+  ]
 }

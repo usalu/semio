@@ -21,7 +21,6 @@ path = "../../⌨️entrypoint/🦀️.rs"
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel.workspace = true
 semio-s-dev-services.workspace = true
 semio-s-artifact-gis-gismap.workspace=true

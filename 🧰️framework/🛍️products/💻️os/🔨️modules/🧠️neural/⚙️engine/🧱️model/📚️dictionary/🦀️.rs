@@ -45,7 +45,7 @@ impl Dictionary {
     pub fn original_root_identity(&self)->Option<usize>{self.pairs.original_root_identity()}
 
     /// 🔗️ Retains only the exact immutable value of one ranked entry.
-    pub fn value_shared_at_rank(&self,index:usize)->Option<semio_framework_value::ordered::SharedOwner<Value>> {self.pairs.value_shared_at_rank(index)}
+    pub fn value_shared_at_rank(&self,index:usize)->Option<semio_framework_value_ordered::ordered::SharedOwner<Value>> {self.pairs.value_shared_at_rank(index)}
 
     /// 📍️ Borrows an original ranked entry from the existing ordered dictionary owner.
     pub fn entry_at_rank(&self,index:usize)->Option<(&String,&Value)> {self.pairs.entry_at_rank(index)}

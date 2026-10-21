@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Applies the polyglot compilation-unit module. Dry run by default.
+"""🧰️ Applies the polyglot compilation-unit module. Dry run by default.
 group 1: creates `L/🏗️build/🧩️units/**` from `staged/🧩️units/**` (create-only; an existing different file refuses the whole set).
 group 2: one anchored edit of the live TypeScript units engine: its private Tarjan implementation becomes a thin wrapper over the shared one (the wrapper keeps the UTF-16 member order the TypeScript plans were built with).
   --apply     write (temp + rename, all or nothing, rollback on error; the edited engine is backed up under C/🗑️generated/polyglot-units/)
   --undo      remove created files that still equal the staged bytes and restore the engine if it still equals the edited bytes
-  --ts-closure group 3 (opt-in, changes TypeScript unit keys): a dependent TypeScript unit keys the declaration CLOSURE of its dependencies instead of their own declaration digest (sound when a re-exported type changes two units away)
+  group 3 (default): a dependent TypeScript unit keys the declaration CLOSURE of its dependencies instead of their own declaration digest (sound when a re-exported type changes two units away); --no-ts-closure skips it
+  group 4 (default): wires `repo units`: the operation in the catalogue and its schema, the router branch and the regenerated help snapshot (wiring.py, wiring/help-fixture.json); --no-wiring skips it
   --no-dedupe skip group 2
   --root DIR  operate on a mirror of the repository (verification overlay)"""
 import hashlib, os, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import wiring
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STAGED = os.path.join(HERE, "staged", "🧩️units")
@@ -54,7 +57,11 @@ def edited_engine(text, dedupe=True, closure=False):
     return text
 
 
-def plan(dedupe, closure):
+WIRING = [("🏗️build/⚙️operations/🔣️catalog.json", wiring.catalog_edit), ("🏗️build/⚙️operations/🧬️schema/🔣️.json", wiring.schema_edit), ("🏗️build/📜️script.ts", wiring.router_edit)]
+HELP = "🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json"
+
+
+def plan(dedupe, closure, wire):
     ops, refused = [], []
     for rel in sorted(staged_files()):
         source, destination = os.path.join(STAGED, rel), os.path.join(TARGET, rel)
@@ -77,6 +84,33 @@ def plan(dedupe, closure):
             except SystemExit as error:
                 print(error)
                 refused.append(ENGINE)
+    if wire:
+        for rel, fn in WIRING:
+            path = os.path.join(LIB, rel)
+            if not os.path.exists(path):
+                refused.append(path)
+                continue
+            before = open(path, "rb").read()
+            try:
+                after = fn(before.decode("utf8")).encode("utf8")
+                ops.append(("same" if after == before else "edit", path, after))
+            except SystemExit as error:
+                print(error)
+                refused.append(path)
+        path = os.path.join(LIB, HELP)
+        fixture = open(os.path.join(HERE, "wiring", "help-fixture.json"), "rb").read()
+        base = open(os.path.join(HERE, "wiring", "help-fixture.base")).read().strip()
+        if not os.path.exists(path):
+            refused.append(path)
+        else:
+            current = open(path, "rb").read()
+            if current == fixture:
+                ops.append(("same", path, None))
+            elif sha(current) == base:
+                ops.append(("edit", path, fixture))
+            else:
+                print("DRIFT: the help snapshot changed since wiring/help-fixture.json was generated; run gen-help.py again")
+                refused.append(path)
     return ops, refused
 
 
@@ -92,7 +126,7 @@ def write_atomic(path, data):
 
 def main():
     args = sys.argv[1:]
-    dedupe, closure = "--no-dedupe" not in args, "--ts-closure" in args
+    dedupe, closure, wire = "--no-dedupe" not in args, "--no-ts-closure" not in args, "--no-wiring" not in args
     if not os.path.isdir(LIB):
         print("library not found:", LIB)
         return 2
@@ -106,15 +140,21 @@ def main():
         for base, _, _ in sorted(os.walk(TARGET), reverse=True):
             if os.path.isdir(base) and not os.listdir(base):
                 os.rmdir(base)
-        backup = os.path.join(BACKUP, "engine.ts")
-        if os.path.exists(backup) and os.path.exists(ENGINE):
-            current, original = open(ENGINE, "rb").read(), open(backup, encoding="utf8").read()
-            if current.decode("utf8") != original and any(edited_engine(original, d, c).encode("utf8") == current for d in (True, False) for c in (True, False)):
-                write_atomic(ENGINE, open(backup, "rb").read())
-                print("engine restored")
+        if os.path.isdir(BACKUP):
+            for name in sorted(os.listdir(BACKUP)):
+                if not name.endswith(".path"):
+                    continue
+                target = open(os.path.join(BACKUP, name), encoding="utf8").read()
+                original = open(os.path.join(BACKUP, name[:-5] + ".orig"), "rb").read()
+                if not os.path.exists(target):
+                    continue
+                current = open(target, "rb").read()
+                if current != original and (target == ENGINE and any(edited_engine(original.decode("utf8"), d, c).encode("utf8") == current for d in (True, False) for c in (True, False)) or target != ENGINE and any(fn(original.decode("utf8")).encode("utf8") == current for rel, fn in WIRING if target == os.path.join(LIB, rel)) or target == os.path.join(LIB, HELP) and current == open(os.path.join(HERE, "wiring", "help-fixture.json"), "rb").read()):
+                    write_atomic(target, original)
+                    print("restored", os.path.relpath(target, ROOT))
         print("undone", removed, "files")
         return 0
-    ops, refused = plan(dedupe, closure)
+    ops, refused = plan(dedupe, closure, wire)
     for kind, path, _ in ops:
         print(kind, os.path.relpath(path, ROOT))
     for path in refused:
@@ -134,7 +174,8 @@ def main():
             elif kind == "edit":
                 original = open(path, "rb").read()
                 os.makedirs(BACKUP, exist_ok=True)
-                write_atomic(os.path.join(BACKUP, "engine.ts"), original)
+                write_atomic(os.path.join(BACKUP, sha(path.encode("utf8"))[:16] + ".orig"), original)
+                open(os.path.join(BACKUP, sha(path.encode("utf8"))[:16] + ".path"), "w", encoding="utf8").write(path)
                 write_atomic(path, data)
                 done.append((path, original))
     except Exception as error:

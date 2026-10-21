@@ -2,6 +2,7 @@
 L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 B = L + "/🏗️build"
 R = B + "/🌐️remote-cache"
+import os as _os
 EDITS = []
 
 
@@ -161,27 +162,7 @@ region(SCHEMA, '''    "Status": {''', None, '''    "Status": {
         }
       }
     },
-    "ServerStatus": {
-      "description": "The document a running server answers on GET /status.",
-      "type": "object",
-      "required": ["version", "protocols", "entries", "bytes", "reservedBytes", "maximumBytes", "maximumEntryBytes", "readOnly", "validation", "counters", "startedAt"],
-      "properties": {
-        "version": { "const": 1 },
-        "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
-        "entries": { "type": "integer", "minimum": 0 },
-        "bytes": { "type": "integer", "minimum": 0 },
-        "reservedBytes": { "type": "integer", "minimum": 0 },
-        "maximumBytes": { "type": "integer", "minimum": 1 },
-        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
-        "readOnly": { "type": "boolean" },
-        "validation": { "enum": ["off", "structure", "complete"] },
-        "counters": { "type": "object" },
-        "startedAt": { "type": "string" }
-      }
-    }
-  }
-}
-''')
+''' + open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'staged', 'schema-defs.txt'), encoding='utf8').read() + '''''')
 
 # ---- operations catalogue: remote-cache is its own operation; cache keeps the ledger and the task cache
 CATALOG = B + "/⚙️operations/🔣️catalog.json"
@@ -512,3 +493,11 @@ import glob as _glob
 import os as _os
 for _name in sorted(_glob.glob(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "edits_*.py"))):
     exec(compile(open(_name, encoding="utf8").read(), _name, "exec"), globals())
+
+text(SCHEMA, """    { "$ref": "#/definitions/Status" }
+  ],""", """    { "$ref": "#/definitions/Status" },
+    { "$ref": "#/definitions/ServerStatus" },
+    { "$ref": "#/definitions/CollectionReport" },
+    { "$ref": "#/definitions/GcResult" },
+    { "$ref": "#/definitions/TextCatalogue" }
+  ],""")

@@ -21,7 +21,7 @@ fn input(law:&serde_json::Value)->DslValue {
     let dialect=&law["target"]["dialect"];
     DslValue::Object(vec![("childId".into(),DslValue::String(law["childId"].as_str().unwrap().into())),("target".into(),DslValue::Object(vec![("artifactId".into(),DslValue::String(law["target"]["artifactId"].as_str().unwrap().into())),("dialect".into(),DslValue::Object(["artifactKind","standard","subset"].map(|key|(key.into(),DslValue::String(dialect[key].as_str().unwrap().into()))).into()))]))])
 }
-fn retire<T:semio_framework_value::RetireOwned>(value:T,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner) {
+fn retire<T:semio_framework_value::retirement::RetireOwned>(value:T,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner) {
     let mut owner=ControlledRetirement::retain(value);
     while !owner.terminal_is_empty() {
         caller.turn_with_decoder(stock(),decoder,|cx|cx.with_original_retirement(|cx|close_original_retained_step(cx,owner.next_demand(4096)?,|grant|owner.step(grant)))).unwrap();

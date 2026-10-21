@@ -40,6 +40,7 @@ neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/�
 
 # 🌉️ `wasm_session` is the browser wasm-pack SDK bridge; the WASI guest component drops it together with its `ui_webgpu` chain.
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os-flow-wasm = { path = "../../🕸️wasm/📦️packages/🦀️rust" }

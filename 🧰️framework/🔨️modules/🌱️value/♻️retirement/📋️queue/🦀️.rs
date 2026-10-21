@@ -144,3 +144,9 @@ mod original_ownership_tests;
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+#[cfg(test)]
+#[path="🧪️tests/🎟️turn/🦀️.rs"]
+mod original_turn_tests;
+#[cfg(test)]
+#[path="🧪️tests/🎮️controlled/🦀️.rs"]
+mod original_controlled_tests;

@@ -43,11 +43,6 @@ pub fn key_original_value_error<'a>(error:&'a ValueError,path:&[usize],index:usi
 pub fn project_original_fault<'a>(error:&'a Fault,path:&[usize])->Result<V<'a>,ValueError>{view(Node::Fault(error),path)}
 /// 🔑️ Borrows the original diagnostic key without allocating a representation.
 pub fn key_original_fault<'a>(error:&'a Fault,path:&[usize],index:usize)->Result<&'a str,ValueError>{key(Node::Fault(error),path,index)}
-impl super::OriginalDomainProjection for OriginalReceivingPrimary{
- fn projection_identity(&self)->usize{self as*const Self as usize}
- fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{view(Node::Receiving(self),path)}
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{key(Node::Receiving(self),path,index)}
-}
 impl super::OriginalDomainProjection for OriginalTurnFailure{
  fn projection_identity(&self)->usize{self as*const Self as usize}
  fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{project_original_turn_failure(self,path)}

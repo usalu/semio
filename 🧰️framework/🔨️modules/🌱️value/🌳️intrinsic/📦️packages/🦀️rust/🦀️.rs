@@ -16,8 +16,6 @@ pub mod bytes;
 mod dynamic_retirement;
 #[path="../../../🧬️retained-clone/🌐️wire/🦀️.rs"]
 mod retained_currency_wire;
-#[path="../../../🗂️ordered/🌐️wire/🦀️.rs"]
-mod ordered_value_wire;
 #[cfg(test)]
 pub use semio_framework_value_derive::{ToValue,FromValue};
 #[cfg(test)]

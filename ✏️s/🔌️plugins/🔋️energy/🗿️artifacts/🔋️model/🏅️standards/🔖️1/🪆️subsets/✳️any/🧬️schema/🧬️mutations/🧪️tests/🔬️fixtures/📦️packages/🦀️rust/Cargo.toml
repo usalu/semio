@@ -214,7 +214,6 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-mut-air-loop = { workspace = true }
 semio-s-artifact-energy-model-mut-battery = { workspace = true }
@@ -270,7 +269,9 @@ semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-air-exchange = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-energy-engine-calendar = { workspace = true }

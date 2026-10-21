@@ -28,7 +28,9 @@
         "semver",
         "identity",
         "main",
-        "gc"
+        "gc",
+        "plugin",
+        "test"
       ]
     },
     "Support": {
@@ -36,6 +38,7 @@
         "native",
         "standard",
         "portable",
+        "provider",
         "missing"
       ]
     },
@@ -93,7 +96,9 @@
             "semver",
             "identity",
             "main",
-            "gc"
+            "gc",
+            "plugin",
+            "test"
           ],
           "properties": {
             "glob": {
@@ -151,6 +156,12 @@
               "$ref": "#/definitions/Support"
             },
             "gc": {
+              "$ref": "#/definitions/Support"
+            },
+            "plugin": {
+              "$ref": "#/definitions/Support"
+            },
+            "test": {
               "$ref": "#/definitions/Support"
             }
           }
@@ -235,7 +246,9 @@
           "semver",
           "identity",
           "main",
-          "gc"
+          "gc",
+          "plugin",
+          "test"
         ],
         "runtimes": [
           {
@@ -263,7 +276,9 @@
               "semver": "native",
               "identity": "native",
               "main": "portable",
-              "gc": "native"
+              "gc": "native",
+              "plugin": "native",
+              "test": "native"
             },
             "builtins": {
               "prefixes": [
@@ -285,7 +300,7 @@
               "glob": "portable",
               "toml": "portable",
               "jsonc": "portable",
-              "yaml": "missing",
+              "yaml": "portable",
               "which": "portable",
               "resolve": "portable",
               "sleep": "standard",
@@ -294,13 +309,15 @@
               "file": "standard",
               "serve": "standard",
               "sqlite": "standard",
-              "ffi": "missing",
-              "transpile": "missing",
-              "bundle": "missing",
+              "ffi": "provider",
+              "transpile": "portable",
+              "bundle": "provider",
               "semver": "portable",
               "identity": "native",
               "main": "portable",
-              "gc": "standard"
+              "gc": "standard",
+              "plugin": "standard",
+              "test": "portable"
             },
             "builtins": {
               "prefixes": [

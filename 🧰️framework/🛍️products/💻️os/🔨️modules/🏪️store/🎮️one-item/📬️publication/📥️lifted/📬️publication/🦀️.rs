@@ -30,5 +30,6 @@ pub struct MemberStoreOneItemWireRequest {
 pub trait MemberStoreOneItemWirePreparationFactory<P, Mutation>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn preflight(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin_demand(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin_copy_byte_demand(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<usize, ValueError>;
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)>;
 }

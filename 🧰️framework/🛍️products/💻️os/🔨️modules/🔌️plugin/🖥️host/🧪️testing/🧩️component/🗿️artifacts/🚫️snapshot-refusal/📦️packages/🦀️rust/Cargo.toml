@@ -33,7 +33,12 @@ semio-framework-diagnostic = { path = "../../../../../../../../../../../🔨️m
 semio-framework-ui-locale = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-os-kernel.workspace = true
+semio-framework-value-derive = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive.workspace = true

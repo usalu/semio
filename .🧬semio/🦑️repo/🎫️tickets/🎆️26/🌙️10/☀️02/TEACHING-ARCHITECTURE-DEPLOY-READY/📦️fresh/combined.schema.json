@@ -1743,7 +1743,31 @@
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json",
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🥒️.feature",
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts",
-        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+        "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/📥️preparation/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts",
+        "📋️build-owners.json",
+        "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
       ],
       "properties": {
         "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml": {
@@ -2828,6 +2852,462 @@
               "pattern": "^[a-f0-9]{64}$"
             }
           }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "♻️mit-bestand/🧺️demonstrator/📋️project.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/📥️preparation/🧬️schema/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "📋️build-owners.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
         }
       }
     }
@@ -2985,7 +3465,35 @@
             "build tool formatter uses closed localized activities and independent SQLite messages",
             "build tool actual Original preserves every checkpoint, cancellation and primary error",
             "dependency work presentation follows bounded interleaved frames and independent SQLite scheduling",
-            "dependency work actual Original preserves checkpoints cancellation and exact failure settlement"
+            "dependency work actual Original preserves checkpoints cancellation and exact failure settlement",
+            "selection stage presentation follows closed neutral clocks and independent SQLite slots",
+            "selection stage actual Original retains every checkpoint and primary failure on presentation settlement",
+            "selection stage pending presentation cannot postpone actual Original cancellation"
+          ]
+        },
+        {
+          "id": "implementation-pin",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+          "milliseconds": 150000,
+          "timeoutMilliseconds": 120000,
+          "source": true,
+          "titles": [
+            "neutral bounded revision contract and independent SQLite admission agree",
+            "bounded revision actual Source windows agree with independent Bun SHA and retain only requested finite text",
+            "bounded revision physical ancestry and exact failures retain original primary through descriptor closure",
+            "captured physical Source refusal diagnostics stay closed, relative and bounded",
+            "a pinned invocation completes with the Source it loaded: an edited reader refuses outside the pin and lets the invocation finish inside it; pins nest and a failing body releases its pin",
+            "implementation pins isolate concurrent invocations while sharing module-copy context"
+          ]
+        },
+        {
+          "id": "execution-contracts",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+          "milliseconds": 150000,
+          "timeoutMilliseconds": 120000,
+          "source": true,
+          "titles": [
+            "closed source and native execution declarations match the independent schema oracle"
           ]
         }
       ]
@@ -3216,22 +3724,50 @@
                 "build tool formatter uses closed localized activities and independent SQLite messages",
                 "build tool actual Original preserves every checkpoint, cancellation and primary error",
                 "dependency work presentation follows bounded interleaved frames and independent SQLite scheduling",
-                "dependency work actual Original preserves checkpoints cancellation and exact failure settlement"
+                "dependency work actual Original preserves checkpoints cancellation and exact failure settlement",
+                "selection stage presentation follows closed neutral clocks and independent SQLite slots",
+                "selection stage actual Original retains every checkpoint and primary failure on presentation settlement",
+                "selection stage pending presentation cannot postpone actual Original cancellation"
+              ]
+            },
+            {
+              "id": "implementation-pin",
+              "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+              "milliseconds": 150000,
+              "timeoutMilliseconds": 120000,
+              "source": true,
+              "titles": [
+                "neutral bounded revision contract and independent SQLite admission agree",
+                "bounded revision actual Source windows agree with independent Bun SHA and retain only requested finite text",
+                "bounded revision physical ancestry and exact failures retain original primary through descriptor closure",
+                "captured physical Source refusal diagnostics stay closed, relative and bounded",
+                "a pinned invocation completes with the Source it loaded: an edited reader refuses outside the pin and lets the invocation finish inside it; pins nest and a failing body releases its pin",
+                "implementation pins isolate concurrent invocations while sharing module-copy context"
+              ]
+            },
+            {
+              "id": "execution-contracts",
+              "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+              "milliseconds": 150000,
+              "timeoutMilliseconds": 120000,
+              "source": true,
+              "titles": [
+                "closed source and native execution declarations match the independent schema oracle"
               ]
             }
           ]
         },
         "budget": {
           "const": {
-            "parentMilliseconds": 2430000,
-            "phaseMilliseconds": 2340000,
+            "parentMilliseconds": 2730000,
+            "phaseMilliseconds": 2640000,
             "reserveMilliseconds": 90000
           }
         },
         "collections": {
           "type": "array",
-          "minItems": 18,
-          "maxItems": 18,
+          "minItems": 26,
+          "maxItems": 26,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -3262,7 +3798,15 @@
                   "dependency-progress-missing-existing",
                   "dependency-progress-missing-new",
                   "dependency-progress-wrong-count",
-                  "dependency-progress-duplicate-title"
+                  "dependency-progress-duplicate-title",
+                  "implementation-pin-exact",
+                  "implementation-pin-missing-first",
+                  "implementation-pin-missing-last",
+                  "implementation-pin-wrong-summary",
+                  "implementation-pin-duplicate-last",
+                  "execution-contracts-exact",
+                  "execution-contracts-uncollected",
+                  "execution-contracts-wrong-count"
                 ]
               },
               "phase": {
@@ -3270,7 +3814,9 @@
                   "source",
                   "cache-descriptors",
                   "declared-project",
-                  "dependency-progress"
+                  "dependency-progress",
+                  "implementation-pin",
+                  "execution-contracts"
                 ]
               },
               "stdout": {
@@ -3329,7 +3875,7 @@
       ]
     },
     "parentMilliseconds": {
-      "const": 2430000
+      "const": 2730000
     },
     "outputPolicy": {
       "const": {

@@ -37,6 +37,19 @@
       ],
       "expectedTestCounts": {
         "library": 53
+      },
+      "status": "passed",
+      "actual": {
+        "process": 35120,
+        "exit": 0,
+        "passed": 53,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0,
+        "seconds": 30.74,
+        "log": "🗑️generated/e2e-filesystem-segmented-history-hsg3.log",
+        "artifacts": "🗑️generated/hsg3",
+        "platform": "macOS arm64"
       }
     },
     {
@@ -59,7 +72,17 @@
       "expected": [
         "Actual owned Cargo check --lib succeeds with normal target provisioning; no raw Rustup, linking bypass or test-only platform skip.",
         "This checks platform branches and types only. Actual x86_64-pc-windows-msvc runtime and filesystem semantics remain unverified."
-      ]
+      ],
+      "precondition": "Declared managed toolchain must provision selected cross-target std; current host+two-wasm Source policy does not. Native Windows/Linux host gates remain required separately.",
+      "status": "unmet-toolchain-capability",
+      "lastAttempt": {
+        "process": 30084,
+        "exit": 101,
+        "reason": "E0463: selected cross-target std not installed",
+        "log": "🗑️generated/e2e-filesystem-check-windows-fsw1.log",
+        "compilerAdmitted": true,
+        "testBodies": 0
+      }
     },
     {
       "id": "filesystem-check-x86_64-unknown-linux-gnu",
@@ -81,7 +104,9 @@
       "expected": [
         "Actual owned Cargo check --lib succeeds with normal target provisioning; no raw Rustup, linking bypass or test-only platform skip.",
         "This checks platform branches and types only. Actual x86_64-unknown-linux-gnu runtime and filesystem semantics remain unverified."
-      ]
+      ],
+      "precondition": "Declared managed toolchain must provision selected cross-target std; current host+two-wasm Source policy does not. Native Windows/Linux host gates remain required separately.",
+      "status": "unmet-toolchain-capability"
     },
     {
       "id": "terminal-editor-controller",
@@ -110,6 +135,22 @@
       ],
       "expectedTestCounts": {
         "terminal": 9
+      },
+      "status": "passed",
+      "lastAttempt": {
+        "process": 10528,
+        "exit": 0,
+        "compilerAdmitted": true,
+        "compileSeconds": 23.29,
+        "testBodies": 9,
+        "passed": 9,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 72,
+        "seconds": 1.26,
+        "reason": "Actual root→visible-child navigation law passed together with all eight prior source controller laws; authenticated archive roots and read-only retained child are distinct scopes.",
+        "log": "🗑️generated/e2e-terminal-source-controller-tdc9.log",
+        "artifacts": "🗑️generated/tdc9"
       }
     },
     {
@@ -140,6 +181,50 @@
       "expectedTestCounts": {
         "preferences": 9,
         "terminal": 8
+      },
+      "status": "passed",
+      "lastAttempt": {
+        "process": 81949,
+        "exit": 101,
+        "compileSeconds": 6.98,
+        "preferences": {
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "seconds": 0.11
+        },
+        "terminal": {
+          "passed": 7,
+          "failed": 1,
+          "ignored": 0,
+          "filtered": 73,
+          "seconds": 0.09
+        },
+        "reason": "Wrong relative usage fixture path; existing canonical dashboard sibling reference corrected, no data duplication.",
+        "log": "🗑️generated/e2e-explicit-language-lng2.log"
+      },
+      "actual": {
+        "process": 41120,
+        "exit": 0,
+        "compileSeconds": 5.34,
+        "preferences": {
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "seconds": 0.13
+        },
+        "terminal": {
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "seconds": 0.02
+        },
+        "log": "🗑️generated/e2e-explicit-language-lng3.log",
+        "artifacts": "🗑️generated/lng3",
+        "platform": "macOS arm64"
       }
     },
     {
@@ -153,11 +238,11 @@
       "declaration": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/📋️project.json",
       "expected": [
         "Actual inferred cargoTargets test route runs through NativeScript and the repository owner-command transport under the incoming Original.",
-        "Four public scalar, compound, strict-child and normal-demand integration laws run; retain actual named bodies and whole terminal separately from direct Cargo matrix evidence.",
+        "Nine public integration laws run: the original four named requirements, four mounted standard-collection lifecycle laws and one supplemental exact source handback lifecycle law. Retain actual named bodies and whole terminal separately from direct Cargo matrix evidence.",
         "Installed supervised stop/restart probes remain the cancellation evidence; this successful test route alone does not prove cancellation."
       ],
       "expectedTestCounts": {
-        "rust": 4
+        "rust": 9
       },
       "status": "pending",
       "expectedNamedTests": [
@@ -183,7 +268,17 @@
         "Owned launcher uses explicit kind lock and genuine resolution writer; no --locked suppression in test compilation or synthetic registry result.",
         "Standalone journey Cargo.lock is authored by the actual resolver; selected manifest and registry resolution retained."
       ],
-      "status": "pending"
+      "status": "passed",
+      "actual": {
+        "process": 61235,
+        "exit": 0,
+        "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.lock",
+        "bytes": 9208,
+        "sha256": "a8dfbaf524082987c46780c5e00d975a68efd5dc3977101d29a7179b1af95c4b",
+        "packages": 42,
+        "compilerBodies": 0,
+        "testBodies": 0
+      }
     },
     {
       "id": "build-skill-validation",
@@ -198,7 +293,14 @@
       "expected": [
         "Existing skill validator exits zero through repository-owned exec on this host.",
         "Frontmatter remains unchanged; no scaffold/script/UI metadata introduced."
-      ]
+      ],
+      "lastAttempt": {
+        "process": 5944,
+        "exit": 1,
+        "bodyExecuted": false,
+        "reason": "Generated task cannot consume its own output: semio-framework-os-flow-browser-package:wasm",
+        "log": "🗑️generated/e2e-build-skill-validation-v3.log"
+      }
     },
     {
       "id": "canonical-cold-lazy-launch",

@@ -147,9 +147,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -160,9 +166,15 @@
       "inputs": [
         "{projectRoot}/../../🗂️workspaces/🦀️cargo/**/*",
         "{projectRoot}/📜️script.ts",
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" }
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
       ],
       "outputs": [],
       "options": {
@@ -200,7 +212,11 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
         "{projectRoot}/../../🏗️build/**/*",
         "{projectRoot}/../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/**/*",
-        "{projectRoot}/📜️script.ts"
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
       ],
       "outputs": [],
       "options": {
@@ -231,7 +247,15 @@
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts"
-          ]
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
+            ]
+          }
         }
       }
     },
@@ -364,9 +388,15 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" }
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
       ],
       "outputs": []
     },
@@ -440,9 +470,15 @@
       },
       "inputs": [
         "libraryGoCommandSources",
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" }
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
       ],
       "outputs": []
     },
@@ -598,7 +634,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -729,7 +769,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       },
       "outputs": []
@@ -1220,24 +1264,100 @@
     "typecheck-project": {
       "metadata": {
         "semio": {
-          "execution": { "version": 1, "kind": "source" },
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
           "dashboard": {
-            "title": { "en": "Check an authored TypeScript project", "de": "Verfasstes TypeScript-Projekt prüfen" },
-            "description": { "en": "Select an authored configuration; the current compiler owner retains state, progress and cancellation.", "de": "Verfasste Konfiguration auswählen; der aktuelle Compiler-Eigentümer verwaltet Zustand, Fortschritt und Abbruch." },
+            "title": {
+              "en": "Check an authored TypeScript project",
+              "de": "Verfasstes TypeScript-Projekt prüfen"
+            },
+            "description": {
+              "en": "Select an authored configuration; the current compiler owner retains state, progress and cancellation.",
+              "de": "Verfasste Konfiguration auswählen; der aktuelle Compiler-Eigentümer verwaltet Zustand, Fortschritt und Abbruch."
+            },
             "verb": "check",
             "parameters": [
-              { "id": "config", "title": { "en": "Project configuration", "de": "Projektkonfiguration" }, "description": { "en": "Choose an authored configuration used by the TypeScript compiler.", "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen." }, "kind": "text", "default": "tsconfig.json", "valuePositional": true, "suggestions": { "source": "configs" } },
-              { "id": "diagnostics", "title": { "en": "Diagnostic detail", "de": "Diagnoseumfang" }, "kind": "choice", "default": "none", "values": [
-                { "id": "none" },
-                { "id": "basic", "args": ["--diagnostics"] },
-                { "id": "extended", "args": ["--extendedDiagnostics"] },
-                { "id": "files", "args": ["--listFiles"] },
-                { "id": "files-only", "args": ["--listFilesOnly"] },
-                { "id": "explain-files", "args": ["--explainFiles"] },
-                { "id": "resolution", "args": ["--traceResolution"] },
-                { "id": "full-errors", "args": ["--noErrorTruncation"] },
-                { "id": "pretty", "args": ["--pretty"] }
-              ] }
+              {
+                "id": "config",
+                "title": {
+                  "en": "Project configuration",
+                  "de": "Projektkonfiguration"
+                },
+                "description": {
+                  "en": "Choose an authored configuration used by the TypeScript compiler.",
+                  "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen."
+                },
+                "kind": "text",
+                "default": "tsconfig.json",
+                "valuePositional": true,
+                "suggestions": {
+                  "source": "configs"
+                }
+              },
+              {
+                "id": "diagnostics",
+                "title": {
+                  "en": "Diagnostic detail",
+                  "de": "Diagnoseumfang"
+                },
+                "kind": "choice",
+                "default": "none",
+                "values": [
+                  {
+                    "id": "none"
+                  },
+                  {
+                    "id": "basic",
+                    "args": [
+                      "--diagnostics"
+                    ]
+                  },
+                  {
+                    "id": "extended",
+                    "args": [
+                      "--extendedDiagnostics"
+                    ]
+                  },
+                  {
+                    "id": "files",
+                    "args": [
+                      "--listFiles"
+                    ]
+                  },
+                  {
+                    "id": "files-only",
+                    "args": [
+                      "--listFilesOnly"
+                    ]
+                  },
+                  {
+                    "id": "explain-files",
+                    "args": [
+                      "--explainFiles"
+                    ]
+                  },
+                  {
+                    "id": "resolution",
+                    "args": [
+                      "--traceResolution"
+                    ]
+                  },
+                  {
+                    "id": "full-errors",
+                    "args": [
+                      "--noErrorTruncation"
+                    ]
+                  },
+                  {
+                    "id": "pretty",
+                    "args": [
+                      "--pretty"
+                    ]
+                  }
+                ]
+              }
             ]
           }
         }
@@ -1259,14 +1379,43 @@
     "typecheck-units": {
       "metadata": {
         "semio": {
-          "execution": { "version": 1, "kind": "source" },
-          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" },
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "reads-caller-input"
+          },
           "dashboard": {
-            "title": { "en": "Check TypeScript unit by unit", "de": "TypeScript einheitenweise prüfen" },
-            "description": { "en": "Fast development check: only units whose sources or dependency declarations changed are checked; results are shared between sessions. The monolithic check stays the release gate.", "de": "Schnelle Entwicklungsprüfung: nur Einheiten mit geänderten Quellen oder Abhängigkeitsdeklarationen werden geprüft; Ergebnisse werden zwischen Sitzungen geteilt. Die monolithische Prüfung bleibt das Freigabetor." },
+            "title": {
+              "en": "Check TypeScript unit by unit",
+              "de": "TypeScript einheitenweise prüfen"
+            },
+            "description": {
+              "en": "Fast development check: only units whose sources or dependency declarations changed are checked; results are shared between sessions. The monolithic check stays the release gate.",
+              "de": "Schnelle Entwicklungsprüfung: nur Einheiten mit geänderten Quellen oder Abhängigkeitsdeklarationen werden geprüft; Ergebnisse werden zwischen Sitzungen geteilt. Die monolithische Prüfung bleibt das Freigabetor."
+            },
             "verb": "check",
             "parameters": [
-              { "id": "config", "title": { "en": "Project configuration", "de": "Projektkonfiguration" }, "description": { "en": "Choose an authored configuration used by the TypeScript compiler.", "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen." }, "kind": "text", "default": "tsconfig.json", "valuePositional": true, "suggestions": { "source": "configs" } }
+              {
+                "id": "config",
+                "title": {
+                  "en": "Project configuration",
+                  "de": "Projektkonfiguration"
+                },
+                "description": {
+                  "en": "Choose an authored configuration used by the TypeScript compiler.",
+                  "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen."
+                },
+                "kind": "text",
+                "default": "tsconfig.json",
+                "valuePositional": true,
+                "suggestions": {
+                  "source": "configs"
+                }
+              }
             ]
           }
         }
@@ -1448,7 +1597,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       },
       "cache": false,
@@ -1538,7 +1691,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -1611,7 +1768,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -2115,7 +2276,11 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2626,7 +2791,11 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
         }
       }
     },
@@ -2754,9 +2923,15 @@
         "{workspaceRoot}/nx.json",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json",
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" }
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
       ]
     },
     "test-rust-binding": {
@@ -3356,7 +3531,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -3391,7 +3570,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -3523,7 +3706,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -3546,7 +3733,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -3587,7 +3778,110 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "reads-caller-input"
+          }
+        }
+      }
+    },
+    "test-build-source-demand": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test build-source-demand"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+              "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+            ]
+          }
         }
       }
     },
@@ -3607,6 +3901,11 @@
       },
       "metadata": {
         "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts"
           ]

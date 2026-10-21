@@ -135,7 +135,8 @@
             "command",
             "output",
             "owner",
-            "profile"
+            "profile",
+            "artifactTargets"
           ],
           "properties": {
             "command": {
@@ -150,6 +151,12 @@
             },
             "profile": {
               "const": "release"
+            },
+            "artifactTargets": {
+              "const": [
+                "semio-framework-os-flow-browser-package:wasm",
+                "semio-framework-canvas:stage-runtime-assets"
+              ]
             }
           }
         },
@@ -203,6 +210,76 @@
               "type": "string",
               "minLength": 1
             }
+          }
+        }
+      }
+    },
+    "DemonstratorRuntimeTestContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "target",
+        "executionVersion",
+        "executionKind",
+        "observation",
+        "command",
+        "route",
+        "runtimeSourceEntries",
+        "dependsOn",
+        "runtimeImports"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "target": {
+          "const": "test-runtime-catalog"
+        },
+        "executionVersion": {
+          "const": 1
+        },
+        "executionKind": {
+          "const": "source"
+        },
+        "observation": {
+          "const": "freshness"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeSourceEntries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\{projectRoot\\}/.+\\.ts$"
+          }
+        },
+        "dependsOn": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "const": "@semio-tech/s-dev-composition:generate"
+          }
+        },
+        "runtimeImports": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\.\\./.+\\.ts$"
           }
         }
       }

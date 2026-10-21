@@ -32,4 +32,4 @@ for pkg,store_name in [("typescript","typescript@5.9.3"),("@types/bun","@types+b
 if not os.path.isdir(nm+"/undici-types"): shutil.copytree(store+"/bun-types@1.4.3/node_modules/undici-types",nm+"/undici-types",symlinks=False)
 open(OV+"/tsconfig.check.json","w").write(json.dumps({"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"bundler","strict":True,"noUncheckedIndexedAccess":True,"noEmit":True,"skipLibCheck":True,"resolveJsonModule":True,"allowImportingTsExtensions":True,"types":["bun","node"],"lib":["ES2023"]},"include":["./"+m.SB_DIR+"/**/*.ts","./"+m.FW+"/"+m.MODS+"/"+m.PROC+"/"+m.TESTING+"/"+m.e(0x1F39B,"execution")+"/"+m.IDX],"exclude":["**/node_modules"]},ensure_ascii=False))
 open(OV+"/package.json","w").write('{"name":"ov2","private":true}\n')
-r=subprocess.run([sys.executable,HERE+"/apply.py","--root",OV,"--write"],capture_output=True,text=True); print(r.stdout[-600:],r.stderr[-400:])
+r=subprocess.run([sys.executable,HERE+"/apply.py","--root",OV,"--write","--update"],capture_output=True,text=True); print(r.stdout[-600:],r.stderr[-400:])

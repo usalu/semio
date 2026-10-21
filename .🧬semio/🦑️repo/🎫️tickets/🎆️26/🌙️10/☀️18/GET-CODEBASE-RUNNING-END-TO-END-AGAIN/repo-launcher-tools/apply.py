@@ -31,8 +31,8 @@ for name in names:
     for row in group["creates"]:
         full = os.path.join(root, row["path"])
         if len(full) > 256: problems.append(f'{row["path"]} (absolute path of {len(full)} characters exceeds 256)'); continue
-        data = open(os.path.join(here, "staged", row["path"]), "rb").read()
-        if sha(data) != row["sha256"]: problems.append(f'{row["path"]} (staged file changed since the plan)'); continue
+        data = open(os.path.join(here, "blobs", row["sha256"]), "rb").read()
+        if sha(data) != row["sha256"]: problems.append(f'{row["path"]} (blob changed since the plan)'); continue
         text = data.decode("utf-8"); have = read(row["path"])
         if have is None: writes[row["path"]] = (text, row["mode"], True); report["create"] += 1
         elif have == text: report["already"] += 1

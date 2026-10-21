@@ -1,8 +1,8 @@
 # Controls and Value Ownership Paths
 
-21 October2026. Curated permanent source/metadata/removal attribution; shared concurrent curations preserved. No shared-tree Gitdiff or exclusive authorship claim. AGENTS.md, ticket reports/generated output excluded.
+21 October2026. Curated permanent source/metadata/removal attribution; shared concurrent curations preserved. No shared-tree Git diff or exclusive authorship claim. AGENTS.md, ticket reports and generated output excluded.
 
-307 paths: 305 present,2 intentional removals; max absolute UTF16 180 (limit256).
+399paths: 396present, 3intentional removals; max absolute UTF16 180 (limit256).
 
 ## Present Permanent Paths
 
@@ -10,6 +10,7 @@
 - `.devcontainer/Dockerfile`
 - `.devcontainer/devcontainer.json`
 - `Cargo.lock`
+- `Cargo.toml`
 - `bun.lock`
 - `♻️mit-bestand/bun.lock`
 - `✏️s/bun.lock`
@@ -22,6 +23,13 @@
 - `🧰️framework/Cargo.lock`
 - `🧰️framework/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🧪️tests/🦀️.rs`
@@ -43,6 +51,7 @@
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/⏱️work/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🏭️factory/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🥒️.feature`
@@ -52,6 +61,10 @@
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs`
@@ -78,6 +91,9 @@
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`
@@ -92,6 +108,8 @@
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🧫️fixtures/📦️owned/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/📦️owned.json`
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🥒️.feature`
@@ -131,23 +149,40 @@
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🔬️script-commands/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🎟️header/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🥒️.feature`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🧪️tests/🎯️dispatch/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/📋️project.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/🦀️.rs`
@@ -180,6 +215,36 @@
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🌐️integration/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🎯️dispatch/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🎮️driver/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📜️record-body-cursor/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️document/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎟️storage/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/📖️pack-reader-and-recovery/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🧭️catalog-cursor/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-catalog-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧱️header-and-footer/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts`
 - `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
 - `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
 - `🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts`
@@ -214,6 +279,28 @@
 - `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json`
 - `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/♻️retirement.schema.json`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/✏️edit/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs`
 - `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json`
 - `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json`
 - `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/🦀️.rs`
@@ -221,7 +308,11 @@
 - `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`
 - `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🗃️history-ledger/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧪️tests/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️retained-clone/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️retained-clone/🧪️tests/🎯️dispatch/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍎️shell-tests-input-1/📦️packages/🦀️rust/Cargo.toml`
@@ -316,3 +407,4 @@
 
 - `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️clone/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧪️tests/🔬️rust-package-commands/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/📦️document/🦀️.rs`

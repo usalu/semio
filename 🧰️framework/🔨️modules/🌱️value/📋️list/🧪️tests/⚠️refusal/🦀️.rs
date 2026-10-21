@@ -2,13 +2,13 @@ use super::*;
 use std::{io::Write, process::{Command, Stdio}};
 
 struct RefusedAllocation;
-impl PageAllocation for RefusedAllocation {
+unsafe impl PageAllocation for RefusedAllocation {
     fn reserve<T>(_: &mut Vec<T>, _: usize) -> Result<(), std::collections::TryReserveError> {
         Vec::<u8>::new().try_reserve_exact(usize::MAX)
     }
 }
 struct ExcessAllocation;
-impl PageAllocation for ExcessAllocation {
+unsafe impl PageAllocation for ExcessAllocation {
     fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError> {
         owner.try_reserve_exact(slots * 2)
     }

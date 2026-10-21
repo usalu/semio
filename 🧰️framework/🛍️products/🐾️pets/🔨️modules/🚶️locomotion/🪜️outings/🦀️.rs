@@ -15,11 +15,17 @@ use semio_framework_pets_contract::schema::Foothold;
 use semio_framework_pets_traversal::climbing::WallHold;
 use semio_framework_pets_contract::schema::Ladder;
 use semio_framework_pets_contract::schema::Shot;
+use crate::draft::{TURN_TICKS, facing_to, turn};
+use crate::spacing::{bodies_of, extent_at, wall_lean_of};
+use semio_framework_pets_clearance::{claim_clear, claim_of, grown, meets, released};
+use semio_framework_pets_kinematics::trigonometry::smoothstep;
+use semio_framework_pets_traversal::climbing::{GRIP_BUDGET, GRIP_CLIMB, GRIP_HANG, HOOK_RETURN, HOOK_SPEED, LADDER_DISMOUNT_TICKS, LADDER_IDLE, LADDER_LIFE, LADDER_MOUNT_TICKS, LADDER_RAISE_TICKS, ROPE_AIM_TICKS, ROPE_HOIST_TICKS, ROPE_MARGIN, ROPE_MISS_CHANCE, ROPE_SHRUG_TICKS, ROPE_TUG_TICKS, WALL_GRAB_TICKS, chain_of, cling_of, clings, foot_of, grip_for, haul_of, haul_step, hoist_path, hook_ticks, ladder_at, ladder_exit, ladder_landing, ladder_length, ladder_step, ladder_to, landing_for, ledge_of, miss_of, rim_for, rim_of, route_of, shot_for, sighted, slide_step, wall_cost, wall_path};
+use semio_framework_pets_traversal::swing::REEL_LEAST;
 
 //#region 🔖️Gear
 /// ⛺️ A planned gear trip and the ladder or rope it installs.
 #[derive(Clone)]
-pub(crate) struct Outing { pub(super) trip: Trip, pub(super) raise: Option<LadderStand>, pub(super) stands: Ticks, pub(super) rope: Option<Rope> }
+pub struct Outing { pub(super) trip: Trip, pub(super) raise: Option<LadderStand>, pub(super) stands: Ticks, pub(super) rope: Option<Rope> }
 
 /// 🧿️ A destination on a perch or a chosen height along a wall.
 #[derive(Clone)]
@@ -34,7 +40,7 @@ pub fn geared(kind: &Species) -> bool {
 }
 
 /// 🗻️ Find a trip by its owning species.
-pub(crate) fn trip_of<'a>(trips: &'a [Trip], owner: &str) -> Option<&'a Trip> { trips.iter().find(|trip| trip.owner == owner) }
+pub fn trip_of<'a>(trips: &'a [Trip], owner: &str) -> Option<&'a Trip> { trips.iter().find(|trip| trip.owner == owner) }
 
 /// 🪺️ The interval where the complete footprint fits on a perch.
 fn room_on(perch: &Perch, half: f64) -> Option<[f64; 2]> { (perch.x0 + half <= perch.x1 - half).then_some([perch.x0 + half, perch.x1 - half]) }

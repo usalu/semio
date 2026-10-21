@@ -1,20 +1,29 @@
 use super::*;
+use semio_s_fem_analyses_assembly::AssemblyJobConstruction;
+use semio_s_fem_analyses_model::MOUNTED_OWNER_PAGE_BYTES;
+use semio_s_fem_analyses_model::reserve_exact_owner_page;
 use semio_s_fem_elements2d::Bar2;
 use semio_s_fem_elements2d::BeamEb2;
 use semio_s_fem_test_support::close_job;
 use semio_s_fem_test_support::pages_bytes;
 use semio_s_fem_test_support::seen_of;
+use semio_s_fem_test_support::Seen;
 use semio_s_fem_test_support::TEST_GRANT;
 use semio_s_fem_static::solve_linear_static;
-use semio_s_fem_model::AxialSpring;
 use semio_s_fem_static::Model;
 use semio_s_fem_model::PlaneStress;
 use semio_s_fem_model::ShellState;
 use semio_s_fem_model::SolidStress;
 
-include!("🍳️assembly-page-and-mounted-admission-laws/🦀️.rs");
-
-include!("🧈️assembly-csr-element-build-and-job-laws/🦀️.rs");
+fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
+    let model = AnalysisModel {
+        nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
+        elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density }.into()],
+        supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+    };
+    let cases = vec![LoadCase { id: "tip_load".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: -1000.0 }], member_loads: vec![], self_weight: false }];
+    (model, cases)
+}
 
 include!("🥓️static-solve-and-rejection-laws/🦀️.rs");
 

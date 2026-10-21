@@ -6,10 +6,16 @@ use semio_framework_pets_contract::schema::Facing;
 use semio_framework_pets_contract::schema::Ending;
 use semio_framework_pets_contract::schema::Waypoint;
 use semio_framework_pets_contract::schema::Course;
+use crate::draft::{feel, index_of};
+use crate::spacing::{bodies_of, extent_of, obstacles_for};
+use semio_framework_pets_clearance::{SCOOT_HASTE, SLIDE_OFF_SPEED, free_among, guarded_stride, must_poof, obstacles_of, released, rests_on, scoot_fraction, scooted, shifted, slide_of, slide_stride};
+use semio_framework_pets_kinematics::animation::spring_step;
+use semio_framework_pets_traversal::swing::HARD_LANDING;
+use semio_framework_pets_contract::schema::{Parachute, Puff};
 
 //#region 🔖️Motion
 /// 👣️ One tick of a walk. On every beat — every tick for a walking or floating gait, the start of every hop for a hopping one — the walk ends when the goal is no farther than one stride (the actor stands on it then) or when somebody is in the way of the next beat; otherwise a stride towards the goal follows. A hopping gait that reaches its goal within a hop, or finds somebody in its way in mid-hop, finishes that hop on the spot. The walk also ends when the stage loses patience. At its end a leaver starts to fade, an actor with a partner waits for it and anyone else comes to rest.
-pub(crate) fn stride(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn stride(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let kind = draft.kinds[index];
     let body = &draft.stage.actors[index];
     let beat = beat_of(kind, clip_of(kind, body.clip.as_deref()));
@@ -55,12 +61,12 @@ pub(crate) fn stride(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🛡️ A stride respects every solid body and planned corridor through this tick.
-pub(super) fn guarded(draft: &Draft<'_>, index: usize, wanted: f64, now: Ticks) -> f64 {
+pub fn guarded(draft: &Draft<'_>, index: usize, wanted: f64, now: Ticks) -> f64 {
     guarded_stride(extent_of(&draft.stage.actors[index], draft.kinds[index]), wanted, &obstacles_for(draft, index, now))
 }
 
 /// 🛷️ Slide off a host's head through guarded positions, then plan a fall.
-pub(crate) fn slip(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn slip(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     let body = &draft.stage.actors[index];
     let host = body.host.as_deref().and_then(|host| index_of(&draft.stage.actors, host));
     let box_of = extent_of(body, draft.kinds[index]);
@@ -81,7 +87,7 @@ pub(crate) fn slip(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
 }
 
 /// 🚌️ Move each surface's scooters together through free positions.
-pub(crate) fn scoot(draft: &mut Draft<'_>, now: Ticks) {
+pub fn scoot(draft: &mut Draft<'_>, now: Ticks) {
     let mut surfaces = Vec::new();
     for body in &draft.stage.actors {
         if body.activity == Activity::Scoot && body.footing == Footing::Perch {
@@ -112,7 +118,7 @@ pub(crate) fn scoot(draft: &mut Draft<'_>, now: Ticks) {
 }
 
 /// 🌬️ Plan the first legal descent or wait in a free place before the last-resort poof.
-pub(crate) fn plunge(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn plunge(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     if let Some(plan) = ways_down(draft, index, now) {
         let activity = draft.stage.actors[index].activity;
         install(draft, index, plan, activity, now);
@@ -125,7 +131,7 @@ pub(crate) fn plunge(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
 }
 
 /// 🛩️ Follow the next owned course waypoint and complete its reserved landing.
-pub(crate) fn fly(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn fly(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     let Some(course) = course_of(&draft.stage.courses, &draft.stage.actors[index].species) else { return plunge(draft, index, now); };
     let last = course.steps.len() - 1;
     let at = now - course.from;
@@ -164,7 +170,7 @@ pub(super) fn dusted(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 💨️ Remove a body that has no legal place and count its dust puff.
-pub(crate) fn poof(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn poof(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     dusted(draft, index, now);
     vanish(draft, index, now)
 }
@@ -217,7 +223,7 @@ pub(super) fn arrive(draft: &mut Draft<'_>, index: usize, course: &Course, now: 
 }
 
 /// 😵️ A hard landing or edge collision leaves a short authored dizzy activity.
-pub(crate) fn daze(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn daze(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     shift(draft, index, Activity::Dizzy, now);
     let body = &mut draft.stage.actors[index];
     body.clip = clip_at(draft.kinds[index], Activity::Dizzy, 0.0);

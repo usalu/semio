@@ -25,5 +25,41 @@
     673,
     1000,
     4096
-  ]
+  ],
+  "allocationPolicy": {
+    "elementBytes": 8,
+    "requestedSlots": 4,
+    "grantSlots": 4,
+    "preservesOnError": true,
+    "cases": [
+      {
+        "providedSlots": 0,
+        "accepted": false,
+        "logicalSlots": 0,
+        "retainedBytes": 0,
+        "quarantined": false
+      },
+      {
+        "providedSlots": 2,
+        "accepted": false,
+        "logicalSlots": 0,
+        "retainedBytes": 16,
+        "quarantined": true
+      },
+      {
+        "providedSlots": 4,
+        "accepted": true,
+        "logicalSlots": 4,
+        "retainedBytes": 32,
+        "quarantined": false
+      },
+      {
+        "providedSlots": 8,
+        "accepted": false,
+        "logicalSlots": 4,
+        "retainedBytes": 64,
+        "quarantined": false
+      }
+    ]
+  }
 }

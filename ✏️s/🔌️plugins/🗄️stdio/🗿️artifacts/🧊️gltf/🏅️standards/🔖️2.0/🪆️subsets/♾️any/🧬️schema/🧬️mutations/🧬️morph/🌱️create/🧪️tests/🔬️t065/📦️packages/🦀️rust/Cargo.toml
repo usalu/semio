@@ -23,8 +23,6 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-gltf-mutations-mut-any = { path = "../../../../../../🪪️asset/🧾️change-extras/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf-mutations-mut-any-2 = { path = "../../../../../../🖼️image/🌱️create/📦️packages/🦀️rust" }

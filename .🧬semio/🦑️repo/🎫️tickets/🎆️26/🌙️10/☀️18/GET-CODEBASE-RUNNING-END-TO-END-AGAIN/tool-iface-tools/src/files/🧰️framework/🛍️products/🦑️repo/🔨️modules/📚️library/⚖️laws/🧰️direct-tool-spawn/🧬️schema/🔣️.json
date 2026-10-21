@@ -1,39 +1,70 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:laws/direct-tool-spawn/ledger",
-  "title": "Direct tool spawn ledger",
-  "description": "The spawns of registered tools that still bypass the tool registry. The ledger may only shrink: a new or larger entry is a breach, a smaller truth is pruned.",
+  "title": "Direct tool spawn ledger (test code)",
+  "description": "The direct spawns of registered tools that test files still make, with the reason they stay. Production code has no ledger: a production spawn outside an adapter is a finding. The ledger may only shrink.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "entries", "declared"],
+  "required": [
+    "version",
+    "reason",
+    "entries"
+  ],
   "properties": {
-    "$schema": {"type": "string"},
-    "version": {"const": 1},
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "entries": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "tool", "form", "scope", "count"],
+        "required": [
+          "path",
+          "tool",
+          "form",
+          "count"
+        ],
         "properties": {
-          "path": {"type": "string", "minLength": 1},
-          "tool": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
-          "form": {"enum": ["spawn", "shell"]},
-          "scope": {"enum": ["prod", "test"]},
-          "count": {"type": "integer", "minimum": 1}
-        }
-      }
-    },
-    "declared": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["tool", "scope", "count"],
-        "properties": {
-          "tool": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
-          "scope": {"enum": ["prod", "test"]},
-          "count": {"type": "integer", "minimum": 1}
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tool": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "form": {
+            "enum": [
+              "spawn",
+              "shell"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       }
     }

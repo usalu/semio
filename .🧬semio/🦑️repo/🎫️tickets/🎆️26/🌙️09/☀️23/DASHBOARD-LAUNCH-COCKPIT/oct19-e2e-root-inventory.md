@@ -584,3 +584,39 @@ Schema/test-only preparation for the existing process progress owner. Production
 - `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🎮️management/🕰️history/🧪️tests/📈️paging/🔣️.json`
 
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/README.md`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.lock`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧬️schema/🔣️.json`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🔣️.json`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json`
+
+
+## Explicit Native Host And Devcontainer CI
+
+- `.github/actions/native-repo/action.yml`
+- `.github/actions/devcontainer-repo/action.yml`
+- `.github/workflows/dashboard.yml`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct21-native-dashboard-ci.md`
+
+## Shared Unit Test Vocabulary
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🎹️keymap-and-launcher/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🖼️window-focus-and-sessions/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🧭️scenario-proofs-and-batching/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct21-terminal-test-vocabulary.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/oct21-explicit-language-acceptance.md`

@@ -268,6 +268,22 @@
             },
             "value": {}
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquired",
+            "withdrawn"
+          ],
+          "properties": {
+            "acquired": {
+              "const": false
+            },
+            "withdrawn": {
+              "const": true
+            }
+          }
         }
       ]
     },
@@ -2177,6 +2193,124 @@
           "items": {
             "$ref": "#/definitions/DescendantCase"
           }
+        }
+      }
+    },
+    "ImageMaintenanceWaitObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "availableBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ImageMaintenanceWaitCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "resource",
+        "observer",
+        "availableBytes",
+        "decision",
+        "parent",
+        "failure",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "resource": {
+          "enum": [
+            "image",
+            "other"
+          ]
+        },
+        "observer": {
+          "type": "boolean"
+        },
+        "availableBytes": {
+          "type": "number"
+        },
+        "decision": {},
+        "parent": {
+          "enum": [
+            null,
+            "before",
+            "after",
+            "deadline",
+            "acquired"
+          ]
+        },
+        "failure": {
+          "enum": [
+            null,
+            "identity",
+            "undefined",
+            "queue",
+            "release",
+            "pending-parent",
+            "late-withdraw",
+            "late-withdraw-release"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "acquired",
+            "withdrawn",
+            "parent",
+            "identity",
+            "undefined",
+            "queue",
+            "boolean",
+            "space",
+            "release"
+          ]
+        }
+      }
+    },
+    "ImageMaintenanceWaitBackendCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "creator",
+        "facts",
+        "control"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "creator": {
+          "enum": [
+            "createPersistentImage",
+            "createFixedReceiverImage"
+          ]
+        },
+        "facts": {
+          "enum": [
+            "verifyPersistentFacts",
+            "captureFixedReceiverFacts"
+          ]
+        },
+        "control": {
+          "enum": [
+            "actual",
+            "maintenanceControl"
+          ]
         }
       }
     }

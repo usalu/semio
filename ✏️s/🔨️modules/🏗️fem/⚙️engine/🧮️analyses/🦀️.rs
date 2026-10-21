@@ -64,7 +64,7 @@ use semio_s_fem_analyses_model::positions_of;
 use semio_s_fem_analyses_model::validate_case;
 use semio_s_fem_analyses_assembly::AssembledSystem;
 #[cfg(test)]
-use semio_s_fem_analyses_assembly::{AnalysisModelOwner, AssemblyConstructionStage, PendingElementBuildStage, UnfactoredSystem};
+use semio_s_fem_sparse::{CsrTripletBuild, CsrTripletBuildStage, SparseTriplet};
 use semio_s_fem_analyses_assembly::assemble_system;
 use semio_s_fem_analyses_assembly::case_rhs_old;
 use semio_s_fem_model::BeamStation;
@@ -694,6 +694,9 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️solid/🦀️.rs"]
 mod solid_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧮️triplet-csr/🦀️.rs"]
+mod triplet_csr_tests;
 // #endregion 🔖️Tests
 
 pub use semio_s_fem_analyses_model::{ResultSource, ResultSourceIdentity, ResultSourceIdentityError, encode_result_source_identity, encode_result_source_parts, validate_result_source_parts, borrow_result_source_identity, validate_result_source_identity, decode_result_source_identity};

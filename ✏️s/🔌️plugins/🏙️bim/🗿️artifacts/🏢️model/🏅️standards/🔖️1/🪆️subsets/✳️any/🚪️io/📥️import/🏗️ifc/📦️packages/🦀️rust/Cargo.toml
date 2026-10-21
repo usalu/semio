@@ -46,7 +46,6 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../../
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-bim-model-examples = { path = "../../../../../📚️examples/🏡️house/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-formula = { path = "../../../../../🧬️schema/📏️authored/📝️formula/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-ifc = { path = "../../../../📤️export/🏗️ifc/📦️packages/🦀️rust" }

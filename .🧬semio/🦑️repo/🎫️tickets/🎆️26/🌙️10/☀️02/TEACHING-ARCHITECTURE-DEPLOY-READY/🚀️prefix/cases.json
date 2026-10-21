@@ -1,0 +1,581 @@
+{
+  "version": 1,
+  "settlements": [
+    {
+      "id": "actual-joined-zero",
+      "proof": {
+        "launched": true,
+        "joined": true,
+        "known": true,
+        "failed": false,
+        "status": 0,
+        "signal": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "refuse-launched",
+      "proof": {
+        "launched": null,
+        "joined": true,
+        "known": true,
+        "failed": false,
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "refuse-joined",
+      "proof": {
+        "launched": true,
+        "joined": false,
+        "known": true,
+        "failed": false,
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "refuse-known",
+      "proof": {
+        "launched": true,
+        "joined": true,
+        "known": false,
+        "failed": false,
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "refuse-failed",
+      "proof": {
+        "launched": true,
+        "joined": true,
+        "known": true,
+        "failed": true,
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "refuse-status",
+      "proof": {
+        "launched": true,
+        "joined": true,
+        "known": true,
+        "failed": false,
+        "status": 1,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "refuse-signal",
+      "proof": {
+        "launched": true,
+        "joined": true,
+        "known": true,
+        "failed": false,
+        "status": 0,
+        "signal": "SIGTERM"
+      },
+      "accepted": false
+    }
+  ],
+  "cargo": [
+    {
+      "id": "workspace-version",
+      "text": "[workspace.package]\nversion=\"0.1.0\"\n",
+      "accepted": true,
+      "version": "0.1.0"
+    },
+    {
+      "id": "quoted-version",
+      "text": "[workspace.package]\nversion = \"2.3.4-alpha+meta\" # real value\n",
+      "accepted": true,
+      "version": "2.3.4-alpha+meta"
+    },
+    {
+      "id": "version-not-text",
+      "text": "[workspace.package]\nversion=1\n",
+      "accepted": false,
+      "version": null
+    },
+    {
+      "id": "missing-version",
+      "text": "[workspace]\nmembers=[]\n",
+      "accepted": false,
+      "version": null
+    },
+    {
+      "id": "invalid-toml",
+      "text": "[workspace.package\nversion=\"x\"\n",
+      "accepted": false,
+      "version": null
+    }
+  ],
+  "runs": [
+    {
+      "id": "fixed-six-and-stop",
+      "fault": "none",
+      "stage": "sample",
+      "accepted": true
+    },
+    {
+      "id": "refuse-status",
+      "fault": "status",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-unknown",
+      "fault": "unknown",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-undefined",
+      "fault": "undefined",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-null",
+      "fault": "null",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-false",
+      "fault": "false",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-zero",
+      "fault": "zero",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-empty",
+      "fault": "empty",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-receipt",
+      "fault": "receipt",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-pins",
+      "fault": "pins",
+      "stage": "source",
+      "accepted": false
+    },
+    {
+      "id": "refuse-cancel",
+      "fault": "cancel",
+      "stage": "source",
+      "accepted": false
+    },
+    {
+      "id": "refuse-future",
+      "fault": "future",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "refuse-publish",
+      "fault": "publish",
+      "stage": "gitTransfer",
+      "accepted": false
+    },
+    {
+      "id": "policy-refusal-before-create",
+      "fault": "policy",
+      "stage": "sample",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-status",
+      "fault": "unit-status",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-unknown",
+      "fault": "unit-unknown",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-marker",
+      "fault": "unit-marker",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-cancel",
+      "fault": "unit-cancel",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-undefined",
+      "fault": "unit-undefined",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-null",
+      "fault": "unit-null",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-false",
+      "fault": "unit-false",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-zero",
+      "fault": "unit-zero",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-empty",
+      "fault": "unit-empty",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-own",
+      "fault": "unit-own",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guestUnit-unit-control",
+      "fault": "unit-control",
+      "stage": "guestUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-status",
+      "fault": "unit-status",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-unknown",
+      "fault": "unit-unknown",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-marker",
+      "fault": "unit-marker",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-cancel",
+      "fault": "unit-cancel",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-undefined",
+      "fault": "unit-undefined",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-null",
+      "fault": "unit-null",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-false",
+      "fault": "unit-false",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-zero",
+      "fault": "unit-zero",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-empty",
+      "fault": "unit-empty",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-own",
+      "fault": "unit-own",
+      "stage": "prefixUnit",
+      "accepted": false
+    },
+    {
+      "id": "refuse-prefixUnit-unit-control",
+      "fault": "unit-control",
+      "stage": "prefixUnit",
+      "accepted": false
+    }
+  ],
+  "identities": [
+    {
+      "id": "same-epochs",
+      "change": "none",
+      "accepted": true
+    },
+    {
+      "id": "refuse-seal",
+      "change": "seal",
+      "accepted": false
+    },
+    {
+      "id": "refuse-own",
+      "change": "own",
+      "accepted": false
+    },
+    {
+      "id": "refuse-control",
+      "change": "control",
+      "accepted": false
+    },
+    {
+      "id": "refuse-template",
+      "change": "template",
+      "accepted": false
+    },
+    {
+      "id": "refuse-missing",
+      "change": "missing",
+      "accepted": false
+    },
+    {
+      "id": "refuse-guest",
+      "change": "guest",
+      "accepted": false
+    },
+    {
+      "id": "refuse-ancestor",
+      "change": "ancestor",
+      "accepted": false
+    }
+  ],
+  "budgets": [
+    {
+      "remaining": null,
+      "accepted": true
+    },
+    {
+      "remaining": 5610000,
+      "accepted": true
+    },
+    {
+      "remaining": 5610001,
+      "accepted": true
+    },
+    {
+      "remaining": 5609999,
+      "accepted": false
+    },
+    {
+      "remaining": 0,
+      "accepted": false
+    },
+    {
+      "remaining": -1,
+      "accepted": false
+    }
+  ],
+  "physical": [
+    {
+      "id": "ordinary-handwritten-data",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "refuse-oversize",
+      "fault": "oversize",
+      "accepted": false
+    },
+    {
+      "id": "refuse-symlink",
+      "fault": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "refuse-hardlink",
+      "fault": "hardlink",
+      "accepted": false
+    },
+    {
+      "id": "refuse-directory",
+      "fault": "directory",
+      "accepted": false
+    },
+    {
+      "id": "refuse-ancestor-symlink",
+      "fault": "ancestor-symlink",
+      "accepted": false
+    },
+    {
+      "id": "refuse-opaque",
+      "fault": "opaque",
+      "accepted": false
+    },
+    {
+      "id": "refuse-descriptor-change",
+      "fault": "descriptor-change",
+      "accepted": false
+    },
+    {
+      "id": "refuse-ancestor-change",
+      "fault": "ancestor-change",
+      "accepted": false
+    },
+    {
+      "id": "refuse-growth",
+      "fault": "growth",
+      "accepted": false
+    },
+    {
+      "id": "refuse-cancel",
+      "fault": "cancel",
+      "accepted": false
+    },
+    {
+      "id": "refuse-deadline",
+      "fault": "deadline",
+      "accepted": false
+    },
+    {
+      "id": "refuse-undefined-read",
+      "fault": "undefined-read",
+      "accepted": false
+    },
+    {
+      "id": "refuse-undefined-read-close",
+      "fault": "undefined-read-close",
+      "accepted": false
+    },
+    {
+      "id": "refuse-close",
+      "fault": "close",
+      "accepted": false
+    },
+    {
+      "id": "refuse-overlength",
+      "fault": "overlength",
+      "accepted": false
+    },
+    {
+      "id": "refuse-excluded",
+      "fault": "excluded",
+      "accepted": false
+    },
+    {
+      "id": "ordinary-empty-data",
+      "fault": "empty",
+      "accepted": true
+    }
+  ],
+  "publication": [
+    {
+      "id": "clean-body-and-publication",
+      "primary": false,
+      "body": null,
+      "cleanup": false,
+      "publish": false,
+      "accepted": true
+    },
+    {
+      "id": "falsy-primary-0",
+      "primary": true,
+      "body": "undefined",
+      "cleanup": false,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "falsy-primary-1",
+      "primary": true,
+      "body": null,
+      "cleanup": false,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "falsy-primary-2",
+      "primary": true,
+      "body": false,
+      "cleanup": false,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "falsy-primary-3",
+      "primary": true,
+      "body": 0,
+      "cleanup": false,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "falsy-primary-4",
+      "primary": true,
+      "body": "",
+      "cleanup": false,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "primary-and-cleanup",
+      "primary": true,
+      "body": "undefined",
+      "cleanup": true,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "primary-and-publication",
+      "primary": true,
+      "body": "undefined",
+      "cleanup": false,
+      "publish": true,
+      "accepted": false
+    },
+    {
+      "id": "cleanup-only",
+      "primary": false,
+      "body": null,
+      "cleanup": true,
+      "publish": false,
+      "accepted": false
+    },
+    {
+      "id": "publication-only",
+      "primary": false,
+      "body": null,
+      "cleanup": false,
+      "publish": true,
+      "accepted": false
+    }
+  ]
+}

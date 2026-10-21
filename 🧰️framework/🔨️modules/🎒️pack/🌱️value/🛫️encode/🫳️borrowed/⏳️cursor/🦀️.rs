@@ -5,13 +5,20 @@ use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldPr
 use semio_framework_dsl_record::native_encoding::RetainedExpressionCursor;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_persistent::list::PagedList;
-use semio_framework_value::paged_text::TextReadView;
+use semio_framework_value_paged_text::paged_text::TextReadView;
 
 const SYMBOL_LIMIT: usize = isize::MAX as usize;
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
-struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool }
+struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool, key: Option<usize> }
+#[derive(Clone, Copy, Debug)]
+struct ChunkLocator { path: [usize; 64], depth: usize, offset: usize, length: usize }
+impl semio_framework_value::retirement::RetireOwned for ChunkLocator{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 impl semio_framework_value::retirement::RetireOwned for Symbol{
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}

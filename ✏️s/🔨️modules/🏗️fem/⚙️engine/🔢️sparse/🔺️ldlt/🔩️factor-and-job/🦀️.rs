@@ -318,7 +318,7 @@ impl LdltJob {
 
     fn workspace_get(&self, row: usize) -> f64 { if self.state.workspace.marks[row] == self.state.workspace.generation { self.state.workspace.values[row] } else { 0.0 } }
 
-    fn advance_column_microcursor(&mut self, context: &mut StepContext<'_>) -> Result<(), SparseError> {
+    pub(crate) fn advance_column_microcursor(&mut self, context: &mut StepContext<'_>) -> Result<(), SparseError> {
         if self.state.reserve_lane < 9 { return self.advance_reservation(context); }
         let column = self.state.column;
         match self.state.cursor.stage {

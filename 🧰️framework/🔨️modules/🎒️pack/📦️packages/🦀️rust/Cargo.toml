@@ -54,11 +54,11 @@ semio-framework-pack-record-schema = { path = "../../🌱️value/🧬️schema/
 semio-framework-replication-codec = { path = "../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-replication-interaction = { path = "../../../📡️replication/📡️wire/🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-schema = { path = "../../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-schema = { path = "../../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 blake3 = "1.8.2"
 semio-framework-async = { workspace = true }
 semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }

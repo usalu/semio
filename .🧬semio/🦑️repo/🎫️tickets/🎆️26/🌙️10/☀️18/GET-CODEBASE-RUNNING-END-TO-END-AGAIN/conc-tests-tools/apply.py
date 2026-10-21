@@ -10,11 +10,16 @@ write="--write" in args; undo="--undo" in args
 LIVE="/Users/ueli/Documents/semio"
 root=args[args.index("--root")+1].rstrip("/") if "--root" in args else LIVE
 live=os.path.realpath(root)==os.path.realpath(LIVE)
-BK=HERE+"/../🗑️generated/conc-tests/backup" if live else root+".backup"
+BK0=HERE+"/../🗑️generated/conc-tests/backup" if live else root+".backup"
+import time
+update="--update" in args
+runs=sorted(os.listdir(BK0)) if os.path.isdir(BK0) else []
+BK=BK0+"/"+(runs[-1] if undo and runs else time.strftime("%Y%m%d-%H%M%S"))
 if live and write and "--allow-running" not in args:
     ps=subprocess.run(["ps","-axo","command"],capture_output=True,text=True).stdout
     if any(("dependencies sync" in l or "show projects" in l) and "apply.py" not in l for l in ps.split("\n")): sys.exit("refused: dependency sync or show projects running")
 if undo:
+    if not runs: sys.exit("nothing to undo")
     index=json.load(open(BK+"/index.json",encoding="utf8"))
     for path,name in index.items():
         if name is None:
@@ -26,12 +31,17 @@ if undo:
                     except OSError: break
                     folder=os.path.dirname(folder)
         else: shutil.copyfile(BK+"/"+name,path); print("restored",path[len(root)+1:][-90:])
-    sys.exit(0)
+    shutil.rmtree(BK); sys.exit(0)
 changes=[]
 for staged,rel in m.NEW.items():
     path=root+"/"+rel; data=open(HERE+"/staged/"+staged,encoding="utf8").read()
     if os.path.exists(path):
-        if open(path,encoding="utf8").read()!=data: sys.exit("refused: new file exists with other content: "+rel[-90:])
+        have=open(path,encoding="utf8").read()
+        if have!=data:
+            if not update: sys.exit("refused: new file exists with other content (use --update for a staged revision): "+rel[-90:])
+            import hashlib
+            if hashlib.sha256(have.encode("utf8")).hexdigest()!=json.load(open(HERE+"/prev.json",encoding="utf8")).get(rel): sys.exit("refused: live file changed since staging: "+rel[-90:])
+            changes.append((path,have,data)); continue
         print("already present:",rel[-80:]); continue
     changes.append((path,None,data))
 for edit in json.load(open(HERE+"/edits.json",encoding="utf8")):

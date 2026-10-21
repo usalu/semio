@@ -118,7 +118,7 @@ def incr_command(depth):
         return t
     return edit
 def child(t):
-    pat=r'command==="tools"\?\(tools!=="bazel"\?\["--version"\]:undefined\):command==="reset"\?\(selected\.tool==="nx"\?\["reset"\]:undefined\):selected\.tool==="nx"&&!\[[^\]]*\]\.includes\(command\?\?""\)\?nxOperationArgumentsV1\(invocation\.args\):undefined'
+    pat=r'command==="tools"\?\(tools!=="bazel"\?\["--version"\]:undefined\):command==="reset"\?\(selected\.tool==="nx"\?\["reset"\]:undefined\):selected\.tool==="nx"&&.*?\?nxOperationArgumentsV1\(invocation\.args\):undefined'
     new='await(await import("../../'+BK+'/'+TS+'")).buildBackendBootstrapArgumentsV1(invocation.args,selected.tool)'
     if new in t and not re.search(pat,t):return t
     if len(re.findall(pat,t))!=1:raise Drift("child: bootstrap expression not found once")
@@ -201,6 +201,18 @@ def incr_test(depth):
         t=t.replace('expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});','expect((row as {implementations?:unknown}).implementations).toBeUndefined();')
         return t
     return edit
+
+def operations_bootstrap(t):
+    old='return operation?.requires==="none"&&operation.implementations.nx==="neutral"&&operation.implementations.bazel==="neutral";'
+    new='return operation?.requires==="none"&&buildBackendIdsV1().every(id=>(buildBackendRowV1(id).operations[name]??"neutral")==="neutral");'
+    if "buildOperationHasNeutralBootstrapV1" not in t:return t
+    t=sub(t,old,new,"operations neutral bootstrap")
+    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../{BK}/{TS}";',"operations bootstrap import")
+def birth_test(t):
+    if "implementations.nx" not in t:return t
+    t=t.replace("json_extract(value,'$.implementations.nx')='neutral' and json_extract(value,'$.implementations.bazel')='neutral'","not exists (select 1 from json_each(json_extract(value,'$.implementations')) where value!='neutral')")
+    t=t.replace('.get(JSON.stringify(operations),row.operation)','.get(JSON.stringify(operations.map((operation:{name:string})=>({...operation,implementations:Object.fromEntries(buildBackendIdsV1().map(id=>[id,buildBackendRowV1(id).operations[operation.name]??"neutral"]))}))),row.operation)')
+    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../../../../{BK}/{TS}";',"birth test import")
 def p(*parts):return "/".join(parts)
 SC=T["SCHEMA"]
 EDITS=[
@@ -208,6 +220,7 @@ EDITS=[
  (p(B,T["INVOCATION"],TS),invocation),
  (p(B,T["CALLER"],n(0x1F4E4,"child"),TS),child),
  (p(B,T["OPERATIONS"],TS),operations),
+ (p(B,T["OPERATIONS"],TS),operations_bootstrap),
  (p(B,T["CALLER"],TS),caller),
  (p(B,T["CALLER"],T["ORCH"],MJS),orchestration),
  (p(B,T["CALLER"],T["ORCH"],n(0x1F7E8,".d.mts")),orchestration_types),
@@ -228,6 +241,7 @@ EDITS=[
  (p(B,names.SCRIPT),conformance_script),
  (p(B,T["CALLER"],n(0x1F4E4,"child"),TS),conformance_child),
  (p(B,T["OPERATIONS"],T["TESTS"],TS),operations_test),
+ (p(B,T["CALLER"],T["TESTS"],n(0x1F4E5,"birth"),TS),birth_test),
  (p(B,T["INVOCATION"],T["TESTS"],TS),invocation_test),
  (p(B,T["INCR"],T["TESTS"],TS),incr_test(2)),
  (p(B,T["INCR"],n(0x1F91D,"concurrent"),T["TESTS"],TS),incr_test(3)),
@@ -274,3 +288,6 @@ def script_edit(t):
     return script(t)
 EDITS[0]=(EDITS[0][0],script_edit)
 def storage_fix(t):return storage(t)
+
+import wire2
+EDITS+=wire2.EDITS

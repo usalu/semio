@@ -2,6 +2,11 @@
 
 use super::*;
 use semio_framework_pets_contract::schema::Ending;
+use crate::spacing::{bodies_of, extent_at, extent_of, obstacles_for};
+use semio_framework_pets_clearance::{MARGIN, PUSHES, claim_clear, free_among, obstacles_of, pushed_out, released, shifted, spot_on};
+use semio_framework_pets_kinematics::trigonometry::smoothstep;
+use semio_framework_pets_traversal::swing::{hang_of, hang_step, lean_of};
+use semio_framework_pets_contract::schema::{Course, Grip, Hang, Waypoint};
 
 //#region 🔖️Hand
 /// 🚦️ A body removed from its plan makes overlapping corridor owners plan again.
@@ -19,7 +24,7 @@ fn yielded(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// ✋️ Lift a pet by its scruff and remember its perch origin for cancellation.
-pub(crate) fn lift(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn lift(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let kind = draft.kinds[index];
     release(draft, index, now);
     let owner = draft.stage.actors[index].species.clone();
@@ -46,7 +51,7 @@ pub(crate) fn lift(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🦧️ Swing a held body below its grip, pushing it away from occupied extents.
-pub(crate) fn hold(draft: &mut Draft<'_>, index: usize, target: Point, now: Ticks) {
+pub fn hold(draft: &mut Draft<'_>, index: usize, target: Point, now: Ticks) {
     let body = &draft.stage.actors[index];
     let kind = draft.kinds[index];
     let Some(hang) = body.hang else { return; };
@@ -69,13 +74,13 @@ pub(crate) fn hold(draft: &mut Draft<'_>, index: usize, target: Point, now: Tick
 }
 
 /// 🎈️ Release a held pet with the measured pointer velocity.
-pub(crate) fn let_go(draft: &mut Draft<'_>, index: usize, velocity: Point, now: Ticks) {
+pub fn let_go(draft: &mut Draft<'_>, index: usize, velocity: Point, now: Ticks) {
     draft.stage.trail.clear();
     unfoot(draft, index, velocity.x, velocity.y, Activity::Tumble, now);
 }
 
 /// ↩️ Return a cancelled pick-up along a clear eased corridor to its nearest free origin.
-pub(crate) fn give_back(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn give_back(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let body = &draft.stage.actors[index];
     let kind = draft.kinds[index];
     let origin = draft.stage.origin.take();
@@ -96,12 +101,12 @@ pub(crate) fn give_back(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🎯️ Carry a tossed pet's body sixteen pixels below the upper stage edge.
-pub(crate) fn toss_target(draft: &Draft<'_>, index: usize) -> Point {
+pub fn toss_target(draft: &Draft<'_>, index: usize) -> Point {
     Point { x: draft.stage.actors[index].goal, y: 16.0 + draft.kinds[index].size.height - draft.kinds[index].grip }
 }
 
 /// 🎾️ A keyboard toss carries a lifted pet up for ninety-six ticks before release.
-pub(crate) fn toss(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn toss(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     lift(draft, index, now);
     draft.stage.origin = None;
     draft.stage.actors[index].until = now + 96;

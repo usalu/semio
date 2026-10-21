@@ -143,9 +143,9 @@ fn flow_fixture_dsl_round_trips_including_cluster_widget() {
             ],
             synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
         },
-        flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: protocol::value::ordered::OrderedMap::new(), previews: Vec::new() },
+        flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: semio_framework_value_ordered::ordered::OrderedMap::new(), previews: Vec::new() },
     });
-    host_snapshot.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: protocol::value::ordered::OrderedSet::from(["a".to_string(), "b".to_string()]) });
+    host_snapshot.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: semio_framework_value_ordered::ordered::OrderedSet::from(["a".to_string(), "b".to_string()]) });
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
     host_snapshot.retire_cold();

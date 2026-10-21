@@ -10,6 +10,7 @@ import { join } from "node:path";
 
 import { expect, test as browserTest, type Locator, type Page } from "@playwright/test";
 import { significantConsoleErrors } from "./🧬️console/🟦️.ts";
+import { isNewToolRunGroup } from "./🧬️simulation/🟦️.ts";
 import { assertDemonstratorE2eArtifactPath } from "../../🔨️modules/🧪️e2e/📁️artifacts/🟦️.ts";
 import artifactPolicy from "../../🔨️modules/🧪️e2e/📁️artifacts/🔣️.json" with { type: "json" };
 // #endregion 🔌️Adapters
@@ -660,7 +661,8 @@ const simulationCases = JSON.parse(readFileSync(new URL("./🧬️simulation/�
     readonly paneId: string;
     readonly toolTabId: string;
     readonly toolCategoryId: string;
-    readonly complete: string;
+    readonly completion: "automatic";
+    readonly acceptedResult: string;
     readonly finalized: string;
     readonly aborted: string;
     readonly finalStep: string;
@@ -714,15 +716,19 @@ test('energie run-cancel', async ({ page }) => {
   const completedStatus = page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.status`));
   await expect(completed.getByRole("progressbar")).toBeVisible();
   await expect(completedStatus).toHaveAttribute("aria-live", /^(polite|off|assertive)$/);
-  await expect(completedStatus).toHaveText(new RegExp(scenario.complete), { timeout: 3 * SURFACE_CONTENT_TIMEOUT_MS });
+  await expect(completedStatus).toHaveText(new RegExp(scenario.finalized), { timeout: 3 * SURFACE_CONTENT_TIMEOUT_MS });
   await expect(page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.steps`))).toContainText(new RegExp(scenario.finalStep));
-  await page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.toolRunFinalize`)).click();
-  await expect(completedStatus).toHaveText(new RegExp(scenario.finalized), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
+  await expect(simulation).toContainText(new RegExp(scenario.acceptedResult));
   await capturePaneArtifact(page, scenario.paneId);
 
   await page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.toolRunStart`)).click();
-  await expect.poll(() => latestToolRunGroup(page, scenario.paneId), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).not.toBe(completedGroup);
-  const abortedGroup = await latestToolRunGroup(page, scenario.paneId);
+  let abortedGroup = "";
+  await expect.poll(async () => {
+    const candidate = await latestToolRunGroup(page, scenario.paneId);
+    if (!isNewToolRunGroup(completedGroup, candidate)) return false;
+    abortedGroup = candidate;
+    return true;
+  }, { timeout: SURFACE_CONTENT_TIMEOUT_MS, message: "restart must publish a distinct nonempty run group before abort" }).toBe(true);
   const abort = page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.toolRunAbort`));
   await expect(abort).toBeEnabled();
   await abort.click();

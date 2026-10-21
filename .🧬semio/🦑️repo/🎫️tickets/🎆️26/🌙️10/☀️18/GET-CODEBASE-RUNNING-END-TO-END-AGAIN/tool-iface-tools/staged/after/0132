@@ -1,73 +1,61 @@
-/** 🔌️ The interface-import census: which packages a test domain may import and where it imports an interface-owned package directly. */
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import type { CrateMeasure } from "../🧾️model/🟦️.ts";
+import { readRustSourceClosureV1, type RustSourceInputV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import type { CrateBudget } from "../💰️budget/🟦️.ts";
+import { execToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+const HOST_CFG: { value: string[] | null } = { value: null };
 
-//#region 🧮️SourceCensus
-/** 🧱️ The JavaScript libraries reachable only through their interface module, package → owning directory (the dependency
- * policy's {@link DEPENDENCY_INTERFACE_OWNERS}): production code outside the owner never imports the package or its
- * subpaths; test-domain code (the taxonomy's tests, fixtures, examples, oracles, probes, generators) may use it as an oracle. */
-export const INTERFACE_OWNED_PACKAGES: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(Object.entries(DEPENDENCY_INTERFACE_OWNERS).filter(([, owner]) => owner.ecosystem === "js").map(([name, owner]) => [name, owner.directory])));
+const WASM_CFG: { value: string[] | null } = { value: null };
 
-/** 🧱️ One import of an interface-owned package outside its owner. */
-export type InterfaceImportHit = Readonly<{ path: string; line: number; specifier: string; owner: string }>;
-
-const MODULE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["']([^"'\n]+)["']/gmu;
-
-/** 🧱️ Whether a path belongs to the test domain: under the domain root or below one of its directory names. */
-export function isTestDomainPath(path: string, testDomain: Readonly<{ directoryNames: readonly string[]; domainPath: string }>): boolean {
-  return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
+/** 🖥️ Host cfg snapshot used by the census and the gate. */
+export function crateTreeHostCfg(): readonly string[] {
+  if (HOST_CFG.value) return HOST_CFG.value;
+  const rustc = execToolSyncV1("rustup", ["which", "rustc"], { encoding: "utf8" }).trim();
+  const cfg = execFileSync(rustc, ["--print", "cfg"], { encoding: "utf8" }).trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
+  return (HOST_CFG.value = [...cfg, "debug_assertions"]);
 }
 
-/** 🧱️ The imports of interface-owned packages in one production source outside their owners. */
-export function interfaceImportHitsOfText(path: string, text: string, owners: Readonly<Record<string, string>> = INTERFACE_OWNED_PACKAGES): InterfaceImportHit[] {
-  const hits: InterfaceImportHit[] = [];
-  for (const match of text.matchAll(MODULE_SPECIFIER)) {
-    const specifier = match[1]!;
-    const owned = Object.keys(owners).find((name) => specifier === name || specifier.startsWith(`${name}/`));
-    if (!owned || path.startsWith(owners[owned]!)) continue;
-    const at = match.index! + match[0].length - specifier.length - 1;
-    hits.push({ path, line: text.slice(0, at).split("\n").length, specifier, owner: owners[owned]! });
+/** 🌉️ The cfg of a `wasm32-unknown-unknown` build, used to scan the code that only the guest target compiles. */
+export function crateTreeWasmCfg(): readonly string[] {
+  if (WASM_CFG.value) return WASM_CFG.value;
+  const rustc = execToolSyncV1("rustup", ["which", "rustc"], { encoding: "utf8" }).trim();
+  const cfg = execFileSync(rustc, ["--print", "cfg", "--target", "wasm32-unknown-unknown"], { encoding: "utf8" }).trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
+  return (WASM_CFG.value = [...cfg, "debug_assertions"]);
+}
+
+/** 📐️ Measures a crate root through the canonical source-closure counter, with optional in-memory files; `cfgOverride` replaces the host cfg (the `test` flag is still added). */
+export async function measureRustCrate(repoRoot: string, entry: string, withTest: boolean, overlay: ReadonlyMap<string, string> = new Map(), manifestDirectory?: string, cfgOverride?: readonly string[]): Promise<CrateMeasure> {
+  const read = async (path: string): Promise<Uint8Array | null> => {
+    const virtual = overlay.get(path);
+    if (virtual !== undefined) return Buffer.from(virtual, "utf8");
+    try { return readFileSync(path); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
+  };
+  const cfg = [...(cfgOverride ?? crateTreeHostCfg()), ...(withTest ? ["test"] : [])];
+  const inputs = await readRustSourceClosureV1([entry], repoRoot, cfg, read, { manifestDirectory: manifestDirectory ?? dirname(entry), generated: () => undefined });
+  return summarize(inputs);
+}
+
+function summarize(inputs: readonly RustSourceInputV1[]): CrateMeasure {
+  return { files: inputs.length, bytes: inputs.reduce((sum, input) => sum + input.bytes, 0), lines: inputs.reduce((sum, input) => sum + input.activeLines, 0), embedded: inputs.filter((input) => input.kind === "embedded").length, paths: inputs.map((input) => input.path), sourcePaths: inputs.filter((input) => input.kind === "source").map((input) => input.path), entries: new Map(inputs.map((input) => [input.path, { bytes: input.bytes, lines: input.activeLines }])) };
+}
+
+/** ✅️ Whether a measure fits a budget. */
+export function measureFits(measure: CrateMeasure, budget: CrateBudget): boolean {
+  return measure.files <= budget.files && measure.bytes <= budget.bytes && measure.lines <= budget.lines;
+}
+
+/** 🧪️ Source text of every file of a measure, keyed by repo-relative path. */
+export function readMeasureSources(repoRoot: string, measure: CrateMeasure, overlay: ReadonlyMap<string, string> = new Map()): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const path of measure.sourcePaths) {
+    if (!path.endsWith(".rs")) continue;
+    const absolute = resolve(repoRoot, path);
+    const virtual = overlay.get(absolute);
+    if (virtual !== undefined) out.set(path, virtual);
+    else if (existsSync(absolute)) out.set(path, readFileSync(absolute, "utf8"));
   }
-  return hits;
+  return out;
 }
-
-/** 🧱️ The interface-ownership census over every tracked TypeScript / JavaScript production source (the test domain read from
- * the taxonomy), cross-checked line for line against `git grep` (the oracle). */
-export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
-  const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
-  const testDomain = dependencyTestDomain(taxonomy);
-  const pathspec = ["--", "*.ts", "*.tsx", "*.js", "*.jsx", "*.mjs", "*.cjs", ":!.🧬semio"];
-  const listed = spawnToolSyncV1("git", ["ls-files", "-z", ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
-  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
-  const sources = listed.stdout.split("\0").filter((path) => path && !isTestDomainPath(path, testDomain));
-  const hits: InterfaceImportHit[] = [];
-  for (const [index, path] of sources.entries()) {
-    if (signal.aborted) throw new Error("interface-ownership census cancelled");
-    if (index % 5000 === 0) onProgress(`${index}/${sources.length} production sources scanned`);
-    let text: string;
-    try {
-      text = readFileSync(join(repoRoot, path), "utf8");
-    } catch {
-      continue;
-    }
-    if (Object.keys(INTERFACE_OWNED_PACKAGES).some((name) => text.includes(name))) hits.push(...interfaceImportHitsOfText(path, text));
-  }
-  const names = Object.keys(INTERFACE_OWNED_PACKAGES).map((name) => name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|");
-  const production = new Set(sources);
-  const oracle = new Set(
-    spawnToolSyncV1("git", ["grep", "-n", "-E", `(from|import|require)[[:space:]]*\\(?[[:space:]]*["'](${names})(/[^"']*)?["']`, ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 })
-      .stdout.split("\n")
-      .filter(Boolean)
-      .map((row) => row.split(":").slice(0, 2))
-      .filter(([path]) => production.has(path!) && !Object.values(INTERFACE_OWNED_PACKAGES).some((owner) => path!.startsWith(owner)))
-      .map((parts) => parts.join(":")),
-  );
-  const scanned = new Set(hits.map((hit) => `${hit.path}:${hit.line}`));
-  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
-  onProgress(`${sources.length}/${sources.length} production sources scanned`);
-  return { files: sources.length, hits, disagreements };
-}
-//#endregion 🧮️SourceCensus

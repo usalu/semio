@@ -31,7 +31,7 @@ fn the_configured_start_action_needs_one_click() {
     tui.render();
     let rect = tui.scene.rect(dashboard.windows[index].list);
     let row = match &tui.scene.node(dashboard.windows[index].list).content {
-        semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        NodeContent::Widget(WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
         _ => panic!("configuration list expected"),
     };
     press(&mut dashboard, &mut tui, &[Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + 2, y: rect.y + row as u16 }, mods: 0, clicks: 1 })]);
@@ -60,7 +60,7 @@ fn an_armed_prefix_notice_precedes_routine_footer_status() {
         press(&mut dashboard, &mut tui, &[ctrl('b')]);
         let notice = dashboard.text().key_armed.as_str();
         let status = match &tui.scene.node(dashboard.shell.footer).content {
-            semio_framework_ui_tui_frame::scene::NodeContent::Chrome(ChromeState::Footer(footer)) => &footer.status,
+            NodeContent::Chrome(ChromeState::Footer(footer)) => &footer.status,
             _ => panic!("footer expected"),
         };
         assert!(status.starts_with(notice), "the pending action must fit before routine status: {status}");
@@ -97,7 +97,7 @@ fn launcher_batched_navigation_edits_the_new_field_before_any_frame() {
             dashboard.handle(&mut tui, &event);
         }
         let input = dashboard.windows[index].input.unwrap();
-        let semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Input(state)) = &tui.scene.node(input).content else { panic!("editor expected") };
+        let NodeContent::Widget(WidgetState::Input(state)) = &tui.scene.node(input).content else { panic!("editor expected") };
         assert_eq!(state.value, row["expected"].as_str().unwrap(), "{}", row["name"]);
         assert_eq!(tui.focus(), Some(input));
     }
@@ -109,7 +109,7 @@ fn launcher_pointer_focus_is_synchronized_before_the_next_character() {
     let metadata: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
     let facts: Facts = serde_json::from_value(metadata["workspace"].clone()).unwrap();
     for row in vectors["pointerCases"].as_array().unwrap() {
-        let (mut dashboard, mut tui) = dashboard_with(Preferences { language:row["locale"].as_str().unwrap().into(), ..Default::default() });
+        let (mut dashboard, mut tui) = dashboard_with(Preferences { language:Some(row["locale"].as_str().unwrap().into()), ..Default::default() });
         dashboard.set_registry(&mut tui, Arc::new(Registry::build(std::path::Path::new("workspace"), &facts)));
         press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
         press(&mut dashboard, &mut tui, &type_text("source-open"));

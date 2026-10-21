@@ -44,7 +44,6 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 serde_json = { workspace = true }

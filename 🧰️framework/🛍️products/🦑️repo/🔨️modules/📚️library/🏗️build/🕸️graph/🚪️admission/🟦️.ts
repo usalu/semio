@@ -50,6 +50,11 @@ export function readBuildRuntimeSourceEntriesV1(value:unknown):readonly string[]
  if(value===undefined)return [];if(validateJsonSchemaSubset(projectSchema.$defs.RuntimeSourceEntries,value).length)throw Error("Closed runtime Source entries required");return Object.freeze([...(value as string[])]);
 }
 
+/** 📄️ Admits exact data resources without granting their imports executable authority. */
+export function readBuildSourceResourceEntriesV1(value:unknown):readonly string[]{
+ if(value===undefined)return [];if(validateJsonSchemaSubset(projectSchema.$defs.SourceResourceEntries,value).length)throw Error("Closed Source resource entries required");return Object.freeze([...(value as string[])]);
+}
+
 /** 🪜️ Retains the strongest actual demand when a runtime Source later becomes a compiler input. */
 export function buildSourceDemandV1(previous:unknown,requested:unknown):"runtime"|"compile"{
  const roles:readonly unknown[]=admissionSchema.$defs.sourceDemandRole.enum,priority=admissionSchema.$defs.sourceDemand.const.priority;if(!roles.includes(requested)||previous!==undefined&&!roles.includes(previous))throw Error("Closed source demand role required");const role=requested as keyof typeof priority,prior=previous as keyof typeof priority|undefined;return prior!==undefined&&priority[prior]>priority[role]?prior:role;
@@ -60,9 +65,9 @@ export function buildNativeSourceObservationV1(value:unknown):"none"|"source"|"c
 
 /** 🧭️ Selects contract terminals through actual normalized own input references without reading Source. */
 export function buildSourceContractGroupsV1(project:{name:string;targets?:Record<string,{inputs?:readonly unknown[]}>;namedInputs?:Record<string,readonly unknown[]>;metadata?:{sourceInputs?:Record<string,unknown>}},defaults:Record<string,readonly unknown[]>,requested:readonly unknown[]=[]):string[]{
- const policy=admissionSchema.$defs.sourceContractScope.const,contracts=project.metadata?.sourceInputs??{},named={...defaults,...project.namedInputs},selected=new Set<string>(),active=new Set<string>(),complete=new Set<string>();let references=0;
+ const policy=admissionSchema.$defs.sourceContractScope.const,contracts=project.metadata?.sourceInputs??{},named={...defaults,...project.namedInputs},selected=new Set<string>(),active=new Set<string>(),complete=new Set<string>();let references=0,literals=0;
  if(Object.keys(contracts).some(name=>(policy.reservedGroups as readonly string[]).includes(name)))throw Error("Reserved source input contract group");
- const visit=(values:readonly unknown[],depth=0)=>{if(!Array.isArray(values)||depth>policy.maximumDepth)throw Error("Finite selected source input closure required");for(const value of values){if(++references>policy.maximumReferences)throw Error("Finite selected source input closure required");if(typeof value!=="string"){
+ const visit=(values:readonly unknown[],depth=0)=>{if(!Array.isArray(values)||depth>policy.maximumDepth)throw Error("Finite selected source input closure required");for(const value of values){if(typeof value==="string"&&(value.includes("{workspaceRoot}")||value.includes("{projectRoot}")||value.startsWith("^"))){if(++literals>policy.maximumLiterals)throw Error("Finite selected source input literals required");continue;}if(++references>policy.maximumReferences)throw Error("Finite selected source input closure required");if(typeof value!=="string"){
   if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Closed selected source input required");const row=value as Record<string,unknown>,keys=Object.keys(row);
   if(typeof row.input==="string"&&row.input&&keys.every(key=>["input","projects","dependencies"].includes(key))){if(row.projects!==undefined){if(!Array.isArray(row.projects)||row.projects.some(name=>typeof name!=="string"||!name)||row.dependencies!==undefined)throw Error("Canonical named input projects required");if(row.projects.includes(project.name))visit([row.input],depth+1);}else if(row.dependencies===undefined||row.dependencies===false)visit([row.input],depth+1);else if(row.dependencies!==true)throw Error("Closed named input dependency required");}
   else if(keys.length===1&&typeof row.fileset==="string"||keys.length===1&&typeof(row.env??row.runtime)==="string"||keys.length===1&&Array.isArray(row.externalDependencies)&&row.externalDependencies.every(name=>typeof name==="string")||typeof row.dependentTasksOutputFiles==="string"&&keys.every(key=>["dependentTasksOutputFiles","transitive"].includes(key))&&(row.transitive===undefined||typeof row.transitive==="boolean"))continue;

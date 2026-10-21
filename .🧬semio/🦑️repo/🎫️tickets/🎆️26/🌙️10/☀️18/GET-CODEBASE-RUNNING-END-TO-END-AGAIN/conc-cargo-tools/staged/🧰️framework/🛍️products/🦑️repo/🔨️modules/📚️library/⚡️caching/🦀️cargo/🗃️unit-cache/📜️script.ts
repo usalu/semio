@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,readFileSync,readdirSync,statSync,writeFileSync} from "node:fs";
+import {existsSync,fstatSync,mkdirSync,readFileSync,readdirSync,statSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {admitFactsV1,expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,toolchainIdentityV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
 import {acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "./🔒️lock/🟦️.ts";
@@ -32,7 +32,7 @@ export function jobserverDescriptorsV1(environment:Environment):readonly number[
 
 function run(inner:readonly string[],args:readonly string[],environment:Environment,capture:boolean):Promise<Outcome>{
  return new Promise((done,fail)=>{
-  const inherited=jobserverDescriptorsV1(environment),stdio:Array<"inherit"|"pipe"|"ignore"|number>=[ "inherit",capture?"pipe":"inherit",capture?"pipe":"inherit"];
+  const inherited=jobserverDescriptorsV1(environment).filter(descriptor=>{try{fstatSync(descriptor);return true;}catch{return false;}}),stdio:Array<"inherit"|"pipe"|"ignore"|number>=[ "inherit",capture?"pipe":"inherit",capture?"pipe":"inherit"];
   if(inherited.length){for(let index=3;index<=Math.max(...inherited);index++)stdio[index]=inherited.includes(index)?index:"ignore";}
   const child=spawn(inner[0]!,[...inner.slice(1),...args],{env:environment as NodeJS.ProcessEnv,stdio}),out:Buffer[]=[],err:Buffer[]=[];
   const forward=(signal:NodeJS.Signals)=>{child.kill(signal);};
@@ -56,8 +56,14 @@ function stripIncremental(args:readonly string[]):string[]{
 }
 
 /** 🛠️ Serves one rustc command line from the cache or compiles it exactly once across all lanes. Never throws on cache faults: any fault is a miss. */
+/** 🪞️ Drops the compiler path Cargo puts before the arguments when it runs the stand-in as `<wrapper> <rustc> <arguments>`; every compiler argument list starts with a flag, a response file or a stdin dash. */
+export function withoutCompilerPathV1(argv:readonly string[]):readonly string[]{
+ const first=argv[0];
+ return first!==undefined&&!first.startsWith("-")&&!first.startsWith("@")&&!first.endsWith(".rs")?argv.slice(1):argv;
+}
+
 export async function wrapRustcV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{
- const settings=readSettingsV1(environment);
+ argv=withoutCompilerPathV1(argv);const settings=readSettingsV1(environment);
  if(!settings)return(await run(environment.SEMIO_UNIT_CACHE_INNER?JSON.parse(environment.SEMIO_UNIT_CACHE_INNER):["rustc"],argv,environment,false)).status;
  const args=expandRustcArgumentsV1(argv,cwd),unit=parseRustcUnitV1(args),bypass=rustcBypassV1(unit,args),crate=unit.crateName||"-";
  const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{})});

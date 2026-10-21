@@ -6,7 +6,7 @@ import {cleanup,sleep,tempRoot,waitFor} from "./common.ts";
 
 const roots:string[]=[];afterAll(()=>roots.forEach(cleanup));
 
-/** A synthetic module closure: a chain of `count` modules, each doing some work at load. */
+/** 🔗 A synthetic module closure: a chain of `count` modules, each doing some work at load. */
 function fixture(count:number){
  const root=tempRoot("delegate-");roots.push(root);mkdirSync(join(root,"mods"));
  for(let i=0;i<count;i++)writeFileSync(join(root,"mods","m"+i+".mjs"),(i+1<count?`import "./m${i+1}.mjs";\n`:"")+`export const v${i}=${JSON.stringify(Array.from({length:200},(_,k)=>"x"+k+"y"+i))}.join("");\n`);
@@ -76,4 +76,25 @@ describe("warm pool",()=>{
   expect(second.exit).toBe(0);expect(JSON.parse(warm.out.find(o=>o.stream==="stdout")!.text)).toEqual(JSON.parse(cold.out.find(o=>o.stream==="stdout")!.text));
   expect(preload.endsWith(".mjs")).toBe(true);await pool.close();
  },60000);
+});
+
+describe("execution port routing",()=>{
+ const sink=()=>{const out:string[]=[];return{out,onOutput:async(_s:string,t:string)=>{out.push(t);}};};
+ const warmPool=(exit=0)=>({take:()=>({}),run:async(_w:any,_r:any,o:any)=>{await o.onOutput("stdout","warm\n");return{exit,started:true};}}) as any;
+ test("a ready executor wins; a refusal or a lost executor without output falls through to the warm worker; a lost one with output is final",async()=>{
+  const calls:string[]=[];
+  const executors=(result:any,writes=false)=>({take:()=>({}),run:async(_e:any,_r:any,o:any)=>{calls.push("executor");if(writes)await o.onOutput("stdout","partial");return result;}}) as any;
+  const run=(executorsPort:any)=>{const s=sink();return createDelegatedExecutionPortV1({pool:warmPool(),executors:executorsPort,coldCommand:["true"],argvFor:id=>["repo","run",id],environment:{},cwd:"/",timing:kind=>calls.push(kind)}).run({id:"a:b",env:{},signal:new AbortController().signal,onSpawn(){},onOutput:s.onOutput}).then(r=>({...r,out:s.out.join("")}));};
+  expect(await run(executors({exit:0}))).toMatchObject({exit:0});expect(calls).toEqual(["executor","executor"]);
+  calls.length=0;expect((await run(executors({exit:70,refusal:"authority"}))).out).toBe("warm\n");expect(calls).toEqual(["executor","warm"]);
+  calls.length=0;expect((await run(executors({exit:70,lost:true}))).out).toBe("warm\n");
+  calls.length=0;expect(await run(executors({exit:70,lost:true},true))).toMatchObject({exit:70,out:"partial"});expect(calls).toEqual(["executor","executor"]);
+  calls.length=0;expect((await run({take:()=>undefined} as any)).out).toBe("warm\n");
+ });
+ test("a refusal of the service invocation is final: it reaches the caller with its code and neither the warm worker nor a cold process runs the command",async()=>{
+  const calls:string[]=[];
+  const executors={take:()=>({}),run:async()=>({exit:70,refusal:"service",code:"revoked",fields:{}})} as any,warm={take:()=>{calls.push("warm");return{};},run:async()=>({exit:0})} as any;
+  const result=await createDelegatedExecutionPortV1({pool:warm,executors,coldCommand:["false"],argvFor:id=>["repo","run",id],environment:{},cwd:"/",timing:kind=>calls.push(kind)}).run({id:"a:b",env:{},client:{token:"t",agent:"x",named:["a"]},signal:new AbortController().signal,onSpawn(){},onOutput:async()=>{}});
+  expect(result).toEqual({exit:70,refusal:{code:"revoked",fields:{}}});expect(calls).toEqual(["refused"]);
+ });
 });

@@ -53,7 +53,6 @@ semio-framework-plugin-time-travel-turns = { path = "../../../⏪️time-travel/
 semio-framework-plugin-tool-run-turns = { path = "../../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../../🏇️mounted-owner/📦️packages/🦀️rust" }

@@ -27,6 +27,7 @@ semio-framework-pack-json = { path = "../../../../📦️packages/🦀️rust", 
 semio-framework-pack-json-source-sink = { path = "../../../../🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 

@@ -35,7 +35,7 @@ fn confirmation_is_operable_with_the_mouse() {
     press(&mut dashboard, &mut tui, &[click(0)]);
     assert!(spawned(&dashboard).is_empty());
     let row = match &tui.scene.node(dashboard.windows[index].list).content {
-        semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        NodeContent::Widget(WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
         _ => panic!("confirmation list expected"),
     };
     press(&mut dashboard, &mut tui, &[click(row as u16)]);
@@ -74,7 +74,7 @@ fn terminal_sizes_follow_their_widget_rectangles_through_every_layout_change() {
     let first = *resizes(&dashboard).last().expect("the first frame tells the daemon the size");
     let rect = tui.scene.rect(dashboard.windows[1].list);
     assert_eq!((rect.width, rect.height), first);
-    let size = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => terminal.screen.size, _ => panic!("terminal expected") };
+    let size = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(WidgetState::Terminal(terminal)) => terminal.screen.size, _ => panic!("terminal expected") };
     assert_eq!((size.width, size.height), first);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('|')]);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('[')]);
@@ -131,7 +131,7 @@ fn copying_a_selection_asks_the_terminal_to_copy() {
     dashboard.focus_window(&mut tui, 1);
     dashboard.frame(&mut tui);
     dashboard.feed(&mut tui, 1, "copy me");
-    if let Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) = tui.scene.node_mut(dashboard.windows[1].list).widget() { terminal.select_all(); }
+    if let Some(WidgetState::Terminal(terminal)) = tui.scene.node_mut(dashboard.windows[1].list).widget() { terminal.select_all(); }
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('y')]);
     assert!(dashboard.effects.iter().any(|effect| matches!(effect, Effect::Copy(text) if text.contains("copy me"))), "{:?}", dashboard.effects);
 }
@@ -142,7 +142,7 @@ fn the_usage_text_is_generated_from_the_keymap_in_both_languages() {
     assert!(english.contains("split right") && english.contains("Ctrl+B"));
     let german = super::help_text(&Preferences { language: Some("de".into()), ..Default::default() });
     assert!(german.contains("rechts teilen") && german.contains("Nach der Präfixtaste"));
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../⌨️usage/🧪️tests/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../⌨️usage/🧪️tests/🔣️.json")).unwrap();
     let expected = fixture["terminalHeader"].as_str().unwrap();
     assert_eq!(english.lines().next(), Some(expected));
     assert_eq!(german.lines().next(), Some(expected));
@@ -239,7 +239,7 @@ fn a_replay_clears_only_the_terminal_it_replays() {
     dashboard.feed(&mut tui, 1, "alpha-output");
     dashboard.feed(&mut tui, 2, "beta-output");
     dashboard.apply(&mut tui, Message::Control(ServerMsg::ReplayStart { session_id: "a".into(), truncated: true }));
-    let text = |dashboard: &Dashboard, tui: &mut Tui, index: usize| match tui.scene.node_mut(dashboard.windows[index].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => { terminal.select_all(); terminal.selected_text().unwrap_or_default() } _ => String::new() };
+    let text = |dashboard: &Dashboard, tui: &mut Tui, index: usize| match tui.scene.node_mut(dashboard.windows[index].list).widget() { Some(WidgetState::Terminal(terminal)) => { terminal.select_all(); terminal.selected_text().unwrap_or_default() } _ => String::new() };
     assert!(!text(&dashboard, &mut tui, 1).contains("alpha-output"));
     assert!(text(&dashboard, &mut tui, 2).contains("beta-output"));
     assert!(dashboard.link.restoring && dashboard.notice.is_some());
@@ -265,7 +265,7 @@ fn the_search_action_starts_a_search_in_the_focused_terminal() {
     dashboard.focus_window(&mut tui, 1);
     dashboard.frame(&mut tui);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('/')]);
-    let searching = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => terminal.search().is_some(), _ => false };
+    let searching = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(WidgetState::Terminal(terminal)) => terminal.search().is_some(), _ => false };
     assert!(searching);
     assert!(!dashboard.link.outbox.iter().any(|message| matches!(message, ClientMsg::Input { .. })), "the search consumes the keys");
 }

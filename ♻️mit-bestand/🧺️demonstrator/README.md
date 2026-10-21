@@ -39,7 +39,7 @@ The demonstrator needs neither Docker nor a Linux host.
 | `@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype` | after `activate-energy-react-prototype`, `activate-fem3d-react-prototype` and `activate-generator-react-prototype`; a pure ordering node (`repo:noop`, no process) | not applicable | |
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | after `prepare-prototype` and `activate-lanes-prototype`: reads the lane receipts and writes the union receipt `dist/♻️activation/prototype` | yes | |
 | `@semio-tech/mit-bestand-demonstrator:dev`, `serve` | the Vite server over the activated prototype; both need `activate-prototype` | never (continuous) | `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) on `127.0.0.1`, or `0.0.0.0` when `DEVCONTAINER=true` |
-| `@semio-tech/mit-bestand-demonstrator:build` | the static site: after `prepare-release` and the four wasm tasks, prefetches the map tiles and builds the Vite artifact; it declares its store receipt `.🧾️store/build.json` | never | |
+| `@semio-tech/mit-bestand-demonstrator:build` | the static site: after `prepare-release`, the four engine wasm tasks, Flow browser wasm and Canvas runtime-asset staging, prefetches the map tiles and builds the Vite artifact; it declares its store receipt `.🧾️store/build.json` | never | |
 | `@semio-tech/mit-bestand-demonstrator:test` | the unit and law tests; the level is an argument (`-- long`, `exhaustive`; the default is `fundamental`) | never | |
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | the shell brand law at level `long`; the runtime catalog test | never | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | after `activate-prototype` and `workspace:deps-browsers`: opens an isolated service session | never | |
@@ -58,7 +58,7 @@ repo run @semio-tech/mit-bestand-demonstrator:serve                        # htt
 repo run workspace:deps-browsers                                           # Chromium; test-e2e also depends on it
 repo run @semio-tech/mit-bestand-demonstrator:test-e2e                     # serve-e2e, then Playwright; independent of the dev server on 6029
 repo --tool=bazel run @semio-tech/mit-bestand-demonstrator:serve           # the same chain under Bazel
-repo run @semio-tech/mit-bestand-demonstrator:build --configuration=release   # the static site
+repo run @semio-tech/mit-bestand-demonstrator:build   # the static site
 ```
 
 `test-e2e` runs its own server on a free port; the dev server on `6029` does not have to run. Reports land in `dist/reports/e/<UUID32>`, or in `🗑️generated/e/<UUID32>` of the ticket named by `SEMIO_TICKET_DIR`. `UUID32` retains the complete service UUID without hyphens. Short test names and a finite artifact policy keep paths within 256 characters; successful pane and interaction checks save `p.png` inside their test output directory.
@@ -72,7 +72,7 @@ The registry is data beside the manifest (`metadata.semio.dashboard` of `📋️
 | readiness | `dev` and `serve` report ready on port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) |
 | global axes | `build-tool` (Nx or Bazel), `cache` (use, skip local, skip all) and `build-mode`, offered on every verb that runs build tasks ([Command registry](../../🧰️framework/🛍️products/🦑️repo/README.md#-command-registry)) |
 
-Not yet verified: no run of this chain under either tool is recorded for this documentation. Target names, dependencies, ports, cache flags and registry entries are read from the manifest, the scripts and the Playwright configuration on 2026-10-20. Browsers of the revision `playwright-core` names were not installed on 2026-10-19, so `test-e2e` first downloads them. The runtime catalog test (`🔨️modules/🧩️runtime/🧪️tests/🟦️.ts`, run as `bun test` on that file with `SEMIO_WORKSPACE_ROOT` set to the absolute repository root) passed on 2026-10-20; it is the only part of this chapter that was run. Static checks of 2026-10-20: the Vite configuration could not load under Vite's default `runner` config loader (the inventory import of the build tool opens a blob URL), so `serve`, `serve-test` and the site `build` pass `configLoader: "native"`, and it resolves with it; `playwright test --list`, started with Bun (`node` fails with `ERR_UNSUPPORTED_ESM_URL_SCHEME`), enumerates 12 tests in one file; the Playwright browsers are downloaded by `repo run workspace:deps-browsers`.
+Current verification is pending. The authored Playwright spec contains twenty cases, covering pane startup, editing/history, Energy automatic finalization and abort, overview and funding assets. A passing prototype browser run, release build publication and final live-service readiness are separate checks. The plain `build` target selects its fixed release mode; `serve` and `test-e2e` use the activated prototype. All verification runs use the declared `repo run` targets above.
 
 ## 🇩🇪️ Deutsch
 
@@ -103,7 +103,7 @@ Der Demonstrator braucht weder Docker noch einen Linux-Host.
 | `@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype` | nach `activate-energy-react-prototype`, `activate-fem3d-react-prototype` und `activate-generator-react-prototype`; ein reiner Ordnungsknoten (`repo:noop`, kein Prozess) | nicht anwendbar | |
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | nach `prepare-prototype` und `activate-lanes-prototype`: liest die Lane-Quittungen und schreibt die Vereinigungsquittung `dist/♻️activation/prototype` | ja | |
 | `@semio-tech/mit-bestand-demonstrator:dev`, `serve` | der Vite-Server über dem aktivierten Prototyp; beide brauchen `activate-prototype` | nie (dauerhaft) | `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) auf `127.0.0.1`, bei `DEVCONTAINER=true` auf `0.0.0.0` |
-| `@semio-tech/mit-bestand-demonstrator:build` | die statische Seite: nach `prepare-release` und den vier Wasm-Tasks lädt es die Kartenkacheln vorab und baut das Vite-Artefakt; es deklariert seine Store-Quittung `.🧾️store/build.json` | nie | |
+| `@semio-tech/mit-bestand-demonstrator:build` | die statische Seite: nach `prepare-release`, den vier Engine-Wasm-Tasks, Flow-Browser-Wasm und dem Bereitstellen der Canvas-Laufzeitdateien lädt es die Kartenkacheln vorab und baut das Vite-Artefakt; es deklariert seine Store-Quittung `.🧾️store/build.json` | nie | |
 | `@semio-tech/mit-bestand-demonstrator:test` | die Unit- und Gesetzestests; die Stufe ist ein Argument (`-- long`, `exhaustive`; Standard ist `fundamental`) | nie | |
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | das Shell-Brand-Gesetz auf Stufe `long`; der Test des Laufzeitkatalogs | nie | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | nach `activate-prototype` und `workspace:deps-browsers`: öffnet eine isolierte Dienst-Sitzung | nie | |
@@ -122,7 +122,7 @@ repo run @semio-tech/mit-bestand-demonstrator:serve                        # htt
 repo run workspace:deps-browsers                                           # Chromium; test-e2e hängt ebenfalls davon ab
 repo run @semio-tech/mit-bestand-demonstrator:test-e2e                     # serve-e2e, dann Playwright; unabhängig vom Dev-Server auf 6029
 repo --tool=bazel run @semio-tech/mit-bestand-demonstrator:serve           # dieselbe Kette unter Bazel
-repo run @semio-tech/mit-bestand-demonstrator:build --configuration=release   # die statische Seite
+repo run @semio-tech/mit-bestand-demonstrator:build   # die statische Seite
 ```
 
 `test-e2e` startet einen eigenen Server auf einem freien Port; der Dev-Server auf `6029` muss nicht laufen. Berichte liegen in `dist/reports/e/<UUID32>` oder in `🗑️generated/e/<UUID32>` des Tickets, das `SEMIO_TICKET_DIR` nennt. `UUID32` enthält die vollständige Sitzungs-UUID ohne Bindestriche. Kurze Testnamen und eine begrenzte Artefaktrichtlinie halten Pfade innerhalb von 256 Zeichen; erfolgreiche Fenster- und Interaktionsprüfungen speichern `p.png` im jeweiligen Testausgabeordner.
@@ -136,4 +136,4 @@ Das Register sind Daten neben dem Manifest (`metadata.semio.dashboard` in `📋�
 | Bereitschaft | `dev` und `serve` melden sich auf Port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) bereit |
 | globale Achsen | `build-tool` (Nx oder Bazel), `cache` (nutzen, lokal überspringen, alles überspringen) und `build-mode`, angeboten bei jedem Verb, das Build-Tasks ausführt (siehe [Befehlsregister](../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch)) |
 
-Nicht verifiziert: Für diese Dokumentation ist kein Lauf dieser Kette unter einem der beiden Werkzeuge aufgezeichnet. Targetnamen, Abhängigkeiten, Ports, Cache-Flags und Registereinträge sind am 2026-10-20 aus Manifest, Skripten und Playwright-Konfiguration gelesen. Browser in der Revision, die `playwright-core` nennt, waren am 2026-10-19 nicht installiert, `test-e2e` lädt sie daher zuerst herunter. Der Test des Laufzeitkatalogs (`🔨️modules/🧩️runtime/🧪️tests/🟦️.ts`, als `bun test` auf dieser Datei mit `SEMIO_WORKSPACE_ROOT` auf den absoluten Repository-Wurzelpfad) ist am 2026-10-20 durchgelaufen; er ist der einzige Teil dieses Kapitels, der ausgeführt wurde. Statische Prüfungen vom 2026-10-20: Die Vite-Konfiguration ließ sich unter Vites Standard-Konfigurationslader `runner` nicht laden (der Inventar-Import des Build-Werkzeugs öffnet eine Blob-URL), deshalb übergeben `serve`, `serve-test` und der Site-`build` `configLoader: "native"`, und sie löst damit auf; `playwright test --list`, mit Bun gestartet (`node` scheitert mit `ERR_UNSUPPORTED_ESM_URL_SCHEME`), zählt 12 Tests in einer Datei; die Playwright-Browser lädt `repo run workspace:deps-browsers`.
+Die aktuelle Verifikation steht noch aus. Die Playwright-Spezifikation enthält zwanzig Fälle für Fensterstart, Bearbeitung/Verlauf, automatische Finalisierung und Abbruch bei Energie, Übersicht und Förderlogos. Ein erfolgreicher Prototyp-Browsertest, die Veröffentlichung des Release-Builds und die Bereitschaft des abschließenden Live-Dienstes sind getrennte Prüfungen. Das einfache Target `build` wählt seinen festgelegten Release-Modus; `serve` und `test-e2e` verwenden den aktivierten Prototyp. Alle Prüfläufe verwenden die oben genannten `repo run`-Targets.

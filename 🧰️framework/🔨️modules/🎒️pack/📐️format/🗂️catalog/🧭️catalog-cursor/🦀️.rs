@@ -55,21 +55,27 @@ impl RetainedPackCatalogCursor {
             let capacity=self.requested_allocation_bytes(owner,target,offset)?;
             if self.allocated_bytes_checked().and_then(|owned|owned.checked_add(capacity)).is_none_or(|total|total>self.maximum_allocation_bytes){return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.catalog-original-demand",offset))}
             let (copy,depth)=match owner{
-                RetainedPackCatalogAllocationOwner::SymbolSpans=>(self.symbols.symbols.next_reserve_copy_byte_demand(),self.symbols.symbols.next_reserve_depth_demand()),
-                RetainedPackCatalogAllocationOwner::SymbolScalars=>(self.symbols.scalars.next_reserve_copy_byte_demand(),self.symbols.scalars.next_reserve_depth_demand()),
-                RetainedPackCatalogAllocationOwner::Chunks=>(self.chunks.next_reserve_copy_byte_demand(),self.chunks.next_reserve_depth_demand()),
-                RetainedPackCatalogAllocationOwner::ObservedChunks=>(self.observed_chunks.next_reserve_copy_byte_demand(),self.observed_chunks.next_reserve_depth_demand()),
+                RetainedPackCatalogAllocationOwner::SymbolSpans=>(self.symbols.symbols.next_capacity_copy_byte_demand(target),self.symbols.symbols.next_capacity_depth_demand(target)),
+                RetainedPackCatalogAllocationOwner::SymbolScalars=>(self.symbols.scalars.next_capacity_copy_byte_demand(target),self.symbols.scalars.next_capacity_depth_demand(target)),
+                RetainedPackCatalogAllocationOwner::Chunks=>(self.chunks.next_capacity_copy_byte_demand(target),self.chunks.next_capacity_depth_demand(target)),
+                RetainedPackCatalogAllocationOwner::ObservedChunks=>(self.observed_chunks.next_capacity_copy_byte_demand(target),self.observed_chunks.next_capacity_depth_demand(target)),
             };
             return Ok(RetirementDemand{copy_bytes:copy.map_err(mapped)?,capacity_bytes:capacity,depth:depth.map_err(mapped)?,..Default::default()})
         }
-        let depth=self.symbols.symbols.next_push_depth_demand().map_err(mapped)?.max(self.symbols.scalars.next_push_depth_demand().map_err(mapped)?).max(self.chunks.next_push_depth_demand().map_err(mapped)?).max(self.observed_chunks.next_push_depth_demand().map_err(mapped)?).max(1);
+        let depth=match self.pending{
+            Some(RetainedPackSegmentEvent::Begin(segment))if self.active.is_none()&&segment.kind==semio_framework_replication_codec::KIND_CHUNK=>self.observed_chunks.next_push_depth_demand().map_err(mapped)?,
+            Some(RetainedPackSegmentEvent::RawByte{segment,index,value})if self.active==Some(segment)&&segment.kind==semio_framework_replication_codec::KIND_SYMBOLS=>match self.symbol_parser.phase{
+                RetainedSymbolsPhase::Length(cursor)if matches!(cursor.preview(value,segment.payload_offset+index).map_err(|fault|fault.into_catalog_fault("retained-pack.catalog-symbol-length-varint"))?,RetainedVarintStep::Complete(0))=>self.symbols.symbols.next_push_depth_demand().map_err(mapped)?,
+                RetainedSymbolsPhase::Text{remaining,..}=>{let depth=if self.symbol_parser.utf8.preview(value,segment.payload_offset+index)?.is_some(){self.symbols.scalars.next_push_depth_demand().map_err(mapped)?}else{1};if remaining==1{depth.max(self.symbols.symbols.next_push_depth_demand().map_err(mapped)?)}else{depth}},
+                _=>1,
+            },
+            Some(RetainedPackSegmentEvent::RawByte{segment,..})if self.active==Some(segment)&&segment.kind==semio_framework_replication_codec::KIND_CHUNK_TABLE&&matches!(self.chunk_parser.phase,RetainedChunksPhase::Hash(31))=>self.chunks.next_push_depth_demand().map_err(mapped)?,
+            _=>1,
+        };
         Ok(RetirementDemand{copy_bytes:std::mem::size_of::<RetainedPackSegmentEvent>(),depth,..Default::default()})
     }
-    pub fn original_close_depth_demand(&self) -> Result<usize, PagedListError> {
-        let mut depth=1;
-        depth=depth.max(self.symbols.scalars.next_pop_depth_demand()?).max(self.symbols.symbols.next_pop_depth_demand()?).max(self.chunks.next_pop_depth_demand()?).max(self.observed_chunks.next_pop_depth_demand()?);
-        depth=depth.max(self.symbols.scalars.next_release_depth_demand()?).max(self.symbols.symbols.next_release_depth_demand()?).max(self.chunks.next_release_depth_demand()?).max(self.observed_chunks.next_release_depth_demand()?);
-        Ok(depth)
+    pub fn original_close_depth_demand(&self) -> Result<usize, ValueError> {
+        self.retirement_demands().map(|demand|demand.depth)
     }
 
     /// 📏️ Borrows the exact currently retained catalog frame or page path for close.
@@ -170,7 +176,7 @@ impl RetainedPackCatalogCursor {
                 if target > self.maximum_chunks {
                     return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.catalog-observed-count",segment.offset));
                 }
-                (target > self.observed_chunks.capacity()).then_some((RetainedPackCatalogAllocationOwner::ObservedChunks, target, segment.offset))
+                (target > self.observed_chunks.capacity()).then_some((RetainedPackCatalogAllocationOwner::ObservedChunks, self.maximum_chunks, segment.offset))
             }
             RetainedPackSegmentEvent::RawByte { segment, index, value } if self.active == Some(segment) && segment.kind == semio_framework_replication_codec::KIND_SYMBOLS => match self.symbol_parser.phase {
                 RetainedSymbolsPhase::Count(cursor)=>match cursor.preview(value,segment.payload_offset+index).map_err(|fault|fault.into_catalog_fault("retained-pack.catalog-symbol-count-varint"))?{
@@ -199,7 +205,7 @@ impl RetainedPackCatalogCursor {
                         Some(_) => {
                             let target=self.symbols.scalar_len().checked_add(1).ok_or(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.catalog-symbol-scalars",segment.payload_offset+index))?;
                             if target>self.maximum_symbol_scalars{return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.catalog-symbol-scalars",segment.payload_offset+index));}
-                            (target > self.symbols.scalar_capacity()).then_some((RetainedPackCatalogAllocationOwner::SymbolScalars, target, segment.payload_offset + index))
+                            (target > self.symbols.scalar_capacity()).then_some((RetainedPackCatalogAllocationOwner::SymbolScalars, self.maximum_symbol_scalars, segment.payload_offset + index))
                         }
                         None => None,
                     }

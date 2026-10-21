@@ -4,14 +4,16 @@ use super::*;
 use semio_framework_pets_contract::schema::Ending;
 use semio_framework_pets_contract::schema::Course;
 use semio_framework_pets_contract::schema::Claim;
+use crate::spacing::extent_at;
+use semio_framework_pets_clearance::{DELAY, claim_of, released};
 
 //#region 🔖️Footing
 /// 🎟️ A complete course and its reserved corridor.
 #[derive(Clone)]
-pub(crate) struct Plan { pub(super) course: Course, pub(super) claim: Claim }
+pub struct Plan { pub(super) course: Course, pub(super) claim: Claim }
 
 /// 🧾️ Find an owner's planned flight.
-pub(crate) fn course_of<'a>(courses: &'a [Course], owner: &str) -> Option<&'a Course> {
+pub fn course_of<'a>(courses: &'a [Course], owner: &str) -> Option<&'a Course> {
     courses.iter().find(|course| course.owner == owner)
 }
 
@@ -44,19 +46,19 @@ pub(super) fn install(draft: &mut Draft<'_>, index: usize, plan: Plan, activity:
 }
 
 /// 🏡️ An actor that has nowhere left to be is gone at once (always `false`): it lets go of its partner and arrives anew, spaced from the others, once it is wanted and a perch has room.
-pub(crate) fn vanish(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
+pub fn vanish(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
     release(draft, index, now);
     remove(draft, index);
     false
 }
 
 /// 🕳️ An actor loses its perch and starts to fall.
-pub(crate) fn drop(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn drop(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     unfoot(draft, index, 0.0, 0.0, Activity::Fall, now);
 }
 
 /// 🕳️ Release a footing, corridor and course before planning the way down.
-pub(crate) fn unfoot(draft: &mut Draft<'_>, index: usize, vx: f64, vy: f64, activity: Activity, now: Ticks) {
+pub fn unfoot(draft: &mut Draft<'_>, index: usize, vx: f64, vy: f64, activity: Activity, now: Ticks) {
     release(draft, index, now);
     let owner = draft.stage.actors[index].species.clone();
     draft.stage.claims = released(&draft.stage.claims, &owner);

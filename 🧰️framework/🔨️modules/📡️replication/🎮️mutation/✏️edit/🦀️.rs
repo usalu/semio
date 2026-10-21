@@ -409,4 +409,3 @@ mod owned_retirement {
     }
 }
 
-semio_framework_value::artifact_retire_struct!(TransactionRef{id,tool});

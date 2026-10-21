@@ -4,13 +4,27 @@ import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,renameSync,rmSync,
 import {randomBytes} from "node:crypto";
 import {dirname} from "node:path";
 import {ProtocolErrorV1,createFrameDecoderV1,encodeFrameV1} from "../protocol/frames.mjs";
-import {POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../protocol/policy.mjs";
-import {attenuateCapabilityV1,authorizeCapabilityV1,createRootKeyV1,mintCapabilityV1,verifyCapabilityV1} from "../protocol/capability.mjs";
+import {POLICY_V1,SUPPORTED_LANGUAGES_V1,renderBothV1,renderTextV1,validatorV1} from "../protocol/policy.mjs";
+import {attenuateCapabilityV1,authorizeCapabilityV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,mintCapabilityV1,verifyCapabilityV1} from "../protocol/capability.mjs";
+import {canonicalRootV1,worktreeIdV1} from "../protocol/endpoint.mjs";
+import {appendAuditV1} from "../../core/session.mjs";
+import coreSchema from "../../core/service.schema.json" with {type:"json"};
 import {createFilterV1,createWorkspaceStateV1,outputSignatureV1} from "../state/index.mjs";
 import {createWatchSupervisorV1} from "../watch/index.mjs";
 import {BusyErrorV1,createGovernorV1} from "./governor.mjs";
 
 const validateClient=validatorV1("ClientFrame");
+
+const CORE_POLICY=coreSchema.definitions.Policy.const;
+
+function renderCoreRefusal(code,fields){
+ const message={};
+ for(const language of SUPPORTED_LANGUAGES_V1)message[language]=CORE_POLICY.messages[language][code].replace(/\{([A-Za-z]+)\}/gu,(_,key)=>String(fields?.[key]??"?"));
+ return message;
+}
+
+/** 🚨 The authority core refused a command the service tried to run for a client. */
+export class ServiceRefusedErrorV1 extends Error{constructor(code,fields){super("Service invocation refused ("+code+")");this.name="ServiceRefusedErrorV1";this.code=code;this.fields=fields??{};}}
 
 /** 🚨 Another live service already owns the endpoint. */
 export class ServiceRunningErrorV1 extends Error{constructor(endpoint){super("A resident service already listens on "+endpoint);this.name="ServiceRunningErrorV1";this.code="running";}}
@@ -51,8 +65,8 @@ export function createResidentServiceV1(options){
  const state=createWorkspaceStateV1({root,instance,policy,filter,fence:fenceDirectory,now});
  const governor=createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
  const connections=new Set(),implementationSet=new Set(implementationPaths);
- const counters={requests:0,memoServed:0,executed:0,refused:0,queries:0,connections:0,staleRefusals:0};
- let graphDirty=false,graphReload,rootKey,server,watcher,closeResolve,closing=false,stale=false,gateOpen,gate=new Promise(resolve=>{gateOpen=resolve;}),idleTimer,pinTimer,residentTimer,lastActivity=now(),stateTimer,pinned=false,activeWatches=0,graphInfo;
+ const frontiers=new Map(),counters={requests:0,memoServed:0,executed:0,refused:0,queries:0,connections:0,staleRefusals:0};
+ let graphDirty=false,graphReload,rootKey,revocations,server,watcher,closeResolve,closing=false,stale=false,gateOpen,gate=new Promise(resolve=>{gateOpen=resolve;}),idleTimer,pinTimer,residentTimer,lastActivity=now(),stateTimer,pinned=false,activeWatches=0,graphInfo;
  const closed=new Promise(resolve=>{closeResolve=resolve;});
 
  const touch=()=>{lastActivity=now();};
@@ -64,9 +78,10 @@ export function createResidentServiceV1(options){
  };
  const refuse=(connection,id,code,key,fields,retry)=>{
   counters.refused++;
-  return send(connection,{t:"refused",...(id!==undefined?{id}:{}),code,message:renderBothV1(key,fields),retry});
+  return send(connection,{t:"refused",...(id!==undefined?{id}:{}),code,message:typeof key==="string"?renderBothV1(key,fields):key,retry});
  };
- const text=(connection,key,fields)=>renderTextV1(key,fields,connection.languages??["en","de"])??renderBothV1(key,fields);
+ const worktree=worktreeIdV1(canonicalRootV1(root));
+ const text=(connection,key,fields)=>renderTextV1(key,fields,connection.languages??SUPPORTED_LANGUAGES_V1)??renderBothV1(key,fields);
 
  const savedState=()=>{
   try{const saved=JSON.parse(readFileSync(runtime.state,"utf8"));return saved?.v===1?saved:undefined;}catch{return undefined;}
@@ -109,10 +124,10 @@ export function createResidentServiceV1(options){
   return performance.now()-started;
  };
 
- const makeContext=(connection,frame,controller,timing)=>{
+ const makeContext=(connection,frame,controller,timing,client)=>{
   let lastProgress=0,lastPhase="";
   const context={
-   id:frame.id,args:frame.args,cwd:frame.cwd,env:frame.env??{},signal:controller.signal,connection,timing,state,ports,policy,root,
+   id:frame.id,args:frame.args,cwd:frame.cwd,env:frame.env??{},signal:controller.signal,connection,timing,state,ports,policy,root,client,
    progress:(phase,done,total,key,fields)=>{
     const at=performance.now();
     if(phase===lastPhase&&at-lastProgress<50&&done<total)return Promise.resolve();
@@ -142,13 +157,15 @@ export function createResidentServiceV1(options){
    }
   }
   if(stale&&command.tier==="service")return refuse(connection,frame.id,"stale","stale-implementation",{},"fallback").then(()=>{counters.staleRefusals++;});
+  const token=frame.cap??connection.cap,client={token,agent:connection.lane,named:projectsOf(frame.args)},session=token?capabilityIdV1(token):undefined;
   if(requireCapability){
-   const token=frame.cap??connection.cap,caveats=token?verifyCapabilityV1(rootKey,token):undefined;
+   const caveats=token?verifyCapabilityV1(rootKey,token):undefined;
    if(!caveats)return refuse(connection,frame.id,"capability","capability",{},"never");
-   const denial=authorizeCapabilityV1(caveats,{commandClass:command.class,command:frame.command,cwd:frame.cwd,now:now(),projects:projectsOf(frame.args)});
+   const denial=authorizeCapabilityV1(caveats,{commandClass:command.class,command:frame.command,cwd:frame.cwd,now:now(),projects:client.named,worktree,agent:connection.lane});
    if(denial)return refuse(connection,frame.id,denial.code,denial.code==="scope"?"scope":"capability",{class:command.class},"never");
+   if(revocations.has(session)||revocations.hasAgent(connection.lane))return refuse(connection,frame.id,"capability","revoked",{},"never");
   }
-  const controller=new AbortController();
+  const controller=new AbortController();controller.session=session;controller.agent=connection.lane;
   connection.requests.set(frame.id,controller);
   const deadline=frame.deadlineMs?setTimeout(()=>controller.abort(Object.assign(new Error("deadline"),{code:"deadline"})),frame.deadlineMs):undefined;
   let release;
@@ -163,7 +180,7 @@ export function createResidentServiceV1(options){
      release=await governor.enter(connection.lane,controller.signal,position=>{void send(connection,{t:"progress",id:frame.id,phase:"queued",done:0,total:0,message:text(connection,"queued",{position}),queue:position});});
      timing.queueMs=performance.now()-entered;
     }
-    const context=makeContext(connection,frame,controller,timing);
+    const context=makeContext(connection,frame,controller,timing,client);
     const pinMs=command.class==="run"||command.class==="watch"?await mustPin(connection,frame.id,controller.signal):undefined;
     if(pinMs!==undefined)timing.admitMs=pinMs;
     const outcome=await handler(context);
@@ -172,9 +189,11 @@ export function createResidentServiceV1(options){
    }finally{if(watchLike)activeWatches--;}
   }catch(error){
    if(error instanceof BusyErrorV1)await refuse(connection,frame.id,"busy","busy",{inFlight:error.inFlight,queued:error.queued},"later");
+   else if(error instanceof ServiceRefusedErrorV1)await refuse(connection,frame.id,CORE_POLICY.wire[error.code],renderCoreRefusal(error.code,error.fields),undefined,error.code==="busy"?"later":"never");
    else if(controller.signal.aborted||error?.name==="AbortError"){
     const reason=controller.signal.reason;
     if(reason?.code==="deadline")await refuse(connection,frame.id,"deadline","deadline",{milliseconds:frame.deadlineMs},"never");
+    else if(reason?.code==="revoked")await refuse(connection,frame.id,"capability","revoked",{},"never");
     else await send(connection,{t:"result",id:frame.id,exit:130,signal:"SIGINT",served:"query",timing:roundTiming({...timing,totalMs:performance.now()-received})});
    }else{
     log("request-failed",String(error?.stack??error));
@@ -215,10 +234,19 @@ export function createResidentServiceV1(options){
   state.beginTask(id);
   const spawnStart=performance.now();
   await context.progress("execute",0,1,"execute",{task:id});
-  let stdout="",stderr="";
-  const result=await ports.execution.run({id,command:task.command,owner:task.owner,cwd:root,env:context.env,signal:parallelSignal,onSpawn:()=>{context.timing.spawnMs??=performance.now()-spawnStart;},onOutput:(stream,data)=>{if(stream==="stdout")stdout+=data;else stderr+=data;return context.output(stream,data);}});
+  let stdout="",stderr="";const partial={stdout:"",stderr:""};
+  const forward=(stream,data,final=false)=>{
+   partial[stream]+=data;
+   const cut=final?partial[stream].length:Math.max(partial[stream].lastIndexOf("\n"),partial[stream].lastIndexOf("\r"))+1;
+   if(cut===0)return undefined;
+   const chunk=partial[stream].slice(0,cut);partial[stream]=partial[stream].slice(cut);
+   return context.output(stream,chunk);
+  };
+  const result=await ports.execution.run({id,command:task.command,owner:task.owner,cwd:root,env:context.env,client:context.client,signal:parallelSignal,onSpawn:()=>{context.timing.spawnMs??=performance.now()-spawnStart;},onOutput:(stream,data)=>{if(stream==="stdout")stdout+=data;else stderr+=data;return forward(stream,data);}});
+  await forward("stdout","",true);await forward("stderr","",true);
   counters.executed++;
   try{if(watcher.state().trust==="exact")await watcher.fence();await watcher.drained();}finally{state.endTask(id);}
+  if(result.refusal)throw new ServiceRefusedErrorV1(result.refusal.code,result.refusal.fields);
   if(result.exit===0&&task.cacheable&&stdout.length+stderr.length<=policy.replayMaximumBytes){
    const keyAfter=await state.taskKey(id);
    if(keyAfter===keyBefore){
@@ -240,9 +268,9 @@ export function createResidentServiceV1(options){
   async cursor(context){await ensureFresh(context);await context.output("stdout",JSON.stringify(state.cursor())+"\n");return{exit:0,served:"query"};},
   async dirty(context){
    await ensureFresh(context);
-   const at=context.args.indexOf("--since"),value=at>=0?context.args[at+1]:undefined;
-   const cursor=value?{instance:value.split(":")[0],seq:Number(value.split(":")[1])}:{instance,seq:0};
-   const answer=state.since(cursor);
+   const at=context.args.indexOf("--since"),value=at>=0?context.args[at+1]:undefined,by=context.args.indexOf("--digest"),digest=by>=0?context.args[by+1]:undefined;
+   const cursor=digest!==undefined?frontiers.get(digest):value?{instance:value.split(":")[0],seq:Number(value.split(":")[1])}:{instance,seq:0};
+   const answer=cursor===undefined?{complete:false,reason:"digest"}:state.since(cursor);
    await context.output("stdout",JSON.stringify({...answer,cursor:state.cursor()})+"\n");counters.queries++;
    return{exit:0,served:"query"};
   },
@@ -253,6 +281,13 @@ export function createResidentServiceV1(options){
    for(const id of ids)if(state.memo.get(id)===undefined||!(await state.memoCurrent(id)))outdated.push(id);
    await context.output("stdout",JSON.stringify({stale:outdated})+"\n");counters.queries++;
    return{exit:0,served:"query"};
+  },
+  async "adopt-frontier"(context){
+   const[digest,cursor]=context.args,[owner,sequence]=String(cursor).split(":"),seq=Number(sequence);
+   if(!/^[0-9a-f]{64}$/u.test(String(digest))||owner!==instance||!Number.isInteger(seq)||seq<0||seq>state.seq){await context.output("stdout","ignored\n");return{exit:0,served:"query"};}
+   frontiers.delete(digest);frontiers.set(digest,{instance,seq});
+   while(frontiers.size>policy.frontierMaximumEntries)frontiers.delete(frontiers.keys().next().value);
+   await context.output("stdout","adopted\n");return{exit:0,served:"query"};
   },
   async adopt(context){
    const generation=Number(context.args[0]);
@@ -282,11 +317,24 @@ export function createResidentServiceV1(options){
   async issue(context){
    const caveats=[];
    const take=name=>{const at=context.args.indexOf(name);return at>=0?context.args[at+1]:undefined;};
-   const scope=take("--classes"),projects=take("--for"),ttl=take("--ttl");
-   if(scope)caveats.push({k:"scope",v:scope.split(",")});
+   const scope=take("--classes")??"status,query,run,watch",projects=take("--for"),ttl=take("--ttl"),agent=take("--agent"),seconds=ttl===undefined?CORE_POLICY.defaultTtlSeconds:Number(ttl);
+   const language=context.languages[0],say=key=>(renderTextV1(key,{maximum:CORE_POLICY.maximumLifetimeMilliseconds/1000},[language])??renderBothV1(key,{maximum:CORE_POLICY.maximumLifetimeMilliseconds/1000}))[language]??"";
+   if(!/^[A-Za-z0-9._:-]{1,64}$/u.test(agent??"")){await context.output("stderr",say("issue-agent")+"\n");return{exit:1,served:"query"};}
+   if(!Number.isInteger(seconds)||seconds<1||seconds*1000>CORE_POLICY.maximumLifetimeMilliseconds){await context.output("stderr",say("issue-ttl")+"\n");return{exit:1,served:"query"};}
+   caveats.push({k:"worktree",v:worktree},{k:"agent",v:agent},{k:"scope",v:scope.split(",")},{k:"notAfter",v:now()+seconds*1000});
    if(projects)caveats.push({k:"projects",v:projects.split(",")});
-   if(ttl)caveats.push({k:"notAfter",v:now()+Number(ttl)*1000});
    await context.output("stdout",mintCapabilityV1(rootKey,caveats)+"\n");
+   return{exit:0,served:"query"};
+  },
+  async revoke(context){
+   const at=context.args.indexOf("--agent"),agent=at>=0?context.args[at+1]:undefined,value=context.args.find(argument=>!argument.startsWith("-")&&argument!==agent);
+   const session=agent===undefined?(/^[0-9a-f]{16}$/u.test(value??"")?value:capabilityIdV1(value??"")):undefined;
+   if(agent===undefined&&session===undefined||at>=0&&agent===undefined){await context.output("stderr","revoke needs a session id, a token or --agent <id>\n");return{exit:1,served:"query"};}
+   if(agent!==undefined)revocations.revokeAgent(agent);else revocations.revoke(session);
+   appendAuditV1(runtime.audit,{v:1,at:now(),event:"revoke",session:session??"-",agent:agent??"-",worktree,operation:"revoke",args:[]});
+   let aborted=0;
+   for(const connection of connections)for(const[id,controller]of connection.requests)if(!(connection===context.connection&&id===context.id)&&(agent!==undefined?controller.agent===agent:controller.session===session)){controller.abort(Object.assign(new Error("revoked"),{code:"revoked"}));aborted++;}
+   await context.output("stdout","revoked "+(agent!==undefined?"agent "+agent:"session "+session)+", "+aborted+" running\n");
    return{exit:0,served:"query"};
   },
   async stop(context){await context.output("stdout","stopping\n");setTimeout(()=>void drainAndExit("requested"),20);return{exit:0,served:"query"};},
@@ -309,7 +357,7 @@ export function createResidentServiceV1(options){
   context.timing.planMs=performance.now()-planStart;
   if(stalePlan.length===0){
    counters.memoServed++;
-   const first=context.languages?.[0]??"en";
+   const first=context.languages[0];
    const since=new Date(Math.max(...ids.map(id=>state.memo.get(id).finishedAt))).toISOString();
    const line=(renderTextV1("replay",{since},[first])??renderBothV1("replay",{since}))[first]??"";
    if(!quiet)await context.output("stdout","> "+ids.join(", ")+"  "+line+"\n");
@@ -423,6 +471,7 @@ export function createResidentServiceV1(options){
    secureDirectory(dirname(runtime.directory),posix);secureDirectory(runtime.directory,posix);
    if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
+   revocations=createRevocationRegistryV1(runtime.revoked,now);
    await listen();lap("listen");
    graphInfo=await ports.graph.load();state.configure(graphInfo);state.setEnvironmentSalt(await ports.graph.environmentDigest());state.setGeneration(graphInfo.generation??null);lap("graph");
    const restore=savedState();

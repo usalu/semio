@@ -165,6 +165,16 @@ impl ToolRunStepRing {
         Ok(Self { steps: steps.into() })
     }
 
+    /// 🔭️ Borrows the original ring rows in wire order for the tick wire cursor.
+    pub fn original_steps(&self) -> &VecDeque<ToolRunStep> {
+        &self.steps
+    }
+
+    /// 🧾️ Lends the wire-ordered rows to funded native receiving, which builds them without coalescing.
+    pub fn original_steps_mut(&mut self) -> &mut VecDeque<ToolRunStep> {
+        &mut self.steps
+    }
+
     pub fn len(&self) -> usize {
         self.steps.len()
     }

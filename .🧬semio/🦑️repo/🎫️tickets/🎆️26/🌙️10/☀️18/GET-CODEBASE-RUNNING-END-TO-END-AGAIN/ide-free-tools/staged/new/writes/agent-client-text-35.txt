@@ -1,406 +1,221 @@
-// 🔶️ Tests of running hooks and rendering their output.
+// #region 🧲️Header
+
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+
+// 🪝️hooks is the hooks domain of the semio repository tooling, split out of the pre-split godfile.
+
+// #endregion 🧲️Header
 
 package hooks
 
 import (
 	json "encoding/json"
+	fmt "fmt"
 	os "os"
 	filepath "path/filepath"
 	strings "strings"
-	testing "testing"
-	time "time"
 
 	model "github.com/usalu/semio/repo/model"
-	providers "github.com/usalu/semio/repo/providers"
-	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
+	statutes "github.com/usalu/semio/repo/statutes"
+	workspace "github.com/usalu/semio/repo/workspace"
 )
 
-func TestRunHookAgentEvents(t *testing.T) {
-	cases := []struct {
-		name    string
-		event   model.HookEvent
-		allowed bool
-	}{
-		{"agent starting", model.HookAgentStarted, true},
-		{"agent ended", model.HookAgentEnded, true},
-		{"agent prompt submitting", model.HookAgentPromptSubmitting, true},
-		{"agent compacting", model.HookAgentCompacting, true},
-		{"agent tool ended", model.HookAgentToolEnded, true},
-		{"agent tool code searching", model.HookAgentToolSearchStarting, true},
-		{"agent tool searched", model.HookAgentToolSearchEnded, true},
-		{"agent tool code editing", model.HookAgentToolCodeEditStarting, true},
-		{"agent tool code edited", model.HookAgentToolCodeEditEnded, true},
-		{"agent tool plan updating starting", model.HookAgentToolPlanUpdatingStarting, true},
-		{"agent tool plan updating ended", model.HookAgentToolPlanUpdatingEnded, true},
-		{"agent tool terminal starting", model.HookAgentToolTerminalStarting, true},
-		{"agent tool terminal ended", model.HookAgentToolTerminalEnded, true},
-		{"agent thinking starting", model.HookAgentThinkingStarting, true},
-		{"agent thinking ended", model.HookAgentThinkingEnded, true},
-		{"version checkpoint ended", model.HookVersionCheckpointEnded, true},
-		{"version checkin starting", model.HookVersionCheckinStarting, true},
-		{"version checkin ended", model.HookVersionCheckinEnded, true},
-		{"version checkout starting", model.HookVersionCheckoutStarting, true},
-		{"version checkout ended", model.HookVersionCheckoutEnded, true},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			hctx := model.HookContext{
-				Event:    tc.event,
-				Client:   "copilot-chat",
-				Second:   time.Now().UTC().Format(time.RFC3339),
-				RepoRoot: t.TempDir(),
-			}
-			result := RunHook(hctx)
-			if result.IsAllowed() != tc.allowed {
-				t.Errorf("expected allowed=%v, got allowed=%v: %s", tc.allowed, result.IsAllowed(), result.GetMessage())
-			}
-		})
-	}
-	t.Run("version checkpoint starting", func(t *testing.T) {
-		hctx := model.HookContext{
-			Event:    model.HookVersionCheckpointStarting,
-			RepoRoot: t.TempDir(),
-		}
-		result := RunHook(hctx)
+// #region 🔖️HookError
 
-		_, ok := result.(model.HookResultVersionCheckpointStarting)
-		if !ok {
-			t.Fatalf("expected HookResultVersionCheckpointStarting, got %T", result)
-		}
-	})
+// ⚠️HookError is every hook failure, carrying the message the Rust implementation formats verbatim.
+type HookError struct {
+	Message string `json:"message"`
 }
 
-func TestRunHookUnknownEvent(t *testing.T) {
-	hctx := model.HookContext{
-		Event:    model.HookEvent("unknown.event"),
-		Client:   "copilot-chat",
-		Second:   time.Now().UTC().Format(time.RFC3339),
-		RepoRoot: t.TempDir(),
-	}
-	result := RunHook(hctx)
-	if result.IsAllowed() {
-		t.Error("expected unknown event to be denied")
-	}
-}
+// 🆕️NewHookError wraps a message.
+func NewHookError(message string) *HookError { return &HookError{Message: message} }
 
-func TestRunHookThinkingEvents(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping slow run hook thinking events test in short mode")
-	}
-	t.Run("thinking ended extracts text from top-level", func(t *testing.T) {
-		hctx := model.HookContext{
-			Event:  model.HookAgentThinkingEnded,
-			Client: "cursor-chat",
-			Second: time.Now().UTC().Format(time.RFC3339),
-			Input:  json.RawMessage(`{"session_id":"sess-think","text":"Planning repo modifications"}`),
-		}
-		result := RunHook(hctx)
-		res, ok := result.(model.HookResultAgentThinkingEnded)
-		if !ok {
-			t.Fatalf("expected HookResultAgentThinkingEnded, got %T", result)
-		}
-		if res.GetMessage() != "Planning repo modifications" {
-			t.Errorf("expected thinking text in message, got %q", res.GetMessage())
-		}
-		if !res.IsAllowed() {
-			t.Error("expected thinking ended to be allowed")
-		}
-	})
-	t.Run("thinking ended extracts text from native.event", func(t *testing.T) {
-		input := `{"native":{"event":{"text":"Thinking deeply","hook_event_name":"afterAgentThought"}},"session_id":"sess-think2"}`
-		hctx := model.HookContext{
-			Event:  model.HookAgentThinkingEnded,
-			Client: "cursor-chat",
-			Second: time.Now().UTC().Format(time.RFC3339),
-			Input:  json.RawMessage(input),
-		}
-		result := RunHook(hctx)
-		res, ok := result.(model.HookResultAgentThinkingEnded)
-		if !ok {
-			t.Fatalf("expected HookResultAgentThinkingEnded, got %T", result)
-		}
-		if res.GetMessage() != "Thinking deeply" {
-			t.Errorf("expected thinking text from native.event, got %q", res.GetMessage())
-		}
-	})
-	t.Run("thinking starting is allowed", func(t *testing.T) {
-		hctx := model.HookContext{
-			Event:  model.HookAgentThinkingStarting,
-			Client: "cursor-chat",
-			Second: time.Now().UTC().Format(time.RFC3339),
-			Input:  json.RawMessage(`{"session_id":"sess-think3","text":"About to think"}`),
-		}
-		result := RunHook(hctx)
-		if _, ok := result.(model.HookResultAgentThinkingStarting); !ok {
-			t.Fatalf("expected HookResultAgentThinkingStarting, got %T", result)
-		}
-		if !result.IsAllowed() {
-			t.Error("expected thinking starting to be allowed")
-		}
-	})
-}
+// 🔤️Error renders the failure message.
+func (e *HookError) Error() string { return e.Message }
 
-func TestHookCommandJSONOutput(t *testing.T) {
-	hctx := model.HookContext{
-		Event:    model.HookAgentStarted,
-		Client:   "copilot-chat",
-		Second:   time.Now().UTC().Format(time.RFC3339),
-		RepoRoot: t.TempDir(),
-	}
-	result := RunHook(hctx)
-	out, err := json.Marshal(result)
+// #endregion 🔖️HookError
+
+// #region 🏷️HookKind
+
+// 🔤️ValidateHookEvent resolves a neutral event slug, listing every valid slug when it does not.
+func ValidateHookEvent(raw string) (model.HookEvent, error) {
+	event, err := model.ValidateHookEvent(raw)
 	if err != nil {
-		t.Fatalf("expected valid JSON marshaling, got: %v", err)
+		return "", NewHookError(fmt.Sprintf("invalid hook event %q, valid events: %s", raw, strings.Join(HookEventSlugs(), ", ")))
 	}
-	var parsed model.HookResultAgentStarted
-	if err := json.Unmarshal(out, &parsed); err != nil {
-		t.Fatalf("expected valid JSON round-trip, got: %v", err)
-	}
-	if !parsed.Allowed {
-		t.Error("expected allowed=true")
-	}
-	if parsed.Second == "" {
-		t.Error("expected non-empty second")
-	}
+	return event, nil
 }
 
-func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
-	t.Run("PreToolUse allow produces VS Code JSON", func(t *testing.T) {
-		hctx := model.HookContext{
-			Event:    model.HookAgentToolStarting,
-			Client:   "copilot-chat",
-			Second:   time.Now().UTC().Format(time.RFC3339),
-			ToolName: "read_file",
-			ToolArgs: "/tmp/file.ts",
-			RepoRoot: t.TempDir(),
-		}
-		result := RunHook(hctx)
-		if !result.IsAllowed() {
-			t.Fatal("expected allowed")
-		}
-		out := providers.FormatCopilotHookOutput("PreToolUse", result)
-		var parsed map[string]interface{}
-		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
-			t.Fatalf("expected valid JSON: %v", err)
-		}
-		hso := parsed["hookSpecificOutput"].(map[string]interface{})
-		if hso["permissionDecision"] != "allow" {
-			t.Errorf("expected allow, got %v", hso["permissionDecision"])
-		}
-	})
-	t.Run("PreToolUse blocked produces VS Code deny JSON", func(t *testing.T) {
-		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git checkout main"}}`)
-		hctx := model.HookContext{
-			Event:    model.HookAgentToolStarting,
-			Client:   "copilot-chat",
-			Second:   time.Now().UTC().Format(time.RFC3339),
-			ToolName: "run_in_terminal",
-			Input:    payload,
-			RepoRoot: t.TempDir(),
-		}
-		result := RunHook(hctx)
-		if result.IsAllowed() {
-			t.Fatal("expected blocked")
-		}
-		hookEventName := extractHookEventNameFromStdin(payload)
-		out := providers.FormatCopilotHookOutput(hookEventName, result)
-		var parsed map[string]interface{}
-		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
-			t.Fatalf("expected valid JSON: %v", err)
-		}
-		hso := parsed["hookSpecificOutput"].(map[string]interface{})
-		if hso["permissionDecision"] != "deny" {
-			t.Errorf("expected deny, got %v", hso["permissionDecision"])
-		}
-		reason, _ := hso["permissionDecisionReason"].(string)
-		if !strings.Contains(reason, "blocked") {
-			t.Errorf("expected blocked reason, got: %s", reason)
-		}
-	})
-	t.Run("tool_name extracted from stdin", func(t *testing.T) {
-		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git stash"}}`)
-		toolName := extractToolNameFromStdin(payload)
-		if toolName != "run_in_terminal" {
-			t.Errorf("expected run_in_terminal, got %s", toolName)
-		}
-		cmd := extractCommandFromStdin(payload)
-		if cmd != "git stash" {
-			t.Errorf("expected git stash, got %s", cmd)
-		}
-	})
+// 📋️HookEventSlugs lists every valid neutral event slug, in declaration order.
+func HookEventSlugs() []string {
+	slugs := make([]string, 0, len(model.AllHookEvents))
+	for _, event := range model.AllHookEvents {
+		slugs = append(slugs, string(event))
+	}
+	return slugs
 }
 
-func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
-	tmpDir := t.TempDir()
-	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
-	sessionID := "test-repo-events-session"
-	payload := json.RawMessage(`{"session_id":"test-repo-events-session","tool_name":"mcp__repo__ticket_open","tool_input":{"title":"My Ticket","prompt":"My Prompt","client":"claude-code","llm":"sonnet-4-5","goal":"MY-GOAL"}}`)
-	hctx := model.HookContext{
-		Event:    model.HookAgentToolStarting,
-		Client:   "claude-code",
-		Second:   "2026-03-05T12:00:00Z",
-		RepoRoot: tmpDir,
-		Input:    payload,
-	}
-	RunHook(hctx)
+// #endregion 🏷️HookKind
 
-	now := time.Now().UTC()
-	logDir := SessionLogDir(tmpDir, now.Year(), int(now.Month()), now.Day(), sessionID)
-	entries, _ := os.ReadDir(logDir)
-	if len(entries) != 1 || entries[0].Name() != "session.json" {
-		names := make([]string, len(entries))
-		for i, e := range entries {
-			names[i] = e.Name()
-		}
-		t.Fatalf("expected only session.json, got %d: %v", len(entries), names)
-	}
-	data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
-	var meta model.SessionMeta
-	json.Unmarshal(data, &meta)
-	if len(meta.Events) != 2 {
-		t.Fatalf("expected 2 session events (agent + derived repo operation), got %d", len(meta.Events))
-	}
-	found := false
-	for _, entry := range meta.Events {
-		var evt map[string]interface{}
-		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] == "agent.ticket.open.starting" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected derived agent.ticket.open.starting event in session.json events")
-	}
+// #region 🎯️HookContext
+
+// 🎯️HookContext is everything one hook invocation knows: the resolved event, who sent it and the native payload.
+type HookContext struct {
+	Event      string            `json:"event"`
+	Client     string            `json:"client"`
+	Second     string            `json:"second"`
+	RepoRoot   string            `json:"repoRoot"`
+	ToolName   string            `json:"toolName,omitempty"`
+	ToolArgs   string            `json:"toolArgs,omitempty"`
+	FilePath   string            `json:"filePath,omitempty"`
+	ParentInfo string            `json:"parentInfo,omitempty"`
+	Extra      map[string]string `json:"extra,omitempty"`
+	Input      json.RawMessage   `json:"input,omitempty"`
 }
 
-func TestRunHookSearchStartingIncludesDefinitions(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "sample.go")
-	content := "package main\n\nfunc Alpha() {\n\tprintln(\"one\")\n}\n\nfunc Beta() {\n\tprintln(\"needle\")\n}\n"
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
-		t.Fatalf("failed to write sample file: %v", err)
-	}
-	payload := json.RawMessage(`{"trajectory_id":"trace-1","tool_info":{"command_line":"grep -n \"needle\" sample.go","cwd":"` + filepath.ToSlash(tmpDir) + `"}}`)
-	hctx := model.HookContext{
-		Event:    model.HookAgentToolSearchStarting,
-		Client:   "windsurf-chat",
-		RepoRoot: tmpDir,
-		Input:    payload,
-	}
-	result := RunHook(hctx)
-	res, ok := result.(model.HookResultAgentToolSearchStarting)
-	if !ok {
-		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
-	}
-	if len(res.Definitions) == 0 {
-		t.Fatalf("expected definitions in event, got %v", res.Definitions)
-	}
-	if res.Definitions[0].Loc <= 0 {
-		t.Fatalf("expected loc > 0, got %d", res.Definitions[0].Loc)
-	}
+// 🆕️NewHookContext builds a context for one resolved event and client.
+func NewHookContext(event model.HookEvent, client string) HookContext {
+	return HookContext{Event: string(event), Client: client}
 }
 
-func TestBuildDefinitionReadsFullFileReturnsFileID(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "full.go")
-	content := "package main\n\nfunc Alpha() {}\n\nfunc Beta() {}\n"
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
-		t.Fatalf("failed to write file: %v", err)
-	}
-	sandbox.BindRoot(t, tmpDir)
-
-	lineSet := map[int]struct{}{1: {}, 2: {}, 3: {}, 4: {}, 5: {}}
-	filesToLines := map[string]map[int]struct{}{filePath: lineSet}
-	definitions := buildDefinitionReads(filesToLines)
-	if len(definitions) != 1 {
-		t.Fatalf("expected exactly one file-id entry for full file read, got %d: %v", len(definitions), definitions)
-	}
-	if definitions[0].Loc != 0 {
-		t.Errorf("expected loc=0 for file-id entry, got %d", definitions[0].Loc)
-	}
-	if definitions[0].ID == "" {
-		t.Errorf("expected non-empty file ID")
-	}
-	absPrefix := filepath.ToSlash(tmpDir)
-	if strings.Contains(definitions[0].ID, absPrefix) {
-		t.Errorf("file ID %q contains absolute tmpDir path %q", definitions[0].ID, absPrefix)
-	}
+// 🕰️AtSecond sets the RFC 3339 second the caller stamped this invocation with.
+func (c HookContext) AtSecond(second string) HookContext {
+	c.Second = second
+	return c
 }
 
-func TestBuildDefinitionReadsUsesRepoRelativePaths(t *testing.T) {
-	tmpDir := t.TempDir()
-	subDir := filepath.Join(tmpDir, "pkg")
-	if err := os.MkdirAll(subDir, 0o755); err != nil {
-		t.Fatalf("failed to create subdir: %v", err)
-	}
-	filePath := filepath.Join(subDir, "util.go")
-	content := "package pkg\n\nfunc Helper() {\n\tprintln(\"found\")\n}\n"
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
-		t.Fatalf("failed to write file: %v", err)
-	}
-	sandbox.BindRoot(t, tmpDir)
-	lineSet := map[int]struct{}{3: {}}
-	filesToLines := map[string]map[int]struct{}{filePath: lineSet}
-	definitions := buildDefinitionReads(filesToLines)
-	if len(definitions) == 0 {
-		t.Fatalf("expected at least one definition, got none")
-	}
-	absPrefix := filepath.ToSlash(tmpDir)
-	for _, def := range definitions {
-		if strings.Contains(def.ID, absPrefix) {
-			t.Errorf("definition ID %q contains absolute tmpDir path %q", def.ID, absPrefix)
+// 🧰️WithTool sets the tool name and raw argument string the agent client reported.
+func (c HookContext) WithTool(toolName string, toolArgs string) HookContext {
+	c.ToolName = toolName
+	c.ToolArgs = toolArgs
+	return c
+}
+
+// 👪️WithParent sets the parent hint (`subagent`, or a parent session id).
+func (c HookContext) WithParent(parentInfo string) HookContext {
+	c.ParentInfo = parentInfo
+	return c
+}
+
+// 📨️WithInput attaches the native payload the agent client wrote to stdin.
+func (c HookContext) WithInput(input json.RawMessage) HookContext {
+	c.Input = input
+	return c
+}
+
+// 🏠️AtRoot sets the repository root the hook runs against.
+func (c HookContext) AtRoot(repoRoot string) HookContext {
+	c.RepoRoot = repoRoot
+	return c
+}
+
+// 📡️ResolvedEvent answers the resolved event, or false when the slug is not a neutral event.
+func (c HookContext) ResolvedEvent() (model.HookEvent, bool) {
+	for _, event := range model.AllHookEvents {
+		if string(event) == c.Event {
+			return event, true
 		}
 	}
+	return "", false
 }
 
-func TestRunHookPreReadCodeDefinitionIDsAreRepoRelative(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "cmd.go")
-	content := "package main\n\nfunc Run() {\n\tprintln(\"run\")\n}\n"
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
-		t.Fatalf("failed to write file: %v", err)
+// #endregion 🎯️HookContext
+
+// #region 🔌️Ports
+
+// 🌍️HookEnvironment is what a hook needs from the machine, with an inert default so a caller that
+// wants pure normalisation supplies nothing.
+type HookEnvironment interface {
+	CurrentCheckpoint() string
+	CheckpointMessage(repoRoot string) string
+	FormatFile(path string)
+}
+
+// 🚫️InertEnvironment is the environment that does nothing and knows nothing.
+type InertEnvironment struct{}
+
+// 🔖️CurrentCheckpoint answers nothing.
+func (InertEnvironment) CurrentCheckpoint() string { return "" }
+
+// 📝️CheckpointMessage answers nothing.
+func (InertEnvironment) CheckpointMessage(repoRoot string) string { return "" }
+
+// 🖌️FormatFile does nothing.
+func (InertEnvironment) FormatFile(path string) {}
+
+// 💻️SystemEnvironment reads the checkpoint identity and message off the real machine.
+type SystemEnvironment struct{}
+
+// 🔖️CurrentCheckpoint answers the version control checkpoint the working tree is on.
+func (SystemEnvironment) CurrentCheckpoint() string { return workspace.GetGitCheckpoint() }
+
+// 📝️CheckpointMessage answers the checkpoint message being prepared under repoRoot.
+func (SystemEnvironment) CheckpointMessage(repoRoot string) string {
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".git", "COMMIT_EDITMSG"))
+	if err != nil {
+		return ""
 	}
-	payload := json.RawMessage(`{"tool_info":{"file_path":"` + filepath.ToSlash(filePath) + `"}}`)
-	hctx := model.HookContext{
-		Event:    model.HookAgentToolSearchStarting,
-		Client:   "windsurf-chat",
-		RepoRoot: tmpDir,
-		Input:    payload,
-	}
-	result := RunHook(hctx)
-	res, ok := result.(model.HookResultAgentToolSearchStarting)
-	if !ok {
-		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
-	}
-	if len(res.Definitions) == 0 {
-		t.Fatalf("expected at least one definition")
-	}
-	absPrefix := filepath.ToSlash(tmpDir)
-	for _, def := range res.Definitions {
-		if strings.Contains(def.ID, absPrefix) {
-			t.Errorf("definition ID %q contains absolute path %q", def.ID, absPrefix)
+	return strings.TrimSpace(string(data))
+}
+
+// 🖌️FormatFile formats a file a code edit just finished writing.
+func (SystemEnvironment) FormatFile(path string) { statutes.RunFormatterForFile(path) }
+
+// 🧪️TestFileResolver resolves a shell command into the test files it would run.
+type TestFileResolver interface {
+	TestFiles(command string, cwd string) []string
+	LabIDs(filePaths []string) []string
+}
+
+// 🚫️InertTestFileResolver is the resolver that resolves nothing.
+type InertTestFileResolver struct{}
+
+// 📄️TestFiles answers nothing.
+func (InertTestFileResolver) TestFiles(command string, cwd string) []string { return nil }
+
+// 🧫️LabIDs answers nothing.
+func (InertTestFileResolver) LabIDs(filePaths []string) []string { return nil }
+
+// 🏃️WorkspaceTestFileResolver resolves test files through the repository's own test runner.
+type WorkspaceTestFileResolver struct{}
+
+// 📄️TestFiles answers the test files the command selects.
+func (WorkspaceTestFileResolver) TestFiles(command string, cwd string) []string {
+	return resolveFullTestFilesFromCommand(command, cwd)
+}
+
+// 🧫️LabIDs answers the lab ids of those files.
+func (WorkspaceTestFileResolver) LabIDs(filePaths []string) []string {
+	return resolveTestLabIDs(filePaths)
+}
+
+// #endregion 🔌️Ports
+
+// #region 🛤️Paths
+
+// 📄️BaseName answers the last path element, splitting on both separators.
+func BaseName(path string) string {
+	trimmed := strings.TrimRight(path, "/\\")
+	if trimmed == "" {
+		if path == "" {
+			return "."
 		}
+		return "/"
 	}
+	if index := strings.LastIndexAny(trimmed, "/\\"); index >= 0 {
+		return trimmed[index+1:]
+	}
+	return trimmed
 }
 
-func TestShouldExecuteSearchCommand(t *testing.T) {
-	tests := []struct {
-		name    string
-		command string
-		want    bool
-	}{
-		{name: "grep command", command: "grep -n needle file.go", want: true},
-		{name: "cat command", command: "cat file.go", want: true},
-		{name: "blocked redirection", command: "grep -n needle file.go > out.txt", want: false},
-		{name: "edit command", command: "sed -i 's/a/b/' file.go", want: false},
+// 🛤️NormalizeHookPath normalises a path the way hook payloads carry it: forward separators, no `./` prefix.
+func NormalizeHookPath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return ""
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := shouldExecuteSearchCommand(tt.command)
-			if got != tt.want {
-				t.Fatalf("shouldExecuteSearchCommand(%q) = %v, want %v", tt.command, got, tt.want)
-			}
-		})
-	}
+	normalized := strings.ReplaceAll(path, "\\", "/")
+	return strings.TrimPrefix(normalized, "./")
 }
+
+// #endregion 🛤️Paths

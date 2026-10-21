@@ -14,6 +14,13 @@ static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAlloc
 mod original_record_source;
 pub use original_record_source::{RetainedRecordBodySourceDecode,RetainedRecordBodyReadLimits,RetainedRecordBodySourceStep};
 
+#[path="🎮️driver/🦀️.rs"]
+mod driver;
+pub use driver::{RetainedValueDriver,retained_pack_close_progress};
+#[path="📦️document/🦀️.rs"]
+mod document;
+pub use document::{RetainedDocumentDriver,INTRINSIC_SCHEMA_GRAPH};
+
 #[path = "🫴️receiving/🦀️.rs"]
 mod original_record_receiving;
 pub use original_record_receiving::RetainedRecordReceiving;

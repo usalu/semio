@@ -35,8 +35,6 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-animation = { workspace = true }
@@ -76,3 +74,7 @@ semio-s-artifact-stdio-semio-video = { workspace = true }
 semio-s-artifact-stdio-semio-video-model = { workspace = true }
 semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value-derive = { workspace = true }

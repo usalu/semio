@@ -47,7 +47,7 @@ pub(super) struct MapBody {
     tracked: bool,
 }
 #[derive(Debug, semio_framework_value::RetireOwned)]
-pub(super) struct MapFields(semio_framework_value::ordered::OrderedMap<MapValue>);
+pub(super) struct MapFields(semio_framework_value_ordered::ordered::OrderedMap<MapValue>);
 impl Serialize for MapFields{
  fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{use serde::ser::SerializeMap;let mut map=serializer.serialize_map(Some(self.0.len()))?;for(key,value)in self.0.iter(){map.serialize_entry(key,value)?;}map.end()}
 }
@@ -61,7 +61,7 @@ impl<'de> Deserialize<'de> for MapFields{
  }
 }
 impl ToValue for MapFields { fn to_value(&self) -> DslValue { self.0.to_value() } }
-impl FromValue for MapFields { fn from_value(value: DslValue) -> Result<Self, ValueError> { semio_framework_value::ordered::OrderedMap::from_value(value).map(Self) } }
+impl FromValue for MapFields { fn from_value(value: DslValue) -> Result<Self, ValueError> { semio_framework_value_ordered::ordered::OrderedMap::from_value(value).map(Self) } }
 impl ArtifactCanonicalJsonTree for MapFields {
     fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(ArtifactCanonicalJsonNode::Object(self.0.len())) }
     fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> { self.0.entry_at_rank(ordinal).map(|(_, value)| value as &dyn ArtifactCanonicalJsonTree).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "map fixture original child ordinal missing")) }
@@ -98,7 +98,7 @@ impl FromValue for MapValue {
         match value {
             DslValue::String(value) => Ok(Self::Text(value)),
             DslValue::Array(value) => value.into_iter().map(Self::from_value).collect::<Result<_, _>>().map(Self::Array),
-            DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<semio_framework_value::ordered::OrderedMap<_>, ValueError>>().map(|map| Self::Object(MapFields(map))),
+            DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<semio_framework_value_ordered::ordered::OrderedMap<_>, ValueError>>().map(|map| Self::Object(MapFields(map))),
             _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "map fixture requires text, array, or object")),
         }
     }
@@ -115,7 +115,7 @@ impl Drop for MapBody {
 }
 
 struct MapIterator<'a> {
-    entries: semio_framework_value::ordered::Iter<'a, MapValue>,
+    entries: semio_framework_value_ordered::ordered::Iter<'a, MapValue>,
     lifetime: &'a MapLifetime,
 }
 impl<'a> Iterator for MapIterator<'a> {
@@ -421,9 +421,9 @@ fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_gr
     let MapMutation::ReplaceMap(MapBody { map, .. }) = &mut edit.forwards[0];
     let mut value = MapValue::Text("leaf".into());
     for _ in 0..ARTIFACT_CANONICAL_JSON_DEPTH + 1 {
-        value = MapValue::Object(MapFields(semio_framework_value::ordered::OrderedMap::from([("nested".into(), value)])));
+        value = MapValue::Object(MapFields(semio_framework_value_ordered::ordered::OrderedMap::from([("nested".into(), value)])));
     }
-    let original = std::mem::replace(map, MapFields(semio_framework_value::ordered::OrderedMap::from([("root".into(), value)])));
+    let original = std::mem::replace(map, MapFields(semio_framework_value_ordered::ordered::OrderedMap::from([("root".into(), value)])));
     retire_fixture_owned(original);
     let mut owner = tests::admit_sealer(tests::authority(), edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement));
     drive_to_prepared(&mut owner, 1_000_000).expect("the native paged walk is bounded by its depth grant, not by the legacy fixed frame stack");

@@ -1,7 +1,7 @@
 import catalogue from "../🔣️catalog.json" with { type: "json" };
 
 /** 🚩️ The part of one catalogue flag that decides how its value is spelled. */
-export type BuildOptionFlagV1 = Readonly<{ name: string; aliases?: readonly string[]; value: string }>;
+export type BuildOptionFlagV1 = Readonly<{ name: string; aliases?: readonly string[]; value: string; operations?: readonly string[] }>;
 
 /** 📚️ The part of the neutral operations catalogue that names the options. */
 export type BuildOptionCatalogV1 = Readonly<{ flags: readonly BuildOptionFlagV1[] }>;
@@ -18,4 +18,10 @@ export function normalizeBuildOptionsV1(args: readonly string[], catalog: BuildO
     else result.push(argument);
   }
   return result;
+}
+
+/** 🧭️ Projects operation arguments after global selections are consumed, preserving help and the opaque child tail. */
+export function buildOperationArgumentsV1(args:readonly string[],catalog:BuildOptionCatalogV1=catalogue as BuildOptionCatalogV1):string[]{
+ const flags=catalog.flags.filter(flag=>flag.operations===undefined&&flag.value==="required"),globals=new Set(flags.flatMap(flag=>[flag.name,...(flag.aliases??[])])),normalized=normalizeBuildOptionsV1(args,{flags}),boundary=normalized.indexOf("--"),head=normalized.slice(0,boundary<0?undefined:boundary);
+ return [...head.filter(argument=>!globals.has(argument.split("=",1)[0]!)),...(boundary<0?[]:normalized.slice(boundary))];
 }

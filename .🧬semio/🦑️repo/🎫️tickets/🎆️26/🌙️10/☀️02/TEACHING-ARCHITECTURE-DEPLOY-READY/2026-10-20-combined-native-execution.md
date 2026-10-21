@@ -1,6 +1,13 @@
 # Combined Native Neutral Execution
 
-Latest status: sealed 17-phase native invocation TTY62305 remains live after its completed 60000 ms actual poll at 2026-10-21T00:19:48Z. Startup is still in capacity admission: the 00:18:57.781Z bounded log observation records 1230s waiting, load 33.66, 1 running and 2 ahead. Neutral collection has not begun, and there is no actual terminal or receipt. Its immediate dispatch verification at 23:58:19Z matched manifest 26941B / SHA256 `262a2e8969066adb32158208d2746d70cebc1e0e67dd8251a1a2e3b1b2181019`, all 83 Ticket + 57 Source pins, closed 17-phase / critical93 coupling and reserved empty 0600 log identity 16777229:454629794. Prior canceled75119 / failed20856 / failed34008 records remain historical.
+## Current Neutral7 Dispatch
+
+Root sealed27469B combined.inputs.json/rawSHA2560f093e8ce3ebb396961849e4bdf374e222db0940ab4612e138ae1b8a75df0310 after complete142 matches at01:38:38.758Z and01:39:23.626Z with stable per-file identities.83Ticket+59Source,18phases,critical95;21progress and6reader tests. Reader async context/token lifetime repair is independently static-clear and all six actual names agree. The generic runner is unchanged. No tests have executed yet.
+
+The sole High Cargo executor has the exact supported native exec command and must independently check all142 plus raw manifest and the reserved neutral7 log before launch. Root and Light agents do not poll its TTY. Two Light agents watch input custody and bounded logs. Dispatch is not proof that a native handle exists or a test collected. See2026-10-21-neutral7-input-seal.md.
+
+
+Latest status: neutral7 actualTTY12857 returned terminal exit1 without cancellation, observed2026-10-21T02:01:50Z. Native startup stopped at inference949/3736 with Generated task cannot consume its own output for semio-framework-os-flow-browser-package:wasm. Complete log617240B/SHA2569fe84fa0dd3ef69a9651f009940fd143f26763546d0075c1c5395d176b7615a0. No combined phase, title pass/fail summary or matching receipt exists. The0f093seal had already been revoked for a peer fixture drift. No native handle remains owned and no retry launched. Earlier execution records remain historical.
 
 The build skill and root AGENTS instructions were read; no additional AGENTS file was found in the ticket ancestry or capture-owner directory. Native frontend: `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/repo`. Observed ordinary file: true, symlink: false, bytes: 16746722, mode: 755.
 
@@ -152,3 +159,50 @@ At2026-10-21T00:06:17.189Z, actual sole sixth-invocation TTY62305 remained live 
 ## 2026-10-21 00:19:48 UTC — Actual Capacity Wait
 
 Owned TTY62305 returned live after a completed 60000 ms poll, with no direct output. Bounded log observation at 00:18:57.781Z: 33432 bytes, mtime 00:18:55.164Z; capacity waited 1230s for exec, load 33.66, 6842 MB spare above the 6553 MB floor, 1 running and 2 ahead. No neutral collection marker or concrete failure appeared. No inputs, capacity settings, leases or peer processes were changed. Continue sole ownership with bounded 60s actual polls.
+
+
+## 2026-10-21 00:25:48 UTC — Actual Admission And Graph Lease Queue
+
+Owned TTY62305 returned live after its completed 60000 ms poll. The log records capacity admission at 00:25:03Z after 1597s under the existing native idle-and-memory rule, then native loading/running. At the bounded read 00:25:48.602Z the log was 69758 bytes, mtime 00:25:38.337Z. Dependency generation verification progressed through 86016; repository graph-facts shard7 exclusive access is queued position 2 of 2 behind process21043 (holder591s at the event). No neutral collection or concrete failure appears. No peer action or configuration/input edit occurred.
+
+
+## 2026-10-21 00:34:06 UTC — Actual Inference Progress
+
+Successive completed 60000 ms owned polls returned TTY62305 live. Actual startup advanced beyond the graph-facts lease queue to graph cache retirement (00:27:08Z), command-source-imports (00:30:36Z), and project inference: 122/3736 at00:31:45Z, 263/3736 at00:32:54Z, 321/3736 by log mtime00:33:31.628Z. The 00:34:06.848Z bounded read found log2175953B, no combined collection and no concrete failure. No input/configuration/peer action occurred.
+
+
+## 2026-10-21 00:35:33 UTC — Actual Intentional Terminal 62305
+
+Root revoked the current seal after Light repeatedly observed the sealed project-assembly Source file drift from 37273B / SHA256`b7802a9f54b5e52b34a4ea17bac72a2db69d3f40f5c0bfceb310fd57cfee0dc0` to37334B / SHA256`06376a34d7002dce7ada9d3f34a88c4a33f21a2fbb45daeac9c0f8d7f47c77e5`, with mtime00:28:56Z. This was Root-relayed Light evidence; this agent did not edit or revert the peer Source file.
+
+A fresh actual owned poll returned live, then Ctrl-C was sent only through TTY62305. That exact handle returned actual exit_code1; clock observation immediately after settlement was00:35:33 UTC. No PID signal, peer cleanup, input edit, pin refresh or retry occurred. The complete preserved log `🗑️generated/2026-10-21-native-combined-neutral6.log` is2279902B / SHA256`e61944acac977407df5337069b5e53bf21da404f043fa59b04d20aeb03fc47af`, dev16777229/ino454629794/nlink1/mode0600, mtime00:35:31.524Z. The tail records inference405/3736, build:project-assembly, then `error: Original Script process interrupted` at framework invocation/process.ts:188:191 and Bun1.3.14(macOS arm64). This cancellation is an actual nonzero terminal, not a neutral test failure.
+
+Full-log collection evidence:0 combined phase-start markers;0 combined receipt markers;0 Bun test pass lines;0 Bun test fail lines. A read-only scan of generated `n-*` output directories found0 receipt.json files and0 receipts matching the current manifest SHA. No neutral test collection or successful neutral result is claimed. The manifest remains26941B / raw SHA256`262a2e8969066adb32158208d2746d70cebc1e0e67dd8251a1a2e3b1b2181019`. All queue and startup records are preserved. No actual native handle remains owned after this terminal.
+
+## 2026-10-21 01:40:42 UTC — Neutral7 Actual Dispatch
+
+Root authorized one exact native release repo exec --projects=workspace -- bun <absoluteTicket>/📦️fresh/combined.ts 0f093e8ce3ebb396961849e4bdf374e222db0940ab4612e138ae1b8a75df0310 with stdout/stderr appended solely to generated/2026-10-21-native-combined-neutral7.log. No forwarded flags, alternate mode, capability rewrite or competing job. It launched tty:true/cwd repository root and returned live session12857; this agent alone owns/polls/settles the actual handle.
+
+Immediate independent snapshot at01:40:42.265Z matched all142 expected bytes/SHA using ordinary singlelink nofollow descriptor/name checks; all142 final leaf identities and ordinary physical ancestor identities remained unchanged over the observation. Closed Ajv manifest validation passed. Exact83Ticket+59Source membership,18phases,critical95,21progress titles and6reader titles matched. The raw manifest was27469B/exactSHA above and unchanged through the snapshot. Reservedlog identity dev16777229/ino456244332/mode0600/nlink1/0B matched. These are physical/static input observations, not executed feature results or loaded-module attribution.
+
+The current manifest is distinct from revoked historical262a; no old seal was executed. Test collection, perphase actual owned settlement, matching receipt and actual native0/null are all still required. Polls remain bounded≤60000ms, material stages and actual failure/terminal are reported to Root promptly. Unexpected later drift will be reported for Root disposition rather than automatically canceling the canonical operation. No Source edit, guard bypass, reset or peer action is authorized.
+
+
+## 2026-10-21 01:46:12 UTC — Live Startup And Root-Relayed Fixture Drift
+
+Actual12857polls remain live. Startup passed capacity and shard7lease queue, reached playground components, then command-source-imports and inference32/3736 by01:46:12.564Z/log161886B. No combined phase or concrete error has appeared. Root relayed Light’s fixture drift at01:44:22.553Z: graph fixture stays184181B but SHA changed fromf89ce54c88615918b9afb41271fa9c879e39ebf0f08443da8e76cde72d23c507 toa6afec3891c73b3c837f7f25997d4ef05ef6f7500fa14e75dc561011e50108d5. Root reports other inputs/manifest remain matched and is attributing exact peer bytes. The seal is revoked for claiming current-cohort success. Root explicitly directed this canonical invocation to continue under its unchanged native/combined guards; no cancellation, input refresh, Source edit or peer action occurred. Record actual collection/refusal/terminal separately when established.
+
+
+## 2026-10-21 01:56:23 UTC — Continued Actual Inference
+
+Owned12857completed successive60000ms polls live. Actual project inference counters advanced165→267→321→400→444→464→546→620of3736. Latest bounded observation01:56:23.567Z/log449035B/mtime01:56:22.508Z, no combined collection or concrete error. Root’s unchanged continue-under-guards disposition remains in force despite fixture seal revocation. No cancellation/refresh/Sourceedit/peeraction or additional command occurred.
+
+## 2026-10-21 02:01:50 UTC — Actual Neutral7 Native Terminal
+
+The completed sole-owner poll returned actual exit_code1 after9.177301292s of a60000ms requested wait. No Ctrl-C, PID signal, peer action, Source edit or input refresh was performed. Clock immediately after settlement:02:01:50 UTC. Log mtime02:01:44.428Z. The actual final inference counter was949of3736; no combined child reached collection.
+
+Actual refusal: Generated task cannot consume its own output: {"project":"semio-framework-os-flow-browser-package","target":"wasm","producer":"semio-framework-os-flow-browser-package:wasm"}. Actual stack: applyBuildGeneratedTaskDependenciesV1 at build/🕸️graph/🚪️admission/🟦️.ts:114:319 → projectWithDefaults at build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:319:41 → processTicksAndRejections(unknown:7:39). Bun1.3.14(macOS arm64). This is concrete native startup guard evidence; it is neither a combined assertion result nor a diagnosis of the domain task’s exact Source cause. No guard was changed.
+
+Complete preserved log generated/2026-10-21-native-combined-neutral7.log:617240B, SHA2569fe84fa0dd3ef69a9651f009940fd143f26763546d0075c1c5395d176b7615a0, dev16777229/ino456244332/nlink1/mode0600. Full-log counts:0phase-start,0phase-complete,0receipt markers,0test(pass)lines,0test(fail)lines,0pass summaries,0fail summaries. Read-only generated n-* scan found0receipt files overall and0matching rawSHA0f093e8ce3ebb396961849e4bdf374e222db0940ab4612e138ae1b8a75df0310. The manifest remains27469B/exactsame rawSHA at this observation. No18-phase success,21progress/6reader pass, current-cohort loaded-byte attribution, capture or production gate is claimed.
+
+Root’s prior fixture-revocation/continue-under-guards disposition was respected. All peer bytes, manifest and queue/startup logs remain preserved. No further command or retry launched; no actual native handle remains owned after12857terminal. Root owns substantive next-step review and any future seal/dispatch.

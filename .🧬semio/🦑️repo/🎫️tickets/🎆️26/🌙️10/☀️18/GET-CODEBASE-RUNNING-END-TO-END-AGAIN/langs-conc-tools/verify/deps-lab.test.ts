@@ -8,7 +8,7 @@ const routing = OV + "/🧰️framework/🔨️modules/🏃️process/📦️pac
 const actual = await import(routing);
 mock.module(routing, () => ({...actual, requireIssuedResourceControlInvocationV1: () => undefined}));
 const {prepareDependencies} = await import(OV + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts");
-const policy = (await import(OV + "/🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json", {with: {type: "json"}})).default;
+const policy = (await import(OV + "/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json", {with: {type: "json"}})).default;
 const authority = {};
 const phase = {leaseControl: {signal: new AbortController().signal}, authority: {original: authority}, advance: async () => undefined, budget: () => 1000};
 const run = async (kind: string, files: Record<string, string> = {}, capture: Record<string, string> = {}) => {

@@ -13,5 +13,13 @@ export type {PythonImportV1, PythonModuleV1, PythonRunnerV1, PythonSourceFactsV1
 export {typeScriptNeutralIdV1, typeScriptOutcomeV1, typeScriptPlanToUnitsV1} from "./🟦️typescript/🟦️.ts";
 export {rustEntryOutcomeV1, rustUnitsFromMetadataV1} from "./🦀️rust/🟦️.ts";
 export type {CargoMetadataV1} from "./🦀️rust/🟦️.ts";
+export {dotnetUnitExecutorV1, msbuildGlobV1, parseCsprojV1, planDotnetUnitsV1} from "./🔷️dotnet/🟦️.ts";
+export type {CsprojFactsV1, DotnetProjectV1, DotnetRunnerV1, DotnetWorkspaceSnapshotV1} from "./🔷️dotnet/🟦️.ts";
+export {cmakeReplyToCppProjectV1, cppHeadersDigestV1, cppUnitExecutorV1, normalizeCppV1, planCppUnitsV1, resolveCppIncludesV1, scanCppIncludesV1} from "./🛠️cpp/🟦️.ts";
+export type {CppPlanV1, CppProjectV1, CppRunnerV1, CppTargetV1, CppWorkspaceSnapshotV1} from "./🛠️cpp/🟦️.ts";
+export {canonicalWitV1, lexWitV1, parseWitItemsV1, planWitUnitsV1, witArtifactV1, witDigestV1, witUnitExecutorV1} from "./🕸️wit/🟦️.ts";
+export type {WitItemV1, WitReferenceV1, WitWorkspaceSnapshotV1} from "./🕸️wit/🟦️.ts";
+export {normalizeTexAuxV1, planTexUnitsV1, scanTexV1, stripTexCommentsV1, texAuxDigestV1, texUnitExecutorV1} from "./📓️tex/🟦️.ts";
+export type {TexReferencesV1, TexRunnerV1, TexWorkspaceSnapshotV1} from "./📓️tex/🟦️.ts";
 export {runUnitsCommandV1, unitsArgumentsV1, unitsOptionNamesV1} from "./⌨️command/🟦️.ts";
 export type {UnitsArgumentsV1, UnitsCommandPortsV1} from "./⌨️command/🟦️.ts";

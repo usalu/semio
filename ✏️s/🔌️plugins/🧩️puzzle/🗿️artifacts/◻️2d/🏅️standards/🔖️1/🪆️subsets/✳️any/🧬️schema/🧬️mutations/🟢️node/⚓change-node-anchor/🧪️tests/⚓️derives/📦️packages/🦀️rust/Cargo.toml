@@ -48,8 +48,6 @@ semio-framework-trace = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-2d-interaction = { path = "../../../../../../../../✏️editor/🕹️interaction/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../../✋️selection/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../../../../🔌️handle/🪢️connect-handles/📦️packages/🦀️rust" }

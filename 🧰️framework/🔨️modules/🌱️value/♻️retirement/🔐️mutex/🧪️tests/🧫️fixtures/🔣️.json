@@ -1,1 +1,110 @@
-{"version":1,"cases":[{"id":"ordinary-original","poisoned":false,"owner":"original owned gesture data","expected":{"preserved":true,"terminal":true}},{"id":"poisoned-original","poisoned":true,"owner":"Originalität 🧬","expected":{"preserved":true,"terminal":true}}]}
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ordinary-original",
+      "poisoned": false,
+      "owner": "original owned gesture data",
+      "expected": {
+        "preserved": true,
+        "terminal": true
+      }
+    },
+    {
+      "id": "poisoned-original",
+      "poisoned": true,
+      "owner": "Originalität 🧬",
+      "expected": {
+        "preserved": true,
+        "terminal": true
+      }
+    }
+  ],
+  "exclusiveGate": {
+    "cursorTransfer": "send",
+    "cursorSharing": "exclusive",
+    "cases": [
+      {
+        "value": 0,
+        "events": [
+          "acquire",
+          "acquire",
+          "release",
+          "acquire",
+          "release"
+        ],
+        "accepted": [
+          true,
+          false,
+          true,
+          true,
+          true
+        ],
+        "terminal": true
+      },
+      {
+        "value": 73,
+        "events": [
+          "release",
+          "acquire",
+          "release",
+          "release"
+        ],
+        "accepted": [
+          false,
+          true,
+          true,
+          false
+        ],
+        "terminal": true
+      }
+    ]
+  },
+  "sharedQueries": [
+    {
+      "port": "source-owner",
+      "events": [
+        "enter",
+        "query",
+        "leave",
+        "query"
+      ],
+      "accepted": [
+        true,
+        false,
+        true,
+        true
+      ]
+    },
+    {
+      "port": "source-lease",
+      "events": [
+        "enter",
+        "query",
+        "leave",
+        "query"
+      ],
+      "accepted": [
+        true,
+        false,
+        true,
+        true
+      ]
+    },
+    {
+      "port": "projection",
+      "events": [
+        "enter",
+        "query",
+        "leave",
+        "query"
+      ],
+      "accepted": [
+        true,
+        false,
+        true,
+        true
+      ]
+    }
+  ]
+}

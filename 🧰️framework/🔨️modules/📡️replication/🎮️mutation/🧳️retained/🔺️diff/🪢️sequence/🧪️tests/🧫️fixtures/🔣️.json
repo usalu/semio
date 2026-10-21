@@ -1,133 +1,29 @@
 {
-  "schema": "semio.retained-diff-sequence/v1",
-  "base": {
-    "a": 0,
-    "b": 1,
-    "text": "original 雪"
-  },
-  "bodyBytes": [
-    1,
-    4096
+  "cases": [
+    {
+      "before": 1,
+      "sets": [
+        2,
+        3
+      ],
+      "expected": 3
+    },
+    {
+      "before": 9,
+      "sets": [
+        8,
+        7,
+        6
+      ],
+      "expected": 6
+    }
   ],
   "cancelCuts": [
     0,
-    1,
-    7,
-    19,
-    71
+    3,
+    16,
+    64,
+    2048
   ],
-  "deniedCurrencies": [
-    "items",
-    "copy",
-    "capacity",
-    "release",
-    "depth"
-  ],
-  "cases": [
-    {
-      "name": "empty-identity",
-      "edits": [],
-      "accepted": true,
-      "expected": {
-        "a": 0,
-        "b": 1,
-        "text": "original 雪"
-      },
-      "messageCount": 0
-    },
-    {
-      "name": "one-original-sparse-edit",
-      "edits": [
-        {
-          "setA": 7,
-          "warning": true
-        }
-      ],
-      "accepted": true,
-      "expected": {
-        "a": 7,
-        "b": 1,
-        "text": "original 雪"
-      },
-      "messageCount": 1
-    },
-    {
-      "name": "later-original-sees-preceding-edit",
-      "edits": [
-        {
-          "setA": 7,
-          "warning": true
-        },
-        {
-          "requireA": 7,
-          "setB": 9,
-          "warning": true
-        }
-      ],
-      "accepted": true,
-      "expected": {
-        "a": 7,
-        "b": 9,
-        "text": "original 雪"
-      },
-      "messageCount": 2
-    },
-    {
-      "name": "later-refusal-keeps-external-original",
-      "edits": [
-        {
-          "setA": 7,
-          "warning": true
-        },
-        {
-          "requireA": 0,
-          "setB": 9
-        }
-      ],
-      "accepted": false,
-      "messageCount": 2
-    },
-    {
-      "name": "first-refusal-is-sticky",
-      "edits": [
-        {
-          "requireA": 2
-        },
-        {
-          "setA": 2,
-          "warning": true
-        }
-      ],
-      "accepted": false,
-      "messageCount": 1
-    },
-    {
-      "name": "third-edit-reads-second-intermediate-original",
-      "edits": [
-        {
-          "setA": 7
-        },
-        {
-          "requireA": 7,
-          "setA": 9
-        },
-        {
-          "requireA": 9,
-          "setB": 3,
-          "warning": true
-        }
-      ],
-      "accepted": true,
-      "expected": {
-        "a": 9,
-        "b": 3,
-        "text": "original 雪"
-      },
-      "messageCount": 1
-    }
-  ],
-  "wideText": {
-    "text": "雪",
-    "repeat": 21846
-  }
+  "maximumTurns": 2048
 }

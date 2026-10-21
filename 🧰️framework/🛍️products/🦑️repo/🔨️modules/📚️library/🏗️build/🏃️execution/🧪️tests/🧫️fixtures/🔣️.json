@@ -96,6 +96,13 @@
         "scope": "all"
       },
       "valid": false
+    },
+    {
+      "id": "source-missing-version",
+      "value": {
+        "kind": "source"
+      },
+      "valid": false
     }
   ],
   "preparationControls": [
@@ -147,5 +154,43 @@
       },
       "valid": false
     }
-  ]
+  ],
+  "authoredSourceTargets": {
+    "case": {
+      "path": "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+      "targets": [
+        "test",
+        "canonical-architecture",
+        "test-runtime-catalog"
+      ],
+      "execution": {
+        "version": 1,
+        "kind": "source"
+      }
+    },
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "targets",
+        "execution"
+      ],
+      "properties": {
+        "path": {
+          "const": "♻️mit-bestand/🧺️demonstrator/📋️project.json"
+        },
+        "targets": {
+          "const": [
+            "test",
+            "canonical-architecture",
+            "test-runtime-catalog"
+          ]
+        },
+        "execution": {
+          "$ref": "#/definitions/Source"
+        }
+      }
+    }
+  }
 }

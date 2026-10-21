@@ -20,7 +20,6 @@ doctest = false
 semio-framework-3d-brep-analysis = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
-semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
@@ -28,3 +27,7 @@ semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 serde_json = { workspace = true }
 parry3d = "0.17"
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

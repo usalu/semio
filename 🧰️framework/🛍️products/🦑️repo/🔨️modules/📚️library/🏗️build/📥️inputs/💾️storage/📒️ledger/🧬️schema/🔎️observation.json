@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "leaf",
+    "regular",
+    "symbolicLink",
+    "links",
+    "sameDevice",
+    "bytes",
+    "maximumBytes",
+    "reason"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "leaf": {
+      "enum": [
+        "optional.sqlite",
+        "optional.sqlite-journal",
+        "optional.sqlite-wal",
+        "optional.sqlite-shm",
+        "optional-gate.sqlite",
+        "optional-gate.sqlite-journal",
+        "optional-gate.sqlite-wal",
+        "optional-gate.sqlite-shm"
+      ]
+    },
+    "regular": {
+      "type": "boolean"
+    },
+    "symbolicLink": {
+      "type": "boolean"
+    },
+    "links": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "sameDevice": {
+      "type": "boolean"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "reason": {
+      "enum": [
+        null,
+        "not-regular",
+        "symbolic-link",
+        "link-count",
+        "device",
+        "extent"
+      ]
+    }
+  }
+}

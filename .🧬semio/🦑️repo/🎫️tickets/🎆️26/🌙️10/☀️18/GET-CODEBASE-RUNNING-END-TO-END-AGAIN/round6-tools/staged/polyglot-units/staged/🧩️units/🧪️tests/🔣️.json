@@ -1,0 +1,3386 @@
+{
+ "policy": {
+  "interfaceKinds": {
+   "typescript-declarations": {
+    "language": "typescript",
+    "artifact": "declaration files (.d.ts) emitted for the unit",
+    "digest": "SHA-256 over sorted rows of path and SHA-256 of bytes of the declaration tree",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "rust-rmeta": {
+    "language": "rust",
+    "artifact": "crate metadata (--emit=metadata, .rmeta)",
+    "digest": "SHA-256 of the .rmeta file; a body edit changes it (spans and inlinable bodies are inside), so this is a conservative API digest",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "go-export-data": {
+    "language": "go",
+    "artifact": "export data member __.PKGDEF of the compiled package archive",
+    "digest": "SHA-256 of __.PKGDEF without its `build id` line",
+    "closure": "transitive",
+    "bazel": "sources"
+   },
+   "python-api": {
+    "language": "python",
+    "artifact": "API text extracted from the module sources (or the sibling .pyi stub)",
+    "digest": "SHA-256 of the API text (see python.api)",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "dotnet-reference-assembly": {
+    "language": "dotnet",
+    "artifact": "reference assembly (metadata-only dll from /refout, deterministic build)",
+    "digest": "SHA-256 of the reference assembly bytes",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "cpp-public-headers": {
+    "language": "cpp",
+    "artifact": "the declared public header set of the unit",
+    "digest": "SHA-256 over sorted rows of path and SHA-256 of bytes of the public headers",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "wit-world": {
+    "language": "wit",
+    "artifact": "canonical text of the WIT package and world",
+    "digest": "SHA-256 of the canonical printed WIT (wasm-tools component wit)",
+    "closure": "transitive",
+    "bazel": "artifact"
+   },
+   "tex-aux": {
+    "language": "tex",
+    "artifact": "auxiliary reference files of the final pass (.aux, .toc)",
+    "digest": "SHA-256 over sorted rows of path and SHA-256 of bytes of the auxiliary files",
+    "closure": "direct",
+    "bazel": "artifact"
+   }
+  }
+ },
+ "graphs": [
+  {
+   "name": "chain",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "b.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:c",
+      "language": "go",
+      "kind": "library",
+      "label": "c",
+      "sources": [
+       "c.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:b",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": true,
+    "order": [
+     "go:a",
+     "go:b",
+     "go:c"
+    ],
+    "layer": {
+     "go:a": 0,
+     "go:b": 1,
+     "go:c": 2
+    }
+   }
+  },
+  {
+   "name": "code-point-order",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:🧰",
+      "language": "go",
+      "kind": "library",
+      "label": "🧰",
+      "sources": [
+       "🧰.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:｡",
+      "language": "go",
+      "kind": "library",
+      "label": "｡",
+      "sources": [
+       "｡.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:z",
+      "language": "go",
+      "kind": "library",
+      "label": "z",
+      "sources": [
+       "z.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": true,
+    "order": [
+     "go:z",
+     "go:｡",
+     "go:🧰"
+    ],
+    "layer": {
+     "go:z": 0,
+     "go:｡": 0,
+     "go:🧰": 0
+    }
+   }
+  },
+  {
+   "name": "layers-by-longest-path",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:t",
+      "language": "go",
+      "kind": "library",
+      "label": "t",
+      "sources": [
+       "t.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:u",
+      "language": "go",
+      "kind": "library",
+      "label": "u",
+      "sources": [
+       "u.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:t",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:v",
+      "language": "go",
+      "kind": "library",
+      "label": "v",
+      "sources": [
+       "v.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:t",
+        "use": "interface"
+       },
+       {
+        "unit": "go:u",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:w",
+      "language": "go",
+      "kind": "binary",
+      "label": "w",
+      "sources": [
+       "w.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:v",
+        "use": "declared"
+       }
+      ],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": true,
+    "order": [
+     "go:t",
+     "go:u",
+     "go:v",
+     "go:w"
+    ],
+    "layer": {
+     "go:t": 0,
+     "go:u": 1,
+     "go:v": 2,
+     "go:w": 3
+    }
+   }
+  },
+  {
+   "name": "cycle",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:b",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "b.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "cycle"
+    ]
+   }
+  },
+  {
+   "name": "unknown-dependency",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:ghost",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "unknown-dependency"
+    ]
+   }
+  },
+  {
+   "name": "interface-of-binary",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:m",
+      "language": "go",
+      "kind": "binary",
+      "label": "m",
+      "sources": [
+       "m.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:m",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "no-interface"
+    ]
+   }
+  },
+  {
+   "name": "implementation-of-binary-is-fine",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:m",
+      "language": "go",
+      "kind": "binary",
+      "label": "m",
+      "sources": [
+       "m.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:t",
+      "language": "go",
+      "kind": "test",
+      "label": "t",
+      "sources": [
+       "t.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:m",
+        "use": "implementation"
+       }
+      ],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": true,
+    "order": [
+     "go:m",
+     "go:t"
+    ],
+    "layer": {
+     "go:m": 0,
+     "go:t": 1
+    }
+   }
+  },
+  {
+   "name": "shared-source",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "x.go"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "x.go"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "shared-source"
+    ]
+   }
+  },
+  {
+   "name": "interface-kind-of-another-language",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "python:p",
+      "language": "python",
+      "kind": "library",
+      "label": "p",
+      "sources": [
+       "p.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "kind"
+    ]
+   }
+  },
+  {
+   "name": "id-prefix",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "python:x",
+      "language": "go",
+      "kind": "library",
+      "label": "x",
+      "sources": [
+       "x.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "prefix"
+    ]
+   }
+  },
+  {
+   "name": "duplicate-dependency",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "b.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "interface"
+       },
+       {
+        "unit": "go:a",
+        "use": "implementation"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "duplicate-dependency"
+    ]
+   }
+  },
+  {
+   "name": "self-dependency",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "declared"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "self"
+    ]
+   }
+  }
+ ],
+ "keys": [
+  {
+   "name": "emoji-paths-and-all-uses",
+   "unit": {
+    "id": "rust:app",
+    "language": "rust",
+    "kind": "library",
+    "label": "app",
+    "sources": [
+     "🧰️framework/z.rs",
+     "a/b.rs",
+     "｡/c.rs",
+     "🧪️tests/t.rs"
+    ],
+    "inputs": [
+     "Cargo.toml",
+     "🔣️.json"
+    ],
+    "dependencies": [
+     {
+      "unit": "rust:core",
+      "use": "interface"
+     },
+     {
+      "unit": "rust:mac",
+      "use": "implementation"
+     },
+     {
+      "unit": "rust:doc",
+      "use": "declared"
+     }
+    ],
+    "externals": [
+     "cargo-registry:serde@1.0.1",
+     "cargo-registry:anyhow@1.0.0"
+    ],
+    "interface": {
+     "kind": "rust-rmeta"
+    },
+    "outputs": [
+     "libapp.rlib",
+     "app.d"
+    ],
+    "toolchain": {
+     "id": "rustc 1.95.0",
+     "parts": [
+      "resolution=abc",
+      "flags=-O"
+     ]
+    },
+    "action": {
+     "argv": [
+      "cargo",
+      "build",
+      "-p",
+      "app"
+     ],
+     "env": {
+      "B": "2",
+      "A": "1"
+     }
+    }
+   },
+   "digests": {
+    "🧰️framework/z.rs": "8d8c34da5eeb6f1a5c1e9fe0baf4235eb925d50e13e174b7ae19e2f0802d9e1c",
+    "a/b.rs": "faee524db200769728a79c901cfeff666469bce5bf5aa5fb204396b1f1195353",
+    "｡/c.rs": "9e01f5c232c8c6711126d654abe971e3864d193fd02c8383a1413690d697154b",
+    "🧪️tests/t.rs": "c7b4caed26f0f73bc68e0c2eba4eda6dbe6fe3014fc8a10e17849abcab1dea9b",
+    "Cargo.toml": "c951bf8c77313da5fbeca89ab5cb3bcc06f6d9b64b9db80cf93f45e0eee73182",
+    "🔣️.json": "1a98cba1e6f6de36ea2ce8f9213c5e52fd7f11e88b5f99f7288125c033db40b5"
+   },
+   "dependencies": {
+    "rust:core": {
+     "interfaceClosure": "a0b8edd9b54ed603b2fd9b06b5eff551777d44e72ba77fd656a38eae78310851",
+     "outputClosure": "db1312a5fe0bc91dc46f7e4d81edf366f0e21f7d1bf624bffeccd9e5833df908"
+    },
+    "rust:mac": {
+     "interfaceClosure": "b292d129d19eb10adbca8bdcc268aefb89978ae7060d601f6b3b16be6a62adee",
+     "outputClosure": "228dcffdbc38264342473b7eaa42cba5d0ce0b7045da97884982b84525f3252d"
+    },
+    "rust:doc": {
+     "interfaceClosure": "766ff1a714283491c9acae646cbe97565f1baa2eb87a7aa4ea323c5059d27ce7",
+     "outputClosure": "f6eae4df2150bc8c4ecfaaf4d1676512baf31ff68347de72c76809c3dd9866e9"
+    }
+   },
+   "interface": "bfe4ea4a989eb7b1f38441b88fa65e66378605f8bd49d68defe2d1114bb854a2",
+   "outputs": "af88d1c09a2ed3c266abc3de4782f235d1d58e15c849aaa8356f74ee34fddedc",
+   "expect": {
+    "key": "08e6873849a5e5fb7fe6b21c84096f91adb680cc0b18f82af5cddf7c2cbc053d",
+    "interfaceClosure": "123a95fe893fb7b96d84eb90ae097d2a61fb25a6fe7a2f184ca8d06aa7a4a17f",
+    "outputClosure": "dd2317afa6105e8f7b9fd524e7b786c6cf0300d4e62401a8a55140ebf55dddeb"
+   }
+  },
+  {
+   "name": "no-interface-no-dependencies",
+   "unit": {
+    "id": "go:main",
+    "language": "go",
+    "kind": "binary",
+    "label": "main",
+    "sources": [
+     "main.go"
+    ],
+    "inputs": [],
+    "dependencies": [],
+    "externals": [],
+    "interface": null,
+    "outputs": [
+     "bin"
+    ],
+    "toolchain": {
+     "id": "tool 1",
+     "parts": []
+    },
+    "action": {
+     "argv": [
+      "build"
+     ],
+     "env": {}
+    }
+   },
+   "digests": {
+    "main.go": "0aceef28746c2b2d5a91808dcf1b5aef96d3eec878753bc2dcb035d0683585ea"
+   },
+   "dependencies": {},
+   "interface": null,
+   "outputs": "53e48fa0d446b3bb876158964ad99c326a816c40d12117576483bf96efd0ea2e",
+   "expect": {
+    "key": "d156f68a554bbf279402b6a743727556601da05cd17d38ec5e6049ead2d5d0fd",
+    "interfaceClosure": null,
+    "outputClosure": "b7efc5a2d367e445565cca1f811401248fe01bb138d6b1fb38e635a7ddda156f"
+   }
+  },
+  {
+   "name": "direct-interface-kind",
+   "unit": {
+    "id": "tex:doc",
+    "language": "tex",
+    "kind": "library",
+    "label": "doc",
+    "sources": [
+     "doc.tex"
+    ],
+    "inputs": [],
+    "dependencies": [
+     {
+      "unit": "tex:chap",
+      "use": "interface"
+     }
+    ],
+    "externals": [],
+    "interface": {
+     "kind": "tex-aux"
+    },
+    "outputs": [
+     "out"
+    ],
+    "toolchain": {
+     "id": "tool 1",
+     "parts": []
+    },
+    "action": {
+     "argv": [
+      "build"
+     ],
+     "env": {}
+    }
+   },
+   "digests": {
+    "doc.tex": "4ff208ebb666f2ec2b18845d9514fd588eeb758cc60715c5f57a9ca621385d1f"
+   },
+   "dependencies": {
+    "tex:chap": {
+     "interfaceClosure": "b05601f76140e0b5ef4d6679f708ffb91ac625ac6aae73dd24e149a258d9fad6",
+     "outputClosure": "1b36b15572d2a0b0a3f50b32d8ad8b1e124ade08c402022b4272aa83dce2eb4d"
+    }
+   },
+   "interface": "74bfc720d45e6b23f52ca669508f511f7a2fc2b0c927c82fb935657b0f077707",
+   "outputs": "4f3b2db939b9b1c005f483a405e8892ac708d3914786374f60cd44a37e679339",
+   "expect": {
+    "key": "69d585471ae73708853760495005a4613aef78c2a69e0e19a44e4780eaf48ef2",
+    "interfaceClosure": "d186ef3c7bfd8b91e8d1c565b682651ddd2b0f2f7a7f16688a897fb33b0e3db2",
+    "outputClosure": "8f51fe86ea60d57a24bfd31463cbfa388ad805b9898fb2bd864fd09358b41f4d"
+   }
+  },
+  {
+   "name": "exposes-subset",
+   "unit": {
+    "id": "go:b",
+    "language": "go",
+    "kind": "library",
+    "label": "b",
+    "sources": [
+     "b.go"
+    ],
+    "inputs": [],
+    "dependencies": [
+     {
+      "unit": "go:a",
+      "use": "interface"
+     },
+     {
+      "unit": "go:z",
+      "use": "interface"
+     }
+    ],
+    "externals": [],
+    "interface": {
+     "kind": "go-export-data"
+    },
+    "outputs": [
+     "out"
+    ],
+    "toolchain": {
+     "id": "tool 1",
+     "parts": []
+    },
+    "action": {
+     "argv": [
+      "build"
+     ],
+     "env": {}
+    }
+   },
+   "digests": {
+    "b.go": "80c2dcd7f10eeb09d6a57bfbae3581af102d8994bcaed9c5213636b28263a00d"
+   },
+   "dependencies": {
+    "go:a": {
+     "interfaceClosure": "8a24a376728d8519633ed16e9e35e4bfac28ddba29c3dcf4d2ed866cb169e8c5",
+     "outputClosure": "a4779313ec8423aabe5a789753796cf366758a7553144d74ff07e8197f979ad0"
+    },
+    "go:z": {
+     "interfaceClosure": "b27872e48376a4a8f99399c99cbe8e59491ec667f0c0a6fd7543e5fb4316d0e1",
+     "outputClosure": "41e57a51e507ba7ca12baa8893b09fdaa764045689c7188e40a1ccc865b673b3"
+    }
+   },
+   "interface": "c7bb1faa2d9657139d89d1210d6c78fbae95f57918e9bd2e5488d87723e8871e",
+   "outputs": "c3de6580c1f018879f7b1a56c3ac51064ef53bec11b70a69cd1b960736a7cafd",
+   "exposes": [
+    "go:a"
+   ],
+   "expect": {
+    "key": "3610a823b5d0470be06ac47727cd4a3f16b3b180876469913a48e10207ab9714",
+    "interfaceClosure": "31b5c80481d39c7cfebf8e91d95760e14c3eb6eae729dc3d855cca2786fe0d1e",
+    "outputClosure": "7bbca43e13767cfd7e6e13e89c1e1094096d439a78f886bea9e235ddfc8c4793"
+   }
+  }
+ ],
+ "scenarios": [
+  {
+   "name": "chain-early-cutoff",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "b.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:c",
+      "language": "go",
+      "kind": "library",
+      "label": "c",
+      "sources": [
+       "c.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:b",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:c#test",
+      "language": "go",
+      "kind": "test",
+      "label": "c#test",
+      "sources": [
+       "c_test.go"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:c",
+        "use": "implementation"
+       }
+      ],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:d",
+      "language": "go",
+      "kind": "library",
+      "label": "d",
+      "sources": [
+       "d.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:c",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:x",
+      "language": "go",
+      "kind": "library",
+      "label": "x",
+      "sources": [
+       "x.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "edits": [],
+     "expect": {
+      "ran": [
+       "go:a",
+       "go:b",
+       "go:c",
+       "go:c#test",
+       "go:d",
+       "go:x"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:c",
+       "go:c#test",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:a",
+       "effect": "body"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:a",
+       "go:c#test"
+      ],
+      "hit": [
+       "go:b",
+       "go:c",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:a"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:a",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:a",
+       "go:b",
+       "go:c",
+       "go:c#test",
+       "go:d"
+      ],
+      "hit": [
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:a",
+       "effect": "revert"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:c",
+       "go:c#test",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:b",
+       "effect": "body"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:b",
+       "go:c#test"
+      ],
+      "hit": [
+       "go:a",
+       "go:c",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:b"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:c",
+       "effect": "fail"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [
+       "go:c"
+      ],
+      "blocked": [
+       "go:c#test"
+      ],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [
+       "go:c"
+      ],
+      "blocked": [
+       "go:c#test"
+      ],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:c",
+       "effect": "fix"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:c",
+       "go:c#test"
+      ],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:c"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:c",
+       "effect": "fail-hard"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:x"
+      ],
+      "failed": [
+       "go:c"
+      ],
+      "blocked": [
+       "go:c#test",
+       "go:d"
+      ],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:c",
+       "effect": "fix"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:c",
+       "go:c#test"
+      ],
+      "hit": [
+       "go:a",
+       "go:b",
+       "go:d",
+       "go:x"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "exposes-limits-the-cone",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:b",
+      "language": "go",
+      "kind": "library",
+      "label": "b",
+      "sources": [
+       "b.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:a",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:c",
+      "language": "go",
+      "kind": "library",
+      "label": "c",
+      "sources": [
+       "c.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:b",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "exposes": {
+    "go:b": []
+   },
+   "steps": [
+    {
+     "edits": [],
+     "expect": {
+      "ran": [
+       "go:a",
+       "go:b",
+       "go:c"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:a",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:a",
+       "go:b"
+      ],
+      "hit": [
+       "go:c"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:b"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:b",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:b",
+       "go:c"
+      ],
+      "hit": [
+       "go:a"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "declared-edges-and-inputs",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:p",
+      "language": "go",
+      "kind": "library",
+      "label": "p",
+      "sources": [
+       "p.src"
+      ],
+      "inputs": [
+       "p.cfg"
+      ],
+      "dependencies": [
+       {
+        "unit": "go:q",
+        "use": "declared"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:q",
+      "language": "go",
+      "kind": "binary",
+      "label": "q",
+      "sources": [
+       "q.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "edits": [],
+     "expect": {
+      "ran": [
+       "go:p",
+       "go:q"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:q",
+       "effect": "body"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:q"
+      ],
+      "hit": [
+       "go:p"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:p",
+       "effect": "input"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:p"
+      ],
+      "hit": [
+       "go:q"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:p"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:p",
+       "effect": "revert"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:p",
+       "go:q"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "diamond",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:base",
+      "language": "go",
+      "kind": "library",
+      "label": "base",
+      "sources": [
+       "base.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:l",
+      "language": "go",
+      "kind": "library",
+      "label": "l",
+      "sources": [
+       "l.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:base",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:r",
+      "language": "go",
+      "kind": "library",
+      "label": "r",
+      "sources": [
+       "r.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:base",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:top",
+      "language": "go",
+      "kind": "library",
+      "label": "top",
+      "sources": [
+       "top.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:l",
+        "use": "interface"
+       },
+       {
+        "unit": "go:r",
+        "use": "interface"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "edits": [],
+     "expect": {
+      "ran": [
+       "go:base",
+       "go:l",
+       "go:r",
+       "go:top"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:l",
+       "effect": "body"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:l"
+      ],
+      "hit": [
+       "go:base",
+       "go:r",
+       "go:top"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:l"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:l",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:l",
+       "go:top"
+      ],
+      "hit": [
+       "go:base",
+       "go:r"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:base",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:base",
+       "go:l",
+       "go:r",
+       "go:top"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    }
+   ]
+  }
+ ],
+ "names": [
+  {
+   "id": "go:example.com/lab/a",
+   "expect": "unit-go-example-com-lab-a-c9c60a3d"
+  },
+  {
+   "id": "python:pkg.mod",
+   "expect": "unit-python-pkg-mod-bfc005b0"
+  },
+  {
+   "id": "typescript:dir:🧰️framework/📦️packages",
+   "expect": "unit-typescript-dir-framework-packages-4662d75d"
+  },
+  {
+   "id": "rust:serde@1.0.1#bin:tool",
+   "expect": "unit-rust-serde-1-0-1-bin-tool-ab5e7ba3"
+  },
+  {
+   "id": "go:🧰",
+   "expect": "unit-go-d4b924e1"
+  },
+  {
+   "id": "go:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:xgo:x",
+   "expect": "unit-go-xgo-xgo-xgo-xgo-xgo-xgo-xgo-xgo-xgo-xgo-xgo-x-37224810"
+  }
+ ],
+ "python": {
+  "analyze": [
+   {
+    "name": "imports-and-names",
+    "source": "import os, sys as system\nimport a.b.c\nfrom . import util as util\nfrom .m import a, b as c\nfrom ..x.y import z\nfrom pkg.sub import *\n\ndef f():\n    import json\n    return json.dumps(1)\n",
+    "expect": {
+     "imports": [
+      [
+       "",
+       0,
+       [
+        "os",
+        "sys"
+       ]
+      ],
+      [
+       "",
+       0,
+       [
+        "a.b.c"
+       ]
+      ],
+      [
+       "",
+       0,
+       [
+        "json"
+       ]
+      ],
+      [
+       "",
+       1,
+       [
+        "util"
+       ]
+      ],
+      [
+       "m",
+       1,
+       [
+        "a",
+        "b"
+       ]
+      ],
+      [
+       "x.y",
+       2,
+       [
+        "z"
+       ]
+      ],
+      [
+       "pkg.sub",
+       0,
+       [
+        "*"
+       ]
+      ]
+     ],
+     "names": [
+      "a",
+      "c",
+      "f",
+      "os",
+      "system",
+      "util",
+      "z"
+     ],
+     "dynamic": true
+    }
+   },
+   {
+    "name": "structure-and-targets",
+    "source": "X: int = 3\nY = Z = [1, 2]\n(w := 5)\nfor i, (j, k) in pairs: pass\nwith open('f') as fh, other() as (aa, bb): pass\nobj.attr = 1\nd['k'] = 2\nclass C:\n    inner = 1\n    def m(self): pass\n@dec\ndef g(): global G; G = 1\nif cond:\n    def h(): pass\nelse:\n    h = None\n",
+    "expect": {
+     "imports": [],
+     "names": [
+      "C",
+      "G",
+      "X",
+      "Y",
+      "Z",
+      "aa",
+      "bb",
+      "fh",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "w"
+     ],
+     "dynamic": false
+    }
+   },
+   {
+    "name": "dynamic-markers",
+    "source": "def __getattr__(name): return 1\n",
+    "expect": {
+     "imports": [],
+     "names": [
+      "__getattr__"
+     ],
+     "dynamic": true
+    }
+   },
+   {
+    "name": "globals-call-is-dynamic",
+    "source": "def f():\n    globals()['a'] = 1\n",
+    "expect": {
+     "imports": [],
+     "names": [
+      "f"
+     ],
+     "dynamic": true
+    }
+   },
+   {
+    "name": "strings-and-continuations",
+    "source": "s = '''import not_an_import\nclass NotAClass: pass'''\nt = 'from x import y'\nu = (1 +\n     2)\nv = 3 \\\n    + 4\ndef f(a,\n      b=')'):\n    return a\n",
+    "expect": {
+     "imports": [],
+     "names": [
+      "f",
+      "s",
+      "t",
+      "u",
+      "v"
+     ],
+     "dynamic": false
+    }
+   },
+   {
+    "name": "init-reexports",
+    "init": true,
+    "source": "from .a import A\nimport os\n",
+    "expect": {
+     "imports": [
+      [
+       "",
+       0,
+       [
+        "os"
+       ]
+      ],
+      [
+       "a",
+       1,
+       [
+        "A"
+       ]
+      ]
+     ],
+     "names": [
+      "A",
+      "os"
+     ],
+     "dynamic": false
+    }
+   }
+  ],
+  "pairs": [
+   {
+    "name": "body-edit",
+    "same": true,
+    "before": "def f(a):\n    return a\n",
+    "after": "def f(a):\n    x = a\n    return x + 1\n"
+   },
+   {
+    "name": "comments-blank-lines-reformat",
+    "same": true,
+    "before": "def f(a, b=1):\n    return a\n",
+    "after": "# note\n\n\ndef f(\n    a,\n    b=1,\n):  # trailing\n    return a\n"
+   },
+   {
+    "name": "docstring-edit",
+    "same": true,
+    "before": "def f():\n    '''one'''\n    return 1\n",
+    "after": "def f():\n    '''two'''\n    return 1\n"
+   },
+   {
+    "name": "private-value-edit",
+    "same": true,
+    "before": "_x = 1\nY: int = 2\n",
+    "after": "_x = 99\nY: int = 2\n"
+   },
+   {
+    "name": "annotated-module-value-edit",
+    "same": true,
+    "before": "X: int = 1\n",
+    "after": "X: int = 2\n"
+   },
+   {
+    "name": "local-import-added",
+    "same": true,
+    "before": "def f():\n    return 1\n",
+    "after": "def f():\n    import json\n    return json.dumps(1)\n"
+   },
+   {
+    "name": "import-added-changes-names",
+    "same": false,
+    "before": "def f():\n    return 1\n",
+    "after": "import os\n\ndef f():\n    return os.getcwd() and 1\n"
+   },
+   {
+    "name": "method-body-edit",
+    "same": true,
+    "before": "class C:\n    def m(self):\n        return 1\n",
+    "after": "class C:\n    def m(self):\n        return 2\n"
+   },
+   {
+    "name": "unannotated-return-ignored",
+    "same": true,
+    "before": "def f(a):\n    return 1\n",
+    "after": "def f(a):\n    return 'x'\n"
+   },
+   {
+    "name": "tuple-default-comma-is-significant",
+    "same": false,
+    "before": "def f(a=(1,)): pass\n",
+    "after": "def f(a=(1)): pass\n"
+   },
+   {
+    "name": "default-change",
+    "same": false,
+    "before": "def f(a=1): pass\n",
+    "after": "def f(a=2): pass\n"
+   },
+   {
+    "name": "parameter-rename",
+    "same": false,
+    "before": "def f(a): pass\n",
+    "after": "def f(b): pass\n"
+   },
+   {
+    "name": "return-annotation",
+    "same": false,
+    "before": "def f() -> int: return 1\n",
+    "after": "def f() -> str: return 'x'\n"
+   },
+   {
+    "name": "new-public-function",
+    "same": false,
+    "before": "def f(): pass\n",
+    "after": "def f(): pass\ndef g(): pass\n"
+   },
+   {
+    "name": "private-name-added-changes-names",
+    "same": false,
+    "before": "def f(): pass\n",
+    "after": "def f(): pass\ndef _g(): pass\n"
+   },
+   {
+    "name": "base-class-change",
+    "same": false,
+    "before": "class C(A): pass\n",
+    "after": "class C(B): pass\n"
+   },
+   {
+    "name": "decorator-change",
+    "same": false,
+    "before": "@a\ndef f(): pass\n",
+    "after": "@b\ndef f(): pass\n"
+   },
+   {
+    "name": "unannotated-public-value",
+    "same": false,
+    "before": "X = 1\n",
+    "after": "X = 2\n"
+   },
+   {
+    "name": "all-change",
+    "same": false,
+    "before": "__all__ = ['a']\na = 1\n_b = 2\n",
+    "after": "__all__ = ['a', '_b']\na = 1\n_b = 2\n"
+   },
+   {
+    "name": "class-field-default",
+    "same": false,
+    "before": "class C:\n    x: int = 1\n",
+    "after": "class C:\n    x: int = 2\n"
+   },
+   {
+    "name": "init-reexport-added",
+    "same": false,
+    "init": true,
+    "before": "from .a import A\n",
+    "after": "from .a import A\nfrom .b import B\n"
+   },
+   {
+    "name": "final-value",
+    "same": false,
+    "before": "from typing import Final\nX: Final = 1\n",
+    "after": "from typing import Final\nX: Final = 2\n"
+   },
+   {
+    "name": "body-mode-unannotated",
+    "same": false,
+    "unannotatedReturns": "body",
+    "before": "def f(a):\n    return 1\n",
+    "after": "def f(a):\n    return 'x'\n"
+   },
+   {
+    "name": "body-mode-annotated",
+    "same": true,
+    "unannotatedReturns": "body",
+    "before": "def f(a) -> int:\n    return 1\n",
+    "after": "def f(a) -> int:\n    return 2\n"
+   }
+  ],
+  "plan": [
+   {
+    "name": "workspace",
+    "roots": [
+     "",
+     "src"
+    ],
+    "pins": {
+     "requests": "2.31.0"
+    },
+    "files": {
+     "pkg/__init__.py": "",
+     "pkg/a.py": "from . import b\nfrom pkg import b as bb\n",
+     "pkg/b.py": "from .c import f\n",
+     "pkg/c.py": "import os\nimport requests\nimport numpy\ndef f(): pass\n",
+     "other.py": "from pkg.a import x\nimport pkg.b\n",
+     "cyc1.py": "import cyc2\n",
+     "cyc2.py": "import cyc1\n",
+     "ns/mod.py": "import other\n",
+     "src/lib/m.py": "from lib import n\n",
+     "src/lib/n.py": "",
+     "src/lib/n.pyi": "def k() -> int: ...\n",
+     "🐍️.py": "import other\n",
+     "node_modules/skip/x.py": ""
+    },
+    "expect": {
+     "units": {
+      "python:pkg": {
+       "sources": [
+        "pkg/__init__.py"
+       ],
+       "dependencies": [],
+       "externals": []
+      },
+      "python:pkg.a": {
+       "sources": [
+        "pkg/a.py"
+       ],
+       "dependencies": [
+        "python:pkg",
+        "python:pkg.b"
+       ],
+       "externals": []
+      },
+      "python:pkg.b": {
+       "sources": [
+        "pkg/b.py"
+       ],
+       "dependencies": [
+        "python:pkg.c"
+       ],
+       "externals": []
+      },
+      "python:pkg.c": {
+       "sources": [
+        "pkg/c.py"
+       ],
+       "dependencies": [],
+       "externals": [
+        "python-import:numpy@unpinned",
+        "python-import:requests@2.31.0"
+       ]
+      },
+      "python:other": {
+       "sources": [
+        "other.py"
+       ],
+       "dependencies": [
+        "python:pkg.a",
+        "python:pkg.b"
+       ],
+       "externals": []
+      },
+      "python:cycle:cyc1": {
+       "sources": [
+        "cyc1.py",
+        "cyc2.py"
+       ],
+       "dependencies": [],
+       "externals": []
+      },
+      "python:ns.mod": {
+       "sources": [
+        "ns/mod.py"
+       ],
+       "dependencies": [
+        "python:other"
+       ],
+       "externals": []
+      },
+      "python:lib.m": {
+       "sources": [
+        "src/lib/m.py"
+       ],
+       "dependencies": [
+        "python:lib.n"
+       ],
+       "externals": []
+      },
+      "python:lib.n": {
+       "sources": [
+        "src/lib/n.py",
+        "src/lib/n.pyi"
+       ],
+       "dependencies": [],
+       "externals": []
+      },
+      "python:file:🐍️.py": {
+       "sources": [
+        "🐍️.py"
+       ],
+       "dependencies": [
+        "python:other"
+       ],
+       "externals": []
+      }
+     }
+    }
+   }
+  ]
+ },
+ "go": {
+  "scan": [
+   {
+    "name": "block-with-aliases",
+    "source": "// Package doc.\npackage p\n\nimport (\n\t\"fmt\"\n\t_ \"embed\"\n\tm \"math\"\n\t. \"strings\"\n\t`raw/path`\n)\n\nfunc F() {}\n",
+    "expect": {
+     "package": "p",
+     "imports": [
+      "embed",
+      "fmt",
+      "math",
+      "raw/path",
+      "strings"
+     ],
+     "constraint": null,
+     "legacyConstraints": [],
+     "embeds": []
+    }
+   },
+   {
+    "name": "constraint-and-cgo",
+    "source": "//go:build linux && !cgo\n\n// Package q.\npackage q\n\nimport \"C\"\nimport \"unsafe\"\n\nvar x = 1\nimport \"never\"\n",
+    "expect": {
+     "package": "q",
+     "imports": [
+      "C",
+      "unsafe"
+     ],
+     "constraint": "linux && !cgo",
+     "legacyConstraints": [],
+     "embeds": []
+    }
+   },
+   {
+    "name": "separate-and-semicolon",
+    "source": "package s\nimport \"a\"\nimport \"b\"; import \"c\"\n/* block */ import (\n  \"d\" ; \"e\"\n)\n",
+    "expect": {
+     "package": "s",
+     "imports": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+     ],
+     "constraint": null,
+     "legacyConstraints": [],
+     "embeds": []
+    }
+   },
+   {
+    "name": "embed-directives",
+    "source": "package e\n\nimport \"embed\"\n\n//go:embed assets/* \"name with space.txt\" other.txt\nvar fs embed.FS\n",
+    "expect": {
+     "package": "e",
+     "imports": [
+      "embed"
+     ],
+     "constraint": null,
+     "legacyConstraints": [],
+     "embeds": [
+      "assets/*",
+      "name with space.txt",
+      "other.txt"
+     ]
+    }
+   },
+   {
+    "name": "legacy-build-line",
+    "source": "// +build ignore\n\npackage l\n",
+    "expect": {
+     "package": "l",
+     "imports": [],
+     "constraint": null,
+     "legacyConstraints": [
+      "ignore"
+     ],
+     "embeds": []
+    }
+   },
+   {
+    "name": "no-imports",
+    "source": "package n\n\nfunc F() {}\nimport \"late\"\n",
+    "expect": {
+     "package": "n",
+     "imports": [],
+     "constraint": null,
+     "legacyConstraints": [],
+     "embeds": []
+    }
+   },
+   {
+    "name": "string-with-import-word",
+    "source": "package w\n\nimport \"fmt\"\n\nvar s = \"import \\\"x\\\"\"\n",
+    "expect": {
+     "package": "w",
+     "imports": [
+      "fmt"
+     ],
+     "constraint": null,
+     "legacyConstraints": [],
+     "embeds": []
+    }
+   }
+  ],
+  "constraints": [
+   {
+    "expr": "linux && amd64",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "linux && amd64",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": false
+   },
+   {
+    "expr": "!windows",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "cgo",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "cgo",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": false
+   },
+   {
+    "expr": "ignore",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "expr": "unix",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "expr": "unix",
+    "context": {
+     "goos": "windows",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "expr": "go1.21",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "go1.30",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "expr": "(linux || darwin) && !386",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "expr": "(linux || darwin) && !arm64",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": false
+   },
+   {
+    "expr": "linux &&",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "expr": "extra",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "expr": "extra",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "expr": "darwin",
+    "context": {
+     "goos": "ios",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "linux",
+    "context": {
+     "goos": "android",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "gc && !gccgo",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "expr": "!(linux || darwin)",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   }
+  ],
+  "names": [
+   {
+    "name": "x_linux.go",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "name": "x_linux.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": false
+   },
+   {
+    "name": "x_linux_amd64.go",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "name": "x_linux_arm64.go",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   },
+   {
+    "name": "x_test.go",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "name": "linux.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "name": "x_amd64_linux.go",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": true
+   },
+   {
+    "name": "x_unix.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "name": "x_linux_test.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": false
+   },
+   {
+    "name": "x_darwin_arm64_test.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "name": "x_arm64.go",
+    "context": {
+     "goos": "darwin",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": false,
+     "tags": [
+      "extra"
+     ]
+    },
+    "expect": true
+   },
+   {
+    "name": "x_windows.go",
+    "context": {
+     "goos": "android",
+     "goarch": "arm64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "expect": false
+   }
+  ],
+  "gomod": [
+   {
+    "text": "module example.com/m // c\n\ngo 1.25\n\nrequire (\n\tgithub.com/a/b v1.2.3 // indirect\n\tgolang.org/x/y v0.1.0\n)\nrequire github.com/c/d v2.0.0+incompatible\nreplace github.com/a/b => ../b\nreplace (\n\tgolang.org/x/y v0.1.0 => example.com/fork/y v0.1.1\n)\n",
+    "expect": {
+     "module": "example.com/m",
+     "go": "1.25",
+     "requires": [
+      {
+       "path": "github.com/a/b",
+       "version": "v1.2.3"
+      },
+      {
+       "path": "golang.org/x/y",
+       "version": "v0.1.0"
+      },
+      {
+       "path": "github.com/c/d",
+       "version": "v2.0.0+incompatible"
+      }
+     ],
+     "replaces": [
+      {
+       "from": "github.com/a/b",
+       "to": "../b",
+       "toVersion": null
+      },
+      {
+       "from": "golang.org/x/y",
+       "to": "example.com/fork/y",
+       "toVersion": "v0.1.1"
+      }
+     ]
+    }
+   }
+  ],
+  "work": [
+   {
+    "text": "go 1.25\n\nuse (\n\t./a\n\t./b/c\n)\nuse ./d\n",
+    "expect": {
+     "go": "1.25",
+     "use": [
+      "./a",
+      "./b/c",
+      "./d"
+     ]
+    }
+   }
+  ],
+  "plan": [
+   {
+    "name": "workspace",
+    "context": {
+     "goos": "linux",
+     "goarch": "amd64",
+     "goMinor": 25,
+     "cgo": true,
+     "tags": []
+    },
+    "files": {
+     "go.mod": "module example.com/lab\n\ngo 1.25\n\nrequire github.com/ext/lib v1.0.0\n",
+     "a/a.go": "package a\n\nimport \"strings\"\n\nfunc A() string { return strings.ToUpper(\"a\") }\n",
+     "a/a_test.go": "package a\n\nimport \"testing\"\n\nfunc TestA(t *testing.T) {}\n",
+     "a/a_windows.go": "package a\n\nfunc W() {}\n",
+     "a/tags.go": "//go:build ignore\n\npackage main\n",
+     "a/testdata/fixture.txt": "data",
+     "b/b.go": "package b\n\nimport (\n\t\"example.com/lab/a\"\n\t\"github.com/ext/lib/sub\"\n)\n\nfunc B() string { return a.A() + sub.S }\n",
+     "b/b_x_test.go": "package b_test\n\nimport (\n\t\"testing\"\n\n\t\"example.com/lab/b\"\n)\n\nfunc TestB(t *testing.T) { _ = b.B() }\n",
+     "cmd/tool/main.go": "package main\n\nimport \"example.com/lab/b\"\n\nfunc main() { _ = b.B() }\n",
+     "inner/go.mod": "module example.com/inner\n\ngo 1.25\n",
+     "inner/i.go": "package inner\n",
+     "vendor/v/v.go": "package v\n",
+     "_hidden/h.go": "package h\n"
+    },
+    "expect": {
+     "packages": {
+      "example.com/lab/a": {
+       "name": "a",
+       "goFiles": [
+        "a/a.go"
+       ],
+       "testGoFiles": [
+        "a/a_test.go"
+       ],
+       "imports": [
+        "strings"
+       ]
+      },
+      "example.com/lab/b": {
+       "name": "b",
+       "goFiles": [
+        "b/b.go"
+       ],
+       "xtestGoFiles": [
+        "b/b_x_test.go"
+       ],
+       "imports": [
+        "example.com/lab/a",
+        "github.com/ext/lib/sub"
+       ]
+      },
+      "example.com/lab/cmd/tool": {
+       "name": "main",
+       "goFiles": [
+        "cmd/tool/main.go"
+       ],
+       "imports": [
+        "example.com/lab/b"
+       ]
+      }
+     },
+     "units": {
+      "go:example.com/lab/a": {
+       "kind": "library",
+       "dependencies": [],
+       "externals": [],
+       "sources": [
+        "a/a.go"
+       ]
+      },
+      "go:example.com/lab/a#test": {
+       "kind": "test",
+       "dependencies": [
+        [
+         "go:example.com/lab/a",
+         "implementation"
+        ]
+       ],
+       "externals": [],
+       "sources": [
+        "a/a_test.go"
+       ],
+       "inputs": [
+        "a/testdata/fixture.txt"
+       ]
+      },
+      "go:example.com/lab/b": {
+       "kind": "library",
+       "dependencies": [
+        [
+         "go:example.com/lab/a",
+         "interface"
+        ]
+       ],
+       "externals": [
+        "go-module:github.com/ext/lib@v1.0.0"
+       ],
+       "sources": [
+        "b/b.go"
+       ]
+      },
+      "go:example.com/lab/b#test": {
+       "kind": "test",
+       "dependencies": [
+        [
+         "go:example.com/lab/b",
+         "implementation"
+        ]
+       ],
+       "externals": [],
+       "sources": [
+        "b/b_x_test.go"
+       ]
+      },
+      "go:example.com/inner": {
+       "kind": "library",
+       "dependencies": [],
+       "externals": [],
+       "sources": [
+        "inner/i.go"
+       ]
+      },
+      "go:example.com/lab/cmd/tool": {
+       "kind": "binary",
+       "dependencies": [
+        [
+         "go:example.com/lab/b",
+         "interface"
+        ]
+       ],
+       "externals": [],
+       "sources": [
+        "cmd/tool/main.go"
+       ]
+      }
+     }
+    }
+   }
+  ]
+ },
+ "typescript": {
+  "plan": {
+   "version": 1,
+   "family": "tsconfig.json",
+   "ambient": [
+    "🌿️ambient/g.d.ts"
+   ],
+   "manifests": [
+    "package.json"
+   ],
+   "order": [
+    "dir:a",
+    "dir:b",
+    "dir:t"
+   ],
+   "components": [],
+   "digest": "x",
+   "units": [
+    {
+     "id": "dir:a",
+     "label": "a",
+     "files": [
+      "a/i.ts"
+     ],
+     "json": [
+      "a/c.json"
+     ],
+     "dependencies": [],
+     "leaf": false
+    },
+    {
+     "id": "dir:b",
+     "label": "b",
+     "files": [
+      "b/i.ts"
+     ],
+     "json": [],
+     "dependencies": [
+      "dir:a"
+     ],
+     "leaf": false
+    },
+    {
+     "id": "dir:t",
+     "label": "t",
+     "files": [
+      "b/🧪️tests/t.ts"
+     ],
+     "json": [],
+     "dependencies": [
+      "dir:b",
+      "dir:a"
+     ],
+     "leaf": true
+    }
+   ]
+  }
+ }
+}

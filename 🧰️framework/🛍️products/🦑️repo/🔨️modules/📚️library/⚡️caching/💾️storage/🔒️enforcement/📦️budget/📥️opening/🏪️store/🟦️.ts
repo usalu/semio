@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{persistentStateArtifactBudgetV1}from"../../../../../../../../../../🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
@@ -20,7 +20,7 @@ const storeSourceURLV1=new URL(physicalSourceOriginV1(import.meta.url,(import.me
 const schema:typeof importedSchema=JSON.parse(storeSchemaCaptureV1.text??"");
 
 /** 🧷️ Refuses cached Store behavior or a stale private policy before retained enrollment or physical opening. */
-export function requireCurrentRepositoryCacheStoreV1():void{if(captureBoundedSourceRevisionV1(fileURLToPath(storeSourceURLV1),8388608).sha256!==storeSourceRevisionV1||captureBoundedSourceRevisionV1(fileURLToPath(storeSchemaURLV1),65536).sha256!==storeSchemaRevisionV1)throw Error("Stale loaded repository Store implementation; restart required");}
+export function requireCurrentRepositoryCacheStoreV1():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(fileURLToPath(storeSourceURLV1),8388608).sha256!==storeSourceRevisionV1||captureBoundedSourceRevisionV1(fileURLToPath(storeSchemaURLV1),65536).sha256!==storeSchemaRevisionV1)throw Error("Stale loaded repository Store implementation; restart required");}
 
 /** 🛠️ Holds one genuinely issued cache charge and the original image throughout loaded child lifetime. */
 export interface RepositoryCacheStoreV1{readonly root:string;readonly storage:NativeStorageReservationV1;readonly control:ResourceLeaseControl;readonly invocation:ScriptInvocation;readonly image:NativeImageStorageV1;readonly recheck:()=>Promise<void>;readonly environment:Readonly<Record<string,string|undefined>>}

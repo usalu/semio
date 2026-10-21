@@ -24,7 +24,6 @@ semio-framework-ui-contract-components = { path = "../../../🧩️component/�
 semio-framework-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust" }
 semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }
-semio-framework-value-derive = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]

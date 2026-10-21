@@ -1,6 +1,7 @@
 //! 🧮️ Canonical expression bytes retain only paged traversal metadata and borrow the original AST each turn.
 use super::super::{ExprValue,ExprOp};
-use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, paged_text::TextReadView};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value_paged_text::paged_text::TextReadView;
 use semio_framework_value_persistent::list::PagedList;
 /// 🌿️ One original node lends its scalar, name and child count without constructing a formula mirror.
 #[derive(Clone,Copy)]

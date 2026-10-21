@@ -268,7 +268,7 @@ fn launcher_text_editing_follows_the_shared_input_caret() {
     press(&mut dashboard, &mut tui, &[named(Key::Left), key('x')]);
     let index = dashboard.focused_index(&tui);
     let input = dashboard.windows[index].input.unwrap();
-    let value = |tui: &Tui| match &tui.scene.node(input).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Input(state)) => state.value.clone(), _ => panic!("editor expected") };
+    let value = |tui: &Tui| match &tui.scene.node(input).content { NodeContent::Widget(WidgetState::Input(state)) => state.value.clone(), _ => panic!("editor expected") };
     assert_eq!(value(&tui), "A界xe\u{301}");
     press(&mut dashboard, &mut tui, &[named(Key::Backspace), named(Key::Delete)]);
     assert_eq!(value(&tui), "A界");

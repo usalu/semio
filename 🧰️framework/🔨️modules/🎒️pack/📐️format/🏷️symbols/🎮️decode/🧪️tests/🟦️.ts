@@ -1,4 +1,5 @@
 import {test,expect} from "bun:test";
+import Ajv2020 from "ajv/dist/2020.js";
 import {readFileSync,existsSync} from "node:fs";
 import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
@@ -61,4 +62,8 @@ test("retained inline symbols preserve original wire indices and independent can
   expect(source.includes("RetainedCloneBinding::close_one")).toBe(true);
   expect(source.includes("decode_inline_symbols(")).toBe(false);
   expect(source.includes("Utf8Admission")).toBe(false);
+});
+
+test("inline source handback separates bounded aliases from exact caller wire retirement",()=>{
+ const law=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);for(const row of law.sourceOwnership.cases){expect(row.wireBytes<=row.backingBytes).toBe(true);const transferred=applyPatch({source:{bytes:row.wireBytes,backing:row.backingBytes}},[{op:"move",from:"/source",path:"/caller"}],true,false).newDocument as unknown as {caller:{bytes:number;backing:number}};const db=new Database(":memory:");db.run("CREATE TABLE wire(owner TEXT,bytes INTEGER,backing INTEGER,released INTEGER)");db.run("INSERT INTO wire VALUES('source',?,?,0)",[row.wireBytes,row.backingBytes]);db.run("UPDATE wire SET owner='caller' WHERE owner='source'");expect(db.query("SELECT bytes AS returnedBytes,released AS inlineWireReleased,backing AS callerWireReleased FROM wire").get()).toEqual(row.expected);db.run("UPDATE wire SET released=backing WHERE owner='caller'");expect((db.query("SELECT released FROM wire").get()as{released:number}).released).toBe(transferred.caller.backing);expect(transferred.caller.bytes).toBe(row.expected.returnedBytes);db.close();}
 });

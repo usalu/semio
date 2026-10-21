@@ -46,16 +46,16 @@ if (context) {
   const write = bun.write;
   if (typeof write === "function") { try { bun.write = function (this: unknown, ...args: unknown[]): unknown { const target = args[0]; settle(typeof target === "string" ? decideWriteV1(context, "Bun.write", target) : undefined); return write.apply(this, args); }; } catch {} }
   const here = import.meta.dir, shims: Readonly<Record<string, string>> = {
-    fs: join(here, "../🩻️fs/🟦️.ts"), "fs/promises": join(here, "../🩻️fs-promises/🟦️.ts"), child_process: join(here, "../🩻️child-process/🟦️.ts"),
+    fs: join(here, "../🩻️fs/🟦️.ts"), "fs/promises": join(here, "../🩻️fs-promises/🟦️.ts"), child_process: join(here, "../🩻️child-process/🟦️.ts"), "bun:sqlite": join(here, "../🩻️sqlite/🟦️.ts"),
   };
   const guardRoot = join(here, "../..");
-  const specifier = /(from\s*|import\s*\(\s*|require\s*\(\s*)(["'])(?:node:)?(fs\/promises|fs|child_process)\2/gu;
+  const specifier = /(from\s*|import\s*\(\s*|require\s*\(\s*)(["'])(?:node:)?(fs\/promises|fs|child_process|bun:sqlite)\2/gu;
   plugin({
     name: "semio-test-guard",
     setup(build) {
       build.onLoad({ filter: /^(?!.*[\\/]node_modules[\\/]).*\.(?:[cm]?ts|tsx|mjs)$/u }, args => {
         const loader = args.path.endsWith("x") ? "tsx" : args.path.endsWith(".mjs") ? "js" : "ts", text = readFileSync(args.path, "utf8");
-        if (args.path.startsWith(guardRoot) || !/(?:fs|child_process)["']/u.test(text)) return { contents: text, loader };
+        if (args.path.startsWith(guardRoot) || !/(?:fs|child_process|sqlite)["']/u.test(text)) return { contents: text, loader };
         return { contents: text.replace(specifier, (_all, lead: string, _quote: string, name: string) => `${lead}${JSON.stringify(shims[name])}`), loader };
       });
     },

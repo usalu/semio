@@ -1,70 +1,32 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
-import { currentPlatform } from "@semio-tech/framework/test/adapter";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { demonstratorE2eOutputDirectory } from "./📁️artifacts/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { join, resolve } from "node:path";
+import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "@semio-tech/repo-lib/dev";
+import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
+import { repoCacheDirectory } from "@semio-tech/repo-lib/process";
+import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
+import { bunSpawnToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-//#endregion 🔌️Adapters
-
-//#region 🧬️Contract
-const HERE = import.meta.dir;
-const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
-const TARGET = cargoTargetDirectory(findWorkspaceRoot());
-const OWNER = join(HERE, "..", "..", "➗️equation");
-const FIXTURES_DIR = join(OWNER, "🧪️tests/🧫️fixtures");
-const CATALOG = join(OWNER, "🔮️oracles", "🔣️.json");
-const ORACLE_ID = "json-rust-equation-carrier-reader";
-const GENERATOR = { oracle: ORACLE_ID, packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate" } as const;
-//#endregion 🧬️Contract
-
-//#region 🔨️Build
-function build(): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(ENGINE, "Cargo.toml")], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
-}
-
-async function sha256(path: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", readFileSync(path));
-  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
-}
-//#endregion 🔨️Build
-
-//#region 🚪️Commands
-function generate(outRoot: string): number {
-  build();
-  const result = spawnSync(join(TARGET, "release", "generate"), [outRoot], { stdio: "inherit" });
-  return result.status ?? 1;
-}
-
-async function manifests(): Promise<void> {
-  const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { testEvidence?: { generator?: { oracle?: string; platform?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
-  const owned = (catalog.testEvidence ?? []).filter((entry) => entry.generator?.oracle === ORACLE_ID);
-  if (owned.length === 0) throw new Error(`no fixture manifest names ${ORACLE_ID}`);
-  for (const entry of owned) {
-    for (const file of entry.files) {
-      const path = join(dirname(CATALOG), file.path);
-      file.sha256 = await sha256(path);
-      file.bytes = readFileSync(path).length;
-    }
-    entry.generator = { ...GENERATOR, platform: currentPlatform() };
-  }
-  writeFileSync(CATALOG, `${JSON.stringify(catalog, null, 2)}\n`);
-  console.log(`${owned.length} fixture manifest(s) refreshed in ${CATALOG}`);
-}
-/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
-export async function runScriptProgram(): Promise<void> {
-  //#endregion 🚪️Commands
-  
-  //#region 🚀️Entry
-  const [command, ...rest] = process.argv.slice(2);
-  const outFlagIndex = rest.indexOf("--out");
-  const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR);
-  if (command === "generate") process.exit(generate(outRoot));
-  else if (command === "manifests") await manifests();
-  else {
-    console.error("usage: bun 📜️script.ts <generate [--out <dir>]|manifests>");
-    process.exit(2);
-  }
+/** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
+export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
+  if (args.length) throw new Error("Demonstrator E2E accepts no compiler or server arguments");
+  const root = resolve(context.root, "../.."), sessionRoot = demonstratorE2eSessionRoot(context.repoRoot), controller = new AbortController();
+  const session = readServiceSession(sessionRoot, DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid(process.env));
+  const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
+  process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
+  try {
+    console.log(`Waiting for Demonstrator E2E service ${session.id}`);
+    const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
+    const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
+    const output = demonstratorE2eOutputDirectory(root, process.env.SEMIO_TICKET_DIR, session.id);
+    console.log(`Testing Demonstrator at ${baseURL}`);
+    const child = bunSpawnToolV1([process.execPath, join(context.repoRoot, "node_modules/playwright/cli.js"), "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdout: "inherit", stderr: "inherit", stdin: "ignore" });
+    const cancel = (): void => { child.kill("SIGTERM"); };
+    controller.signal.addEventListener("abort", cancel, { once: true });
+    if (controller.signal.aborted) cancel();
+    let status: number;
+    try { status = await child.exited; }
+    finally { controller.signal.removeEventListener("abort", cancel); }
+    if (status !== 0 && !controller.signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
+  } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
 }

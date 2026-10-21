@@ -16,6 +16,10 @@ use semio_framework_pets_contract::schema::Footing;
 use semio_framework_pets_contract::schema::Facing;
 use semio_framework_pets_contract::schema::Activity;
 use semio_framework_pets_contract::schema::Stage;
+use semio_framework_pets_character::feeling::settled;
+use semio_framework_pets_contract::schema::{Gaze, Rect};
+use semio_framework_pets_kinematics::rig::BonePose;
+use semio_framework_pets_kinematics::trigonometry::smoothstep;
 
 /// 🫡️ The stage after its only actor greeted towards `x`.
 fn greeted(menagerie: &Menagerie, stage: Stage, x: f64) -> Stage {

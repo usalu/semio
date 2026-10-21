@@ -61,6 +61,7 @@ impl<P: CountedPresence> ErasedSnapshotRetirement for Retirement<P> {
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> { self.demands(maximum_body_bytes) }
 }
 
 impl<P: CountedPresence> Drop for Retirement<P> {

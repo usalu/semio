@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
 use semio_s_fem_analyses_model::ASSEMBLY_TRIPLET_INDEX_SPACE;
+use semio_s_fem_analyses_model::AssemblyOrder;
 use semio_s_fem_analyses_model::AnalysisModel;
 use semio_s_fem_analyses_model::AnalysisModelCloseCursor;
 use semio_s_fem_analyses_model::DofMap;
@@ -54,6 +55,8 @@ use semio_s_fem_sparse::NumericalOutcomeDesk;
 use semio_s_fem_sparse::NumericalRun;
 use semio_s_fem_sparse::Coo;
 use semio_s_fem_sparse::Csr;
+use semio_s_fem_sparse::CsrTripletBuild;
+use semio_s_fem_sparse::SparseTriplet;
 use semio_s_fem_sparse_ldlt::ldlt_factor;
 use semio_s_fem_sparse_ldlt::LdltFactor;
 

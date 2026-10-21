@@ -9,7 +9,7 @@ artifact_retire_struct!(crate::space_history_document::SpaceAlternative { id, na
 
 artifact_retire_struct!(crate::space_history_document::SpaceHistorySnapshot { checkpoints, alternatives, active_alternative_id });
 
-artifact_retire_struct!(crate::space_history_mutations::commit_space_checkpoint::CommitSpaceCheckpoint { checkpoint });
+artifact_retire_struct!(crate::space_history_mutations::commit_space_checkpoint::CommitSpaceCheckpoint { checkpoint, index });
 
 artifact_retire_struct!(crate::space_history_mutations::create_space_alternative::CreateSpaceAlternative { alternative });
 

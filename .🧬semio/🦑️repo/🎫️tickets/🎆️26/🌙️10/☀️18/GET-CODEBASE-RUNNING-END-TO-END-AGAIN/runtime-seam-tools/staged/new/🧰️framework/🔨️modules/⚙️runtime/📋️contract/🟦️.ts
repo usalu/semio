@@ -2,20 +2,13 @@
 export type RuntimeIdV1 = "bun" | "node";
 
 /** 📚️ Names one runtime-dependent capability family; neutral code asks for a family, never for a runtime. */
-export type RuntimeFamilyV1 = "glob" | "toml" | "jsonc" | "yaml" | "which" | "resolve" | "sleep" | "spawn" | "stdin" | "file" | "serve" | "sqlite" | "ffi" | "transpile" | "bundle" | "semver" | "identity" | "main" | "gc";
+export type RuntimeFamilyV1 = "glob" | "toml" | "jsonc" | "yaml" | "which" | "resolve" | "sleep" | "spawn" | "stdin" | "file" | "serve" | "sqlite" | "ffi" | "transpile" | "bundle" | "semver" | "identity" | "main" | "gc" | "plugin" | "test";
 
 /** 🧭️ States how an adapter provides a family: its own native API, a standard API, our portable code, or not at all. */
-export type RuntimeSupportV1 = "native" | "standard" | "portable" | "missing";
+export type RuntimeSupportV1 = "native" | "standard" | "portable" | "provider" | "missing";
 
 /** 🪪️ Identifies the hosting runtime; `key` is stable text for cache keys and receipts, `executable` is what a parent spawns. */
 export interface RuntimeIdentityV1 { readonly id: RuntimeIdV1; readonly version: string; readonly revision: string; readonly key: string; readonly executable: string }
-
-/** 🚫️ Refusal raised when an adapter does not provide a requested family. */
-export class RuntimeCapabilityMissingV1 extends Error {
-  readonly family: RuntimeFamilyV1;
-  readonly runtime: RuntimeIdV1;
-  constructor(family: RuntimeFamilyV1, runtime: RuntimeIdV1) { super(`Runtime ${runtime} lacks capability ${family}`); this.name = "RuntimeCapabilityMissingV1"; this.family = family; this.runtime = runtime; }
-}
 
 /** 🌐️ Options of one glob scan. */
 export interface RuntimeGlobScanOptionsV1 { readonly cwd?: string; readonly dot?: boolean; readonly onlyFiles?: boolean; readonly absolute?: boolean; readonly followSymlinks?: boolean }
@@ -27,10 +20,12 @@ export interface RuntimeWhichOptionsV1 { readonly PATH?: string; readonly cwd?: 
 
 /** 🚀️ Describes how one standard stream of a child is wired. */
 export type RuntimeStdioV1 = "pipe" | "inherit" | "ignore";
+/** 🌊️ A web byte stream that is also async-iterable. */
+export type RuntimeByteStreamV1 = ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>;
 /** 🚀️ Options of one child process; `timeout` is a wall-clock budget in milliseconds. */
 export interface RuntimeSpawnOptionsV1 { readonly cwd?: string; readonly env?: Readonly<Record<string, string | undefined>>; readonly stdin?: RuntimeStdioV1 | string | Uint8Array; readonly stdout?: RuntimeStdioV1; readonly stderr?: RuntimeStdioV1; readonly timeout?: number; readonly signal?: AbortSignal; readonly detached?: boolean }
 /** 🚀️ One running child; streams are web streams so no runtime stream type leaks. */
-export interface RuntimeChildV1 { readonly pid: number; readonly exited: Promise<number>; readonly stdout: ReadableStream<Uint8Array>; readonly stderr: ReadableStream<Uint8Array>; readonly exitCode: number | null; kill(signal?: NodeJS.Signals | number): void }
+export interface RuntimeChildV1 { readonly pid: number; readonly exited: Promise<number>; readonly stdout: RuntimeByteStreamV1; readonly stderr: RuntimeByteStreamV1; readonly exitCode: number | null; kill(signal?: NodeJS.Signals | number): void }
 /** 🚀️ The outcome of one synchronous child. */
 export interface RuntimeSpawnSyncResultV1 { readonly exitCode: number | null; readonly signalCode: string | null; readonly success: boolean; readonly stdout: Buffer; readonly stderr: Buffer }
 
@@ -48,10 +43,12 @@ export interface RuntimeFileV1 { readonly path: string; exists(): Promise<boolea
 export type RuntimeSqliteValueV1 = string | number | bigint | boolean | null | Uint8Array;
 /** 🗃️ Options of one SQLite connection. */
 export interface RuntimeSqliteOptionsV1 { readonly readonly?: boolean; readonly create?: boolean; readonly readwrite?: boolean }
-/** 🗃️ One prepared statement; rows are plain objects or arrays. */
-export interface RuntimeSqliteStatementV1 { all(...parameters: unknown[]): any[]; get(...parameters: unknown[]): any; run(...parameters: unknown[]): unknown; values(...parameters: unknown[]): any[][]; finalize(): void }
+/** 🗃️ The effect of one write statement. */
+export interface RuntimeSqliteChangesV1 { readonly changes: number; readonly lastInsertRowid: number | bigint }
+/** 🗃️ One prepared statement; rows are plain objects or arrays and a missing row is `null`. */
+export interface RuntimeSqliteStatementV1<Row = any, Params extends any[] = any[]> { all(...parameters: Params): Row[]; get(...parameters: Params): Row | null; run(...parameters: Params): RuntimeSqliteChangesV1; values(...parameters: Params): any[][]; finalize(): void }
 /** 🗃️ One SQLite connection with the closed method set every framework caller uses. */
-export interface RuntimeSqliteDatabaseV1 { query(sql: string): RuntimeSqliteStatementV1; prepare(sql: string): RuntimeSqliteStatementV1; run(sql: string, ...parameters: unknown[]): unknown; exec(sql: string): unknown; transaction<T extends (...arguments_: any[]) => any>(body: T): T; close(throwOnError?: boolean): void }
+export interface RuntimeSqliteDatabaseV1 { query<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params>; prepare<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params>; run(sql: string, ...parameters: any[]): RuntimeSqliteChangesV1; exec(sql: string): unknown; transaction<T extends (...arguments_: any[]) => any>(body: T): T; close(throwOnError?: boolean): void }
 /** 🗃️ Constructor shape of the connection class a caller may instantiate. */
 export interface RuntimeSqliteConstructorV1 { new (path?: string, options?: RuntimeSqliteOptionsV1): RuntimeSqliteDatabaseV1 }
 
@@ -70,6 +67,7 @@ export interface RuntimeNativeCallbackV1 { readonly pointer: RuntimeNativePointe
 
 /** 🔌️ The native-binding surface as one object: type names, library loading, typed reads, buffer addresses and callbacks. */
 export interface RuntimeNativeSystemV1 {
+  toArrayBuffer(pointer: RuntimeNativePointerV1, byteOffset?: number, byteLength?: number): ArrayBuffer;
   readonly FFIType: Readonly<Record<RuntimeNativeTypeV1, RuntimeNativeTypeV1>>;
   dlopen<Symbols extends Readonly<Record<string, RuntimeNativeSymbolV1>>>(path: string, symbols: Symbols): RuntimeNativeLibraryV1<Symbols>;
   readonly read: RuntimeNativeReadV1;
@@ -87,7 +85,7 @@ export interface RuntimeImportRecordV1 { readonly path: string; readonly kind: "
 export interface RuntimeTranspilerV1 { transformSync(source: string, loader?: RuntimeLoaderV1): string; scan(source: string): { readonly exports: string[]; readonly imports: RuntimeImportRecordV1[] }; scanImports(source: string): RuntimeImportRecordV1[] }
 
 /** 📦️ One bundler plugin hook set. */
-export interface RuntimeBundleBuilderV1 { onResolve(constraints: { filter: RegExp; namespace?: string }, callback: (arguments_: { path: string; importer?: string; namespace?: string }) => { path: string; namespace?: string; external?: boolean } | undefined | void | Promise<{ path: string; namespace?: string; external?: boolean } | undefined | void>): void; onLoad(constraints: { filter: RegExp; namespace?: string }, callback: (arguments_: { path: string; namespace?: string }) => { contents?: string | Uint8Array; loader?: string; exports?: Record<string, unknown> } | undefined | void | Promise<{ contents?: string | Uint8Array; loader?: string; exports?: Record<string, unknown> } | undefined | void>): void }
+export interface RuntimeBundleBuilderV1 { onResolve(constraints: { filter: RegExp; namespace?: string }, callback: (arguments_: { path: string; importer: string; namespace: string }) => { path: string; namespace?: string; external?: boolean; loader?: string } | undefined | void | Promise<{ path: string; namespace?: string; external?: boolean; loader?: string } | undefined | void>): void; onLoad(constraints: { filter: RegExp; namespace?: string }, callback: (arguments_: { path: string; namespace: string; loader: string }) => { contents?: string | Uint8Array; loader?: string; exports?: Record<string, unknown> } | undefined | void | Promise<{ contents?: string | Uint8Array; loader?: string; exports?: Record<string, unknown> } | undefined | void>): void }
 /** 📦️ One bundler plugin. */
 export interface RuntimeBundlePluginV1 { readonly name: string; setup(builder: RuntimeBundleBuilderV1): void | Promise<void> }
 /** 📦️ Options of one bundle. */
@@ -96,6 +94,33 @@ export interface RuntimeBundleOptionsV1 { readonly entrypoints: readonly string[
 export interface RuntimeBundleOutputV1 { readonly path: string; readonly kind: string; text(): Promise<string>; bytes(): Promise<Uint8Array> }
 /** 📦️ The outcome of one bundle; failed builds carry messages in `logs`. */
 export interface RuntimeBundleResultV1 { readonly success: boolean; readonly metafile?: { readonly inputs: Readonly<Record<string, unknown>> }; readonly outputs: readonly RuntimeBundleOutputV1[]; readonly logs: readonly { readonly message: string; readonly level: string }[] }
+
+/** 🧪️ Matchers of one expectation; the closed subset the framework's own tests and lanes use. */
+export interface RuntimeMatchersV1 {
+  readonly not: RuntimeMatchersV1;
+  readonly resolves: RuntimeMatchersV1;
+  readonly rejects: RuntimeMatchersV1;
+  toBe(expected: unknown): void; toEqual(expected: unknown): void; toStrictEqual(expected: unknown): void; toMatchObject(expected: unknown): void;
+  toBeTruthy(): void; toBeFalsy(): void; toBeNull(): void; toBeUndefined(): void; toBeDefined(): void; toBeNaN(): void;
+  toBeGreaterThan(expected: number | bigint): void; toBeGreaterThanOrEqual(expected: number | bigint): void; toBeLessThan(expected: number | bigint): void; toBeLessThanOrEqual(expected: number | bigint): void; toBeCloseTo(expected: number, digits?: number): void;
+  toContain(expected: unknown): void; toContainEqual(expected: unknown): void; toHaveLength(expected: number): void; toHaveProperty(path: string, value?: unknown): void; toMatch(expected: RegExp | string): void; toBeInstanceOf(expected: Function): void;
+  toThrow(expected?: RegExp | string | Function): void;
+}
+/** 🧪️ One test body. */
+export type RuntimeTestBodyV1 = () => void | Promise<void>;
+/** 🧪️ Options of one test; a plain number is a timeout in milliseconds. */
+export type RuntimeTestOptionsV1 = number | { readonly timeout?: number };
+/** 🧪️ Declares tests; `skip`, `only` and `todo` are the closed variants. */
+export interface RuntimeTestFunctionV1 { (name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; skip(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; only(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; todo(name: string, body?: RuntimeTestBodyV1): void }
+/** 🧪️ The thin test API every runtime's test runner is projected onto. */
+export interface RuntimeTestApiV1 {
+  readonly test: RuntimeTestFunctionV1;
+  readonly describe: (name: string, body: () => void) => void;
+  readonly beforeAll: (body: RuntimeTestBodyV1) => void; readonly afterAll: (body: RuntimeTestBodyV1) => void; readonly beforeEach: (body: RuntimeTestBodyV1) => void; readonly afterEach: (body: RuntimeTestBodyV1) => void;
+  readonly expect: (actual: unknown, message?: string) => RuntimeMatchersV1;
+}
+/** 🧪️ Options of one test-runner invocation. */
+export interface RuntimeTestCommandOptionsV1 { readonly filter?: string; readonly timeoutMilliseconds?: number; readonly concurrency?: number }
 
 /** 🔢️ One adapter: every family, with `undefined` for a family the runtime lacks. */
 export interface RuntimeAdapterV1 {
@@ -111,16 +136,20 @@ export interface RuntimeAdapterV1 {
   spawn?(command: readonly string[], options?: RuntimeSpawnOptionsV1): RuntimeChildV1;
   spawnSync?(command: readonly string[], options?: RuntimeSpawnOptionsV1): RuntimeSpawnSyncResultV1;
   stdinText?(): Promise<string>;
-  stdinStream?(): ReadableStream<Uint8Array>;
+  stdinStream?(): RuntimeByteStreamV1;
   file?(path: string): RuntimeFileV1;
   serve?(options: RuntimeServeOptionsV1): Promise<RuntimeServerV1>;
   sqlite?(): RuntimeSqliteConstructorV1;
   ffiOpen?<Symbols extends Readonly<Record<string, RuntimeNativeSymbolV1>>>(path: string, symbols: Symbols): RuntimeNativeLibraryV1<Symbols>;
   ffiRead?(): RuntimeNativeReadV1;
   ffiPointer?(view: ArrayBufferView): RuntimeNativePointerV1;
+  ffiToArrayBuffer?(pointer: RuntimeNativePointerV1, byteOffset?: number, byteLength?: number): ArrayBuffer;
   ffiCallback?(body: (...arguments_: any[]) => any, signature: RuntimeNativeSymbolV1): RuntimeNativeCallbackV1;
   transpiler?(options?: RuntimeTranspilerOptionsV1): RuntimeTranspilerV1;
   bundle?(options: RuntimeBundleOptionsV1): Promise<RuntimeBundleResultV1>;
+  loaderPlugin?(plugin: RuntimeBundlePluginV1): void;
+  testApi?(): RuntimeTestApiV1;
+  testCommand?(files: readonly string[], options?: RuntimeTestCommandOptionsV1): readonly string[];
   semverSatisfies?(version: string, range: string): boolean;
   semverOrder?(left: string, right: string): -1 | 0 | 1;
   main?(metaUrl: string): boolean;

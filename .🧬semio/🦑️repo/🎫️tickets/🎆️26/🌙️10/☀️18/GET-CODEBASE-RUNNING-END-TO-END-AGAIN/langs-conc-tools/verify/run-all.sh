@@ -14,7 +14,7 @@ suite() {
   LC_ROOT="$OV" nice -n 10 bun test "$@" >"$out" 2>&1
   printf '%-34s %s\n' "$name" "$(/usr/bin/grep -E '^ *[0-9]+ (pass|fail)$' "$out" | tr -s ' \n' ' ')"
 }
-suite toolchains-contract "./$P/🏗️build/🧰️toolchains/🧪️tests/🟦️.ts"
+suite toolchains-contract "./$P/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🧪️tests/🟦️.ts"
 suite native-provisioning "./$L/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts"
 suite bazel-native-classes "./$BZ/🧰️toolchains/🧪️tests/🟦️.ts"
 suite bazel-go "./$BZ/🐹️go/🧪️tests/🟦️.ts"

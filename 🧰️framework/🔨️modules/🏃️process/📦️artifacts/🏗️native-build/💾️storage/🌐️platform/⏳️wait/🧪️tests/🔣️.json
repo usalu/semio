@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": false,
+      "parent": null,
+      "failure": null,
+      "id": "continue-queued",
+      "expected": "acquired"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": null,
+      "id": "withdraw-funded",
+      "expected": "withdrawn"
+    },
+    {
+      "resource": "other",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": null,
+      "id": "unrelated-progress-never-observes",
+      "expected": "acquired"
+    },
+    {
+      "resource": "image",
+      "observer": false,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": null,
+      "id": "ordinary-request-no-observer",
+      "expected": "acquired"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": "before",
+      "failure": null,
+      "id": "original-cancellation-before-observe",
+      "expected": "parent"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": "after",
+      "failure": null,
+      "id": "original-cancellation-wins-withdrawal",
+      "expected": "parent"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": "deadline",
+      "failure": null,
+      "id": "original-deadline-stays-primary",
+      "expected": "parent"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": "identity",
+      "id": "physical-identity-refuses",
+      "expected": "identity"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": false,
+      "parent": null,
+      "failure": "undefined",
+      "id": "thrown-undefined-stays-primary",
+      "expected": "undefined"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": "queue",
+      "id": "queue-cleanup-failure-stays-primary",
+      "expected": "queue"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": 1,
+      "parent": null,
+      "failure": null,
+      "id": "nonboolean-observer-refuses",
+      "expected": "boolean"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": -1,
+      "decision": true,
+      "parent": null,
+      "failure": null,
+      "id": "negative-space-refuses",
+      "expected": "space"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 9007199254740992,
+      "decision": true,
+      "parent": null,
+      "failure": null,
+      "id": "unsafe-space-refuses",
+      "expected": "space"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": false,
+      "parent": "acquired",
+      "failure": null,
+      "id": "late-parent-cancellation-releases-acquired-writer",
+      "expected": "parent"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": false,
+      "parent": "acquired",
+      "failure": "release",
+      "id": "late-parent-and-release-error-retained",
+      "expected": "release"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": false,
+      "parent": null,
+      "failure": "pending-parent",
+      "id": "interrupted-observation-is-joined",
+      "expected": "parent"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": "late-withdraw",
+      "id": "late-owned-withdrawal-releases-acquired-writer",
+      "expected": "withdrawn"
+    },
+    {
+      "resource": "image",
+      "observer": true,
+      "availableBytes": 1073741824,
+      "decision": true,
+      "parent": null,
+      "failure": "late-withdraw-release",
+      "id": "late-owned-withdrawal-release-failure-retained",
+      "expected": "queue"
+    }
+  ],
+  "backends": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts",
+      "creator": "createPersistentImage",
+      "facts": "verifyPersistentFacts",
+      "control": "actual"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+      "creator": "createFixedReceiverImage",
+      "facts": "captureFixedReceiverFacts",
+      "control": "maintenanceControl"
+    }
+  ]
+}

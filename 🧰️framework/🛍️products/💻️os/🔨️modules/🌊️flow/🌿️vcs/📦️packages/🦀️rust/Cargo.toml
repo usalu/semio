@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

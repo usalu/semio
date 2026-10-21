@@ -33,5 +33,6 @@ semio-framework-value-persistent = { path = "../../../../🌱️value/📋️lis
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-tool-run = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }

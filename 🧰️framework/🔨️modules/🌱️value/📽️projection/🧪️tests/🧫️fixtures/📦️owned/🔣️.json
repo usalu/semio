@@ -81,5 +81,95 @@
       "payload": 0,
       "spent": 8
     }
+  ],
+  "outputHandoffs": [
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 8,
+      "copyBudget": 16,
+      "depth": 1,
+      "admitted": true,
+      "retained": false
+    },
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": true,
+      "items": 0,
+      "outputBytes": 8,
+      "copyBudget": 16,
+      "depth": 1,
+      "admitted": false,
+      "retained": true
+    },
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 8,
+      "copyBudget": 15,
+      "depth": 1,
+      "admitted": false,
+      "retained": true
+    },
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 8,
+      "copyBudget": 16,
+      "depth": 0,
+      "admitted": false,
+      "retained": true
+    },
+    {
+      "ready": false,
+      "closing": false,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 8,
+      "copyBudget": 16,
+      "depth": 1,
+      "admitted": false,
+      "retained": true
+    },
+    {
+      "ready": true,
+      "closing": true,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 8,
+      "copyBudget": 16,
+      "depth": 1,
+      "admitted": false,
+      "retained": true
+    },
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": false,
+      "items": 1,
+      "outputBytes": 16,
+      "copyBudget": 32,
+      "depth": 1,
+      "admitted": false,
+      "retained": false
+    },
+    {
+      "ready": true,
+      "closing": false,
+      "hasOutput": true,
+      "items": 1,
+      "outputBytes": 0,
+      "copyBudget": 0,
+      "depth": 1,
+      "admitted": true,
+      "retained": false
+    }
   ]
 }

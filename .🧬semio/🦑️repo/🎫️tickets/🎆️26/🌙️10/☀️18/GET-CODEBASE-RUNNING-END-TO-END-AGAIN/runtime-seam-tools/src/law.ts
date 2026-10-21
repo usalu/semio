@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isMainModuleV1, runtimeSpawnSyncV1 } from "../🟦️.ts";
+import { maskSourceV1 } from "../🪶️portable/🔬️source/🟦️.ts";
 
 /** ⚖️ Names the rule a finding breaks: the global `Bun`, a `bun` module specifier, `process.versions.bun`, a Bun-only `import.meta` member, or the same inside an embedded template payload. */
 export type RuntimeLawRuleV1 = "Bun" | "specifier" | "process.versions.bun" | "import.meta" | "embedded";
@@ -18,62 +19,9 @@ const CODE_RULES: readonly (readonly [RuntimeLawRuleV1, RegExp])[] = [
   ["import.meta", /import\s*\.\s*meta\s*\.\s*(?:dir|path|main)(?![\w$])/gu],
 ];
 const EMBEDDED_RULES: readonly RegExp[] = [/(?<![\w$])Bun\.[A-Za-z_$]/gu, /process\s*\.\s*versions\s*\.\s*bun/gu, /import\s*\.\s*meta\s*\.\s*(?:dir|path|main)(?![\w$])/gu, /["'`]bun:[a-z]+["'`]/gu];
-const REGEX_PREVIOUS = /[(,=:[!&|?{};+\-*%<>~^]$/u;
-const REGEX_KEYWORDS = /(?:^|[^\w$])(?:return|typeof|case|do|else|in|of|void|delete|throw|new|yield|await)$/u;
-
-/** 🔬️ Masks comments and string contents of one source so rules see code only, and collects template bodies for the embedded rule. */
-function mask(source: string): { readonly code: string; readonly specifiers: { index: number; value: string }[]; readonly templates: { index: number; body: string }[] } {
-  const output = source.split("");
-  const specifiers: { index: number; value: string }[] = [], templates: { index: number; body: string }[] = [];
-  const blank = (from: number, to: number): void => { for (let at = from; at < to; at++) if (output[at] !== "\n" && output[at] !== "\r") output[at] = " "; };
-  let index = 0;
-  const scanCode = (stopAtBrace: boolean): void => {
-    let depth = 0, previous = "";
-    while (index < source.length) {
-      const character = source[index]!, next = source[index + 1];
-      if (character === "/" && next === "/") { const end = source.indexOf("\n", index); const stop = end < 0 ? source.length : end; blank(index, stop); index = stop; continue; }
-      if (character === "/" && next === "*") { const end = source.indexOf("*/", index + 2); const stop = end < 0 ? source.length : end + 2; blank(index, stop); index = stop; continue; }
-      if (character === '"' || character === "'") {
-        const start = index++;
-        while (index < source.length && source[index] !== character && source[index] !== "\n") { if (source[index] === "\\") index++; index++; }
-        const value = source.slice(start + 1, index);
-        if (SPECIFIER.test(value)) specifiers.push({ index: start, value });
-        blank(start + 1, index); index++; previous = "x"; continue;
-      }
-      if (character === "`") {
-        const start = index++;
-        let bodyStart = index;
-        const parts: string[] = [];
-        while (index < source.length && source[index] !== "`") {
-          if (source[index] === "\\") { index += 2; continue; }
-          if (source[index] === "$" && source[index + 1] === "{") {
-            parts.push(source.slice(bodyStart, index)); blank(bodyStart, index);
-            index += 2; scanCode(true); bodyStart = index; continue;
-          }
-          index++;
-        }
-        parts.push(source.slice(bodyStart, index)); blank(bodyStart, index);
-        templates.push({ index: start, body: source.slice(start + 1, index) });
-        index++; previous = "x"; continue;
-      }
-      if (character === "/" && (previous === "" || REGEX_PREVIOUS.test(previous) || REGEX_KEYWORDS.test(previous))) {
-        const start = index++;
-        let inClass = false;
-        while (index < source.length && source[index] !== "\n") { const c = source[index]!; if (c === "\\") { index += 2; continue; } if (c === "[") inClass = true; else if (c === "]") inClass = false; else if (c === "/" && !inClass) break; index++; }
-        blank(start + 1, index); index++; previous = "x"; continue;
-      }
-      if (stopAtBrace) { if (character === "{") depth++; else if (character === "}") { if (depth === 0) { index++; return; } depth--; } }
-      if (!/\s/u.test(character)) previous = (previous + character).slice(-24);
-      index++;
-    }
-  };
-  scanCode(false);
-  return { code: output.join(""), specifiers, templates };
-}
-
 /** 🔍️ Finds every place one source names a specific runtime. */
 export function scanRuntimeLawSourceV1(source: string): RuntimeLawFindingV1[] {
-  const { code, specifiers, templates } = mask(source), starts: number[] = [0];
+  const masked = maskSourceV1(source), code = masked.code, specifiers = masked.strings.filter(row => SPECIFIER.test(row.value)).map(row => ({ index: row.start, value: row.value })), templates = masked.templates.map(row => ({ index: row.start, body: row.body })), starts: number[] = [0];
   for (let at = 0; at < source.length; at++) if (source[at] === "\n") starts.push(at + 1);
   const where = (index: number): { line: number; column: number } => { let low = 0, high = starts.length - 1; while (low < high) { const middle = (low + high + 1) >> 1; if (starts[middle]! <= index) low = middle; else high = middle - 1; } return { line: low + 1, column: index - starts[low]! + 1 }; };
   const findings: RuntimeLawFindingV1[] = [];

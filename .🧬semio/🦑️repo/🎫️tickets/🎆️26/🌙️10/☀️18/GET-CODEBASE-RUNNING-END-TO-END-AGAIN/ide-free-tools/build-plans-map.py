@@ -89,6 +89,8 @@ def fm(f):
     name = re.search(r"^name:\s*(.*)$", head, re.M); ov = re.search(r"^overview:\s*(.*)$", head, re.M)
     return ((name.group(1) if name else "").strip().strip('"'), (ov.group(1) if ov else "").strip().strip('"'))
 
+TODAY = datetime.date.today()
+ARCHIVE_DIR = f"{TICKETS}/🎆️{TODAY:%y}/🌙️{TODAY:%m}/☀️{TODAY:%d}/ARCHIVED-CURSOR-PLANS-WITHOUT-TICKET"
 entries, archives, edits = [], {}, []
 used = collections.defaultdict(set)
 for f in allplans:
@@ -108,17 +110,7 @@ for f in allplans:
         if len(dirs) > 1: raise SystemExit("ambiguous " + f + " " + str(dirs))
         e.update(kind="move", ticket=dirs[0], dest=dirs[0] + "/" + base, evidence=ev)
     else:
-        name, ov = fm(f)
-        day = addlog.get(f) or datetime.date.fromtimestamp(os.stat(os.path.join(ROOT, f)).st_mtime).isoformat()
-        y, mo, d = day.split("-"); slug = archive_slug(name or prefix[:-9])
-        base_dir = f"{TICKETS}/🎆️{y[2:]}/🌙️{mo}/☀️{d}"
-        if slug in slugdirs or slug in used[base_dir]: slug = (slug[:50].rsplit("-", 1)[0] + "-" + pid.upper())[:60]
-        used[base_dir].add(slug); tdir = f"{base_dir}/{slug}"
-        doc = {"title": titleize(name or prefix), "emoji": "🗺️", "status": "closed", "description": ov or (name or prefix),
-               "summary": f"Archived the plan {base} as its own ticket when the retired .cursor/plans source was removed from the repository.",
-               "goal": GOAL, "plan": {"client": "cursor", "id": pid, "local": base}}
-        archives[tdir] = doc
-        e.update(kind="archive", ticket=tdir, dest=tdir + "/" + base, evidence="none: own archive ticket dated " + day)
+        e.update(kind="archive", ticket=ARCHIVE_DIR, dest=ARCHIVE_DIR + "/" + base, evidence="none: the one archive ticket")
     entries.append(e)
 for f in sorted(os.listdir(os.path.join(ROOT, ".codex", "plans"))) if os.path.isdir(os.path.join(ROOT, ".codex", "plans")) else []:
     d = slugdirs["DECLARATIVE-SPATIAL-ACTIONS"][0]
@@ -131,6 +123,13 @@ for e in entries:
         text = open(os.path.join(ROOT, e["ticket"], "🎫️ticket.json"), encoding="utf-8", newline="").read()
         m = re.search(r'^(\s*)"source":\s*"((?:[^"\\]|\\.)*)"', text, re.M)
         edits.append({"path": e["ticket"] + "/🎫️ticket.json", "old": m.group(0), "new": m.group(1) + '"local": ' + json.dumps(os.path.basename(e["dest"]), ensure_ascii=False)})
+n_arch = sum(1 for e in entries if e["kind"] == "archive")
+if n_arch:
+    if ARCHIVE_DIR.rsplit("/", 1)[1] in slugdirs: raise SystemExit("archive slug exists")
+    archives[ARCHIVE_DIR] = {"title": "Archived Cursor Plans Without Ticket", "emoji": "🗺️", "status": "closed",
+        "description": f"The {n_arch} Cursor plans that sat in the retired .cursor/plans directory without any ticket evidence (no ticket.json plan reference, no ticket named in the plan). Each stays a ticket-owned file of this folder under its original name, <name>_<id>.plan.md.",
+        "summary": f"Archived {n_arch} plans out of the retired .cursor/plans source into this ticket when the directory was removed from the repository.",
+        "goal": GOAL}
 out = {"version": 1, "goal": GOAL, "entries": entries, "archiveTickets": archives, "ticketEdits": edits}
 json.dump(out, open(os.path.join(HERE, "staged", "plans-map.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 k = collections.Counter(e["kind"] for e in entries)

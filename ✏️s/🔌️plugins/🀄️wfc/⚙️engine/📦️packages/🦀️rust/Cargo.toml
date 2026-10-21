@@ -26,14 +26,12 @@ semio-framework-job-worker = { path = "../../../../../../🧰️framework/🔨�
 semio-framework-job-worker-authority = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
 semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-graph-engine = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
 semio-s-plugin-wfc-engine-oracle = { path = "../../🧿️oracle/📦️packages/🦀️rust" }

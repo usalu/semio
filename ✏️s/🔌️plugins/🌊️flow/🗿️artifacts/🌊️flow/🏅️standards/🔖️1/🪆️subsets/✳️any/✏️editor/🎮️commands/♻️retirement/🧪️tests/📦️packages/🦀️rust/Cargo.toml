@@ -48,9 +48,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-flow-flow-config = { path = "../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-editor-leaves = { path = "../../../../🔗️connect-media-ports/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-editor = { path = "../../../../../📦️packages/🦀️rust" }
@@ -69,6 +66,8 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio_framework_ui_contract = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

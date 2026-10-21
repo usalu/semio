@@ -1,379 +1,491 @@
-/** 🔷️ Whole-workspace TypeScript project behind `verify typescript`: roots are listed from the live checkout, so no frozen list can go stale.
- * The check runs the TypeScript compiler API in a child process (this very module, executed by Node) instead of `tsc`, because `tsc` reports only syntax errors as soon as one file anywhere in the program fails to parse. The child reports the syntax errors of every file and still type-checks every file that parsed, so the count stays meaningful while a peer's edit is half applied.
- * An application whose generated ambient file (`next-env.d.ts`) the workspace excludes is type-checked by its own `tsconfig.json` after the workspace program, and its diagnostics count; an excluded ambient file without such a project is refused.
- * @see 📜️script.ts
- */
+// 🔬️ Tests of the workspace domain, split out of the pre-split godfile suite.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { totalmem } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import type ts from "typescript";
-import { spawnToolSyncV1, spawnToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+package workspace
 
-//#region 🔖️TypescriptProject
-/** 🎚️ Which roots the generated project lists: every checked-in or untracked-but-not-ignored source, optionally narrowed. */
-export type TypescriptProjectSelection = {
-  readonly scopes: readonly string[];
-  readonly changedOnly: boolean;
-  readonly listed?: readonly string[];
-};
+import (
+	"encoding/json"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+	"unicode/utf16"
+)
 
-/** 🧭️ The parsed `verify typescript <project|check>` flags. */
-export type TypescriptProjectArguments = {
-  readonly selection: TypescriptProjectSelection;
-  readonly out: string | undefined;
-  readonly filesFrom: string | undefined;
-  readonly heapMegabytes: number | undefined;
-  readonly timeoutMinutes: number;
-  readonly maximumDiagnostics: number;
-  readonly list: boolean;
-};
+// 🧭️FixtureOrigin is the directory of the module under test. The external sandbox `TestMain` assigns it from `sandbox.Origin`, because this package cannot import the sandbox without a cycle.
+var FixtureOrigin string
 
-/** 📊️ What a `tsc` run reported: the total, the files carrying at least one diagnostic and the per-code histogram. */
-export type TypescriptDiagnosticSummary = {
-  readonly total: number;
-  readonly files: number;
-  readonly byCode: Readonly<Record<string, number>>;
-};
+func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
+	root := t.TempDir()
+	previous := GetRootDir()
+	SetRootDir(root)
+	t.Cleanup(func() { SetRootDir(previous) })
 
-/** 📑️ One file whose source does not parse: the file, how many syntax errors it carries and the first one in `tsc` spelling. */
-export type TypescriptSyntaxFile = {
-  readonly file: string;
-  readonly count: number;
-  readonly first: string;
-};
-
-/** 🏷️ The first argument that makes this module act as the type-check child instead of a library. */
-const TYPESCRIPT_CHECK_FLAG = "--typescript-check";
-
-/** 🏷️ The tool prefix of every line this command prints. */
-const TYPESCRIPT_TAG = "[verify typescript]";
-
-/** 🧩️ The ambient declaration shims the workspace resolves by `paths`, kept only while their target file exists. */
-const TYPESCRIPT_AMBIENT_PATHS: Readonly<Record<string, string>> = {
-  "dom-accessibility-api": "node_modules/dom-accessibility-api/dist/index.d.ts",
-  "fast-json-stable-stringify": "🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🔤️fast-json-stable-stringify/🟦️.d.ts",
-  "lines-and-columns": "node_modules/lines-and-columns/build/index.d.ts",
-};
-
-/** 🔎️ A `tsc` diagnostic that names a file: `path(line,column): error TS1234: message` starting in column zero. */
-const FILE_DIAGNOSTIC = /^(?<file>[^\s(][^\n]*?)\((?<line>\d+),(?<column>\d+)\): error (?<code>TS\d+): /;
-
-/** 🌐️ A `tsc` diagnostic without a file: `error TS6053: message` (program options, missing root files). */
-const GLOBAL_DIAGNOSTIC = /^error (?<code>TS\d+): /;
-
-/** 🛤️ Repo-relative POSIX form of a path, the only spelling roots and scopes use. */
-function posixPath(path: string): string {
-  return path.replaceAll("\\", "/");
+	got := GetRepoMetaDir()
+	want := filepath.Join(root, ".🧬semio", "🦑️repo")
+	if got != want {
+		t.Fatalf("GetRepoMetaDir() = %q, want %q", got, want)
+	}
+	if strings.Contains(got, ".🦑️repo") {
+		t.Fatalf("GetRepoMetaDir() retained legacy path: %q", got)
+	}
 }
 
-/** 🎯️ Validates one `--scope` value: a repo-relative folder or file prefix that stays inside the checkout. */
-function normalizeScope(value: string): string {
-  const scope = posixPath(value).replace(/^\.\//, "").replace(/\/+$/, "");
-  if (scope === "" || isAbsolute(scope) || /^[A-Za-z]:/.test(scope) || scope.split("/").includes("..")) throw new Error(`${TYPESCRIPT_TAG} --scope must be a repo-relative path inside the checkout, got ${JSON.stringify(value)}`);
-  return scope;
+func TestMatchesIgnorePatternDirectoryCoverage(t *testing.T) {
+	cases := []struct {
+		name    string
+		path    string
+		isDir   bool
+		pattern string
+		want    bool
+	}{
+		{"dir by recursive pattern", "node_modules", true, "**/node_modules/**", true},
+		{"nested file by recursive pattern", "a/node_modules/pkg/index.js", false, "**/node_modules/**", true},
+		{"dir mismatch", "src", true, "**/node_modules/**", false},
+		{"exact dir pattern", "dist", true, "dist/**", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := matchesIgnorePattern(tc.path, tc.isDir, tc.pattern)
+			if got != tc.want {
+				t.Fatalf("matchesIgnorePattern(%q, %t, %q) = %t, want %t", tc.path, tc.isDir, tc.pattern, got, tc.want)
+			}
+		})
+	}
 }
 
-/** 🔧️ Parses the flags of `project` and `check`; unknown flags fail loudly. */
-export function parseTypescriptProjectArguments(args: readonly string[]): TypescriptProjectArguments {
-  const scopes: string[] = [];
-  let changedOnly = false, out: string | undefined, filesFrom: string | undefined, heapMegabytes: number | undefined, timeoutMinutes = 180, maximumDiagnostics = 0, list = false;
-  for (let index = 0; index < args.length; index++) {
-    const flag = args[index]!;
-    const value = (): string => {
-      const next = args[++index];
-      if (next === undefined || next.startsWith("--")) throw new Error(`${TYPESCRIPT_TAG} ${flag} needs a value`);
-      return next;
-    };
-    const count = (minimum: number): number => {
-      const text = value(), parsed = Number(text);
-      if (!Number.isInteger(parsed) || parsed < minimum) throw new Error(`${TYPESCRIPT_TAG} ${flag} needs an integer of at least ${minimum}, got ${JSON.stringify(text)}`);
-      return parsed;
-    };
-    if (flag === "--scope") scopes.push(normalizeScope(value()));
-    else if (flag === "--changed") changedOnly = true;
-    else if (flag === "--out") out = value();
-    else if (flag === "--files-from") filesFrom = value();
-    else if (flag === "--heap-mb") heapMegabytes = count(1024);
-    else if (flag === "--timeout-minutes") timeoutMinutes = count(1);
-    else if (flag === "--max-diagnostics") maximumDiagnostics = count(0);
-    else if (flag === "--list") list = true;
-    else throw new Error(`${TYPESCRIPT_TAG} unknown flag ${JSON.stringify(flag)} (expected --scope <path>, --changed, --files-from <list>, --out <file>, --heap-mb <n>, --timeout-minutes <n>, --max-diagnostics <n>, --list)`);
-  }
-  return { selection: { scopes, changedOnly }, out, filesFrom, heapMegabytes, timeoutMinutes, maximumDiagnostics, list };
+func TestGlobByExtensionSkipsIgnoredDirectoryRoot(t *testing.T) {
+	tempRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tempRoot, "src"), 0755); err != nil {
+		t.Fatalf("failed to create src dir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(tempRoot, "node_modules", "pkg"), 0755); err != nil {
+		t.Fatalf("failed to create node_modules dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempRoot, "src", "kept.go"), []byte("package src\n"), 0644); err != nil {
+		t.Fatalf("failed to create kept.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempRoot, "node_modules", "pkg", "ignored.go"), []byte("package pkg\n"), 0644); err != nil {
+		t.Fatalf("failed to create ignored.go: %v", err)
+	}
+
+	files, err := GlobByExtension(tempRoot, "**/*", []string{"go"}, []string{"**/node_modules/**"}, false)
+	if err != nil {
+		t.Fatalf("globByExtension failed: %v", err)
+	}
+	if len(files) != 1 || files[0] != "src/kept.go" {
+		t.Fatalf("expected only src/kept.go, got %v", files)
+	}
 }
 
-/** 📚️ Runs `git` read-only in the checkout and returns its NUL-separated records. */
-function gitRecords(root: string, args: readonly string[]): string[] {
-  const result = spawnToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: root, encoding: "utf8", maxBuffer: 1 << 29, shell: false });
-  if (result.error || result.status !== 0) throw new Error(`${TYPESCRIPT_TAG} git ${args.join(" ")} failed: ${result.error?.message ?? result.stderr}`);
-  return result.stdout.split("\0").filter((record) => record !== "");
+func TestFlat(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"repo", "repo"},
+		{"Design.tsx", "designtsx"},
+		{".devcontainer", "devcontainer"},
+		{"devcontainer.json", "devcontainerjson"},
+		{"RUNNING-SKETCHPAD", "runningsketchpad"},
+		{"R26-02-1", "r26021"},
+		{"compose.ts", "composets"},
+		{"State Managment", "statemanagment"},
+		{"createSketchpadStore", "createsketchpadstore"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.input, func(t *testing.T) {
+			got := Flat(tc.input)
+			if got != tc.expected {
+				t.Errorf("Flat(%q): expected %q, got %q", tc.input, tc.expected, got)
+			}
+		})
+	}
 }
 
-/** 📥️ Every TypeScript source of the live checkout: tracked or untracked-but-not-ignored, and present on disk. */
-export function listTypescriptWorkspaceSources(root: string): string[] {
-  const records = gitRecords(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "*.ts", "*.tsx"]);
-  return [...new Set(records.map(posixPath))].filter((path) => existsSync(join(root, path)));
+func TestPathToUriPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want string
+	}{
+		{"compose/js/src", "compose/js/src"},
+		{"repo/client/main.go", "repo/client/main.go"},
+		{"test.txt", "test.txt"},
+		{"a b/c d", "a%20b/c%20d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			if got := PathToUriPath(tt.path); got != tt.want {
+				t.Errorf("PathToUriPath(%q) = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
 }
 
-/** 🩹️ The sources that differ from `HEAD` (modified, added or untracked): the roots of a "what did my edit break" run. */
-export function listTypescriptChangedSources(root: string): string[] {
-  const changed = [...gitRecords(root, ["diff", "-z", "--name-only", "HEAD", "--", "*.ts", "*.tsx"]), ...gitRecords(root, ["ls-files", "-z", "--others", "--exclude-standard", "--", "*.ts", "*.tsx"])];
-  return [...new Set(changed.map(posixPath))].filter((path) => existsSync(join(root, path)));
+func TestPathFromUriPath(t *testing.T) {
+	tests := []struct {
+		uriPath string
+		want    string
+	}{
+		{"compose/js/src", "compose/js/src"},
+		{"repo/client/main.go", "repo/client/main.go"},
+		{"a%20b/c%20d", "a b/c d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.uriPath, func(t *testing.T) {
+			if got := PathFromUriPath(tt.uriPath); got != tt.want {
+				t.Errorf("PathFromUriPath(%q) = %q, want %q", tt.uriPath, got, tt.want)
+			}
+		})
+	}
 }
 
-/** 🚫️ The `exclude` patterns of the root `tsconfig.json`, the single place the workspace declares what is not source. */
-export function readTypescriptWorkspaceExcludes(root: string): string[] {
-  const document = Bun.JSONC.parse(readFileSync(join(root, "tsconfig.json"), "utf8")) as { exclude?: unknown };
-  if (!Array.isArray(document.exclude) || !document.exclude.every((entry): entry is string => typeof entry === "string")) throw new Error(`${TYPESCRIPT_TAG} tsconfig.json must declare an exclude list of strings`);
-  return document.exclude.map(posixPath);
+func TestTitleizeSlug(t *testing.T) {
+	tests := []struct {
+		name string
+		slug string
+		want string
+	}{
+		{"single word", "code", "Code"},
+		{"two words", "inline-comment", "Inline Comment"},
+		{"three words", "missing-region-marker", "Missing Region Marker"},
+		{"already titleized", "Code", "Code"},
+		{"uppercase input", "CODE", "Code"},
+		{"empty", "", ""},
+		{"single char", "a", "A"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := TitleizeSlug(tt.slug)
+			if got != tt.want {
+				t.Errorf("TitleizeSlug(%q) = %q, want %q", tt.slug, got, tt.want)
+			}
+		})
+	}
 }
 
-/** 🧹️ Whether the same rules `tsc` applies to `exclude` drop a path: a pattern excludes the match itself and everything below it. */
-function excluder(patterns: readonly string[]): (path: string) => boolean {
-  const globs = patterns.map((pattern) => new Bun.Glob(pattern.replace(/^\.\//, "")));
-  const folders = new Map<string, boolean>();
-  const folderExcluded = (folder: string): boolean => {
-    if (folder === "" || folder === ".") return false;
-    const known = folders.get(folder);
-    if (known !== undefined) return known;
-    const slash = folder.lastIndexOf("/");
-    const excluded = folderExcluded(slash < 0 ? "" : folder.slice(0, slash)) || globs.some((glob) => glob.match(folder));
-    folders.set(folder, excluded);
-    return excluded;
-  };
-  return (path) => {
-    const slash = path.lastIndexOf("/");
-    return folderExcluded(slash < 0 ? "" : path.slice(0, slash)) || globs.some((glob) => glob.match(path));
-  };
+func TestStatutePathToIdValue(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"single segment", "code", "Code"},
+		{"two segments", "code/inline-comment", "Code#Inline Comment"},
+		{"three segments", "code/file/missing-header-region", "Code#File#Missing Header Region"},
+		{"four segments", "code/header/region/nested", "Code#Header#Region#Nested"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := StatutePathToIdValue(tt.path)
+			if got != tt.want {
+				t.Errorf("StatutePathToIdValue(%q) = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
 }
 
-/** 🧲️ The sorted, deduplicated roots a selection keeps out of the listed sources; a `name.d.ts` next to `name.ts` or `name.tsx` is shadowed, as TypeScript resolves it. */
-export function selectTypescriptRoots(sources: readonly string[], excludes: readonly string[], selection: TypescriptProjectSelection, changed: readonly string[]): string[] {
-  const excluded = excluder(excludes), changedSet = new Set(changed), listedSet = selection.listed === undefined ? null : new Set(selection.listed);
-  const included = new Set([...new Set(sources)].filter((path) => !excluded(path)));
-  const shadowed = (path: string): boolean => path.endsWith(".d.ts") && (included.has(`${path.slice(0, -5)}.ts`) || included.has(`${path.slice(0, -5)}.tsx`));
-  const kept = [...included].filter((path) => !shadowed(path) && (!selection.changedOnly || changedSet.has(path)) && (listedSet === null || listedSet.has(path)) && (selection.scopes.length === 0 || selection.scopes.some((scope) => path === scope || path.startsWith(`${scope}/`))));
-  return kept.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+func TestStatuteIdValueToPath(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{"single segment", "Code", "code"},
+		{"two segments", "Code#Inline Comment", "code/inline-comment"},
+		{"three segments", "Code#File#Missing Header Region", "code/file/missing-header-region"},
+		{"four segments", "Code#Header#Region#Nested", "code/header/region/nested"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := StatuteIdValueToPath(tt.value)
+			if got != tt.want {
+				t.Errorf("StatuteIdValueToPath(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
 }
 
-/** 🧭️ An application the workspace program leaves out because a generated ambient file would leak into every other package, checked by its own `tsconfig.json` instead. */
-export type TypescriptAppProject = {
-  readonly folder: string;
-  readonly project: string;
-};
-
-/** 🏷️ The generated ambient declaration file of an application that is excluded from the workspace program (Next writes it next to the app's `tsconfig.json`). */
-const TYPESCRIPT_APP_AMBIENT_FILE = "next-env.d.ts";
-
-/** 📱️ The applications whose ambient file is excluded from the workspace program: each must carry its own `tsconfig.json`, so no project stays silently unchecked. */
-export function listTypescriptAppProjects(root: string, sources: readonly string[], excludes: readonly string[]): TypescriptAppProject[] {
-  const excluded = excluder(excludes), projects: TypescriptAppProject[] = [];
-  for (const path of [...new Set(sources)].sort()) {
-    if (path.split("/").pop() !== TYPESCRIPT_APP_AMBIENT_FILE || !excluded(path)) continue;
-    const slash = path.lastIndexOf("/"), folder = slash < 0 ? "" : path.slice(0, slash), project = folder === "" ? "tsconfig.json" : `${folder}/tsconfig.json`;
-    if (!existsSync(join(root, project))) throw new Error(`${TYPESCRIPT_TAG} ${path} is excluded from the workspace program but ${project} does not exist, so nothing would type-check the application`);
-    projects.push({ folder, project });
-  }
-  return projects;
+func TestStatutePathIdValueRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"single segment", "code"},
+		{"two segments", "code/inline-comment"},
+		{"three segments", "code/file/missing-header-region"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idValue := StatutePathToIdValue(tt.path)
+			gotPath := StatuteIdValueToPath(idValue)
+			if gotPath != tt.path {
+				t.Errorf("round trip failed: path %q -> idValue %q -> path %q", tt.path, idValue, gotPath)
+			}
+		})
+	}
 }
 
-/** 🎯️ Whether a selection reaches an application: an unrestricted run always does; scopes, a root list and a changed-only run do when they touch its folder. */
-export function selectsTypescriptAppProject(app: TypescriptAppProject, selection: TypescriptProjectSelection, changed: readonly string[]): boolean {
-  const inside = (path: string): boolean => app.folder === "" || path === app.folder || path.startsWith(`${app.folder}/`);
-  if (selection.listed !== undefined) return selection.listed.some(inside);
-  if (selection.changedOnly) return changed.some(inside);
-  return selection.scopes.length === 0 || selection.scopes.some((scope) => inside(scope) || app.folder === scope || app.folder.startsWith(`${scope}/`));
+func TestSetRootDirResetsGitignoreCache(t *testing.T) {
+	tmpDirA := t.TempDir()
+	tmpDirB := t.TempDir()
+	oldRoot := GetRootDir()
+	defer func() { SetRootDir(oldRoot) }()
+	SetRootDir(tmpDirA)
+	_ = IsGitIgnored("any.txt")
+	os.WriteFile(filepath.Join(tmpDirB, ".gitignore"), []byte("node_modules/\n"), 0644)
+	SetRootDir(tmpDirB)
+	ignored := IsGitIgnored(filepath.Join(tmpDirB, "node_modules", "x.ts"))
+	if !ignored {
+		t.Error("expected SetRootDir to refresh gitignore cache for new root")
+	}
 }
 
-/** 🧾️ The generated `tsconfig`: relative paths only, `extends` the root project, `files` is the whole root list. */
-export function typescriptProjectDocument(roots: readonly string[], toRoot: string, existingPaths: Readonly<Record<string, string>>): Record<string, unknown> {
-  const prefix = toRoot === "" ? "" : `${posixPath(toRoot)}/`;
-  return {
-    extends: `${prefix}tsconfig.json`,
-    compilerOptions: {
-      allowImportingTsExtensions: true,
-      noEmit: true,
-      skipLibCheck: true,
-      incremental: false,
-      types: ["bun", "node"],
-      paths: Object.fromEntries(Object.entries(existingPaths).map(([name, target]) => [name, [`${prefix}${target}`]])),
-    },
-    include: [],
-    files: roots.map((path) => `${prefix}${path}`),
-  };
+func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, output)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte("*.exe\n.🧬semio/🦑️repo/⚡️cache/\nserver\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	previous := GetRootDir()
+	SetRootDir(root)
+	t.Cleanup(func() { SetRootDir(previous) })
+	artifacts := []string{
+		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo",
+		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo.exe",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
+		"coda/example/.coda/validators/programming.exe",
+	}
+	ignored := GetGitIgnoredSet(append(artifacts, "src/kept.go"))
+	for _, path := range artifacts {
+		if !ignored[path] {
+			t.Errorf("expected build artifact %q to be gitignored", path)
+		}
+	}
+	if ignored["src/kept.go"] {
+		t.Error("src/kept.go must not be gitignored")
+	}
 }
 
-/** 📂️ Default home of the generated project and its logs: the gitignored `.cache` of the checkout. */
-function defaultProjectFolder(root: string): string {
-  return join(root, ".cache", "semio", "typescript");
+func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
+	repoRoot := t.TempDir()
+	nested := filepath.Join(repoRoot, "a", "b", "c")
+	if err := os.MkdirAll(filepath.Join(repoRoot, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
+	}
+	if err := os.MkdirAll(nested, 0755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
+	oldRoot := GetRootDir()
+	defer func() { SetRootDir(oldRoot) }()
+	SetRootDir(nested)
+	if got := GetRootDir(); got != repoRoot {
+		t.Fatalf("expected repo root %q, got %q", repoRoot, got)
+	}
+	if got := GetRepoMetaDir(); got != filepath.Join(repoRoot, ".🧬semio", "🦑️repo") {
+		t.Fatalf("expected repo meta dir at monorepo root, got %q", got)
+	}
 }
 
-/** 📃️ Reads a root list file: one repo-relative or absolute path per line, blank lines and `#` lines skipped, absolute paths below the checkout made relative. */
-export function readTypescriptRootList(root: string, listPath: string): string[] {
-  const lines = readFileSync(resolve(root, listPath), "utf8").split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "" && !line.startsWith("#"));
-  return [...new Set(lines.map((line) => posixPath(isAbsolute(line) ? relative(root, line) : line)))];
+func TestSplitCommandSegments(t *testing.T) {
+	cases := []struct {
+		cmd      string
+		expected []string
+	}{
+		{"git checkout main", []string{"git checkout main"}},
+		{"cd /tmp && git checkout main", []string{"cd /tmp", "git checkout main"}},
+		{"echo done; git stash", []string{"echo done", "git stash"}},
+		{"ls | grep foo", []string{"ls", "grep foo"}},
+		{"a || b", []string{"a", "b"}},
+		{"  ", []string{}},
+		{"", []string{}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.cmd, func(t *testing.T) {
+			got := SplitCommandSegments(tc.cmd)
+			if len(got) != len(tc.expected) {
+				t.Fatalf("expected %v, got %v", tc.expected, got)
+			}
+			for i := range tc.expected {
+				if got[i] != tc.expected[i] {
+					t.Errorf("segment %d: expected %q, got %q", i, tc.expected[i], got[i])
+				}
+			}
+		})
+	}
 }
 
-/** ✍️ Generates the project from the live workspace, writes it and returns where, with the root count. */
-export function writeTypescriptProject(root: string, parsed: TypescriptProjectArguments): { readonly path: string; readonly roots: readonly string[]; readonly stale: readonly string[] } {
-  const sources = listTypescriptWorkspaceSources(root);
-  const changed = parsed.selection.changedOnly ? listTypescriptChangedSources(root) : [];
-  const listed = parsed.filesFrom === undefined ? undefined : readTypescriptRootList(root, parsed.filesFrom);
-  const roots = selectTypescriptRoots(sources, readTypescriptWorkspaceExcludes(root), listed === undefined ? parsed.selection : { ...parsed.selection, listed }, changed);
-  const kept = new Set(roots), stale = listed === undefined ? [] : listed.filter((path) => !kept.has(path));
-  if (roots.length === 0) throw new Error(`${TYPESCRIPT_TAG} the selection matches no TypeScript source`);
-  const path = resolve(root, parsed.out ?? join(defaultProjectFolder(root), "🔣️tsconfig.json"));
-  const existing = Object.fromEntries(Object.entries(TYPESCRIPT_AMBIENT_PATHS).filter(([, target]) => existsSync(join(root, target))));
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(typescriptProjectDocument(roots, relative(dirname(path), root), existing), null, 2)}\n`);
-  return { path, roots, stale };
+func TestWriteWarningfUsesStderr(t *testing.T) {
+	read, write, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := os.Stderr
+	os.Stderr = write
+	defer func() { os.Stderr = previous }()
+
+	WriteWarningf("Failed to update: %s", "boom")
+	if err := write.Close(); err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = previous
+	output, err := io.ReadAll(read)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(output), "Warning: Failed to update: boom\n"; got != want {
+		t.Fatalf("warning output = %q, want %q", got, want)
+	}
 }
 
-/** 🧮️ Counts the diagnostics of a `tsc --pretty false` log: only column-zero lines are diagnostics, indented lines continue them. */
-export function summarizeTypescriptDiagnostics(log: string): TypescriptDiagnosticSummary {
-  const byCode: Record<string, number> = {}, files = new Set<string>();
-  let total = 0;
-  for (const line of log.split("\n")) {
-    const located = FILE_DIAGNOSTIC.exec(line);
-    const code = located?.groups?.code ?? GLOBAL_DIAGNOSTIC.exec(line)?.groups?.code;
-    if (code === undefined) continue;
-    total++;
-    byCode[code] = (byCode[code] ?? 0) + 1;
-    if (located?.groups?.file !== undefined) files.add(located.groups.file);
-  }
-  return { total, files: files.size, byCode };
+func TestDotnetFormatterProjects(t *testing.T) {
+	var vectors struct {
+		Cases []struct {
+			Name     string
+			Source   string
+			Files    []string
+			Projects []string
+		}
+	}
+	data, err := os.ReadFile(filepath.Join(FixtureOrigin, "..", "..", "🧪️tests", "🧫️fixtures", "📡️dotnet-format-owners.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(data, &vectors); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range vectors.Cases {
+		t.Run(row.Name, func(t *testing.T) {
+			root := t.TempDir()
+			for _, file := range row.Files {
+				path := filepath.Join(root, filepath.FromSlash(file))
+				if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got := DotnetFormatterProjects(root, row.Source)
+			if !reflect.DeepEqual(got, row.Projects) {
+				t.Fatalf("projects = %v, want %v", got, row.Projects)
+			}
+		})
+	}
 }
 
-/** 🧠️ Default heap: three quarters of physical memory, at most 24 GiB, at least the 4 GiB Node default. */
-function defaultHeapMegabytes(): number {
-  return Math.max(4096, Math.min(24576, Math.floor((totalmem() / 1048576) * 0.75)));
+func TestIdeConfigurationPaths(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join(FixtureOrigin, "..", "..", "..", "🎛️dashboard", "🧪️tests", "🧫️fixtures", "🧭️authority", "🔣️.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		PathCases []struct {
+			Path     string
+			Accepted bool
+		}
+		InventoryPolicy struct {
+			BoundaryDirectories []string
+			ExcludedRoots       []string
+		}
+		InventoryCases []struct {
+			Path      string
+			Inspected bool
+		}
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range fixture.PathCases {
+		for _, path := range []string{row.Path, strings.ReplaceAll(strings.ToUpper(row.Path), "/", "\\")} {
+			if got := IsIdeConfigurationPath(path); got == row.Accepted {
+				t.Errorf("%s: forbidden = %v", path, got)
+			}
+		}
+	}
+	if !reflect.DeepEqual(ideInventoryBoundaryDirectories, fixture.InventoryPolicy.BoundaryDirectories) || !reflect.DeepEqual(ideInventoryExcludedRoots, fixture.InventoryPolicy.ExcludedRoots) {
+		t.Fatal("Go inventory differs from shared authority policy")
+	}
+	parent := os.Getenv("SEMIO_TEST_ARTIFACT_DIR")
+	if parent == "" {
+		t.Fatal("Caller-owned authority inventory artifacts required")
+	}
+	if err := os.MkdirAll(parent, 0755); err != nil {
+		t.Fatal(err)
+	}
+	root, err := os.MkdirTemp(parent, "go-authority-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(root)
+	for _, row := range fixture.InventoryCases {
+		absolute := filepath.Join(root, filepath.FromSlash(row.Path))
+		if len(utf16.Encode([]rune(absolute))) > 256 {
+			t.Fatal("Portable authority fixture path capacity exceeded")
+		}
+		if err := os.MkdirAll(filepath.Dir(absolute), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(absolute, []byte(""), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for attempt := 0; attempt < 2; attempt++ {
+		paths, err := IdeConfigurationPaths(root, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, row := range fixture.InventoryCases {
+			found := false
+			for _, path := range paths {
+				if path == filepath.ToSlash(filepath.Dir(row.Path)) {
+					found = true
+				}
+			}
+			if found != row.Inspected {
+				t.Errorf("%s: inspected = %v", row.Path, found)
+			}
+		}
+	}
+	if _, err := IdeConfigurationPaths(root, "missing"); err == nil {
+		t.Fatal("Missing inventory root must fail closed")
+	}
+	t.Logf("[DEBUG] Go authority inspected %d shared path vectors in both path forms and %d inventory boundaries twice", len(fixture.PathCases), len(fixture.InventoryCases))
 }
 
-/** 🔬️ Lists the files of a `tsc`-spelled diagnostic log that carry syntax errors, with the count and the first diagnostic of each; the log is the syntax log the child writes. */
-export function summarizeTypescriptSyntaxFiles(log: string): TypescriptSyntaxFile[] {
-  const files = new Map<string, { count: number; first: string }>();
-  for (const line of log.split("\n")) {
-    const located = FILE_DIAGNOSTIC.exec(line);
-    const file = located?.groups?.file;
-    if (file === undefined) continue;
-    const known = files.get(file);
-    if (known === undefined) files.set(file, { count: 1, first: line });
-    else known.count++;
-  }
-  return [...files].map(([file, { count, first }]) => ({ file, count, first })).sort((left, right) => (left.file < right.file ? -1 : left.file > right.file ? 1 : 0));
+func TestRunToolRunsRegisteredToolsAndRefusesUnknownOnes(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	result, err := RunTool("git", []string{"--version"}, ToolRunOptions{})
+	if err != nil || result.Status != 0 || !strings.HasPrefix(result.Stdout, "git version") {
+		t.Fatalf("RunTool(git) = %+v, %v", result, err)
+	}
+	failed, err := RunTool("git", []string{"no-such-subcommand-for-the-registry"}, ToolRunOptions{})
+	if err != nil || failed.Status == 0 {
+		t.Fatalf("a failing tool must answer its status, got %+v, %v", failed, err)
+	}
+	if _, err := RunTool("no-such-tool-for-the-registry", nil, ToolRunOptions{}); err == nil {
+		t.Fatal("an unknown tool id must be refused")
+	}
 }
 
-/** 🧪️ The child: type-checks one project through the compiler API, writes every diagnostic in `tsc --pretty false` spelling to `logPath` and the syntax errors alone to `syntaxLogPath`; a file that does not parse is reported but not checked semantically, every other file is. Returns the `tsc` exit status (0 clean, 2 diagnostics). */
-async function checkTypescriptProjectInChild(projectPath: string, logPath: string, syntaxLogPath: string): Promise<number> {
-  const typescript: typeof ts = (await import("typescript")).default;
-  const configHost: ts.ParseConfigFileHost = {
-    ...typescript.sys,
-    onUnRecoverableConfigFileDiagnostic: (diagnostic) => {
-      throw new Error(typescript.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
-    },
-  };
-  const parsed = typescript.getParsedCommandLineOfConfigFile(resolve(projectPath), { noEmit: true }, configHost);
-  if (parsed === undefined) throw new Error(`${TYPESCRIPT_TAG} ${projectPath} cannot be read`);
-  const program = typescript.createProgram({ rootNames: parsed.fileNames, options: parsed.options, projectReferences: parsed.projectReferences, configFileParsingDiagnostics: typescript.getConfigFileParsingDiagnostics(parsed) });
-  const syntax: ts.Diagnostic[] = [], semantic: ts.Diagnostic[] = [], broken = new Set<ts.SourceFile>();
-  for (const source of program.getSourceFiles()) {
-    const found = program.getSyntacticDiagnostics(source);
-    if (found.length > 0) broken.add(source);
-    syntax.push(...found);
-  }
-  for (const source of program.getSourceFiles()) if (!broken.has(source)) semantic.push(...program.getSemanticDiagnostics(source));
-  const programWide = [...typescript.getConfigFileParsingDiagnostics(parsed), ...program.getOptionsDiagnostics(), ...program.getGlobalDiagnostics()];
-  const format: ts.FormatDiagnosticsHost = { getCurrentDirectory: () => process.cwd(), getCanonicalFileName: (name) => name, getNewLine: () => "\n" };
-  const render = (diagnostics: readonly ts.Diagnostic[]): string => typescript.sortAndDeduplicateDiagnostics(diagnostics).map((diagnostic) => typescript.formatDiagnostic(diagnostic, format)).join("");
-  const everything = [...programWide, ...syntax, ...semantic];
-  writeFileSync(logPath, render(everything));
-  writeFileSync(syntaxLogPath, render(syntax));
-  return everything.length === 0 ? 0 : 2;
-}
-
-/** ⏱️ Type-checks `projectPath` in a Node child with the given heap, writing every diagnostic to `logPath` and the syntax errors to `syntaxLogPath`; heartbeat on stderr, interrupts are forwarded, so a long check can be cancelled. Resolves to the `tsc`-style exit status (0 clean, 2 diagnostics). */
-export function runTypescriptCompiler(root: string, projectPath: string, logPath: string, syntaxLogPath: string, heapMegabytes: number, timeoutMinutes: number): Promise<number> {
-  try {
-    createRequire(import.meta.url).resolve("typescript");
-  } catch {
-    throw new Error(`${TYPESCRIPT_TAG} the typescript package is not installed for ${fileURLToPath(import.meta.url)}; install the workspace dependencies first`);
-  }
-  return new Promise((done, fail) => {
-    const started = Date.now();
-    const child = spawnToolV1("node", [`--max-old-space-size=${heapMegabytes}`, "--experimental-strip-types", "--disable-warning=ExperimentalWarning", fileURLToPath(import.meta.url), TYPESCRIPT_CHECK_FLAG, projectPath, logPath, syntaxLogPath], { cwd: root, stdio: ["ignore", "inherit", "inherit"], shell: false });
-    const heartbeat = setInterval(() => console.error(`${TYPESCRIPT_TAG} type-check running for ${Math.round((Date.now() - started) / 1000)}s (log ${logPath})`), 60_000);
-    const deadline = setTimeout(() => child.kill("SIGKILL"), timeoutMinutes * 60_000);
-    const interrupt = (signal: NodeJS.Signals): void => void child.kill(signal);
-    const forward = ["SIGINT", "SIGTERM"] as const;
-    for (const signal of forward) process.once(signal, interrupt);
-    const release = (): void => {
-      clearInterval(heartbeat);
-      clearTimeout(deadline);
-      for (const name of forward) process.removeListener(name, interrupt);
-    };
-    child.once("error", (error) => {
-      release();
-      fail(error);
-    });
-    child.once("close", (status, signal) => {
-      release();
-      if (signal !== null) fail(new Error(`${TYPESCRIPT_TAG} the type-check was stopped by ${signal} after ${Math.round((Date.now() - started) / 1000)}s`));
-      else done(status ?? 1);
-    });
-  });
-}
-
-/** 🧯️ Prints the files that do not parse, one line each with their first syntax error, so the cause of a count is never hidden behind it. */
-function reportTypescriptSyntaxFiles(syntaxLog: string, syntaxPath: string): void {
-  const files = summarizeTypescriptSyntaxFiles(syntaxLog);
-  if (files.length === 0) return;
-  console.log(`${TYPESCRIPT_TAG} ${files.length} file(s) do not parse and were not type-checked (every other file was; log ${syntaxPath}):`);
-  for (const { first, count } of files.slice(0, 50)) console.log(`${TYPESCRIPT_TAG}   ${first}${count > 1 ? ` (+${count - 1} more)` : ""}`);
-  if (files.length > 50) console.log(`${TYPESCRIPT_TAG}   … ${files.length - 50} more file(s)`);
-}
-
-/** 🚀️ Entry of `verify typescript <project|check> [flags]`: `project` writes the tsconfig, `check` writes it and type-checks every root. */
-export async function runTypescriptVerification(root: string, segments: readonly string[]): Promise<void> {
-  const [command, ...flags] = segments;
-  if (command !== "project" && command !== "check") throw new Error(`${TYPESCRIPT_TAG} usage: verify typescript <project|check> [--scope <path>]… [--changed] [--files-from <list>] [--out <file>] [--heap-mb <n>] [--timeout-minutes <n>] [--max-diagnostics <n>] [--list]`);
-  const parsed = parseTypescriptProjectArguments(flags);
-  const { path, roots, stale } = writeTypescriptProject(root, parsed);
-  console.log(`${TYPESCRIPT_TAG} project ${path} roots=${roots.length}`);
-  if (stale.length > 0) console.log(`${TYPESCRIPT_TAG} dropped ${stale.length} listed root(s) that are missing, excluded or shadowed: ${stale.slice(0, 20).join(", ")}${stale.length > 20 ? ", …" : ""}`);
-  if (parsed.list) for (const rootPath of roots) console.log(rootPath);
-  if (command === "project") return;
-  const logPath = join(dirname(path), `${basename(path, ".json")}.tsc.txt`), syntaxPath = join(dirname(path), `${basename(path, ".json")}.syntax.txt`), heap = parsed.heapMegabytes ?? defaultHeapMegabytes();
-  console.log(`${TYPESCRIPT_TAG} node --max-old-space-size=${heap} ${relative(root, fileURLToPath(import.meta.url))} ${TYPESCRIPT_CHECK_FLAG} ${relative(root, path)} > ${relative(root, logPath)}`);
-  const status = await runTypescriptCompiler(root, path, logPath, syntaxPath, heap, parsed.timeoutMinutes);
-  const summary = summarizeTypescriptDiagnostics(readFileSync(logPath, "utf8"));
-  if (status !== 0 && status !== 2) throw new Error(`${TYPESCRIPT_TAG} the type-check crashed with status ${status}; the log ${logPath} holds the cause (heap exhaustion is status 134: raise --heap-mb)`);
-  const codes = Object.entries(summary.byCode).sort((left, right) => right[1] - left[1] || (left[0] < right[0] ? -1 : 1)).slice(0, 12).map(([code, count]) => `${code}=${count}`).join(" ");
-  console.log(`${TYPESCRIPT_TAG} roots=${roots.length} diagnostics=${summary.total} files=${summary.files} top: ${codes || "none"}`);
-  reportTypescriptSyntaxFiles(readFileSync(syntaxPath, "utf8"), syntaxPath);
-  const changed = parsed.selection.changedOnly ? listTypescriptChangedSources(root) : [];
-  const selection = { ...parsed.selection, listed: parsed.filesFrom === undefined ? undefined : readTypescriptRootList(root, parsed.filesFrom) };
-  let appDiagnostics = 0;
-  for (const app of listTypescriptAppProjects(root, listTypescriptWorkspaceSources(root), readTypescriptWorkspaceExcludes(root))) {
-    if (!selectsTypescriptAppProject(app, selection, changed)) continue;
-    const appName = `${basename(path, ".json")}.app-${basename(app.folder) || "root"}`, appLog = join(dirname(path), `${appName}.tsc.txt`), appSyntax = join(dirname(path), `${appName}.syntax.txt`);
-    const appStatus = await runTypescriptCompiler(root, resolve(root, app.project), appLog, appSyntax, heap, parsed.timeoutMinutes);
-    const appSummary = summarizeTypescriptDiagnostics(readFileSync(appLog, "utf8"));
-    if (appStatus !== 0 && appStatus !== 2) throw new Error(`${TYPESCRIPT_TAG} the type-check crashed with status ${appStatus} on ${app.project}; the log ${appLog} holds the cause`);
-    console.log(`${TYPESCRIPT_TAG} app ${app.project} diagnostics=${appSummary.total} files=${appSummary.files}`);
-    reportTypescriptSyntaxFiles(readFileSync(appSyntax, "utf8"), appSyntax);
-    appDiagnostics += appSummary.total;
-  }
-  const total = summary.total + appDiagnostics;
-  if (total > parsed.maximumDiagnostics) throw new Error(`${TYPESCRIPT_TAG} ${total} diagnostic(s) exceed the allowed ${parsed.maximumDiagnostics}; see ${logPath}`);
-  console.log(`${TYPESCRIPT_TAG} passed.`);
-}
-//#endregion 🔖️TypescriptProject
-
-if (import.meta.main && process.argv[2] === TYPESCRIPT_CHECK_FLAG) {
-  const [projectPath, logPath, syntaxLogPath] = process.argv.slice(3);
-  if (projectPath === undefined || logPath === undefined || syntaxLogPath === undefined) throw new Error(`${TYPESCRIPT_TAG} ${TYPESCRIPT_CHECK_FLAG} needs <project> <log> <syntax-log>`);
-  process.exitCode = await checkTypescriptProjectInChild(projectPath, logPath, syntaxLogPath);
+func TestToolCommandMarksRegisteredRunsAndDropsIdeInjections(t *testing.T) {
+	t.Setenv("VSCODE_INSPECTOR_OPTIONS", "x")
+	command := ToolCommand("git", "--version")
+	if command.Env == nil {
+		t.Skip("no tool registry above the working directory")
+	}
+	joined := strings.Join(command.Env, "\n")
+	if !strings.Contains(joined, "SEMIO_TOOL_RUN=git") || strings.Contains(joined, "VSCODE_INSPECTOR_OPTIONS") {
+		t.Fatalf("the registry environment was not applied: %s", joined)
+	}
+	if plain := ToolCommand("echo", "x"); plain.Env != nil {
+		t.Fatal("an unregistered command must keep the process environment")
+	}
 }

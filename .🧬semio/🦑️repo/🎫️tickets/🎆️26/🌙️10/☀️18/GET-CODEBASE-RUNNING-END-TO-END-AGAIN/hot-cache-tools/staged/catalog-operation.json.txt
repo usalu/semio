@@ -1,7 +1,7 @@
     {
       "name": "service",
       "requires": "none",
-      "synopsis": "service status|start|stop|restart|issue|drop-caches|probe",
+      "synopsis": "service status|start|stop|restart|issue|revoke|drop-caches|probe",
       "summary": {
         "en": "Run, inspect or stop the resident service of this worktree that keeps the graph, file digests and task results warm and answers every agent over one local socket.",
         "de": "Startet, prüft oder beendet den residenten Dienst dieses Worktrees, der Graph, Datei-Prüfsummen und Aufgabenergebnisse warm hält und alle Agenten über einen lokalen Socket bedient."
@@ -48,10 +48,18 @@
         },
         {
           "name": "issue",
-          "synopsis": "service issue [--classes <classes>] [--for <projects>] [--ttl <seconds>]",
+          "synopsis": "service issue --agent <id> [--classes <classes>] [--for <projects>] [--ttl <seconds>]",
           "summary": {
-            "en": "Print a capability token restricted to command classes, projects and lifetime; hand it to an agent that must not do more.",
-            "de": "Gibt eine Berechtigung aus, beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf."
+            "en": "Print a capability token for one agent session, bound to this worktree and restricted to command classes, projects and lifetime; hand it to an agent that must not do more (SEMIO_SERVICE_TOKEN).",
+            "de": "Gibt eine Berechtigung für eine Agenten-Sitzung aus, an diesen Worktree gebunden und beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf (SEMIO_SERVICE_TOKEN)."
+          }
+        },
+        {
+          "name": "revoke",
+          "synopsis": "service revoke <session|token> | --agent <id>",
+          "summary": {
+            "en": "Revoke one agent session or every session of an agent: running commands of it are cancelled and later requests are refused.",
+            "de": "Widerruft eine Agenten-Sitzung oder alle Sitzungen eines Agenten: laufende Befehle werden abgebrochen und spätere Anfragen abgelehnt."
           }
         },
         {

@@ -17,7 +17,7 @@ pub struct FlowInvocationOrigin{
  pub outer_node_hash:Option<u64>,
  pub preview_source:Option<FlowPreviewSource>,
 }
-pub type FlowInvocationOriginLease=protocol::value::ordered::SharedOwner<FlowInvocationOrigin>;
+pub type FlowInvocationOriginLease=semio_framework_value_ordered::ordered::SharedOwner<FlowInvocationOrigin>;
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FlowInvocationEntry{pub origin:FlowInvocationOriginLease,pub reply:Option<String>}
 impl FlowInvocationOrigin{

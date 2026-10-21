@@ -2,7 +2,7 @@
 
 use super::{DomainSelection,LocalInteractionRoot,SelectionMode};
 use super::super::LocalInteractionDomainPatch;
-use semio_framework_value::ordered::{SharedOwner, UpdateCursor};
+use semio_framework_value_ordered::ordered::{SharedOwner, UpdateCursor};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -48,7 +48,7 @@ impl RetireOwned for MapUpdate {
 }
 
 #[derive(Default)]
-struct CandidateCleanup {selection:Option<semio_framework_value::ordered::OrderedMap<DomainSelection>>,mode:Option<semio_framework_value::ordered::OrderedMap<SelectionMode>>,granularity:Option<semio_framework_value::ordered::OrderedMap<String>>,current:Option<MapUpdate>}
+struct CandidateCleanup {selection:Option<semio_framework_value_ordered::ordered::OrderedMap<DomainSelection>>,mode:Option<semio_framework_value_ordered::ordered::OrderedMap<SelectionMode>>,granularity:Option<semio_framework_value_ordered::ordered::OrderedMap<String>>,current:Option<MapUpdate>}
 semio_framework_value::artifact_retire_struct!(CandidateCleanup {selection,mode,granularity,current});
 
 struct UpdateState {candidate:Option<LocalInteractionRoot>,domain:Option<SharedOwner<String>>,patch:PatchState,current:Option<MapUpdate>,pending:Option<CandidateCleanup>,cleanup:Option<ControlledRetirement<CandidateCleanup>>,phase:u8}

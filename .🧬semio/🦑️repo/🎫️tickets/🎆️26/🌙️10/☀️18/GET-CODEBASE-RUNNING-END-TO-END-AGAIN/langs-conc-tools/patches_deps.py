@@ -28,7 +28,7 @@ def deps_test(text):
          'if (capture) return command==="cargo"&&args[0]==="--version"?identity(cwd,signal):command==="dotnet"?toolchainPolicy.dotnet.sdk:"";'),
         ("deps-test-go", '        return "";\n      });\n      assert.deepEqual(calls, row.commands.map(', '        return "";\n      }, process.env, async (base: NodeJS.ProcessEnv) => ({ ...base, ...toolchainPolicy.go.variables }));\n      assert.deepEqual(calls, row.commands.map('),
         ("deps-test-import", 'import assert from "node:assert/strict";\n',
-         'import assert from "node:assert/strict";\nimport toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json" with { type: "json" };\n'),
+         'import assert from "node:assert/strict";\nimport toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json" with { type: "json" };\n'),
     ])
 
 def deps_fixture(text):

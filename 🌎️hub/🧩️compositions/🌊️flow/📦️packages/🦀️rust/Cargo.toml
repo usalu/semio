@@ -48,7 +48,6 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 dsl_derive = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 # 🌱️ `DuplicateWidget`'s `CompositeMutationKind` impl now bounds on `ToValue`/`FromValue` (see that
 # trait's own doc), not `serde::Serialize`/`serde::de::DeserializeOwned`.
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde.workspace = true
 serde_json.workspace = true
 

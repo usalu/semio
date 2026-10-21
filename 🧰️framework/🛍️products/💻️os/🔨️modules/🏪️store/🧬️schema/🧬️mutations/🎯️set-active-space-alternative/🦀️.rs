@@ -39,23 +39,20 @@ where
 //#region ⚙️Semantics
 impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
-        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
-    }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![SpaceHistoryMutation::SetActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })]
-    
-    })())
-}
-}
-
-impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["activeAlternativeId".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
+        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
+    }
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+        Ok(vec![SpaceHistoryMutation::SetActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })])
     }
 }
 //#endregion ⚙️Semantics

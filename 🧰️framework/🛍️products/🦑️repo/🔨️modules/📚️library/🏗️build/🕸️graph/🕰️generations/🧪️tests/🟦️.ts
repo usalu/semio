@@ -13,7 +13,7 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {GENERATION_POLICY_V1,canonicalJsonV1,createFactIndexV1,createFileLeasePortV1,createFrontierV1,createGenerationStoreV1,diffFrontiersV1,factConsumersV1,frontierHoldsV1,patchFactIndexV1,readGenerationFragmentV1,readGenerationManifestV1,readGenerationPointerV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1} from "../🟨️.mjs";
-import {IDENTITY,applyOps,createMemoryFilePort,createWorld,ringFiles,seed,type Op} from "./🏃️world/🟦️.ts";
+import {IDENTITY,IMPLEMENTATION,applyOps,createMemoryFilePort,createWorld,ringFiles,seed,type Op} from "./🏃️world/🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),windows=process.platform==="win32";
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
@@ -352,13 +352,13 @@ test("scale: thousands of owners verify by distinct rows, refresh only the dirty
   const todo=spec.cold?names:spec.owners;state.computed+=todo.length;
   return{owners:todo.map(name=>({name,root:name,kind:"project" as const,node:{name},edges:[],targets:["build"],config:name+"/project.json",rows:[...sharedRows,...privateRows(name)]})),env:{digest:sha("env"),rows:[row("env/file",0)]},global:{}};
  };
- const started=Date.now(),cold=await store.refresh({identity:IDENTITY,membership,compute});
+ const started=Date.now(),cold=await store.refresh({identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute});
  expect(cold.built).toBe(true);expect(Object.keys(cold.current.manifest!.owners).length).toBe(owners);expect(Date.now()-started).toBeLessThan(60000);
  const index=await store.readIndex(cold.current.manifest!.factIndex);
  expect(index!.rows.length).toBe(shared+owners*priv+1);expect(index!.classes.length).toBeLessThanOrEqual(owners+3);
- state.hold=0;state.rows=0;const warm=await store.refresh({identity:IDENTITY,membership,compute});
+ state.hold=0;state.rows=0;const warm=await store.refresh({identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute});
  expect(warm.served).toBe("verified");expect(state.rows).toBe(index!.rows.length);expect(state.hold).toBe(Math.ceil(index!.rows.length/GENERATION_POLICY_V1.verifyChunkRows));
- state.edit=1;state.hold=0;state.computed=0;const edited=await store.refresh({identity:IDENTITY,membership,compute});
+ state.edit=1;state.hold=0;state.computed=0;const edited=await store.refresh({identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute});
  expect(edited.built&&edited.published).toBe(true);expect(state.computed).toBe(1);expect(state.hold).toBeLessThanOrEqual(Math.ceil(index!.rows.length/GENERATION_POLICY_V1.verifyChunkRows)+2*13+8);
  const patched=await store.readIndex(edited.current.manifest!.factIndex);expect(patched!.classes.length).toBeLessThanOrEqual(GENERATION_POLICY_V1.compactionFactor*patched!.owners.length+GENERATION_POLICY_V1.compactionFloor);
  expect(selectFactClassesV1(patched!,new Set(["o17"])).ids.length).toBeLessThan(shared+priv+3);
@@ -413,7 +413,7 @@ test("virtual groups are replaced wholesale, an environment move refreshes only 
    env:{digest:state.env,rows:[{kind:"file",path:"@env",fact:{stale:true}}]},global:{},replaceTags:["g"],
   };
  };
- const options={identity:IDENTITY,membership,compute:compute as never},first=await store.refresh(options);
+ const options={identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute:compute as never},first=await store.refresh(options);
  expect(Object.keys(first.current.manifest!.owners).sort()).toEqual(["a","b","g1","g2"]);
  state.group=["g1"];state.dirty=["a"];
  const second=await store.refresh(options);
@@ -446,3 +446,21 @@ test("a shared file edited every few hundred milliseconds never restarts a 300 p
   if(python)expect(normalized(await world.graph(after.current))).toEqual(pythonGraph(busy));
  }finally{clean(quiet);clean(busy);}
 },180000);
+
+test("the manifest stamps the implementation of its builder, a generation of another implementation is served as it is, and a manifest of another format is no generation",async()=>{
+ const memory=createMemoryFilePort(),state={log:[] as string[]};
+ const membership=async()=>({digest:sha("m"),frontier:createFrontierV1({directories:[],members:[],capturedAt:1}),changes:[] as never[]});
+ const compute=async(spec:{cold:boolean;owners:string[]})=>{state.log.push(spec.cold?"cold":"delta:"+spec.owners.join("+"));return{owners:[{name:"a",root:"a",kind:"project" as const,node:{name:"a",root:"a"},edges:[],targets:["build"],rows:[{kind:"file",path:"a",fact:{}}]}],env:{digest:sha("env"),rows:[]},global:{},replaceTags:[]};};
+ const store=createGenerationStoreV1({root:"/memory/gen",fs:memory.port,resources:{facts:"f"},holds:async()=>true}),options=(implementation:string,policy?:"fresh"|"current")=>({identity:IDENTITY,implementation,...(policy?{policy}:{}),membership,compute:compute as never});
+ const first=await store.refresh(options(sha("impl-a")));
+ expect(first.current.manifest!.implementation).toBe(sha("impl-a"));
+ const verified=await store.refresh(options(sha("impl-b")));
+ expect(verified.built).toBe(false);expect(verified.current.manifest!.implementation).toBe(sha("impl-a"));expect(state.log).toEqual(["cold"]);
+ expect((await store.refresh(options(sha("impl-b"),"current"))).served).toBe("current");
+ const manifestPath=[...memory.files.keys()].find(path=>path.startsWith("/memory/gen/m/"))!,old=JSON.parse(Buffer.from(memory.files.get(manifestPath)!.bytes).toString("utf8"));delete old.implementation;
+ const bytes=Buffer.from(canonicalJsonV1(old)),digest=createHash("sha256").update(bytes).digest("hex");
+ memory.files.set("/memory/gen/m/"+digest+".json",{bytes,modifiedMs:Date.now()});memory.files.set("/memory/gen/current.json",{bytes:Buffer.from(canonicalJsonV1({version:1,generation:0,manifest:digest,parent:null})),modifiedMs:Date.now()});
+ const reborn=await store.refresh(options(sha("impl-b")));
+ expect(reborn.built).toBe(true);expect(state.log).toEqual(["cold","cold"]);expect(reborn.current.manifest!.implementation).toBe(sha("impl-b"));
+ await expect(createGenerationStoreV1({root:"/memory/other",fs:createMemoryFilePort().port,resources:{facts:"f"},holds:async()=>true}).refresh(options("not-a-digest"))).rejects.toThrow();
+});

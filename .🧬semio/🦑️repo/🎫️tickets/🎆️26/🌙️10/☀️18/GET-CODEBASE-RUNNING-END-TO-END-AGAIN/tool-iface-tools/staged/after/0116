@@ -1,288 +1,601 @@
-#!/usr/bin/env bun
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { join, resolve, dirname } from "node:path";
-import {createBuildBootstrapCapabilitiesV1} from "./📥️caller/📤️child/🟦️.ts";
-import {issueRepositoryScriptProvidersV1} from "../🏃️process/🔌️providers/🟦️.ts";
-import { readScriptPolicy,Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment,checkScriptInvocation,advanceScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-
-import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json" with { type: "json" };
-import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-const bazelTestContract=compileJsonSchemaSubset(bazelTestSchema);
-
-/** 🧪️ Selects closed independently bounded Bazel contracts without replacing their Original. */
-export function bazelTestCommandsV1(arguments_:readonly string[]):readonly Readonly<{phase:string|null;pattern:string;maximumMilliseconds:number}>[]{
- const phase=arguments_[0]??null;if(arguments_.length>1||bazelTestContract.validate({phase}).length)throw new Error("Expected test bazel [declared runtime phase]");const policy=bazelTestSchema.definitions.Policy.const,phases=phase===null?[null,...bazelTestSchema.definitions.Phase.enum]:[phase];return phases.map(phase=>({phase,pattern:phase===null?policy.sourcePattern:policy.runtimePrefix+phase+policy.runtimeSuffix,maximumMilliseconds:policy.maximumChildMilliseconds}));
-}
-
-/** 🏗️ Executes workspace build leaves without importing repository audits. */
-export class BuildScript extends Script {
-  async run(segments: string[]): Promise<void> {
-    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), slice = segments[0];
-    if (!slice) {
-      console.log(`[build] Completed the ${mode} workspace build graph.`);
-      return;
-    }
-    if (slice === "canvas") {
-      if (segments.length !== 2 || segments[1] !== "fonts") throw new Error("Expected build canvas fonts");
-      const cwd = join(this.repoRoot, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust");
-      const { repositoryProcessOwnerContextV1 } = await import("../🏃️process/📋️context/🔣️policy/🟦️.ts");
-      const { repositoryCargoArtifactBuildPolicyV1 } = await import("../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
-      const { prepareCargoWorkspaceInvocation } = await import("../🗂️workspaces/🦀️cargo/🟦️.ts");
-      const {repositoryCargoPreparationStorageV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts");
-      const { devToolingEnv } = await import("../🏃️process/🌿️environment/🟦️.ts");
-      await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.repoRoot), this.repoRoot, ["build", "--manifest-path", join(cwd, "Cargo.toml")], this.repoRoot, scriptInvocationEnvironment(this.invocation,process.env),scriptCompilerAdmissionControlV1(this.invocation,"cargo:font-preparation",buildBudgetMs()));
-      const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_CARGO_ARTIFACT_POLICY: JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd, this.repoRoot)) });
-      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "build"], cwd, "canvas-font-assets:build", scriptInvocationBudget(this.invocation, buildBudgetMs()), { env, signal: this.invocation.control.signal });
-      return;
-    }
-    if (slice === "storybook") {
-      if(segments.length!==1)throw new Error("Storybook build accepts only its declared intent");const {buildRepositoryStorybookV1}=await import("./📖️storybook/🏃️execution/🟦️.ts");await buildRepositoryStorybookV1(this.repoRoot,mode,this.invocation);return;
-    }
-    const targets: Readonly<Record<string, string>> = { assets: "@semio-tech/assets:build", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
-    const target = targets[slice];
-    if (!target) throw new Error(`Unknown workspace build selection: ${slice}`);
-    await runOwnedBuildInvocationV1(this.repoRoot, ["run", target, `--configuration=${mode}`, ...(segments.length > 1 ? ["--", ...segments.slice(1)] : [])], this.invocation,createIssuedResourceControlV1(this.invocation,"build:command",0));
-  }
-}
-
-/** 🧪️ Runs the independently bundled workspace build ownership contract. */
-class TestScript extends Script {
-  async run(args: string[]): Promise<void> {
-    if(args[0]==="bazel"){
-      const original=this.invocation,root=this.repoRoot,environment=Object.freeze({...process.env}),initial=createIssuedResourceControlV1(original,"build:bazel",0),commands=bazelTestCommandsV1(args.slice(1)),{repoTestArtifactEnvironment}=await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),source=resolve(import.meta.dir,"🔧️tools/🏗️bazel/🧪️tests/🟦️.ts");
-      for(const command of commands){
-        const label="build:bazel:"+(command.phase??"source-parity");await advanceScriptInvocation(original,label,"running");
-        await withRequestedIssuedResourceControlV1(initial,command.maximumMilliseconds,async phase=>{const progress=async()=>{checkResourceLeaseControl(phase);await advanceScriptInvocation(original,label,"running");checkResourceLeaseControl(phase);};checkResourceLeaseControl(phase);await runOwnedCommand(process.execPath,["test",source,"--test-name-pattern",command.pattern],root,label,compilerAdmissionBudgetV1(phase),{env:scriptResourceProcessEnvironmentV1(phase,{...environment,...repoTestArtifactEnvironment(root,"build-bazel"),SEMIO_WORKSPACE_ROOT:root,SEMIO_BAZEL_INTEGRATION:"1",SEMIO_BAZEL_FIXTURE_PHASE:command.phase??undefined}),signal:phase.signal,onProgress:progress});checkResourceLeaseControl(phase);});
-        await advanceScriptInvocation(original,label,"complete");
-      }
-      return;
-    }
-    if (args.length === 1 && ["bazel-bootstrap", "runtime-build-producer"].includes(args[0]!)) {
-      const { repoTestArtifactEnvironment } = await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
-      const source = args[0] === "runtime-build-producer" ? resolve(import.meta.dir, "../🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts") : resolve(import.meta.dir, "../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts");
-      const env = { ...process.env, ...repoTestArtifactEnvironment(this.repoRoot, `build-${args[0]}`) };
-      await runOwnedCommand(process.execPath, ["test", source], this.repoRoot, `build:${args[0]}:contract`, scriptInvocationBudget(this.invocation, 300_000), { env, signal: this.invocation.control.signal });
-      return;
-    }
-    if (args.length) throw new Error("Workspace build tests accept no arguments");
-    await runOwnedCommand(process.execPath, ["test", resolve(import.meta.dir, "🧪️tests/🟦️.ts"), resolve(import.meta.dir,"🧪️tests/🕸️graph/🟦️.ts"),resolve(import.meta.dir,"👁️observation/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"🩺️preflight/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"../⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts")], this.repoRoot, "workspace-build:contract", scriptInvocationBudget(this.invocation, 300_000), { signal: this.invocation.control.signal });
-  }
-}
-
-
-/** 🧭️ Routes the repository's portable build commands to the selected implementation. */
-export class RepoScript extends Script {
-  async run(args:string[]):Promise<void> { await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0)); }
-}
-
-/** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
-export async function runOwnedBuildInvocationV1(root:string,typed:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
- const{normalizeBuildOptionsV1}=await import("./⚙️operations/🔤️options/🟦️.ts"),args=normalizeBuildOptionsV1(typed),{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
- await withBuildCapacityV1(args,process.env,granted=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl),{control:phaseControl});
-}
-
-/** 🌡️ Runs an invocation whose machine capacity is already granted, inherited from the CLI door or taken here for scripts routed around it. */
-async function runAdmittedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
- requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,parent,args);
- const{parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts"),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
- const dashboard=selected.args[0]==="run"&&selected.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")?(await import("../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(selected.args):undefined;
- if(buildInvocationRequestsHelpV1(selected.args)&&dashboard===undefined){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(selected.args,process.env));return;}
- if(selected.args[0]==="preflight"){const{runBuildPreflightV1}=await import("./🩺️preflight/🟦️.ts");await runBuildPreflightV1(root,selected.args,parent);return;}
- if(selected.args[0]==="incremental"){const{runIncrementalV1}=await import("./📏️incremental/⌨️command/🟦️.ts");await runIncrementalV1(root,selected.args,parent);return;}
- if(selected.args[0]==="concurrency"){const{runConcurrencyV1}=await import("./📏️incremental/🤝️concurrent/⌨️command/🟦️.ts");await runConcurrencyV1(root,selected.args,parent);return;}
- const{readNativeRepoRecoveryPlanV1}=await import("./🚀️bootstrap/⌨️cli/🟦️.ts");
- if(readNativeRepoRecoveryPlanV1(root,resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:(parent.capabilities as {buildMode:string}).buildMode}).args)){await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);return;}
- const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,async(diagnostics,diagnosticPhase)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}});}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
-}
-
-async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
-  const {parseBuildInvocationV1,resolveBuildInvocationV1,readBuildDependencyInvocationV1,readBuildGraphAncestorSelectionV1,loadBuildInvocationGraphV1}=await import("./🧭️invocation/🟦️.ts");
-  const {scriptInvocationEnvironment,checkScriptInvocation}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
-  checkScriptInvocation(parent);
-  const{readIssuedScriptProcessEnvelopeV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),capabilities=readOwnedBuildInvocationV1(root,parent,args),environment={...process.env,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_BUILD_MODE:capabilities.buildMode},selected=parseBuildInvocationV1(args,environment),resolved=resolveBuildInvocationV1(root,selected.args,environment),original=capabilities,ancestor=readBuildGraphAncestorSelectionV1(root,original),invocation=parent;
-  readIssuedScriptProcessEnvelopeV1(parent);
-  const patch:NodeJS.ProcessEnv={...resolved.env,SEMIO_BUILD_MODE:capabilities.buildMode,CARGO_NET_OFFLINE:String(capabilities.native.network.offline),SEMIO_BUILD_TOOL:selected.tool,SEMIO_BUILD_WORKERS:selected.workers,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_INVOCATION_PID:process.env.SEMIO_BUILD_INVOCATION_PID??String(process.pid),SEMIO_BUILD_REUSE_GRAPH:process.env.SEMIO_BUILD_REUSE_GRAPH,SEMIO_BUILD_GRAPH_PATH:process.env.SEMIO_BUILD_GRAPH_PATH,SEMIO_BUILD_GRAPH_DIGEST:process.env.SEMIO_BUILD_GRAPH_DIGEST};
-  const encoded=scriptInvocationEnvironment(invocation,{...process.env,...patch});
-  patch.SEMIO_SCRIPT_PROCESS_INVOCATION=encoded.SEMIO_SCRIPT_PROCESS_INVOCATION;
-  const previous=Object.fromEntries(Object.keys(patch).map(key=>[key,process.env[key]]));
-  for(const[key,value]of Object.entries(patch))if(value===undefined)delete process.env[key];else process.env[key]=value;
-  try {
-    if(await(await import("./🚀️bootstrap/⌨️cli/🟦️.ts")).runNativeRepoRecoveryV1(root,resolved.args,invocation,phaseControl))return;
-    if(resolved.args[0]==="run"&&resolved.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")){
-      const native=await import("../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts"),mode=readBuildMode((capabilities as {buildMode?:unknown}).buildMode??resolved.env.SEMIO_BUILD_MODE??"prototype");
-      const nativeArguments=native.dashboardInvocation(resolved.args);
-      if(nativeArguments!==undefined){
-        const {readNativeCallerAuthorityV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");const code=await native.launchDashboard(root,nativeArguments,{invocation,workspace:root,mode,network:readNativeCallerAuthorityV1(invocation.capabilities).network,control:scriptCompilerAdmissionControlV1(invocation,"dashboard:launch",0)});
-        if(code!==0)throw new Error(`Dashboard invocation failed (${code})`);
-        return;
-      }
-    }
-    const command=resolved.args[0];
-    if(["run","run-many","affected","exec","watch"].includes(command)){
-      const {validateBuildTaskArgumentsV1}=await import("./🧭️selection/🟦️.ts");
-      validateBuildTaskArgumentsV1(resolved.args);
-    }
-    if(command==="dependencies"){
-      const {mode,selection}=readBuildDependencyInvocationV1(resolved.args);
-      if(mode==="ensure"){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);return;}
-      const {SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts");
-      await new (mode==="lock"?RefreshLockScript:SyncScript)(root,root,invocation).run(selection.kind==="all"?["--all"]:["--scope",selection.owner]);return;
-    }
-    if(command==="cargo"){
-      const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
-      process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
-    }
-    const {buildOperationRequiresV1}=await import("./⚙️operations/🟦️.ts");
-    if(buildOperationRequiresV1(command)==="dependencies"){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
-    if(command==="remote-execution"){
-      const {runRemoteExecutionCommandV1}=await import("./🏃️execution/🐳️service/🟦️.ts");
-      const result=await runRemoteExecutionCommandV1(resolved.args.slice(1),{root,environment:process.env,host:{platform:process.platform,arch:process.arch},signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:"+stage,"running");},write:line=>console.log(line)});
-      if(result!==undefined)console.log(JSON.stringify(result,null,2));
-      return;
-    }
-    if(command==="cache"&&["status","gc"].includes(resolved.args[1]??"")&&!resolved.args.includes("--tasks")){
-      const {runCacheLedgerV1}=await import("./🧹️cache-gc/⌨️command/🟦️.ts");
-      await runCacheLedgerV1(root,resolved.args.slice(1),invocation,phaseControl);
-      return;
-    }
-    if(command==="cache"&&["serve","remote"].includes(resolved.args[1]??"")){
-      const {runRemoteCacheCommandV1}=await import("./🌐️remote-cache/⌨️command/🟦️.ts");
-      const tool=async()=>selected.tool==="nx"?(await import("../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1():(await import("./🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts")).bazelRemoteCacheToolV1();
-      const result=await runRemoteCacheCommandV1(resolved.args.slice(1),{root,environment:process.env,signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:cache:"+stage,"running");},write:line=>console.log(line),tool});
-      if(result!==undefined)console.log(JSON.stringify(result,null,2));
-      return;
-    }
-    const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
-    await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{
-    if(command==="tools"){
-      if(resolved.args[1]!=="setup"||resolved.args.length>3)throw new Error("Expected repo tools setup [nx|bazel|all]");
-      const tools=resolved.args[2]??selected.tool;
-      if(!["nx","bazel","all"].includes(tools))throw new Error(`Unknown build tool: ${tools}`);
-      if(tools!=="nx"){
-        const bootstrap=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"),{requireBazelPlatformV1,bazelProgressLineV1,describeBazelReadinessV1}=await import("../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts"),{prepareBazelModulesV1}=await import("./🔧️tools/🏗️bazel/📜️script.ts"),{withBazelSetupStorageV1}=await import("./🔧️tools/🏗️bazel/💾️storage/🟦️.ts"),{issueBuildTaskEnvironmentV1}=await import("./📥️caller/🟦️.ts"),publish=(stage:string)=>invocation.control.publish({owner:invocation.policy.owner,command:`build:tools:${stage}`,stage:"running"}),offline=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true";
-        await requireBazelPlatformV1(root,phaseControl.signal);
-        await withBazelSetupStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{
-          let last=0;const bazel=await bootstrap.prepareBazel(root,storage.tools,actualPhase,event=>{publish(event.phase);const step=bazelProgressLineV1(event,last);last=step.lastPercent;if(step.line)console.log(step.line);},offline);
-          publish("modules");const modules=await prepareBazelModulesV1(root,bazel,invocation,storage,actualPhase),row=bootstrap.bazelDistribution(process.platform,process.arch),report=await describeBazelReadinessV1({executable:bazel,platform:process.platform,arch:process.arch,sha256:row.sha256,lock:modules.lock,repository:modules.repository});
-          publish("ready");console.log(report.line);console.log(`[bazel] readiness ${JSON.stringify(report.readiness)}`);
-        });
-      }
-      if(tools!=="bazel"){const adapter=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");await adapter.runOwnedNxInvocationV1(root,["--version"],invocation,phaseControl);}
-      return;
-    }
-    if(command==="reset"){
-      if(resolved.args.length!==1)throw new Error("Expected repo reset without task arguments");
-      if(selected.tool==="bazel"){const{resetBazelBuildStateV1}=await import("./🔧️tools/🏗️bazel/💾️storage/🗑️reset/🟦️.ts");await resetBazelBuildStateV1(root,invocation,phaseControl);}
-      else{const{invalidateBuildGraphV1}=await import("./🕸️graph/🟦️.ts");await invalidateBuildGraphV1(root,invocation,phaseControl);const {runOwnedNxInvocationV1}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");await runOwnedNxInvocationV1(root,["reset"],invocation,phaseControl);}
-      return;
-    }
-    if(command==="cache"){
-      const {runBuildCacheOperationV1}=await import("./⚙️operations/🟦️.ts");
-      const resolveCacheTool=async(tool:"nx"|"bazel")=>tool==="nx"?(await import("../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts")).nxBuildCacheToolV1():(await import("./🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();
-      console.log(JSON.stringify(await runBuildCacheOperationV1(selected.tool,resolved.args.slice(1),{root,invocation,phaseControl},resolveCacheTool),null,2));
-      return;
-    }
-    if(["graph","show"].includes(command)){
-      const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??"fresh",...(command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{})}});
-      const {buildOptionV1}=await import("./🧭️selection/🟦️.ts");
-      let result:unknown=graph;
-      for(const row of graph.unavailable??[])console.error(`[build] unavailable project ${row.project??row.root}: ${row.source} does not parse (${row.sha256.slice(0,12)})`);
-      if(command==="show"){
-        const subject=resolved.args[1];
-        if(subject==="project"){const name=resolved.args[2];if(!name)throw new Error("Build project name required");result=graph.projects[name];const withheld=graph.unavailable?.find(row=>row.project===name);if(!result)throw new Error(withheld?`Build project ${name} is unavailable until ${withheld.source} parses: ${withheld.reason}`:`Unknown build project: ${name}`);}
-        else if(subject==="projects")result=Object.keys(graph.projects).sort();
-        else if(subject==="targets")result=[...new Set(Object.values(graph.projects).flatMap(project=>Object.keys(project.targets)))].sort();
-        else throw new Error("Expected repo show projects|project <name>|targets");
-      }
-      const output=buildOptionV1(resolved.args,"file");
-      if(output){const {withRepositoryBuildReportV1}=await import("./📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,result,invocation,async artifact=>{console.log(artifact.path);});}
-      else if(Array.isArray(result)&&!resolved.args.includes("--json"))console.log(result.join("\n"));else console.log(JSON.stringify(result,null,2));
-      return;
-    }
-    const {prepareBuildToolStorageV1}=await import("./🔧️tools/💾️storage/🟦️.ts");await prepareBuildToolStorageV1(root,selected.tool,invocation,phaseControl,0);
-    const baseline=await loadBuildInvocationGraphV1(root,resolved.args,parent,invocation,phaseControl,process.env.SEMIO_BUILD_REUSE_GRAPH==="true"),{withSelectedRustBuildGraphV1}=await import("./🕸️graph/🦀️rust/🟦️.ts");await withSelectedRustBuildGraphV1(root,baseline,resolved.args,invocation,phaseControl,async(prepared,rustPhase)=>{const graph=prepared.graph;for(const[key,value]of Object.entries(prepared.environment)){previous[key]=process.env[key];process.env[key]=value;}
-    const {withRepositoryBuildGraphArtifactV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
-    await withRepositoryBuildGraphArtifactV1(root,graph,invocation,rustPhase,async(pinned,artifactPhase)=>{
-    process.env.SEMIO_BUILD_GRAPH_PATH=pinned.path;process.env.SEMIO_BUILD_GRAPH_DIGEST=pinned.digest;process.env.SEMIO_BUILD_REUSE_GRAPH="true";
-    if(command==="watch"){const selection=await import("./🧭️selection/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("./📥️caller/📤️child/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation,artifactPhase,{child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});return;}
-    if(selected.tool==="nx"){
-      if(command==="exec"&&resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="))){
-        const selection=await import("./🧭️selection/🟦️.ts"),{buildExecPlanV1}=await import("./⚙️operations/🟦️.ts"),listed=(names:string[])=>selection.buildOptionsV1(resolved.args,names).flatMap(value=>value.split(",").filter(Boolean));
-        console.log(JSON.stringify(buildExecPlanV1(selection.selectBuildProjectsV1(graph,listed(["projects","p"]),listed(["exclude"]))),null,2));
-        return;
-      }
-      const {runOwnedNxInvocationV1,publishBootstrapSources}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts"),{nxOperationArgumentsV1}=await import("../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts");
-      publishBootstrapSources(root);
-      const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("./🧾️store-receipt/🟦️.ts"),{storeRepairNxArgumentsV1}=await import("./🧾️store-receipt/🟨️.mjs"),boundary=resolved.args.indexOf("--"),forwarded=boundary<0?[]:resolved.args.slice(boundary+1);
-      const nx=async(nxArguments:string[])=>{const prior=process.exitCode;process.exitCode=undefined;try{await runOwnedNxInvocationV1(root,nxArguments,invocation,artifactPhase);if(process.exitCode)throw new Error(`Build invocation failed (${process.exitCode})`);}finally{process.exitCode=prior;}};
-      await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:()=>nx(nxOperationArgumentsV1(resolved.args)!),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
-      return;
-    }
-    if(command==="inputs")throw new Error("repo inputs is implemented for Nx; Bazel records the inputs of its spawns for repo verify build-parity");
-    const selection=await import("./🧭️selection/🟦️.ts");
-    process.env.SEMIO_BUILD_REUSE_GRAPH="true";
-    const adapter=await import("./🔧️tools/🏗️bazel/📜️script.ts");
-    const head=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")),dryRun=head.some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="));
-    const request=await selection.selectBuildTasksV1(root,graph,resolved.args,invocation,files=>dryRun?selection.affectedBuildProjectsV1(graph,files):adapter.bazelAffectedProjectsV1(root,graph,selection.affectedTouchesV1(graph,files),invocation,artifactPhase));
-    const planning=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph=")),operations=await import("./🔧️tools/🏗️bazel/⚙️operations/🟦️.ts"),untouched=command==="affected"&&!request.tasks.length;
-    if(planning){
-      const plan=operations.bazelDryRunPlanV1(untouched?operations.bazelEmptyPlanV1:adapter.planBazelTasksV1(graph,adapter.bazelAuthorizedRequestV1(request,invocation))),output=selection.buildOptionV1(resolved.args,"graph");
-      if(output&&output!=="stdout"&&output!=="true"){
-        const {withRepositoryBuildReportV1}=await import("./📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,plan,invocation,async artifact=>{console.log(artifact.path);});
-      }else console.log(JSON.stringify(plan,null,2));
-      return;
-    }
-    if(untouched){console.log("[bazel] no affected tasks");return;}
-    if(resolved.watch){
-      const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("./📥️caller/📤️child/🟦️.ts");
-      await withRequestedIssuedResourceControlV1(artifactPhase,0,async childPhase=>{let watching:Promise<void>|undefined;
-      try{
-        await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,childPhase,{initial:true,child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});watching.catch(error=>controller.abort(error));});
-      }finally{controller.abort();await watching?.catch(error=>{if(!controller.signal.aborted)throw error;});}},controller.signal);
-      return;
-    }
-    const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("./🧾️store-receipt/🟦️.ts");
-    await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:async()=>{await adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase);},repair:async task=>{await adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase);}});
-    },additionalBytes=>prepareBuildToolStorageV1(root,selected.tool,invocation,rustPhase,additionalBytes));
-    });
-    });
-  } finally {for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}
-}
-
-/** 🏛️ Returns the single authored ordinary policy used before a fresh build CLI birth. */
-export function readDefaultBuildCliPolicyV1(environment:Readonly<Record<string,string|undefined>>={}){return readScriptPolicy(Object.freeze({version:1,owner:"repository:build",maximumElapsedMilliseconds:buildBudgetMs(environment)}));}
-
-/** 🚪️ Admits the original authored CLI policy and resources before any backend or installed application launch. */
-export async function runBuildCliV1(root:string,typed:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
-  const{normalizeBuildOptionsV1}=await import("./⚙️operations/🔤️options/🟦️.ts"),{resolveBuildCliLanguageV1}=await import("./⚙️operations/📖️help/🟦️.ts"),args=normalizeBuildOptionsV1(typed);
-  const chosen=resolveBuildCliLanguageV1(args,environment);
-  if(environment===process.env)process.env.SEMIO_LANGUAGE=chosen;
-  const prefix=args[0]==="repo"||args[0]==="build"?1:0;
-  if(args[prefix]==="leases"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runLeasesCliV1}=await import("./🔒️leases/⌨️command/🟦️.ts");process.exitCode=await runLeasesCliV1(root,args.slice(prefix+1),environment);return;}
-  if(args[prefix]==="capacity"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runCapacityCommandV1}=await import("./🌡️host-capacity/⌨️command/🟦️.ts");process.exitCode=await runCapacityCommandV1(args.slice(prefix+1),{environment,write:line=>console.log(line)});return;}
-  if(args[prefix]==="tools"&&["exec","list","verify"].includes(args[prefix+1]??"")){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runToolsCommandV1}=await import("./🧰️tool-registry/⌨️command/🟦️.ts");process.exitCode=await runToolsCommandV1(args.slice(prefix+1),{environment,write:line=>console.log(line),root});return;}
-  if(environment.SEMIO_TOOL_GUARD==="refuse"||environment.SEMIO_TOOL_GUARD==="warn"){const{installToolGuardV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts"),ledger=(await import("../⚖️laws/🧰️direct-tool-spawn/🧾️ledger/🔣️.json",{with:{type:"json"}})).default;installToolGuardV1({root,mode:environment.SEMIO_TOOL_GUARD,tolerated:new Set(ledger.entries.map((row:{path:string;tool:string})=>row.path+"\0"+row.tool)),environment});}
-  const{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
-  await withBuildCapacityV1(args.slice(prefix),environment,granted=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment));
-}
-
-/** 🌡️ Creates the original script envelope and runs the CLI once the machine has admitted the invocation, so its budget starts with the grant and not with the queue. */
-async function runAdmittedBuildCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv):Promise<void> {
-  issueRepositoryScriptProvidersV1(environment);
-  const {createScriptProcessEnvelope,readScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope,SCRIPT_PROCESS_INVOCATION_ENV}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
-  const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];
-  const incoming=wire===undefined?undefined:readScriptProcessEnvelope(JSON.parse(wire),Date.now());
-  const policy=environment.SEMIO_SCRIPT_POLICY===undefined?incoming?.policy??readDefaultBuildCliPolicyV1(environment):readScriptPolicy(JSON.parse(environment.SEMIO_SCRIPT_POLICY));
-  if(incoming&&(incoming.policy.owner!==policy.owner||incoming.policy.version!==policy.version||incoming.policy.maximumElapsedMilliseconds!==policy.maximumElapsedMilliseconds))throw new Error("Original build policy changed across handoff");
-  const capabilities=incoming?.capabilities??await createBuildBootstrapCapabilitiesV1(root,args,environment),envelope=incoming??createScriptProcessEnvelope(policy,capabilities,Date.now());
-  await withScriptProcessEnvelope(envelope,original=>runScriptMain(new ScriptRouter(root,root).register("repo",RepoScript).register("build",BuildScript).register("test",TestScript),{invocation:original,argv:[...args]}));
-}
-
-if(import.meta.main)await runBuildCliV1(findWorkspaceRoot(import.meta.dir),process.argv.slice(2));
+{"$schema": "../🧬️schema/🔣️.json", "version": 1,
+ "reasons": {"test": {"en": "Test code keeps its direct spawns until the tests move onto the registry drop-ins (spawnToolSyncV1, runToolV1, workspace.ToolCommand, spawn_command); tests are scanned and ratcheted, so no new one may appear.", "de": "Testcode behält seine direkten Starts, bis die Tests auf die Registratur-Einsätze (spawnToolSyncV1, runToolV1, workspace.ToolCommand, spawn_command) umgestellt sind; Tests werden geprüft und ratschenartig begrenzt, es darf keiner hinzukommen."}},
+ "entries": [
+  {"path": ".storybook/🧪️tests/🧪️scope-resolution/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🀄️wfc/🪶️sqlite/🎨️bitmap/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🪶️sqlite/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🕸️mesh/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️semantic/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🔮️oracle-and-remedy-laws/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/✅️compliance-gates/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🧬️facet-and-asset-parity/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️owned/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧰️testing/🛫️native-output/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️cohort/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔬️page-domain/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 9},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️codec/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️audit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🎹️facets/🧪️tests/🔬️conformance/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 11},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 7},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🔬️rust-package-commands/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🎲️board/🎬️scene/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️entities/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️ownership/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "✏️s/🧪️tests/🏘️plugin-composition/📝️text-facet-parsers/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/🏗️compiler/♻️capture/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/✏️editor-catalog/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧪️tests/🌳️unit-census/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧪️tests/🐳️docker-image/🟦️.ts", "tool": "docker", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧪️tests/🔬️bin-unit/🪶️count-lease/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🌎️hub/🧪️tests/🤝️dev-collaboration/🧭️scope-and-dev-servers/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧪️tests/🦀️rust-warnings/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧪️tests/🧪️diff-only-law-gate/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧪️tests/🧭️entrypoint/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/📦️packages/🟦️typescript/🧪️tests/📤️module-package-surface/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/⏳️async/📏️api/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/⚠️diagnostic/🧪️tests/🎛️controlled/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔓️uncontrolled-owners/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️tests/🧪️numeric-index-oracle/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/📝️paged/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🔶️actor-return-codecs-load/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stream/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📬️output/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts", "tool": "hdiutil", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🎭️forged/📜️script.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️managed/🟦️.ts", "tool": "dotnet", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️managed/🟦️.ts", "tool": "uv", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts", "tool": "cmake", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/💥️crash/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🎚️capacity/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/📥️processes/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/⚖️law/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🚦️protocol/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🚦️protocol/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🚦️protocol/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🏗️mesh-engine/🎯️component-references/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️theme-resolve/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🔬️mesh-unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖼️assets/🗺️tile-proxy/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧪️tests/🧩️suite/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🔬️unit/🛫️controlled/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧪️carrier-record-lists/🦀️.rs", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🏭️producer/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🔤️occurrences/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/♻️retirement/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🫳️reconstruction/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧱️neutrality/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧪️tests/🔬️unit/🦀️.rs", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️tests/🪪️single-owner/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 8},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧪️tests/🔗️source-custody/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🌊️hydration-and-source-birth/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/📸️snapshot-custody/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 12},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧪️tests/🛫️encoding/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔀️surface-switch/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖥️view-model-surfaces/🟦️.tsx", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🌐️world3d-window-pointer-and-orbit-laws/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/📇️inventory/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/📇️inventory/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧬️surface-schema/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧪️tests/🧪️set-state/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts", "tool": "cargo", "form": "shell", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🔸️raw-close/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🕸️native-optimization/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔢️ieee754/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🏭️producer/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🧮️compute-retained/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📣️contributions/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🚀️local-hub/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧩️contribution/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🌉️fixtures-and-pixels/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧬️jco-rewrites/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🔬️unit/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚪️entrypoint_windows.go", "tool": "bun", "form": "spawn", "scope": "prod", "count": 1, "reason": "Removed by the repo-launcher set (groups launcher and rust); the row drops out when that set is applied."},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🛠️tool/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs", "tool": "bun", "form": "spawn", "scope": "prod", "count": 1, "reason": "Removed by the repo-launcher set (groups launcher and rust); the row drops out when that set is applied."},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🧪️tests/🔦️search/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🧪️tests/🔭️exhaustive/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/⌨️controls/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/♻️reuse/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🔎️source-discovery/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts", "tool": "nx", "form": "shell", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧩️sources/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧪️tests/🔬️unit/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/⚙️configure-and-vscode-hooks/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🌿️git-version-control/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 8},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🏁️checkpoint-in-events/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🚦️test-dispatch/🐹️.go", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/🧪️tests/🔢️numstat-parsing/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 8},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🐍️oracle.py", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts", "tool": "repo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🧪️tests/🚦️baseline-command/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🧪️tests/🚦️baseline-command/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts", "tool": "node", "form": "shell", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/🧪️tests/🟦️.ts", "tool": "node", "form": "shell", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️dependencies/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️dependencies/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔒️trunk-lockfile/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️command-imports/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/🔁️context/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️daemon/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️wasm/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🖥️services/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🗿️artifact-source/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️live-activation/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧬️generator-ownership/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧾️cargo-provenance/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧭️help-offline/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts", "tool": "nx", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🔒️classes/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📐️declared-inputs/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔗️workspace-closure/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧮️covered-inputs/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️registry-consistency/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🧪️tests/🟦️.ts", "tool": "python", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 8},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️rust-policy-source-evidence/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/🧪️tests/🦀️native/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧩️compute-constructor/🧪️tests/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📦️identity/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️nested-owners/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️workspace-negation-closure/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️workspace-negation-closure/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎫️ticket-role-routing/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏛️canonical-execution/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏠️owner-projection-policy/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏺️historical-package-owner-identity/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📜️historical-document-evidence/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/📝️docs-and-mounts/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🧬️layout-differential/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/💥️child-control/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🔸️rejects-incomplete-plans-plan/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔗️markdown-inline-references/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️micro-commit-staged-index/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️micro-commit-staged-index/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎨️artifact-path-projection/🔸️authored-draw-residue-recovery/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎨️artifact-path-projection/🟠️authored-draw-source-producer/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎫️ticket-protection/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🏗️shared-fixtures/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🏗️shared-fixtures/🟦️.ts", "tool": "repo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📝️commit-and-budgets/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📝️commit-and-budgets/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 31},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔗️registry-and-cargo-providers/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🔵️shared/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🔶️safegitenv-replaces-unusable-configured/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🔹️buildmicrocommitmetrics-merges-uloc-git/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🔹️buildmicrocommitmetrics-merges-uloc-git/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 14},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🔬️micro-commit/🟡️installmicrocommitgithooks-writes-portab/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 12},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🛠️dev-tooling/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧩️policy-laws/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️mutation-taxonomy/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧱️taxonomy-normalization/📋️inventory-order-cli-and-ticket-scope/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧳️generated-outputs/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧾️generator-preview-and-dispositions/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🔶️mutation-root-discovery-projects/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🔸️recognizes-binary-leaf-tag/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 5},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟠️requires-one-enabled-reachable/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔷️typescript-project/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗂️mutation-leaf-case-table/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚧️cargo-discovery-exclusions/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛑️taxonomy-cli-cancellation/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛟️transaction-recovery-authority/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 4},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-authority/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 3},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-authority/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-authority/🧫️fixture/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-leaf-generics/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-dependency-direction/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️fixture-law-ownership/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️manifestless-source-closure/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️manifestless-source-closure/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️owned-script-routes/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-dependency-source/🟦️.ts", "tool": "bun", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-dependency-source/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔗️participation/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧾️attributes/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🪵️root/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🪵️root/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 7},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧹️clean-ticket-runs/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪟️windows-command-paths/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts", "tool": "go", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🔣️taxonomy-input/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/🧪️tests/🔭️hook-search/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/📋️capability-listing/🐹️.go", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🤝️jsonrpc-handshake/🐹️.go", "tool": "bun", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/🧪️tests/🌿️git-version-control/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/🧪️tests/🌿️git-version-control/🟦️.ts", "tool": "git", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/🧪️tests/🔬️unit/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 7},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts", "tool": "cargo", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 2},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts", "tool": "node", "form": "spawn", "scope": "test", "count": 1},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/🧪️tests/🔖️checkpoint/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 6},
+  {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/🧪️tests/🔬️unit/🐹️.go", "tool": "git", "form": "spawn", "scope": "test", "count": 2}
+ ],
+ "declared": [
+  {"tool": "bun", "scope": "prod", "count": 4582},
+  {"tool": "bun", "scope": "test", "count": 22},
+  {"tool": "cargo", "scope": "prod", "count": 2},
+  {"tool": "repo", "scope": "prod", "count": 31}
+ ]}

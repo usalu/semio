@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-job.workspace = true
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-os-kernel-neural-engine-model = { path = "../../../🧱️model/📦️packages/🦀️rust" }

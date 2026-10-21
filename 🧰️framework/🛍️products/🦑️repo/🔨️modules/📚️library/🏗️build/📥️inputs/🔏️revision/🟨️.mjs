@@ -1,5 +1,6 @@
 import schemaContract from"./🧬️schema/🔣️.json"with{type:"json"};
 import{constants,lstatSync,openSync,fstatSync,readSync,closeSync}from"node:fs";
+import{AsyncLocalStorage}from"node:async_hooks";
 import{createHash}from"node:crypto";
 import{resolve,isAbsolute,parse,relative,sep,join}from"node:path";
 import{fileURLToPath}from"node:url";
@@ -37,7 +38,16 @@ function capture(path,maximumBytes,retainText){
  if(failed)throw primary;if(expected!==undefined&&value.sha256!==expected)throw Error("Compiler-captured physical Source byte identity changed");return value;
 }
 const ownSourceURL=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL),ownPath=fileURLToPath(ownSourceURL),loaded=capture(ownPath,maximumSourceBytes,false),ownSchemaPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",ownSourceURL)),loadedSchema=capturedSources?capture(ownSchemaPath,maximumTextBytes,false):undefined;
-function current(){if(capture(ownPath,loaded.byteLength,false).sha256!==loaded.sha256||loadedSchema&&capture(ownSchemaPath,loadedSchema.byteLength,false).sha256!==loadedSchema.sha256)throw Error("Stale loaded Source revision reader; restart required");}
+const pinKeyV1=Symbol.for("semio.implementationPin.context.v1"),pinContextV1=globalThis[pinKeyV1]??=new AsyncLocalStorage();
+/** 📍️ True while an invocation is committed to the implementation it loaded: every self-check of a loaded Source then lets the invocation finish, and what it publishes names the loaded bytes, so a Source edited meanwhile is left to the next invocation. */
+export function implementationPinnedV1(){return pinContextV1.getStore()?.active===true;}
+/** 📌️ Runs `body` committed to the loaded implementation; pins nest and a failing body releases its pin. */
+export async function withImplementationPinV1(body){const parent=pinContextV1.getStore(),pin={active:true,authority:parent?.active===true?parent.authority:new Map()};try{return await pinContextV1.run(pin,body);}finally{pin.active=false;}}
+/** 📸️ Reads authority data (the owner registry, declarations) once per pinned invocation: every later read of the same key returns the first answer, so a run completes consistently with the data it started from; outside a pin it reads every time. */
+export function pinnedAuthorityReadV1(key,read){const rows=pinContextV1.getStore()?.active===true?pinContextV1.getStore().authority:undefined;if(!rows)return read();if(!rows.has(key))rows.set(key,read());return rows.get(key);}
+/** 🧽️ Forgets the authority snapshot so the next read starts a new consistent view; a graph load calls it before it reads its authority. */
+export function clearPinnedAuthorityV1(){pinContextV1.getStore()?.authority?.clear();}
+function current(){if(implementationPinnedV1())return;if(capture(ownPath,loaded.byteLength,false).sha256!==loaded.sha256||loadedSchema&&capture(ownSchemaPath,loadedSchema.byteLength,false).sha256!==loadedSchema.sha256)throw Error("Stale loaded Source revision reader; restart required");}
 /** 🔏️ Streams one finite ordinary Source revision; returned DATA grants no physical resource custody. */
 export function captureBoundedSourceRevisionV1(path,maximumBytes,retainText=false){
  if(typeof path!=="string"||!isAbsolute(path)||resolve(path)!==path||path.length>maximumPathUnits||path.includes("\0")||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>maximumSourceBytes||typeof retainText!=="boolean"||retainText&&maximumBytes>maximumTextBytes)throw Error("Reducing finite Source revision request required");

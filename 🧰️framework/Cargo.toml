@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
     "🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust",
@@ -54,6 +55,7 @@ members = [
     "🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/✨️derive/⚙️expansion/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
@@ -1002,6 +1004,7 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
   rust-version = "1.95"
 
   [workspace.dependencies]
+semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust" }
   wasm-bindgen = "0.2.106"
 
     [workspace.dependencies.pack]
@@ -1168,6 +1171,9 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
 
     [workspace.dependencies.semio-framework-value]
     path = "🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-ordered]
+    path = "🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-native-owned]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"

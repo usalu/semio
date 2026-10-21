@@ -31,14 +31,52 @@
       "reads"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
-    "test-original-record-receiving-source":{"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "reads", "cargoToolchain"], "outputs": [],"cache":true,"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-record-receiving source"}},
-    "test-original-record-receiving-native":{"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "reads", "cargoToolchain"], "outputs": [],"cache":true,"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-record-receiving native"}},
+    "test-original-record-receiving-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-record-receiving source"
+      }
+    },
+    "test-original-record-receiving-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-record-receiving native"
+      }
+    },
     "test-occurrence-order-source": {
       "executor": "repo:script",
       "inputs": [
@@ -276,6 +314,100 @@
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
       },
       "cache": true
+    },
+    "test-catalog-reservation-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🧭️catalog-cursor/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️document/🦀️.rs",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-catalog-reservation-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Catalog Reservations",
+              "de": "Katalogreservierungen Testen"
+            },
+            "description": {
+              "en": "Check append and final-extent page reservations against independent SQL.",
+              "de": "Prüft Seitenreservierungen für Anhänge und endgültige Umfänge mit unabhängiger SQL-Referenz."
+            }
+          }
+        }
+      }
+    },
+    "test-inline-symbol-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🦀️.rs",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-inline-symbol-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Inline Symbol Ownership",
+              "de": "Inline-Symbolbesitz Testen"
+            },
+            "description": {
+              "en": "Check bounded inline work and exact caller wire handback against independent models.",
+              "de": "Prüft begrenzte Inline-Arbeit und die exakte Rückgabe des Aufrufer-Wire mit unabhängigen Modellen."
+            }
+          }
+        }
+      }
     }
   }
 }

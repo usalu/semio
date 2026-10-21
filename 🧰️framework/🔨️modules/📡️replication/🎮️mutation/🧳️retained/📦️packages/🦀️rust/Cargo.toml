@@ -22,11 +22,13 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-factory = { path = "../../../../../🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }
 semio-framework-replication-mutation-retained-field = { path = "../../🪡️field/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-replication-mutation-messages = { path = "../../../📨️messages/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-snapshot-projection.workspace = true
 semio-framework-value-persistent.workspace = true
 semio-framework-value-native-owned.workspace = true
 semio-framework-diagnostic = { path = "../../../../../⚠️diagnostic/📦️packages/🦀️rust" }

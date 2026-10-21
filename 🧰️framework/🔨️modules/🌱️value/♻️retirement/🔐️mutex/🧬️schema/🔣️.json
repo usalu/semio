@@ -1,1 +1,157 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.dev/value/original-owned-mutex-corpus","type":"object","required":["version","cases"],"additionalProperties":false,"properties":{"version":{"const":1},"cases":{"type":"array","minItems":1,"items":{"type":"object","required":["id","poisoned","owner","expected"],"additionalProperties":false,"properties":{"id":{"type":"string","minLength":1},"poisoned":{"type":"boolean"},"owner":{"type":"string","minLength":1},"expected":{"type":"object","required":["preserved","terminal"],"additionalProperties":false,"properties":{"preserved":{"const":true},"terminal":{"const":true}}}}}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/value/original-owned-mutex-corpus",
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "exclusiveGate",
+    "sharedQueries"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "poisoned",
+          "owner",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "poisoned": {
+            "type": "boolean"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "preserved",
+              "terminal"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "preserved": {
+                "const": true
+              },
+              "terminal": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "exclusiveGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cursorTransfer",
+        "cursorSharing",
+        "cases"
+      ],
+      "properties": {
+        "cursorTransfer": {
+          "const": "send"
+        },
+        "cursorSharing": {
+          "const": "exclusive"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "events",
+              "accepted",
+              "terminal"
+            ],
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "events": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "acquire",
+                    "release"
+                  ]
+                }
+              },
+              "accepted": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "boolean"
+                }
+              },
+              "terminal": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "sharedQueries": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "port",
+          "events",
+          "accepted"
+        ],
+        "properties": {
+          "port": {
+            "enum": [
+              "source-owner",
+              "source-lease",
+              "projection"
+            ]
+          },
+          "events": {
+            "const": [
+              "enter",
+              "query",
+              "leave",
+              "query"
+            ]
+          },
+          "accepted": {
+            "const": [
+              true,
+              false,
+              true,
+              true
+            ]
+          }
+        }
+      }
+    }
+  }
+}

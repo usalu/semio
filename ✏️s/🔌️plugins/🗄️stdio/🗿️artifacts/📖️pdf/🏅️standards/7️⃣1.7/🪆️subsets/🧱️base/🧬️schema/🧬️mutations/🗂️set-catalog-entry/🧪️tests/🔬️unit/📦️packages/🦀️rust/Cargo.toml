@@ -34,8 +34,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-deflate = { workspace = true }
@@ -58,6 +56,7 @@ serde_json = { workspace = true }
 testkit = ["semio-s-artifact-stdio-pdf-diff/testkit", "semio-s-artifact-stdio-pdf-snapshot-2/testkit", "semio-s-artifact-stdio-pdf-inferences/testkit", "semio-s-artifact-stdio-pdf-mut-base-2/testkit", "semio-s-artifact-stdio-pdf-conformance-support/testkit", "semio-s-artifact-stdio-pdf-mut-family/testkit", "semio-s-artifact-stdio-pdf-mut-family-2/testkit", "semio-s-artifact-stdio-pdf-mut-family-3/testkit", "semio-s-artifact-stdio-pdf-mut-x/testkit", "semio-s-artifact-stdio-pdf-mut-family-8/testkit", "semio-s-artifact-stdio-pdf-mut-family-11/testkit", "semio-s-artifact-stdio-pdf-testkit/testkit", "semio-s-artifact-stdio-pdf-tests-2/testkit"]
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

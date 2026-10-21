@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-hash = { path = "../../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
-semio-framework-pack-format = { path = "../../../📐️format/📦️packages/🦀️rust" }
+semio-framework-pack-format = { path = "../../../📐️format/📦️packages/🦀️rust", features = ["deflate"] }
 semio-framework-pack-format-catalog = { path = "../../../📐️format/🗂️catalog/📦️packages/🦀️rust" }
 semio-framework-pack-format-retained = { path = "../../../📐️format/🎮️retained/📦️packages/🦀️rust" }
 semio-framework-pack-record = { path = "../../../🌱️value/📦️packages/🦀️rust" }

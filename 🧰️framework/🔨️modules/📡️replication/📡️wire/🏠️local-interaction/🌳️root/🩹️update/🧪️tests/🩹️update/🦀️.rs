@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_value::ordered::SharedOwner;
+use semio_framework_value_ordered::ordered::SharedOwner;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}

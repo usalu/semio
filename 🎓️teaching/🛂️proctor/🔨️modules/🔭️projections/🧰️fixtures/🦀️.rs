@@ -36,7 +36,7 @@ pub fn command_id(number: usize, run: &str) -> String {
 /// ▶️ Start a run of `quiz` at `challenge` as `learner` and answer every sheet task perfectly — on a
 /// timed run each right after opening it —, without submitting.
 pub async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, course: &LoadedCourse, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
-    submit(bus, &Command::StartRun { id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into(), challenge, at: millis }, millis).await;
+    submit(bus, &Command::StartRun { origin: None, id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into(), challenge, at: millis }, millis).await;
     let document = &course.current()[quiz].quiz;
     for (index, task) in course::sheet_of(document, course::run_seed(run), challenge).tasks.iter().enumerate() {
         if task.seconds().is_some() {

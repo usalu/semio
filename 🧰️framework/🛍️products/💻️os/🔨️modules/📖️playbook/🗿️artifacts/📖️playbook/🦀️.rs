@@ -226,7 +226,7 @@ pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option
     None
 }
 
-pub type PlaybookValues = semio_framework_value::ordered::OrderedMap<DslValue>;
+pub type PlaybookValues = semio_framework_value_ordered::ordered::OrderedMap<DslValue>;
 
 fn retire_displaced_playbook_value(value: Option<DslValue>) {
     if let Some(value) = value { FromValue::retire_decoded(value); }

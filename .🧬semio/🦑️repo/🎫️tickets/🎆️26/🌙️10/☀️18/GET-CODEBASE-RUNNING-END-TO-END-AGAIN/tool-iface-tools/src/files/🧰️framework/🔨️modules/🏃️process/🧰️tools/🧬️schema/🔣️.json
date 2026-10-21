@@ -79,12 +79,11 @@
     "Messages": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["unknownTool", "toolMissing", "callerRefused", "syncRefused", "versionMismatch", "cancelled", "failed", "execUsage", "listHeader", "verifyOk", "verifyProblem", "admitting", "running", "finished", "guardRefused", "guardWarned", "capacityMissing"],
+      "required": ["unknownTool", "toolMissing", "callerRefused", "versionMismatch", "cancelled", "failed", "execUsage", "listHeader", "verifyOk", "verifyProblem", "admitting", "running", "finished", "guardRefused", "guardWarned"],
       "properties": {
         "unknownTool": {"$ref": "#/definitions/Text"},
         "toolMissing": {"$ref": "#/definitions/Text"},
         "callerRefused": {"$ref": "#/definitions/Text"},
-        "syncRefused": {"$ref": "#/definitions/Text"},
         "versionMismatch": {"$ref": "#/definitions/Text"},
         "cancelled": {"$ref": "#/definitions/Text"},
         "failed": {"$ref": "#/definitions/Text"},
@@ -96,8 +95,7 @@
         "running": {"$ref": "#/definitions/Text"},
         "finished": {"$ref": "#/definitions/Text"},
         "guardRefused": {"$ref": "#/definitions/Text"},
-        "guardWarned": {"$ref": "#/definitions/Text"},
-        "capacityMissing": {"$ref": "#/definitions/Text"}
+        "guardWarned": {"$ref": "#/definitions/Text"}
       }
     },
     "RowFilter": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}},

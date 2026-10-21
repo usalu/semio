@@ -91,7 +91,7 @@
       "environment": {
         "LANGUAGE": "de"
       },
-      "expected": "en"
+      "expected": null
     }
   ],
   "invalidDeclarations": [

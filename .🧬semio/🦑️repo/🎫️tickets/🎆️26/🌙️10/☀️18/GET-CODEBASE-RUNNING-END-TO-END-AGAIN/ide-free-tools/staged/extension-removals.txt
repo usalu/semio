@@ -1,4 +1,4 @@
-/owners[1425] <object>
+/owners[1427] <object>
 /ownerEvidence/vscode-extension-owner-documentation
 /ownerEvidence/bun-public-package-repo-vscode
 /referenceOwners/vscode-package-ignore

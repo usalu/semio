@@ -55,7 +55,7 @@ export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,
  const top=()=>{if(closed||size<=0)return;while(idle.length+starting<size)create();};
  return{
   top,
-  /** Hands out one warm worker, or undefined when none is ready (the caller then starts a cold process). */
+  /** 🤝 Hands out one warm worker, or undefined when none is ready (the caller then starts a cold process). */
   take(){
    const worker=idle.shift();
    if(!worker){coldServed++;top();return undefined;}
@@ -63,7 +63,7 @@ export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,
    queueMicrotask(top);
    return worker;
   },
-  /** Runs one command in a taken worker: sends the request, streams output, resolves with the exit status. */
+  /** ⚙ Runs one command in a taken worker: sends the request, streams output, resolves with the exit status. */
   run(worker,request,{onOutput,signal}){
    return new Promise((resolve,reject)=>{
     const child=worker.child;let started=false;
@@ -83,10 +83,20 @@ export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,
  };
 }
 
-/** ▶ Execution port that runs a task as the real command line in a warm worker (or a cold process when none is ready). */
-export function createDelegatedExecutionPortV1({pool,coldCommand,argvFor,environment,cwd,timing=()=>{}}){
+/** ▶ Execution port that runs a task as the real command line: in a resident executor when one is ready and the repository allows it, otherwise in a warm one-shot worker, otherwise in a cold process. */
+export function createDelegatedExecutionPortV1({pool,executors,executorArgumentsFor=id=>["run",id],coldCommand,argvFor,environment,cwd,timing=()=>{}}){
+ let sequence=0;
  return{
-  async run({id,env,signal,onSpawn,onOutput}){
+  async run({id,env,client,signal,onSpawn,onOutput}){
+   if(executors){
+    const executor=executors.take();
+    if(executor){
+     let wrote=false;
+     const result=await executors.run(executor,{id:++sequence,argv:executorArgumentsFor(id),cwd,env:{...(env??{})},client},{onOutput:(stream,text)=>{wrote=true;return onOutput(stream,text);},signal});
+     if(result.refusal==="service"){timing("refused");return{exit:result.exit,refusal:{code:result.code,fields:result.fields}};}
+     if(!(result.refusal==="authority"||result.lost&&!wrote)){onSpawn?.();timing("executor");return{exit:result.exit};}
+    }
+   }
    const request={argv:argvFor(id),cwd,env:{...(env??{})}};
    const worker=pool.take();
    if(worker){onSpawn?.();timing("warm");return pool.run(worker,request,{onOutput,signal});}

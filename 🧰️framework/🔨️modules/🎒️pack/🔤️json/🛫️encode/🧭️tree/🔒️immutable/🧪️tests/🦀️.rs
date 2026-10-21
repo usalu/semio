@@ -1,6 +1,6 @@
 //! 🔒️ Immutable canonical rows lend their original addresses and close every funded output frontier.
 use super::{ArtifactCanonicalJsonTree as Tree,ArtifactCanonicalJsonTreeCursor as Cursor,Node,ArtifactCanonicalJsonText as Text,RetainedCloneGrant,RetainedCloneStep,RetirementDemand,ValueError};
-use semio_framework_value::{retirement::shared::sealed::SealedShared, retirement::{RetireOwned, shared::sealed::SharedIssuer}, retained_clone::RetainedCloneSource};
+use semio_framework_value::{shared_issuance::SealedShared, retirement::RetireOwned, shared_issuance::SharedIssuer, retained_clone::RetainedCloneSource};
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 #[derive(semio_framework_value::RetireOwned)]
@@ -21,7 +21,7 @@ fn table(n:usize)->PersistentList<SealedShared<Row>>{
  let mut leaves=leaves.into_iter();let children=std::array::from_fn(|_|leaves.next());PersistentList::admit_branch(children,grant(PersistentList::<SealedShared<Row>>::page_birth_demand())).unwrap_or_else(|(error,_)|panic!("original immutable fixture branch:{error}")).0
 }
 fn source<T:RetireOwned+Send+Sync+'static>(value:T)->RetainedCloneSource<T>{let birth=RetainedCloneSource::<T>::owned_constructor_demand::<()>();let d=RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()};RetainedCloneSource::admit_owned(value,(),grant(d)).unwrap_or_else(|(error,_,_)|panic!("original immutable tree source:{error}")).0}
-fn close<T:RetireOwned+Send+Sync+'static>(source:&mut RetainedCloneSource<T>){for turn in 0..100000{if source.terminal_is_empty(){return;}let first=source.next_close_demands(4096).unwrap();let d=source.next_close_demands(first.copy_bytes.max(4096)).unwrap();let g=grant(d);let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999,"original immutable source closure");}}
+fn close<T:RetireOwned+Send+Sync+'static>(source:&mut RetainedCloneSource<T>){for turn in 0..100000{if source.terminal_is_empty(){return;}let first=source.next_close_demand(4096).unwrap();let d=source.next_close_demand(first.copy_bytes.max(4096)).unwrap();let g=grant(d);let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999,"original immutable source closure");}}
 /// 👁️ Native kind, key and child views retain every actual row address with no payload Clone or heap work.
 #[test]
 fn canonical_immutable_table_views_preserve_original_rows_and_zero_heap(){

@@ -24,6 +24,7 @@ path = "🦀️.rs"
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path="../../../🛬️decode/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path="../../../🌳️intrinsic/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

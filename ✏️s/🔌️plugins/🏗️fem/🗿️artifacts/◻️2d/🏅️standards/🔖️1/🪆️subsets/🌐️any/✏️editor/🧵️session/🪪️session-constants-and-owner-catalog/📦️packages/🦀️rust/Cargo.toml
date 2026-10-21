@@ -18,7 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-ui-scene = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-framework-value-registry = { workspace = true }
 semio-s-fem-analyses-model = { workspace = true }
 semio-s-fem-model = { workspace = true }

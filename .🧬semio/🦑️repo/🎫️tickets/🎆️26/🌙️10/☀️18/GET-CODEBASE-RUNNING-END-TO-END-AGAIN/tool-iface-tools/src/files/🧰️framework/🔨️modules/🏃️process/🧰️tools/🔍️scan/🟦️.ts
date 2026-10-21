@@ -168,8 +168,8 @@ function shellOf(command: string, argumentsText: string, registry: ToolRegistryV
 }
 
 function scanCallSites(path: string, text: string, language: "ts" | "rust" | "go" | "python", registry: ToolRegistryV1, scope: "prod" | "test"): ToolSpawnSiteV1[] {
-  const masked = language === "python" ? maskPython(text) : maskCommentsV1(text, language), code = language === "python" ? maskPython(text, true) : maskCommentsV1(text, language, true), starts = lineStarts(text), sites: ToolSpawnSiteV1[] = [];
-  const add = (callee: string, form: ToolSpawnSiteV1["form"], tool: string | null, argument: string, offset: number): void => { if (tool !== null) sites.push({ path, line: lineOf(starts, offset), callee, form, tool, argument: argument.slice(0, 80), scope }); };
+  const testAt = language === "rust" ? text.search(/#\[cfg\(test\)\]/u) : -1, masked = language === "python" ? maskPython(text) : maskCommentsV1(text, language), code = language === "python" ? maskPython(text, true) : maskCommentsV1(text, language, true), starts = lineStarts(text), sites: ToolSpawnSiteV1[] = [];
+  const add = (callee: string, form: ToolSpawnSiteV1["form"], tool: string | null, argument: string, offset: number): void => { if (tool !== null) sites.push({ path, line: lineOf(starts, offset), callee, form, tool, argument: argument.slice(0, 80), scope: testAt >= 0 && offset >= testAt ? "test" : scope }); };
   for (const callee of registry.scan.callees.filter(row => row.language === language)) {
     const escaped = callee.name.replace(/[.$]/gu, "\\$&");
     const pattern = callee.shape === "template" ? new RegExp("(?<![\\w$])(?:Bun\\.)?\\$`", "gu") : new RegExp(`(?<![\\w$])${callee.name.includes(".") || callee.name.includes("::") ? "" : "(?:[\\w$]+\\.)?"}${escaped}\\s*\\(`, "gu");
@@ -180,6 +180,7 @@ function scanCallSites(path: string, text: string, language: "ts" | "rust" | "go
         continue;
       }
       const open = match.index + match[0].length, first = readArgumentV1(masked, open);
+      if (language === "rust" && masked[first.end] !== ")") continue;
       if (callee.shape === "shell-string") {
         const text0 = literalOf(first.text) ?? (first.text.startsWith("`") ? first.text.slice(1, first.text.indexOf("${") < 0 ? -1 : first.text.indexOf("${")) : undefined);
         if (text0 !== undefined) for (const word of shellCommandsV1(text0)) add(callee.name, "shell", classify(word, registry, text0.trim().split(/\s+/u)[1]), text0, match.index);

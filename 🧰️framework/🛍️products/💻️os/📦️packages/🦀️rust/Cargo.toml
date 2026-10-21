@@ -125,7 +125,6 @@ semio-framework-os-store-command = { path = "../../🔨️modules/🏪️store/�
 semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust" }
 semio-framework-os-store-projection = { path = "../../🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-message-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust" }
-semio-framework-value-retirement-owner = { path = "../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
 
 semio-framework-os-directory-client = { path = "../../🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust" }
 semio-framework-os-history = { path = "../../🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust", default-features = false }

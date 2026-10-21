@@ -1,0 +1,11 @@
+# Graph Shard and Image Call Order Audit
+
+Static Source reads only, no evaluation/native effects/PID probe. Repeated telemetry transition alone is not used as lock ownership proof.
+
+Actual build/📥️inputs/💾️storage/🟨️.mjs withGraphFactWriterV1 lines129-161 provides explicit release/retry protocol. It opens lease partition and optional graph maintenance, then each loop enters withRepositoryCacheStoreV1(graph) at141. Inside that image-backed store it tries namespace shard exclusive with timeoutMs:0 at143. A busy top-level shard returns waiting:true rather than blocking under graph image custody; nested different-namespace wait refuses. Any acquired shard is released in finally155 before leaving callback.
+
+After the awaited withRepositoryCacheStoreV1 returns, result.waiting branch157 awaits the shard externally only as a readiness turn, then releases it in finally BEFORE continue. The next loop141 reacquires graph image/store only after that shard release completed. If release fails without an earlier primary, it throws and cannot proceed to new image acquisition. Thus the specific observed shardwait→imagewait path has lexical proof that it releases the temporary shard first. No inverse blocking shard→graph-image edge exists in this branch.
+
+The cache-store implementation withRepositoryCacheStoreV1 at100-102 awaits callback and closes image in finally before returning; its enclosing return cannot finish earlier than awaited image close. Graph storage next loop therefore neither waits on shard while retaining that store image nor waits for graph image while retaining temporary shard. The lease partition remains separately retained; this report makes no unsupported claim about all lower-level mapping leases.
+
+Graph 🕸️graph/🟦️.ts withBuildGraphStateV1 invokes this selected/fact-store wrapper before taking build-graph-state writer; generationHost lease exclusive adapter300-302 likewise releases in finally. This supports ordered Source intent, not a complete runtime wait graph. A legitimate queued exclusive predecessor can still delay later shared image requests; earliest reported PID remains queue-ticket metadata rather than actual kernel holder proof. No cycle established and no cleanup/recovery authority inferred.

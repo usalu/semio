@@ -83,12 +83,12 @@ async fn every_caller_may_share_presence_inside_the_course_rooms_only() {
     for page in ["learner", "preferences"] {
         let cursor = serde_json::json!({ "tag": "0a1b2c3d", "place": { "screen": page }, "cursor": { "anchor": "viewport", "x": 0.5, "y": 0.5 } });
         assert_eq!(module.presence_admission(&Scope(format!("proctor-fixture/{page}")), &cursor), Ok(()), "{page}");
-        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", crate::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
+        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", teaching_proctor_base::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
     }
     for page in ["learner", "preferences"] {
         let cursor = serde_json::json!({ "tag": "0a1b2c3d", "place": { "screen": page }, "cursor": { "anchor": "viewport", "x": 0.5, "y": 0.5 } });
         assert_eq!(module.presence_admission(&Scope(format!("proctor-fixture/{page}")), &cursor), Ok(()), "{page}");
-        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", crate::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
+        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", teaching_proctor_base::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
     }
     assert_eq!(module.presence_admission(&Scope("proctor-fixture".into()), &state), Err(teaching_proctor_base::presence::STATE_INVALID.to_string()));
     assert_eq!(module.presence_admission(&Scope("other-course/home".into()), &state), Err(teaching_proctor_base::presence::SCOPE_UNKNOWN.to_string()));

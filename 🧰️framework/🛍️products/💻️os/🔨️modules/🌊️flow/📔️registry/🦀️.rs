@@ -132,11 +132,11 @@ pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {}
 /// id is known — raising `manifest.id` instead made every browser evaluation fault
 /// `extension.missing` and stall the tick chain (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 struct ContributedExtensionStub {
-    metadata:Option<protocol::value::ordered::SharedOwner<neural::PendingOperatorMetadata>>,
+    metadata:Option<semio_framework_value_ordered::ordered::SharedOwner<neural::PendingOperatorMetadata>>,
     retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate<Option<ControlledRetirement<ContributedStubSource>>>,
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct ContributedStubSource{metadata:Option<protocol::value::ordered::SharedOwner<neural::PendingOperatorMetadata>>}
+struct ContributedStubSource{metadata:Option<semio_framework_value_ordered::ordered::SharedOwner<neural::PendingOperatorMetadata>>}
 
 impl neural::Operator for ContributedExtensionStub {
     /// 🧊️ Keeps synchronous diagnostics on the same declared contribution closure.
@@ -210,7 +210,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         }
         let invocation_address = plugin_id.to_string();
         let operator_id = info.id.clone();
-        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { metadata:Some(protocol::value::ordered::SharedOwner::from_cold(neural::PendingOperatorMetadata{extension_id:invocation_address,operator_id})),retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(None) }) }], &[]);
+        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { metadata:Some(semio_framework_value_ordered::ordered::SharedOwner::from_cold(neural::PendingOperatorMetadata{extension_id:invocation_address,operator_id})),retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(None) }) }], &[]);
     }
     registry.finalize();
     Ok(())

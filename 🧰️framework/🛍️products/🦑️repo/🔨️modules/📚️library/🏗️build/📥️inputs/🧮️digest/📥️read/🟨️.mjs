@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{requireCurrentSourceInventoryV1,captureExactSourcePathV1,captureRepositorySourceRootV1,admitExactSourceExtentV1}from"../../📋️data/📥️load/🟨️.mjs";
 export{admitExactSourceExtentV1}from"../../📋️data/📥️load/🟨️.mjs";
@@ -14,7 +14,7 @@ import{withArtifactDescriptorV1}from"../../../../../../../../🔨️modules/📁
 const sourceURL=new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),policyURL=new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),loadedPolicy=captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536,true),schema=JSON.parse(loadedPolicy.text??""),loadedRevision=captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256,loadedPolicyRevision=loadedPolicy.sha256;
 const policy=Object.freeze({...schema.definitions.Policy.const}),owners=new WeakMap();
 /** 🧷️ Refuses retained reader behavior or privately captured policy superseded before managed admission or delivery. */
-export function requireCurrentExactSourceReadV1(){requireCurrentSourceInventoryV1();if(captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256!==loadedRevision||captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536).sha256!==loadedPolicyRevision)throw Error("Stale loaded exact Source reader; restart required");}
+export function requireCurrentExactSourceReadV1(){if(implementationPinnedV1())return;requireCurrentSourceInventoryV1();if(captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256!==loadedRevision||captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536).sha256!==loadedPolicyRevision)throw Error("Stale loaded exact Source reader; restart required");}
 const missing=error=>error&&typeof error==="object"&&["ENOENT","ENOTDIR"].includes(error.code);
 const stamp=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
 function recordFailure(scope,error){scope.accepting=false;if(!scope.failures.some(prior=>Object.is(prior,error))&&scope.failures.length<policy.maximumBatchFailures)scope.failures.push(error);}

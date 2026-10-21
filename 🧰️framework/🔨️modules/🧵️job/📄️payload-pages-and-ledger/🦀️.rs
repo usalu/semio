@@ -15,7 +15,7 @@ pub const JOB_PAYLOAD_PROCESS_BYTES: usize = 64 * 1024 * 1024;
 /// [`JOB_PAYLOAD_PROCESS_BYTES`]. It is a CEILING over the whole process — every concurrent
 /// operation moves it — so it stays private and no owner samples its absolute value; an owner
 /// reads its own share through `JobPayloadOperationLedger::process_share_bytes`.
-pub(super) static JOB_PAYLOAD_PROCESS_OWNED_BYTES: AtomicUsize = AtomicUsize::new(0);
+pub static JOB_PAYLOAD_PROCESS_OWNED_BYTES: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(usize)]
@@ -44,8 +44,26 @@ pub enum JobPayloadAdmissionFault {
     RejectedSourcePending,
 }
 
+/// 🚧️ Admission faults surface to value-level callers as work-limit refusals; sealed or pending sources are invariant violations.
+impl From<JobPayloadAdmissionFault> for semio_framework_value::ValueError {
+    fn from(fault: JobPayloadAdmissionFault) -> Self {
+        let (kind, message) = match fault {
+            JobPayloadAdmissionFault::OpportunityExhausted => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload opportunity exhausted"),
+            JobPayloadAdmissionFault::OperationItems => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload operation item limit reached"),
+            JobPayloadAdmissionFault::OperationBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload operation byte limit reached"),
+            JobPayloadAdmissionFault::ProcessBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload process byte limit reached"),
+            JobPayloadAdmissionFault::StreamItems => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload stream item limit reached"),
+            JobPayloadAdmissionFault::StreamBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload stream byte limit reached"),
+            JobPayloadAdmissionFault::WriterFull => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload writer is full"),
+            JobPayloadAdmissionFault::WriterSealed => (semio_framework_value::ValueRefusalKind::InvariantViolated, "job payload writer is sealed"),
+            JobPayloadAdmissionFault::RejectedSourcePending => (semio_framework_value::ValueRefusalKind::InvariantViolated, "job payload rejected source is pending"),
+        };
+        semio_framework_value::ValueError::literal(kind, message)
+    }
+}
+
 pub struct JobPayloadPageSource {
-    pub(super) storage: Box<[MaybeUninit<u8>]>,
+    pub storage: Box<[MaybeUninit<u8>]>,
 }
 
 impl std::fmt::Debug for JobPayloadPageSource {
@@ -59,7 +77,7 @@ impl JobPayloadPageSource {
         Self::with_extent(JOB_PAYLOAD_PAGE_BYTES)
     }
 
-    pub(super) fn with_extent(extent: usize) -> Self { assert!(extent > 0 && extent <= JOB_PAYLOAD_PAGE_BYTES); Self { storage: Box::<[u8]>::new_uninit_slice(extent) } }
+    pub fn with_extent(extent: usize) -> Self { assert!(extent > 0 && extent <= JOB_PAYLOAD_PAGE_BYTES); Self { storage: Box::<[u8]>::new_uninit_slice(extent) } }
 
     pub fn allocated_capacity_bytes(&self) -> usize { self.storage.len() }
 
@@ -76,7 +94,7 @@ impl Default for JobPayloadPageSource {
 
 pub struct JobPayloadRejectedPage {
     pub fault: JobPayloadAdmissionFault,
-    pub(super) source: ManuallyDrop<Option<JobPayloadPageSource>>,
+    pub source: ManuallyDrop<Option<JobPayloadPageSource>>,
 }
 
 impl std::fmt::Debug for JobPayloadRejectedPage {
@@ -107,29 +125,29 @@ impl Drop for JobPayloadRejectedPage {
 
 #[doc(hidden)]
 pub struct JobPayloadOperationLedger {
-    pub(super) operation: OperationId,
-    pub(super) generation: Generation,
-    pub(super) pages: AtomicUsize,
-    pub(super) bytes: AtomicUsize,
-    pub(super) stream_pages: [AtomicUsize; JobPayloadStream::COUNT],
-    pub(super) stream_bytes: [AtomicUsize; JobPayloadStream::COUNT],
+    pub operation: OperationId,
+    pub generation: Generation,
+    pub pages: AtomicUsize,
+    pub bytes: AtomicUsize,
+    pub stream_pages: [AtomicUsize; JobPayloadStream::COUNT],
+    pub stream_bytes: [AtomicUsize; JobPayloadStream::COUNT],
 }
 
 impl JobPayloadOperationLedger {
-    fn reservation_copy_bytes()->usize{5*2*size_of::<usize>()+size_of::<JobPayloadStream>()}
+    pub fn reservation_copy_bytes()->usize{5*2*size_of::<usize>()+size_of::<JobPayloadStream>()}
 
 
-    pub(super) fn new(operation: OperationId, generation: Generation) -> Self {
+    pub fn new(operation: OperationId, generation: Generation) -> Self {
         Self { operation, generation, pages: AtomicUsize::new(0), bytes: AtomicUsize::new(0), stream_pages: std::array::from_fn(|_| AtomicUsize::new(0)), stream_bytes: std::array::from_fn(|_| AtomicUsize::new(0)) }
     }
 
-    pub(super) fn reserve(&self,stream:JobPayloadStream,extent:usize)->Result<(),JobPayloadAdmissionFault>{self.reserve_original(stream,extent).map(|_|()).map_err(|(fault,_)|fault)}
-    pub(super) fn reserve_original(&self,stream:JobPayloadStream,extent:usize)->Result<usize,(JobPayloadAdmissionFault,usize)>{
+    pub fn reserve(&self,stream:JobPayloadStream,extent:usize)->Result<(),JobPayloadAdmissionFault>{self.reserve_original(stream,extent).map(|_|()).map_err(|(fault,_)|fault)}
+    pub fn reserve_original(&self,stream:JobPayloadStream,extent:usize)->Result<usize,(JobPayloadAdmissionFault,usize)>{
         let index=stream as usize;let owners=[(&self.pages,1,JOB_PAYLOAD_OPERATION_PAGES,JobPayloadAdmissionFault::OperationItems),(&self.bytes,extent,JOB_PAYLOAD_OPERATION_BYTES,JobPayloadAdmissionFault::OperationBytes),(&self.stream_pages[index],1,JOB_PAYLOAD_OPERATION_PAGES,JobPayloadAdmissionFault::StreamItems),(&self.stream_bytes[index],extent,JOB_PAYLOAD_OPERATION_BYTES,JobPayloadAdmissionFault::StreamBytes),(&JOB_PAYLOAD_PROCESS_OWNED_BYTES,extent,JOB_PAYLOAD_PROCESS_BYTES,JobPayloadAdmissionFault::ProcessBytes)];
         for (done,(owner,amount,maximum,fault))in owners.iter().enumerate(){if owner.try_update(Ordering::AcqRel,Ordering::Acquire,|value|value.checked_add(*amount).filter(|value|*value<=*maximum)).is_err(){for (original,amount,_,_)in owners[..done].iter().rev(){original.fetch_sub(*amount,Ordering::AcqRel);}return Err((*fault,0));}}Ok(0)
     }
 
-    pub(super) fn release(&self, stream: JobPayloadStream, extent: usize) {
+    pub fn release(&self, stream: JobPayloadStream, extent: usize) {
         let stream_index = stream as usize;
         JOB_PAYLOAD_PROCESS_OWNED_BYTES.fetch_sub(extent, Ordering::AcqRel);
         self.stream_bytes[stream_index].fetch_sub(extent, Ordering::AcqRel);
@@ -138,7 +156,7 @@ impl JobPayloadOperationLedger {
         self.pages.fetch_sub(1, Ordering::AcqRel);
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.pages.load(Ordering::Acquire) == 0 && self.bytes.load(Ordering::Acquire) == 0 && self.stream_pages.iter().all(|count| count.load(Ordering::Acquire) == 0) && self.stream_bytes.iter().all(|count| count.load(Ordering::Acquire) == 0)
     }
 
@@ -150,28 +168,28 @@ impl JobPayloadOperationLedger {
     /// counter's absolute value — is the observable an owner may assert: the absolute value is
     /// moved by every other operation alive in the process, so sampling it before and after a
     /// close ladder answers about the whole process rather than about this owner.
-    pub(super) fn process_share_bytes(&self) -> usize {
+    pub fn process_share_bytes(&self) -> usize {
         self.bytes.load(Ordering::Acquire)
     }
 }
 
-pub(super) struct JobPayloadPage {
-    pub(super) source: JobPayloadPageSource,
-    pub(super) length: usize,
+pub struct JobPayloadPage {
+    pub source: JobPayloadPageSource,
+    pub length: usize,
 }
 
 impl JobPayloadPage {
-    pub(super) fn bytes(&self) -> &[u8] {
+    pub fn bytes(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.source.storage.as_ptr().cast::<u8>(), self.length) }
     }
 }
 
 pub struct RetainedJobPayload {
-    pub(super) stream: JobPayloadStream,
-    pub(super) pages: ManuallyDrop<[Option<JobPayloadPage>; JOB_PAYLOAD_OPERATION_PAGES]>,
-    pub(super) page_count: usize,
-    pub(super) length: usize,
-    pub(super) ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
+    pub stream: JobPayloadStream,
+    pub pages: ManuallyDrop<[Option<JobPayloadPage>; JOB_PAYLOAD_OPERATION_PAGES]>,
+    pub page_count: usize,
+    pub length: usize,
+    pub ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
 }
 
 impl RetainedJobPayload {
@@ -218,8 +236,8 @@ impl RetainedJobPayload {
 }
 
 pub struct RetainedJobPayloadReader<'a> {
-    pub(super) payload: &'a RetainedJobPayload,
-    pub(super) page: usize,
+    pub payload: &'a RetainedJobPayload,
+    pub page: usize,
 }
 
 impl<'a> RetainedJobPayloadReader<'a> {

@@ -27,7 +27,7 @@ describe("repo service",()=>{
   const run=async(args:string[],languages=["de","en"])=>{const out=sink(),err=sink();const exit=await runResidentCommandV1({root:s.root,args,languages,environment:s.environment,stdout:out,stderr:err});return{exit,out:out.text(),err:err.text()};};
   const status=await run(["status","--json"]);expect(status.exit).toBe(0);expect(JSON.parse(status.out).watcher.backend).toBe("none");
   expect((await run(["probe"])).exit).toBe(0);
-  const token=await run(["issue","--classes","run","--ttl","30"]);expect(token.exit).toBe(0);expect(token.out.trim()).toMatch(/^v1\./u);
+  const token=await run(["issue","--agent","a1","--classes","run","--ttl","30"]);expect(token.exit).toBe(0);expect(token.out.trim()).toMatch(/^v1\./u);
   expect((await run(["drop-caches"])).out).toContain("dropped");
   const usage=await run(["frobnicate"],["de"]);expect(usage.exit).toBe(1);expect(usage.err).toContain("Verwendung");
   expect((await run(["frobnicate"],["en"])).err).toContain("Usage");

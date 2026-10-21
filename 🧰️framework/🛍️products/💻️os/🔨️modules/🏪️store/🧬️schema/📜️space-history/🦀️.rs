@@ -182,21 +182,27 @@ impl SpaceHistoryStep {
 }
 
 impl semio_framework_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+    fn is_empty(&self) -> bool {
+        self.steps.is_empty()
+    }
+}
+
+impl semio_framework_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Self {
         let rows: Vec<Vec<SpaceHistoryStep>> = self.steps.iter().enumerate().map(|(index, step)| step.undo_rows(base, &self.steps[..index])).collect();
         Self { steps: rows.into_iter().rev().flatten().collect() }
     }
-
 }
 
-impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
-    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
-        let mut prepared =  semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as semio_framework_os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
+impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {}
+
+impl semio_framework_os_spr::ColdMutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
+    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+        let mut prepared = semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as MutationDiff<SpaceHistorySnapshot>>::retire_projection, capability);
         let mut next = prepared.value_mut();
         for step in &self.steps {
             step.step_into(&mut next)?;
         }
-
         prepared.install(snapshot);
         Ok(())
     }
@@ -209,25 +215,7 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
             }
         }
     }
-
-    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
-        let mut prepared = semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as semio_framework_os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
-        let mut next = prepared.value_mut();
-        for step in &self.steps {
-            step.step_into(&mut next)?;
-        }
-        prepared.install(snapshot);
-        Ok(())
-    }
-
 }
-
-impl semio_framework_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
-    fn is_empty(&self) -> bool {
-        self.steps.is_empty()
-    }
-}
-
 
 impl DiffRegions for SpaceHistoryDiff {
     fn touches(&self) -> TouchedPaths {

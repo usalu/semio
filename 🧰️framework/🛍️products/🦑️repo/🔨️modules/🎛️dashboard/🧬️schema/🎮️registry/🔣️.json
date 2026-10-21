@@ -491,11 +491,7 @@
           "description": "🗂️ Default: the leading word of `id` when it is a known verb, else `task`."
         },
         "command": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Text"
-          },
-          "minItems": 1
+          "$ref": "#/$defs/DashboardToolCommand"
         },
         "cwd": {
           "$ref": "#/$defs/RelativePath"
@@ -1217,6 +1213,72 @@
             "properties": {
               "projectParameter": false,
               "directoryParameter": false
+            }
+          }
+        }
+      ]
+    },
+    "SecondaryDeveloperGuiName": {
+      "type": "string",
+      "enum": [
+        "gitkraken",
+        "code",
+        "code-insiders",
+        "cursor",
+        "windsurf",
+        "zed",
+        "fleet",
+        "idea",
+        "rider",
+        "devenv",
+        "subl",
+        "sublime_text",
+        "nvim",
+        "vim",
+        "gvim",
+        "emacs",
+        "kate",
+        "nova",
+        "eclipse",
+        "netbeans",
+        "studio"
+      ]
+    },
+    "SecondaryDeveloperGuiExecutable": {
+      "type": "string",
+      "pattern": "^(?:.*[/\\\\])?(?:[gG][iI][tT][kK][rR][aA][kK][eE][nN]|[cC][oO][dD][eE]|[cC][oO][dD][eE]-[iI][nN][sS][iI][dD][eE][rR][sS]|[cC][uU][rR][sS][oO][rR]|[wW][iI][nN][dD][sS][uU][rR][fF]|[zZ][eE][dD]|[fF][lL][eE][eE][tT]|[iI][dD][eE][aA]|[rR][iI][dD][eE][rR]|[dD][eE][vV][eE][nN][vV]|[sS][uU][bB][lL]|[sS][uU][bB][lL][iI][mM][eE]_[tT][eE][xX][tT]|[nN][vV][iI][mM]|[vV][iI][mM]|[gG][vV][iI][mM]|[eE][mM][aA][cC][sS]|[kK][aA][tT][eE]|[nN][oO][vV][aA]|[eE][cC][lL][iI][pP][sS][eE]|[nN][eE][tT][bB][eE][aA][nN][sS]|[sS][tT][uU][dD][iI][oO])(?:\\.[eE][xX][eE]|\\.[cC][mM][dD]|\\.[aA][pP][pP])?$"
+    },
+    "SecondaryDeveloperGuiLauncher": {
+      "type": "string",
+      "pattern": "^(?:.*[/\\\\])?(?:[oO][pP][eE][nN]|[sS][tT][aA][rR][tT]|[cC][mM][dD]|[pP][oO][wW][eE][rR][sS][hH][eE][lL][lL]|[pP][wW][sS][hH])(?:\\.[eE][xX][eE]|\\.[cC][mM][dD]|\\.[aA][pP][pP])?$"
+    },
+    "DashboardToolCommand": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Text"
+      },
+      "minItems": 1,
+      "allOf": [
+        {
+          "not": {
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/SecondaryDeveloperGuiExecutable"
+              }
+            ],
+            "minItems": 1
+          }
+        },
+        {
+          "not": {
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/SecondaryDeveloperGuiLauncher"
+              }
+            ],
+            "minItems": 1,
+            "contains": {
+              "$ref": "#/$defs/SecondaryDeveloperGuiExecutable"
             }
           }
         }

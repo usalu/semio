@@ -1,0 +1,3 @@
+# Installed Load Search Assertions
+
+The existing nothing query accepted any count through >=0. Shared closed search vectors now require exact0 for nothing and exact1 plus actual ID for rare prefix. The broadword result retains its declared at-least12500 contract. An independent SQLite50000-category count and Ajv validate the neutral recipe inside the existing real installed-binary test. The actual Workspace/query/latency assertions and effective-budget log remain, with no new runtime dependency or test-count change. The journeys freshness declaration already observes the new DATA. Low source accepted; actual installed load remains pending.

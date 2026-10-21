@@ -27,6 +27,7 @@ semio-framework-os-flow-host-source = { path = "../../../📦️packages/🦀️
 semio-framework-os-flow-operators = { path = "../../../../../🗃️operators/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-job = { workspace = true }

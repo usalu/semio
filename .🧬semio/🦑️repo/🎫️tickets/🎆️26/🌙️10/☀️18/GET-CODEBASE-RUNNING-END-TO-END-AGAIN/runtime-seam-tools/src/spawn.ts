@@ -1,7 +1,7 @@
 import { spawn, spawnSync, type ChildProcess, type StdioOptions } from "node:child_process";
 import { constants } from "node:os";
 import { Readable } from "node:stream";
-import type { RuntimeChildV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeStdioV1 } from "../../📋️contract/🟦️.ts";
+import type { RuntimeByteStreamV1, RuntimeChildV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeStdioV1 } from "../../📋️contract/🟦️.ts";
 
 function environment(source: RuntimeSpawnOptionsV1["env"]): NodeJS.ProcessEnv {
   if (source === undefined) return process.env;
@@ -14,8 +14,8 @@ function wire(value: RuntimeSpawnOptionsV1["stdin"], fallback: RuntimeStdioV1): 
   return value === undefined ? fallback : typeof value === "string" && (value === "pipe" || value === "inherit" || value === "ignore") ? value : "pipe";
 }
 
-function empty(): ReadableStream<Uint8Array> { return new ReadableStream<Uint8Array>({ start: controller => controller.close() }); }
-function webStream(stream: Readable | null): ReadableStream<Uint8Array> { return stream === null ? empty() : (Readable.toWeb(stream) as ReadableStream<Uint8Array>); }
+function empty(): RuntimeByteStreamV1 { return new ReadableStream<Uint8Array>({ start: controller => controller.close() }) as unknown as RuntimeByteStreamV1; }
+function webStream(stream: Readable | null): RuntimeByteStreamV1 { return stream === null ? empty() : (Readable.toWeb(stream) as unknown as RuntimeByteStreamV1); }
 function exitNumber(code: number | null, signal: NodeJS.Signals | null): number { return code ?? 128 + (signal === null ? 0 : (constants.signals[signal] ?? 0)); }
 
 /** 🚀️ Starts one child process over `node:child_process` with web streams; defaults are stdin ignored, stdout piped, stderr inherited. */

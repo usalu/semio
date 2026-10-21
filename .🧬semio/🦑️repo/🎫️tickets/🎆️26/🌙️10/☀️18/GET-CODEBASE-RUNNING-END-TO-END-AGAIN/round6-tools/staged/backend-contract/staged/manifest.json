@@ -1,0 +1,132 @@
+{
+ "backends.schema.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🧬️schema/🔣️.json",
+  "sha256": "1d6d30aa62369ebb3a0815474e8ec36f3b73d4e22443b0d4da91200ac2164f49",
+  "length": 113
+ },
+ "backends.registry.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/📋️registry/🔣️.json",
+  "sha256": "e3d029bcfd862505aa0a9345c7b21797c4a9c80791ee0bcac56a82106fddbbc4",
+  "length": 115
+ },
+ "backends.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🟦️.ts",
+  "sha256": "a81cbfe0c35441e12ba3223980745a38bc1aa675255b1393ba543477c8877883",
+  "length": 102
+ },
+ "taskmodel.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧮️task-model/🟦️.ts",
+  "sha256": "e3fb42d676393d8aafb55596a53f5a72dba372d1f7dd0f04b3407bda82f38f37",
+  "length": 104
+ },
+ "semio.schema.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🧬️schema/🔣️.json",
+  "sha256": "0e39087fed2e3f48df265c97d89daf33b0768c987ede13b92192477f3ab21537",
+  "length": 118
+ },
+ "semio.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🟦️.ts",
+  "sha256": "0a1bb1212408a896e6c4d4acf274bbb7aac8685575d8ac8da0185f474107a9cf",
+  "length": 107
+ },
+ "semio_store.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts",
+  "sha256": "0c321336ca35346b3cde3c694c5acba48d174cc1164777febf51ca1492d7b8bf",
+  "length": 115
+ },
+ "semio_remote.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🌐️remote/🟦️.ts",
+  "sha256": "1bb67feb6a09d24a42c28341878d62fbd8e11271d024470b824943bd84a57c26",
+  "length": 116
+ },
+ "semio_exec.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🚀️exec/🟦️.ts",
+  "sha256": "842b70cbd24662a5820df6f647758a09285d322b60bcbfa8f5500566e88cab9c",
+  "length": 114
+ },
+ "semio_scheduler.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🏁️scheduler/🟦️.ts",
+  "sha256": "8f2eeff1420ae5118509ffbf8119bff69796609649c145ce9f630b07e838bd81",
+  "length": 119
+ },
+ "semio_driver.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/📐️conformance/🟦️.ts",
+  "sha256": "19a1772e784a02b60b0d37790f288227d1bc0f7dd157b13d1db32f01f2912edb",
+  "length": 121
+ },
+ "conformance.schema.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🧬️schema/🔣️.json",
+  "sha256": "c8cf81a4a240ffdf47fcf9287d73253535df47c3bc244e7bec0172123dae2877",
+  "length": 116
+ },
+ "conformance.scenarios.json": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/📋️scenarios/🔣️.json",
+  "sha256": "95ba84b5bef09754543120d4ae26a3e86d79333edc32708b48cc680f2fd52c30",
+  "length": 119
+ },
+ "stub.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🎭️stub/🟦️.ts",
+  "sha256": "733f518a0b9ca758cbff9e97428bc9a5f532e3a7bc4a4e6cf1cb0b6853f23431",
+  "length": 112
+ },
+ "conformance.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🟦️.ts",
+  "sha256": "3322a299e4e0d9c643753605b439c1fa446a61c79b8ee1772e48ae370de65293",
+  "length": 105
+ },
+ "conformance_runner.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🏃️runner/🟦️.ts",
+  "sha256": "82ac06f111478f03d02df91498ca350ce0bef01c5dc9016eb14e48dd13be071f",
+  "length": 114
+ },
+ "nx_backend.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
+  "sha256": "64b4d109e73537ee72c3d88e0c0f288767f9ead3a40d1dbb2fbb0c27f4f61c25",
+  "length": 114
+ },
+ "nx_driver.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/📐️conformance/🟦️.ts",
+  "sha256": "602a4a22ae3f8c7798569187dec785bd36615d8d1d5aa9b04f3af772f2f94a55",
+  "length": 118
+ },
+ "bazel_backend.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
+  "sha256": "ff96d7c729101ee49e49ef7efc8dfb4b1de46538c3f28081dc93c5d089c76f38",
+  "length": 117
+ },
+ "bazel_driver.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📐️conformance/🟦️.ts",
+  "sha256": "c6457b1019ae543e95666ffd36c3cbca68bda4d37be493e1a7da2bc715fc5aee",
+  "length": 121
+ },
+ "semio_backend.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
+  "sha256": "ad9a14ac6a63a64b6d4b36eba935cc2f2aad187f5157ed6b9e1f7402572835bd",
+  "length": 117
+ },
+ "conformance_command.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/⌨️command/🟦️.ts",
+  "sha256": "6689b81700de05731e4b1b9964a0e5c49aba4ffce76f83d723b73b9c0cbaeb12",
+  "length": 115
+ },
+ "conformance_oracle.py": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🧪️tests/🐍️oracle/🐍️.py",
+  "sha256": "e12aa702cb475ce0c7f78872e33227a2541eb891469fd6880cb087c97057b58d",
+  "length": 122
+ },
+ "conformance_test.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🧪️tests/🟦️.ts",
+  "sha256": "1e1913299189b7869fade6b43fff4fdb1a382229e5573ce503c0e432256e6acb",
+  "length": 113
+ },
+ "semio_test.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🧪️tests/🟦️.ts",
+  "sha256": "ec503ac50c5902b183159c27167c7772c57f10c27728dac01d3c44b19c20ed0f",
+  "length": 115
+ },
+ "backends_test.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🧪️tests/🟦️.ts",
+  "sha256": "af198d0f9ff85b0b77e6d638460bb1f9859f486fe2a7adc8ad2af8ce8307d834",
+  "length": 110
+ }
+}

@@ -1,320 +1,452 @@
-//! 🔌️ The production repository the repo MCP server serves: every tool reaches the domain owner the matching verb reaches, every resource reads through the repository GraphQL surface.
+// #region 🧲️Header
 
-use semio_framework_repo_cli_event_stream::format_markdown_result;
-use semio_framework_repo_graphql::{Executor, RepoContext};
-use semio_framework_repo_graphql_fs::FsRepoContext;
-//#region 🔌️McpVerb
-use semio_framework_repo_mcp::{Content, Context, GetPromptResult, HandlerError, Profile, Repository, RepositoryResult, ResourceContent};
-use semio_framework_repo_model::{GoalCloseInput, GoalCreateInput, GoalReopenInput, TicketCloseInput, TicketStatus};
-use semio_framework_repo_providers::McpClientKind;
-use serde_json::{json, Map, Value as Json};
-use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-/// 🔌️ The repository of one repo root, answering as one MCP profile.
-pub struct RepoRepository {
-    root: PathBuf,
-    profile: Profile,
+// Configure command, micro commit hooks, and VS Code hook output.
+
+// #endregion 🧲️Header
+
+package client
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
+	repoRoot := t.TempDir()
+	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	hookSourcesDir := filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🪝️hooks")
+	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
+		t.Fatalf("mkdir hooks: %v", err)
+	}
+	if err := os.MkdirAll(hookSourcesDir, 0o755); err != nil {
+		t.Fatalf("mkdir hook sources: %v", err)
+	}
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+			t.Fatalf("write hook source %s: %v", hookName, err)
+		}
+	}
+	for _, hookName := range []string{"pre-commit", "post-commit"} {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if err := os.WriteFile(hookPath, []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+			t.Fatalf("write hook %s: %v", hookName, err)
+		}
+	}
+	var out bytes.Buffer
+	cmd := configureCommand(nil, &Config{Repo: repoRoot})
+	cmd.SetOut(&out)
+	cmd.SetArgs(nil)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("configure should succeed: %v", err)
+	}
+	output := out.String()
+	if !strings.Contains(output, "config generation is disabled") {
+		t.Fatalf("expected no-operation message, got %q", output)
+	}
+	if !strings.Contains(output, "git hooks removed") {
+		t.Fatalf("expected git hook removal message, got %q", output)
+	}
+	if !strings.Contains(output, "micro-commit hooks installed") {
+		t.Fatalf("expected micro-commit hooks install message, got %q", output)
+	}
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if st, err := os.Stat(hookPath); err != nil || st.IsDir() {
+			t.Fatalf("expected micro-commit hook at %s: %v", hookPath, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(hooksDir, "pre-commit")); err == nil {
+		t.Fatal("expected legacy pre-commit hook removed")
+	}
+	for _, path := range []string{
+		filepath.Join(repoRoot, ".github", "hooks", "repo.json"),
+		filepath.Join(repoRoot, ".cursor", "hooks.json"),
+		filepath.Join(repoRoot, ".claude", "settings.json"),
+		filepath.Join(repoRoot, ".kiro", "agents", "repo.json"),
+		filepath.Join(hooksDir, "pre-commit"),
+	} {
+		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
+			t.Fatalf("configure unexpectedly left or created %s", path)
+		}
+	}
 }
 
-impl RepoRepository {
-    /// 🆕️ Binds the repository to a root and the profile the server was started with.
-    pub fn open(root: &Path, profile: Profile) -> RepoRepository {
-        RepoRepository { root: root.to_path_buf(), profile }
-    }
+const stubMicroCommitHook = `#!/usr/bin/env sh
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+GK_TEMPLATE="$GIT_DIR/gkcommittemplate.txt"
+: >"$GK_TEMPLATE"
+git config --local commit.template "$GK_TEMPLATE"
+for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
+  if [ -f "$GIT_DIR/$msg" ]; then
+    : >"$GIT_DIR/$msg"
+  fi
+done
+exit 0
+`
 
-    fn context(&self) -> FsRepoContext {
-        FsRepoContext::open(&self.root)
-    }
-
-    /// 🪪️ The agent-client surface the profile stands for.
-    fn kind(&self) -> McpClientKind {
-        match self.profile {
-            Profile::Generic => McpClientKind::Generic,
-            Profile::Cursor => McpClientKind::Cursor,
-            Profile::Kiro => McpClientKind::Kiro,
-            Profile::Copilot => McpClientKind::Copilot,
-            Profile::Claude => McpClientKind::Claude,
-            Profile::Codex => McpClientKind::Codex,
-        }
-    }
-
-    /// 🛤️ A path argument as a repository-relative path.
-    fn relative(&self, path: &str) -> String {
-        let root = self.root.display().to_string().replace('\\', "/");
-        let path = path.replace('\\', "/");
-        path.strip_prefix(&format!("{root}/")).map(str::to_string).unwrap_or(path)
-    }
-
-    /// 📚️ One GraphQL read rendered as the YAML a resource carries.
-    fn yaml_of_query(&self, query: &str) -> Result<String, HandlerError> {
-        let context = self.context();
-        let data = Executor::new(&context).execute(query, &Map::new()).map_err(|error| HandlerError::tool(&error.message))?;
-        semio_framework_repo_yaml::marshal(&data).map_err(|error| HandlerError::tool(&error))
-    }
+// 🪝️TestMicroCommitPostCommitHookResetsTemplates proves the installer puts executable hook sources into the git hooks dir and git runs the installed hook. The checked-in hook sources are held by the checked-in asset contracts law.
+func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
+	repoRoot := t.TempDir()
+	initGit := exec.Command("git", "init")
+	initGit.Dir = repoRoot
+	if out, err := initGit.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, out)
+	}
+	gitDir := filepath.Join(repoRoot, ".git")
+	hooksDir := filepath.Join(gitDir, "hooks")
+	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
+		t.Fatalf("mkdir hooks: %v", err)
+	}
+	hookSourcesDir := filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🪝️hooks")
+	if err := os.MkdirAll(hookSourcesDir, 0o755); err != nil {
+		t.Fatalf("mkdir repo hooks: %v", err)
+	}
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), []byte(stubMicroCommitHook), 0o755); err != nil {
+			t.Fatalf("write hook source %s: %v", hookName, err)
+		}
+	}
+	if err := installMicroCommitHooks(repoRoot); err != nil {
+		t.Fatalf("install hooks: %v", err)
+	}
+	templatePath := filepath.Join(gitDir, "gkcommittemplate.txt")
+	editMsgPath := filepath.Join(gitDir, "COMMIT_EDITMSG")
+	for _, p := range []string{templatePath, editMsgPath} {
+		if err := os.WriteFile(p, []byte("draft\n"), 0o644); err != nil {
+			t.Fatalf("seed %s: %v", p, err)
+		}
+	}
+	hookPath := filepath.Join(hooksDir, "post-commit")
+	cmd := exec.Command(hookPath)
+	cmd.Dir = repoRoot
+	cmd.Env = append(os.Environ(), "GIT_DIR="+gitDir, "GIT_WORK_TREE="+repoRoot)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("run post-commit: %v\n%s", err, out)
+	}
+	b, err := os.ReadFile(editMsgPath)
+	if err != nil {
+		t.Fatalf("read %s: %v", editMsgPath, err)
+	}
+	if len(b) != 0 {
+		t.Fatalf("expected empty %s after post-commit, got %q", editMsgPath, b)
+	}
+	tplCfg := exec.Command("git", "config", "--local", "--get", "commit.template")
+	tplCfg.Dir = repoRoot
+	tplOut, err := tplCfg.Output()
+	if err != nil {
+		t.Fatalf("expected commit.template set to empty GK file after post-commit: %v", err)
+	}
+	if !strings.Contains(string(tplOut), "gkcommittemplate.txt") {
+		t.Fatalf("expected commit.template to point at gkcommittemplate.txt, got %q", tplOut)
+	}
+	legacy, err := os.ReadFile(templatePath)
+	if err != nil {
+		t.Fatalf("read legacy GK template: %v", err)
+	}
+	if len(legacy) != 0 {
+		t.Fatalf("expected empty gkcommittemplate.txt after post-commit, got %q", legacy)
+	}
 }
 
-/// 🎼️ An optional string argument; a present value that is not a non-empty string is refused.
-fn optional(arguments: &Json, key: &str) -> Result<String, HandlerError> {
-    match arguments.get(key) {
-        None => Ok(String::new()),
-        Some(Json::String(text)) if !text.is_empty() => Ok(text.clone()),
-        Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
-    }
+func TestExtractToolNameFromStdin(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"vscode tool_name", `{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"ls"}}`, "run_in_terminal"},
+		{"claude code tool_name", `{"tool_name":"Bash","tool_input":{"command":"git checkout main"}}`, "Bash"},
+		{"no tool_name", `{"tool_input":{"command":"ls"}}`, ""},
+		{"empty object", `{}`, ""},
+		{"invalid json", `not json`, ""},
+		{"empty input", ``, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractToolNameFromStdin(json.RawMessage(tc.input))
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
 }
 
-/// 🎼️ A required string argument.
-fn required(arguments: &Json, key: &str) -> Result<String, HandlerError> {
-    if arguments.get(key).is_none() {
-        return Err(HandlerError::tool(&format!("missing {key}")));
-    }
-    optional(arguments, key)
+func TestExtractHookEventNameFromStdin(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"PreToolUse", `{"hookEventName":"PreToolUse","tool_name":"editFiles"}`, "PreToolUse"},
+		{"PostToolUse", `{"hookEventName":"PostToolUse","tool_name":"editFiles"}`, "PostToolUse"},
+		{"SessionStart", `{"hookEventName":"SessionStart","source":"new"}`, "SessionStart"},
+		{"no hookEventName", `{"tool_name":"Bash"}`, ""},
+		{"empty", `{}`, ""},
+		{"invalid json", `bad`, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractHookEventNameFromStdin(json.RawMessage(tc.input))
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
 }
 
-/// 🎼️ An optional boolean argument.
-fn switch(arguments: &Json, key: &str) -> Result<bool, HandlerError> {
-    match arguments.get(key) {
-        None => Ok(false),
-        Some(Json::Bool(flag)) => Ok(*flag),
-        Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
-    }
+func TestVSCodeEventFromHookEvent(t *testing.T) {
+	cases := []struct {
+		name       string
+		event      HookEvent
+		parentInfo string
+		expect     string
+	}{
+		{"agent.tool.starting", HookAgentToolStarting, "", "PreToolUse"},
+		{"agent.tool.ended", HookAgentToolEnded, "", "PostToolUse"},
+		{"agent.started", HookAgentStarted, "", "SessionStart"},
+		{"agent.started subagent", HookAgentStarted, "subagent", "SubagentStart"},
+		{"agent.ended", HookAgentEnded, "", "Stop"},
+		{"agent.ended subagent", HookAgentEnded, "subagent", "SubagentStop"},
+		{"agent.prompt.submitting", HookAgentPromptSubmitting, "", "UserPromptSubmit"},
+		{"agent.compacting", HookAgentCompacting, "", "PreCompact"},
+		{"agent.file.read.starting", HookAgentToolSearchStarting, "", "PreToolUse"},
+		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, "", "PreToolUse"},
+		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, "", "PostToolUse"},
+		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, "", "PreToolUse"},
+		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, "", "PostToolUse"},
+		{"agent.tool.test.starting", HookAgentToolTestStarting, "", "PreToolUse"},
+		{"agent.tool.test.ended", HookAgentToolTestEnded, "", "PostToolUse"},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, "", "PreToolUse"},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, "", "PostToolUse"},
+		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, "", "PreToolUse"},
+		{"agent.tool.plan.updating.ended", HookAgentToolPlanUpdatingEnded, "", "PostToolUse"},
+		{"agent.thinking.starting", HookAgentThinkingStarting, "", ""},
+		{"agent.thinking.ended", HookAgentThinkingEnded, "", ""},
+		{"unknown", HookEvent("unknown.x"), "", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := copilotEventFromHookEvent(tc.event, tc.parentInfo)
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
 }
 
-/// 🎼️ An optional string list argument.
-fn strings(arguments: &Json, key: &str) -> Result<Vec<String>, HandlerError> {
-    match arguments.get(key) {
-        None => Ok(Vec::new()),
-        Some(Json::Array(items)) if !items.is_empty() => items.iter().map(|item| item.as_str().filter(|text| !text.is_empty()).map(str::to_string).ok_or_else(|| HandlerError::tool(&format!("invalid {key}")))).collect(),
-        Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
-    }
+func TestFormatCopilotHookOutput(t *testing.T) {
+	t.Run("PreToolUse allow", func(t *testing.T) {
+		out := formatCopilotHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["permissionDecision"] != "allow" {
+			t.Errorf("expected permissionDecision=allow, got %v", hso["permissionDecision"])
+		}
+		if hso["hookEventName"] != "PreToolUse" {
+			t.Errorf("expected hookEventName=PreToolUse, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("PreToolUse deny", func(t *testing.T) {
+		out := formatCopilotHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: false, Message: "blocked: git checkout"}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["permissionDecision"] != "deny" {
+			t.Errorf("expected permissionDecision=deny, got %v", hso["permissionDecision"])
+		}
+		if hso["permissionDecisionReason"] != "blocked: git checkout" {
+			t.Errorf("expected reason in output, got %v", hso["permissionDecisionReason"])
+		}
+	})
+	t.Run("SessionStart with message", func(t *testing.T) {
+		out := formatCopilotHookOutput("SessionStart", HookResultAgentStarted{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true, Message: "agent.started acknowledged"}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["additionalContext"] != "agent.started acknowledged" {
+			t.Errorf("expected additionalContext, got %v", hso["additionalContext"])
+		}
+	})
+	t.Run("Stop always has hookSpecificOutput", func(t *testing.T) {
+		out := formatCopilotHookOutput("Stop", HookResultAgentEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for Stop")
+		}
+		if hso["hookEventName"] != "Stop" {
+			t.Errorf("expected hookEventName=Stop, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("UserPromptSubmit always has hookSpecificOutput", func(t *testing.T) {
+		out := formatCopilotHookOutput("UserPromptSubmit", HookResultAgentPromptSubmitting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for UserPromptSubmit")
+		}
+		if hso["hookEventName"] != "UserPromptSubmit" {
+			t.Errorf("expected hookEventName=UserPromptSubmit, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("PostToolUse always has hookSpecificOutput", func(t *testing.T) {
+		out := formatCopilotHookOutput("PostToolUse", HookResultAgentToolEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for PostToolUse")
+		}
+		if hso["hookEventName"] != "PostToolUse" {
+			t.Errorf("expected hookEventName=PostToolUse, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("unknown event empty output", func(t *testing.T) {
+		out := formatCopilotHookOutput("", HookResultBase{Allowed: true, Message: "test"})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+	})
 }
 
-/// 🎫️ A `YY/MM/DD/SLUG` path, emoji spellings and four-digit years accepted.
-fn ticket_id(path: &str) -> Result<semio_framework_repo_tickets::TicketId, HandlerError> {
-    let mut id = semio_framework_repo_tickets::TicketId::parse(path).map_err(|error| HandlerError::tool(&error.message))?;
-    if id.year >= 2000 {
-        id.year %= 100;
-    }
-    Ok(id)
+func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
+	t.Run("PreToolUse allow produces VS Code JSON", func(t *testing.T) {
+		hctx := HookContext{
+			Event:    HookAgentToolStarting,
+			Client:   "copilot-chat",
+			Second:   time.Now().UTC().Format(time.RFC3339),
+			ToolName: "read_file",
+			ToolArgs: "/tmp/file.ts",
+			RepoRoot: t.TempDir(),
+		}
+		result := RunHook(hctx)
+		if !result.IsAllowed() {
+			t.Fatal("expected allowed")
+		}
+		out := formatCopilotHookOutput("PreToolUse", result)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON: %v", err)
+		}
+		hso := parsed["hookSpecificOutput"].(map[string]interface{})
+		if hso["permissionDecision"] != "allow" {
+			t.Errorf("expected allow, got %v", hso["permissionDecision"])
+		}
+	})
+	t.Run("PreToolUse blocked produces VS Code deny JSON", func(t *testing.T) {
+		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git checkout main"}}`)
+		hctx := HookContext{
+			Event:    HookAgentToolStarting,
+			Client:   "copilot-chat",
+			Second:   time.Now().UTC().Format(time.RFC3339),
+			ToolName: "run_in_terminal",
+			Input:    payload,
+			RepoRoot: t.TempDir(),
+		}
+		result := RunHook(hctx)
+		if result.IsAllowed() {
+			t.Fatal("expected blocked")
+		}
+		hookEventName := extractHookEventNameFromStdin(payload)
+		out := formatCopilotHookOutput(hookEventName, result)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON: %v", err)
+		}
+		hso := parsed["hookSpecificOutput"].(map[string]interface{})
+		if hso["permissionDecision"] != "deny" {
+			t.Errorf("expected deny, got %v", hso["permissionDecision"])
+		}
+		reason, _ := hso["permissionDecisionReason"].(string)
+		if !strings.Contains(reason, "blocked") {
+			t.Errorf("expected blocked reason, got: %s", reason)
+		}
+	})
+	t.Run("tool_name extracted from stdin", func(t *testing.T) {
+		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git stash"}}`)
+		toolName := extractToolNameFromStdin(payload)
+		if toolName != "run_in_terminal" {
+			t.Errorf("expected run_in_terminal, got %s", toolName)
+		}
+		cmd := extractCommandFromStdin(payload)
+		if cmd != "git stash" {
+			t.Errorf("expected git stash, got %s", cmd)
+		}
+	})
 }
 
-/// 🧰️ A tool result carrying the markdown of one entity payload.
-fn entity_result(key: &str, entity: Json, extra: &[String]) -> RepositoryResult {
-    let mut data = Map::new();
-    data.insert(key.to_string(), entity);
-    let mut lines = vec![format_markdown_result("graphql", &Json::Object(data))];
-    lines.extend(extra.iter().cloned());
-    RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
+func TestBlockedToolPatterns(t *testing.T) {
+	if len(BlockedToolPatterns) < 20 {
+		t.Errorf("expected at least 20 blocked patterns, got %d", len(BlockedToolPatterns))
+	}
+	expectedPatterns := []string{
+		"git add",
+		"git branch",
+		"git checkout",
+		"git cherry-pick",
+		"git clean",
+		"git clone",
+		"git commit",
+		"git config",
+		"git fetch",
+		"git init",
+		"git merge",
+		"git mv",
+		"git pull",
+		"git push",
+		"git rebase",
+		"git remote",
+		"git reset",
+		"git restore",
+		"git revert",
+		"git rm",
+		"git stash",
+		"git switch",
+		"git tag",
+	}
+	for _, ep := range expectedPatterns {
+		found := false
+		for bp := range BlockedToolPatterns {
+			if bp == ep {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing blocked pattern: %s", ep)
+		}
+	}
 }
-
-/// 🧰️ A tool result carrying plain lines.
-fn lines_result(lines: Vec<String>) -> RepositoryResult {
-    RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
-}
-
-/// 🎫️ The id and uri a ticket record answers with.
-fn ticket_identity(slug: &str) -> (String, String) {
-    let id = semio_framework_repo_identity::emoji_text(semio_framework_repo_identity::entity("ticket")) + &semio_framework_repo_identity::flat(slug);
-    let uri = format!("repo://ticket/{id}");
-    (id, uri)
-}
-
-impl RepoRepository {
-    fn ticket_open(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let kind = self.kind();
-        let mut client = optional(arguments, "client")?;
-        if client.trim().is_empty() {
-            client = semio_framework_repo_providers::hook_client_for_mcp_kind(kind).to_string();
-        }
-        let request = semio_framework_repo_tickets::TicketOpenRequest {
-            emoji: optional(arguments, "emoji")?,
-            title: optional(arguments, "title")?,
-            prompt: optional(arguments, "prompt")?,
-            llm: optional(arguments, "llm")?,
-            effort: optional(arguments, "effort")?,
-            client,
-            goal: optional(arguments, "goal")?,
-            parent: optional(arguments, "parent")?,
-            no_issue: switch(arguments, "no_issue")?,
-            no_management: switch(arguments, "no_management")?,
-            issue: optional(arguments, "issue")?,
-            session: String::new(),
-            plan_id: optional(arguments, "plan_id")?,
-            spec_id: optional(arguments, "spec_id")?,
-        };
-        let context = self.context();
-        let outcome = context.with_tickets(kind, |service| service.open(&request)).map_err(|error| HandlerError::tool(&error.message))?;
-        let id = semio_framework_repo_tickets::TicketId::parse(&outcome.id).map_err(|error| HandlerError::tool(&error.message))?;
-        let ticket = context.with_tickets(kind, |service| service.read(&id)).map_err(|error| HandlerError::tool(&error.message))?;
-        let (artifact, uri) = ticket_identity(&ticket.slug);
-        let mut payload = json!({ "id": artifact, "slug": ticket.slug, "year": ticket.year, "month": ticket.month, "day": ticket.day, "status": ticket.status, "path": ticket.folder_path, "uri": uri });
-        let mut extra = outcome.warnings.clone();
-        if let Some(issue) = ticket.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty()) {
-            payload["github"] = json!({ "issue": issue });
-            extra.push(format!("GitHub issue: {issue}"));
-        }
-        Ok(entity_result("ticketOpen", payload, &extra))
-    }
-
-    fn ticket_close(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let path = optional(arguments, "path")?;
-        let context = self.context();
-        let id = if path.is_empty() {
-            let open = context.tickets(None, None, None, Some(TicketStatus::Open)).map_err(|error| HandlerError::tool(&error.message))?;
-            let latest = open.into_iter().max_by(|left, right| (left.year, left.month, left.day, &left.slug).cmp(&(right.year, right.month, right.day, &right.slug))).ok_or_else(|| HandlerError::tool("no path provided and no open tickets found"))?;
-            semio_framework_repo_tickets::TicketId::new(latest.year, latest.month, latest.day, latest.slug)
-        } else {
-            ticket_id(&path)?
-        };
-        let title = optional(arguments, "title")?;
-        let input = TicketCloseInput {
-            year: id.year,
-            month: id.month,
-            day: id.day,
-            slug: id.slug,
-            summary: optional(arguments, "summary")?,
-            files: Some(strings(arguments, "files")?),
-            title: Some(title).filter(|title| !title.is_empty()),
-            no_management: switch(arguments, "no_management")?,
-            all: false,
-        };
-        let ticket = context.ticket_close(input).map_err(|error| HandlerError::tool(&error.message))?;
-        let (artifact, _) = ticket_identity(&ticket.slug);
-        let finished = ticket.interactions.iter().rev().find(|interaction| interaction.kind.starts_with("ticket.close")).map(|interaction| interaction.date.clone()).unwrap_or_default();
-        let started = ticket.interactions.first().map(|interaction| interaction.date.clone()).unwrap_or_default();
-        Ok(entity_result("ticketClose", json!({ "id": artifact, "slug": ticket.slug, "status": ticket.status, "dates": { "created": started, "finished": finished } }), &[]))
-    }
-
-    fn ticket_reopen(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let kind = self.kind();
-        let path = optional(arguments, "path")?;
-        let context = self.context();
-        let mut id = if path.is_empty() {
-            let tickets = context.tickets(None, None, None, None).map_err(|error| HandlerError::tool(&error.message))?;
-            let latest = tickets.into_iter().max_by(|left, right| (left.year, left.month, left.day, left.interactions.first().map(|interaction| interaction.date.clone())).cmp(&(right.year, right.month, right.day, right.interactions.first().map(|interaction| interaction.date.clone())))).ok_or_else(|| HandlerError::tool("no path provided and no tickets found"))?;
-            semio_framework_repo_tickets::TicketId::new(latest.year, latest.month, latest.day, latest.slug)
-        } else {
-            ticket_id(&path)?
-        };
-        let no_management = switch(arguments, "no_management")?;
-        let title = optional(arguments, "title")?;
-        if !title.is_empty() {
-            id = context.retitle(&id, Some(&title), no_management).map_err(|error| HandlerError::tool(&error.message))?;
-        }
-        let mut client = optional(arguments, "client")?;
-        if client.trim().is_empty() {
-            client = semio_framework_repo_providers::hook_client_for_mcp_kind(kind).to_string();
-        }
-        let request = semio_framework_repo_tickets::TicketReopenRequest {
-            id: id.id(),
-            prompt: optional(arguments, "prompt")?,
-            llm: optional(arguments, "llm")?,
-            effort: optional(arguments, "effort")?,
-            client,
-            goal: optional(arguments, "goal")?,
-            parent: optional(arguments, "parent")?,
-            no_management,
-            session: String::new(),
-            plan_id: optional(arguments, "plan_id")?,
-            spec_id: optional(arguments, "spec_id")?,
-        };
-        let outcome = context.with_tickets(kind, |service| service.reopen(&request)).map_err(|error| HandlerError::tool(&error.message))?;
-        let mut lines = outcome.warnings.clone();
-        lines.push(format!("\n🔓️ Ticket reopened: {}", id.slug));
-        Ok(lines_result(lines))
-    }
-
-    fn goal_open(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let input = GoalCreateInput {
-            title: optional(arguments, "title")?,
-            description: optional(arguments, "description")?,
-            prompt: optional(arguments, "prompt")?,
-            due_date: optional(arguments, "due_date")?,
-            llm: optional(arguments, "llm")?,
-            effort: String::new(),
-            client: optional(arguments, "client")?,
-            no_management: switch(arguments, "no_management")?,
-            parent: optional(arguments, "parent")?,
-            milestone: optional(arguments, "milestone")?,
-        };
-        let goal = self.context().goal_create(input).map_err(|error| HandlerError::tool(&error.message))?;
-        Ok(entity_result("goalCreate", json!({ "id": goal.id, "title": goal.title, "status": goal.status, "prompt": goal.prompt, "dueDate": goal.dates.due, "client": goal.client, "llm": goal.llm }), &[]))
-    }
-
-    fn goal_close(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let input = GoalCloseInput { id: required(arguments, "id")?, summary: required(arguments, "summary")?, no_management: switch(arguments, "no_management")? };
-        let goal = self.context().goal_close(input).map_err(|error| HandlerError::tool(&error.message))?;
-        Ok(entity_result("goalClose", json!({ "id": goal.id, "status": goal.status }), &[]))
-    }
-
-    fn goal_reopen(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let some = |value: String| Some(value).filter(|value| !value.is_empty());
-        let input = GoalReopenInput {
-            id: required(arguments, "id")?,
-            prompt: required(arguments, "prompt")?,
-            llm: required(arguments, "llm")?,
-            client: required(arguments, "client")?,
-            effort: String::new(),
-            title: some(optional(arguments, "title")?),
-            description: some(optional(arguments, "description")?),
-            due_date: some(optional(arguments, "due_date")?),
-            parent: None,
-            no_management: switch(arguments, "no_management")?,
-        };
-        let goal = self.context().goal_reopen(input).map_err(|error| HandlerError::tool(&error.message))?;
-        Ok(entity_result("goalReopen", json!({ "id": goal.id, "status": goal.status }), &[]))
-    }
-}
-
-impl Repository for RepoRepository {
-    fn call(&self, _context: &Context, name: &str, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
-        let context = self.context();
-        let failed = |error: semio_framework_repo_graphql::ContextError| HandlerError::tool(&error.message);
-        match name {
-            "ticket_open" => self.ticket_open(arguments),
-            "ticket_close" => self.ticket_close(arguments),
-            "ticket_reopen" => self.ticket_reopen(arguments),
-            "goal_open" => self.goal_open(arguments),
-            "goal_close" => self.goal_close(arguments),
-            "goal_reopen" => self.goal_reopen(arguments),
-            "section_move" => context.move_section(&self.relative(&required(arguments, "file")?), &required(arguments, "old_name")?, &required(arguments, "new_name")?).map(lines_result).map_err(failed),
-            "file_integrate" => context
-                .integrate_file(&self.relative(&required(arguments, "source")?), &required(arguments, "target_section")?, &self.relative(&required(arguments, "target_file")?), &optional(arguments, "target_parent_section")?)
-                .map(lines_result)
-                .map_err(failed),
-            "section_extract" => context.extract_section(&self.relative(&required(arguments, "source_file")?), &required(arguments, "source_section")?, &self.relative(&required(arguments, "target_file")?)).map(lines_result).map_err(failed),
-            _ => Err(HandlerError::tool("tool not found")),
-        }
-    }
-
-    fn read(&self, _context: &Context, uri: &str) -> Result<ResourceContent, HandlerError> {
-        let text = match uri {
-            "repo://" => self.yaml_of_query("query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }")?,
-            "repo://bundles" => self.yaml_of_query("query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }")?,
-            "repo://folders" => self.yaml_of_query("query Folders { repo { folders { id path name kind } } }")?,
-            "repo://files" => self.yaml_of_query("query Files { repo { files { id path name kind extension } } }")?,
-            "repo://tickets" => self.yaml_of_query("query Tickets { repo { tickets { id slug title status prompt interactions { prompt } } } }")?,
-            "repo://policies" => self.yaml_of_query("query Policies { repo { policies { id description breachs { id } } } }")?,
-            "repo://contributors" => self.yaml_of_query("query Contributors { repo { contributors { id emails name contributions { checkpoints { id } tickets { id } } } } }")?,
-            "repo://goals" => {
-                let goals = self.context().goals().map_err(|error| HandlerError::tool(&error.message))?;
-                semio_framework_repo_yaml::marshal(&serde_json::to_value(goals).map_err(|error| HandlerError::tool(&error.to_string()))?).map_err(|error| HandlerError::tool(&error))?
-            }
-            _ => return Err(HandlerError::tool("resource not found")),
-        };
-        Ok(ResourceContent { uri: uri.to_string(), mime_type: "text/plain".to_string(), text, blob: String::new() })
-    }
-
-    fn prompt(&self, _context: &Context, name: &str, arguments: &BTreeMap<String, String>) -> Result<GetPromptResult, HandlerError> {
-        let Some(instruction) = semio_framework_repo_mcp::prompt_instruction(name) else { return Err(HandlerError::tool("prompt not found")) };
-        let given = arguments.get("prompt").cloned().unwrap_or_default();
-        Ok(GetPromptResult { description: instruction.to_string(), messages: vec![("user".to_string(), Content::text(&format!("{instruction}\n\n{given}")))] })
-    }
-}
-
-/// 🏠️ The production repository of a root, answering as the profile `SEMIO_REPO_MCP_CLIENT` names.
-pub fn real_repository(root: PathBuf) -> RepoRepository {
-    let profile = Profile::parse(&std::env::var(semio_framework_repo_mcp::PROFILE_ENVIRONMENT).unwrap_or_default()).unwrap_or_default();
-    RepoRepository::open(&root, profile)
-}
-//#endregion 🔌️McpVerb

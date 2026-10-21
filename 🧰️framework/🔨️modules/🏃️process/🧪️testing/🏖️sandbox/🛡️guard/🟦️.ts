@@ -71,7 +71,7 @@ export function decideListenV1(context: GuardContextV1, port: number): GuardViol
 
 /** 🛡️ Extracts the written path of one call from its arguments; descriptors and unknown shapes yield nothing. */
 export function guardWriteTargetsV1(declared: TestSandboxProtocolV1, fn: string, args: readonly unknown[]): readonly string[] {
-  const indexes = (declared.guard.writeTargets as Readonly<Record<string, readonly number[]>>)[fn];
+  const indexes = (declared.guard.writeTargets as Readonly<Record<string, readonly number[]>>)[fn] ?? (declared.guard.sqliteTargets as Readonly<Record<string, readonly number[]>>)[fn];
   if (!indexes) return [];
   const rows: string[] = [];
   for (const index of indexes) {

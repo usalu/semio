@@ -26,7 +26,6 @@ testkit = ["semio-framework-os-infinite-board-schema/testkit", "semio-framework-
 
 [dependencies]
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 geometry = { path = "../../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }

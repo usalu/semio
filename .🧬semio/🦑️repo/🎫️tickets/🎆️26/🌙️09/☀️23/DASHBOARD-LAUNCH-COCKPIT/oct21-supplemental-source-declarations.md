@@ -13,3 +13,5 @@ A filesystem-only declaration audit finds all34 planned target pairs and explici
 Native plan now expects the current authored52 filesystem laws; actual admitted roster/whole terminal remains authoritative.
 
 Root subsequently added a third actual callback-fence filesystem law. Retained native expectation is now53 authored library laws; no new run or observed pass is implied.
+
+Source39 is the existing @semio-tech/framework-original-slot:verify-source gate. Fresh declaration has executionKind Source and exact tests/TS runtime entry; its inputs default/^default, no freshness exception, and actual router command verify source retains TSC followed by the original-slot Ajv/RFC6902/SQLite verifier. Added only to the retained extra execution plan as pending; Controls owns the declaration and source review. Original38 remain unchanged.

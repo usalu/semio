@@ -29,6 +29,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-snapshot-projection = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-stdio-semio-table-model = { workspace = true }

@@ -41,7 +41,7 @@ mutations = [
     ("observation-images-unbounded", os.path.join(OBS, MJS), "while(retainedProjectImageBytes>GRAPH_MEMORY_POLICY_V1.retainedImageBytes&&", "while(false&&", "retention"),
     ("observation-no-interning", os.path.join(OBS, MJS), "return internJsonStringsV1(value,graphStringInternerV1);", "return value;", "retention"),
     ("engine-fragments-not-interned", os.path.join(ENGINE, MJS), "readGenerationFragmentV1(internJsonStringsV1(unpack(bytes,P.maximumFragmentBytes),graphStringInternerV1))", "readGenerationFragmentV1(unpack(bytes,P.maximumFragmentBytes))", "shared"),
-    ("nodes-ungoverned-dispatch", os.path.join(NODES, MJS), "await governor.run(()=>inferProject(job));", "await inferProject(job);", "wiring"),
+    ("nodes-ungoverned-dispatch", os.path.join(NODES, MJS), "await governor.run(async()=>{", "await (async()=>{", "wiring"),
     ("nodes-statistics-dropped", os.path.join(NODES, MJS), "...(governor?{memory:governor.stats()}:{})", "", "wiring"),
 ]
 survivors, killed = [], 0

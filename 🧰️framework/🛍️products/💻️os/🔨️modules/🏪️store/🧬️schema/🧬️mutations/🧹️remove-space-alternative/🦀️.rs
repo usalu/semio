@@ -23,32 +23,23 @@ pub struct RemoveSpaceAlternative {
 //#region ⚙️Semantics
 impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "remove", entity: "space-alternative", kind: "remove-space-alternative", record: "RemovedSpaceAlternative" };
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
-        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveAlternative { alternative_id: self.alternative_id.clone() }))
-    }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.alternatives
-            .iter()
-            .find(|value| value.id == self.alternative_id)
-            .map(|alternative| {
-                vec![
-                    SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
-                    SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative.clone() }),
-                ]
-            })
-            .unwrap_or_default()
-    
-    })())
-}
-}
-
-impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["alternatives".into(), self.alternative_id.clone()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
+        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveAlternative { alternative_id: self.alternative_id.clone() }))
+    }
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+        Ok(base.alternatives.iter().find(|value| value.id == self.alternative_id).map(|alternative| vec![
+            SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
+            SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative.clone() }),
+        ]).unwrap_or_default())
     }
 }
 //#endregion ⚙️Semantics

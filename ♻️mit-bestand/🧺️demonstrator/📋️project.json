@@ -55,7 +55,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "check-without-outputs"
+          }
         }
       },
       "defaultConfiguration": "prototype"
@@ -96,7 +100,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "check-without-outputs"
+          }
         }
       },
       "defaultConfiguration": "release"
@@ -104,7 +112,11 @@
     "dev": {
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          },
           "dashboard": {
             "ready": {
               "port": 6029,
@@ -146,7 +158,9 @@
         "@semio-tech/framework-surface-rs:wasm",
         "@semio-tech/framework-editor-rs:wasm",
         "@semio-tech/framework-os-node-graph-rs:wasm",
-        "@semio-tech/puzzle-plugin:wasm"
+        "@semio-tech/puzzle-plugin:wasm",
+        "semio-framework-os-flow-browser-package:wasm",
+        "semio-framework-canvas:stage-runtime-assets"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -162,7 +176,11 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" },
+          "cache": {
+            "version": 1,
+            "class": "managed-output",
+            "reason": "outputs-in-managed-store"
+          },
           "buildMode": {
             "fixed": "release"
           }
@@ -179,7 +197,47 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🎚️config/🟦️.ts",
+            "{projectRoot}/📜️script.ts",
+            "{projectRoot}/🪧️brand.ts",
+            "{projectRoot}/🔨️modules/🧩️runtime/♻️activation/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanebranding/🟦️.ts",
+            "{projectRoot}/🧪️tests/🎭️acceptance/🧬️console/🧪️.ts",
+            "{projectRoot}/🧪️tests/🏛️shell-brand/🟦️.ts",
+            "{projectRoot}/🔨️modules/🧩️runtime/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorruntimebuildvariants/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanedescription/🟦️.ts",
+            "{projectRoot}/🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratormaptiles/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs",
+              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+            ]
+          }
+        }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json"
+      ]
     },
     "activate-prototype": {
       "executor": "repo:script",
@@ -208,7 +266,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "pure-function-of-inputs"
+          }
         }
       },
       "defaultConfiguration": "prototype"
@@ -222,14 +284,22 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       }
     },
     "serve": {
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          },
           "dashboard": {
             "ready": {
               "port": 6029,
@@ -278,7 +348,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -303,7 +377,11 @@
       "continuous": true,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" },
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          },
           "continuousSharing": false
         }
       }
@@ -322,7 +400,21 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+            "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{projectRoot}/🪧️brand.ts"
+            ]
+          }
         }
       }
     },
@@ -346,8 +438,44 @@
         },
         {
           "env": "SEMIO_BUILD_BUDGET_MS"
+        },
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json"
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🎚️config/🟦️.ts",
+            "{projectRoot}/📜️script.ts",
+            "{projectRoot}/🪧️brand.ts",
+            "{projectRoot}/🔨️modules/🧩️runtime/♻️activation/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanebranding/🟦️.ts",
+            "{projectRoot}/🧪️tests/🎭️acceptance/🧬️console/🧪️.ts",
+            "{projectRoot}/🧪️tests/🏛️shell-brand/🟦️.ts",
+            "{projectRoot}/🔨️modules/🧩️runtime/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorruntimebuildvariants/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanedescription/🟦️.ts",
+            "{projectRoot}/🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratormaptiles/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs",
+              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+            ]
+          }
         }
-      ]
+      }
     },
     "test-runtime-catalog": {
       "executor": "repo:script",
@@ -356,6 +484,21 @@
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts runtime-catalog-test"
+      },
+      "dependsOn": [
+        "@semio-tech/s-dev-composition:generate"
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🔨️modules/🧩️runtime/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     }
   }

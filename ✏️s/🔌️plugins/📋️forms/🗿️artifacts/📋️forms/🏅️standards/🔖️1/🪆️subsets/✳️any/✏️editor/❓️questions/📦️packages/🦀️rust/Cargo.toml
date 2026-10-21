@@ -40,8 +40,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-value-dictionary = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-diff = { path = "../../../../🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-tests = { path = "../../../../🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust" }

@@ -45,8 +45,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-bim-model-authored = { path = "../../../../📏️authored/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-components = { path = "../../../../💡️inferences/🪑️components/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-curtain-walls = { path = "../../../../💡️inferences/🧊️element-solids/🪟️curtain-walls/📦️packages/🦀️rust" }
@@ -88,6 +86,7 @@ serde_json = { workspace = true, optional = true }
 testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-artifact-bim-model-schema/testkit", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-mut-any-50/testkit", "semio-s-artifact-bim-model-mut-any-51/testkit", "semio-s-artifact-bim-model-mut-any-56/testkit", "semio-s-artifact-bim-model-mut-any-83/testkit", "semio-s-artifact-bim-model-mut-any-87/testkit", "semio-s-artifact-bim-model-mut-any-88/testkit", "semio-s-artifact-bim-model-wall-layout/testkit", "semio-s-artifact-bim-model-mut-any-156/testkit", "semio-s-artifact-bim-model-curtain-walls/testkit", "semio-s-artifact-bim-model-components/testkit", "semio-s-artifact-bim-model-quantities/testkit", "semio-s-artifact-bim-model-inferences/testkit", "semio-s-artifact-bim-model-wall-geometry/testkit", "semio-s-artifact-bim-model-modify/testkit", "semio-s-artifact-bim-model-tests-5/testkit", "semio-s-artifact-bim-model-mut-any-177/testkit", "semio-s-artifact-bim-model-family-tests/testkit", "semio-s-artifact-bim-model-mut-any-190/testkit", "semio-s-artifact-bim-model-ifc/testkit", "semio-s-artifact-bim-model-ifc-2/testkit"]
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }

@@ -1,0 +1,199 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "target",
+    "executionKind",
+    "metadata",
+    "command",
+    "dataReads",
+    "roles",
+    "dependencies"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "target": {
+      "const": "test-e2e"
+    },
+    "executionKind": {
+      "type": "null"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceInputObservation",
+        "runtimeSourceEntries",
+        "closure"
+      ],
+      "properties": {
+        "sourceInputObservation": {
+          "const": "freshness"
+        },
+        "runtimeSourceEntries": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\{projectRoot\\}/.+$"
+          }
+        },
+        "closure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resources"
+          ],
+          "properties": {
+            "resources": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "const": "{projectRoot}/🪧️brand.ts"
+              }
+            }
+          }
+        }
+      }
+    },
+    "command": {
+      "const": "bun ./🔨️modules/🧪️e2e/📜️script.ts test"
+    },
+    "dataReads": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^\\{projectRoot\\}/.+$"
+      }
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observation",
+          "inputRole",
+          "nativeObservation"
+        ],
+        "properties": {
+          "observation": {
+            "enum": [
+              null,
+              "freshness"
+            ]
+          },
+          "inputRole": {
+            "enum": [
+              "compile",
+              "freshness"
+            ]
+          },
+          "nativeObservation": {
+            "const": "compile"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test-e2e",
+        "serve-e2e",
+        "prepare-e2e",
+        "activate-prototype",
+        "activate-lanes-prototype",
+        "prepare-prototype",
+        "build",
+        "prepare-release"
+      ],
+      "properties": {
+        "test-e2e": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "serve-e2e": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prepare-e2e": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "activate-prototype": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "activate-lanes-prototype": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prepare-prototype": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "build": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prepare-release": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

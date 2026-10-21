@@ -50,5 +50,20 @@
       "declaredFields"
     ],
     "firstCloseHeapBytes": 0
+  },
+  "correlatedRetirement": {
+    "bodies": [
+      0,
+      1,
+      4096
+    ],
+    "cancelCuts": [
+      0,
+      1,
+      8,
+      64
+    ],
+    "maximumTurns": 100000,
+    "sourcePreserved": true
   }
 }

@@ -14,9 +14,15 @@
       "reads"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -1668,6 +1674,106 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-bulk-vec-retained source"
+      }
+    },
+    "test-paged-reservation-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-paged-reservation-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Page Reservation",
+              "de": "Seitenreservierung Testen"
+            },
+            "description": {
+              "en": "Check original page funding and retained partial allocations against the schema and independent SQL oracle.",
+              "de": "Prüft ursprüngliche Seitenbudgets und erhaltene Teilallokationen mit Schema und unabhängiger SQL-Referenz."
+            }
+          }
+        }
+      }
+    },
+    "test-exclusive-retirement-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-exclusive-retirement-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Exclusive Retirement",
+              "de": "Exklusive Freigabe Testen"
+            },
+            "description": {
+              "en": "Check exclusive owned cursor transfer and shared source query admission against independent SQL.",
+              "de": "Prüft exklusive Cursorübergabe und gemeinsame Quellenabfragen anhand unabhängiger SQL-Referenzen."
+            }
+          }
+        }
       }
     }
   }

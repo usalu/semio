@@ -106,6 +106,8 @@ ED(g, M + "/📐️model/📦️packages/🐹️go/🎫️ticket/🐹️.go", "/
 ED(g, M + "/📐️model/📦️packages/🦀️rust/🎫️work-aggregates/🦀️.rs", "/// 🧷️ An IDE-native plan or spec file archived into the ticket folder on close.", "/// 🧷️ A client-native plan or spec file archived into the ticket folder on close.")
 ED(g, M + "/📐️model/🧬️schema/🔣️.json", '"$comment": "🧷️ An IDE-native plan or spec file archived into the ticket folder on close."', '"$comment": "🧷️ A client-native plan or spec file archived into the ticket folder on close."')
 
+import json as _j
+POST_PLAN = [e["dest"] for e in _j.load(open(os.path.join(HERE, "staged", "plans-map.json"), encoding="utf-8"))["entries"] if e["src"].endswith("post_plan_to_issue_c256e28e.plan.md")][0]
 # ---- tests: Cursor refuses a plan attachment; the live GitHub test reads the plan from its ticket
 TU = T + "/🧪️tests/🔬️unit/🐹️.go"
 FUNC(g, TU, "TestResolvePlanSourceCursorPlanID", '''func TestResolvePlanSourceRefusesCursorPlanID(t *testing.T) {
@@ -137,7 +139,7 @@ FUNC(g, TU, "TestApplyTicketPlanFromIDsCursor", '''func TestApplyTicketPlanFromI
 	}
 }''')
 LIVE_OLD = 'filepath.Join(workspace.GetRootDir(), ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")'
-LIVE_NEW = 'filepath.Join(workspace.GetRootDir(), filepath.FromSlash(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/POST-PLAN-TO-ISSUE/post_plan_to_issue_c256e28e.plan.md"))'
+LIVE_NEW = 'filepath.Join(workspace.GetRootDir(), filepath.FromSlash("' + POST_PLAN + '"))'
 ED(g, TU, LIVE_OLD, LIVE_NEW)
 
 TC = CLI + "/🧪️tests/🗒️ticket-plan/🐹️.go"
@@ -173,7 +175,7 @@ FUNC(g, TC, "TestApplyTicketPlanFromIDsCursor", '''func TestApplyTicketPlanFromI
 		t.Fatalf("plan: %+v", ticket.Plan)
 	}
 }''')
-ED(g, TC, 'filepath.Join(rootDir, ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")', 'filepath.Join(rootDir, filepath.FromSlash(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/POST-PLAN-TO-ISSUE/post_plan_to_issue_c256e28e.plan.md"))')
+ED(g, TC, 'filepath.Join(rootDir, ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")', 'filepath.Join(rootDir, filepath.FromSlash("' + POST_PLAN + '"))')
 
 # ---- library: no cursor-plan-snapshot population, the commit bullets cover ticket plans
 BUL = L + "/🎛️commands/📝️commit/🔸️bullets/🟦️.ts"

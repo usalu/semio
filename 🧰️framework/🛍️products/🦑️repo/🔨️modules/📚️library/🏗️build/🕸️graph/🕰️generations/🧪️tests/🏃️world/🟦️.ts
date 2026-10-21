@@ -1,5 +1,6 @@
 /** 🏃️ A synthetic multi-project workspace with its own tiny inference (nodes, import edges, an environment of owner roots and package names), the ports a generation store needs and a child entry point so several operating system processes can share one store. The same model is implemented independently in `🐍️oracle.py`. */
 import {createHash} from "node:crypto";
+import {readFileSync} from "node:fs";
 import {lstat,mkdir,readFile,readdir,rm,writeFile,utimes} from "node:fs/promises";
 import {basename,dirname,join,posix} from "node:path";
 import {renderGenerationMessageV1} from "../../🔌️load/🟨️.mjs";
@@ -7,6 +8,7 @@ import {createGraphPhaseClockV1} from "../../../⏱️phases/🟨️.mjs";
 import {canonicalJsonV1,createFileLeasePortV1,createFrontierV1,createGenerationStoreV1,diffFrontiersV1,type FrontierV1,type GenerationComputeResultV1,type GenerationComputeSpecV1,type GenerationMembershipV1,type GenerationRowV1,type GenerationStoreV1} from "../../🟨️.mjs";
 
 export const IDENTITY=createHash("sha256").update("synthetic-identity-v1").digest("hex");
+export const IMPLEMENTATION=createHash("sha256").update("synthetic-implementation-v1").digest("hex");
 const sha=(text:string|Uint8Array)=>createHash("sha256").update(text).digest("hex");
 
 export type Op={op:"write";path:string;content:string}|{op:"delete";path:string}|{op:"rename";from:string;to:string};
@@ -28,14 +30,14 @@ async function walk(dir:string,relative:string,files:string[],dirs:string[]):Pro
  }
 }
 
-type Owner={name:string;root:string;config:string;package?:string;uses:string[]};
+type Owner={name:string;root:string;config:string;package?:string;uses:string[];broken?:boolean};
 
 async function readOwners(dir:string):Promise<{owners:Owner[];rows:GenerationRowV1[]}>{
  const files:string[]=[],dirs:string[]=[];await walk(dir,"pkg",files,dirs);
  const owners:Owner[]=[],rows:GenerationRowV1[]=[];
  for(const file of files.filter(file=>basename(file)==="project.json")){
   const text=await readFile(join(dir,file),"utf8"),json=JSON.parse(text);rows.push({kind:"field",path:file,fact:{name:json.name,package:json.package??null}});
-  owners.push({name:json.name,root:dirname(file),config:file,...(json.package?{package:json.package}:{}),uses:json.uses??[]});
+  owners.push({name:json.name,root:dirname(file),config:file,...(json.package?{package:json.package}:{}),...(json.broken?{broken:true}:{}),uses:json.uses??[]});
  }
  return{owners:owners.sort((a,b)=>a.name<b.name?-1:1),rows};
 }
@@ -46,8 +48,9 @@ export function environmentDigest(owners:readonly Owner[]):string{
  return sha(canonicalJsonV1({owners:owners.map(owner=>[owner.name,owner.root]).sort((a,b)=>a[0]<b[0]?-1:1),packages:owners.filter(owner=>owner.package).map(owner=>[owner.package,owner.name]).sort((a,b)=>a[0]!<b[0]!?-1:1)}));
 }
 
-async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[]):Promise<{name:string;root:string;kind:"project";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[]}>{
+async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[]):Promise<{name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[]}>{
  const rows:GenerationRowV1[]=[],config=await readFile(join(dir,owner.config));rows.push(fileRow(owner.config,config));
+ if(owner.broken)return{name:owner.name,root:owner.root,kind:"unavailable",node:{root:owner.root,project:owner.name,source:owner.config,sha256:sha(config),reason:"broken"},edges:[],targets:[],config:owner.config,rows};
  const sourceDir=owner.root+"/src";let names:string[]|null=null;
  try{names=(await readdir(join(dir,sourceDir))).sort();}catch{}
  rows.push({kind:"readdir",path:sourceDir,fact:names});
@@ -118,8 +121,8 @@ export function createWorld(dir:string,options:{store?:string;identity?:string;l
  const compute=options.computeWrap?options.computeWrap(createCompute(dir,log,options.ownerDelayMs)):createCompute(dir,log,options.ownerDelayMs),membership=createMembership(dir);
  return{
   dir,store,log,holdsLog,
-  refresh:(opts={})=>store.refresh({identity,policy:opts.policy,only:opts.only?new Set(opts.only):undefined,membership,compute,signal:opts.signal,progress:opts.progress as never,...(opts.bypassBuilder?{builder:body=>body()}:{})}),
-  refreshClosure:(roots,opts={})=>store.refreshClosure({roots,identity,policy:opts.policy,membership,compute,signal:opts.signal,progress:opts.progress as never}),
+  refresh:(opts={})=>store.refresh({identity,implementation:IMPLEMENTATION,policy:opts.policy,only:opts.only?new Set(opts.only):undefined,membership,compute,signal:opts.signal,progress:opts.progress as never,...(opts.bypassBuilder?{builder:body=>body()}:{})}),
+  refreshClosure:(roots,opts={})=>store.refreshClosure({roots,identity,implementation:IMPLEMENTATION,policy:opts.policy,membership,compute,signal:opts.signal,progress:opts.progress as never}),
   graph:async(current,names)=>{const graph=await store.assemble(current,{names});const{generation,membership:_member,...rest}=graph;return JSON.parse(canonicalJsonV1(rest));},
  };
 }
@@ -164,19 +167,19 @@ if(import.meta.main&&process.argv[2]==="child"){
 
 
 /** 🧩️ The partial inference of the synthetic workspace in repository terms (what `discoverPart` returns): owners with their facts, the edges of every processed owner, the environment, and the facts of the whole capture. */
-export function createPartDiscover(dir:string,log:{full:string[];edges:string[];cold:boolean}[]=[]){
+export function createPartDiscover(dir:string,log:{full:string[];edges:string[];cold:boolean}[]=[],ownerDelayMs=0){
  return async(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>{
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
   const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name));
-  const inferred=[];for(const owner of full){signal?.throwIfAborted();inferred.push(await inferOwner(dir,owner,owners));}
+  const inferred=[];for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));inferred.push(await inferOwner(dir,owner,owners));}
   const edgeOnly:{name:string}[]=[],extra:Awaited<ReturnType<typeof inferOwner>>[]=[];
   if(!spec.cold&&envDigest!==spec.previousEnv)for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();extra.push(await inferOwner(dir,owner,owners));edgeOnly.push({name:owner.name});}
   log.push({full:inferred.map(row=>row.name).sort(),edges:edgeOnly.map(row=>row.name).sort(),cold:spec.cold});
   const capture=[...inferred,...extra].flatMap(row=>row.rows);
   return{
-   owners:inferred.map(row=>({name:row.name,root:row.root,config:row.config,node:row.node,nodeRows:row.rows})),
+   owners:inferred.map(row=>({name:row.name,root:row.root,config:row.config,...(row.kind==="unavailable"?{unavailable:row.node}:{node:row.node}),nodeRows:row.rows})),
    edgeOnly,edges:[...inferred,...extra].flatMap(row=>row.edges) as never[],externalNodes:{},parseUnavailable:[],
    rows:capture,env:{digest:envDigest,rows:envRows},replaceTags:[],
   };
@@ -184,13 +187,15 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
 }
 
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
-export function createMockHost(dir:string,options:{signal?:AbortSignal;environment?:Record<string,string>;gate?:()=>Promise<void>;identity?:string}={}){
+export function createMockHost(dir:string,options:{signal?:AbortSignal;environment?:Record<string,string>;gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];ownerDelayMs?:number}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
  let building=Promise.resolve();
- const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log),holds=createHolds(dir);
+ const implementationRows:GenerationRowV1[]=(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};});
+ const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log,options.ownerDelayMs),holds=createHolds(dir);
  const host={
   workspaceRoot:dir,namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,
   async identity(){return options.identity??IDENTITY;},
+  async implementationRows(){return implementationRows;},
   async withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>){events.push("shared");return body({root:join(dir,".gen")},{published});},
   async withBuilder<T>(body:(store:unknown,control:unknown)=>Promise<T>){
    events.push("builder:wait");const previous=building;let release!:()=>void;building=new Promise<void>(resolve=>{release=resolve;});await previous;events.push("builder:held");

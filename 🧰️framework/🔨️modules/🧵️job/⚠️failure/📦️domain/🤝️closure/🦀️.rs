@@ -3,6 +3,7 @@ use crate::{OriginalTurnFailure,OriginalDomainFailure,OriginalDomainProjection,O
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
 /// 🪢️ The initial failure remains independent from its complete source-closure failure.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct OriginalClosureFailure{pub initial:OriginalTurnFailure,pub closure:OriginalTurnFailure}
 impl OriginalDomainFailure for OriginalClosureFailure{
  fn domain_code(&self)->&str{"original.source-closure"}

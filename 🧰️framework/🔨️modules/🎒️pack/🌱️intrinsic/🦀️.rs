@@ -15,7 +15,6 @@ pub enum IntrinsicFormat { Body, Document }
 
 #[path="🎮️retained/🦀️.rs"]
 mod retained;
-pub(crate) use retained::{Driver,document::DocumentDriver};
 pub use retained::{RetainedIntrinsicBody,RetainedIntrinsicDocument,RetainedIntrinsicInput,RetainedIntrinsicStep,RetainedIntrinsicOriginalCall};
 
 /// 🛬️ Moves the exact intrinsic value out of one complete input under cumulative caller control.

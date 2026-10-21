@@ -11,7 +11,7 @@ type Round={outcome:"value"|"failure"|"conflict";message?:string;code?:string;un
 
 /** 🔁️ Extracts the actual settlement owner from the observation source (or from SETTLE_SOURCE for a patched copy) and runs it over the closed decision corpus. */
 async function settlementOwner(){
- const source=await readFile(process.env.SETTLE_SOURCE??new URL("../../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("observation.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="settleObservedComputationV1");
+ const source=await readFile(process.env.SETTLE_SOURCE??new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("observation.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="settleObservedComputationV1");
  if(!node)throw Error("Actual observed settlement owner required");
  return ts.transpileModule(node.getText(tree).replace(/^export\s/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 }

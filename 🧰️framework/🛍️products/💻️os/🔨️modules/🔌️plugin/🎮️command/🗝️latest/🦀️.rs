@@ -26,8 +26,8 @@ impl ToolLatestWinsKeyCopy {
         else{self.part+=1;self.offset=0;self.prefix=0;copied_bytes=0;}}
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes,..idle};Ok(if self.part>4{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
-    pub fn take_key(&mut self,grant:RetainedCloneGrant)->Result<Option<(semio_framework_value::ordered::SharedOwner<String>,RetainedCloneProgress)>,ValueError>{
-        use semio_framework_value::ordered::SharedOwner;
+    pub fn take_key(&mut self,grant:RetainedCloneGrant)->Result<Option<(semio_framework_value_ordered::ordered::SharedOwner<String>,RetainedCloneProgress)>,ValueError>{
+        use semio_framework_value_ordered::ordered::SharedOwner;
         if self.part<=4||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<SharedOwner::<String>::allocation_bytes(){return Ok(None);}
         let Some(key)=self.key.take()else{return Ok(None)};
         match SharedOwner::admit(key,grant){Ok(value)=>Ok(Some(value)),Err((error,key))=>{self.key=Some(key);Err(error)}}

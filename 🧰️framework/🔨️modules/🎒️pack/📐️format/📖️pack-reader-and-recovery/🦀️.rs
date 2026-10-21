@@ -1,6 +1,7 @@
 //! 📖️ Pack reader and recovery: the superblock, the pack file with its identity chunk cursor, the footer-only reader and the forward-scan recovery. See [`super`].
 
 use super::*;
+use super::header_and_footer::validate_chunk_custody;
 
 //#region 🔖️Reader
 /// 🪪️ The two fixed-size, always-present anchors of a pack file.

@@ -1,0 +1,118 @@
+name: Native Dashboard
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dashboard-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  BUN_VERSION: 1.4.2
+  NODE_VERSION: 24.15.0
+  SEMIO_LANGUAGE: en
+  SEMIO_BUILD_MODE: prototype
+  SEMIO_BUILD_BUDGET_MS: '21600000'
+  RUST_MIN_STACK: '134217728'
+  CI: 'true'
+defaults:
+  run:
+    shell: bash
+jobs:
+  native:
+    name: Dashboard (${{ matrix.name }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            runner: ubuntu-latest
+          - name: macos
+            runner: macos-latest
+          - name: windows
+            runner: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/native-repo
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Probe the Explicit German Entry
+        env:
+          SEMIO_LANGUAGE: de
+        run: repo --help
+      - name: Filesystem Command Laws
+        id: filesystem-command-laws
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-filesystem-workspace --lib -- --nocapture --test-threads=1
+      - name: Terminal Editor Controller
+        id: terminal-editor-controller
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-terminal --lib source_ -- --nocapture --test-threads=1
+      - name: Explicit Language Choice
+        id: explicit-language-choice
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-terminal --lib language -- --nocapture --test-threads=1
+      - name: Canonical Cold Lazy Launch
+        id: canonical-cold-lazy-launch
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo run @semio-tech/repo-dashboard-rs:test-cold-start --skip-cache --output=stream
+      - name: Installed Journeys
+        id: installed-journeys
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo run @semio-tech/repo-dashboard-rs:test-journeys --skip-cache --output=stream
+      - name: Installed Load
+        id: installed-load
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo run @semio-tech/repo-dashboard-rs:test-load --skip-cache --output=stream
+      - name: Process Deadline
+        id: process-deadline
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo run @semio-tech/repo-dashboard-rs:test-process-deadline --skip-cache --output=stream
+      - name: Retain Native Dashboard Evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dashboard-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/dashboard-artifacts
+            ${{ runner.temp }}/dashboard-results
+          if-no-files-found: warn
+          retention-days: 14
+  devcontainer:
+    name: Dashboard (Devcontainer)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/devcontainer-repo
+      - name: Retain Devcontainer Execution Output
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dashboard-devcontainer
+          path: ${{ runner.temp }}/dashboard-devcontainer.log
+          if-no-files-found: warn
+          retention-days: 14

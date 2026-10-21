@@ -4,7 +4,7 @@ import json, os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from paths import ROOT  # noqa: E402
+from paths import ROOT, NEW3  # noqa: E402
 
 GIB, MIB = 1 << 30, 1 << 20
 DAY = 86_400_000
@@ -17,6 +17,9 @@ problems = []
 
 
 def writer(suffix):
+    for name in ("gc-launch.ts", "gc-reclaim.ts"):
+        if suffix == "new:" + name:
+            return NEW3[name]
     rows = [row for row in tracked if row.endswith(suffix)]
     if len(rows) != 1:
         problems.append("writer %r matched %d tracked file(s): %s" % (suffix, len(rows), rows[:3]))
@@ -60,11 +63,15 @@ for id, directory, purpose in (
     ("leases", "b/l", ("Resource lease data.", "Ressourcen-Lease-Daten.")),
 ):
     areas.append(area(id, directory, purpose, [BUDGET], root="native", kind="partition", partition=id, managed={"owner": "image"}))
+next(row for row in areas if row["id"] == "graph")["recreate"] = "derived"
 areas.append(area("rust", "rust/fixed", ("Cargo store, compiled units and Nx task artifacts.", "Cargo-Speicher, kompilierte Einheiten und Nx-Task-Artefakte."), [BUDGET], kind="partition", partition="rust", managed={"owner": "image"}))
 areas.append(area("control", "b/c", ("Bootstrap control: SQLite lease catalogs, claims and queues.", "Bootstrap-Steuerung: SQLite-Lease-Kataloge, Claims und Warteschlangen."), [BUDGET], root="native", kind="control", managed={"owner": "control"}))
 areas.append(area("boot-recovery", "boot-recovery", ("Native boot recovery ledgers kept beside the partition tree.", "Native Boot-Wiederherstellungsprotokolle neben dem Partitionsbaum."), ["/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts"], root="native", budget={"bytes": 16 * MIB}, collect=collect(30, HOUR)))
 areas.append(area("nx-artifacts", "nx/artifacts", ("Nx task artifacts, trimmed by Nx itself at maxCacheSize.", "Nx-Task-Artefakte, von Nx selbst bei maxCacheSize gekürzt."), ["/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"], kind="nested", partition="rust", budget={"bytes": 3 * GIB}, managed={"owner": "nx"}))
 areas.append(area("cargo-store", None, ("Cargo build, target, home and incremental state: the rest of the rust partition.", "Cargo-Build-, Target-, Home- und Inkrementalzustand: der Rest der Rust-Partition."), ["/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts"], kind="nested", partition="rust", budget={"remainder": True}, managed={"owner": "cargo"}))
+areas.append(area("graph-inference", "inference", ("Optional graph caches and fact blocks, reclaimed in the background above the hard floor.", "Optionale Graph-Caches und Faktenblöcke, im Hintergrund oberhalb der harten Untergrenze zurückgewonnen."), ["/📥️inputs/💾️storage/🟨️.mjs", "new:gc-reclaim.ts"], kind="nested", partition="graph", budget={"bytes": 2 * GIB}, managed={"owner": "graph"}, reclaim={"softAvailableBytes": 1879048192, "targetAvailableBytes": 2147483648}))
+areas.append(area("graph-closures", "build-input-closures", ("Content-addressed source closures of the graph.", "Inhaltsadressierte Quell-Closures des Graphen."), ["/🏗️build/📥️inputs/🟨️.mjs"], kind="nested", partition="graph", budget={"bytes": 1342177280}, managed={"owner": "graph"}))
+areas.append(area("graph-lock-closures", "build-lock-closures", ("Content-addressed lock closures of the graph.", "Inhaltsadressierte Lock-Closures des Graphen."), ["/🏗️build/📥️inputs/🟨️.mjs"], kind="nested", partition="graph", budget={"bytes": 67108864}, managed={"owner": "graph"}))
 areas.append(area("bazel-actions", "bazel/actions", ("Bazel disk cache, bounded by a share of the products partition.", "Bazel-Disk-Cache, begrenzt durch einen Anteil der Produkt-Partition."), ["/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts"], kind="nested", partition="products", budget={"basisPoints": 4000}, managed={"owner": "bazel"}))
 
 loose = (
@@ -82,7 +89,7 @@ loose = (
     ("trunk", "trunk", ("Trunk wasm staging for the wgpu renderer.", "Trunk-Wasm-Staging für den wgpu-Renderer."), ["/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts"], GIB, collect(14, HOUR)),
     ("breaches", "breaches", ("Policy breach reports.", "Richtlinien-Verstoßberichte."), ["/🚨️policy/🏃️runner/🟦️.ts"], 128 * MIB, collect(30, HOUR)),
     ("bench", "bench", ("Benchmark outputs.", "Benchmark-Ausgaben."), ["/🧑‍💻dev/📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts"], 512 * MIB, collect(14, HOUR)),
-    ("build", "build", ("Nx plugin command captures.", "Nx-Plugin-Befehlsmitschnitte."), ["/🔌️nx-plugin/📤️arguments/🟨️.mjs"], 128 * MIB, collect(7, HOUR)),
+    ("build", "build", ("Nx plugin command captures.", "Nx-Plugin-Befehlsmitschnitte."), ["/🔌️nx-plugin/📤️arguments/🟨️.mjs", "new:gc-launch.ts"], 128 * MIB, collect(7, HOUR)),
     ("stages", "stages", ("Native stage cache of warm builds.", "Nativer Stage-Cache warmer Builds."), ["/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts"], GIB, collect(14, HOUR)),
     ("generated", "🤖️generated", ("Agent session logs.", "Agenten-Sitzungsprotokolle."), ["/📦️packages/🐹️go/📓️session/🐹️.go"], GIB, collect(60, HOUR)),
     ("diff", "🔀️diff", ("Checkpoint and hook diffs.", "Checkpoint- und Hook-Diffs."), ["/📦️packages/🐹️go/🎫️checkpoint/🐹️.go"], GIB, collect(60, HOUR)),
@@ -130,11 +137,20 @@ policy = {
         "native": {"directory": ".cache", "maximumBytes": 256 * MIB, "undeclaredUnusedAgeMs": 7 * DAY, "undeclaredQuietMs": HOUR, "ignored": [".DS_Store"]},
     },
     "areas": areas,
+    "needs": [{
+        "partition": "graph", "measuredOn": "2026-10-21", "headroomPercent": 20, "floorBytes": 1073741824,
+        "components": [
+            {"id": "closures", "area": "graph-closures", "measuredBytes": 1136250880},
+            {"id": "lock-closures", "area": "graph-lock-closures", "measuredBytes": 14123008},
+            {"id": "inference", "area": "graph-inference", "measuredBytes": 1818488832},
+            {"id": "publication", "bytes": 536870912, "measuredBytes": 0},
+        ],
+    }],
     "retirements": retirements,
 }
 if problems:
     raise SystemExit("\n".join(problems))
-out = os.path.join(HERE, sys.argv[1] if len(sys.argv) > 1 else "staged2", "ledger-policy.json")
+out = os.path.join(HERE, sys.argv[1] if len(sys.argv) > 1 else "staged3", "ledger-policy.json")
 with open(out, "w", encoding="utf-8") as handle:
     json.dump(policy, handle, indent=2, ensure_ascii=False)
     handle.write("\n")

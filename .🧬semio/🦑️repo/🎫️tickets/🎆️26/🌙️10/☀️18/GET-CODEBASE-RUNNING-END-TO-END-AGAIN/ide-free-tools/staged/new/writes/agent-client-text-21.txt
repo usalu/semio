@@ -1,516 +1,403 @@
-// #region 🧲️Header
+//! 🔶️ Dispatch and formatting: the per-event hook dispatch and the hook result formatting.
+//!
+//! Holds the `🔶️Dispatch`, `🖨️Formatting` regions of the crate root; the root re-exports its items.
 
-// 2026 Ueli Saluz <ueli@semio-tech.com>
+use super::*;
 
-// 🚦️run carries hook execution, the hook artifacts and the hook event dispatch.
-
-// #endregion 🧲️Header
-
-package hooks
-
-import (
-	context "context"
-	json "encoding/json"
-	fmt "fmt"
-	io "io"
-	os "os"
-	filepath "path/filepath"
-	strconv "strconv"
-	strings "strings"
-	time "time"
-
-	codebase "github.com/usalu/semio/repo/codebase"
-	languages "github.com/usalu/semio/repo/languages"
-	model "github.com/usalu/semio/repo/model"
-	providers "github.com/usalu/semio/repo/providers"
-	statutes "github.com/usalu/semio/repo/statutes"
-	testrunner "github.com/usalu/semio/repo/testrunner"
-	todos "github.com/usalu/semio/repo/todos"
-	workspace "github.com/usalu/semio/repo/workspace"
-)
-
-// #region 🦀️Hooks
-
-// 🏃️runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
-func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	return RunHookExecutionCtx(context.Background(), client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
+//#region 🔶️Dispatch
+fn insert_when_present(result: HookResult, key: &str, value: &str) -> HookResult {
+    if value.is_empty() {
+        result
+    } else {
+        result.with(key, Value::String(value.to_string()))
+    }
 }
 
-func RunHookExecutionCtx(ctx context.Context, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	done := make(chan error, 1)
-	go func() {
-		done <- runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
-	}()
-	select {
-	case err := <-done:
-		return err
-	case <-ctx.Done():
-		return fmt.Errorf("hook timed out: %w", ctx.Err())
-	}
+fn string_array(values: &[String]) -> Value {
+    Value::Array(values.iter().map(|value| Value::String(value.clone())).collect())
 }
 
-func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
-	if toolName == "" {
-		if tn := extractToolNameFromStdin(input); tn != "" {
-			toolName = tn
-		}
-	}
-	event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
-	if err != nil {
-		return err
-	}
-	if parentInfo == "" {
-		parentInfo = resolvedParent
-	}
-	hctx := model.HookContext{
-		Event:      event,
-		Client:     client,
-		Second:     time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:   repoRoot,
-		ToolName:   toolName,
-		ToolArgs:   toolArgs,
-		FilePath:   filePath,
-		ParentInfo: parentInfo,
-		Input:      input,
-	}
-	result := RunHook(hctx)
-	provider := providers.GetAgentClientProvider(client)
-	if provider != nil && provider.Kind() == "copilot-chat" {
-		hookEventName := extractHookEventNameFromStdin(input)
-		if hookEventName == "" {
-			hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
-		}
-		out := provider.FormatHookOutput(hookEventName, result)
-		fmt.Fprintln(stdout, out)
-		return nil
-	}
-	if jsonMode {
-		out, _ := json.Marshal(result)
-		fmt.Fprintln(stdout, string(out))
-		return nil
-	}
-	if !result.IsAllowed() {
-		fmt.Fprintln(stderr, result.GetMessage())
-		return workspace.ExitError{Code: 2}
-	}
-	msg := result.GetMessage()
-	if msg != "" {
-		fmt.Fprintln(stdout, msg)
-	}
-	return nil
+fn agent_base(context: &HookContext, environment: &dyn HookEnvironment) -> HookResult {
+    let input = context.input.as_ref();
+    let mut session = extract_session_id(input);
+    let second = first_non_empty(&[find_nested_string_value(input, &["second"]), context.second.clone()]);
+    let mut parent = resolve_parent_session_id("", input);
+    if !context.parent_info.is_empty() {
+        parent = resolve_parent_session_id(&context.parent_info, input);
+        if context.parent_info == "subagent" {
+            let agent_id = find_nested_string_value(input, &["agent_id", "agentId"]);
+            if !agent_id.is_empty() {
+                let parent_session = first_non_empty(&[extract_parent(input), extract_session_id(input)]);
+                session = agent_id;
+                parent = normalize_parent_session_id(&parent_session);
+            } else if parent.is_empty() {
+                parent = session.clone();
+            }
+        }
+    }
+    let mut result = HookResult { message_shadowed: true, ..HookResult::new(true, "") };
+    result = insert_when_present(result, "checkpoint", &extract_checkpoint_id(input, environment));
+    result = insert_when_present(result, "session", &session);
+    result = insert_when_present(result, "second", &second);
+    result = insert_when_present(result, "client", &context.client);
+    result = insert_when_present(result, "llm", &extract_llm(input));
+    result = insert_when_present(result, "effort", &extract_effort(input));
+    result = insert_when_present(result, "transcript", &extract_transcript(input));
+    result = insert_when_present(result, "message", &extract_message_id(input));
+    result.with("parent", Value::String(parent))
 }
 
-// #endregion 🦀️Hooks
-
-// #region 📰️Todos
-
-// 🔶️ResolveHookEvent resolves a hook event.
-func ResolveHookEvent(name string, client string, toolName string, input json.RawMessage) (model.HookEvent, string, error) {
-	if event, err := model.ValidateHookEvent(name); err == nil {
-		return event, "", nil
-	}
-	kind := model.ToolKindGeneric
-	if strings.TrimSpace(toolName) != "" {
-		kind = todos.ClassifyTool(toolName)
-	}
-	if command := extractCommandFromStdin(input); command != "" {
-		segment, _ := testrunner.ExtractTestSegmentFromCommand(command)
-		commandKind := model.ClassifyCommandKind(todos.FirstNonEmpty(segment, command))
-		if kind == model.ToolKindGeneric || kind == model.ToolKindTerminal || commandKind == model.ToolKindTest || commandKind == model.ToolKindBuild || commandKind == model.ToolKindCodeSearch || commandKind == model.ToolKindCodeEdit {
-			kind = commandKind
-		}
-	}
-	if toolName == "Glob" && len(input) > 0 {
-		kind = model.ToolKindGeneric
-	}
-	provider := providers.GetAgentClientProvider(client)
-	if provider != nil {
-		return provider.ResolveNativeEvent(name, kind)
-	}
-	return providers.ResolveClaudeCompatibleEvent(name, kind)
+/// 🔤️ The first non-blank value.
+pub fn first_non_empty(values: &[String]) -> String {
+    values.iter().map(|value| value.trim()).find(|value| !value.is_empty()).unwrap_or_default().to_string()
 }
 
-// 🔹️RunHook runs a hook.
-func RunHook(ctx model.HookContext) model.HookResult {
-	previousRoot := workspace.GetRootDir()
-	defer func() {
-		workspace.SetRootDir(previousRoot)
-		workspace.GitignoreMutex.Lock()
-		workspace.CachedGitignore = nil
-		workspace.GitignoreLoaded = false
-		workspace.GitignoreMutex.Unlock()
-		codebase.InvalidateTechnologyCache()
-	}()
-	result := runHookCore(ctx)
-	writeHookArtifacts(ctx, result, SystemEnvironment{})
-	trackHookInOpenTicket(ctx, result)
-	return result
+/// 🔶️ Builds the event-specific hook result for one context.
+///
+/// Blocking is applied here and nowhere else: `agent.tool.starting` and
+/// `agent.tool.terminal.starting` are the two events that can refuse an invocation, and a refusal is
+/// carried as `allowed = false` plus the reason, exactly as every IDE reads it back.
+pub fn dispatch_hook(context: &HookContext, environment: &dyn HookEnvironment, tests: &dyn TestFileResolver) -> HookResult {
+    let Some(event) = context.hook_event() else {
+        return HookResult::new(false, format!("unknown event: {}", context.event));
+    };
+    let input = context.input.as_ref();
+    if hook_event_kind(event) == HookKind::Version {
+        let mut result = HookResult::new(true, if event == HookEvent::VersionCheckpointStarting { "checkpoint starting hook passed" } else { "" });
+        result = insert_when_present(result, "checkpoint", &extract_checkpoint_id(input, environment));
+        if matches!(event, HookEvent::VersionCheckpointStarting | HookEvent::VersionCheckpointEnded) {
+            result = insert_when_present(result, "description", &extract_checkpoint_message(input, &context.repo_root, environment));
+        }
+        return result;
+    }
+    let base = agent_base(context, environment);
+    match event {
+        HookEvent::AgentStarted => base,
+        HookEvent::AgentEnded => insert_when_present(base, "report", &extract_report(input)),
+        HookEvent::AgentPromptSubmitting => insert_when_present(base, "prompt", &find_nested_string_value(input, &["prompt", "text"])),
+        HookEvent::AgentCompacting => insert_when_present(base, "chat", &extract_chat(input)),
+        HookEvent::AgentToolStarting => {
+            let tool_name = first_non_empty(&[context.tool_name.clone(), extract_tool_name(input)]);
+            let args = first_non_empty(&[context.tool_args.clone(), extract_terminal_command(input, &context.tool_args), extract_command_from_stdin(input)]);
+            let reason = is_tool_blocked(&tool_name, &args);
+            let mut result = HookResult { allowed: reason.is_none(), message: reason.unwrap_or_default(), extra: base.extra, message_shadowed: base.message_shadowed };
+            result = insert_when_present(result, "name", &tool_name);
+            if let Some(tool_input) = extract_tool_input_map(input) {
+                result = result.with("input", Value::Object(tool_input.clone()));
+            }
+            result
+        }
+        HookEvent::AgentToolEnded => {
+            let mut result = insert_when_present(base, "name", &first_non_empty(&[context.tool_name.clone(), extract_tool_name(input)]));
+            if let Some(tool_input) = extract_tool_input_map(input) {
+                result = result.with("input", Value::Object(tool_input.clone()));
+            }
+            if let Some(response) = extract_tool_response(input) {
+                result = result.with("response", response);
+            }
+            result
+        }
+        HookEvent::AgentToolPlanUpdatingStarting | HookEvent::AgentToolPlanUpdatingEnded => {
+            let steps = extract_plan_steps(input, &context.tool_args);
+            if steps.is_empty() {
+                base
+            } else {
+                base.with("steps", serde_json::to_value(&steps).unwrap_or(Value::Null))
+            }
+        }
+        HookEvent::AgentToolSearchStarting | HookEvent::AgentToolSearchEnded => {
+            let reads = extract_search_reads(input, &context.tool_args);
+            let mut result = base;
+            if !reads.pages.is_empty() {
+                result = result.with("pages", string_array(&reads.pages));
+            }
+            if !reads.ranges.is_empty() {
+                result = result.with("ranges", string_array(&reads.ranges));
+            }
+            result
+        }
+        HookEvent::AgentToolCodeEditStarting => {
+            let edit = extract_code_edit(input, &context.tool_args);
+            let mut result = insert_when_present(base, "path", &edit.path);
+            result = insert_when_present(result, "old", &edit.old);
+            result = insert_when_present(result, "new", &edit.new);
+            if edit.all {
+                result = result.with("all", Value::Bool(true));
+            }
+            result
+        }
+        HookEvent::AgentToolCodeEditEnded => {
+            let edit = extract_code_edit(input, &context.tool_args);
+            if !edit.path.is_empty() {
+                environment.format_file(&edit.path);
+            }
+            let mut result = insert_when_present(base, "path", &edit.path);
+            result = insert_when_present(result, "old", &edit.old);
+            insert_when_present(result, "new", &edit.new)
+        }
+        HookEvent::AgentToolTestStarting => {
+            let selection = extract_test_selection(input, &context.tool_args, tests);
+            let mut result = base;
+            if !selection.labs.is_empty() {
+                result = result.with("labs", string_array(&selection.labs));
+            }
+            if !selection.tests.is_empty() {
+                result = result.with("tests", string_array(&selection.tests));
+            }
+            insert_when_present(result, "timeout", &selection.timeout)
+        }
+        HookEvent::AgentToolTestEnded => {
+            let outcome = extract_test_outcome(input, tests);
+            let mut result = base;
+            if !outcome.files.is_empty() {
+                result = result.with("files", string_array(&outcome.files));
+            }
+            if !outcome.succeeded.is_empty() {
+                result = result.with("succeeded", string_array(&outcome.succeeded));
+            }
+            if !outcome.failed.is_empty() {
+                result = result.with("failed", string_array(&outcome.failed));
+            }
+            result
+        }
+        HookEvent::AgentToolBuildStarting => {
+            let bundles = extract_build_bundles(input, &context.tool_args);
+            let mut result = insert_when_present(base, "name", &first_non_empty(&[context.tool_name.clone(), "build".to_string()]));
+            result = result.with("input", serde_json::json!({ "bundles": bundles }));
+            result
+        }
+        HookEvent::AgentToolBuildEnded => {
+            let outcome = extract_build_outcome(input);
+            let mut result = insert_when_present(base, "name", &first_non_empty(&[context.tool_name.clone(), "build".to_string()]));
+            result = result.with("response", serde_json::json!({ "succeeded": outcome.succeeded, "failed": outcome.failed }));
+            result
+        }
+        HookEvent::AgentToolTerminalStarting => {
+            let command = extract_terminal_command(input, &context.tool_args);
+            let tool = first_non_empty(&[context.tool_name.clone(), "run_in_terminal".to_string()]);
+            let reason = is_tool_blocked(&tool, &first_non_empty(&[command.clone(), context.tool_args.clone()]));
+            let mut result = HookResult { allowed: reason.is_none(), message: reason.unwrap_or_default(), extra: base.extra, message_shadowed: base.message_shadowed };
+            result = insert_when_present(result, "name", &first_non_empty(&[context.tool_name.clone(), extract_tool_name(input)]));
+            if let Some(tool_input) = extract_tool_input_map(input) {
+                result = result.with("input", Value::Object(tool_input.clone()));
+            }
+            insert_when_present(result, "command", &command)
+        }
+        HookEvent::AgentToolTerminalEnded => {
+            let outcome = extract_terminal_outcome(input);
+            let mut result = insert_when_present(base, "name", &first_non_empty(&[context.tool_name.clone(), extract_tool_name(input)]));
+            if let Some(tool_input) = extract_tool_input_map(input) {
+                result = result.with("input", Value::Object(tool_input.clone()));
+            }
+            result = insert_when_present(result, "command", &outcome.command);
+            result = result.with("pid", Value::Number(outcome.pid.parse::<i64>().unwrap_or_default().into()));
+            if outcome.terminated {
+                result = result.with("terminated", Value::Bool(true));
+            }
+            result = result.with("stdout", Value::String(outcome.stdout));
+            result.with("stderr", Value::String(outcome.stderr))
+        }
+        HookEvent::AgentThinkingStarting | HookEvent::AgentThinkingEnded => {
+            let text = find_nested_string_value(input, &["text"]);
+            HookResult { allowed: base.allowed, message: text, extra: base.extra, message_shadowed: base.message_shadowed }
+        }
+        _ => base,
+    }
 }
 
-func runHookCore(ctx model.HookContext) model.HookResult {
-	repoRoot := ctx.RepoRoot
-	if repoRoot == "" {
-		repoRoot = workspace.GetRootDir()
-	}
-	if repoRoot != "" {
-		workspace.SetRootDir(repoRoot)
-	}
-	result := dispatchHook(ctx)
-	hookResult, ok := result.(model.HookResult)
-	if !ok {
-		return model.HookResultBase{Allowed: false, Message: "invalid hook result"}
-	}
-	return hookResult
+fn extract_tool_response(input: Option<&Value>) -> Option<Value> {
+    let object = decode_hook_input_map(input)?;
+    if let Some(response) = object.get("tool_response") {
+        return Some(response.clone());
+    }
+    if let Some(output) = object.get("tool_output") {
+        return Some(output.clone());
+    }
+    let output = find_nested_string_value(input, &["tool_output", "toolOutput", "output", "response"]);
+    if output.is_empty() {
+        None
+    } else {
+        Some(Value::String(output))
+    }
 }
 
-func writeHookArtifacts(ctx model.HookContext, result model.HookResult, environment HookEnvironment) {
-	if HookEventKind(ctx.Event) == model.HookKindVersion {
-		return
-	}
-	repoRoot := ctx.RepoRoot
-	if repoRoot == "" {
-		repoRoot = workspace.GetRootDir()
-	}
-	if repoRoot == "" {
-		return
-	}
-	repoRoot = workspace.FindRepoRoot(repoRoot)
-	workspace.SetRootDir(repoRoot)
-	cfg := workspace.LoadRepoConfig(repoRoot)
-	if !cfg.Logging.Session {
-		return
-	}
-	now := time.Now().UTC()
-	sessionID := ExtractSessionIDFromInput(ctx.Input)
-	if sessionID == "" && ctx.Client == "kiro-cli" {
-		sessionID = fmt.Sprintf("kiro-%d", os.Getppid())
-	}
-	if sessionID == "" {
-		sessionID = "unknown"
-	}
-	logDir := filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "⚡️cache", "🤖️generated",
-		model.FormatYearDir(now.Year()%100),
-		model.FormatMonthDir(int(now.Month())),
-		model.FormatDayDir(now.Day()),
-		sessionID,
-	)
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
-		return
-	}
-	writeSessionHookLog(ctx, result, logDir, sessionID, cfg.Logging, environment)
-	if cfg.Logging.Operations {
-		logRepoOperationHook(ctx, result, logDir, now, sessionID, cfg.Logging)
-	}
+/// 🧪️ What a starting test event selected.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TestSelection {
+    pub labs: Vec<String>,
+    pub tests: Vec<String>,
+    pub timeout: String,
 }
 
-// 📓️writeSessionHookLog records one hook invocation through the session store port, so the
-// filesystem is one implementation of where a session log lives rather than the only one.
-func writeSessionHookLog(ctx model.HookContext, result model.HookResult, logDir string, sessionID string, lg workspace.LoggingConfig, environment HookEnvironment) {
-	store := NewDirectorySessionStore(filepath.Dir(logDir))
-	_, _ = RecordSessionHook(store, HookContextOf(ctx), HookResultOf(result), sessionID, lg, environment)
+/// 🧪️ What a finished test event reports.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TestOutcome {
+    pub files: Vec<String>,
+    pub succeeded: Vec<String>,
+    pub failed: Vec<String>,
 }
 
-// 🎯️HookContextOf lifts the model-level hook context into the port-isolated one this module dispatches on.
-func HookContextOf(ctx model.HookContext) HookContext {
-	return HookContext{Event: string(ctx.Event), Client: ctx.Client, Second: ctx.Second, RepoRoot: ctx.RepoRoot, ToolName: ctx.ToolName, ToolArgs: ctx.ToolArgs, FilePath: ctx.FilePath, ParentInfo: ctx.ParentInfo, Extra: ctx.Extra, Input: ctx.Input}
+fn looks_like_file_path(value: &str) -> bool {
+    value.contains('/') || value.contains('\\') || (value.contains('.') && !value.starts_with('.'))
 }
 
-// 🔶️HookResultOf reduces a typed hook result to the flat record the session log and the formatter read.
-func HookResultOf(result model.HookResult) HookResult {
-	return HookResult{Allowed: result.IsAllowed(), Message: result.GetMessage()}
+fn string_members(source: &Map<String, Value>, keys: &[&str]) -> Vec<String> {
+    let mut collected = Vec::new();
+    for key in keys {
+        match source.get(*key) {
+            Some(Value::Array(items)) => {
+                for item in items {
+                    if let Value::String(item) = item {
+                        if !item.is_empty() {
+                            collected.push(item.clone());
+                        }
+                    }
+                }
+            }
+            Some(Value::String(item)) if !item.is_empty() => collected.push(item.clone()),
+            _ => {}
+        }
+    }
+    collected
 }
 
-// ⬛️logRepoOperationHook logs repo operation hook.
-func logRepoOperationHook(hctx model.HookContext, result interface{}, operation string, t time.Time, msg string, lg workspace.LoggingConfig) {
-	if !lg.Operations {
-		return
-	}
-	logDir := strings.TrimSpace(operation)
-	sessionID := strings.TrimSpace(msg)
-	if logDir == "" || sessionID == "" {
-		return
-	}
-	resultToolName, resultCommand := todos.ExtractHookResultToolInfo(result)
-	toolName := todos.FirstNonEmpty(resultToolName, hctx.ToolName, extractToolNameFromStdin(hctx.Input))
-	repoOperation := todos.DeriveRepoOpFromMCPTool(toolName)
-	if repoOperation == "" {
-		repoOperation = todos.DeriveRepoOpFromCLICommand(todos.FirstNonEmpty(resultCommand, hctx.ToolArgs, extractCommandFromStdin(hctx.Input)))
-	}
-	if repoOperation == "" {
-		return
-	}
-	phase := "starting"
-	switch hctx.Event {
-	case model.HookAgentToolEnded, model.HookAgentToolPlanUpdatingEnded, model.HookAgentToolSearchEnded, model.HookAgentToolCodeEditEnded, model.HookAgentToolTestEnded, model.HookAgentToolBuildEnded, model.HookAgentToolTerminalEnded:
-		phase = "ended"
-	}
-	metaPath := filepath.Join(logDir, "session.json")
-	var meta model.SessionMeta
-	if data, err := os.ReadFile(metaPath); err == nil {
-		_ = json.Unmarshal(data, &meta)
-	}
-	inputMap := decodeHookInputMap(hctx.Input)
-	second := todos.FirstNonEmpty(findNestedStringValue(inputMap, "second"), hctx.Second, t.UTC().Format(time.RFC3339))
-	checkpoint := todos.ResolveEventCheckpointID(extractCheckpointSHAFromInput(hctx.Input))
-	eventJSON, _ := json.Marshal(map[string]interface{}{
-		"kind":        "agent." + repoOperation + "." + phase,
-		"client":      hctx.Client,
-		"session":     ResolveEventSessionID(sessionID),
-		"second":      ResolveEventSecondID(second),
-		"checkpoint":  checkpoint,
-		"contributor": "unknown",
-	})
-	entry := model.EventEntry{Event: eventJSON}
-	meta.Events = append(meta.Events, entry)
-	_ = workspace.WriteJSONFile(metaPath, meta)
+/// 🧪️ Reads a starting test event: the files and test selectors it names, and its timeout.
+pub fn extract_test_selection(input: Option<&Value>, tool_args: &str, tests: &dyn TestFileResolver) -> TestSelection {
+    let source = extract_tool_input_map(input).cloned().or_else(|| parse_tool_args(tool_args)).unwrap_or_default();
+    let mut selection = TestSelection::default();
+    let mut target_files = string_members(&source, &["files"]);
+    for named in string_members(&source, &["testNames", "test_names", "tests"]) {
+        if looks_like_file_path(&named) {
+            target_files.push(named);
+        } else {
+            selection.tests.push(named);
+        }
+    }
+    for key in ["timeout", "timeoutMs"] {
+        match source.get(key) {
+            Some(Value::String(raw)) if !raw.is_empty() => {
+                selection.timeout = raw.clone();
+                break;
+            }
+            Some(Value::Number(number)) => {
+                selection.timeout = format!("{}", number.as_f64().unwrap_or_default() as i64);
+                break;
+            }
+            _ => {}
+        }
+    }
+    let mut command = extract_command_from_stdin(input);
+    if command.is_empty() {
+        if let Some(Value::String(raw)) = source.get("command") {
+            command = raw.clone();
+        }
+    }
+    if !command.is_empty() && target_files.is_empty() {
+        let (_, cwd) = extract_command_and_cwd(input);
+        let resolved = tests.test_files(&command, &cwd);
+        if !resolved.is_empty() {
+            target_files = resolved;
+        }
+    }
+    if !target_files.is_empty() && selection.tests.iter().all(String::is_empty) {
+        selection.labs = tests.lab_ids(&target_files);
+        if !selection.labs.is_empty() {
+            selection.tests.clear();
+            return selection;
+        }
+    }
+    selection
 }
 
-func extractSearchDefinitionReadsFromInput(input json.RawMessage, toolArgs string) []model.HookSearchDefinition {
-	pages, ranges := todos.ExtractSearchFromInput(input, toolArgs)
-	_ = pages
-	filesToLines := map[string]map[int]struct{}{}
-	addLine := func(path string, line int) {
-		path = workspace.NormalizeHookPath(path)
-		if path == "" {
-			return
-		}
-		if _, ok := filesToLines[path]; !ok {
-			filesToLines[path] = map[int]struct{}{}
-		}
-		if line > 0 {
-			filesToLines[path][line] = struct{}{}
-		}
-	}
-	for _, ref := range ranges {
-		parts := strings.SplitN(ref, "#L", 2)
-		path := parts[0]
-		if len(parts) == 1 {
-			addLine(path, 0)
-			continue
-		}
-		lineSpec := parts[1]
-		if strings.Contains(lineSpec, "-L") {
-			rangeParts := strings.SplitN(lineSpec, "-L", 2)
-			start, _ := strconv.Atoi(rangeParts[0])
-			end, _ := strconv.Atoi(rangeParts[1])
-			for line := start; line <= end; line++ {
-				addLine(path, line)
-			}
-		} else if line, err := strconv.Atoi(lineSpec); err == nil {
-			addLine(path, line)
-		}
-	}
-	data := decodeHookInputMap(input)
-	if toolInfo, ok := data["tool_info"].(map[string]interface{}); ok {
-		if filePath, _ := toolInfo["file_path"].(string); filePath != "" {
-			addLine(filePath, 0)
-		}
-		commandLine, _ := toolInfo["command_line"].(string)
-		cwd, _ := toolInfo["cwd"].(string)
-		if commandLine != "" && shouldExecuteSearchCommand(commandLine) {
-			commandFiles, pattern := todos.ExtractSearchCommandFilesAndPattern(commandLine, cwd)
-			for _, filePath := range commandFiles {
-				matchedLines := todos.SearchLinesInFile(filePath, pattern)
-				if len(matchedLines) == 0 {
-					addLine(filePath, 0)
-					continue
-				}
-				for _, line := range matchedLines {
-					addLine(filePath, line)
-				}
-			}
-		}
-	}
-	return buildDefinitionReads(filesToLines)
+/// 🧪️ Reads a finished test event: the files it ran and which cases passed or failed.
+pub fn extract_test_outcome(input: Option<&Value>, tests: &dyn TestFileResolver) -> TestOutcome {
+    let Some(object) = decode_hook_input_map(input) else { return TestOutcome::default() };
+    let mut outcome = TestOutcome::default();
+    if let Some(tool_input) = extract_tool_input_map(input) {
+        outcome.files = string_members(tool_input, &["files"]);
+    }
+    if outcome.files.is_empty() {
+        let (command, cwd) = extract_command_and_cwd(input);
+        if !command.is_empty() {
+            outcome.files = tests.test_files(&command, &cwd);
+        }
+    }
+    let tool_output = object.get("tool_output").and_then(Value::as_object).unwrap_or(object);
+    outcome.succeeded = string_members(tool_output, &["succeeded", "passed", "passing"]);
+    outcome.failed = string_members(tool_output, &["failed", "failing", "errors"]);
+    outcome
 }
 
-func buildDefinitionReads(filesToLines map[string]map[int]struct{}) []model.HookSearchDefinition {
-	var result []model.HookSearchDefinition
-	for filePath, lines := range filesToLines {
-		normalized := workspace.NormalizeHookPath(filePath)
-		if normalized == "" {
-			continue
-		}
-		absPath := normalized
-		if !filepath.IsAbs(absPath) {
-			absPath = filepath.Join(workspace.GetRootDir(), normalized)
-		}
-		content, err := os.ReadFile(absPath)
-		if err != nil {
-			continue
-		}
-		if _, ok := lines[0]; ok {
-			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
-			continue
-		}
-		lineCount := strings.Count(string(content), "\n") + 1
-		if len(lines) == 0 || spansEntireFile(lines, string(content), lineCount) {
-			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
-			continue
-		}
-		definitions := languages.ParseDefinitions(string(content), normalized)
-		matched := false
-		for _, definition := range definitions {
-			loc := 0
-			for line := range lines {
-				if line >= definition.StartLine && line <= definition.EndLine {
-					loc++
-				}
-			}
-			if loc > 0 {
-				matched = true
-				result = append(result, model.HookSearchDefinition{ID: definition.GetID(), Loc: loc})
-			}
-		}
-		if !matched {
-			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
-		}
-	}
-	return result
+/// 🏗️ The bundles a starting build event names.
+pub fn extract_build_bundles(input: Option<&Value>, tool_args: &str) -> Vec<String> {
+    let source = extract_tool_input_map(input).cloned().or_else(|| parse_tool_args(tool_args));
+    let Some(source) = source else { return Vec::new() };
+    string_members(&source, &["bundles", "targets", "technologies", "label"])
 }
 
-func shouldExecuteSearchCommand(command string) bool {
-	command = strings.TrimSpace(command)
-	if command == "" {
-		return false
-	}
-	if strings.Contains(command, ">") || strings.Contains(command, "sed -i") {
-		return false
-	}
-	segments := workspace.SplitCommandSegments(command)
-	if len(segments) == 0 {
-		segments = []string{command}
-	}
-	for _, segment := range segments {
-		fields := strings.Fields(segment)
-		if len(fields) == 0 {
-			continue
-		}
-		switch filepath.Base(fields[0]) {
-		case "grep", "rg", "ripgrep", "ag", "ack", "cat", "bat", "batcat", "less", "head", "tail":
-			return true
-		}
-	}
-	return false
+/// 🏗️ What a finished build event reports.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BuildOutcome {
+    pub succeeded: Vec<String>,
+    pub failed: Vec<String>,
 }
 
-func dispatchHook(ctx model.HookContext) interface{} {
-	base := model.HookResultAgentBase{
-		HookResultBase: model.HookResultBase{Allowed: true},
-		Checkpoint:     extractCheckpointSHAFromInput(ctx.Input),
-		Session:        ExtractSessionIDFromInput(ctx.Input),
-		Second:         todos.FirstNonEmpty(findNestedStringValue(decodeHookInputMap(ctx.Input), "second"), ctx.Second),
-		Client:         ctx.Client,
-		LLM:            extractLLMFromInput(ctx.Input),
-		Effort:         extractEffortFromInput(ctx.Input),
-		Transcript:     ExtractTranscriptFromInput(ctx.Input),
-		MessageID:      extractMessageIDFromInput(ctx.Input),
-		Parent:         resolveParentSessionID("", ctx.Input),
-	}
-	if ctx.ParentInfo != "" {
-		base.Parent = resolveParentSessionID(ctx.ParentInfo, ctx.Input)
-		if ctx.ParentInfo == "subagent" {
-			if agentID := findNestedStringValue(decodeHookInputMap(ctx.Input), "agent_id", "agentId"); agentID != "" {
-				parentSession := extractParentFromInput(ctx.Input)
-				if parentSession == "" {
-					parentSession = ExtractSessionIDFromInput(ctx.Input)
-				}
-				base.Session = agentID
-				base.Parent = normalizeParentSessionID(parentSession)
-			} else if base.Parent == "" {
-				base.Parent = base.Session
-			}
-		}
-	}
-	if len(ctx.Input) > 0 {
-		var raw map[string]interface{}
-		if err := json.Unmarshal(ctx.Input, &raw); err == nil {
-			base.Raw = raw
-		}
-	}
-	switch ctx.Event {
-	case model.HookAgentStarted:
-		return model.HookResultAgentStarted{HookResultAgentBase: base}
-	case model.HookAgentEnded:
-		return model.HookResultAgentEnded{HookResultAgentBase: base, Report: extractReportFromInput(ctx.Input)}
-	case model.HookAgentPromptSubmitting:
-		return model.HookResultAgentPromptSubmitting{HookResultAgentBase: base, Prompt: findNestedStringValue(decodeHookInputMap(ctx.Input), "prompt", "text")}
-	case model.HookAgentCompacting:
-		return model.HookResultAgentCompacting{HookResultAgentBase: base, Chat: extractChatFromInput(ctx.Input)}
-	case model.HookAgentToolStarting:
-		toolName := todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input))
-		toolInput := todos.ExtractToolInputFromStdin(ctx.Input)
-		blocked, reason := IsToolBlocked(toolName, todos.FirstNonEmpty(ctx.ToolArgs, extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs), extractCommandFromStdin(ctx.Input)))
-		base.Allowed = !blocked
-		base.Message = reason
-		return model.HookResultAgentToolStarting{HookResultAgentBase: base, Name: toolName, Input: toolInput}
-	case model.HookAgentToolEnded:
-		response := todos.ExtractToolResponseFromStdin(ctx.Input)
-		if len(response) == 0 {
-			if output := findNestedStringValue(decodeHookInputMap(ctx.Input), "tool_output", "toolOutput", "output", "response"); output != "" {
-				response, _ = json.Marshal(output)
-			}
-		}
-		return model.HookResultAgentToolEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Response: response}
-	case model.HookAgentToolPlanUpdatingStarting, model.HookAgentToolPlanUpdatingEnded:
-		return model.HookResultAgentToolPlanUpdating{HookResultAgentBase: base, Steps: todos.ExtractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)}
-	case model.HookAgentToolSearchStarting:
-		pages, ranges := todos.ExtractSearchFromInput(ctx.Input, ctx.ToolArgs)
-		return model.HookResultAgentToolSearchStarting{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
-	case model.HookAgentToolSearchEnded:
-		pages, ranges := todos.ExtractSearchFromInput(ctx.Input, ctx.ToolArgs)
-		return model.HookResultAgentToolSearchEnded{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
-	case model.HookAgentToolCodeEditStarting:
-		path, oldText, newText, all := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
-		return model.HookResultAgentToolCodeEditStarting{HookResultAgentBase: base, Path: path, Old: oldText, New: newText, All: all}
-	case model.HookAgentToolCodeEditEnded:
-		path, oldText, newText, _ := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
-		// Auto-format the edited file.
-		if path != "" {
-			statutes.RunFormatterForFile(path)
-		}
-		return model.HookResultAgentToolCodeEditEnded{HookResultAgentBase: base, Path: path, Old: oldText, New: newText}
-	case model.HookAgentToolTestStarting:
-		labs, tests, timeout := extractTestStartingFromInput(ctx.Input, ctx.ToolArgs)
-		return model.HookResultAgentToolTestStarting{HookResultAgentBase: base, Labs: labs, Tests: tests, Timeout: timeout}
-	case model.HookAgentToolTestEnded:
-		files, succeeded, failed := extractTestEndedFromInput(ctx.Input)
-		return model.HookResultAgentToolTestEnded{HookResultAgentBase: base, Files: files, Succeeded: succeeded, Failed: failed}
-	case model.HookAgentToolBuildStarting:
-		bundles := extractBuildBundlesFromInput(ctx.Input, ctx.ToolArgs)
-		payload, _ := json.Marshal(map[string]interface{}{"bundles": bundles})
-		return model.HookResultAgentToolStarting{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, "build"), Input: payload}
-	case model.HookAgentToolBuildEnded:
-		succeeded, failed := extractBuildEndedFromInput(ctx.Input)
-		payload, _ := json.Marshal(map[string]interface{}{"succeeded": succeeded, "failed": failed})
-		return model.HookResultAgentToolEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, "build"), Response: payload}
-	case model.HookAgentToolTerminalStarting:
-		command := extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs)
-		blocked, reason := IsToolBlocked(todos.FirstNonEmpty(ctx.ToolName, "run_in_terminal"), todos.FirstNonEmpty(command, ctx.ToolArgs))
-		base.Allowed = !blocked
-		base.Message = reason
-		return model.HookResultAgentToolTerminalStarting{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Command: command}
-	case model.HookAgentToolTerminalEnded:
-		command, pid, terminated, stdout, stderr := extractTerminalEndedFromInput(ctx.Input)
-		pidValue, _ := strconv.Atoi(pid)
-		stdoutJSON, _ := json.Marshal(stdout)
-		stderrJSON, _ := json.Marshal(stderr)
-		return model.HookResultAgentToolTerminalEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Output: stdoutJSON, Command: command, PID: pidValue, Terminated: terminated, Stdout: stdoutJSON, Stderr: stderrJSON}
-	case model.HookAgentThinkingStarting:
-		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
-		return model.HookResultAgentThinkingStarting{HookResultAgentBase: base}
-	case model.HookAgentThinkingEnded:
-		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
-		return model.HookResultAgentThinkingEnded{HookResultAgentBase: base}
-	case model.HookVersionCheckpointStarting:
-		return runCheckpointStartingHook(ctx)
-	case model.HookVersionCheckpointEnded:
-		return model.HookResultVersionCheckpointEnded{HookResultBase: model.HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input), Description: extractCheckpointMessageFromInput(ctx.Input, ctx.RepoRoot)}
-	case model.HookVersionCheckinStarting, model.HookVersionCheckinEnded, model.HookVersionCheckoutStarting, model.HookVersionCheckoutEnded:
-		return model.HookResultVersionCheckpointEnded{HookResultBase: model.HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input)}
-	default:
-		return model.HookResultBase{Allowed: false, Message: "unknown event: " + string(ctx.Event)}
-	}
+/// 🏗️ Reads a finished build event.
+pub fn extract_build_outcome(input: Option<&Value>) -> BuildOutcome {
+    let Some(object) = decode_hook_input_map(input) else { return BuildOutcome::default() };
+    let tool_output = object.get("tool_output").and_then(Value::as_object).unwrap_or(object);
+    BuildOutcome { succeeded: string_members(tool_output, &["succeeded", "passed", "built"]), failed: string_members(tool_output, &["failed", "errors"]) }
+}
+//#endregion 🔶️Dispatch
+
+//#region 🖨️Formatting
+/// 🖨️ What the repo binary writes after a hook, and with which exit code.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HookOutput {
+    #[serde(rename = "stdout", default)]
+    pub stdout: String,
+    #[serde(rename = "stderr", default)]
+    pub stderr: String,
+    #[serde(rename = "exitCode", default)]
+    pub exit_code: i32,
 }
 
-// #endregion 📰️Todos
+/// 🖨️ Renders a hook result the way the calling client reads it.
+///
+/// Copilot Chat is the only client whose result is wrapped (`hookSpecificOutput`), and it is written
+/// to stdout whether or not the invocation was allowed — the permission decision lives inside the
+/// record. `json_mode` prints the plain record for every other client. Otherwise a refusal goes to
+/// stderr with exit code 2 and an allowed result prints only its message, if it has one.
+pub fn render_hook_output(client: &str, event: HookEvent, parent_info: &str, native_event_name: &str, result: &HookResult, json_mode: bool) -> HookOutput {
+    if let Some(provider) = get_agent_client_provider(client) {
+        if provider.kind() == "copilot-chat" {
+            let hook_event_name = if native_event_name.is_empty() { HookFormatter::native_event_from_hook_event(&provider, event, parent_info) } else { native_event_name.to_string() };
+            return HookOutput { stdout: HookFormatter::format_hook_output(&provider, &hook_event_name, result), stderr: String::new(), exit_code: 0 };
+        }
+    }
+    if json_mode {
+        return HookOutput { stdout: format_plain_hook_output(result), stderr: String::new(), exit_code: 0 };
+    }
+    if !result.allowed {
+        return HookOutput { stdout: String::new(), stderr: result.message.clone(), exit_code: 2 };
+    }
+    HookOutput { stdout: result.message.clone(), stderr: String::new(), exit_code: 0 }
+}
+
+/// 🔤️ The native event name the client would use for a neutral event, or the payload's own name.
+pub fn resolve_native_event_name(client: &str, event: HookEvent, parent_info: &str, input: Option<&Value>) -> String {
+    let named = extract_hook_event_name(input);
+    if !named.is_empty() {
+        return named;
+    }
+    match get_agent_client_provider(client) {
+        Some(provider) => HookFormatter::native_event_from_hook_event(&provider, event, parent_info),
+        None => String::new(),
+    }
+}
+
+/// 🎆️ The agent-client provider for a client slug, as the closed provider enum.
+pub fn agent_client_for(client: &str) -> Option<AgentClientProviders> {
+    get_agent_client_provider(client)
+}
+//#endregion 🖨️Formatting

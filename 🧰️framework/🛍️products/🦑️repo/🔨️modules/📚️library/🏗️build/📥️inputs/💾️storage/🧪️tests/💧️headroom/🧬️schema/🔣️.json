@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "available",
+    "minimum",
+    "leaves",
+    "cancelAfter",
+    "retired",
+    "availableAfter"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "available": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "minimum": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "leaves": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes",
+          "allocated",
+          "modified"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allocated": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "modified": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cancelAfter": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "retired": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "availableAfter": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -177,3 +177,32 @@ CATALOG2 = [
 ]
 
 EDITORS2 = {"catalog": lambda text: apply(text, CATALOG2, "catalog2")}
+
+
+BUDGET_POLICY3 = [
+    ('  "maximumBytes": 68719476736,', '  "maximumBytes": 70866960384,'),
+    (
+        '    "graph": {\n      "directory": ".cache/b/g",\n      "capacityBytes": 4294967296,\n      "maximumLogicalBytes": 4293918720\n    },',
+        '    "graph": {\n      "directory": ".cache/b/g",\n      "capacityBytes": 6442450944,\n      "maximumLogicalBytes": 6441402368\n    },',
+    ),
+]
+BUDGET_SCHEMA3 = [
+    (
+        '    "maximumBytes": {\n      "type": "integer",\n      "minimum": 1048576,\n      "maximum": 68719476736\n    },',
+        '    "maximumBytes": {\n      "type": "integer",\n      "minimum": 1048576,\n      "maximum": 70866960384\n    },',
+    ),
+]
+BUDGET_FIXTURE3 = [('"expectedPartitionBytes": 68249714688,', '"expectedPartitionBytes": 70397198336,')]
+GRAPH_STORAGE3 = [
+    (
+        'maintained=true;await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();return;}await image.recheck();check();}catch(error){failed=true;throw error;}',
+        'maintained=true;await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();return;}void import("../../🧹️cache-gc/🚀️launch/🟦️.ts").then(module=>module.launchGraphOptionalCollectorV1(workspace,space.bavail*space.bsize)).catch(()=>{});await image.recheck();check();}catch(error){failed=true;throw error;}',
+    ),
+]
+
+EDITORS3 = {
+    "budget-policy": lambda text: apply(text, BUDGET_POLICY3, "budget-policy"),
+    "budget-schema": lambda text: apply(text, BUDGET_SCHEMA3, "budget-schema"),
+    "budget-fixture": lambda text: apply(text, BUDGET_FIXTURE3, "budget-fixture"),
+    "graph-storage": lambda text: apply(text, GRAPH_STORAGE3, "graph-storage"),
+}

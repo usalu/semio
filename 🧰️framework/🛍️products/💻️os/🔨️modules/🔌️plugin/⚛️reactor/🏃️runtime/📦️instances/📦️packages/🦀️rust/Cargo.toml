@@ -40,7 +40,6 @@ semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀�
 semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -34,7 +34,7 @@ impl<T:Send+Sync+'static> CapturedSnapshotRetirement<T>{
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.read.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadReturn>()+size_of::<SnapshotRead<T>>()+size_of::<u64>()+size_of::<usize>(),depth:2,..Default::default()});}
   if let Some(active)=self.active.as_ref(){return nested(artifact_retirement_box_demands(active,body)?);}
-  if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:semio_framework_value::retirement::shared::FactorySharedRetirement::<T>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}return snapshot_registry_alias_demands(&self.registry);}
+  if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:semio_framework_value_factory::shared::FactorySharedRetirement::<T>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}return snapshot_registry_alias_demands(&self.registry);}
   if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>(),depth:1,..Default::default()});}
   self.factory_close.as_ref().map_or(Ok(Default::default()),|factory|factory.demands(body))
  }

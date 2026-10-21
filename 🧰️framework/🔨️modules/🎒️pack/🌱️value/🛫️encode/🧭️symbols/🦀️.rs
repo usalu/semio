@@ -3,7 +3,7 @@ use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldPro
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use semio_framework_value_persistent::list::PagedList;
 use std::cmp::Ordering;
-use semio_framework_value::paged_text::TextReadView;
+use semio_framework_value_paged_text::paged_text::TextReadView;
 
 const SYMBOL_CAPACITY:usize=isize::MAX as usize;
 

@@ -2,6 +2,7 @@
 use super::*;
 use semio_framework_os_spr::command::{MutationMessageLedgerRetirement, MutationMessagePublication, MutationMessagePublicationBatch, MutationMessagePublicationJoin};
 use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES};
 use std::mem::{ManuallyDrop, size_of};
 
 pub struct ArtifactStoreDiagnosticRecord { entry:semio_framework_os_spr::EditMessages,bytes:usize }

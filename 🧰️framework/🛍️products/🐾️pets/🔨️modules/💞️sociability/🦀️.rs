@@ -10,14 +10,17 @@ use semio_framework_pets_staging_draft::attention::{hail, heed, loose, shrug, PU
 use semio_framework_pets_staging_draft::draft::{actor_key, clip_at, feel, index_of, perform, present, shift, stage_key, standing, Draft};
 use semio_framework_pets_staging_draft::locomotion::{attend, paced, stroll};
 use semio_framework_pets_staging_draft::schedule::{pairing_tick, sociable};
-use semio_framework_pets_staging_draft::spacing::{clearway, COMFORT_GAP, MEET_GAP};
-use semio_framework_pets_character::behavior::{affinity_of, dwell_of, encounter_of, encounter_shares, needs_after, rapport_after, rapport_faded, AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS};
+use semio_framework_pets_staging_draft::spacing::{clearway, COMFORT_GAP};
+use semio_framework_pets_character::behavior::{affinity_of, dwell_of, encounter_shares, needs_after, rapport_after, rapport_faded, AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS};
 use semio_framework_pets_character::feeling::{caught, click_trick, encounter_bias, show_trick, swayed_shares, whim_trick, Occasion, CONTAGION_REACH, LEAN_TICKS};
-use semio_framework_pets_contract::schema::{Activity, Cue, Deed, Feeling, Footing, Menagerie, PetMode, Pledge, Rapport, Ticks, Tier};
+use semio_framework_pets_contract::schema::{Activity, Cue, Deed, Footing, Menagerie, PetMode, Pledge, Rapport, Ticks, Tier};
 use semio_framework_pets_interaction::gesture::{warmth_after, Caress};
 use semio_framework_pets_kinematics::randomness::{random_pick, random_words, unit_of, weighted_index};
 use semio_framework_pets_kinematics::terrain::{larger, smaller};
 use semio_framework_pets_kinematics::trigonometry::clamp;
+use semio_framework_pets_character::behavior::RAPPORT_SPAN;
+use semio_framework_pets_clearance::SEAM;
+use semio_framework_pets_staging_draft::draft::astir;
 
 //#region 🔖️Constants
 const ENCOUNTER_REACH: f64 = 12.0;

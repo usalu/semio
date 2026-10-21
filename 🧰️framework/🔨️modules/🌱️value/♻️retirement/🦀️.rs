@@ -40,9 +40,12 @@ pub enum RetirementStep {
     BudgetExhausted,
 }
 
+/// 🧳️ Transfers exclusive retirement custody across threads; shared access belongs to an explicit owner gate.
 pub trait RetirementCursor: Send {
     /// 🎟️ Borrows one original next-action quote without recursively re-querying individual currencies.
-    fn next_demand(&self, maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError>;
+    fn next_demand(&self, maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
+        Ok(crate::RetirementDemand { copy_bytes: self.next_selected_work_byte_demand(maximum_body_bytes)?, capacity_bytes: self.next_birth_bytes(maximum_body_bytes).unwrap_or(0), release_bytes: self.next_close_byte_demand().unwrap_or(0), depth: self.next_depth_demand()? })
+    }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep;
     fn terminal_is_empty(&self) -> bool;
     /// 🪆️ Admits the next structural cursor slot before a typed owner can return it.

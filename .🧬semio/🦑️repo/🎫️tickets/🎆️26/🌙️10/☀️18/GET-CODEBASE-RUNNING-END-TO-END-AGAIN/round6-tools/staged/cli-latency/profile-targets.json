@@ -1,0 +1,16 @@
+{
+ "/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts": {"openRepositoryCachePartitionV1":"partition.open","openRepositoryLeasePartitionV1":"partition.open-leases","prepareRepositoryCacheParentsV1":"partition.parents","openRepositoryCachePartitionAttemptV1":"partition.attempt"},
+ "/📥️opening/🏪️store/🟦️.ts": {"withRepositoryCacheStoreV1":"store.with"},
+ "/💾️storage/🌐️platform/🟦️.ts": {"openNativePlatformStorageV1":"image.open-platform"},
+ "/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": {"openPersistentNativeImageV1":"image.open","verifyPersistentManagedChildrenV1":"image.verify-children","inspectPersistentReceiver":"image.inspect"},
+ "/🏗️build/🕸️graph/🟦️.ts": {"loadBuildGraphV1":"graph.load-graph"},
+ "/🏗️build/🧭️invocation/🟦️.ts": {"loadBuildInvocationGraphV1":"graph.load-invocation"},
+ "/🏗️build/🚀️bootstrap/🟦️.ts": {"ensureBuildEnvironmentV1":"dependencies.ensure-impl"},
+ "/🏗️build/🔧️tools/💾️storage/🟦️.ts": {"prepareBuildToolStorageV1":"tools.storage-impl"},
+ "/🏗️build/🧭️selection/🟦️.ts": {"selectBuildTasksV1":"selection.tasks"},
+ "/🏗️build/🧭️selection/📥️closure/🟦️.ts": {"selectedBuildPrerequisitesV1":"selection.prerequisites"},
+ "/🏗️build/🕸️graph/🦀️rust/🟦️.ts": {"withSelectedRustBuildGraphV1":"graph.rust"},
+ "/budget/🕸️graph/🟦️.ts": {"withRepositoryBuildGraphArtifactV1":"graph.artifact"},
+ "/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {"withHostCapacityV1":"capacity.with"},
+ "/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts": {"readHostSampleV1":"capacity.sample"}
+}

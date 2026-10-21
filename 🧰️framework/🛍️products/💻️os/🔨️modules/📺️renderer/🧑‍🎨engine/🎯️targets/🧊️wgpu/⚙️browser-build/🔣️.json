@@ -10,6 +10,8 @@
     "@semio-tech/framework-canvas-ts",
     "@semio-tech/framework-os",
     "@semio-tech/plugin-registry",
+    "@semio-tech/ui",
+    "@semio-tech/ui-contract",
     "@semio-tech/ui-locale-rs",
     "ajv",
     "typescript"

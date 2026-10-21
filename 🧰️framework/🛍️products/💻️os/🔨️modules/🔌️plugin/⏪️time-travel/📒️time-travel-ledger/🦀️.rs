@@ -12,7 +12,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub session: TimeTravelSession,
     pub pending_command: Option<semio_framework_time_travel::TimeTravelCommandCustody>,
     pub discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
-    pub command_retirements: semio_framework_value::retirement_queue::RetirementQueue,
+    pub command_retirements: semio_framework_value_retirement_queue::RetirementQueue,
     pub command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub(super) session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     pub(super) session_retired: bool,

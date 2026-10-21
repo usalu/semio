@@ -51,15 +51,6 @@ class PlaygroundSessionScript extends BundleScript {
     else await new PlaygroundSessionGenerateScript(this.root, this.repoRoot, this.invocation, request).run(args);
   }
 }
-class CatalogPublicationScript extends BundleScript {
-  async run(args:string[]):Promise<void>{
-    if(args.length!==1||!["generate","check","preview","verify"].includes(args[0]!))throw new Error("catalog-publication requires generate, check, preview or verify");
-    const {specificCatalogPublicationV1}=await import("./🧩️catalog/📦️packages/🟦️typescript/📣️publication/🟦️.ts");
-    const {GenerateScript,CheckGeneratedScript,PreviewGeneratedScript,CheckScript}=await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
-    const selected=args[0]==="generate"?GenerateScript:args[0]==="check"?CheckGeneratedScript:args[0]==="preview"?PreviewGeneratedScript:CheckScript;
-    await new selected(this.root,this.repoRoot,this.invocation,specificCatalogPublicationV1(path=>readFileSync(resolve(this.repoRoot,path),"utf8"))).run([]);
-  }
-}
 class CatalogPublicationTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     if(args.length)throw new Error("catalog-publication-test accepts no arguments");
@@ -95,5 +86,5 @@ class TypecheckScript extends BundleScript {
     await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "../tsconfig.json", owner: "s:typescript", args, timeoutMs: 1_800_000 });
   }
 }
-const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

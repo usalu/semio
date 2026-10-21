@@ -1,0 +1,87 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "commands",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "commands": {
+      "const": 50000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "words",
+          "hits",
+          "comparison",
+          "expectedId"
+        ],
+        "properties": {
+          "label": {
+            "enum": [
+              "word",
+              "rare prefix",
+              "nothing"
+            ]
+          },
+          "words": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          },
+          "hits": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50000
+          },
+          "comparison": {
+            "enum": [
+              "exact",
+              "at-least"
+            ]
+          },
+          "expectedId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "hits": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "comparison": {
+                  "const": "exact"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

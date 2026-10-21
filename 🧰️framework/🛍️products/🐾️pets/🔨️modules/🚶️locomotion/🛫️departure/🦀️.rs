@@ -2,10 +2,13 @@
 
 use super::*;
 use semio_framework_pets_contract::schema::Ending;
+use crate::spacing::{bodies_of, extent_at, obstacles_for};
+use semio_framework_pets_clearance::{MARGIN, claim_clear, lane_lift, spot_on};
+use semio_framework_pets_contract::schema::{Course, Waypoint};
 
 //#region 🔖️Departure
 /// 🥾️ Where a walk from `x` towards `goal` really ends: a hopping gait covers ground in whole hops of its clip (speed × the length of the clip), as many as fit before the goal; every other gait goes all the way.
-pub(crate) fn paced(kind: &Species, clip: Option<&str>, x: f64, goal: f64) -> f64 {
+pub fn paced(kind: &Species, clip: Option<&str>, x: f64, goal: f64) -> f64 {
     let beat = beat_of(kind, clip_of(kind, clip));
     if beat == 1 {
         return goal;
@@ -24,7 +27,7 @@ pub(crate) fn paced(kind: &Species, clip: Option<&str>, x: f64, goal: f64) -> f6
 }
 
 /// 🚶️ An actor sets out for a goal on its perch; it turns towards it first when it faces the other way.
-pub(crate) fn stroll(draft: &mut Draft<'_>, index: usize, goal: f64, clip: Option<Slug>, now: Ticks) {
+pub fn stroll(draft: &mut Draft<'_>, index: usize, goal: f64, clip: Option<Slug>, now: Ticks) {
     shift(draft, index, Activity::Walk, now);
     let until = now + dwell_of(Activity::Walk, draft.stage.mode, 0.0);
     let body = &mut draft.stage.actors[index];
@@ -34,7 +37,7 @@ pub(crate) fn stroll(draft: &mut Draft<'_>, index: usize, goal: f64, clip: Optio
 }
 
 /// 🧍️ An actor waits for its partner: idle, turning towards it, for as long as the stage has patience.
-pub(crate) fn attend(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn attend(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     shift(draft, index, Activity::Idle, now);
     let clip = clip_at(draft.kinds[index], Activity::Idle, 0.0);
     let body = &mut draft.stage.actors[index];
@@ -44,7 +47,7 @@ pub(crate) fn attend(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🦘️ Where an actor could hop to: per other perch (in perch order) the place nearest to it that keeps half a body from the ends and a comfortable gap from the actors there, when `hop_of` grants the hop, the flight really ends on that perch and its arc covers nothing that must stay free ([`soars`]); a floating gait glides there in a straight line at twice its speed when the place is within the reach of a hop and four seconds.
-pub(crate) fn hops_of(draft: &Draft<'_>, index: usize) -> Vec<Launch> {
+pub fn hops_of(draft: &Draft<'_>, index: usize) -> Vec<Launch> {
     let actors = &draft.stage.actors;
     let body = &actors[index];
     let kind = draft.kinds[index];
@@ -94,7 +97,7 @@ pub(crate) fn hops_of(draft: &Draft<'_>, index: usize) -> Vec<Launch> {
 }
 
 /// 🚀️ Commit a hop only when its entire arc or floating lane and landing remain clear.
-pub(crate) fn launch(draft: &mut Draft<'_>, index: usize, chosen: &Launch, clip: Option<Slug>, now: Ticks) -> bool {
+pub fn launch(draft: &mut Draft<'_>, index: usize, chosen: &Launch, clip: Option<Slug>, now: Ticks) -> bool {
     let body = &draft.stage.actors[index];
     let kind = draft.kinds[index];
     let mut courses = Vec::new();

@@ -30,8 +30,6 @@ semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-base-examples = { workspace = true }
@@ -41,6 +39,7 @@ semio-s-artifact-stdio-semio-graph-snapshot = { path = "../../../../../📸️sn
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

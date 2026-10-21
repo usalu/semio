@@ -10,7 +10,9 @@ export const SCHEMA_V1=schema;
 /** 🧪 Compiled validator of one definition. */
 export function validatorV1(name){return compileSchemaV1(schema,name);}
 
-const SUPPORTED=Object.freeze(["en","de"]);
+/** 🌍 The languages every text of the service exists in, in the order of the refusals that precede a language handshake. */
+export const SUPPORTED_LANGUAGES_V1=Object.freeze(["en","de"]);
+const SUPPORTED=SUPPORTED_LANGUAGES_V1;
 
 function fill(template,fields){return template.replace(/\{([A-Za-z]+)\}/gu,(_,key)=>String(fields[key]??"?"));}
 

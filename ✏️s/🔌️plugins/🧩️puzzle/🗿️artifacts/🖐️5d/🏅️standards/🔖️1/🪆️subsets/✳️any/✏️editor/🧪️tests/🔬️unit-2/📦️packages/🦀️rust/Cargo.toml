@@ -46,8 +46,6 @@ semio-framework-trace = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
-semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-3d-editor = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-config = { workspace = true }
@@ -98,6 +96,7 @@ serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-puzzle5d = { path = "../../../../📦️packages/🦀️rust" }
 rstar = "0.12"
 semio-framework-async-macros = { workspace = true }

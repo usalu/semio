@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "live invocation completes",
+      "abortBefore": false,
+      "abortDuring": false,
+      "failed": 0,
+      "expected": {
+        "prefetchCalls": 1,
+        "signalForwarded": true,
+        "buildCalls": 1,
+        "cancelled": false,
+        "failure": "none"
+      }
+    },
+    {
+      "name": "cancelled invocation never starts prefetch",
+      "abortBefore": true,
+      "abortDuring": false,
+      "failed": 0,
+      "expected": {
+        "prefetchCalls": 0,
+        "signalForwarded": false,
+        "buildCalls": 0,
+        "cancelled": true,
+        "failure": "cancelled"
+      }
+    },
+    {
+      "name": "prefetch cancellation stops artifact build",
+      "abortBefore": false,
+      "abortDuring": true,
+      "failed": 0,
+      "expected": {
+        "prefetchCalls": 1,
+        "signalForwarded": true,
+        "buildCalls": 0,
+        "cancelled": true,
+        "failure": "cancelled"
+      }
+    },
+    {
+      "name": "tile failure stops artifact build",
+      "abortBefore": false,
+      "abortDuring": false,
+      "failed": 1,
+      "expected": {
+        "prefetchCalls": 1,
+        "signalForwarded": true,
+        "buildCalls": 0,
+        "cancelled": false,
+        "failure": "tiles"
+      }
+    }
+  ],
+  "canaries": [
+    {
+      "kind": "vt",
+      "coordinate": {
+        "z": 3,
+        "x": 4,
+        "y": 2
+      },
+      "included": true
+    },
+    {
+      "kind": "vt",
+      "coordinate": {
+        "z": 3,
+        "x": 1,
+        "y": 2
+      },
+      "included": false
+    },
+    {
+      "kind": "osm",
+      "coordinate": {
+        "z": 0,
+        "x": 0,
+        "y": 0
+      },
+      "included": true
+    }
+  ],
+  "cacheRuns": [
+    {
+      "name": "cold cache only receives planned jobs",
+      "warm": false
+    },
+    {
+      "name": "warm cache preserves skipExisting",
+      "warm": true
+    }
+  ]
+}

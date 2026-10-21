@@ -1,0 +1,195 @@
+{
+  "cases": [
+    {
+      "name": "already-funded",
+      "available": 10,
+      "minimum": 10,
+      "leaves": [
+        {
+          "name": "a",
+          "bytes": 2,
+          "allocated": 4,
+          "modified": 0
+        }
+      ],
+      "cancelAfter": null,
+      "retired": [],
+      "availableAfter": 10
+    },
+    {
+      "name": "optional-funded",
+      "available": 0,
+      "minimum": 10,
+      "leaves": [
+        {
+          "name": "b",
+          "bytes": 2,
+          "allocated": 8,
+          "modified": 1
+        },
+        {
+          "name": "a",
+          "bytes": 1,
+          "allocated": 4,
+          "modified": 0
+        }
+      ],
+      "cancelAfter": null,
+      "retired": [
+        "a",
+        "b"
+      ],
+      "availableAfter": 12
+    },
+    {
+      "name": "mixed-pressure",
+      "available": 0,
+      "minimum": 10,
+      "leaves": [
+        {
+          "name": "a",
+          "bytes": 1,
+          "allocated": 4,
+          "modified": 0
+        }
+      ],
+      "cancelAfter": null,
+      "retired": [
+        "a"
+      ],
+      "availableAfter": 4
+    },
+    {
+      "name": "no-eligible-leaves",
+      "available": 0,
+      "minimum": 10,
+      "leaves": [],
+      "cancelAfter": null,
+      "retired": [],
+      "availableAfter": 0
+    },
+    {
+      "name": "oldest-tie-path",
+      "available": 0,
+      "minimum": 4,
+      "leaves": [
+        {
+          "name": "b",
+          "bytes": 2,
+          "allocated": 4,
+          "modified": 1
+        },
+        {
+          "name": "a",
+          "bytes": 2,
+          "allocated": 4,
+          "modified": 1
+        }
+      ],
+      "cancelAfter": null,
+      "retired": [
+        "a"
+      ],
+      "availableAfter": 4
+    },
+    {
+      "name": "cancel-after-effect",
+      "available": 0,
+      "minimum": 10,
+      "leaves": [
+        {
+          "name": "a",
+          "bytes": 1,
+          "allocated": 4,
+          "modified": 0
+        },
+        {
+          "name": "b",
+          "bytes": 2,
+          "allocated": 8,
+          "modified": 1
+        }
+      ],
+      "cancelAfter": 1,
+      "retired": [
+        "a"
+      ],
+      "availableAfter": 4
+    }
+  ],
+  "requests": [
+    {
+      "value": {
+        "minimumAvailableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 2684354560
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": -1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 2684354561
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1.5
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 0,
+        "wait": true
+      },
+      "accepted": false
+    },
+    {
+      "value": {},
+      "accepted": false
+    }
+  ],
+  "boundaryCases": [
+    {
+      "kind": "pressure",
+      "callbackRejected": false,
+      "wrapperRejected": true,
+      "continuation": true
+    },
+    {
+      "kind": "io",
+      "callbackRejected": true,
+      "wrapperRejected": true,
+      "continuation": false
+    },
+    {
+      "kind": "cancel",
+      "callbackRejected": true,
+      "wrapperRejected": true,
+      "continuation": false
+    },
+    {
+      "kind": "funded",
+      "callbackRejected": false,
+      "wrapperRejected": false,
+      "continuation": true
+    }
+  ]
+}

@@ -46,7 +46,6 @@
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 //#region 🗂️OrderedOwnership
-pub use semio_framework_value_ordered::ordered;
 
 #[path = "🗂️ordered/🔢️numeric/🧮️scratch/🦀️.rs"]
 pub mod numeric_scratch;
@@ -62,7 +61,6 @@ pub use shared_utf8::SharedUtf8;
 pub use semio_framework_value_intrinsic::bytes;
 
 
-pub use semio_framework_value_snapshot_projection::snapshot_projection;
 
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
@@ -85,5 +83,4 @@ pub use semio_framework_value_intrinsic::{NativeDecodeControl,NativeDecodeProgre
 
 
 
-pub use semio_framework_value_paged_text::paged_text;
 

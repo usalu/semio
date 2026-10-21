@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
-"""mkgroups.py: derives the staged set from the verified work copy. Compares /private/tmp/storage-seam/work against /private/tmp/storage-seam/base (the pristine snapshot the work started from): new files go to staged/files, changed files become anchored EDITS (token-level hunks, expanded inside their own line until the anchor is unique in the BASE file, then checked against the LIVE file), whole-file rewrites go to REWRITES (sha256 of the old bytes). Writes groups/g1.py..g3.py. Nothing under the checkout is modified."""
+"""🧬 mkgroups.py: derives the staged set from the verified work copy. Compares /private/tmp/storage-seam/work against /private/tmp/storage-seam/base (the pristine snapshot the work started from): new files go to staged/files, changed files become anchored EDITS (token-level hunks, expanded inside their own line until the anchor is unique in the BASE file, then checked against the LIVE file), whole-file rewrites go to REWRITES (sha256 of the old bytes). Writes groups/g1.py..g3.py. Nothing under the checkout is modified."""
 import difflib, hashlib, json, os, re, shutil, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 LIVE = "/Users/ueli/Documents/semio"
 BASE, WORK = "/private/tmp/storage-seam/base", "/private/tmp/storage-seam/work"
 STAGED = os.path.join(HERE, "staged", "files")
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..")))
-from winpath import place
+import winpath
+
+
+def place(staged_root, logical, data):
+    """📥 Stores every snapshot under a digest name (`w/<12 hex>.<ext>`) with the manifest `w/map.json`, so no ticket-side path nears the 256 byte limit."""
+    mapping = winpath.load(staged_root)
+    name = mapping.get(logical) or winpath.alias_name(logical, set(mapping.values()))
+    folder = os.path.join(staged_root, "w")
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, name), "wb") as handle:
+        handle.write(data)
+    mapping[logical] = name
+    winpath.save(staged_root, mapping)
+    return os.path.join(folder, name)
+
+
 TOP = "🧰️framework"
 REWRITE_SUFFIXES = json.load(open(os.path.join(HERE, "rewrites.json"))) if os.path.exists(os.path.join(HERE, "rewrites.json")) else []
 SKIP = ("node_modules", "/art/", ".envwire.ts", ".DS_Store")

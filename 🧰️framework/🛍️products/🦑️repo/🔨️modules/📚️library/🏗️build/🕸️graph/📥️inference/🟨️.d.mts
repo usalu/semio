@@ -95,3 +95,5 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  targetExecutionKindV1(target:Readonly<{metadata?:Readonly<{semio?:Readonly<Record<string,unknown>>}>}>,identity?:string):string|undefined;
  validateGeneratorOutputProducersV1(contracts:Readonly<Record<string,unknown>>,projects:Readonly<Record<string,unknown>>,workspaceRoot:string,selection:import("../🚪️admission/🟦️.ts").BuildGraphSelectionV1,registry:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1|undefined,context:BuildInferenceContextV1):Promise<void>;
 }
+/** 📋️ The authored files of the implementation this module loaded with the bytes they had at load. */
+export const loadedImplementationRowsV1:readonly {readonly kind:"digest";readonly path:string;readonly fact:{readonly sha256:string;readonly size:number;readonly mtimeMs:number}}[];

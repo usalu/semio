@@ -8,7 +8,7 @@ mkdir -p "$O/$F/🛍️products/🦑️repo/🔨️modules" "$O/$L/🏗️build"
 ln -sfn "$R/node_modules" "$O/node_modules"
 ln -sfn "$R/$F/🔨️modules" "$O/$F/🔨️modules"
 ln -sfn "$R/$L/🏗️build/🟦️typescript" "$O/$L/🏗️build/🟦️typescript"
-ln -sfn "$R/$L/⚡️caching" "$O/$L/⚡️caching"
+for d in "$R/$L"/*; do n="$(basename "$d")"; [ "$n" = "🏗️build" ] || ln -sfn "$d" "$O/$L/$n"; done
 rm -rf "$O/$L/🏗️build/🧩️units"
 mkdir -p "$O/$L/🏗️build/🧩️units"
 cp -R "$HERE/staged/🧩️units/." "$O/$L/🏗️build/🧩️units/"

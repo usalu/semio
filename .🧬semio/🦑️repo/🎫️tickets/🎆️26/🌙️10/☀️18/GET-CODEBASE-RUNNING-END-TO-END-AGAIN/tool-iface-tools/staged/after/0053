@@ -1,308 +1,386 @@
-/** 🚀️ Operator verbs of the architecture quiz: the site goes to a CDN at the site host, the proctor runs as a zero-touch
- * Docker stack (proctor + Caddy) at the proctor host, both hosts from `🔣️.json`.
+/** 🎭️ The end-to-end gate of the architecture course: it boots throw-away stacks and drives the real site in a real browser
+ * (Playwright, Chromium) through everything a learner does.
  *
- * - `publish` builds the site with the proctor origin baked in, verifies the CDN artifact (entry points, sealed document,
- *   hashed assets, no development leftovers, size budget) and stages it with `_headers`.
- * - `docker-image-build` builds the proctor image with its version, revision and commit time as OCI labels;
- *   `docker-image-publish` checks that image and the stack, then pushes it as `sha-<revision>-<image digest>`, the workspace
- *   version and `latest` with the developer's own `docker login`, and prints the digest.
- * - `docker-image-check` runs the image as the stack does (no configuration, read-only root, no capabilities) and checks
- *   what it is (labels, user, no shell, the stack files it carries) and the API as the CDN-hosted site meets it: ready
- *   behind the proxy, cleartext refused, cross-origin preflight and POST granted to the site origin only, the request
- *   body limit, shared presence between two learners (a foreign origin refused), `docker stop` drains with exit code 0
- *   while a socket is open, the WAL folded into `proctor.sqlite` on the volume.
- * - `docker-stack-check` proves the stack exactly as a host gets it — `compose.yaml` and the `Caddyfile` copied out of the
- *   image into an empty directory: config, `caddy validate`, `up --wait` on a throw-away project with Caddy's internal
- *   CA on `localhost`, the hardening Docker applied, the API and the presence WebSocket over HTTPS through Caddy, a
- *   certificate the operator supplies served instead of Caddy's own, a backup while serving, an update without a failed
- *   request and with the data kept, a restore, an erasure on request, then `down --volumes`.
- * - `docker-stack-bundle` stages what the proctor host needs without a registry: the stack files out of the image, an
- *   empty `certificates` directory, an `.env` that pins the tag, the image as `proctor-image.tar` and the host's steps.
- * - `deploy-check` is the readiness gate: drift between `🔣️.json` and every file that repeats it, the course, `publish`,
- *   the image build, both checks and the end-to-end gate when the package has one.
+ * Two topologies run the same specs:
+ * - `dev` — the site's dev server and a development proctor, one origin through the dev proxy, as `dev` starts them;
+ * - `rehearsal` — the release build of the site with the proctor origin baked in, served as static files from one
+ *   origin as a CDN does, and a production-mode proctor on another origin that grants exactly that site origin: the
+ *   cross-origin topology that is deployed.
  *
- * Runtime Docker checks use one argv without a shell on Windows, macOS and Linux. Image production requires a native
- * Linux release compiler owner. Ctrl-C/SIGTERM stops the running client and removes what a check created.
- * @see ./🔣️.json — the site and proctor hosts, the image repository and port
- * @see ./🧬️schema/🔣️.json — the contract of that file
- * @see ./Dockerfile — the proctor image
- * @see ./compose.yaml — the stack
- * @see ./Caddyfile — the TLS-terminating proxy
- * @see ../README.md — the runbook
- * https://docs.docker.com/reference/cli/docker/ */
+ * Every stack has its own ports, proctor data directory and logs under the selected ticket's generated directory
+ * (or `.🧬semio/🎓️teaching/architecture-course-e2e/<run>/`), and a loopback control endpoint through which a spec takes its proctor
+ * away and brings it back. Everything is stopped and deleted afterwards — on success, failure, Ctrl+C or termination; a
+ * failed run keeps its directory (logs, traces, screenshots) and says where. Chromium comes from `PLAYWRIGHT_BROWSERS_PATH`,
+ * else from the repo's tool cache, and is downloaded there once when it is missing.
+ * The compiler and its output stay in bounded repository storage. The rehearsal retains an immutable artifact reader
+ * through the complete browser journey, closes its static listener, and then releases that reader.
+ *
+ * `test-e2e [--topology <both|dev|rehearsal>] [--serial] [--keep] [--proctor <executable>] [-- <Playwright arguments…>]`: no topology means
+ * both, at once unless `--serial`; `--proctor` runs that executable (a release build, say) instead of building the
+ * proctor; words after `--` go unchanged to `playwright test` (`--grep`, `--project`, `--headed`, `--workers`, …).
+ * @see ./🎚️config/🟦️.ts — the Playwright projects
+ * @see ./🚶️learner/🟦️.ts — the learner the specs drive
+ * @see ../🧱️stack/🟦️.ts — the parts the stacks are booted from
+ * @see ../🧪️tests — the specs
+ * https://playwright.dev/docs/test-cli */
+import { buildModeEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 
-import { courseOriginalBuildModeV1 } from "../🏗️builder/🎚️mode/🟦️.ts";
-
-import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { requireIssuedScriptInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
-import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
+import { createServer } from "node:http";
+import { createRequire } from "node:module";
+import { createServer as createListener, type AddressInfo } from "node:net";
+import { dirname, isAbsolute, join, posix, resolve } from "node:path";
+import { repoToolCacheEnv, runRepositoryCommand as runOwnedCommand } from "@semio-tech/process/execution";
+import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptInvocationBudget, scriptInvocationEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { withViteArtifactV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
+import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { LAUNCHER_SIGNALS, PROCTOR_DEV_COURSE, launchProctor, proctorReady, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
-import { spawnToolSyncV1, spawnToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import course from "../🔣️.json" with { type: "json" };
-import deployment from "./🔣️.json" with { type: "json" };
+import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
+import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
+import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
+import { runTopologySessionsV1 } from "./🔒️sessions/🟦️.ts";
+import { spawnToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-//#region 🔣️Constants
-/** 🌐️ The host the CDN serves the site at. */
-export const COURSE_SITE_HOST = deployment.site.host;
+//#region 🗺️Topologies
+/** 🗺️ The topologies the gate boots, in the order they are named. */
+export const COURSE_E2E_TOPOLOGIES = ["dev", "rehearsal"] as const;
 
-/** 🪪️ The site origin: the one browser origin the proctor grants. */
-export const COURSE_SITE_ORIGIN = `https://${COURSE_SITE_HOST}`;
+/** 🗺️ One topology of the gate. */
+export type CourseTopology = (typeof COURSE_E2E_TOPOLOGIES)[number];
 
-/** 🛂️ The host the Docker stack serves the proctor at. */
-export const COURSE_PROCTOR_HOST = deployment.proctor.host;
+/** 🧾️ The variables a spec reads: the topology it runs in, the proctor origin of its stack and the stack's control
+ * endpoint (`PLAYWRIGHT_BASE_URL` is the site origin). */
+export const COURSE_E2E_ENVIRONMENT = { topology: "TEACHING_ARCHITECTURE_COURSE_E2E_TOPOLOGY", proctor: "TEACHING_ARCHITECTURE_COURSE_E2E_PROCTOR", control: "TEACHING_ARCHITECTURE_COURSE_E2E_CONTROL" } as const;
 
-/** 🔗️ The proctor origin a release build of the site talks to. */
-export const COURSE_PROCTOR_ORIGIN = `https://${COURSE_PROCTOR_HOST}`;
+/** 🗃️ Where the runs of the gate keep their stacks, relative to the repository root. */
+export const COURSE_E2E_DIRECTORY = [".🧬semio", "🎓️teaching", "architecture-course-e2e"] as const;
 
-/** 🏷️ The registry repository every proctor image tag lives under. */
-export const COURSE_IMAGE_REPOSITORY = deployment.proctor.image;
-
-/** 🔌️ The port the proctor binds inside the container (`PROCTOR_PORT`). */
-export const COURSE_IMAGE_PORT = deployment.proctor.port;
-
-/** 🗄️ The one writable path of the image (`PROCTOR_DATA`). */
-export const COURSE_IMAGE_DATA_ROOT = "/srv/course/data";
-
-/** 🗃️ The SQLite file the proctor keeps in `PROCTOR_DATA`. */
-export const COURSE_IMAGE_DATABASE = "proctor.sqlite";
-
-/** 👤️ The unprivileged account the image runs as (`uid:gid`). */
-export const COURSE_IMAGE_USER = "65532:65532";
-
-/** 💓️ The image's `HEALTHCHECK`: the proctor's own readiness probe. */
-export const COURSE_IMAGE_HEALTHCHECK = ["CMD", "/usr/local/bin/proctor", "health"] as const;
-
-/** 🎒️ Where the image carries the stack files of its release. */
-export const COURSE_IMAGE_STACK_ROOT = "/srv/course/deploy";
-
-/** 👣️ The whole footprint of a host besides Docker: these two files in one directory. */
-export const COURSE_STACK_FILES = ["compose.yaml", "Caddyfile"] as const;
-
-/** 🔏️ The directory beside the stack files Caddy loads the operator's own certificates from (`*.pem` bundles). */
-export const COURSE_STACK_CERTIFICATES = "certificates";
-
-/** 📦️ Where `publish` stages the CDN artifact, relative to the package's `dist`. */
-export const COURSE_PAGES_DIRECTORY = "pages/course";
-
-/** 🎁️ Where `docker-stack-bundle` stages the directory for the proctor host, relative to the package's `dist`. */
-export const COURSE_BUNDLE_DIRECTORY = "proctor";
-
-/** 💾️ The file the bundle carries the proctor image in. */
-export const COURSE_BUNDLE_IMAGE = "proctor-image.tar";
-
-/** 🏋️ What a release of the site may weigh: the entry script and stylesheet compressed as a CDN sends them, and the whole
- * artifact on disk. */
-export const COURSE_SITE_BUDGET = { scriptGzipBytes: 300_000, styleGzipBytes: 60_000, totalBytes: 5_000_000 } as const;
-
-/** 📑️ `_headers` for CDNs that honour it (Cloudflare Pages, Netlify): every response hardened (the frame ban a `meta`
- * policy cannot carry included), hashed assets immutable, documents revalidated. No two rules set the same header for
- * one path, because those CDNs join the values of every matching rule. GitHub Pages ignores the file. */
-export const COURSE_SITE_HEADERS =
-  [
-    "/*",
-    "  X-Content-Type-Options: nosniff",
-    "  X-Frame-Options: DENY",
-    "  Content-Security-Policy: frame-ancestors 'none'",
-    "  Referrer-Policy: no-referrer",
-    "/assets/*",
-    "  Cache-Control: public, max-age=31536000, immutable",
-    ...["/", "/index.html", "/404.html"].flatMap((path) => [path, "  Cache-Control: no-cache"]),
-  ].join("\n") + "\n";
-
-const SITE = "🎓️teaching/🏛️architecture/📚️course";
-export const DEPLOY = `${SITE}/🚀️deploy`;
-export const DOCKERFILE = `${DEPLOY}/Dockerfile`;
-export const BUNDLE = `${SITE}/📦️packages/🟦️typescript`;
-export const COURSE = `${SITE}/🔣️.json`;
-const PROCTOR_README = "🎓️teaching/🛂️proctor/README.md";
-const WORKFLOW = ".github/workflows/architecture-course.yml";
-const PROJECT = "@teaching/architecture-course";
-export const FOREIGN_ORIGIN = "https://foreign.example";
-//#endregion 🔣️Constants
-
-//#region 🧰️Tools
-/** 🏳️ The value following `flag` in `segments`, if any. */
-export function flag(segments: readonly string[], name: string): string | undefined {
-  const index = segments.indexOf(name);
-  return index >= 0 ? segments[index + 1] : undefined;
+/** 🎫️ Keeps browser diagnostics within the selected ticket, or the development cache when no ticket is selected. */
+export function endToEndWorkDirectory(repoRoot: string, environment: NodeJS.ProcessEnv = process.env): string {
+  return environment.SEMIO_TICKET_DIR ? join(ticketOutput(repoRoot, [], environment), "e2e") : join(repoRoot, ...COURSE_E2E_DIRECTORY);
 }
 
-/** 🛑️ Carries original cancellation alongside Ctrl-C/SIGTERM and releases its listeners. */
-export function deploymentInterruption(parent: AbortSignal): { readonly signal: AbortSignal; readonly release: () => void } {
-  const controller = new AbortController();
-  const cancel = (): void => controller.abort();
-  const originalCancelled = (): void => controller.abort(parent.reason);
-  parent.addEventListener("abort", originalCancelled, { once: true });
-  if (parent.aborted) originalCancelled();
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
-  return { signal: controller.signal, release: () => { controller.abort(); parent.removeEventListener("abort", originalCancelled); process.off("SIGINT", cancel); process.off("SIGTERM", cancel); } };
+/** 🏭️ Carries the rehearsal proctor origin into its isolated site build child. */
+export function rehearsalBuildEnvironment(proctor: string, environment: Readonly<Record<string, string | undefined>> = process.env): Record<string, string | undefined> {
+  return buildModeEnvironment("release", { ...environment, PROCTOR_URL: proctor });
 }
 
-/** 🪪️ Requires the exact live parent before lending cancellation to a deployment operation. */
-export function interruption(invocation: ScriptInvocation): ReturnType<typeof deploymentInterruption> {
-  requireIssuedScriptInvocationV1(invocation);
-  return deploymentInterruption(invocation.control.signal);
+/** 🎼️ Authors a bounded rehearsal product without changing production output or passing compiler escape arguments. */
+export function rehearsalBuildPlan(bundleRoot: string, proctor: string, environment: Readonly<Record<string, string | undefined>> = process.env): { root: string; config: string; mode: "release"; owner: string; environment: Record<string, string | undefined> } {
+  return { root: bundleRoot, config: resolve(bundleRoot, "../../🏗️builder/🌐️vite/🟦️.ts"), mode: "release", owner: "architecture-course:rehearsal", environment: rehearsalBuildEnvironment(proctor, environment) };
+}
+/** 👷️ One worker per concurrent topology; multi-user scenarios open their own learner contexts. */
+export const SHARED_WORKERS = 1;
+
+const PLAYWRIGHT_CLI = ["node_modules", "playwright", "cli.js"] as const;
+const PLAYWRIGHT_CONFIG = ["🎓️teaching", "🏛️architecture", "📚️course", "🎭️e2e", "🎚️config", "🟦️.ts"] as const;
+
+/** 🧭️ What a command line asks for: the topologies (all when none is named), whether they run one after the other,
+ * whether the run directory is kept, a proctor executable to run instead of building one, and the arguments of
+ * `playwright test`. */
+export function endToEndPlan(segments: readonly string[]): { readonly topologies: readonly CourseTopology[]; readonly serial: boolean; readonly keep: boolean; readonly proctor: string | undefined; readonly playwright: readonly string[] } {
+  const plan = { topologies: [...COURSE_E2E_TOPOLOGIES] as CourseTopology[], serial: false, keep: false, proctor: undefined as string | undefined, playwright: [] as string[] };
+  const seen = new Set<string>();
+  for (let index = 0; index < segments.length; index++) {
+    const option = segments[index]!;
+    if (option === "--") { plan.playwright = segments.slice(index + 1); break; }
+    if (!["--topology", "--serial", "--keep", "--proctor"].includes(option)) throw new Error(`Unknown end-to-end option ${JSON.stringify(option)}; put Playwright arguments after --`);
+    if (seen.has(option)) throw new Error(`Duplicate end-to-end option ${option}`);
+    seen.add(option);
+    if (option === "--serial") plan.serial = true;
+    else if (option === "--keep") plan.keep = true;
+    else {
+      const value = segments[++index];
+      if (option === "--topology") {
+        if (value !== "both" && value !== "dev" && value !== "rehearsal") throw new Error("--topology needs both, dev or rehearsal");
+        plan.topologies = value === "both" ? [...COURSE_E2E_TOPOLOGIES] : [value];
+      } else {
+        if (!value || value.startsWith("--")) throw new Error("--proctor needs the path of a proctor executable");
+        plan.proctor = value;
+      }
+    }
+  }
+  return plan;
+}
+/** 🛤️ Where a `--proctor` executable is: absolute values stay, relative ones resolve against the repository root, never against the package directory the build tool runs the script in. */
+export function endToEndProctorPath(repoRoot: string, value: string, paths: Pick<typeof posix, "isAbsolute" | "resolve"> = { isAbsolute, resolve }): string {
+  return paths.isAbsolute(value) ? value : paths.resolve(repoRoot, value);
+}
+/** 🧭️ The order the topologies boot in: the rehearsal first, because its release build needs the whole host and the dev
+ * site, once up, holds the whole host for as long as it runs. */
+export function bootOrder(topologies: readonly CourseTopology[]): readonly CourseTopology[] {
+  return [...topologies].sort((left, right) => Number(right === "rehearsal") - Number(left === "rehearsal"));
 }
 
-/** 🗣️ One progress line of these verbs. */
-export function say(line: string): void {
-  console.log(`[deploy] ${line}`);
+//#endregion 🗺️Topologies
+
+//#region 🧱️Stacks
+/** 🗣️ One progress line of the gate. */
+function say(line: string): void {
+  console.log(`[e2e] ${line}`);
 }
 
-/** 💤️ Resolves after `ms`, or fails at once when `signal` is aborted. */
-export function pause(ms: number, signal: AbortSignal): Promise<void> {
-  if (signal.aborted) return Promise.reject(signal.reason);
+/** 🧰️ What every stack of one run shares. */
+interface Run {
+  readonly invocation: ScriptInvocation;
+  readonly repoRoot: string;
+  readonly bundleRoot: string;
+  readonly script: string;
+  readonly portEnv: string;
+  readonly work: string;
+  readonly proctor: string | ProctorArtifact;
+  readonly signal: AbortSignal;
+}
+
+/** 🧱️ A booted stack: its origins, its control endpoint and the way to stop it. */
+interface Stack {
+  readonly topology: CourseTopology;
+  readonly site: string;
+  readonly proctor: string;
+  readonly control: string;
+}
+
+/** 🧯️ Ends a bounded Node port probe before its caller may bind the selected ports. */
+function probePorts(source: string, args: readonly string[], signal?: AbortSignal): Promise<string> {
+  const child = spawnToolV1("node", ["--input-type=module", "-e", source, ...args], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000) });
+  let output = "";
+  let failure = "";
+  child.stdout!.on("data", chunk => { output += chunk; });
+  child.stderr!.on("data", chunk => { failure += chunk; });
   return new Promise((accept, reject) => {
-    const cancel = (): void => { clearTimeout(timer); reject(signal.reason); };
-    const timer = setTimeout(() => { signal.removeEventListener("abort", cancel); accept(); }, ms);
-    signal.addEventListener("abort", cancel, { once: true });
-  });
-}
-
-/** 🧾️ What one Docker client call answered: its exit code, both streams as text and stdout as the bytes it wrote. */
-export type DockerAnswer = Readonly<{ code: number; stdout: string; stderr: string; bytes: Buffer }>;
-
-/** 🧯️ Bounds cleanup after cancellation without reviving the canceled deployment work. */
-export const COURSE_DEPLOY_CLEANUP_MS = 45_000;
-
-/** 🐳️ Runs one `docker` argv without a shell, with `env` merged over the process environment (a variable set to
- * `undefined` is removed) and `input` on stdin; an aborted `signal` interrupts the client. */
-export function docker(args: readonly string[], options: Readonly<{ signal?: AbortSignal; env?: NodeJS.ProcessEnv; input?: string | Uint8Array; cwd?: string }> = {}): Promise<DockerAnswer> {
-  return new Promise((accept, reject) => {
-    if (options.signal?.aborted) return reject(new Error("cancelled"));
-    const child = spawnToolV1("docker", [...args], { shell: false, cwd: options.cwd, env: Object.fromEntries(Object.entries({ ...process.env, ...options.env }).filter(([, value]) => value !== undefined)), stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
-    const written: Buffer[] = [];
-    let stderr = "";
-    child.stdout!.on("data", (chunk: Buffer) => written.push(chunk));
-    child.stderr!.on("data", (chunk: Buffer) => (stderr += chunk.toString("utf8")));
-    child.stdin?.on("error", error => { if (!options.signal?.aborted) reject(error); });
-    const abort = (): void => terminateOwnedChildTree(child);
-    options.signal?.addEventListener("abort", abort, { once: true });
-    if (options.signal?.aborted) abort();
-    child.once("error", (error) => reject(/ENOENT/u.test(String(error)) ? new Error("the docker client does not exist on PATH; install Docker Desktop or Docker Engine") : error));
-    child.once("close", (code) => {
-      options.signal?.removeEventListener("abort", abort);
-      if (options.signal?.aborted) return reject(new Error("cancelled"));
-      const bytes = Buffer.concat(written);
-      accept({ code: code ?? -1, stdout: bytes.toString("utf8").trim(), stderr: stderr.trim(), bytes });
+    child.once("error", reject);
+    child.once("close", code => {
+      const answer = output.trim();
+      if (code !== 0) reject(Error(`port probe failed (${code}): ${failure || output}`));
+      else accept(answer);
     });
-    if (options.input !== undefined) child.stdin!.end(options.input);
   });
 }
 
-/** 🚢️ Runs one `docker` argv and fails with its output unless it exits 0. */
-export async function dockerOk(args: readonly string[], options: Parameters<typeof docker>[1] = {}): Promise<string> {
-  const answer = await docker(args, options);
-  if (answer.code !== 0) throw new Error(`docker ${args.slice(0, 3).join(" ")} exited ${answer.code}: ${(answer.stderr || answer.stdout).split("\n").slice(-6).join(" | ").slice(0, 900)}`);
-  return answer.stdout;
+/** 🔌️ Whether a loopback port is free after the probe has released it. */
+export async function portFree(port: number, signal?: AbortSignal): Promise<boolean> {
+  const source = "import {createServer} from 'node:net';const probe=createServer();probe.once('error',()=>process.stdout.write('false'));probe.listen(Number(process.argv[1]),'127.0.0.1',()=>probe.close(()=>process.stdout.write('true')));";
+  const answer = await probePorts(source, [String(port)], signal);
+  if (answer !== "true" && answer !== "false") throw Error(`port ${port} probe returned ${answer}`);
+  return answer === "true";
 }
 
-/** 📜️ The last `lines` lines a container wrote to stdout and stderr. */
-export async function containerLog(container: string, lines: number, signal: AbortSignal): Promise<string> {
-  const answer = await docker(["logs", "--tail", String(lines), container], { signal }).catch(() => ({ stdout: "", stderr: "" }));
-  return [answer.stdout, answer.stderr].filter(Boolean).join("\n");
+/** 🫧️ Fresh OS-selected site and proctor ports prevent old browser tabs from rejoining a later isolated stack. */
+export async function endToEndPorts(signal?: AbortSignal): Promise<{ readonly site: number; readonly proctor: number }> {
+  const source = "import {createServer} from 'node:net';const servers=[createServer(),createServer()];const ports=await Promise.all(servers.map(server=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',()=>resolve(server.address().port));})));await Promise.all(servers.map(server=>new Promise(resolve=>server.close(resolve))));process.stdout.write(JSON.stringify(ports));";
+  const ports: unknown = JSON.parse(await probePorts(source, [], signal));
+  if (!Array.isArray(ports) || ports.length !== 2 || ports.some(port => !Number.isInteger(port) || port < 1 || port > 65535) || ports[0] === ports[1]) throw Error("port probe returned invalid stack ports");
+  return { site: ports[0], proctor: ports[1] };
 }
 
-/** 🐋️ The daemon's server version, or an error naming the missing daemon — a precondition, never a quiz fault. */
-export async function dockerServerVersion(signal?: AbortSignal): Promise<string> {
-  const answer = await docker(["version", "--format", "{{.Server.Version}}"], { signal });
-  if (answer.code !== 0 || !answer.stdout) throw new Error(`the Docker daemon does not answer: ${(answer.stderr || answer.stdout).slice(0, 300)}`);
-  return answer.stdout;
+/** 🌿️ The environment of a stack's proctor: nothing of the caller's `PROCTOR_*`, the stack's port and data directory,
+ * the site's course, and `posture` (the mode and what it needs). */
+function proctorEnvironment(repoRoot: string, port: number, data: string, posture: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const inherited = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("PROCTOR_")));
+  return { ...inherited, PROCTOR_PORT: String(port), PROCTOR_DATA: data, PROCTOR_COURSE: join(repoRoot, ...PROCTOR_DEV_COURSE), ...posture };
 }
 
-/** 🔖️ The commit a build of this checkout comes from: its hash (suffixed `-dirty` when tracked files differ from it) and
- * its time; `unknown` outside a git checkout. */
-export function sourceRevision(repoRoot: string): Readonly<{ revision: string; created: string }> {
-  const git = (...args: string[]): string | undefined => {
-    const run = spawnToolSyncV1("git", args, { cwd: repoRoot, encoding: "utf8", windowsHide: true });
-    return run.status === 0 ? run.stdout.trim() : undefined;
+/** 🎛️ The control endpoint of one stack on a free loopback port: `POST /proctor/stop` ends the stack's proctor at once
+ * (a crash, as far as the site can tell), `POST /proctor/start` launches it again over the same data and answers once
+ * it is ready. */
+function serveControl(proctor: { stop(): Promise<unknown>; start(): Promise<unknown> }): Promise<{ readonly url: string; close(): Promise<void> }> {
+  const server = createServer((request, answer) => {
+    const act = request.method !== "POST" ? undefined : request.url === "/proctor/stop" ? proctor.stop : request.url === "/proctor/start" ? proctor.start : undefined;
+    const done = (status: number, body = ""): void => {
+      answer.statusCode = status;
+      answer.end(body);
+    };
+    if (act === undefined) return done(404, "POST /proctor/stop or /proctor/start");
+    act().then(
+      () => done(204),
+      (error: unknown) => done(500, error instanceof Error ? error.message : String(error)),
+    );
+  });
+  return new Promise((accept, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () =>
+      accept({
+        url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
+        close: () =>
+          new Promise<void>((closed) => {
+            server.close(() => closed());
+            server.closeAllConnections();
+          }),
+      }),
+    );
+  });
+}
+
+/** 👓️ Holds the site the last build published under the artifact reader's custody until `release`, which settles once the
+ * custody is returned. */
+function holdSiteArtifact(run: Run): Promise<{ readonly path: string; release(): Promise<void> }> {
+  return new Promise((accept, reject) => {
+    let finish!: () => void;
+    const finished = new Promise<void>((done) => (finish = done));
+    const custody: Promise<void> = withViteArtifactV1(run.repoRoot, "release", "architecture-course:rehearsal", run.invocation, scriptCompilerAdmissionControlV1(run.invocation, "vite:rehearsal-reader", 0), async (artifact) => {
+      accept({ path: artifact.path, release: () => (finish(), custody) });
+      await finished;
+    });
+    custody.catch(reject);
+  });
+}
+
+/** 🧱️ Retains one ready topology and its artifact reader through the learner journeys, then stops every owned part. */
+async function withStack(topology: CourseTopology, run: Run, consume: (stack: Stack) => Promise<void>): Promise<void> {
+  const ports = await endToEndPorts(run.signal);
+  const taken = (await Promise.all([ports.site, ports.proctor].map(async (port) => ((await portFree(port, run.signal)) ? [] : [port])))).flat();
+  if (taken.length > 0) throw new Error(`the ${topology} stack needs port ${taken.join(" and ")}, which something else listens on (another run of this gate?)`);
+  const directory = join(run.work, topology);
+  const site = `http://127.0.0.1:${ports.site}`;
+  const proctor = `http://127.0.0.1:${ports.proctor}`;
+  mkdirSync(join(directory, "proctor-data"), { recursive: true });
+  const env = proctorEnvironment(run.repoRoot, ports.proctor, join(directory, "proctor-data"), topology === "dev" ? { PROCTOR_MODE: "development" } : { PROCTOR_MODE: "production", PROCTOR_ALLOWED_ORIGINS: site });
+  const closing: (() => Promise<unknown>)[] = [];
+  const close = async (): Promise<void> => {
+    const failures: unknown[] = [];
+    for (const end of closing.splice(0).reverse()) await end().catch((error: unknown) => { failures.push(error); say(`${topology}: ${error instanceof Error ? error.message : String(error)}`); });
+    if (failures.length) throw new AggregateError(failures, `The ${topology} stack did not stop cleanly`);
   };
-  const head = git("rev-parse", "HEAD");
-  if (!head) return { revision: "unknown", created: "1970-01-01T00:00:00Z" };
-  return { revision: git("status", "--porcelain", "--untracked-files=no") ? `${head}-dirty` : head, created: git("log", "-1", "--format=%cI") ?? "1970-01-01T00:00:00Z" };
+  try {
+    let running: ProctorProcess | undefined;
+    const start = async (): Promise<void> => {
+      if (running !== undefined) return;
+      const launched = typeof run.proctor === "string" ? launchProctor(run.proctor, run.repoRoot, ["serve"], env, join(directory, "proctor.log")) : run.proctor.launch(["serve"], env, join(directory, "proctor.log"));
+      running = launched;
+      await awaitReady({ label: `the ${topology} proctor at ${proctor}`, probe: () => proctorReady(proctor), exited: launched.exited, signal: run.signal, say });
+    };
+    const stop = async (): Promise<void> => {
+      const ending = running;
+      running = undefined;
+      await ending?.stop(0);
+    };
+    closing.push(stop);
+    await start();
+    say(`${topology}: proctor ready at ${proctor} (${env.PROCTOR_MODE})`);
+    const control = await serveControl({ stop, start });
+    closing.push(() => control.close());
+    const stack = { topology, site, proctor, control: control.url };
+    if (topology === "dev") {
+      const server = launchOwned(process.execPath, [run.script, "dev-site"], run.bundleRoot, scriptInvocationEnvironment(run.invocation, { ...process.env, [run.portEnv]: String(ports.site), PROCTOR_PORT: String(ports.proctor), TEACHING_ARCHITECTURE_COURSE_WATCH: "off" }), join(directory, "site.log"));
+      closing.push(() => server.stop());
+      await awaitReady({ label: `the dev site at ${site}`, probe: () => httpAnswers(site, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: run.signal, say });
+      say(`dev: site ready at ${site}, proxying to ${proctor}`);
+      await consume(stack);
+    } else {
+      courseOriginalBuildModeV1(run.invocation, "release");
+      say(`rehearsal: building the release site for ${proctor}`);
+      await buildViteArtifact({ ...rehearsalBuildPlan(run.bundleRoot, proctor), workspace: run.repoRoot, invocation: run.invocation, control: scriptCompilerAdmissionControlV1(run.invocation, "vite:rehearsal-build", 0), signal: run.signal });
+      const held = await holdSiteArtifact(run);
+      closing.push(() => held.release());
+      const artifact = held.path;
+      const problems = siteArtifactProblems(artifact, proctor);
+      if (problems.length > 0) throw new Error(`the release build is not a site artifact:\n- ${problems.join("\n- ")}`);
+      const served = await serveStaticSite(artifact, ports.site);
+      closing.push(() => served.close());
+      say(`rehearsal: static site at ${served.origin}, calling ${proctor} cross-origin`);
+      await consume(stack);
+    }
+  } finally {
+    await close();
+  }
+}
+//#endregion 🧱️Stacks
+
+//#region 🎬️Specs
+/** 🌐️ Makes sure the Chromium builds this Playwright version drives exist in `browsers`, downloading them once. The
+ * build list is read from the `playwright-core` the `playwright` package itself resolves (the isolated install links no
+ * `playwright-core` at the root). */
+async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, browsers: string, signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted();
+  const core = dirname(createRequire(realpathSync(join(repoRoot, ...PLAYWRIGHT_CLI))).resolve("playwright-core/package.json"));
+  const manifest = JSON.parse(readFileSync(join(core, "browsers.json"), "utf8")) as { readonly browsers: readonly { readonly name: string; readonly revision: string }[] };
+  const installed = ["chromium", "chromium-headless-shell"].every((name) => existsSync(join(browsers, `${name.replaceAll("-", "_")}-${manifest.browsers.find((browser) => browser.name === name)?.revision}`, "INSTALLATION_COMPLETE")));
+  if (installed) return;
+  say(`installing Chromium for Playwright into ${browsers}`);
+  await runOwnedCommand(invocation, process.execPath, [join(repoRoot, ...PLAYWRIGHT_CLI), "install", "chromium"], repoRoot, "architecture-course:test-e2e browser", { version: 1, maximumElapsedMilliseconds: scriptInvocationBudget(invocation, 600_000), output: readNativeCallerAuthorityV1(invocation.capabilities).transport }, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
 }
 
-/** ✅️ Validates current material while its genuine native producer and executable remain retained. */
-export async function checkCourse(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
-  const { signal, release } = interruption(invocation), phase = AbortSignal.any([signal, AbortSignal.timeout(1_800_000)]);
+/** 🎬️ Runs the specs against one stack, every output line prefixed with its topology; resolves with the exit status. */
+function runSpecs(stack: Stack, run: Run, browsers: string, output: string, forwarded: readonly string[]): Promise<number> {
+  run.signal.throwIfAborted();
+  const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers, PLAYWRIGHT_BASE_URL: stack.site, [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
+  const child = spawnToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", join(output, stack.topology), ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  const cancel = (): void => terminateOwnedChildTree(child);
+  run.signal.addEventListener("abort", cancel, { once: true });
+  for (const stream of [child.stdout!, child.stderr!]) {
+    let rest = "";
+    stream.setEncoding("utf8").on("data", (chunk: string) => {
+      const lines = `${rest}${chunk}`.split(/\r?\n/u);
+      rest = lines.pop() ?? "";
+      for (const line of lines) console.log(`[${stack.topology}] ${line}`);
+    });
+    stream.on("end", () => rest !== "" && console.log(`[${stack.topology}] ${rest}`));
+  }
+  return new Promise((accept) => {
+    child.once("error", (error) => {
+      say(`${stack.topology}: ${error.message}`);
+      accept(1);
+    });
+    child.once("close", (code) => {
+      run.signal.removeEventListener("abort", cancel);
+      accept(code ?? 1);
+    });
+  });
+}
+
+/** 🎭️ `test-e2e` — builds the proctor once, boots the topologies of `segments`, runs the specs against each, and stops
+ * and deletes everything again. It fails when a stack does not boot or any spec fails. */
+export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, script: string, portEnv: string, segments: readonly string[]): Promise<void> {
+  const plan = endToEndPlan(segments);
+  courseOriginalBuildModeV1(invocation,plan.topologies.includes("rehearsal")?"release":"dev");
+  const work = join(endToEndWorkDirectory(repoRoot), `${new Date().toISOString().replace(/[-:]|\.\d+Z$/gu, "")}-${process.pid}`);
+  const browsers = repoToolCacheEnv(repoRoot).PLAYWRIGHT_BROWSERS_PATH!;
+  const interruption = new AbortController();
+  const signal = AbortSignal.any([invocation.control.signal, interruption.signal]);
+  let interrupted: NodeJS.Signals | undefined;
+  const interrupt = (signal: NodeJS.Signals): void => {
+    interrupted ??= signal;
+    interruption.abort();
+  };
+  for (const signal of LAUNCHER_SIGNALS) process.on(signal, interrupt);
+  const started = Date.now();
+  let failure: string | undefined = "the run did not finish";
   let artifact: ProctorArtifact | undefined;
   try {
-    artifact = await acquireProctor(repoRoot, invocation, process.env, phase, courseOriginalBuildModeV1(invocation, "dev"));
-    const status = await artifact.launch(["check", resolve(repoRoot, COURSE)]).exited;
-    phase.throwIfAborted();
-    if (status !== 0) throw Error(`Authenticated proctor course check exited ${status}`);
-  } finally { try { await artifact?.close(); } finally { release(); } }
-}
-//#endregion 🧰️Tools
-
-//#region 📐️Drift
-/** 🧮️ A Caddy size (`8KB`, `2MiB`, `512`) in bytes. */
-export function caddySizeBytes(size: string): number {
-  const parsed = /^(\d+)\s*(B|KB|MB|GB|KiB|MiB|GiB)?$/iu.exec(size.trim());
-  if (!parsed) throw new Error(`${JSON.stringify(size)} is not a size`);
-  const factors: Record<string, number> = { b: 1, kb: 1e3, mb: 1e6, gb: 1e9, kib: 1024, mib: 1024 ** 2, gib: 1024 ** 3 };
-  return Number(parsed[1]) * factors[(parsed[2] ?? "B").toLowerCase()]!;
-}
-
-/** 📨️ The request body Caddy lets through to the proctor by default, from the `Caddyfile`'s `request_body`: its size, or
- * the default of the environment placeholder that carries it (the `@oversized` matcher beside it compares a declared
- * length with the same placeholder). */
-export function stackRequestBodyLimit(caddyfile: string): number {
-  const limit = /request_body\s*\{[^}]*\bmax_size\s+(?:\{\$\w+:([^}\s]+)\}|(\S+))/u.exec(caddyfile);
-  if (!limit) throw new Error("the Caddyfile caps no request body");
-  return caddySizeBytes(limit[1] ?? limit[2]!);
-}
-
-/** 🗺️ The deployment's DNS zone: strip a host label while retaining an apex with two labels. */
-export function hostZone(host: string): string {
-  const labels = host.split(".");
-  return labels.slice(labels.length > 2 ? 1 : 0).join(".");
-}
-
-/** 📐️ Every place where a file of the deployment disagrees with its one authored source, `🔣️.json`: a host in the zone
- * of the site host or of the proctor host, or an image repository, other than the declared ones in the Dockerfile, the
- * stack, the workflow, the READMEs or the package; the baked port, origin, account and health probe of the image; the
- * certificates directory the stack mounts and loads; two defaults for the one request body limit of the `Caddyfile`;
- * unpinned base images or workflow actions; a workflow, README or
- * root script naming a target the package does not have; a Pages artifact path other than the staged one. Empty when
- * nothing drifted. */
-export function deploymentDrift(repoRoot: string, read: (path: string) => string = path => readFileSync(join(repoRoot, path), "utf8")): string[] {
-  const problems: string[] = [];
-  const [dockerfile, compose, caddyfile, workflow] = [read(DOCKERFILE), read(`${DEPLOY}/compose.yaml`), read(`${DEPLOY}/Caddyfile`), read(WORKFLOW)];
-  const texts: Record<string, string> = { [DOCKERFILE]: dockerfile, [`${DEPLOY}/compose.yaml`]: compose, [`${DEPLOY}/Caddyfile`]: caddyfile, [WORKFLOW]: workflow, [`${SITE}/README.md`]: read(`${SITE}/README.md`), [PROCTOR_README]: read(PROCTOR_README), [`${BUNDLE}/package.json`]: read(`${BUNDLE}/package.json`) };
-  const zones = [...new Set([COURSE_SITE_HOST, COURSE_PROCTOR_HOST].map(hostZone))].map((zone) => zone.replace(/\./gu, "\\.")).join("|");
-  for (const [path, text] of Object.entries(texts)) {
-    for (const host of new Set(text.match(new RegExp(`(?:[a-z0-9_][a-z0-9_-]*\\.)+(?:${zones})`, "gu")) ?? [])) if (host !== COURSE_SITE_HOST && host !== COURSE_PROCTOR_HOST && !host.startsWith("_github-pages-challenge-")) problems.push(`${path} names the host ${host}, which 🔣️.json does not declare`);
-    for (const image of new Set(text.match(/ghcr\.io\/[a-z0-9._/-]+/gu) ?? [])) if (image !== COURSE_IMAGE_REPOSITORY) problems.push(`${path} names the image ${image}, not ${COURSE_IMAGE_REPOSITORY}`);
-  }
-  const expect = (path: string, text: string, fragments: readonly string[]): void => {
-    for (const fragment of fragments) if (!text.includes(fragment)) problems.push(`${path} lacks ${JSON.stringify(fragment)}`);
-  };
-  expect(DOCKERFILE, dockerfile, [`PROCTOR_PORT=${COURSE_IMAGE_PORT}`, `EXPOSE ${COURSE_IMAGE_PORT}`, `PROCTOR_ALLOWED_ORIGINS=${COURSE_SITE_ORIGIN}`, `PROCTOR_DATA=${COURSE_IMAGE_DATA_ROOT}`, `VOLUME ["${COURSE_IMAGE_DATA_ROOT}"]`, `USER ${COURSE_IMAGE_USER}`, `CMD [${COURSE_IMAGE_HEALTHCHECK.slice(1).map((word) => JSON.stringify(word)).join(", ")}]`, `COPY deploy ${COURSE_IMAGE_STACK_ROOT}`, 'COPY --chmod=0555 proctor /usr/local/bin/proctor', 'RUN ["/usr/local/bin/proctor", "check", "/srv/course/content/🏛️architecture/📚️course/🔣️.json"]']);
-  expect(`${DEPLOY}/compose.yaml`, compose, [`image: ${COURSE_IMAGE_REPOSITORY}:\${PROCTOR_TAG:-latest}`, `- "${COURSE_IMAGE_PORT}"`, `\${PROCTOR_ALLOWED_ORIGINS:-${COURSE_SITE_ORIGIN}}`, `\${PROCTOR_HOST:-${COURSE_PROCTOR_HOST}}`, `${COURSE_IMAGE_DATA_ROOT}`, `- ./${COURSE_STACK_CERTIFICATES}:/${COURSE_STACK_CERTIFICATES}:ro`]);
-  expect(`${DEPLOY}/Caddyfile`, caddyfile, [`{$PROCTOR_HOST:${COURSE_PROCTOR_HOST}} {`, `reverse_proxy proctor:${COURSE_IMAGE_PORT}`, `load /${COURSE_STACK_CERTIFICATES}`, "respond @oversized 413"]);
-  const limits = new Set([...caddyfile.matchAll(/\{\$PROCTOR_LIMIT_BODY_BYTES:([^}\s]+)\}/gu)].map((placeholder) => placeholder[1]!));
-  if (limits.size > 1) problems.push(`${DEPLOY}/Caddyfile defaults PROCTOR_LIMIT_BODY_BYTES to ${[...limits].join(" and ")}`);
-  expect(WORKFLOW, workflow, [`path: ${BUNDLE}/dist/release/${COURSE_PAGES_DIRECTORY}`]);
-  for (const image of [...dockerfile.matchAll(/^ARG \w+_IMAGE=(\S+)$/gmu), ...compose.matchAll(/^\s+image:\s*(\S+)$/gmu)].map((line) => line[1]!)) if (!image.startsWith(COURSE_IMAGE_REPOSITORY) && !/^[\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/u.test(image)) problems.push(`the base image ${image} is not pinned to an exact tag and digest`);
-  for (const action of new Set([...workflow.matchAll(/^\s*(?:- )?uses:\s*(\S+)/gmu)].map((line) => line[1]!))) if (!/@[0-9a-f]{40}$/u.test(action)) problems.push(`${WORKFLOW} uses ${action} without a commit hash`);
-  const project = JSON.parse(read(`${BUNDLE}/📋️project.json`)) as { targets: Record<string, unknown> };
-  for (const [path, text] of Object.entries({ ...texts, "package.json": read("package.json") })) for (const target of new Set([...text.matchAll(new RegExp(`${PROJECT}:([a-z0-9-]+)`, "gu"))].map((mention) => mention[1]!))) if (!(target in project.targets)) problems.push(`${path} names ${PROJECT}:${target}, which is not a target of the package`);
-  try {
-    stackRequestBodyLimit(caddyfile);
+    mkdirSync(work, { recursive: true });
+    say(`topologies ${plan.topologies.join(", ")}${plan.serial ? " (one after the other)" : ""}; run directory ${work}`);
+    await ensureBrowser(invocation, repoRoot, browsers, signal);
+    const given = plan.proctor === undefined ? undefined : endToEndProctorPath(repoRoot, plan.proctor);
+    say(given === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${given} as it is`);
+    if (given === undefined) artifact = await acquireProctor(repoRoot, invocation, process.env, signal);
+    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal };
+    const statuses: number[] = [];
+    const sharing = !plan.serial && plan.topologies.length > 1 && !plan.playwright.some((argument) => /^(?:--workers|-j)(?:=|$)/u.test(argument));
+    const forwarded = sharing ? [...plan.playwright, "--workers", String(SHARED_WORKERS)] : plan.playwright;
+    const play = async (stack: Stack): Promise<void> => {
+      say(`${stack.topology}: running the specs against ${stack.site}`);
+      const status = await runSpecs(stack, run, browsers, join(work, "report"), forwarded);
+      say(`${stack.topology}: specs ${status === 0 ? "passed" : `failed (${status})`}`);
+      statuses.push(status);
+    };
+    await runTopologySessionsV1(bootOrder(plan.topologies), plan.serial, (topology, consume) => withStack(topology, run, consume), play);
+    failure = interrupted !== undefined ? `stopped by ${interrupted}` : statuses.every((status) => status === 0) ? undefined : "specs failed";
   } catch (error) {
-    problems.push(`${DEPLOY}/Caddyfile: ${(error as Error).message}`);
+    failure = interrupted !== undefined ? `stopped by ${interrupted}` : error instanceof Error ? error.message : String(error);
+  } finally {
+    try { await artifact?.close(); } catch (error) { failure = `${failure ? failure + "; " : ""}proctor artifact close failed: ${error instanceof Error ? error.message : String(error)}`; }
+    for (const signal of LAUNCHER_SIGNALS) process.off(signal, interrupt);
+    interruption.abort();
+    if (existsSync(work) && ((failure === undefined && !plan.keep) || readdirSync(work).length === 0)) rmSync(work, { recursive: true, force: true, maxRetries: 20, retryDelay: 200 });
+    else say(`kept ${work} (proctor and site logs per topology, report/ with traces and screenshots)`);
   }
-  return problems;
+  if (failure !== undefined) throw new Error(`end-to-end gate failed after ${Math.round((Date.now() - started) / 1_000)} s: ${failure}`);
+  say(`passed in ${Math.round((Date.now() - started) / 1_000)} s: ${plan.topologies.join(", ")}`);
 }
-
-/** ⚠️ What an owner still has to decide before the site is public, none of which stops a deployment: the legal pages
- * the site links (`site.legal` of `🔣️.json`). */
-export function deploymentWarnings(): string[] {
-  const legal: Readonly<{ imprint?: string; privacy?: string }> = (deployment.site as { legal?: { imprint?: string; privacy?: string } }).legal ?? {};
-  return (["imprint", "privacy"] as const).filter((page) => !legal[page]).map((page) => `site.legal.${page} is not set in ${DEPLOY}/🔣️.json: the public site links no ${page === "imprint" ? "imprint" : "privacy notice"}`);
-}
-//#endregion 📐️Drift
+//#endregion 🎬️Specs

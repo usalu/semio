@@ -8,7 +8,9 @@
     "defaultPolicy",
     "budgetCases",
     "preparationCases",
-    "pressureCases"
+    "pressureCases",
+    "controlCases",
+    "diagnosticCases"
   ],
   "additionalProperties": false,
   "properties": {
@@ -180,6 +182,74 @@
           "effects": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      }
+    },
+    "controlCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "neutralBootstrap"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "neutralBootstrap": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "diagnosticCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "args",
+          "route",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "route": {
+            "enum": [
+              "capacity",
+              "leases",
+              "help",
+              "admitted"
+            ]
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "language": {
+            "enum": [
+              "en",
+              "de"
+            ]
           }
         }
       }

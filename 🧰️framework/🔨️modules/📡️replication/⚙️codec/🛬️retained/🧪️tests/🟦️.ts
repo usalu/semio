@@ -30,3 +30,8 @@ test("original fallible wire copy retains every actual prefix receipt and no tri
  expect(source.includes("if let Err(error)=copy_result{")).toBe(true);
  expect(source.includes("return Err(error.with_retained_progress(progress))")).toBe(true);
 });
+
+test("retained wire retirement keeps one release event for every supplied body",()=>{
+ const rule=law.retirement;const schema=JSON.parse(readFileSync(new URL("./🧫️fixtures/♻️retirement.schema.json",import.meta.url),"utf8"));expect(semioSchemaAjvV1({strict:true}).compile(schema)(rule)).toBe(true);expect(semioSchemaAjvV1({strict:true}).compile(schema)({...rule,liveDepth:0})).toBe(false);
+ const db=new Database(":memory:");try{for(const field of law.fields){for(const cut of rule.cuts){const expected=cut===0?0:Buffer.byteLength(field.value);const row=db.query("SELECT CASE WHEN ?=0 THEN 0 ELSE length(CAST(? AS BLOB)) END AS releaseBytes,0 AS copyBytes,0 AS capacityBytes,1 AS depth").get(cut,field.value);expect(row).toEqual({releaseBytes:expected,copyBytes:rule.copyBytes,capacityBytes:rule.capacityBytes,depth:rule.liveDepth});for(const body of rule.bodies){expect(body>=0).toBe(true);expect(row).toEqual({releaseBytes:expected,copyBytes:0,capacityBytes:0,depth:1});}}}expect(rule.terminal).toEqual({copyBytes:0,capacityBytes:0,releaseBytes:0,depth:0});}finally{db.close();}
+});

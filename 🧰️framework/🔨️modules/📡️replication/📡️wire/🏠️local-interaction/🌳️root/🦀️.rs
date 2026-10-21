@@ -1,7 +1,7 @@
 //! 🌳️ Exact persistent local interaction roots compose defining typed physical retirement.
 
 use super::{DomainSelection,LocalInteractionState,SelectionMode};
-use semio_framework_value::ordered::OrderedMap;
+use semio_framework_value_ordered::ordered::OrderedMap;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::ValueError;
 

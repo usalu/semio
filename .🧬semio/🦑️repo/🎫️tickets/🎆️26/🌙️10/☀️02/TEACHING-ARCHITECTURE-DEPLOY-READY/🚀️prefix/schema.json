@@ -1,0 +1,1764 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fixed Late Sampled Fresh Capture Prefix",
+  "$ref": "#/definitions/intent",
+  "definitions": {
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "workspaceRoot",
+        "cohort",
+        "captureId",
+        "runToken",
+        "engineId",
+        "tag",
+        "native",
+        "operations",
+        "inputs",
+        "limits",
+        "milliseconds",
+        "python",
+        "parentInputs",
+        "criticalRoster"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "fresh-capture-prefix-intent"
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cohort": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "runToken": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "engineId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?!latest$)[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+        },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^/tmp/semio-course-native-[a-f0-9]{32}/repo$"
+            },
+            "sha256": {
+              "const": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c"
+            },
+            "bytes": {
+              "const": 11767992
+            }
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "create",
+            "receiver",
+            "gitTransfer",
+            "provision",
+            "facts",
+            "export",
+            "final"
+          ],
+          "properties": {
+            "create": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "receiver": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "gitTransfer": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "provision": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "facts": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "export": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "final": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry",
+            "capture",
+            "gitCapture",
+            "archive",
+            "git",
+            "facts",
+            "export",
+            "final"
+          ],
+          "properties": {
+            "entry": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entrySha256",
+                "receiverSha256",
+                "controllerSha256",
+                "provisionSha256"
+              ],
+              "properties": {
+                "entrySha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "receiverSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "controllerSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "provisionSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "capture": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "core",
+                "host",
+                "entry",
+                "schema",
+                "contract"
+              ],
+              "properties": {
+                "core": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "host": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "entry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "contract": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "gitCapture": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "producer",
+                "entry",
+                "revalidation",
+                "core",
+                "host",
+                "schema",
+                "contract",
+                "sourceSchema"
+              ],
+              "properties": {
+                "producer": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "entry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "revalidation": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "core": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "host": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "contract": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "sourceSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "archive": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entry",
+                "archive",
+                "revalidation",
+                "core",
+                "host",
+                "schema",
+                "contract",
+                "gitSchema",
+                "sourceSchema"
+              ],
+              "properties": {
+                "entry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "archive": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "revalidation": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "core": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "host": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "contract": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "gitSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "sourceSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "git": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "scriptSha256",
+                "schemaSha256",
+                "receiverSha256",
+                "sourceParserSha256",
+                "ownershipSha256"
+              ],
+              "properties": {
+                "scriptSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schemaSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "receiverSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "sourceParserSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "ownershipSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "facts": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "core",
+                "entry",
+                "schema",
+                "cases",
+                "tests",
+                "oracle",
+                "controller",
+                "controllerSchema",
+                "finalCore",
+                "modes",
+                "fixture",
+                "finalSchema",
+                "finalFixture",
+                "finalEntry"
+              ],
+              "properties": {
+                "core": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "entry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "cases": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "tests": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "oracle": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "controller": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "controllerSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "finalCore": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "modes": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "fixture": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "finalSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "finalFixture": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "finalEntry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "export": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "core",
+                "entry",
+                "schema",
+                "heldFinalCore",
+                "heldController",
+                "heldGit",
+                "helper",
+                "cases",
+                "promotion",
+                "tests",
+                "oracle",
+                "heldFinalIntegration",
+                "modes",
+                "heldFinalEntry",
+                "heldControllerSchema",
+                "heldGitSchema"
+              ],
+              "properties": {
+                "core": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "entry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldFinalCore": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldController": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldGit": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "helper": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "cases": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "promotion": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "tests": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "oracle": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldFinalIntegration": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "modes": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldFinalEntry": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldControllerSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "heldGitSchema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "final": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "📤️fresh/modes.ts",
+                "🔬️final/archive.py",
+                "🔬️final/boundary-entry.ts",
+                "🔬️final/boundary.cases.json",
+                "🔬️final/boundary.schema.json",
+                "🔬️final/boundary.ts",
+                "🔬️final/cases.json",
+                "🔬️final/core.ts",
+                "🔬️final/entry.ts",
+                "🔬️final/integration.ts",
+                "🔬️final/oracle.py",
+                "🔬️final/schema.json",
+                "🔬️final/tests.ts"
+              ],
+              "properties": {
+                "📤️fresh/modes.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/archive.py": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/boundary-entry.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/boundary.cases.json": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/boundary.schema.json": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/boundary.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/cases.json": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/core.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/entry.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/integration.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/oracle.py": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/schema.json": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "🔬️final/tests.ts": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "milliseconds",
+            "commandMilliseconds",
+            "outputBytes",
+            "outputLines",
+            "cleanupMilliseconds"
+          ],
+          "properties": {
+            "milliseconds": {
+              "type": "integer",
+              "minimum": 60000,
+              "maximum": 43200000
+            },
+            "commandMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 7200000
+            },
+            "outputBytes": {
+              "const": 67108864
+            },
+            "outputLines": {
+              "const": 262144
+            },
+            "cleanupMilliseconds": {
+              "const": 60000
+            }
+          }
+        },
+        "milliseconds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "facts",
+            "export",
+            "final"
+          ],
+          "properties": {
+            "facts": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 300000
+            },
+            "export": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 600000
+            },
+            "final": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 600000
+            }
+          }
+        },
+        "python": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parentInputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "cases",
+            "parent",
+            "tests",
+            "derive",
+            "deriveSchema",
+            "deriveCases",
+            "deriveTests"
+          ],
+          "properties": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "cases": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "parent": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "tests": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "derive": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "deriveSchema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "deriveCases": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "deriveTests": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "criticalRoster": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "policy": {
+      "const": {
+        "stages": [
+          {
+            "id": "create",
+            "entry": "🌱️linux/entry.ts",
+            "milliseconds": 960000
+          },
+          {
+            "id": "source",
+            "entry": "📦️fresh/script.ts",
+            "milliseconds": 960000
+          },
+          {
+            "id": "gitCapture",
+            "entry": "📦️fresh/capture-git.ts",
+            "milliseconds": 330000
+          },
+          {
+            "id": "gitArchive",
+            "entry": "📦️fresh/git-transfer.ts",
+            "milliseconds": 960000
+          },
+          {
+            "id": "gitTransfer",
+            "entry": "📦️fresh/git-transfer.ts",
+            "milliseconds": 960000
+          },
+          {
+            "id": "provision",
+            "entry": "🌱️linux/entry.ts",
+            "milliseconds": 960000
+          }
+        ],
+        "criticalPaths": [
+          ".github/workflows/architecture-course.yml",
+          "🎓️teaching/🏛️architecture/📚️course/README.md",
+          "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+          "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+          "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+          "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🌐️sealed-publication-and-bundle/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🏗️site-build/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🐳️docker-context-and-image/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🛑️cancellation-and-staging/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧩️compose-caddy-and-workflow/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️deploy/🧰️deploy-fixtures/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🔣️.json",
+          "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🛗️native/🔣️.json",
+          "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️readiness/🛗️native/🧬️schema/🔣️.json",
+          "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🔣️.json",
+          "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json",
+          "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json",
+          "📋️project.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧬️schema/📐️law.json",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json",
+          "Cargo.toml",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.d.mts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🗂️components/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🥒️.feature",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+          "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/📥️preparation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts",
+          "📋️build-owners.json",
+          "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
+        ],
+        "authoredPaths": {
+          "compose": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+          "caddyfile": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+          "bundleProducer": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+          "dockerfile": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+          "deployment": "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json",
+          "productSchema": "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json"
+        },
+        "metadataMilliseconds": 60000,
+        "cleanupMilliseconds": 60000,
+        "prefixMilliseconds": 5610000,
+        "sourceBytes": 2097152,
+        "intentBytes": 262144,
+        "maximumPath": 256,
+        "cargoUnits": 10000000,
+        "cargoOwnedBytes": 134217728,
+        "cargoDepth": 128,
+        "ownFiles": [
+          "schema.json",
+          "cases.json",
+          "core.ts",
+          "entry.ts",
+          "tests.ts",
+          "oracle.py"
+        ],
+        "controlFiles": [
+          "📦️fresh/schema.json",
+          "📦️fresh/cases.json",
+          "📦️fresh/contract.ts",
+          "📦️fresh/core.ts",
+          "📦️fresh/host.ts",
+          "📦️fresh/script.ts",
+          "📦️fresh/tests.ts",
+          "📦️fresh/critical-paths.json",
+          "📦️fresh/git.schema.json",
+          "📦️fresh/git.cases.json",
+          "📦️fresh/git.ts",
+          "📦️fresh/git.tests.ts",
+          "📦️fresh/git-entry.ts",
+          "📦️fresh/fresh-git.py",
+          "📦️fresh/capture-git.ts",
+          "📦️fresh/git-archive.schema.json",
+          "📦️fresh/git-archive.ts",
+          "📦️fresh/git-transfer.ts",
+          "🌱️linux/git.schema.json",
+          "🌱️linux/git.cases.json",
+          "🌱️linux/git.ts",
+          "🌱️linux/git.tests.ts",
+          "🌱️linux/git-receiver.py",
+          "🌱️linux/receiver.py",
+          "🌱️linux/script.ts",
+          "🌱️linux/schema.json",
+          "🧰️native/script.ts",
+          "📦️fresh/combined.schema.json",
+          "📦️fresh/combined.cases.json",
+          "📦️fresh/combined.ts",
+          "📦️fresh/git-format.schema.json",
+          "📦️fresh/git-format.cases.json",
+          "📦️fresh/git-format.tests.ts",
+          "🧰️native/schema.json",
+          "🧰️native/cases.json",
+          "🧰️native/tests.ts",
+          "🌱️linux/cases.json",
+          "🌱️linux/plan.json",
+          "🌱️linux/tests.ts",
+          "🌱️linux/entry.schema.json",
+          "🌱️linux/entry.cases.json",
+          "🌱️linux/entry.ts",
+          "🌱️linux/entry.tests.ts",
+          "🌱️linux/receiver.cases.json",
+          "🌱️linux/verify.ts",
+          "📤️fresh/modes.ts",
+          "🔬️final/archive.py",
+          "🔬️final/boundary-entry.ts",
+          "🔬️final/boundary.cases.json",
+          "🔬️final/boundary.schema.json",
+          "🔬️final/boundary.ts",
+          "🔬️final/cases.json",
+          "🔬️final/core.ts",
+          "🔬️final/entry.ts",
+          "🔬️final/integration.ts",
+          "🔬️final/oracle.py",
+          "🔬️final/schema.json",
+          "🔬️final/tests.ts",
+          "📤️fresh/cases.json",
+          "📤️fresh/core.ts",
+          "📤️fresh/entry.ts",
+          "📤️fresh/oracle.py",
+          "📤️fresh/promotion.ts",
+          "📤️fresh/schema.json",
+          "📤️fresh/tests.ts",
+          "🚀️run/📜️script.ts",
+          "👁️facts/cases.json",
+          "👁️facts/core.ts",
+          "👁️facts/entry.ts",
+          "👁️facts/oracle.py",
+          "👁️facts/schema.json",
+          "👁️facts/tests.ts",
+          "🚀️fresh/schema.json",
+          "🚀️fresh/cases.json",
+          "🚀️fresh/parent.ts",
+          "🚀️fresh/tests.ts",
+          "🚀️fresh/derive.schema.json",
+          "🚀️fresh/derive.cases.json",
+          "🚀️fresh/derive.ts",
+          "🚀️fresh/derive.tests.ts",
+          "🚀️fresh/physical.schema.json",
+          "🚀️fresh/physical.cases.json",
+          "🚀️fresh/physical.tests.ts"
+        ],
+        "unit": {
+          "path": "tests.ts",
+          "milliseconds": 180000,
+          "marker": "[DEBUG] fresh capture prefix neutral ",
+          "outputBytes": 1048576,
+          "summary": {
+            "settlements": 7,
+            "cargo": 5,
+            "runs": 36,
+            "physical": 18,
+            "identities": 8,
+            "budgets": 6,
+            "publication": 10,
+            "stages": 6,
+            "critical": 116,
+            "controls": 83,
+            "oracle": "Ajv+SQLite+Python hashlib+independent TOML",
+            "actualCapture": false
+          }
+        },
+        "guestFiles": [
+          "schema.json",
+          "cases.json",
+          "core.ts",
+          "guest.py",
+          "entry.ts",
+          "tests.ts",
+          "oracle.py",
+          "inputs.json"
+        ],
+        "units": [
+          {
+            "id": "guestUnit",
+            "path": "🧪️guest/tests.ts",
+            "milliseconds": 180000,
+            "marker": "[DEBUG] captured-neutral pure validation passed ",
+            "summary": {
+              "ticket": 83,
+              "payload": 84,
+              "source": 81,
+              "phases": 19,
+              "oracles": "SQLite+Python hashlib+actual Python physical receiver"
+            }
+          },
+          {
+            "id": "prefixUnit",
+            "path": "🚀️prefix/tests.ts",
+            "milliseconds": 180000,
+            "marker": "[DEBUG] fresh capture prefix neutral ",
+            "summary": {
+              "settlements": 7,
+              "cargo": 5,
+              "runs": 36,
+              "physical": 18,
+              "identities": 8,
+              "budgets": 6,
+              "publication": 10,
+              "stages": 6,
+              "critical": 116,
+              "controls": 83,
+              "oracle": "Ajv+SQLite+Python hashlib+independent TOML",
+              "actualCapture": false
+            }
+          }
+        ]
+      }
+    },
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "settlementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "proof",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "launched",
+            "joined",
+            "known",
+            "failed",
+            "status",
+            "signal"
+          ],
+          "properties": {
+            "launched": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "joined": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "known": {
+              "type": "boolean"
+            },
+            "failed": {
+              "type": "boolean"
+            },
+            "status": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "signal": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "cargoCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text",
+        "accepted",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "runCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "stage",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "status",
+            "unknown",
+            "undefined",
+            "null",
+            "false",
+            "zero",
+            "empty",
+            "receipt",
+            "pins",
+            "cancel",
+            "policy",
+            "future",
+            "publish",
+            "unit-status",
+            "unit-unknown",
+            "unit-marker",
+            "unit-undefined",
+            "unit-cancel",
+            "unit-null",
+            "unit-false",
+            "unit-zero",
+            "unit-empty",
+            "unit-own",
+            "unit-control"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "sample",
+            "create",
+            "source",
+            "gitCapture",
+            "gitArchive",
+            "gitTransfer",
+            "provision",
+            "guestUnit",
+            "prefixUnit"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ownInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "files",
+        "controls",
+        "template",
+        "guest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "fresh-capture-prefix-inputs"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema.json",
+            "cases.json",
+            "core.ts",
+            "entry.ts",
+            "tests.ts",
+            "oracle.py"
+          ],
+          "properties": {
+            "schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "oracle.py": {
+              "$ref": "#/definitions/pin"
+            }
+          }
+        },
+        "controls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "📦️fresh/schema.json",
+            "📦️fresh/cases.json",
+            "📦️fresh/contract.ts",
+            "📦️fresh/core.ts",
+            "📦️fresh/host.ts",
+            "📦️fresh/script.ts",
+            "📦️fresh/tests.ts",
+            "📦️fresh/critical-paths.json",
+            "📦️fresh/git.schema.json",
+            "📦️fresh/git.cases.json",
+            "📦️fresh/git.ts",
+            "📦️fresh/git.tests.ts",
+            "📦️fresh/git-entry.ts",
+            "📦️fresh/fresh-git.py",
+            "📦️fresh/capture-git.ts",
+            "📦️fresh/git-archive.schema.json",
+            "📦️fresh/git-archive.ts",
+            "📦️fresh/git-transfer.ts",
+            "🌱️linux/git.schema.json",
+            "🌱️linux/git.cases.json",
+            "🌱️linux/git.ts",
+            "🌱️linux/git.tests.ts",
+            "🌱️linux/git-receiver.py",
+            "🌱️linux/receiver.py",
+            "🌱️linux/script.ts",
+            "🌱️linux/schema.json",
+            "🧰️native/script.ts",
+            "📦️fresh/combined.schema.json",
+            "📦️fresh/combined.cases.json",
+            "📦️fresh/combined.ts",
+            "📦️fresh/git-format.schema.json",
+            "📦️fresh/git-format.cases.json",
+            "📦️fresh/git-format.tests.ts",
+            "🧰️native/schema.json",
+            "🧰️native/cases.json",
+            "🧰️native/tests.ts",
+            "🌱️linux/cases.json",
+            "🌱️linux/plan.json",
+            "🌱️linux/tests.ts",
+            "🌱️linux/entry.schema.json",
+            "🌱️linux/entry.cases.json",
+            "🌱️linux/entry.ts",
+            "🌱️linux/entry.tests.ts",
+            "🌱️linux/receiver.cases.json",
+            "🌱️linux/verify.ts",
+            "📤️fresh/modes.ts",
+            "🔬️final/archive.py",
+            "🔬️final/boundary-entry.ts",
+            "🔬️final/boundary.cases.json",
+            "🔬️final/boundary.schema.json",
+            "🔬️final/boundary.ts",
+            "🔬️final/cases.json",
+            "🔬️final/core.ts",
+            "🔬️final/entry.ts",
+            "🔬️final/integration.ts",
+            "🔬️final/oracle.py",
+            "🔬️final/schema.json",
+            "🔬️final/tests.ts",
+            "📤️fresh/cases.json",
+            "📤️fresh/core.ts",
+            "📤️fresh/entry.ts",
+            "📤️fresh/oracle.py",
+            "📤️fresh/promotion.ts",
+            "📤️fresh/schema.json",
+            "📤️fresh/tests.ts",
+            "🚀️run/📜️script.ts",
+            "👁️facts/cases.json",
+            "👁️facts/core.ts",
+            "👁️facts/entry.ts",
+            "👁️facts/oracle.py",
+            "👁️facts/schema.json",
+            "👁️facts/tests.ts",
+            "🚀️fresh/schema.json",
+            "🚀️fresh/cases.json",
+            "🚀️fresh/parent.ts",
+            "🚀️fresh/tests.ts",
+            "🚀️fresh/derive.schema.json",
+            "🚀️fresh/derive.cases.json",
+            "🚀️fresh/derive.ts",
+            "🚀️fresh/derive.tests.ts",
+            "🚀️fresh/physical.schema.json",
+            "🚀️fresh/physical.cases.json",
+            "🚀️fresh/physical.tests.ts"
+          ],
+          "properties": {
+            "📦️fresh/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/contract.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/host.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/script.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/critical-paths.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git.tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/fresh-git.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/capture-git.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-archive.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-archive.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-transfer.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/git.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/git.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/git.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/git.tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/git-receiver.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/receiver.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/script.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🧰️native/script.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/combined.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/combined.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/combined.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-format.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-format.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📦️fresh/git-format.tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🧰️native/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🧰️native/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🧰️native/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/plan.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/entry.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/entry.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/entry.tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/receiver.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🌱️linux/verify.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/modes.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/archive.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/boundary-entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/boundary.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/boundary.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/boundary.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/integration.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/oracle.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🔬️final/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/oracle.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/promotion.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "📤️fresh/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️run/📜️script.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/oracle.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "👁️facts/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/parent.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/derive.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/derive.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/derive.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/derive.tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/physical.schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/physical.cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "🚀️fresh/physical.tests.ts": {
+              "$ref": "#/definitions/pin"
+            }
+          }
+        },
+        "template": {
+          "$ref": "#/definitions/pin"
+        },
+        "guest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema.json",
+            "cases.json",
+            "core.ts",
+            "guest.py",
+            "entry.ts",
+            "tests.ts",
+            "oracle.py",
+            "inputs.json"
+          ],
+          "properties": {
+            "schema.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "cases.json": {
+              "$ref": "#/definitions/pin"
+            },
+            "core.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "guest.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "entry.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "tests.ts": {
+              "$ref": "#/definitions/pin"
+            },
+            "oracle.py": {
+              "$ref": "#/definitions/pin"
+            },
+            "inputs.json": {
+              "$ref": "#/definitions/pin"
+            }
+          }
+        }
+      }
+    },
+    "identityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "change",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "change": {
+          "enum": [
+            "none",
+            "seal",
+            "own",
+            "control",
+            "template",
+            "missing",
+            "guest",
+            "ancestor"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "budgetCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remaining",
+        "accepted"
+      ],
+      "properties": {
+        "remaining": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "physicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "oversize",
+            "symlink",
+            "hardlink",
+            "directory",
+            "ancestor-symlink",
+            "opaque",
+            "descriptor-change",
+            "ancestor-change",
+            "growth",
+            "cancel",
+            "deadline",
+            "undefined-read",
+            "undefined-read-close",
+            "close",
+            "overlength",
+            "excluded",
+            "empty"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "publicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "primary",
+        "body",
+        "cleanup",
+        "publish",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cleanup": {
+          "type": "boolean"
+        },
+        "publish": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

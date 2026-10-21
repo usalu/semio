@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -7,150 +5,165 @@ import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
-const ORACLE_ID = "riff-avi-1-0-mutate";
-const ENGINE_FAMILY = "riff";
-const ENGINE_VERSION = "2.0.0";
+/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
+type ProbeReport = {
+  schema: "semio.repository-test.probe-report/v2";
+  probe: string;
+  probeVersion: string;
+  engine: { family: string; implementation: string; version: string };
+  status: "ok" | "failed" | "unsupported";
+  durationMs: number;
+  measurements: Record<string, unknown>;
+  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
+};
 
-type Outcome = "applied" | "rejected";
-type Recipe = Readonly<{ id: string; directoryName: string; subset: "hdrl" | "idx1" | "movi"; mutation: string; outcome: Outcome; notes: string }>;
-
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one entry per
- *  declared `AviMutation` kind, `-applied` always, `-rejected-<reason>` wherever the real
- *  `validate_indexed`/`AviDiff::apply` genuinely refuses the input (see that file's own recipe
- *  comments for exactly which real error code each rejection corresponds to). */
-const RECIPES: readonly Recipe[] = [
-  { id: "no-mutation-applied", directoryName: "⏸️no-mutation-applied", subset: "hdrl", mutation: "no-mutation", outcome: "applied", notes: "Identity — before and after bytes are the same document." },
-  { id: "set-main-header-applied", directoryName: "🧾️set-main-header-applied", subset: "hdrl", mutation: "set-main-header", outcome: "applied", notes: "Only avih fields change; streams/idx1/unknown chunks untouched." },
-  { id: "set-idx1-present-applied", directoryName: "📇️set-idx1-present-applied", subset: "idx1", mutation: "set-idx1-present", outcome: "applied", notes: "idx1Present flips false; the idx1 chunk is omitted entirely on encode." },
-  { id: "insert-stream-applied", directoryName: "📥️insert-stream-applied", subset: "hdrl", mutation: "insert-stream", outcome: "applied", notes: "A third stream is appended; mainHeader.streams is left stale at 2, matching real dispatch." },
-  { id: "insert-stream-rejected-out-of-bounds", directoryName: "⛔️insert-stream-rejected-out-of-bounds", subset: "hdrl", mutation: "insert-stream", outcome: "rejected", notes: "Attempted insertion index exceeds the final collection length — mutation.apply.invalid-index." },
-  { id: "remove-stream-applied", directoryName: "📤️remove-stream-applied", subset: "hdrl", mutation: "remove-stream", outcome: "applied", notes: "The audio stream (index 1) is removed; mainHeader.streams stays stale at 2." },
-  { id: "remove-stream-rejected-missing", directoryName: "❓️remove-stream-rejected-missing", subset: "hdrl", mutation: "remove-stream", outcome: "rejected", notes: "Attempted removal index does not exist — mutation.apply.missing-target." },
-  { id: "set-stream-header-applied", directoryName: "🎞️set-stream-header-applied", subset: "hdrl", mutation: "set-stream-header", outcome: "applied", notes: "Stream 0's strh is whole-value replaced (rate changes)." },
-  { id: "set-stream-header-rejected-missing-stream", directoryName: "⚠️set-stream-header-rejected-missing-stream", subset: "hdrl", mutation: "set-stream-header", outcome: "rejected", notes: "Attempted stream_index does not exist — missing-target on the streams collection." },
-  { id: "set-stream-format-applied", directoryName: "🎨️set-stream-format-applied", subset: "hdrl", mutation: "set-stream-format", outcome: "applied", notes: "Stream 1's strf is whole-value replaced (samplesPerSec changes)." },
-  { id: "set-stream-format-rejected-missing-stream", directoryName: "🚫️set-stream-format-rejected-missing-stream", subset: "hdrl", mutation: "set-stream-format", outcome: "rejected", notes: "Attempted stream_index does not exist — missing-target on the streams collection." },
-  { id: "insert-chunk-applied", directoryName: "🧩️insert-chunk-applied", subset: "movi", mutation: "insert-chunk", outcome: "applied", notes: "A 4th movi chunk is appended to stream 0; strh.length is left stale at 3." },
-  { id: "insert-chunk-rejected-missing-stream", directoryName: "🚫️insert-chunk-rejected-missing-stream", subset: "movi", mutation: "insert-chunk", outcome: "rejected", notes: "Attempted stream_index does not exist — missing-target at the STREAMS level." },
-  { id: "remove-chunk-applied", directoryName: "🗑️remove-chunk-applied", subset: "movi", mutation: "remove-chunk", outcome: "applied", notes: "The middle movi chunk of stream 0 is removed." },
-  { id: "remove-chunk-rejected-missing-chunk", directoryName: "❓️remove-chunk-rejected-missing-chunk", subset: "movi", mutation: "remove-chunk", outcome: "rejected", notes: "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level." },
-  { id: "set-chunk-keyframe-applied", directoryName: "🔑️set-chunk-keyframe-applied", subset: "movi", mutation: "set-chunk-keyframe", outcome: "applied", notes: "The last movi chunk of stream 0 flips its keyframe flag; chunk data is untouched." },
-  { id: "set-chunk-keyframe-rejected-missing-chunk", directoryName: "⚠️set-chunk-keyframe-rejected-missing-chunk", subset: "movi", mutation: "set-chunk-keyframe", outcome: "rejected", notes: "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level." },
-  { id: "add-unknown-chunk-applied", directoryName: "🧱️add-unknown-chunk-applied", subset: "movi", mutation: "add-unknown-chunk", outcome: "applied", notes: "A second top-level unknown chunk is appended after the existing JUNK chunk." },
-  { id: "add-unknown-chunk-rejected-out-of-bounds", directoryName: "⛔️add-unknown-chunk-rejected-out-of-bounds", subset: "movi", mutation: "add-unknown-chunk", outcome: "rejected", notes: "Attempted insertion index exceeds the final collection length — invalid-index." },
-  { id: "remove-unknown-chunk-applied", directoryName: "🧹️remove-unknown-chunk-applied", subset: "movi", mutation: "remove-unknown-chunk", outcome: "applied", notes: "The one top-level unknown (JUNK) chunk is removed, leaving none." },
-  { id: "remove-unknown-chunk-rejected-missing", directoryName: "🔍️remove-unknown-chunk-rejected-missing", subset: "movi", mutation: "remove-unknown-chunk", outcome: "rejected", notes: "Attempted removal index does not exist — missing-target." },
-];
+const ENGINE = { family: "image-rs", implementation: "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)", version: "image@0.25.10" } as const;
+const PROBE_VERSION = "image@0.25.10";
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
 //#endregion 🧬️Contract
 
-//#region 🏭️Generate
-const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
+//#region 📥️Model
+type OpaqueSegment = { present: boolean; size?: number; digest?: string };
+type JpgDoc = { dimensions: string; colorType: string; raster: { size: number; digest: string }; xmp: OpaqueSegment; exif: OpaqueSegment; iptc: OpaqueSegment; iccProfile: OpaqueSegment };
+//#endregion 📥️Model
 
-function contentDigest(bytes: Buffer): string {
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+//#region 🔓️Read
+/** 📥️ Runs the standalone codec's `project` subcommand — every field it returns is ALREADY the
+ *  profile's own opaque-payload projection (size+digest, never raw bytes; see that binary's own
+ *  `project()` function), so nothing further happens to it here. */
+function readJpg(path: string): JpgDoc {
+  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`jpeg-jfif-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
+  return JSON.parse(result.stdout) as JpgDoc;
 }
+//#endregion 🔓️Read
 
-function platformId(): string {
-  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
-  const arch = process.arch === "arm64" ? "arm64" : "x64";
-  return `${os}-${arch}`;
-}
-
-function fixtureRoot(recipe: Recipe, override: string | null): string {
-  if (override !== null) return override;
-  if (recipe.subset === "hdrl") return join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
-  if (recipe.subset === "idx1") return join(import.meta.dir, "..", "..", "📇️idx1", "🧪️tests/🧫️fixtures");
-  return join(import.meta.dir, "..", "..", "🎞️movi", "🧪️tests/🧫️fixtures");
-}
-
-/** 🦀️ Shells out to the standalone `riff-avi-codec` binary — the ONLY place this file touches it. */
-function codecBuild(id: string, fixtureDir: string): void {
-  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, fixtureDir], { encoding: "utf8" });
-  if (result.status !== 0) {
-    throw new Error(`riff-avi-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
+//#region ⚖️Compare
+/** ⚖️ Structural equality over the whole projection — every field is either a small typed value
+ *  (dimensions, colorType) or already an opaque size+digest pair, so a plain recursive diff is the
+ *  operative equality; nothing here is reordered or tolerance-adjusted. */
+function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    const len = Math.max(expected.length, actual.length);
+    for (let i = 0; i < len; i += 1) diffAt(`${path}[${i}]`, expected[i], actual[i], diffs);
+    return;
   }
-}
-
-function fileEntry(role: string, dir: string, filename: string, directoryName: string): { role: string; path: string; mediaType: string; sha256: string; bytes: number } {
-  const abs = join(dir, filename);
-  const bytes = readFileSync(abs);
-  return { role, path: `${FIXTURE_PATH_PREFIX}${directoryName}/${filename}`, mediaType: "video/x-msvideo", sha256: contentDigest(bytes), bytes: bytes.length };
-}
-
-function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
-  const dir = join(outDir, recipe.directoryName);
-  codecBuild(recipe.id, dir);
-  const files: ReturnType<typeof fileEntry>[] = [fileEntry("expected-before-avi", dir, "⬅️before.avi", recipe.directoryName)];
-  if (recipe.outcome === "applied") {
-    if (!existsSync(join(dir, "➡️after.avi"))) throw new Error(`recipe ${recipe.id} is declared applied but the codec produced no ➡️after.avi`);
-    files.push(fileEntry("expected-after-avi", dir, "➡️after.avi", recipe.directoryName));
-  } else if (existsSync(join(dir, "➡️after.avi"))) {
-    throw new Error(`recipe ${recipe.id} is declared rejected but the codec produced an ➡️after.avi anyway`);
+  if (typeof expected === "object" && expected !== null && typeof actual === "object" && actual !== null && !Array.isArray(expected)) {
+    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
+    for (const key of keys) diffAt(`${path}.${key}`, (expected as Record<string, unknown>)[key], (actual as Record<string, unknown>)[key], diffs);
+    return;
   }
+  if (JSON.stringify(expected) !== JSON.stringify(actual)) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
+}
 
-  return {
-    id: recipe.id,
-    class: "third-party-generated",
-    target: { artifact: "s.stdio.avi", standard: "1.0", subset: recipe.subset },
-    mutation: recipe.mutation,
-    outcome: recipe.outcome,
-    units: { length: "unitless", angle: "degree" },
-    files,
-    generator: {
-      oracle: ORACLE_ID,
-      packageVersion: ENGINE_VERSION,
-      engineFamily: ENGINE_FAMILY,
-      engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
-      platform: platformId(),
-    },
-    provenance: { source: "generated", license: "MIT (riff)", attribution: "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
-    comparisonProfile: "semantic-avi-v1",
-    reproducible: true,
-    family: "structural",
-    notes: recipe.notes,
-  };
+function compareDocs(expected: JpgDoc, actual: JpgDoc): { equal: boolean; diffCount: number; diffs: string[] } {
+  const diffs: string[] = [];
+  diffAt("$", expected, actual, diffs);
+  return { equal: diffs.length === 0, diffCount: diffs.length, diffs: diffs.slice(0, 50) };
+}
+//#endregion ⚖️Compare
+
+//#region 🔬️Probes
+function requireInputs(inputs: readonly string[], count: number, probe: string): void {
+  if (inputs.length < count) throw new Error(`${probe} requires ${count} --input path(s), got ${inputs.length}`);
+}
+
+type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] ; engine?: ProbeReport["engine"]; probeVersion?: string };
+
+const MARKER_ENGINE = { family: "pillow", implementation: "Pillow 11.3.0 JPEG marker reader (quantization tables, JFIF APP0)", version: "11.3.0" } as const;
+const MARKER_PROBE_VERSION = "pillow@11.3.0";
+
+/** 🐍️ Independently reads JFIF metadata and native quantization observations. */
+const MARKER_READER = String.raw`
+import io, json, sys
+from PIL import Image
+def project(path):
+    im = Image.open(path); im.load()
+    info = im.info
+    return {
+        "quantTables": {str(k): list(v) for k, v in (im.quantization or {}).items()},
+        "jfifVersion": list(info["jfif_version"]) if info.get("jfif_version") else None,
+        "jfifUnit": info.get("jfif_unit"),
+        "jfifDensity": list(info["jfif_density"]) if info.get("jfif_density") else None,
+        "size": list(im.size),
+        "mode": im.mode,
+    }
+paths = sys.argv[1:]
+if len(paths) == 1:
+    print(json.dumps(project(paths[0]), sort_keys=True))
+else:
+    a, b = project(paths[0]), project(paths[1])
+    print(json.dumps({"equal": a == b, "expected": a, "actual": b}, sort_keys=True))
+`;
+
+function markerRun(paths: readonly string[]): Record<string, unknown> {
+  const result = spawnToolSyncV1("python3", ["-c", MARKER_READER, ...paths], { encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`pillow marker reader failed: ${result.stderr}`);
+  return JSON.parse(result.stdout) as Record<string, unknown>;
+}
+
+const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
+  "jpg-marker-project": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-marker-project");
+    return { status: "ok", engine: MARKER_ENGINE, probeVersion: MARKER_PROBE_VERSION, measurements: markerRun([inputs[0]!]) } as never;
+  },
+  "jpg-marker-compare": async (inputs) => {
+    requireInputs(inputs, 2, "jpg-marker-compare");
+    return { status: "ok", engine: MARKER_ENGINE, probeVersion: MARKER_PROBE_VERSION, measurements: markerRun([inputs[0]!, inputs[1]!]) } as never;
+  },
+
+  "jpg-import": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-import");
+    const perInput = inputs.map((input) => {
+      try {
+        readJpg(input);
+        return { path: input, ok: true, error: undefined as string | undefined };
+      } catch (error) {
+        return { path: input, ok: false, error: String((error as Error).message ?? error) };
+      }
+    });
+    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
+  },
+  "jpg-project": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-project");
+    const doc = readJpg(inputs[0]!);
+    return { status: "ok", measurements: { projection: doc } };
+  },
+  "jpg-compare": async (inputs) => {
+    requireInputs(inputs, 2, "jpg-compare");
+    const expected = readJpg(inputs[0]!);
+    const actual = readJpg(inputs[1]!);
+    const verdict = compareDocs(expected, actual);
+    return { status: "ok", measurements: { ...verdict, expected, actual } };
+  },
+};
+//#endregion 🔬️Probes
+
+//#region 🚀️Entry
+function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] } {
+  const [probe = "", ...rest] = argv;
+  const inputs: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) if (rest[i] === "--input") inputs.push(rest[i + 1] ?? "");
+  return { probe, inputs };
 }
 
 async function main(argv: readonly string[]): Promise<number> {
-  const [command = "generate", ...rest] = argv;
-  const value = (flag: string): string | null => {
-    const index = rest.indexOf(flag);
-    return index === -1 ? null : (rest[index + 1] ?? null);
+  const { probe, inputs } = parseArgv(argv);
+  const started = Date.now();
+  const emit = (report: ProbeReport): number => {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return report.status === "failed" ? 1 : 0;
   };
-  const only = value("--only");
-  const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
-  if (recipes.length === 0) {
-    console.error(`[avi generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
-    return 1;
+  const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);
+  const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
+  const run = PROBES[probe];
+  if (!run) return emit({ schema: "semio.repository-test.probe-report/v2", probe: probe || "(none)", probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${probe}`, detail: `known: ${Object.keys(PROBES).join(", ")}` }] });
+  try {
+    const result = await Promise.race([run(inputs), watchdog]);
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: (result as { probeVersion?: string }).probeVersion ?? PROBE_VERSION, engine: (result as { engine?: typeof ENGINE }).engine ?? ENGINE, status: result.status, durationMs: Date.now() - started, measurements: result.measurements, ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}) });
+  } catch (error) {
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: String((error as Error).message ?? error) }] });
   }
-  const outputOverride = process.env.SEMIO_FIXTURE_OUT ?? value("--out");
-
-  if (command !== "generate" && command !== "manifests") {
-    console.error(`[avi generator] unknown command ${JSON.stringify(command)} — expected generate | manifests`);
-    return 1;
-  }
-
-  const manifests: Record<string, unknown>[] = [];
-  let failed = 0;
-  for (const recipe of recipes) {
-    try {
-      const outputRoot = fixtureRoot(recipe, outputOverride);
-      mkdirSync(outputRoot, { recursive: true });
-      manifests.push(generateOne(recipe, outputRoot));
-      console.error(`[avi generator] ${recipe.id} (${recipe.mutation}/${recipe.outcome})`);
-    } catch (error) {
-      failed += 1;
-      console.error(`[avi generator] ${recipe.id} FAILED — ${(error as Error).message}`);
-    }
-  }
-
-  if (command === "manifests") {
-    process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
-  }
-  console.error(`[avi generator] ${manifests.length}/${recipes.length} bundle(s) generated${failed > 0 ? `, ${failed} failed` : ""}`);
-  return failed > 0 ? 1 : 0;
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {

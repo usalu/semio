@@ -11,13 +11,14 @@ struct Snapshot{a:i64,b:i64,text:String}
 impl Clone for Snapshot{fn clone(&self)->Self{panic!("ordered native candidate must use actual SnapshotProjection")}}
 struct Projection(OwnedFieldProjection<Snapshot>);
 impl SnapshotProjection for Snapshot{
+ type Output=Self;
  type Projection=Projection;
  fn projection_birth_demand()->RetirementDemand{OwnedFieldProjection::<Self>::birth_demand()}
  fn begin_projection(g:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{OwnedFieldProjection::<Self>::begin(g).map(|(cursor,p)|(Projection(cursor),p))}
 }
 impl SnapshotProjectionCursor<Snapshot> for Projection{
  fn demands(&self,s:RetainedCloneRef<'_,Snapshot>,body:usize)->Result<RetirementDemand,ValueError>{self.0.demands(s,body)}
- fn advance(&mut self,s:RetainedCloneRef<'_,Snapshot>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{PROJECTIONS.fetch_add(1,Ordering::Relaxed);self.0.advance(s,g)}
+ fn advance(&mut self,s:RetainedCloneRef<'_,Snapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{PROJECTIONS.fetch_add(1,Ordering::Relaxed);self.0.advance(s,body,g)}
  fn ready(&self)->bool{self.0.ready()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.0.take_demand()}
  fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(Snapshot,RetainedCloneProgress)>,ValueError>{self.0.take(g)}
@@ -95,7 +96,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_item
 fn denied(g:RetainedCloneGrant,d:RetirementDemand)->Vec<RetainedCloneGrant>{let mut grants=vec![RetainedCloneGrant{maximum_items:0,..g}];if d.copy_bytes>0{grants.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g});}if d.capacity_bytes>0{grants.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g});}if d.release_bytes>0{grants.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g});}if d.depth>0{grants.push(RetainedCloneGrant{maximum_depth:d.depth-1,..g});}grants}
 fn exact<T>(run:impl FnOnce()->T,p:impl FnOnce(&T)->RetainedCloneProgress)->T{let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);let p=p(&value);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(!heap.overflowed);value}
 fn source<T:RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{let d=RetainedCloneSource::<T>::owned_constructor_demand::<()>();RetainedCloneSource::admit_owned(value,(),grant(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()})).map_err(|(e,..)|e).unwrap().0}
-fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let d=source.next_close_demands(4096).unwrap();exact(||source.close_step(grant(d)).unwrap(),|step|step.progress());}}
+fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let d=source.next_close_demand(4096).unwrap();exact(||source.close_step(grant(d)).unwrap(),|step|step.progress());}}
 fn drain<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();exact(||owner.step(grant(d)).unwrap(),|step|step.progress());}}
 fn decode<T:FromValue>(value:&serde_json::Value)->T{semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usize>,commit_cut:Option<usize>){let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);

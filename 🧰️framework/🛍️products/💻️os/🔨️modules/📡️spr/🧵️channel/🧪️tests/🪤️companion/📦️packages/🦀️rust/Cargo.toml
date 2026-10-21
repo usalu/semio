@@ -27,7 +27,9 @@ semio-framework-os-channel = { path = "../../../../📦️packages/🦀️rust",
 protocol = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 semio-framework-io-control = { path = "../../../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

@@ -28,9 +28,9 @@ semio-framework-io-sqlite-snapshot = { path = "../../../../📦️packages/🦀�
 semio-framework-diagnostic = { path = "../../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

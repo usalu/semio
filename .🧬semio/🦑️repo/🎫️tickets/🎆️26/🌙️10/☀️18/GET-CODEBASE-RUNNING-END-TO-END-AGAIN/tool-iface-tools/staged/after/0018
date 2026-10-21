@@ -13,27 +13,27 @@ const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
-const SUBSET = "a";
-const ORACLE_ID = "lopdf-pdf-1-7-a-mutate-reader";
-const COMPARISON_PROFILE = "semantic-pdf-conformance-a-v1";
+const SUBSET = "x";
+const ORACLE_ID = "lopdf-pdf-1-7-x-mutate-reader";
+const COMPARISON_PROFILE = "semantic-pdf-conformance-x-v1";
 // 🧾️ Kept in step with `🔁️codec/🏗️generate/🦀️.rs::KINDS` (itself the same list as
-// `../🔣️oracle.json`'s `pdf-1-7-a` catalog) — `manifests` walks whichever recipe directories the
+// `../🔣️oracle.json`'s `pdf-1-7-x` catalog) — `manifests` walks whichever recipe directories the
 // engine actually wrote rather than trusting this constant, so a drift here fails loudly as a
 // missing-directory error instead of silently under-registering a kind.
-const KINDS: readonly string[] = ["insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
+const KINDS: readonly string[] = ["set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation"];
 const FIXTURE_DIRECTORY_BY_KIND: Readonly<Record<string, string>> = {
+  "set-output-intent": "🏳️set-output-intent",
+  "remove-output-intent": "🧽️remove-output-intent",
+  "set-trim-box": "📐️set-trim-box",
+  "remove-trim-box": "✂️remove-trim-box",
+  "embed-font-file": "🔤️embed-font-file",
+  "remove-font-file": "🧺️remove-font-file",
   "insert-javascript-action": "📜️insert-javascript-action",
   "remove-javascript-action": "🚫️remove-javascript-action",
   "insert-launch-action": "🚀️insert-launch-action",
   "remove-launch-action": "🛬️remove-launch-action",
-  "insert-embedded-file": "📎️insert-embedded-file",
-  "remove-embedded-file": "🗑️remove-embedded-file",
-  "set-af-relationship": "🔗️set-af-relationship",
-  "remove-af-relationship": "✂️remove-af-relationship",
-  "set-output-intent": "🏳️set-output-intent",
-  "remove-output-intent": "🧽️remove-output-intent",
-  "embed-font-file": "🔤️embed-font-file",
-  "remove-font-file": "🧺️remove-font-file",
+  "insert-media-annotation": "🎬️insert-media-annotation",
+  "remove-media-annotation": "⏹️remove-media-annotation",
   "insert-encryption-dictionary": "🔒️insert-encryption-dictionary",
   "remove-encryption-dictionary": "🔓️remove-encryption-dictionary",
 };
@@ -79,7 +79,7 @@ async function manifests(): Promise<void> {
     const afterPath = join(dir, AFTER_FILENAME);
     if (!existsSync(beforePath) || !existsSync(afterPath)) throw new Error(`${dir} does not contain the generated pair — run "generate" first`);
     entries.push({
-      id: `a-${kind}`,
+      id: `x-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },
       mutation: kind,
@@ -95,10 +95,10 @@ async function manifests(): Promise<void> {
         packageVersion: "0.44",
         engineFamily: "lopdf",
         engineVersion: "0.44",
-        command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts generate",
+        command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
         platform: currentPlatform(),
       },
-      comparisonPipeline: "pdf-1-7-a-lopdf-compare-v1",
+      comparisonPipeline: "pdf-1-7-x-lopdf-compare-v1",
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
@@ -181,7 +181,7 @@ async function encryptionMode(emitManifests: boolean, root: string): Promise<num
     entries.push({
       id: `encryption-${kind}`,
       class: "third-party-generated",
-      target: { artifact: "s.stdio.pdf", standard: "1.7", subset: "a" },
+      target: { artifact: "s.stdio.pdf", standard: "1.7", subset: "x" },
       mutation: kind,
       outcome: "applied",
       units: { length: "unitless", angle: "degree" },

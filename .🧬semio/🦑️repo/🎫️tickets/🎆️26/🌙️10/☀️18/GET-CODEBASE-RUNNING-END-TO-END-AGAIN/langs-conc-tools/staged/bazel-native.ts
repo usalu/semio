@@ -4,7 +4,7 @@ import {taskFamilyV1} from "../../../🏃️execution/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import table from "./🔣️.json" with {type: "json"};
 
-if (validateJsonSchemaSubset(schema, table, schema).length) throw new Error("Closed Bazel native toolchain classes required");
+if (validateJsonSchemaSubset(schema, table, schema).length) throw new Error("Closed Bazel native toolchain classes required / Geschlossene Bazel-Klassentabelle der nativen Toolchains erforderlich");
 
 /** 🧰️ The toolchain classes a Bazel task can belong to besides Go and Cargo, which have their own identities. */
 export type BazelNativeToolchainKindV1 = Exclude<ToolchainKindV1, "go">;

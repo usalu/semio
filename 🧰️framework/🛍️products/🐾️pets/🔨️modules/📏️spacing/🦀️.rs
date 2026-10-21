@@ -1,19 +1,24 @@
 //! 📏️ The spacing of grounded actors: actors of one surface never stand in each other. Where an actor can stand a comfortable gap away from everybody else (`rooms_for`, `quarters`), how far it can walk (`clearway`) and whether the arc of a hop keeps clear of what must stay free (`soars`) — with the gaps the whole stage keeps: `COMFORT_GAP`, `MEET_GAP`.
 //!
 //! Everything here measures along one surface: feet on the same perch, distances in x.
-//! A part of the stage, not of the crate: everything is `pub(crate)` at most.
+//! A part of the stage, not of the package: the items the parts of the stage in `pets-staging` call are `pub`, the rest stays private to this crate.
 //!
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../📏️spacing/🟦️.ts — the TypeScript twin
 
-use crate::draft::{carve, crowd_on, shoulders, Draft, Room, RATE};
+use crate::draft::{carve, crowd_on, shoulders, Draft, Room};
 use semio_framework_pets_clearance::Body;
-use semio_framework_pets_contract::schema::{Activity, Perch, Point, Species, Ticks};
+use semio_framework_pets_contract::schema::{Activity, Point, Species, Ticks};
 use semio_framework_pets_kinematics::terrain::{hop_step, larger, perch_at, smaller, Flight, Hop};
 use semio_framework_pets_kinematics::trigonometry::clamp;
 use semio_framework_pets_contract::schema::Footing;
 use semio_framework_pets_contract::schema::Actor;
 use semio_framework_pets_contract::schema::Extent;
+use crate::draft::hover_of;
+use semio_framework_pets_clearance::{MARGIN, SEAM, UPRIGHT, body_of, obstacles_of, united};
+use semio_framework_pets_kinematics::trigonometry::{cos_turns, sin_turns};
+use semio_framework_pets_traversal::climbing::cling_of;
+use semio_framework_pets_traversal::swing::CHUTE_ROD;
 
 //#region 🔖️Constants
 pub const MEET_GAP: f64 = 6.0;

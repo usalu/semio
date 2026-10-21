@@ -1,193 +1,177 @@
 
-import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { subsetIdForDirectoryName } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
-import { assessMutationCrateBudget, newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
-import { parseCrateBudget, type CrateBudget } from "../📦️crate-tree/🗺️plan/💰️budget/🟦️.ts";
+import { existsSync, readFileSync } from "node:fs";
+import { join, posix } from "node:path";
+import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
+import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
+import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
 import { execToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
 
-/** 📐️ Reads the crate budgets of `new crates`: `--target=<files>/<bytes>/<lines>` is what every crate aims for, `--hard=<files>/<bytes>/<lines>` is the limit the planner refuses to pack beyond. */
-export function crateBudgetFlags(flags: ReadonlySet<string>): { target: CrateBudget | undefined; hard: CrateBudget | undefined } {
-  const value = (name: string): string | undefined => [...flags].find((flag) => flag.startsWith(`${name}=`))?.slice(name.length + 1);
-  const target = value("--target");
-  const hard = value("--hard");
-  return { target: target === undefined ? undefined : parseCrateBudget(target), hard: hard === undefined ? undefined : parseCrateBudget(hard) };
+const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
+
+/** 🔒️ The closed set of cache-correctness rules; every finding names exactly one. */
+export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] as const;
+export type CacheRuleV1 = (typeof CACHE_RULES_V1)[number];
+
+/** 🎯️ The resolved target facts a rule reads: the shape the inference gives a target after its cache policy. */
+export interface CacheTargetV1 {
+  cache?: boolean;
+  executor?: string;
+  inputs?: unknown[];
+  outputs?: string[];
+  options?: { command?: string; commands?: unknown[]; env?: Record<string, string> };
+  configurations?: Record<string, { env?: Record<string, string>; command?: string }>;
+  metadata?: { semio?: Record<string, any> };
 }
 
-/** 🛂️ Resolves a scaffold destination from the caller's exact physical owner and canonical leaf. */
-export function newScaffoldDestinationV1(repoRoot: string, kind: "artifact" | "standard" | "subset", owner: string, newDirectory: string): string {
-  if (!owner || /^[A-Za-z]:/u.test(owner) || owner.startsWith("/") || /[\\\u0000-\u001f]/u.test(owner) || owner.split("/").some((part) => !part || part === "." || part === "..")) throw Error("Scaffold owner must be an exact workspace-relative path");
-  if (!newDirectory || /[/:\\\u0000-\u001f]/u.test(newDirectory) || newDirectory === "." || newDirectory === "..") throw Error("Scaffold directory must be one canonical leaf");
-  const root = realpathSync(repoRoot), ownerPath = join(root, owner);
-  if (!existsSync(ownerPath) || !statSync(ownerPath).isDirectory()) throw Error(`Scaffold owner is missing: ${owner}`);
-  const physical = relative(root, realpathSync(ownerPath));
-  if (!physical || isAbsolute(physical) || physical === ".." || physical.startsWith(`..${sep}`)) throw Error("Scaffold owner must be physically inside the workspace");
-  const taxonomy = loadTaxonomy();
-  const collection = kind === "artifact" ? taxonomy.artifactsDirName : kind === "standard" ? taxonomy.standardsDirName : taxonomy.subsetsDirName;
-  if (kind === "standard" && taxonomy.standardDirPrefix && !newDirectory.startsWith(taxonomy.standardDirPrefix)) throw Error(`Standard directory must start with ${taxonomy.standardDirPrefix}`);
-  const collectionRelative = `${owner}/${collection}`;
-  if (kind === "subset" && subsetIdForDirectoryName(collectionRelative, newDirectory, taxonomy) === null) throw Error(`Subset directory is not registered for ${collectionRelative}`);
-  const destination = `${collectionRelative}/${newDirectory}`;
-  let existing = join(root, destination);
-  while (!existsSync(existing)) existing = dirname(existing);
-  const physicalParent = relative(root, realpathSync(existing));
-  if (isAbsolute(physicalParent) || physicalParent === ".." || physicalParent.startsWith(`..${sep}`)) throw Error("Scaffold destination must be physically inside the workspace");
-  return destination;
+/** 🧾️ One resolved target together with the names its inputs may reference. */
+export interface CacheRecordV1 { id: string; root: string; authoredCache: boolean | null; target: CacheTargetV1; namedInputs: Record<string, unknown[]> }
+
+/** 🚩️ One violated rule on one target (or, for overlaps, on one pair). */
+export interface CacheFindingV1 { id: string; rule: CacheRuleV1; detail: string }
+
+const MANIFEST = "📋️project.json";
+const MUTATING = /(?:--fix(?![\w-])|--write(?![\w-])|\bpublish\b|\bdeploy\b|\bgit\s+(?:commit|push|add|checkout|stash|reset)\b)/u;
+const MUTATING_EXEMPT = /(?:--check\b|--dry-run\b|\bverify\b)/u;
+const NETWORK = /\b(?:curl|wget|git clone|git fetch|npm install|bun install|bun add|bunx|npx|cargo fetch|cargo install|pip install|uv sync|uv pip|apt-get|brew install|go get|go mod download)(?![-\w])/u;
+
+/** 🧷️ Matches a workspace-relative path against one input glob (`*`, `**`, `?`, `{a,b}`); the independent `minimatch` oracle checks it. */
+export function globMatchesV1(pattern: string, path: string): boolean {
+  const source = pattern.replace(/[.+^$()|\\[\]]/gu, "\\$&").replace(/\{([^{}]*)\}/gu, (_, alternatives: string) => `(?:${alternatives.split(",").join("|")})`).replace(/\*\*\/|\*\*|\*|\?/gu, (token) => token === "**/" ? "(?:.*/)?" : token === "**" ? ".*" : token === "*" ? "[^/]*" : "[^/]");
+  return new RegExp(`^${source}$`, "u").test(path);
 }
 
-/** 🏗️ Scaffolds an exact caller-owned artifact, standard, subset, or mutation directory, or lays out the crates of an existing artifact. */
-export class CleanMechanismNewScript extends Script {
-  async run(segments: string[]): Promise<void> {
-    const kind = segments[0];
-    if (kind !== "subset" && kind !== "standard" && kind !== "artifact" && kind !== "mutation" && kind !== "crates" && kind !== "leaves") {
-      console.error("usage: bun ./📜️script.ts new artifact <owner-root> <new-artifact-dir>");
-      console.error("   or: bun ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
-      console.error("   or: bun ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--hard=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
-      console.error("   or: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)");
-      process.exit(1);
-      return;
-    }
-    const taxonomy = loadTaxonomy();
-    const rest = segments.slice(1);
-    const flags = new Set(rest.filter((arg) => arg.startsWith("--")));
-    const knownFlags = new Set(["--verify", "--check-applied", "--oracle", "--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema", "--rust", "--no-test-rewrites", "--no-test-aggregate", "--inline-root-modules", "--family-crate", "--keep", "--explain", "--unmirror"]);
-    for (const flag of flags) if (!knownFlags.has(flag) && !flag.startsWith("--backup=") && !flag.startsWith("--sandbox=") && !flag.startsWith("--base=") && !flag.startsWith("--samples=") && !flag.startsWith("--mutation-families=") && !flag.startsWith("--lift=") && !flag.startsWith("--target=") && !flag.startsWith("--hard=")) throw new Error(`new ${kind}: unknown option ${flag}`);
-    const dryRun = flags.has("--dry-run");
-    const positional = rest.filter((a) => !a.startsWith("--"));
-    const repoRoot = this.root;
-    try {
-      if (kind === "mutation") {
-        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
-        const [owner, name] = positional as [string, string];
-        const budget = await assessMutationCrateBudget(repoRoot, owner);
-        if (budget?.verdict === "refused") throw new Error(`new mutation: ${budget.crate} would leave the source gate (lib ${budget.lib.files} files / ${budget.lib.bytes} bytes / ${budget.lib.lines} lines, test ${budget.test.files} / ${budget.test.bytes} / ${budget.test.lines}); put the leaf in a family crate or run \`bun ./📜️script.ts new crates <artifact-package-dir>\` first`);
-        if (budget?.verdict === "near-limit" || budget?.verdict === "already-over") console.warn(`new mutation: ${budget.crate} is ${budget.verdict === "already-over" ? "already over" : "next to"} the source gate (lib ${budget.lib.files} files / ${budget.lib.lines} lines, test ${budget.test.files} files); plan a carve with \`bun ./📜️script.ts new crates\``);
-        const result = newScaffoldMutationTree(
-          repoRoot,
-          owner,
-          name,
-          {
-            composite: flags.has("--composite"),
-            text: flags.has("--text"),
-            binary: flags.has("--binary"),
-            typescript: flags.has("--typescript"),
-            graphql: flags.has("--graphql"),
-            protobuf: flags.has("--protobuf"),
-            jsonSchema: flags.has("--json-schema"),
-            familyCrate: flags.has("--family-crate"),
-          },
-          dryRun,
-        );
-        this.report(`${owner}/${name}`, result.created, result.skipped, dryRun);
-        for (const edit of result.updated) console.log(`  ${dryRun ? "~ (dry-run)" : "~"} ${edit}`);
-        return;
-      }
-      if (kind === "leaves") {
-        if (positional.length !== 1) throw new Error("usage: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema] [--rust]");
-        const { externalizeFacetLeaves } = await import("../📦️crate-tree/🧾️facet-leaves/🟦️.ts");
-        const absolute = join(repoRoot, positional[0]!);
-        const result = externalizeFacetLeaves(readFileSync(absolute, "utf8"), absolute, repoRoot, { json: flags.has("--json-schema"), rust: flags.has("--rust") });
-        if (!result) { console.log(`new leaves: ${positional[0]} has no ArtifactSchemaDescriptor companion to serve.`); return; }
-        if (!dryRun) writeFileSync(absolute, result.text);
-        console.log(`new leaves: ${positional[0]} — ${dryRun ? "would serve" : "serving"} ${result.leaves.length} companion(s) from their documents; install a SchemaLeafReader (FileSystemSchemaLeaves) in every host that resolves them.`);
-        for (const leaf of result.leaves) console.log(`  ${leaf.scope}/${leaf.export}/${leaf.format} <- ${leaf.path}`);
-        return;
-      }
-      if (kind === "crates") {
-        if (positional.length !== 1) throw new Error("usage: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--no-test-rewrites] [--backup=<dir>]");
-        await this.crates(positional[0]!, flags, dryRun);
-        return;
-      }
-      if (positional.length !== 2) throw new Error(`new ${kind}: expected an exact owner path and a new directory`);
-      const [owner, newDirectory] = positional as [string, string];
-      const destination = newScaffoldDestinationV1(repoRoot, kind, owner, newDirectory);
-      const result = kind === "artifact" ? newScaffoldArtifactTree(repoRoot, destination, dryRun) : kind === "standard" ? newScaffoldStandardTree(repoRoot, destination, dryRun) : newScaffoldSubsetTree(repoRoot, destination, taxonomy, dryRun);
-      this.report(destination, result.created, result.skipped, dryRun);
-    } catch (error) {
-      console.error((error as Error).message);
-      process.exit(1);
-    }
-  }
+const ALWAYS_HASHED_ENV = new Set(["SEMIO_BUILD_MODE"]);
+const WORD = /^[A-Za-z][A-Za-z0-9_-]*$/u;
+const expandInputs = (inputs: readonly unknown[], names: Record<string, unknown[]>, seen: ReadonlySet<string> = new Set()): unknown[] => inputs.flatMap((input) => {
+  if (typeof input !== "string") return [input];
+  const word = input.startsWith("^") ? input.slice(1) : input;
+  if (!WORD.test(word)) return [input];
+  if (input.startsWith("^") || seen.has(word) || !Object.hasOwn(names, word)) return [];
+  return expandInputs(names[word]!, names, new Set([...seen, word]));
+});
 
-  private async crates(packageDir: string, flags: ReadonlySet<string>, dryRun: boolean): Promise<void> {
-    const { applyCarveWrites, carveWrites, planArtifactCrates, registerBuildOwnerRows, resolveCarveBackupDir } = await import("../📦️crate-tree/🟦️.ts");
-    if (flags.has("--check-applied")) {
-      const sandbox = [...flags].find((flag) => flag.startsWith("--sandbox="))?.slice("--sandbox=".length);
-      if (!sandbox) throw new Error("new crates --check-applied needs --sandbox=<dir> (a directory outside the repository)");
-      const { verifyAppliedLayout } = await import("../📦️crate-tree/🧫️sandbox/🟦️.ts");
-      const { workspaceAdmissionProblems } = await import("../📦️crate-tree/📝️render/🟦️.ts");
-      const { sharedMountFiles } = await import("../📦️crate-tree/🔬️verify/🟦️.ts");
-      const base = [...flags].find((flag) => flag.startsWith("--base="))?.slice("--base=".length) ?? "HEAD";
-      const artifactDir = dirname(dirname(packageDir));
-      const samples = Number([...flags].find((flag) => flag.startsWith("--samples="))?.slice("--samples=".length) ?? 12);
-      if (!Number.isInteger(samples) || samples < 1) throw new Error("new crates --samples expects a positive integer");
-      const report = await verifyAppliedLayout(this.root, artifactDir, resolve(sandbox), base, flags.has("--keep"), samples);
-      const packageManifest = Bun.TOML.parse(readFileSync(join(this.root, packageDir, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } };
-      const admission = workspaceAdmissionProblems(readFileSync(join(this.root, packageDir, packageManifest.package?.workspace ?? "../..", "Cargo.toml"), "utf8"));
-      const pluginDir = artifactDir.split("/").slice(0, 3).join("/");
-      const manifests = execToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-files", "-co", "--exclude-standard", "-z", "--", pluginDir], { cwd: this.root, maxBuffer: 1 << 28 }).toString("utf8").split("\0").filter((path) => path.endsWith("/Cargo.toml"));
-      const reached = sharedMountFiles(this.root, manifests, (manifest) => manifest.startsWith(`${artifactDir}/`));
-      const shared = reached.filter((entry) => entry.file.startsWith(`${pluginDir}/`));
-      const sharedForeign = reached.filter((entry) => !entry.file.startsWith(`${pluginDir}/`)).map((entry) => entry.file);
-      console.log(JSON.stringify({ base, ...report, admission, shared, sharedForeign }, null, 2));
-      if (admission.length || shared.length || Object.values(report.layout).some((row) => row.onlyCombined > 0)) { process.exit(1); return; }
-      return;
-    }
-    if (flags.has("--unmirror")) { await this.unmirror(packageDir, !dryRun); return; }
-    const mode = [...flags].find((flag) => flag.startsWith("--mutation-families="))?.slice("--mutation-families=".length) ?? "auto";
-    if (mode !== "off" && mode !== "on" && mode !== "auto") throw new Error(`--mutation-families expects off, on or auto, got ${JSON.stringify(mode)}`);
-    const lift = [...flags].find((flag) => flag.startsWith("--lift="))?.slice("--lift=".length).split(",").filter(Boolean);
-    const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, ...crateBudgetFlags(flags), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
-    for (const crate of plan.crates) console.log(`crate ${crate.name}  ${crate.packageDir}  lib ${crate.lib?.files}/${crate.lib?.bytes}/${crate.lib?.lines}  test ${crate.test?.files}/${crate.test?.bytes}/${crate.test?.lines}  deps [${crate.dependsOn.map((id) => plan.crates.find((entry) => entry.id === id)?.name).join(", ")}]`);
-    for (const note of plan.overlay.notes) console.log(`note: ${note}`);
-    if (plan.problems.length) {
-      for (const problem of plan.problems) console.error(`problem: ${problem}`);
-      if (flags.has("--explain")) for (const blocker of plan.blockers) {
-        console.error(`blocker: ${blocker.slices} slices, ${blocker.files} files, ${blocker.bytes} bytes, ${blocker.lines} lines; coherence [${blocker.coherence.join("; ")}]; cycles [${blocker.cycles.join(", ")}]`);
-        for (const row of blocker.groupReport) console.error(`  ${row}`);
-      }
-      process.exit(1);
-      return;
-    }
-    if (flags.has("--verify")) {
-      const sandbox = [...flags].find((flag) => flag.startsWith("--sandbox="))?.slice("--sandbox=".length);
-      if (!sandbox) throw new Error("new crates --verify needs --sandbox=<dir> (a directory outside the repository)");
-      const { verifyCarveInSandbox } = await import("../📦️crate-tree/🧫️sandbox/🟦️.ts");
-      const report = await verifyCarveInSandbox(plan, resolve(sandbox), { oracle: flags.has("--oracle"), keep: flags.has("--keep") });
-      console.log(JSON.stringify(report, null, 2));
-      const failed = report.census.some((row) => !row.withinHardBudget) || report.moduleTreeProblems.length > 0 || report.visibility.length > 0 || report.orphan.length > 0 || report.glue.length > 0 || Object.values(report.unresolvedCrates).some((list) => list.length > 0) || Object.values(report.oracle ?? {}).some((row) => row.onlyCandidate > 0) || Object.values(report.layout ?? {}).some((row) => row.onlyCombined > 0);
-      if (failed) { process.exit(1); return; }
-      return;
-    }
-    const { writes } = await carveWrites(plan);
-    for (const write of writes) console.log(`  ${dryRun ? "(dry-run) " : ""}${write.action === "create" ? "+" : write.action === "delete" ? "-" : "~"} ${write.path}`);
-    if (dryRun) return;
-    const backupFlag = [...flags].find((flag) => flag.startsWith("--backup="))?.slice("--backup=".length);
-    const backup = backupFlag ? resolveCarveBackupDir(this.root, backupFlag) : undefined;
-    applyCarveWrites(this.root, writes, backup);
-    const owners = registerBuildOwnerRows(this.root, plan, backup);
-    console.log(`owner rows: ${owners.length ? owners.join(", ") : "none added"}`);
-    console.log(`new crates: ${plan.artifactCrate} — wrote ${writes.length} file(s) for ${plan.crates.length} crate(s).`);
-    await this.unmirror(packageDir, true);
-  }
+const projectPath = (pattern: string, root: string): string => pattern.replace(/^\{workspaceRoot\}\//u, "").replaceAll("{projectRoot}/", root === "." ? "" : `${root}/`).replaceAll("{projectRoot}", root);
+const coversManifest = (leaves: readonly unknown[], root: string): boolean => {
+  const path = root === "." ? MANIFEST : `${root}/${MANIFEST}`, patterns = leaves.filter((leaf): leaf is string => typeof leaf === "string");
+  return patterns.some((pattern) => !pattern.startsWith("!") && globMatchesV1(projectPath(pattern, root), path)) && !patterns.some((pattern) => pattern.startsWith("!") && globMatchesV1(projectPath(pattern.slice(1), root), path));
+};
 
-  private async unmirror(packageDir: string, apply: boolean): Promise<void> {
-    const { runUnmirror } = await import("../📦️crate-tree/🪞️unmirror/🏃️run/🟦️.ts");
-    const result = runUnmirror({ repoRoot: this.root, artifacts: [dirname(dirname(packageDir))], apply, log: (line) => console.log(`  ${line}`) });
-    const report = result.report;
-    console.log(`new crates --unmirror: ${report.edits.size} file(s), ${result.manifests.size} manifest(s), ${report.removedLeaves} mirror re-export(s) removed, ${report.repointedLeaves + report.repointedChains} path(s) re-pointed, ${report.addedImports} import(s) added, ${report.removedModules} module(s) removed${apply ? `, ${result.written} written` : " (dry-run)"}.`);
-    for (const line of [...report.unresolvedMirrors.map((entry) => `unresolved mirror re-export ${entry}`), ...report.multiMounted.map((entry) => `file mounted more than once, not edited ${entry}`), ...result.cycles.map((entry) => `dependency cycle ${entry}`), ...result.regressions.map((entry) => `audit regression ${entry}`), ...result.conflicts.map((entry) => `file changed while planning ${entry}`)]) console.error(`problem: ${line}`);
-    if (result.cycles.length || result.regressions.length || result.conflicts.length || report.unresolvedMirrors.length) process.exit(1);
-  }
+const commandOf = (target: CacheTargetV1): string => target.options?.command ?? (Array.isArray(target.options?.commands) ? target.options.commands.map((operation) => typeof operation === "string" ? operation : (operation as { command?: string })?.command ?? "").join(" && ") : "");
+const outputPath = (output: string, root: string): string | undefined => {
+  const tokens = output.replaceAll(/\{options\.env\.(\w+)\}/gu, "<$1>");
+  if (tokens.includes("{options.")) return undefined;
+  return tokens.startsWith("/") ? tokens : posix.normalize(projectPath(tokens, root) || ".");
+};
 
-  private report(rel: string, created: string[], skipped: string[], dryRun: boolean): void {
-    const verb = dryRun ? "would create" : "created";
-    console.log(`new: ${rel} — ${verb} ${created.length} file(s), ${skipped.length} already present.`);
-    for (const p of created) console.log(`  ${dryRun ? "+ (dry-run)" : "+"} ${p}`);
+/** 🔎️ Runs every per-target rule (the inference appends `{ env: SEMIO_BUILD_MODE }` to every replayed target, so the build mode is always hashed) on one resolved target; a target that never replays only answers for its classification and its authored cache. */
+export function cacheCorrectnessFindingsV1(record: CacheRecordV1): CacheFindingV1[] {
+  const { id, root, target } = record, findings: CacheFindingV1[] = [], found = (rule: CacheRuleV1, detail: string) => findings.push({ id, rule, detail });
+  const decision = target.metadata?.semio?.cache, semio = target.metadata?.semio ?? {};
+  if (decision?.class === "unclassified") found("unclassified-target", "no policy row, declaration or verifying command classifies this target");
+  if (target.cache === false && decision === undefined) found("uncached-without-reason", "cache false records no decision: declare metadata.semio.cache with the class and reason that forbid replay");
+  if (record.authoredCache === true && target.cache === false && decision?.class !== "continuous") found("authored-cache-overridden", `authored cache true, resolved ${decision ? `${decision.class}/${decision.reason}` : "uncached"}`);
+  if (target.cache !== true) return findings;
+  const leaves = expandInputs(target.inputs ?? ["default", "^default"], record.namedInputs);
+  if (leaves.some((leaf) => typeof leaf === "string" && !leaf.startsWith("!") && globSelectsRepositoryV1(projectPath(leaf, root))) && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-repository-input", "declares the whole repository as input and no input precision rule bounds it: add a rule to the input precision document that names what the task reads (traced, static or bound), or record why every file is read (whole, assumed)");
+  const wholeKeys = workspaceKeyViolationsV1(RESOLUTION, leaves, commandOf(target), id);
+  if (wholeKeys.length && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-workspace-rust-key", cargoResolutionTextV1(RESOLUTION, "workspaceKey", cargoResolutionLanguageV1(RESOLUTION, process.env), { subject: id, keys: wholeKeys.join(", ") }));
+  if (Array.isArray(target.inputs) && target.inputs.length === 0 && target.executor !== "repo:noop") found("empty-inputs", "inputs [] hashes nothing but the results of dependencies");
+  const declaredOutputs = Array.isArray(target.outputs) && target.outputs.length > 0;
+  if (decision?.class === "deterministic" && decision.reason === "pure-function-of-inputs" && !declaredOutputs && semio.rustBuildIntent === undefined && semio.rustUnitAggregate === undefined && semio.hostPlatformOutputsV1 === undefined && target.executor !== "repo:noop") found("producer-without-outputs", "a replayed producer declares no output, so a hit restores nothing");
+  const environment = new Set([...Object.keys(target.options?.env ?? {}), ...Object.values(target.configurations ?? {}).flatMap((configuration) => Object.keys(configuration.env ?? {}))]), hashed = new Set(leaves.flatMap((leaf) => typeof leaf === "object" && leaf !== null && typeof (leaf as { env?: unknown }).env === "string" ? [(leaf as { env: string }).env] : []));
+  if (environment.size && !coversManifest(leaves, root)) for (const key of [...environment].sort()) if (!hashed.has(key) && !ALWAYS_HASHED_ENV.has(key)) found("env-unhashed", `options.env.${key} is neither an {env} input nor covered by hashing the declaring manifest`);
+  for (const input of target.inputs ?? []) if (typeof input === "string") { const word = input.startsWith("^") ? input.slice(1) : input; if (WORD.test(word) && !Object.hasOwn(record.namedInputs, word)) found("named-input-undeclared", `input ${input} names no declared named input`); }
+  for (const output of target.outputs ?? []) { const path = outputPath(output, root); if (path !== undefined && (path.startsWith("/") || path === ".." || path.startsWith("../"))) found("output-escapes", `${output} resolves outside the workspace (${path})`); }
+  const command = commandOf(target);
+  if (MUTATING.test(command) && !MUTATING_EXEMPT.test(command)) found("command-mutating", command.slice(0, 160));
+  if (NETWORK.test(command)) found("command-network", command.slice(0, 160));
+  return findings;
+}
+
+const segments = (path: string) => path.replace(/\/(?:\*\*(?:\/\*)?)?$/u, "").split("/").filter(Boolean);
+const nests = (left: string[], right: string[]) => left.length <= right.length ? left.every((part, index) => part === right[index]) : right.every((part, index) => part === left[index]);
+
+/** 🧱️ Two replayed targets that declare the same output tree (or one inside the other) overwrite each other's restore. */
+export function cacheOutputOverlapFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
+  const owners: { id: string; path: string; parts: string[] }[] = [], findings: CacheFindingV1[] = [];
+  for (const record of records) if (record.target.cache === true) for (const output of new Set(record.target.outputs ?? [])) { const path = outputPath(output, record.root); if (path !== undefined && !path.startsWith("/") && !path.startsWith("..")) owners.push({ id: record.id, path, parts: segments(path) }); }
+  const byHead = new Map<string, typeof owners>();
+  for (const owner of owners) { const head = owner.parts[0] ?? ""; (byHead.get(head) ?? byHead.set(head, []).get(head)!).push(owner); }
+  for (const group of byHead.values()) for (let left = 0; left < group.length; left++) for (let right = left + 1; right < group.length; right++) {
+    const a = group[left]!, b = group[right]!;
+    if (a.id !== b.id && a.parts.length && b.parts.length && nests(a.parts, b.parts)) findings.push({ id: a.id, rule: "output-overlap", detail: `${a.path} overlaps ${b.id}: ${b.path}` });
   }
+  return findings;
+}
+
+/** 🪜️ The exempt targets that no longer declare a whole-workspace Rust key (or no longer exist): the exemption list is a ratchet, so an owner who derives a narrower key must delete the entry. */
+export function staleRustKeyExemptionsV1(records: readonly CacheRecordV1[]): string[] {
+  const open = { ...RESOLUTION, workspaceKeys: { ...RESOLUTION.workspaceKeys, exemptTargets: [] } }, byId = new Map(records.map((record) => [record.id, record]));
+  return RESOLUTION.workspaceKeys.exemptTargets.flatMap((row) => row.targets).filter((id) => {
+    const record = byId.get(id);
+    return !record || record.target.cache !== true || workspaceKeyViolationsV1(open, expandInputs(record.target.inputs ?? ["default", "^default"], record.namedInputs), commandOf(record.target)).length === 0;
+  }).sort();
+}
+
+/** 🧮️ Every finding of every rule over a set of resolved targets. */
+export function cacheCorrectnessRepositoryFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
+  return [...records.flatMap(cacheCorrectnessFindingsV1), ...cacheOutputOverlapFindingsV1(records)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : a.detail < b.detail ? -1 : 1);
+}
+
+type PolicyV1 = { targetDefaults?: Record<string, Record<string, unknown>> };
+export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any, policy?: any): any }
+
+/** 📚️ Resolves every authored target of the tracked manifests through the production cache policy (targetDefaults, generator-contract outputs, classification) into the records the rules read. Inference-only projects have no manifest target and are covered by the production outputs gate. */
+const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
+const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
+
+/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
+function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
+  const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
+  if (!rule) return target;
+  const metadata = { ...target.metadata, semio: { ...target.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
+  if (BROAD_EVIDENCE.has(rule.evidence)) return { ...target, metadata };
+  return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
+}
+
+/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
+export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
+  const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
+  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;
+  const document = precision ?? (existsSync(join(repoRoot, library, PRECISION_FILE)) ? readInputPrecisionV1(read(`${library}/${PRECISION_FILE}`)) : undefined);
+  const injected = new Map<string, string[]>();
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned") continue;
+    if (!injected.has(contract.target)) injected.set(contract.target, []);
+    for (const output of contract.outputRoots) { const target = output.producer?.target ?? contract.target; (injected.get(target) ?? injected.set(target, []).get(target)!).push(`{workspaceRoot}/${output.path}`); }
+  }
+  const manifests = (tracked ?? execToolSyncV1("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { cwd: repoRoot, maxBuffer: 1 << 28 }).toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
+  const records: CacheRecordV1[] = [];
+  for (const manifest of manifests.sort()) {
+    let json: any;
+    try { json = read(manifest); } catch { continue; }
+    const root = posix.dirname(manifest), names: Record<string, unknown[]> = { ...nx, ...json.namedInputs, ...Object.fromEntries(Object.keys(json.metadata?.sourceInputs ?? {}).map((key) => [key, []])) };
+    for (const [name, authored] of Object.entries<any>(json.targets ?? {})) {
+      const id = `${json.name ?? root}:${name}`, base = { ...(policy.targetDefaults?.[name] ?? {}), ...authored, ...(authored.cache === false && authored.inputs === undefined ? { inputs: ["default"] } : {}), options: { ...authored.options, ...(typeof authored.command === "string" && authored.options?.command === undefined ? { command: authored.command } : {}) } } as any;
+      const outputs = injected.get(id);
+      if (outputs?.length) base.outputs = outputs;
+      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: narrowedTargetV1(document, json.name ?? root, name, internals.targetPolicy(name, structuredClone(base))), namedInputs: names });
+    }
+  }
+  return records;
+}
+
+/** 🚨️ Turns the findings into policy breaches the verification lanes print. */
+export function policyCacheCorrectnessBreaches(findings: readonly CacheFindingV1[]): BreachRecord[] {
+  return findings.map((finding) => ({
+    id: `cache-correctness-${finding.rule}-${finding.id}`,
+    summary: `${finding.rule} ${finding.id}: ${finding.detail}`,
+    kind: "repo/cache-correctness",
+    scope: finding.id,
+    priority: "high",
+    autofixable: false,
+    reason: "A replayed task whose key omits an input, an environment value or an output restores a stale or empty result for every later build, and a shared remote cache would spread it to every machine.",
+    solution: "Declare the missing inputs or outputs on the target, classify it in `⚡️caching/🔣️policy.json` `targetClasses`, or set `cache: false` with the decision that names why it cannot replay.",
+  }));
 }

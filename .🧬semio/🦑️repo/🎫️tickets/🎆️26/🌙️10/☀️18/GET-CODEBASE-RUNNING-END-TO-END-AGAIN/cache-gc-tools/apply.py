@@ -53,7 +53,7 @@ def plan(tolerate=False):
             continue
         if editor(after) != after:
             raise patches.Drift("%s: patch is not idempotent" % key)
-        state = "base" if known.get(key) == sha(original) else "drifted since staging, anchors verified" if key in known else "unrecorded base"
+        state = "base" if sha(original) in (known.get(key) if isinstance(known.get(key), list) else [known.get(key)]) else "drifted since staging, anchors verified" if key in known else "unrecorded base"
         if after != before:
             writes[path] = after.encode("utf-8")
             notes.append("patch  %s (%s)" % (key, state))
@@ -67,7 +67,8 @@ def plan(tolerate=False):
                 notes.append("same   %s" % name)
                 continue
             base = known.get("file:" + name)
-            if base is not None and base != sha(read(path)) and not tolerate:
+            accepted = base if isinstance(base, list) else [base]
+            if base is not None and sha(read(path)) not in accepted and not tolerate:
                 raise patches.Drift("%s changed since staging" % name)
             notes.append("update %s" % name)
         else:

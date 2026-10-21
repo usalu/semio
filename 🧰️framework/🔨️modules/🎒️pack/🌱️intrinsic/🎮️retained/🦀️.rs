@@ -23,14 +23,14 @@ impl Default for Owned{fn default()->Self{Self{frames:Vec::new(),scalar:DslValue
 enum Copy{None,Inline(usize),Bytes(usize),Symbol{symbol:u64,index:usize,count:usize},Ready}
 
 /// 🎮️ Each advance returns actual bounded work; every terminal path requires explicit close.
-struct Materializer<'a,D:Driver>{
+struct Materializer<'a,D:RetainedValueDriver>{
  input:Option<RetainedIntrinsicInput<'a>>,cursor:D,owned:ManuallyDrop<Owned>,retiring:Option<ControlledRetirement<Owned>>,
  offset:usize,maximum:usize,admitted:usize,maximum_frames:usize,header:u8,copy:Copy,pending_token:Option<Token>,sealed:bool,complete:bool,closing:bool,closed:bool,original_failed:bool,fault:Option<PackRefusal>,
 }
 fn invalid(detail:&'static str)->PackRefusal{PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"retained intrinsic Body",offset:0,detail}}
 fn capacity()->PackRefusal{PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained intrinsic cumulative ownership"}}
 fn allocation()->PackRefusal{PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained intrinsic allocation failed"))}
-impl<'a,D:Driver> Materializer<'a,D>{
+impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
  /// 🎟️ Admits transferred source backing before constructing an allocation-free parser.
  fn new(input:RetainedIntrinsicInput<'a>,mut limits:PackLimits,maximum:usize)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{
   if input.bytes().len()as u64>limits.max_file_len||input.capacity()>maximum{return Err((capacity(),input))}
@@ -149,7 +149,7 @@ impl<'a,D:Driver> Materializer<'a,D>{
  pub fn take_output(&mut self)->Option<DslValue>{if self.complete&&!self.closing&&!self.original_failed&&self.fault.is_none(){self.owned.output.take()}else{None}}
  pub fn original_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,PackRefusal>{
   use semio_framework_value::RetirementDemand;if self.closed{return Ok(Default::default())}if self.pending_token.is_some()||!self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}
-  Ok(RetirementDemand{copy_bytes:self.next_close_copy_byte_demand().map_err(PackRefusal::from)?,capacity_bytes:self.next_close_capacity_byte_demand(body).map_err(PackRefusal::from)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand().map_err(PackRefusal::from)?})
+  if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_demand(body).map_err(PackRefusal::from)}}self.cursor.close_demands(body)
  }
  pub fn close_original_step(&mut self,grant:RetainedCloneGrant)->RetainedIntrinsicOriginalCall<RetainedCloneStep>{
   let empty=RetainedCloneProgress::default();let demand=match self.original_close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedIntrinsicOriginalCall{result:Err(error),progress:empty}};
@@ -170,29 +170,12 @@ impl<'a,D:Driver> Materializer<'a,D>{
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.cursor.terminal_is_empty()&&self.retiring.is_none()&&self.input.is_none()}
 }
-impl<D:Driver> Drop for Materializer<'_,D>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retained intrinsic operation abandoned before terminal close");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}}}
+impl<D:RetainedValueDriver> Drop for Materializer<'_,D>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retained intrinsic operation abandoned before terminal close");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}}}
 
-pub(crate) trait Driver:Sized{
- fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>;
- fn one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>;
- fn allocated_bytes(&self)->usize;
- fn input_bytes(&self)->usize;
- fn consumed_bytes(&self)->u64;
- fn body_bytes(&self,input:&[u8])->u64;
- fn symbol_utf8_bytes(&self,symbol:u64)->Result<usize,PackRefusal>;
- fn symbol_chars(&self,symbol:u64)->Result<usize,PackRefusal>;
- fn symbol_char(&self,symbol:u64,index:usize)->Result<Option<char>,PackRefusal>;
- fn normal_demands(&self)->Result<semio_framework_value::RetirementDemand,PackRefusal>{Err(invalid("original turn allocation quote is unavailable for this intrinsic driver"))}
- fn next_copy_demand(&self)->usize{0}
- fn next_capacity_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
- fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
- fn next_release_demand(&self)->Result<usize,PackRefusal>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>;
- fn terminal_is_empty(&self)->bool;
-}
-fn close_receipt(step:semio_framework_pack_format_retained::RetainedPackCloseStep)->RetainedCloneStep{match step{semio_framework_pack_format_retained::RetainedPackCloseStep::Complete=>RetainedCloneStep::Complete(Default::default()),semio_framework_pack_format_retained::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()})}}
+
+
 struct BodyDriver{cursor:RetainedRecordBodyCursor,offset:usize,sealed:bool}
-impl Driver for BodyDriver{
+impl RetainedValueDriver for BodyDriver{
  fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{let symbols=length.min(limits.max_symbols as usize);Ok(Self{cursor:RetainedRecordBodyCursor::try_new_intrinsic(limits,symbols,length,length,maximum)?,offset:0,sealed:false})}
  fn one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
   if let Some(bytes)=self.cursor.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.cursor.reserve_allocation(bytes).map_err(|error|error.fault)?;return Ok(None)}
@@ -208,7 +191,8 @@ impl Driver for BodyDriver{
  fn symbol_chars(&self,symbol:u64)->Result<usize,PackRefusal>{self.cursor.symbol_chars(symbol)}
  fn symbol_char(&self,symbol:u64,index:usize)->Result<Option<char>,PackRefusal>{self.cursor.symbol_char(symbol,index)}
  fn next_release_demand(&self)->Result<usize,PackRefusal>{Ok(self.cursor.next_release_allocation_bytes()?.unwrap_or(0))}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{Ok(close_receipt(self.cursor.close_step(grant.maximum_items,grant.maximum_release_bytes)?))}
+ fn close_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,PackRefusal>{self.cursor.source_close_demands()}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{let demand=self.close_demands(grant.maximum_copy_bytes)?;if !self.terminal_is_empty()&&!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}Ok(retained_pack_close_progress(self.cursor.close_step(grant.maximum_items,grant.maximum_release_bytes)?))}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
 }
 macro_rules! operation{($name:ident,$driver:ty)=>{
@@ -234,9 +218,7 @@ macro_rules! operation{($name:ident,$driver:ty)=>{
 }}
 operation!(RetainedIntrinsicBody,BodyDriver);
 
-#[path="📦️document/🦀️.rs"]
-pub(crate) mod document;
-use document::DocumentDriver;
-operation!(RetainedIntrinsicDocument,DocumentDriver);
+use semio_framework_pack_record_retained::{RetainedValueDriver,RetainedDocumentDriver,retained_pack_close_progress};
+operation!(RetainedIntrinsicDocument,RetainedDocumentDriver);
 #[cfg(test)]
-pub(super) fn schema_graph()->&'static[u8]{document::SCHEMA_GRAPH}
+pub(super) fn schema_graph()->&'static[u8]{semio_framework_pack_record_retained::INTRINSIC_SCHEMA_GRAPH}

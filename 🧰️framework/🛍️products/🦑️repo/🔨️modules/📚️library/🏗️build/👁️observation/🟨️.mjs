@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
@@ -20,7 +20,7 @@ import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs
 const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256;
 
 /** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
-export function requireCurrentObservationV1(){try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
+export function requireCurrentObservationV1(){if(implementationPinnedV1())return;try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
 
 /** ⏱️ Files stamped this close to the start of a computation may still change within one timestamp tick, so their result is never persisted (racy-git rule). */
 const RACY_MS = 2000;
@@ -578,7 +578,7 @@ export async function settleObservedComputationV1(compute,{signal,limit=64,onRou
   const rows=[...nested.values()],consistent=consistentObservationsV1(rows);
   if(consistent&&!failed){accept(rows,captured.values());return value;}
   const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return"";}})()]):undefined;
-  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||signature===previousFailure)){accept(rows,captured.values());throw failure;}
+  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure)){accept(rows,captured.values());throw failure;}
   previousFailure=signature;
   if(consistent&&await observationsHold(rows,64,new Set(),new Set(),signal)){
    signal?.throwIfAborted();

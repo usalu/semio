@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{fileURLToPath}from"node:url";
 const sourceURL=new URL("../🟨️.mjs",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),policyURL=new URL("../../🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),ownerURL=new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL));
@@ -9,7 +9,7 @@ const blob="Bun"in globalThis,target=blob?URL.createObjectURL(new Blob([sourceBy
 let module;try{module=await import(target);}catch{throw Error("Captured inventory Source module load failed");}finally{if(blob)URL.revokeObjectURL(target);}
 const loadedURL=module.loadedSourceInventoryURLV1,loaded=module.createSourceInventoryDataV1(JSON.parse(policyBytes.toString("utf8")).definitions.Policy.const);
 const loadedExact=loadedURL===target||loadedURL==="file:///"+target;
-function requireCurrentSourceInventoryV1(){if(!loadedExact||createHash("sha256").update(sourceBytes).digest("hex")!==sourceRevision||createHash("sha256").update(policyBytes).digest("hex")!==policyRevision||revision(sourceURL,65536)!==sourceRevision||revision(policyURL,65536)!==policyRevision||revision(ownerURL)!==ownerRevision)throw Error("Stale loaded inventory implementation; restart required");}
+function requireCurrentSourceInventoryV1(){if(implementationPinnedV1())return;if(!loadedExact||createHash("sha256").update(sourceBytes).digest("hex")!==sourceRevision||createHash("sha256").update(policyBytes).digest("hex")!==policyRevision||revision(sourceURL,65536)!==sourceRevision||revision(policyURL,65536)!==policyRevision||revision(ownerURL)!==ownerRevision)throw Error("Stale loaded inventory implementation; restart required");}
 requireCurrentSourceInventoryV1();
 return Object.freeze({data:loaded,requireCurrentSourceInventoryV1});
 }

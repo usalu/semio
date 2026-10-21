@@ -1,4 +1,4 @@
-"""Independent model of the graph memory laws (stdlib only): the admission decision, the budget resolution, the language choice, the message rendering and a checker for governor traces. It never imports the JavaScript implementation.
+"""🐍️ Independent model of the graph memory laws (stdlib only): the admission decision, the budget resolution, the language choice, the message rendering and a checker for governor traces. It never imports the JavaScript implementation.
 
 usage: oracle.py expect FIXTURE   prints the expected verdicts of every table as JSON
        oracle.py trace FIXTURE TRACE   checks one recorded governor trace against its scenario and prints a list of violations (empty list = lawful)"""
@@ -43,18 +43,18 @@ def budget(policy, environment):
     return {"bytes": max(policy["minimumBudgetMegabytes"], min(policy["defaultBudgetMegabytes"], share)) * MEGABYTE}
 
 
-def language(environment):
-    for name in ("SEMIO_DASHBOARD_LOCALE", "LC_ALL", "LC_MESSAGES", "LANG"):
+def languages(policy, environment):
+    for name in policy["languageEnvironment"]:
         value = environment.get(name)
         if value:
             head = re.split(r"[_.@-]", value)[0].lower()
-            if head in ("en", "de"):
-                return head
-    return "en"
+            if head in policy["languages"]:
+                return [head]
+    return list(policy["languages"])
 
 
-def render(messages, key, fields, environment):
-    return re.sub(r"\{([a-z]+)\}", lambda match: str(fields[match.group(1)]), messages[language(environment)][key])
+def render(policy, messages, key, fields, environment):
+    return [re.sub(r"\{([a-z]+)\}", lambda match: str(fields[match.group(1)]), messages[language][key]) for language in languages(policy, environment)]
 
 
 def expect(fixture):
@@ -62,13 +62,13 @@ def expect(fixture):
     return {
         "admission": [decide(policy, row["state"]) for row in fixture["admission"]],
         "budgets": [budget(policy, row["environment"]) for row in fixture["budgets"]],
-        "languages": [language(row["environment"]) for row in fixture["languages"]],
-        "messages": [render(messages, row["key"], row["fields"], row["environment"]) for row in fixture["messageCases"]],
+        "languages": [languages(policy, row["environment"]) for row in fixture["languages"]],
+        "messages": [render(policy, messages, row["key"], row["fields"], row["environment"]) for row in fixture["messageCases"]],
     }
 
 
 def check_trace(fixture, trace):
-    """Invariants of a governor run: arrival order is start order, never more than `workers` run, a start beside running projects happens only within the budget, every project completes, collections are rate limited, waiting lines are spaced, the serial line appears once."""
+    """✅️ Invariants of a governor run: arrival order is start order, never more than `workers` run, a start beside running projects happens only within the budget, every project completes, collections are rate limited, waiting lines are spaced, the serial line appears once."""
     policy = fixture["policy"]
     scenario = next(row for row in fixture["governor"] if row["name"] == trace["scenario"])
     budget_bytes = scenario["budgetMegabytes"] * MEGABYTE

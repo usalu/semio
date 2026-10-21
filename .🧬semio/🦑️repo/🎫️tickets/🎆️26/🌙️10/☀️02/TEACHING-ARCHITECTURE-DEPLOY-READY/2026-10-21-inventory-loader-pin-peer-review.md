@@ -1,0 +1,7 @@
+# Inventory Loader Pin Delta
+
+Observed 2026-10-21T01:28:36.259Z. Root compared retained ordinary descriptor-read loader body3800B/SHA31a02c99a3216a8208cf3afd51efd39ba3d4df981798aa7b7f906619e870b95a with current3858B/SHA1b5d361493190e3521269ecdb5f172ea32a47c8d8464b022f994428f128bc152. Exact reconstruction by removing implementationPinnedV1 from the import list and removing the new early return reproduces the prior body; no other byte changed.
+
+The deliberately changed contract allows a pinned invocation to keep using its captured helper and policy bytes while the working Source changes. Initial finite physical capture of source/policy and dynamic import of those captured bytes remain; requested physical read expected-SHA checks remain in the reader. The pin bypasses subsequent own/helper/policy freshness and loadedURL verification. This is an explicit continuation policy, not proof of current working Source. Root preserves it and is repairing the separate ambient async invocation scope leak.
+
+No new Source path/read/import beyond the existing revision module was introduced. Existing loader APIs, source inventory capture, output generation, and policy source paths are byte-identical. Captured production Source still needs independent exact expected-byte verification; course_log_audit is tracing this separately. No actual feature test or production result is established by this review.

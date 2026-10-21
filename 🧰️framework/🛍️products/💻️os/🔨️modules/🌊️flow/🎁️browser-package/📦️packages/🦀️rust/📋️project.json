@@ -242,8 +242,9 @@
     "wasm": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts wasm",
-        "cwd": "{projectRoot}"
+        "command": "bun \"../../🏗️build/📜️script.ts\" wasm",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": false
       },
       "outputs": [
         "{projectRoot}/.🧾️store/wasm.json"
@@ -257,6 +258,13 @@
           "wasmPackageSourceV1": {
             "version": 1,
             "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust"
+          },
+          "sourceInputObservation": "freshness",
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js"
+            ]
           }
         }
       }
@@ -382,6 +390,37 @@
         "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"
       ]
+    },
+    "test-producer-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/**/*",
+        "flowBrowserDeclarationOracle"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun test \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts\"",
+        "cwd": "{workspaceRoot}",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
     }
   },
   "implicitDependencies": [
@@ -392,7 +431,7 @@
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/bun.lock",
       "cargoToolchain",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
@@ -468,9 +507,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   }
 }

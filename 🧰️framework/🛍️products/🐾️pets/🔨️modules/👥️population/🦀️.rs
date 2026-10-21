@@ -6,12 +6,12 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../👥️population/🟦️.ts — the TypeScript twin
 
-use semio_framework_pets_staging_draft::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, shoulders, stage_key, surface_of, Draft};
+use semio_framework_pets_staging_draft::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, stage_key, surface_of, Draft};
 use semio_framework_pets_staging_draft::locomotion::{drop, leave, vanish};
-use semio_framework_pets_staging_draft::spacing::{quarters, rooms_for, COMFORT_GAP};
+use semio_framework_pets_staging_draft::spacing::{quarters, rooms_for};
 use semio_framework_pets_character::behavior::{dwell_of, needs_of, MODE_LIMITS};
 use semio_framework_pets_character::feeling::at_rest;
-use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, Perch, PetMode, Slug, Species, Surface, Surveyed, Ticks};
+use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, PetMode, Slug, Species, Surface, Surveyed, Ticks};
 use semio_framework_pets_interaction::gesture::{no_hover, COLD};
 use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
 use semio_framework_pets_kinematics::terrain::{landing_of, larger, perches_of, smaller};
@@ -19,6 +19,14 @@ use semio_framework_pets_kinematics::trigonometry::clamp;
 use semio_framework_pets_character::feeling::Occasion;
 use semio_framework_pets_contract::schema::Wall;
 use semio_framework_pets_clearance::Body as Solid;
+use semio_framework_pets_clearance::{MARGIN, evicted, free_at, seat_of, shifted};
+use semio_framework_pets_contract::schema::Plume;
+use semio_framework_pets_interaction::gesture::{IDLE, circled};
+use semio_framework_pets_kinematics::terrain::walls_of;
+use semio_framework_pets_staging_draft::draft::feel;
+use semio_framework_pets_staging_draft::locomotion::{course_of, halt, poof, trip_of, unfoot, unlifted};
+use semio_framework_pets_staging_draft::spacing::{bodies_of, extent_of};
+use semio_framework_pets_traversal::climbing::{GRIP_BUDGET, LadderStand, cling_of, ladder_holds, slip_of, spill_of, wall_holds};
 
 //#region 🔖️Constants
 pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };

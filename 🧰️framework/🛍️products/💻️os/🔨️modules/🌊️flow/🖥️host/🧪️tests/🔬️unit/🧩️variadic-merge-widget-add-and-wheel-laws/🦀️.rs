@@ -33,14 +33,14 @@ fn variadic_merge_evaluates_port_routed_inputs() {
             Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::InputSlider { id: "b".into(), label: "B".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::Neuron { id: "merge".into(), neuron_kind: "dictionary.merge".into(), params: Dictionary::new(), input_ports: vec!["0".into(), "1".into()], output_ports: vec![], preview: true },
-            Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
+            Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::new() },
         ],
         synapses: vec![
             SynapseSpec { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "number".into(), to_port: "0".into() },
             SynapseSpec { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "number".into(), to_port: "1".into() },
             SynapseSpec { id: "s3".into(), from: "merge".into(), to: "preview".into(), from_port: "dictionary".into(), to_port: String::new() },
         ],
-        layout: protocol::value::ordered::OrderedMap::new(),
+        layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Merge);
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {

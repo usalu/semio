@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "preserveRegisteredRoster": 42,
+  "requirements": [
+    {
+      "id": "retained-sequence-source",
+      "mandatory": true,
+      "status": "pending-corpus-and-source-metadata",
+      "project": "@semio-tech/framework-replication-rs",
+      "target": "test-retained-diff-sequence-source",
+      "command": "repo run @semio-tech/framework-replication-rs:test-retained-diff-sequence-source --skip-cache --output=stream",
+      "requires": [
+        "exact original sequence schema/corpus recovery",
+        "closed Source execution metadata and explicit runtime entry on existing declaration",
+        "independent source review"
+      ],
+      "sourceEntry": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts",
+      "qualification": "Actual declaration and dispatcher physically verified in Rust package; excluded from registered39 until conditional prerequisites settle. No run yet.",
+      "declaration": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "nativeAcceptance": {
+        "project": "@semio-tech/framework-replication-rs",
+        "target": "test-retained-diff-sequence-native",
+        "exactIntegrationLaws": 3,
+        "status": "pending",
+        "qualification": "Actual adjacent dispatcher runs TSC+Bun then exact retained_diff_sequence integration3; not proved by separate23 whole libraries."
+      }
+    },
+    {
+      "id": "exclusive-retirement-source",
+      "mandatory": true,
+      "status": "pending-runtime",
+      "project": "@semio-tech/value-rs",
+      "target": "test-exclusive-retirement-source",
+      "sourceEntry": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
+      "freshnessData": [
+        "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🧫️fixtures/🔣️.json",
+        "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs"
+      ],
+      "candidateInput": "e2e-thread-contract-source-candidate.json",
+      "requires": [
+        "actual three-body Source oracle and whole result"
+      ],
+      "qualification": "Physical closed Source target/dispatcher independently accepted and included in the registered roster. Retirement whole-library58755 passed19 laws including actual Cell transfer; independent three-body TS/SQLite Source control remains unrun.",
+      "command": "repo run @semio-tech/value-rs:test-exclusive-retirement-source --skip-cache --output=stream"
+    },
+    {
+      "id": "inline-symbol-source",
+      "mandatory": true,
+      "status": "pending-runtime",
+      "project": "@semio-tech/framework-pack-rs",
+      "target": "test-inline-symbol-source",
+      "sourceEntry": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+      "freshnessData": [
+        "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json",
+        "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🦀️.rs"
+      ],
+      "candidateInput": "e2e-inline-symbol-source-candidate.json",
+      "requires": [
+        "actual two-body Source oracle and whole"
+      ],
+      "qualification": "Physical closed noarg Source target/dispatcher independently accepted and included in registered42. Pack Native46746 passed48 laws including wire handback; independent two-body TS oracle remains unrun.",
+      "command": "repo run @semio-tech/framework-pack-rs:test-inline-symbol-source --skip-cache --output=stream"
+    }
+  ]
+}

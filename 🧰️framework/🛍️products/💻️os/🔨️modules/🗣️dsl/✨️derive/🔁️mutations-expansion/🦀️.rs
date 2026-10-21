@@ -332,18 +332,7 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
             #retire_cold
         }
 
-        impl #impl_generics ::protocol::ColdMutation<#snapshot_ty> for #aggregate_ty #where_clause {
-type ReferenceDiff= #diff_ty;
-fn diff(&self, base: &#snapshot_ty) -> ::protocol::MutationOutcome<Self::Diff> {
-                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
-                match self { #(#diff_arms),* }
-            }
-fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
-                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
-                match self { #(#inverse_arms),* }
-            }
-}
-impl #impl_generics ::semio_framework_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
+        impl #impl_generics ::semio_framework_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
             fn kinds() -> &'static [::semio_framework_os_command::SemanticDescriptor] {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 &[#(#kind_consts),*]

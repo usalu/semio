@@ -41,8 +41,6 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../../
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-shooting-shooting-inferences = { path = "../../../../../../💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-mutations = { path = "../../../../../➕️create-asset/🧪️tests/➕️appends/📦️packages/🦀️rust" }
 semio-s-artifact-shooting-shooting-schema = { path = "../../../../../../📦️packages/🦀️rust" }

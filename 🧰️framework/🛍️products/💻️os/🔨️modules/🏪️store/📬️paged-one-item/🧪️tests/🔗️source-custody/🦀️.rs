@@ -202,7 +202,7 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
     }
     assert!(factory_close.is_none());
     let authority=retained_authority.take().unwrap();
-    let mut authority_close=semio_framework_value::retirement::shared::SharedControlledRetirement::new(authority);
+    let mut authority_close=semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(authority);
     for _ in 0..maximum{
         if authority_close.terminal_is_empty(){break;}
         let copy=authority_close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:authority_close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:authority_close.next_release_byte_demand().unwrap(),maximum_depth:authority_close.next_depth_demand().unwrap()};

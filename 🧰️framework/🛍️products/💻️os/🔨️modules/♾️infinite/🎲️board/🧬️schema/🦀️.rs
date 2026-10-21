@@ -10,7 +10,7 @@ use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, Number, To
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use graph::{EdgeId, HandleId, NodeId};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonMemberPolicy, JsonWriteNode, JsonWriteSource};
-use semio_framework_value::ordered::{OrderedMap, SharedOwner, UpdateCursor};
+use semio_framework_value_ordered::ordered::{OrderedMap, SharedOwner, UpdateCursor};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{deferred, deferred_birth_bytes_for, RetirementCursor, RetireOwned, sequence, sequence_birth_bytes};
 use geometry::Vec2;

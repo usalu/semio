@@ -1,292 +1,174 @@
-import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
-/** 🧩️ Semantic parity execution owner. */
+import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1, readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import {withArtifactDescriptorSlotV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
+import { artifactsStorageSchema as publicationSchema } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import {copyFile} from "node:fs/promises";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-import { repoCacheDirectory } from "@semio-tech/process/execution";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
+import type { ComponentSourceOwnerV1 } from "@semio-tech/plugin-registry/discovery";
+import { builtPluginModulesRootIn } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
+import { artifactFiles, fileDigest,readArtifactBytesV1 } from "../../📦️distribution/📋️inventory/🟦️.ts";
+import { ensureGuestSlimTypstFontsAt } from "../🔤️guestslim-fonts/🟦️.ts";
+import { ensurePreview2ShimVendorAt } from "../🩹️preview2-shim-patches/🟦️.ts";
+import { hostShimSource } from "../🪢️host-shim-source/🟦️.ts";
+import { optimizePluginCoreModuleAsync, pluginCoreModuleFilesV1, pluginWasmOptToolV1 } from "../🪶️wasm-opt/🟦️.ts";
+import { PLUGIN_HOST_SHIM_FILE, SHARD_WORKER_FILE } from "../🧾️contract/🟦️.ts";
+import { pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE } from "../../🕸️imports/🟦️.ts";
+import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from "../🟦️.ts";
+import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { spawnToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+/** ⏱️ Upper bound of one guest `describe()` probe over a transpiled module. */
+const DESCRIPTOR_PROBE_BUDGET_MS = 120_000;
 
+/** 📏️ Upper bound of one probe's base64 descriptor answer. */
+const DESCRIPTOR_PROBE_MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 
-
-const repoRoot = findWorkspaceRoot();
-
-import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
-import { loadPlaywrightV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-
-import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer } from "../🌐️server-pool/🟦️.ts";
-
-import type { ParityPlaygroundReport } from "../📋️playground-report/🟦️.ts";
-import { BootStatus, ParityRenderer, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure } from "../🏗️structure/🟦️.ts";
-
-import { parityOutDir, writeParityReport } from "../📊️report/🟦️.ts";
-import { parityVerdict } from "../✅️verdict/🟦️.ts";
-
-import { PARITY_PROBE_CATALOG, PARITY_STATE_PROBE_SUITE, ProbeRunResult, runParityProbe, runParityProbeSuite } from "../🔬️probe/🟦️.ts";
-
-import { PARITY_PIXEL_REGION_KINDS, compareParityRegion, decodeParityScreenshot } from "../🖼️pixels/🟦️.ts";
-
-
-
-//#endregion 🔖️PixelCompare
-
-//#region 🔖️Triage
-const PARITY_BOOT_TIMEOUT_MS = Number(process.env.PARITY_RUNTIME_BOOT_TIMEOUT_MS ?? 180_000);
-
-/** 🧬️terra-parity-rebaseline: the exact TypeError `🟦️.ts`'s `loadActor` throws —
- * `const api = await bridge.createActorApi(actorId);` on a module whose export is `undefined` — once it
- * crosses `ShardClient.activate`'s reject (`🧵️shard-client.ts` `entry.reject(graftWorkerStack(...))`) and
- * surfaces as an unhandled rejection on the page. Matched on BOTH the property-access phrasing V8 uses
- * (`bridge.createActorApi is not a function` / `undefined is not an object (evaluating
- * 'bridge.createActorApi')`) and the bare symbol, so a wording change in one engine doesn't silently stop
- * matching in the other. Deliberately narrow — this must not catch unrelated "X is not a function" defects,
- * which are real regressions, not stale fixtures. */
-const PARITY_STALE_BRIDGE_RE = /createActorApi/;
-
-/** 🪜️Boot-triage ladder — each rung is a distinct terminal status, never conflated with a structural/pixel mismatch. */
-async function triageParityBoot(page: import("playwright").Page, renderer: ParityRenderer, url: string): Promise<{ readonly status: BootStatus; readonly detail?: string }> {
-  const pageErrors: string[] = [];
-  page.on("pageerror", (e) => pageErrors.push(String(e)));
-  page.on("console", (m) => {
-    if (m.type() === "error") pageErrors.push(m.text());
-  });
-  const staleBridgeHit = (): string | undefined => pageErrors.find((e) => PARITY_STALE_BRIDGE_RE.test(e));
-  try {
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  } catch (e) {
-    return { status: "SERVER-FAIL", detail: String(e) };
-  }
-  if (renderer === "react") {
-    try {
-      await page.waitForFunction(() => document.querySelectorAll("#root *").length > 20, { timeout: PARITY_BOOT_TIMEOUT_MS });
-    } catch {
-      const stale = staleBridgeHit();
-      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "react #root never populated" };
-    }
-    const nodeCount = await page.evaluate(() => document.querySelectorAll("[data-ui-path]").length);
-    if (nodeCount === 0) {
-      const stale = staleBridgeHit();
-      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" };
-    }
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
-  }
-  try {
-    await page.waitForFunction(() => document.querySelector("#semio-wgpu-canvas") != null, { timeout: PARITY_BOOT_TIMEOUT_MS });
-  } catch {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu canvas never mounted" };
-  }
-  if (pageErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: pageErrors.join(" | ") };
-  try {
-    await page.waitForFunction(() => typeof (window as unknown as { semioWgpuIntrospection?: { dumpStructure?: unknown } }).semioWgpuIntrospection?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
-  } catch {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
-  }
-  const dump = await dumpWgpuStructure(page);
-  if (dump.nodes.length === 0) {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "wgpu structural dump empty (plugin-bridge/kernel wiring)" };
-  }
-  const stats = await dumpWgpuFrameStats(page);
-  if (stats && stats.drawCalls === 0) return { status: "BLANK-PAINT", detail: "zero draw calls (paint pipeline)" };
-  const stale = staleBridgeHit();
-  return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
-}
-
-//#endregion 🔖️Report
-
-//#region 🔖️Sweep
-/** 🎭️ Points playwright at the shared cache root's `tools/ms-playwright` that `📜️script.ts setup`
- * actually populates (`bunx playwright install --with-deps chromium`). Without this, `chromium.launch()`
- * falls back to the user-global `~/Library/Caches/ms-playwright`, which holds whatever an unrelated
- * project installed — here a stale `chromium_headless_shell-1223` against the required `-1234` — and
- * every parity run dies with "Executable doesn't exist" suggesting `npx playwright install`, i.e. a
- * download, for a browser the repo had already installed. The storybook runner (root `📜️script.ts`,
- * `🔖️TestScript`) already sets this.
- *
- * terra-parity-rebaseline: hoisted out of `verifyParityVariant` (the only call site that set this
- * before today) into a shared helper, and now ALSO called from `ParityTriageScript`/`ParityProbeScript`
- * — both launch `chromium` directly without going through `verifyParityVariant` and were dying on the
- * exact same stale-global-cache error, which is what made even a single `parity triage <variant>`
- * unrunnable (measured: `Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1234/...`,
- * exit 1) before this fix — never mind a 58-variant sweep. */
-function ensureParityPlaywrightBrowsersPath(): void {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
-}
-
-async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
-  const start = Date.now();
-  ensureParityPlaywrightBrowsersPath();
-  const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-  let reactServer: ParityServerHandle | undefined;
-  let wgpuServer: ParityServerHandle | undefined;
-  try {
-    if (!opts.skipDev) {
-      await prebuildParityPlugin(variant);
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
-    }
-    const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-    const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-    const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-    const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-    if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
-      return { variant, boot: { react: reactBoot.status, wgpu: wgpuBoot.status, detail: reactBoot.detail ?? wgpuBoot.detail }, durationMs: Date.now() - start };
-    }
-    await reactPage.waitForTimeout(400);
-    await wgpuPage.waitForTimeout(400);
-    const reactDump = await dumpReactStructure(reactPage);
-    const wgpuDump = await dumpWgpuStructure(wgpuPage);
-    const structural = compareParityStructural(reactDump, wgpuDump);
-    const outDir = parityOutDir();
-    const reactPng = await decodeParityScreenshot(reactPage, await reactPage.screenshot());
-    const wgpuPng = await decodeParityScreenshot(wgpuPage, await wgpuPage.screenshot());
-    const wgpuPaths = new Set(wgpuDump.nodes.map((n) => n.path));
-    const regionNodes = reactDump.nodes.filter((n) => PARITY_PIXEL_REGION_KINDS.has(n.kind) && wgpuPaths.has(n.path));
-    const regions = await Promise.all(regionNodes.map((n) => compareParityRegion(reactPage, reactPng, wgpuPng, n, outDir, variant)));
-    const failingRegions = regions.filter((r) => r.ratio > r.threshold);
-    let behavioral: ProbeRunResult | undefined;
-    try {
-      behavioral = await runParityProbe(reactPage, wgpuPage, PARITY_STATE_PROBE_SUITE.steps);
-    } catch (e) {
-      behavioral = { status: "FAIL", steps: [{ index: 0, step: { kind: "settle", ms: 0 }, status: "FAIL", detail: `probe runner threw: ${String(e)}` }] };
-    }
-    return {
-      variant,
-      boot: { react: reactBoot.status, wgpu: wgpuBoot.status },
-      structural,
-      pixel: { status: failingRegions.length === 0 ? "PASS" : "FAIL", comparedRegions: regions.length, regions: failingRegions },
-      behavioral,
-      durationMs: Date.now() - start,
-    };
-  } finally {
-    await browser.close();
-    if (reactServer) stopParityDevServer(reactServer);
-    if (wgpuServer) stopParityDevServer(wgpuServer);
+/** 📦️ `support`: stages the vendor shims, the shard worker and the packed fonts every module of the one plugin-modules root shares. */
+export class SupportScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length !== 0) throw new Error("Usage: support");
+    const mode=readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,phase=scriptCompilerAdmissionControlV1(this.invocation,"browser:support",0);
+    await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,phase,(_store,storePhase)=>withRepositoryCacheStoreV1(this.repoRoot,"products",this.invocation,storePhase,(store,storePhase)=>withArtifactScratchV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/support"}},token=>withArtifactDestinationTaskV1(token,this.invocation,async sink=>{
+      const vendor=join(sink.directory,"vendor"),shard=join(sink.directory,"shard"),root=builtPluginModulesRootIn(this.repoRoot,mode);
+      ensurePreview2ShimVendorAt(vendor,this.repoRoot);mkdirSync(shard);writeFileSync(join(shard,SHARD_WORKER_FILE),shardWorkerSource());
+      for(const[directory,owner,source]of[[PREVIEW2_VENDOR_RELATIVE,"browser-support:preview2",vendor],[MODULE_SHARD_DIRECTORY,"browser-support:shard",shard]]as const)await withRepositoryArtifactDestinationV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:join(root,directory)},destination=>stageRepositoryArtifacts(destination,owner,artifactFiles(source)));
+      console.log("Browser support: canonical selected-mode vendor shims and shard worker published");
+    }))));
   }
 }
 
-class ParitySmokeScript extends BundleScript {
-  async run(): Promise<void> {
-    const variant = requirePlaygroundVariant(process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const report = await verifyParityVariant(variant, findFreeParityPortPair());
-    console.log(JSON.stringify(report, null, 2));
-    if (parityVerdict(report) !== "PASS") {
-      throw new Error(`parity smoke ${parityVerdict(report)}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "missing"} pixel=${report.pixel?.status ?? "missing"} behavioral=${report.behavioral?.status ?? "missing"}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
-    }
-    console.log(`parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} behavioral=${report.behavioral?.status} (${report.durationMs}ms)`);
-  }
+
+/** 🔎️ Runs the transpiled module's own `describe()` under JSPI and returns the semantic descriptor bytes it answers. */
+async function probeModuleDescriptor(module: string, repoRoot: string, control: CompilerAdmissionControl, environment: Readonly<Record<string, string | undefined>> = process.env): Promise<Uint8Array> {
+  const phase = requestedCompilerAdmissionControlV1(control, DESCRIPTOR_PROBE_BUDGET_MS);
+  const budget = compilerAdmissionBudgetV1(phase);
+  const child = spawnToolV1("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, "--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, module], { cwd: repoRoot, env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, signal: control.signal, timeout: budget, killSignal: "SIGTERM", stdio: ["ignore", "pipe", "pipe"] });
+  const terminate = (): void => terminateOwnedChildTree(child);
+  control.signal.addEventListener("abort", terminate, { once: true });
+  const deadline = setTimeout(terminate, budget);
+  let stdout = "", stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => { stdout += chunk; if (stdout.length > DESCRIPTOR_PROBE_MAX_OUTPUT_BYTES) child.kill(); });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr = (stderr + chunk).slice(-8192); });
+  let status: number | null, failure: unknown;
+  try { status = await new Promise<number | null>(accept => { child.once("error", error => { failure = error; }); child.once("close", accept); }); } finally { clearTimeout(deadline); control.signal.removeEventListener("abort", terminate); }
+  checkResourceLeaseControl(phase);
+  if (failure !== undefined) throw failure;
+  if (status !== 0) throw new Error(`module describe() probe failed (${status}): ${stderr}`);
+  const base64 = stdout.trim();
+  if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(base64)) throw new Error("module describe() probe answered no base64 descriptor");
+  return Buffer.from(base64, "base64");
 }
 
-class ParityTriageScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
-    const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    let reactServer: ParityServerHandle | undefined;
-    let wgpuServer: ParityServerHandle | undefined;
-    try {
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
-      const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-      const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-      console.log(`triage ${variant}: react=${reactBoot.status}${reactBoot.detail ? ` (${reactBoot.detail})` : ""}`);
-      console.log(`triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
-    } finally {
-      await browser.close();
-      if (reactServer) stopParityDevServer(reactServer);
-      if (wgpuServer) stopParityDevServer(wgpuServer);
-    }
-  }
+/** 🧺️ The private state one component module is materialized in: its source identity, the deliverable the module is built from, the stage cache and a
+ * private work directory. */
+export type ComponentModuleWorkV1 = Readonly<{ invocation:ScriptInvocation; repoRoot: string; target: ComponentSourceOwnerV1; deliverable: ComponentDeliverableV1; cache: StageCacheV1; work: string; environment?: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>;
+
+/** 🏷️ The jco module name of a component crate. */
+function componentBaseV1(target: ComponentSourceOwnerV1): string {
+  return target.packageName.replaceAll("-", "_");
 }
 
-/** 🎬️Standalone entry point for JUST the behavioral probe suite — boots both dev servers, triages
- * boot, then runs `PARITY_PROBE_CATALOG[suiteName]` (default `"shell"`) without paying for the
- * structural/pixel comparison `verifyParityVariant` also does. Useful for iterating on a probe suite
- * itself without re-running the (slower) full `verify`. */
-class ParityProbeScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const suiteName = segments[1] || "state";
-    const suite = PARITY_PROBE_CATALOG[suiteName];
-    if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
-    const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
-    const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    let reactServer: ParityServerHandle | undefined;
-    let wgpuServer: ParityServerHandle | undefined;
-    try {
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
-      const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-      const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-      if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
-        throw new Error(`parity probe FAILED: boot react=${reactBoot.status} wgpu=${wgpuBoot.status}${(reactBoot.detail ?? wgpuBoot.detail) ? ` (${reactBoot.detail ?? wgpuBoot.detail})` : ""}`);
-      }
-      const result = await runParityProbeSuite(reactPage, wgpuPage, suite);
-      console.log(JSON.stringify(result, null, 2));
-      console.log(`probe ${variant}/${suiteName}: ${result.status} (${result.steps.length} step(s))`);
-      if (result.status !== "PASS") throw new Error(`parity probe ${variant}/${suiteName} FAILED`);
-    } finally {
-      await browser.close();
-      if (reactServer) stopParityDevServer(reactServer);
-      if (wgpuServer) stopParityDevServer(wgpuServer);
-    }
-  }
+const identities = new Map<string, Promise<string>>();
+/** 🪪️ One tool identity per process: a file's SHA-256 or a command's version answer. */
+function toolIdentityV1(key: string, compute: () => Promise<string>): Promise<string> {
+  let known = identities.get(key);
+  if (!known) { known = compute(); identities.set(key, known); }
+  return known;
 }
 
-class ParityVerifyScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variants = segments.filter((s) => !s.startsWith("--"));
-    if (variants.length === 0) throw new Error("usage: parity verify <variant…>");
-    const skipDev = process.env.SKIP_DEV === "1";
-    const ports = skipDev ? parityPortsForShard(0) : findFreeParityPortPair();
-    const reports: ParityPlaygroundReport[] = [];
-    for (const variant of variants) {
-      const report = await verifyParityVariant(variant, ports, { skipDev });
-      reports.push(report);
-      console.log(`${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
-    }
-    writeParityReport(reports);
-    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
-    if (unresolved.length > 0) throw new Error(`parity verify: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
-  }
+/** 🧬️ The identity of the sources the transpile stage runs: the transpile orchestration, the jco module rewrites and the contract they share. */
+async function materializationIdentityV1(): Promise<string> {
+  const digests = await Promise.all(["../🟦️.ts", "../🧬️jco-module-rewrites/🟦️.ts", "../🧾️contract/🟦️.ts"].map((source) => fileDigest(fileURLToPath(new URL(source, import.meta.url)))));
+  return createHash("sha256").update(digests.join("\n")).digest("hex");
 }
 
-class ParitySweepScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const shardArg = segments.find((s) => s.startsWith("--shard="))?.slice("--shard=".length);
-    const [shardIndex, shardCount] = shardArg ? shardArg.split("/").map(Number) : [0, 1];
-    const variants = playgroundCatalog().map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
-    const reports: ParityPlaygroundReport[] = [];
-    for (const variant of variants) {
-      let report: ParityPlaygroundReport;
-      try {
-        report = await verifyParityVariant(variant, parityPortsForShard(shardIndex ?? 0));
-      } catch (error) {
-        report = { variant, boot: { react: "SERVER-FAIL", wgpu: "SERVER-FAIL", detail: String(error) }, durationMs: 0 };
-      }
-      reports.push(report);
-      console.log(`sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
-    }
-    writeParityReport(reports);
-    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
-    console.log(`parity sweep complete: ${reports.length - unresolved.length}/${reports.length} PASS`);
-    if (unresolved.length > 0) throw new Error(`parity sweep: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
-  }
+/** 🧬️ The transpile stage: jco's location-independent module files of the component, cached by the component's digest, the jco version, this module's
+ * implementation and the module name. */
+export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
+  checkResourceLeaseControl(work.control);
+  const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
+  const [component, jco, materialization] = await Promise.all([fileDigest(work.deliverable.wasm, work.control.signal), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1)]);
+  await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal);
+  checkResourceLeaseControl(work.control);
+  return output;
 }
 
-export { PARITY_BOOT_TIMEOUT_MS, PARITY_STALE_BRIDGE_RE, ParityProbeScript, ParitySmokeScript, ParitySweepScript, ParityTriageScript, ParityVerifyScript, ensureParityPlaywrightBrowsersPath, triageParityBoot, verifyParityVariant };
+/** 🪶️ The optimize stage: `wasm-opt -Oz` of every extracted core of a shipped component on `cores` threads, each cached by the core's digest, the optimizer's
+ * version and its arguments (the thread count never changes Binaryen's output). Resolves with the directory of the optimized cores, or `null` for a local
+ * profile that ships unoptimized cores. */
+export async function optimizeComponentCoresV1(work: ComponentModuleWorkV1, transpiled: string, cores?: number): Promise<string | null> {
+  checkResourceLeaseControl(work.control);
+  if (!COMPONENT_PROFILE_POLICIES[work.deliverable.profile].shipped) return null;
+  const output = join(work.work, "optimized"), tool = pluginWasmOptToolV1({ repoRoot: work.repoRoot }), version = await toolIdentityV1(`wasm-opt:${tool.command}`, () => captureOwnedCommandV1(tool.command, ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim()));
+  mkdirSync(output, { recursive: true });
+  for (const file of pluginCoreModuleFilesV1(transpiled, componentBaseV1(work.target))) {
+    const core = join(transpiled, file), stage = join(work.work, `optimize-${file}`);
+    await work.cache.run({ stage: "optimize", schemaVersion: 1, inputs: { core: await fileDigest(core, work.control.signal) }, tools: { "wasm-opt": version, args: tool.args.join(" ") } }, stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", environment: work.environment, ...(cores === undefined ? {} : { cores }), control: work.control }), work.control.signal);
+    renameSync(join(stage, "core.wasm"), join(output, file));
+    rmSync(stage, { recursive: true, force: true });
+  }
+  checkResourceLeaseControl(work.control);
+  return output;
+}
+
+/** 🧩️ Assembles the module next to its final directory (so relative imports resolve exactly as published): the transpiled files with the optimized cores
+ * swapped in, the host shim, and the preview2 shim imports pointed at the plugin-modules vendor directory. */
+async function assembleComponentModuleV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,temporary:string,vendor:string,maximumFiles:number,maximumBytes:number):Promise<string>{
+ checkResourceLeaseControl(work.control);if(work.target.directoryName===undefined)throw Error("Authored deployment directory required");mkdirSync(temporary,{recursive:true});const shim=hostShimSource();let bytes=Buffer.byteLength(shim);if(bytes>maximumBytes)throw Error("Finite browser shim extent required");for(const[name,path]of artifactFiles(transpiled,maximumFiles-1,maximumBytes-bytes)){const source=optimized&&existsSync(join(optimized,name))?join(optimized,name):path,destination=join(temporary,name),facts=lstatSync(source),extent=facts.size;if(!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||destination.length>publicationSchema.definitions.Protocol.const.maximumPathUnits||extent>maximumBytes-bytes)throw Error("Finite assembled browser extent required");bytes+=extent;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}writeFileSync(join(temporary,PLUGIN_HOST_SHIM_FILE),shim);rewritePreview2ShimImports(join(temporary,`${componentBaseV1(work.target)}.js`),vendor);checkResourceLeaseControl(work.control);return temporary;
+}
+
+/** 🔎️ The probe stage: the assembled module's own `describe()` under JSPI, cached by the digest of every module file and the node version. */
+async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string,vendor:string): Promise<Uint8Array> {
+  checkResourceLeaseControl(work.control);
+  const inputs: Record<string, string> = {};
+  for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
+  for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);
+  const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), output = join(work.work, "probe");
+  await work.cache.run({ stage: "probe", schemaVersion: 1, inputs, tools: { node } }, output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal);
+  checkResourceLeaseControl(work.control);
+  return readArtifactBytesV1(join(output,"semantic.bin"),CATALOG_DESCRIPTOR_MAX_BYTES,work.control.signal);
+}
+
+/** 📦️ Publishes the assembled module: its semantic descriptor, the bridge and a copy of the receipt that binds the two, staged atomically under the
+ * component's one ownership key. The module's `describe()` must hash to the receipt's semantic descriptor. */
+async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: string, semantic: Uint8Array, receipt: ComponentReceiptV1,maximumFiles:number,maximumBytes:number): Promise<string> {
+  checkResourceLeaseControl(work.control);
+  const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,output=join(builtPluginModulesRootIn(work.repoRoot,mode),work.target.directoryName!),base=componentBaseV1(work.target);
+  if(receipt.profile!==mode)throw Error("Component receipt must match its actual Original mode");
+    if (createHash("sha256").update(semantic).digest("hex") !== receipt.semanticDescriptorSha256) throw new Error(`${work.target.pluginId}: the module's describe() is not the semantic descriptor its receipt names`);
+    const descriptor=finalizePluginDescriptor(semantic,work.target.pluginId),payload=new Map<string,Uint8Array|string>([["🛂️.descriptor.semio",descriptor.pack],["🔣️.json",descriptor.json],[MODULE_BRIDGE_FILE,pluginComponentBridgeSource(base,work.target.wasmOut)],[COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1(receipt)]]),existing=artifactFiles(module,maximumFiles,maximumBytes);let bytes=0,count=existing.size;
+    for(const[name,path]of existing)if(!payload.has(name))bytes+=lstatSync(path).size;for(const[name,value]of payload){if(!existing.has(name))count++;bytes+=typeof value==="string"?Buffer.byteLength(value):value.byteLength;}if(count>maximumFiles||bytes>maximumBytes)throw Error("Final browser module exceeds combined scratch grant");for(const[name,value]of payload)writeFileSync(join(module,name),value);
+    work.control.signal?.throwIfAborted();
+    const files=artifactFiles(module);
+    await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactDestinationV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,directory:output},destination=>stageRepositoryArtifacts(destination,componentModuleOwnerV1(work.target.cratePath),files)));
+    return output;
+}
+
+/** 🌐️ Retains one genuine vendor reader and funded assembled module through actual probe and final publication. */
+export async function publishComponentBrowserV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,receipt:ComponentReceiptV1):Promise<void>{
+ const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,policy=publicationSchema.definitions.Protocol.const;if(receipt.profile!==mode)throw Error("Exact actual browser publication mode required");
+ await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:join(builtPluginModulesRootIn(work.repoRoot,mode),PREVIEW2_VENDOR_RELATIVE),owner:"browser-support:preview2",maximumBytes:policy.maximumOutputBytes+policy.maximumManifestBytes,maximumFiles:policy.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,work.invocation,async artifact=>{
+  await withArtifactScratchV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:artifact.control,request:{version:1,mode,owner:"browser/module/"+work.target.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,work.invocation,async sink=>{
+   let total=0;const vendor=join(sink.directory,PREVIEW2_VENDOR_RELATIVE);for(const name of artifact.files){const source=join(artifact.path,name),destination=join(vendor,name),size=lstatSync(source).size;if(destination.length>policy.maximumPathUnits||size>policy.maximumOutputBytes-total)throw Error("Browser vendor scratch extent exceeded");total+=size;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}
+   const module=await assembleComponentModuleV1({...work,control:sink.control},transpiled,optimized,join(sink.directory,"module"),vendor,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);artifactFiles(sink.directory);const semantic=await probeComponentModuleV1({...work,control:sink.control},module,vendor);await artifact.recheck();await publishComponentModuleV1({...work,control:sink.control},module,semantic,receipt,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);
+  }));
+ })));
+}

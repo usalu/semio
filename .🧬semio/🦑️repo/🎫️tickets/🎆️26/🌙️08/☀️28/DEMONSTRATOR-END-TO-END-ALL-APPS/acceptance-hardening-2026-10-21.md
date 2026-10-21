@@ -122,3 +122,51 @@ Current line landmarks in acceptance/🟦️.ts (line numbers identify this revi
 9. If source-level selectors fail in a served run, retain exact first failing locator/action and screenshot/trace, compare the authored production DOM contract, and fix the confirmed owner. No speculative retries, fake probes, or weakened tests.
 
 No new evidence changes the next action: continue the already queued owner processes until native admission permits actual results, then diagnose the first concrete failure. No passing test/runtime claim is made.
+
+### Active E2E Ownership Handoff
+
+Parent assigned acceptance/asset/browser triage for existing E2E session 98132. A single attempted cross-agent `write_stdin` returned `Unknown process id`; no output was consumed and no process was launched, restarted or stopped. Runtime retains the agent-scoped native service handle, complete stream append to `🗑️generated/e2e-contract.log`, and admission/browser-start/terminal notifications. This agent owns the shared-log and acceptance artifact triage. Unit execution remains Runtime-owned; infrastructure batching remains parent-owned.
+
+Runtime confirmed session 98132 admitted one job / 3,584 MB at 14,029 MB available with the unchanged 6,553 MB floor. It is in selected native preparation / command-source imports. No Playwright start, browser assertion or pass is claimed. Current source still declares all 20 acceptance cases and captures a short PNG for each successful pane boot/content case and document-history case. The actual ticket artifact root is 153 characters; adding the declared 102-character reserved suffix totals 255, within the 256-character policy. The runner uses one Chromium worker and the authored real GPU adapter configuration. No assertions, fixture expectations or GPU settings were weakened.
+
+## Retained E2E Diagnostic Readiness
+
+E2E 98132 remains owned by runtime_execution for native polling, because native handles are scoped per agent. This agent owns bounded reads of generated/e2e-contract.log and browser failure triage. No duplicate browser command was launched. Latest observed stream has source-closure/import preparation only, without a browser runner header or case output.
+
+The current twenty-case source and its automatic health fixture were reread without edits. First live evidence should be classified in this order:
+
+1. Authored prepare/serve generation and `Testing Demonstrator at` URL, followed by the actual Playwright test header. Earlier graph/compiler failures are pretest infrastructure failures.
+2. Artifact path/title assertions execute before each browser case body; an error here belongs to the existing bounded artifact contract.
+3. Per-pane readiness outcome and each declared window’s real surface content. Preserve all content expectations, including independent Koordinator windows and Generator preview. An empty scene after ready needs actual guest/runtime diagnosis; it does not justify lowering the assertion.
+4. Visible control mutation, actual result projection, undo and redo. Statik requires settled zero geometry before PageUp and settled changed geometry thereafter; its current source retains that synchronization. Energie status must come from real transport accessibility output.
+5. Automatic page/console error teardown applies to every case, including selection and funding. A PNG attachment alone does not imply case success when health teardown fails.
+
+Short `p.png` screenshots are captured and attached for each successful boot-content body and history workflow. Parent can visually inspect retained pixels after actual execution. No screenshot, console result, completed workflow or twenty-case pass is claimed before the browser starts.
+
+Runtime execution later reported one E2E progress burst of 61069 tokens exceeded its 60000-token capture limit before any browser start; its received middle was truncated and the log has an explicit gap. Retained E2E logs cannot now be described as a complete process stream. Our separately owned Source-demand uses direct stdout/stderr file redirection, so that stream does not depend on tool chunk size. No browser pass or failure is inferred from a missing progress region.
+
+## E2E 98132 Terminal Evidence
+
+Runtime_execution confirmed native handle 98132 terminated with exit 1 after parent-directed SIGINT of this own obsolete pretest job, ending with `Original Script process interrupted`. The parent decision used known module initialization before subsequent source saves; no process-specific emitted hash mismatch is claimed. The received final chunk is retained in generated/e2e-contract.log, whose earlier capture-gap note remains. No browser runner, served acceptance assertion, screenshot completion or twenty-case result occurred in this invocation. Runtime unit 45442 and our Source-demand 46731 remain retained; no replacement E2E was launched by this agent.
+
+## Finite Current Acceptance Review During34653 Queue
+
+Read-only review of the current20 expanded browser cases found no confirmed selector/fixture mismatch requiring an edit. The20 titles exactly equal the artifact fixture roster, are ASCII and at most24characters. Automatic browser health remains installed for all cases; exact404 resource-only suppression remains strict. Eight boot cases retain every window/content check, and nine PNG call sites include the eight-pane boot loop plus interaction completion captures. FEM still waits for settled zero geometry before PageUp and then a changed nonzero scene before the scale baseline.
+
+Re-read29 authored Rust sources from the current example/mutation inventory, seven current simulation/tool-run sources, eight current DOM projection/identity owners, the procedural and puzzle DSL assets, curation stock DSL, brand, spec and four neutral fixtures. Current renderer still emits tree-label/tree-description, numeric stepper controls, action-pane/engagement IDs, meshes/instances and node-graph snapshot attributes. Per-shell readiness still requires session plus initialExampleReady. Funding remains the third landing-tour step with three authored logos, matching the twoNext actions.
+
+Current procedural height6/min0/max10/step0.5 permits6.5 and the seven widgets/six edges remain the asserted fixture. CAD catalogue still binds addObject and persisted creation. Puzzle retained publish calls the real create_object mutation helper and selects the minted ID; the absence of a literal CreateObject token in this helper is not a behavior defect. Its seed/kind/mesh asset identities match the fixture. Process row action and inspector fields still expose enabled and origin identifiers, with setStepEnabled as a mutation. GIS addFeature still targets positions with default lon/lat0 and CreatePosition. Curation exact beam ID/name/availability24 remain authored. Energy real tool ID, framework transport action/status/progress/step IDs and no-result wording remain consistent. FEM current_revision captions and deformationScale action/control remain consistent.
+
+Historical audit references to simulation-session/🦀️.rs no longer resolve at that local folder: it currently holds the JSON contract/tests, while editor source explicitly links semio_s_artifact_energy_model_session as session. This changes the research path inventory, not an observed acceptance selector or fixture expectation. Its engine implementation was not exhaustively traversed in this finite review. Actual browser rendering, tool scheduling, mutation result/history and screenshots remain unexecuted; source review is not a passing E2E result. No Source edits, native commands or application actions were made by this review.
+
+## Energy Lifecycle Behavior Correction
+
+The finite behavior review found a concrete error missed by the earlier selector-only audit. Actual framework complete_tool_run_job in OS plugin/tool-run/instance/job-admission-and-finalize-turn emits JobComplete then, for mutating:false, immediately emits Finalize in the same method. The authored Energy run contract is mutating:false. A persistent Complete state plus manual Finalize button is therefore not its workflow. Framework action legality permits Abort in Starting/Running/Paused/Complete/Finalizing, and terminal groups expose Start for a fresh run.
+
+Saved neutral schema/cases and unit oracles before the browser change. Energy completion is now automatic; stable Finalized status, final quality-tier step and accepted read-only result text are all required. The second run waits for a distinct nonempty numeric group and captures that identity from the successful poll before immediately targeting its enabled Abort button. An intermediate empty panel can no longer satisfy a not-equal-to-old-group predicate. It still requires actual Aborted and no-result text; natural completion is not accepted as cancellation. No runtime semantics, numerical setting, action API or product instrumentation changed.
+
+Six language-neutral restart cases cover actual/new, empty, same, nonnumeric, child-ID and initial groups. A pure imported helper is compared with an independent Ajv schema reference. The existing console Vitest entry reads the real non-mutating contract and Rust auto-finalization branch, and TypeScript AST verifies that the Energy browser case asserts finalized/final-tier/accepted-result, uses fresh-group validation and has no manual finalize. The normal unit entry already includes this file; the helper is a derived static import. Runtime owns adding the two external text reads as explicit DATA resources on test/canonical targets to preserve their Source/freshness authority. E2E runtime roots and native prerequisites remain unchanged.
+
+Browser health itself has no new confirmed defect: its automatic fixture installs pageerror/console-error listeners before each case and asserts both lists in finally; the anchored404 resource diagnostic exemption does not suppress other4xx/application/trace failures. All20cases retain it. Actual Energy run timing, host projection and cancellation remain pending served browser execution; no passing claim is made.
+
+Actual auto-finalization method begins at source line81. No native invocation was launched for this correction.

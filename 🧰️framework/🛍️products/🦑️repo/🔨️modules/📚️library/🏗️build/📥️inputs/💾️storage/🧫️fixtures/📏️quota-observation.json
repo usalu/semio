@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "zero-boundary",
+      "input": {
+        "maximumBytes": 0,
+        "usedBytes": 0,
+        "availableBytes": 0,
+        "minimumAvailableBytes": 0
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 0,
+        "usedBytes": 0,
+        "availableBytes": 0,
+        "minimumAvailableBytes": 0,
+        "reason": null,
+        "headroomSatisfied": true
+      }
+    },
+    {
+      "id": "policy-room",
+      "input": {
+        "maximumBytes": 1073741824,
+        "usedBytes": 0,
+        "availableBytes": 2147483648,
+        "minimumAvailableBytes": 1073741824
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 1073741824,
+        "usedBytes": 0,
+        "availableBytes": 2147483648,
+        "minimumAvailableBytes": 1073741824,
+        "reason": null,
+        "headroomSatisfied": true
+      }
+    },
+    {
+      "id": "exact-boundaries",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 10,
+        "availableBytes": 5,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 10,
+        "usedBytes": 10,
+        "availableBytes": 5,
+        "minimumAvailableBytes": 5,
+        "reason": null,
+        "headroomSatisfied": true
+      }
+    },
+    {
+      "id": "retained-pressure",
+      "input": {
+        "maximumBytes": 1073741824,
+        "usedBytes": 1073741825,
+        "availableBytes": 2147483648,
+        "minimumAvailableBytes": 1073741824
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 1073741824,
+        "usedBytes": 1073741825,
+        "availableBytes": 2147483648,
+        "minimumAvailableBytes": 1073741824,
+        "reason": "retained",
+        "headroomSatisfied": true
+      }
+    },
+    {
+      "id": "headroom-pressure-refuses-reservation",
+      "input": {
+        "maximumBytes": 1073741824,
+        "usedBytes": 0,
+        "availableBytes": 1073741823,
+        "minimumAvailableBytes": 1073741824
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 1073741824,
+        "usedBytes": 0,
+        "availableBytes": 1073741823,
+        "minimumAvailableBytes": 1073741824,
+        "reason": null,
+        "headroomSatisfied": false
+      }
+    },
+    {
+      "id": "retained-precedes-headroom",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 11,
+        "availableBytes": 4,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": true,
+        "maximumBytes": 10,
+        "usedBytes": 11,
+        "availableBytes": 4,
+        "minimumAvailableBytes": 5,
+        "reason": "retained",
+        "headroomSatisfied": false
+      }
+    },
+    {
+      "id": "negative-is-shape",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": -1,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": false,
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": -1,
+        "minimumAvailableBytes": 5,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "fraction-is-shape",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 0.5,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": false,
+        "maximumBytes": 10,
+        "usedBytes": 0.5,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "unsafe-is-shape",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 9007199254740992,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": false,
+        "maximumBytes": 10,
+        "usedBytes": 9007199254740992,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "extra-is-shape",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5,
+        "foreign": {
+          "private": "not-observed"
+        }
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 5,
+        "schemaValid": false,
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "missing-is-shape",
+      "input": {
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": 10
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 3,
+        "schemaValid": false,
+        "maximumBytes": 10,
+        "usedBytes": 0,
+        "availableBytes": 10,
+        "minimumAvailableBytes": null,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "type-is-shape",
+      "input": {
+        "maximumBytes": "10",
+        "usedBytes": 0,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5
+      },
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "object",
+        "fieldCount": 4,
+        "schemaValid": false,
+        "maximumBytes": null,
+        "usedBytes": 0,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 5,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "null-is-shape",
+      "input": null,
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "null",
+        "fieldCount": null,
+        "schemaValid": false,
+        "maximumBytes": null,
+        "usedBytes": null,
+        "availableBytes": null,
+        "minimumAvailableBytes": null,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    },
+    {
+      "id": "array-is-shape",
+      "input": [],
+      "expected": {
+        "version": 1,
+        "observed": true,
+        "kind": "array",
+        "fieldCount": null,
+        "schemaValid": false,
+        "maximumBytes": null,
+        "usedBytes": null,
+        "availableBytes": null,
+        "minimumAvailableBytes": null,
+        "reason": "shape",
+        "headroomSatisfied": null
+      }
+    }
+  ]
+}

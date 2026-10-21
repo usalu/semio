@@ -23,3 +23,78 @@ test("captured physical Source refusal diagnostics stay closed, relative and bou
  const fs=await import("node:fs/promises"),paths=await import("node:path"),{default:ts}=await import("typescript"),source=await fs.readFile(new URL("../🟨️.mjs",import.meta.url),"utf8"),file=ts.createSourceFile("revision.mjs",source,ts.ScriptTarget.Latest,true),node=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="capturedReadRefusalV1");if(!node)throw Error("Actual captured Source refusal owner required");const actual=new Function("relative","isAbsolute","sep",node.getText()+";return capturedReadRefusalV1;")(paths.posix.relative,paths.posix.isAbsolute,"/"),ajv=new Ajv({strict:true}),db=new Database(":memory:");
  try{for(const row of corpus.refusals){expect(ajv.validate({...schema.definitions.CapturedReadRefusalCase,definitions:schema.definitions},row)).toBe(true);const inside=db.query("select ?1=?2 or substr(?2,1,length(?1)+1)=?1||'/' accepted").get(row.root,row.path)as{accepted:number},oracle={version:1,scope:inside.accepted?"workspace":"outside",path:inside.accepted?row.path.slice(row.root.length+(row.path===row.root?0:1)):null,sourceCount:row.sources};expect(oracle).toEqual(row.expected);expect(actual({root:row.root,sources:{size:row.sources}},row.path)).toEqual(oracle);expect(ajv.validate(schema.definitions.CapturedReadRefusal,oracle)).toBe(true);}}finally{db.close();}
 });
+
+/** 🧪️ Loads distinct real reader modules and the actual self-check against a controlled changed capture. */
+async function implementationPinReadersV1(){
+ const fs=await import("node:fs/promises"),{default:ts}=await import("typescript"),source=await fs.readFile(new URL("../🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("revision.mjs",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="current");
+ if(!node)throw Error("Actual reader current guard required");
+ const main=await import("../🟨️.mjs"),copy=await import(new URL("../🟨️.mjs?implementation-pin-copy",import.meta.url).href);
+ expect(copy.withImplementationPinV1).not.toBe(main.withImplementationPinV1);
+ const guard=(reader:typeof main)=>new Function("implementationPinnedV1","capture","ownPath","loaded","loadedSchema","ownSchemaPath",node.getText(tree)+";return current;")(reader.implementationPinnedV1,()=>({sha256:"changed"}),"/fixture/reader",{byteLength:1,sha256:"loaded"},undefined,"/fixture/schema")as()=>void;
+ return{main,copy,guard};
+}
+
+test("a pinned invocation completes with the Source it loaded: an edited reader refuses outside the pin and lets the invocation finish inside it; pins nest and a failing body releases its pin",async()=>{
+ const{main:reader,copy,guard}=await implementationPinReadersV1(),current=guard(reader),primary=Object.freeze({pinBodyFailure:true});
+ expect(reader.implementationPinnedV1()).toBe(false);expect(current).toThrow("Stale loaded Source revision reader; restart required");
+ await reader.withImplementationPinV1(async()=>{
+  expect(reader.implementationPinnedV1()).toBe(true);expect(copy.implementationPinnedV1()).toBe(true);
+  await copy.withImplementationPinV1(async()=>{expect(current).not.toThrow();});
+  expect(reader.implementationPinnedV1()).toBe(true);expect(current).not.toThrow();
+ });
+ expect(reader.implementationPinnedV1()).toBe(false);expect(current).toThrow("Stale loaded Source revision reader");
+ await expect(reader.withImplementationPinV1(async()=>{throw primary;})).rejects.toBe(primary);expect(reader.implementationPinnedV1()).toBe(false);
+});
+
+test("implementation pins isolate concurrent invocations while sharing module-copy context",async()=>{
+ const readers=await implementationPinReadersV1(),db=new Database(":memory:"),ajv=new Ajv({strict:true});
+ try{
+  for(const row of corpus.implementationPins.scopeCases){
+   expect(ajv.validate(schema.definitions.ImplementationPinCase,row),row.name).toBe(true);
+   const oracle=db.query("WITH RECURSIVE scopes AS(SELECT json_extract(value,'$.id')id,json_extract(value,'$.parent')parent,json_extract(value,'$.pin')pin FROM json_each(?1)),lineage(id,pinned,depth)AS(SELECT id,pin,0 FROM scopes WHERE parent IS NULL UNION ALL SELECT s.id,CASE WHEN s.pin OR l.pinned THEN 1 ELSE 0 END,l.depth+1 FROM scopes s JOIN lineage l ON s.parent=l.id WHERE l.depth<16)SELECT id,pinned FROM lineage ORDER BY id").all(JSON.stringify(row.scopes))as{id:string;pinned:number}[];
+   expect(oracle.length,row.name+" complete neutral forest").toBe(row.scopes.length);expect(new Set(oracle.map(value=>value.id)).size).toBe(row.scopes.length);
+   const expected=Object.fromEntries(row.scopes.map(value=>[value.id,value.expected])),actual:Record<string,boolean>={};expect(Object.fromEntries(oracle.map(value=>[value.id,Boolean(value.pinned)])),row.name+" SQLite ancestry").toEqual(expected);
+   let entered=0,release!:()=>void;const allEntered=new Promise<void>(resolve=>{release=resolve;});
+   const visit=async(scope:typeof row.scopes[number]):Promise<void>=>{
+    const reader=readers[scope.module as"main"|"copy"],body=async()=>{
+     const children=Promise.all(row.scopes.filter(child=>child.parent===scope.id).map(visit));
+     if(++entered===row.scopes.length)release();await allEntered;
+     actual[scope.id]=reader.implementationPinnedV1();expect(actual[scope.id],row.name+":"+scope.id).toBe(expected[scope.id]);
+     const current=readers.guard(reader);if(expected[scope.id])expect(current).not.toThrow();else expect(current).toThrow("Stale loaded Source revision reader");
+     await children;
+    };
+    if(scope.pin)await reader.withImplementationPinV1(body);else await body();
+   };
+   await Promise.all(row.scopes.filter(scope=>scope.parent===null).map(visit));expect(actual,row.name).toEqual(expected);expect(readers.main.implementationPinnedV1()).toBe(false);expect(readers.copy.implementationPinnedV1()).toBe(false);
+  }
+  for(const row of corpus.implementationPins.lifetimeCases){
+   expect(ajv.validate(schema.definitions.ImplementationPinLifetimeCase,row),row.name).toBe(true);
+   const innerPrimary=Object.freeze({inner:row.name}),outerPrimary=Object.freeze({outer:row.name}),actual:Record<string,boolean>={};let releaseInner!:()=>void,releaseOuter!:()=>void,innerDescendant!:Promise<boolean>,outerDescendant!:Promise<boolean>,outerRejected=false;
+   const innerGate=new Promise<void>(resolve=>{releaseInner=resolve;}),outerGate=new Promise<void>(resolve=>{releaseOuter=resolve;});
+   try{await readers.main.withImplementationPinV1(async()=>{
+    actual.outer=readers.copy.implementationPinnedV1();outerDescendant=outerGate.then(()=>readers.copy.implementationPinnedV1());let innerRejected=false;
+    try{await readers.copy.withImplementationPinV1(async()=>{actual.inner=readers.main.implementationPinnedV1();innerDescendant=innerGate.then(()=>readers.main.implementationPinnedV1());if(row.innerFailure)throw innerPrimary;});}catch(error){innerRejected=true;expect(error).toBe(innerPrimary);}
+    expect(innerRejected,row.name).toBe(row.innerFailure);actual.afterInner=readers.copy.implementationPinnedV1();releaseInner();actual.innerDescendant=await innerDescendant;if(row.outerFailure)throw outerPrimary;
+   });}catch(error){outerRejected=true;expect(error).toBe(outerPrimary);}
+   expect(outerRejected,row.name).toBe(row.outerFailure);actual.afterOuter=readers.main.implementationPinnedV1();releaseOuter();actual.outerDescendant=await outerDescendant;expect(actual,row.name).toEqual(row.expected);expect(readers.copy.implementationPinnedV1()).toBe(false);
+  }
+ }finally{db.close();}
+});
+
+test("authority data is read once per pinned invocation and again after the snapshot is cleared; outside a pin every read is fresh",async()=>{
+ const fs=await import("node:fs"),os=await import("node:os"),home=fileURLToPath(new URL("..",import.meta.url)),listing=fs.readdirSync(home),moduleName=listing.find(name=>name.endsWith(".mjs"))!,schemaName=listing.find(name=>name.endsWith("schema"))!;
+ const scratch=fs.mkdtempSync(join(fs.realpathSync(os.tmpdir()),"revision-snapshot-"));
+ try{
+  fs.mkdirSync(join(scratch,schemaName));const schemaFile=fs.readdirSync(join(home,schemaName))[0]!;fs.copyFileSync(join(home,schemaName,schemaFile),join(scratch,schemaName,schemaFile));fs.copyFileSync(join(home,moduleName),join(scratch,moduleName));
+  const reader=await import(join(scratch,moduleName));let version=0;const read=()=>++version;
+  expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(1);expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(2);
+  await reader.withImplementationPinV1(async()=>{
+   expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);expect(reader.pinnedAuthorityReadV1("policy",read)).toBe(4);
+   await reader.withImplementationPinV1(async()=>{expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);});
+   expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);reader.clearPinnedAuthorityV1();expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(5);
+  });
+  expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(6);
+  await reader.withImplementationPinV1(async()=>{expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(7);});
+  await reader.withImplementationPinV1(async()=>{expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(8);});
+ }finally{fs.rmSync(scratch,{recursive:true,force:true});}
+});

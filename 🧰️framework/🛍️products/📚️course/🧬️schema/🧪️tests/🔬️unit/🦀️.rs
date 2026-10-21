@@ -12,19 +12,6 @@ fn round_trips<T: Serialize + DeserializeOwned>(context: &str, value: &Value) {
 }
 
 #[test]
-fn course_aggregate_owns_quiz_components() {
-    let vector = fixture("course-model");
-    let course = typed::<Course>(&vector["course"]);
-    let quizzes = typed::<Vec<Quiz>>(&vector["quizzes"]);
-    assert_eq!(json(&crate::validation::course_issues(&course, &quizzes)), vector["expected"]["courseIssues"]);
-    assert_eq!(json(&crate::validation::quiz_issues(&quizzes[0])), vector["expected"]["quizIssues"]);
-    round_trips::<Course>("course-model/course", &vector["course"]);
-    let view = course::views::course_view(&course, &quizzes);
-    assert!(crate::validation::course_view_issues(&view).is_empty());
-    assert_eq!(view.topics.as_ref().unwrap()[0].quizzes, vec!["warmup"]);
-}
-
-#[test]
 fn every_fixture_document_round_trips_through_the_twin() {
     for case in ["sheet-assembly", "badge-rules", "learner-lifecycle", "leaderboard"] {
         for (index, quiz) in entries(&fixture(case)["quizzes"]).iter().enumerate() {

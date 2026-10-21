@@ -1,0 +1,7 @@
+# Local Cross-Target Capability Boundary
+
+21 October2026. Actual managed command30084 attempted Windows-target filesystem check and settled whole101 after real compiler admission. The firstparty hash dependency reported E0463: std for x86_64-pc-windows-msvc is absent. No Windows filesystem branch or runtime behavior was verified. Log: `🗑️generated/e2e-filesystem-check-windows-fsw1.log`; artifacts `🗑️generated/fsw1`.
+
+Fresh Source pins rust-toolchain.toml to minimal nightly-2026-07-20, rust-src/llvm-tools-preview, and exactly wasm32-unknown-unknown/wasm32-wasip2 plus the actual host. The owned Rustup installation sourceRequest and compiler identity enforce that finite set and retain a complete sealed immutable generation. There is no arbitrary target-add operation through this interface. Do not mutate the generation, run raw rustup, fabricate std or relax custody merely to make an authored local check execute.
+
+Independent Low review accepts qualifying these two local cross-target attempts on actual authored tooling capability. The Linux cross-target step has not been executed and is not passed; current policy also does not provision its std on this macOS host. Required genuine native Windows/Linux host acceptance remains open under the user cross-platform requirement, separate from current macOS53 green. A wider target policy would require its own schema-first feature/cases, not an incidental gate bypass.

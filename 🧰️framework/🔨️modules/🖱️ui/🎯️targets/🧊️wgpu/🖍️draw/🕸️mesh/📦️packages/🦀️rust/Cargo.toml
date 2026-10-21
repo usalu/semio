@@ -36,7 +36,6 @@ semio-framework-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️
 semio-framework-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
 semio-framework-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../🔲️pixels/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }
 

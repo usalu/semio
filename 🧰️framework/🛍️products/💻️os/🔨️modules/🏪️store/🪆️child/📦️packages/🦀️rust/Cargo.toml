@@ -35,7 +35,7 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-job = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }

@@ -69,7 +69,7 @@ impl Encoder<'_,'_,'_,'_>{
             },
             V::Statements(length)=>{output.byte(TAG_STATEMENTS,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let key=source.projection_key(&path[..depth],index)?;self.forced(key,output)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(keyword,_)|keyword==key)).map(|(_,producer)|producer.encode(self.control)).transpose()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_fields(source,spec.as_ref(),path,next,level+1,output)?;}Ok(())},
             V::Wire(directed)=>{output.byte(TAG_WIRE,self.control)?;self.projected_wire(source,directed,path,depth,level,output)},
-            V::Expr(expression)=>{let symbols=self.symbols;super::expression::encode(expression,usize::from(self.options.limits.max_depth).saturating_sub(usize::from(level)),symbols.entries.len(),|index|Ok(semio_framework_value::paged_text::TextReadView::from_str(symbols.entries[index].text)),output,self.control)},
+            V::Expr(expression)=>{let symbols=self.symbols;super::expression::encode(expression,usize::from(self.options.limits.max_depth).saturating_sub(usize::from(level)),symbols.entries.len(),|index|Ok(semio_framework_value_paged_text::paged_text::TextReadView::from_str(symbols.entries[index].text)),output,self.control)},
             _=>Err(mismatch()),
         }
     }

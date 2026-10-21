@@ -5,7 +5,7 @@ mod expression;
 pub use expression::{BorrowedExpressionSource,BorrowedExpressionView,RetainedExpressionCursor,RetainedExpressionStep};
 
 /// 🔎️ One immutable authored field at an ordinal path, without constructing a source mirror.
-pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),Expr(&'a dyn BorrowedExpressionSource),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
+pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),Expr(&'a dyn BorrowedExpressionSource),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
 
 /// 🌱️ The retained operation keeps this source immutable until projection and publication finish.
 pub trait FieldProjectionSource{
@@ -15,7 +15,7 @@ pub trait FieldProjectionSource{
     /// 🔤️ Borrows one output key from the same ordinal source without scanning previous entries.
     fn projection_key(&self,_path:&[usize],_index:usize)->Result<&str,ValueError>{Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"field owner has no retained ranked key projection"))}
     /// 🌿️ Borrows native key bytes without requiring contiguous string custody.
-    fn projection_key_view(&self,path:&[usize],index:usize)->Result<semio_framework_value::paged_text::TextReadView<'_>,ValueError>{self.projection_key(path,index).map(semio_framework_value::paged_text::TextReadView::from_str)}
+    fn projection_key_view(&self,path:&[usize],index:usize)->Result<semio_framework_value_paged_text::paged_text::TextReadView<'_>,ValueError>{self.projection_key(path,index).map(semio_framework_value_paged_text::paged_text::TextReadView::from_str)}
 }
 impl<T:DslField> FieldProjectionSource for T{
     fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{DslField::projection_view(self,path)}

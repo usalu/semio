@@ -89,7 +89,7 @@ const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../../../../../🔨
 /// the graph whose nodes sit at negative surface x, which is what made the stale publication visible.
 fn camera_law_column_host() -> FlowHost {
     let mut host = host_with_test_fixture();
-    let mut layout = protocol::value::ordered::OrderedMap::new();
+    let mut layout = semio_framework_value_ordered::ordered::OrderedMap::new();
     for (id, x, y) in [("height", -197.19, -102.70), ("radius", -156.03, -177.33), ("sides", -156.43, -155.28), ("profile", -64.49, -163.40), ("extrusion-axis", -65.26, -116.45), ("extrude", 34.84, -154.18)] {
         layout.insert(id.to_string(), WidgetLayout { x, y });
     }
@@ -174,7 +174,7 @@ fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
         synapses: vec![],
-        layout: protocol::value::ordered::OrderedMap::new(),
+        layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();

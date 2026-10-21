@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "maximumTurnBytes",
+    "maximumSymbols",
+    "maximumSymbolBytes",
+    "constructorBytes",
+    "large",
+    "valid",
+    "invalid",
+    "sourceOwnership"
+  ],
+  "properties": {
+    "schema": {
+      "const": "pack.retained-inline-symbols/v1"
+    },
+    "maximumTurnBytes": {
+      "const": 4096
+    },
+    "maximumSymbols": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumSymbolBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "constructorBytes": {
+      "const": 0
+    },
+    "large": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "word",
+        "repetitions",
+        "bytes",
+        "emptySymbols"
+      ],
+      "properties": {
+        "word": {
+          "type": "string"
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "emptySymbols": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "hex",
+          "symbols",
+          "prefixBytes",
+          "sourceOffset"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prefixBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceOffset": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "hex",
+          "refusal"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "refusal": {
+            "enum": [
+              "incomplete",
+              "noncanonical",
+              "utf8",
+              "symbol-count",
+              "symbol-length"
+            ]
+          }
+        }
+      }
+    },
+    "sourceOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceExit",
+        "callerRetirement",
+        "fixedCloseTurns",
+        "cases"
+      ],
+      "properties": {
+        "sourceExit": {
+          "const": "original-wire-handback"
+        },
+        "callerRetirement": {
+          "const": "actual-wire-backing"
+        },
+        "fixedCloseTurns": {
+          "const": 1024
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "wireBytes",
+              "backingBytes",
+              "expected"
+            ],
+            "properties": {
+              "wireBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "backingBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "returnedBytes",
+                  "inlineWireReleased",
+                  "callerWireReleased"
+                ],
+                "properties": {
+                  "returnedBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "inlineWireReleased": {
+                    "const": 0
+                  },
+                  "callerWireReleased": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+    "Counter": {
+      "description": "What one keyspace of a running server did since it started; stale counts action results dropped on a read because a blob they name left the store.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hits", "misses", "puts", "conflicts", "rejected", "stale"],
+      "properties": {
+        "hits": { "type": "integer", "minimum": 0 },
+        "misses": { "type": "integer", "minimum": 0 },
+        "puts": { "type": "integer", "minimum": 0 },
+        "conflicts": { "type": "integer", "minimum": 0 },
+        "rejected": { "type": "integer", "minimum": 0 },
+        "stale": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ServerStatus": {
+      "description": "The document a running server answers on GET /status.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "protocols", "entries", "bytes", "reservedBytes", "maximumBytes", "maximumEntryBytes", "readOnly", "validation", "counters", "startedAt"],
+      "properties": {
+        "version": { "const": 1 },
+        "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
+        "entries": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "reservedBytes": { "type": "integer", "minimum": 0 },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+        "readOnly": { "type": "boolean" },
+        "validation": { "enum": ["off", "structure", "complete"] },
+        "counters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ac", "cas", "nx"],
+          "properties": {
+            "ac": { "$ref": "#/definitions/Counter" },
+            "cas": { "$ref": "#/definitions/Counter" },
+            "nx": { "$ref": "#/definitions/Counter" }
+          }
+        },
+        "startedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" }
+      }
+    },
+    "StoreBounds": {
+      "description": "The finite bounds a store is opened with: total bytes, bytes per entry (not above the total) and the idle age in milliseconds after which an entry is dropped (0 keeps entries until space is needed).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumBytes", "maximumEntryBytes", "maximumAgeMilliseconds"],
+      "properties": {
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+        "maximumAgeMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Fill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries", "bytes"],
+      "properties": { "entries": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 } }
+    },
+    "Removed": {
+      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), age (idle for too long) and budget (least recently used beyond the bound).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries", "bytes", "dangling", "age", "budget"],
+      "properties": {
+        "entries": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "dangling": { "type": "integer", "minimum": 0 },
+        "age": { "type": "integer", "minimum": 0 },
+        "budget": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CollectionReport": {
+      "description": "What one collection of a store directory did or, for a plan, would do.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "dryRun", "scanned", "removed", "remaining"],
+      "properties": {
+        "version": { "const": 1 },
+        "dryRun": { "type": "boolean" },
+        "scanned": { "$ref": "#/definitions/Fill" },
+        "removed": { "$ref": "#/definitions/Removed" },
+        "remaining": { "$ref": "#/definitions/Fill" }
+      }
+    },
+    "GcResult": {
+      "description": "What bun repo remote-cache gc --json prints: the collection report of the directory, or a marker that the directory does not exist.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "dryRun", "directory", "present"],
+          "properties": {
+            "version": { "const": 1 },
+            "dryRun": { "type": "boolean" },
+            "directory": { "type": "string", "minLength": 1 },
+            "present": { "const": false }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "dryRun", "directory", "scanned", "removed", "remaining"],
+          "properties": {
+            "version": { "const": 1 },
+            "dryRun": { "type": "boolean" },
+            "directory": { "type": "string", "minLength": 1 },
+            "scanned": { "$ref": "#/definitions/Fill" },
+            "removed": { "$ref": "#/definitions/Removed" },
+            "remaining": { "$ref": "#/definitions/Fill" }
+          }
+        }
+      ]
+    },
+    "TextCatalogue": {
+      "description": "The bilingual messages of the remote cache command: every key has exactly the two catalogue languages.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "languages", "messages"],
+      "properties": {
+        "version": { "const": 1 },
+        "languages": { "const": ["en", "de"] },
+        "messages": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z-]*(\\.[a-z][a-z-]*)+$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["en", "de"],
+              "properties": { "en": { "type": "string" }, "de": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

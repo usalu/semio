@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { readdirSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
@@ -11,351 +10,228 @@ import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
-const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
-const APPLICATION_FIXTURES_DIR = join(HERE, "..", "..", "🧩️application", "🧪️tests/🧫️fixtures");
-const COMMENT_FIXTURES_DIR = join(HERE, "..", "..", "💬️comment", "🧪️tests/🧫️fixtures");
-const GRAPHIC_CONTROL_FIXTURES_DIR = join(HERE, "..", "..", "🎛️graphic-control", "🧪️tests/🧫️fixtures");
-const RECIPE = "pattern-strip";
-const FIXTURE_DIRECTORY = "📼️pattern-strip";
-const FIXTURE_FILE = "🎬️pattern-strip.gif";
+const ORACLE_ID = "gif-87a-any-mutate-reader";
+const COMPARISON_PROFILE = "semantic-gif-87a-reader-v1";
+/** 🧾️ The eleven kinds Pillow can express. Only `set-pixel-aspect-ratio` stays `-uncarried`: no
+ *  surveyed writer emits that byte, in either GIF version.
+ *
+ *  🔍️`set-image-interlace` was ONCE recorded here as unwritable, on a measurement taken with a 4x3 and
+ *  an 8x8 image. That was an artifact of the test, not of Pillow: `GifImagePlugin.get_interlace`
+ *  defaults to 1 and only forces 0 when `min(im.size) < 16` (its "@PIL153 workaround"). At 16x16 and
+ *  above Pillow writes the descriptor's interlace bit by default and clears it on `interlace=False`,
+ *  both under a GIF87a signature — so the interlace pair uses a 16x16 canvas where every other kind
+ *  uses 4x3. */
+const KINDS: readonly string[] = ["no-mutation", "set-screen-size", "set-global-color-table", "set-background-color-index", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
+const FIXTURE_DIRECTORIES: Readonly<Record<string, string>> = {
+  "insert-image": "➕️insert-image",
+  "move-image": "🔀️move-image",
+  "no-mutation": "⏸️no-mutation",
+  "remove-image": "➖️remove-image",
+  "set-background-color-index": "🖌️set-background-color-index",
+  "set-global-color-table": "🎨️set-global-color-table",
+  "set-image-geometry": "📐️set-image-geometry",
+  "set-image-interlace": "🪜️set-image-interlace",
+  "set-image-pixels": "🎞️set-image-pixels",
+  "set-pixel-aspect-ratio": "⚖️set-pixel-aspect-ratio",
+  "set-screen-size": "🖥️set-screen-size",
+};
 const BEFORE_FILE = "⬅️before.gif";
 const AFTER_FILE = "➡️after.gif";
-
-const READER_ORACLE_ID = "gif-89a-any-mutate-reader";
-const READER_ENGINE_VERSION = "0.13.3";
-
-type ReaderOutcome = "applied" | "no-op";
-type ReaderRecipe = Readonly<{ id: string; mutation: string; outcome: ReaderOutcome; notes: string }>;
-
-const FIXTURE_DIRECTORY_NAMES: Readonly<Record<string, string>> = {
-  "add-app-extension": "🧩️add-app-extension",
-  "insert-comment": "💬️insert-comment",
-  "insert-frame-applied": "➕️insert-frame-applied",
-  "move-frame-applied": "🔀️move-frame-applied",
-  "no-mutation-no-op": "⏸️no-mutation-no-op",
-  "remove-app-extension": "🧹️remove-app-extension",
-  "remove-comment": "🗑️remove-comment",
-  "remove-frame-applied": "➖️remove-frame-applied",
-  "set-background-color-index-applied": "🖌️set-background-color-index-applied",
-  "set-frame-delay-applied": "⏱️set-frame-delay-applied",
-  "set-frame-disposal-applied": "♻️set-frame-disposal-applied",
-  "set-frame-geometry-applied": "📐️set-frame-geometry-applied",
-  "set-frame-interlace-applied": "🪜️set-frame-interlace-applied",
-  "set-frame-pixels-applied": "🧱️set-frame-pixels-applied",
-  "set-frame-transparency-applied": "👻️set-frame-transparency-applied",
-  "set-frame-user-input-applied": "🕹️set-frame-user-input-applied",
-  "set-global-color-table-applied": "🌈️set-global-color-table-applied",
-  "set-loop-count-applied": "🔁️set-loop-count-applied",
-  "set-pixel-aspect-ratio": "⚖️set-pixel-aspect-ratio",
-  "set-screen-size-applied": "🖥️set-screen-size-applied",
-};
-
-const APPLICATION_RECIPES = new Set(["add-app-extension", "remove-app-extension", "set-loop-count-applied"]);
-const COMMENT_RECIPES = new Set(["insert-comment", "remove-comment"]);
-const GRAPHIC_CONTROL_RECIPES = new Set(["set-frame-delay-applied", "set-frame-disposal-applied", "set-frame-transparency-applied", "set-frame-user-input-applied"]);
-
-function committedFixtureRoot(id: string): string {
-  if (APPLICATION_RECIPES.has(id)) return APPLICATION_FIXTURES_DIR;
-  if (COMMENT_RECIPES.has(id)) return COMMENT_FIXTURES_DIR;
-  if (GRAPHIC_CONTROL_RECIPES.has(id)) return GRAPHIC_CONTROL_FIXTURES_DIR;
-  return FIXTURES_DIR;
-}
-
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🧫️fixtures/📖️reader/🦀️.rs` verbatim — one entry per
- *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🔮️oracles/🔣️.json`'s `-uncarried`
- *  entries for the other 5, and `reader.rs`'s own header docstring for why). Every kind here
- *  applies `["applied"]` per the real dispatch (`../🧬️schema/🧬️mutations/🦀️.rs:288`,
- *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch). */
-const READER_RECIPES: readonly ReaderRecipe[] = [
-  { id: "no-mutation-no-op", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after bytes are the same document; no-mutation's diff is unconditionally a no-op." },
-  { id: "set-screen-size-applied", mutation: "set-screen-size", outcome: "applied", notes: "Only the logical screen width/height change." },
-  { id: "set-global-color-table-applied", mutation: "set-global-color-table", outcome: "applied", notes: "The global colour table is replaced with a different palette." },
-  { id: "set-background-color-index-applied", mutation: "set-background-color-index", outcome: "applied", notes: "Only the background colour index scalar changes — readable via `Decoder::bg_color`, a real public getter, even though the encoder has no setter for it." },
-  { id: "set-loop-count-applied", mutation: "set-loop-count", outcome: "applied", notes: "Only the NETSCAPE2.0 loop count changes." },
-  { id: "insert-frame-applied", mutation: "insert-frame", outcome: "applied", notes: "A fourth frame is appended." },
-  { id: "remove-frame-applied", mutation: "remove-frame", outcome: "applied", notes: "The middle (index 1) frame is removed." },
-  { id: "move-frame-applied", mutation: "move-frame", outcome: "applied", notes: "The first frame is moved to the end." },
-  { id: "set-frame-geometry-applied", mutation: "set-frame-geometry", outcome: "applied", notes: "Frame 0's left/top offset changes; width/height/pixels untouched." },
-  { id: "set-frame-pixels-applied", mutation: "set-frame-pixels", outcome: "applied", notes: "Frame 0's palette-index buffer is replaced, same geometry." },
-  { id: "set-frame-interlace-applied", mutation: "set-frame-interlace", outcome: "applied", notes: "Frame 0's interlace flag flips; rows are re-stored in GIF's 4-pass order. The reader recovers the flag via `Decoder::next_frame_info` (before pixel decode) — see reader.rs's own header docstring for why this is readable at all." },
-  { id: "set-frame-delay-applied", mutation: "set-frame-delay", outcome: "applied", notes: "Frame 0's delay changes." },
-  { id: "set-frame-disposal-applied", mutation: "set-frame-disposal", outcome: "applied", notes: "Frame 0's disposal method changes." },
-  { id: "set-frame-transparency-applied", mutation: "set-frame-transparency", outcome: "applied", notes: "Frame 0 gains a transparent index." },
-  { id: "set-frame-user-input-applied", mutation: "set-frame-user-input", outcome: "applied", notes: "Frame 0's needs-user-input flag flips." },
-];
+/** 🪞️ `no-mutation` declares the `no-op` outcome, so its pair must be IDENTICAL. Every other kind must
+ *  move the projection, and the generator refuses to write one that does not. */
+const NO_OP: ReadonlySet<string> = new Set(["no-mutation"]);
 //#endregion 🧬️Contract
 
+//#region 🐍️Writer
+/** 🐍️ Pillow is the WRITER. Passed to `python3 -c` rather than living in its own file, because this
+ *  node is allowed exactly one script. */
+const WRITER = String.raw`
+import io, os, sys
+from PIL import Image
+
+PALETTE_A = [255,0,0, 0,255,0, 0,0,255, 255,255,0]
+PALETTE_B = [10,20,30, 200,180,160, 0,128,255, 255,0,128]
+
+def single(w, h, data, palette=PALETTE_A, bg=0, interlace=None):
+    im = Image.new('P', (w, h))
+    im.putpalette(palette + [0] * (256 * 3 - len(palette)))
+    im.putdata(data)
+    im.info['background'] = bg
+    buf = io.BytesIO()
+    if interlace is None:
+        im.save(buf, format='GIF')
+    else:
+        im.save(buf, format='GIF', interlace=interlace)
+    return buf.getvalue()
+
+def split(b):
+    """Fixed-grammar walk over GIF blocks. Decodes nothing; only locates block boundaries."""
+    assert b[:6] == b'GIF87a', b[:6]
+    packed = b[10]
+    i = 13
+    if packed & 0x80:
+        i += 3 * (2 ** ((packed & 0x07) + 1))
+    header, blocks = b[:i], []
+    while i < len(b):
+        t = b[i]
+        if t == 0x3B:
+            break
+        if t == 0x2C:
+            start = i
+            i += 10
+            lp = b[start + 9]
+            if lp & 0x80:
+                i += 3 * (2 ** ((lp & 0x07) + 1))
+            i += 1
+            while b[i] != 0:
+                i += 1 + b[i]
+            i += 1
+            blocks.append(b[start:i])
+        elif t == 0x21:
+            raise SystemExit('refusing to assemble from a file containing an extension block')
+        else:
+            raise SystemExit('unexpected block 0x%02x' % t)
+    return header, blocks
+
+def assemble(sources):
+    """Container header from the first source, image blocks from all of them, then the trailer."""
+    headers, blocks = [], []
+    for s in sources:
+        h, b = split(s)
+        headers.append(h)
+        blocks.extend(b)
+    if len(set(headers)) != 1:
+        raise SystemExit('source headers differ: assembling would re-attribute frame colours')
+    return headers[0] + b''.join(blocks) + b'\x3B'
+
+FA = [0,1,2,3, 0,1,2,3, 0,1,2,3]
+FB = [3,2,1,0, 3,2,1,0, 3,2,1,0]
+FC = [1,1,2,2, 3,3,0,0, 2,2,1,1]
+
+def base():
+    return assemble([single(4, 3, FA), single(4, 3, FB)])
+
+def pair(kind):
+    if kind == 'no-mutation':
+        return base(), base()
+    if kind == 'set-screen-size':
+        return single(4, 3, FA), single(6, 2, [0,1,2,3,0,1, 2,3,0,1,2,3])
+    if kind == 'set-global-color-table':
+        return single(4, 3, FA), single(4, 3, FA, palette=PALETTE_B)
+    if kind == 'set-background-color-index':
+        return single(4, 3, FA, bg=0), single(4, 3, FA, bg=2)
+    if kind == 'insert-image':
+        return base(), assemble([single(4, 3, FA), single(4, 3, FC), single(4, 3, FB)])
+    if kind == 'remove-image':
+        return assemble([single(4, 3, FA), single(4, 3, FB), single(4, 3, FC)]), base()
+    if kind == 'move-image':
+        return base(), assemble([single(4, 3, FB), single(4, 3, FA)])
+    if kind == 'set-image-geometry':
+        return single(4, 3, FA), single(3, 4, [0,1,2, 3,0,1, 2,3,0, 1,2,3])
+    if kind == 'set-image-pixels':
+        return single(4, 3, FA), single(4, 3, FC)
+    if kind == 'set-image-interlace':
+        # 📐️16x16 is the smallest canvas Pillow will interlace: below it, get_interlace() forces 0.
+        big = [(x + y) % 4 for y in range(16) for x in range(16)]
+        return single(16, 16, big, interlace=False), single(16, 16, big, interlace=True)
+    raise SystemExit('unknown kind ' + kind)
+
+out_root, kind, directory_name, before_name, after_name = sys.argv[1:6]
+before, after = pair(kind)
+d = os.path.join(out_root, directory_name)
+os.makedirs(d, exist_ok=True)
+open(os.path.join(d, before_name), 'wb').write(before)
+open(os.path.join(d, after_name), 'wb').write(after)
+print('%s: before=%dB after=%dB' % (kind, len(before), len(after)))
+`;
+//#endregion 🐍️Writer
+
 //#region 🔨️Build
-/** ⚙️ Builds the reference-crate-backed generator binary if it is missing or stale. */
-function ensureBuilt(): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+const READER = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
+
+function readerBinary(): string {
+  const result = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(READER, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
+  return join(cargoTargetDirectory(findWorkspaceRoot()), "release", "reader");
+}
+
+function projectionOf(binary: string, path: string): string {
+  const result = spawnSync(binary, ["project", path], { encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`reader refused ${path}: ${result.stdout}${result.stderr}`);
+  return JSON.stringify(JSON.parse(result.stdout).measurements);
 }
 
 async function sha256(path: string): Promise<string> {
-  const bytes = readFileSync(path);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = await crypto.subtle.digest("SHA-256", readFileSync(path));
   return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 //#endregion 🔨️Build
 
 //#region 🚪️Commands
-async function generate(outDir: string): Promise<void> {
-  ensureBuilt();
-  mkdirSync(outDir, { recursive: true });
-  const outPath = join(outDir, FIXTURE_FILE);
-  const result = spawnSync(ENGINE_BIN, [outPath], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`generator binary failed with status ${result.status}`);
-  const digest = await sha256(outPath);
-  console.log(`${outPath}\n${digest}`);
+function generate(outRoot: string): number {
+  const binary = readerBinary();
+  const failures: string[] = [];
+  for (const kind of KINDS) {
+    const directory = FIXTURE_DIRECTORIES[kind]!;
+    const written = spawnToolSyncV1("python3", ["-c", WRITER, outRoot, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
+    if (written.status !== 0) {
+      failures.push(`${kind}: writer failed`);
+      continue;
+    }
+    const before = projectionOf(binary, join(outRoot, directory, BEFORE_FILE));
+    const after = projectionOf(binary, join(outRoot, directory, AFTER_FILE));
+    const moved = before !== after;
+    if (NO_OP.has(kind) && moved) failures.push(`${kind}: declares no-op but the projection moved`);
+    else if (!NO_OP.has(kind) && !moved) failures.push(`${kind}: not observable in the reader's projection`);
+  }
+  console.error(`[generator] ${KINDS.length - failures.length}/${KINDS.length} fixture pair(s) into ${outRoot}`);
+  for (const failure of failures) console.error(`[generator] ${failure}`);
+  return failures.length > 0 ? 1 : 0;
 }
 
 async function manifests(): Promise<void> {
-  const outPath = join(FIXTURES_DIR, FIXTURE_DIRECTORY, FIXTURE_FILE);
-  if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
-  const digest = await sha256(outPath);
-  const entry = {
-    id: RECIPE,
-    class: "third-party-generated",
-    family: "mechanical",
-    files: [{ path: `../🧫️fixtures/${FIXTURE_DIRECTORY}/${FIXTURE_FILE}`, mediaType: "image/gif", sha256: digest }],
-    provenance: { license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: {
-      oracle: "gif-89a-any-mutate",
-      packageVersion: "0.13",
-      engineFamily: "gif",
-      engineVersion: "0.13",
-      command: "bun 🏭️generator/📜️script.ts generate",
-      platform: currentPlatform(),
-    },
-    reproducible: true,
-  };
-  console.log(JSON.stringify(entry, null, 2));
-}
-
-function platformId(): string {
-  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
-  const arch = process.arch === "arm64" ? "arm64" : "x64";
-  return `${os}-${arch}`;
-}
-
-function contentDigest(bytes: Buffer): string {
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-}
-
-/** 🦀️ Shells out to the standalone `reader` binary — the ONLY place this file touches it. */
-function readerBuild(id: string, outDir: string): void {
-  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", ENGINE_MANIFEST, "--bin", "reader", "--", "build", id, outDir, FIXTURE_DIRECTORY_NAMES[id]!, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
-  if (result.status !== 0) throw new Error(`reader build ${id} failed (exit ${result.status}): ${result.stderr}`);
-}
-
-function readerFileEntry(role: string, dir: string, filename: string, directory: string): { role: string; path: string; mediaType: string; sha256: string; bytes: number } {
-  const abs = join(dir, filename);
-  const bytes = readFileSync(abs);
-  return { role, path: `../🧫️fixtures/${directory}/${filename}`, mediaType: "image/gif", sha256: contentDigest(bytes), bytes: bytes.length };
-}
-
-/** 📋️ Builds the manifest entry from files ALREADY on disk — never rebuilds, never rewrites what
- *  it just hashed (playbook step 5.4). `build` (below) is the only command that writes bytes. */
-function readerManifestEntry(recipe: ReaderRecipe, outDir: string): Record<string, unknown> {
-  const directory = FIXTURE_DIRECTORY_NAMES[recipe.id]!;
-  const dir = join(outDir, directory);
-  const files = [readerFileEntry("expected-before-gif", dir, BEFORE_FILE, directory), readerFileEntry("expected-after-gif", dir, AFTER_FILE, directory)];
-  return {
-    id: recipe.id,
-    class: "third-party-generated",
-    target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },
-    mutation: recipe.mutation,
-    outcome: recipe.outcome,
-    units: { length: "unitless", angle: "degree" },
-    files,
-    generator: {
-      oracle: READER_ORACLE_ID,
-      packageVersion: READER_ENGINE_VERSION,
-      engineFamily: "gif",
-      engineVersion: READER_ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only ${recipe.id}`,
-      platform: platformId(),
-    },
-    provenance: { source: "generated", license: "MIT OR Apache-2.0 (gif)", attribution: "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🧫️fixtures/📖️reader/🦀️.rs", security: "scanned-clean", privacy: "no-personal-data" },
-    comparisonProfile: "semantic-gif-89a-reader-v1",
-    reproducible: true,
-    family: "structural",
-    notes: recipe.notes,
-  };
-}
-
-async function build(outDir: string | null, only: string | null): Promise<number> {
-  const recipes = only === null ? READER_RECIPES : READER_RECIPES.filter((recipe) => recipe.id === only);
-  if (recipes.length === 0) {
-    console.error(`[gif reader generator] no recipe matches ${JSON.stringify(only)} — known: ${READER_RECIPES.map((recipe) => recipe.id).join(", ")}`);
-    return 1;
-  }
-  if (outDir !== null) mkdirSync(outDir, { recursive: true });
-  let failed = 0;
-  for (const recipe of recipes) {
-    try {
-      readerBuild(recipe.id, outDir ?? committedFixtureRoot(recipe.id));
-      console.error(`[gif reader generator] ${recipe.id} (${recipe.mutation}/${recipe.outcome})`);
-    } catch (error) {
-      failed += 1;
-      console.error(`[gif reader generator] ${recipe.id} FAILED — ${(error as Error).message}`);
+  const entries = [];
+  for (const kind of KINDS) {
+    const directory = FIXTURE_DIRECTORIES[kind]!;
+    const dir = join(FIXTURES_DIR, directory);
+    if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run generate first`);
+    const files = [];
+    for (const [role, name] of [["expected-before-gif", BEFORE_FILE], ["expected-after-gif", AFTER_FILE]] as const) {
+      const path = join(dir, name);
+      files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: await sha256(path), bytes: readFileSync(path).length });
     }
+    entries.push({
+      id: `${kind}-${NO_OP.has(kind) ? "no-op" : "applied"}`,
+      class: "third-party-generated",
+      target: { artifact: "s.stdio.gif", standard: "87a", subset: "any" },
+      mutation: kind,
+      outcome: NO_OP.has(kind) ? "no-op" : "applied",
+      units: { length: "unitless", angle: "degree" },
+      files,
+      provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+      generator: { oracle: ORACLE_ID, packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate", platform: currentPlatform() },
+      comparisonProfile: COMPARISON_PROFILE,
+      reproducible: true,
+      family: "mechanical",
+      notes: `A conformant GIF87a written by Pillow 11.3.0 — correct signature, no Graphic Control Extension — with the ${kind} mutation expressed as the difference between the pair. Multi-image cases are assembled from Pillow's own image blocks, with the source headers asserted byte-identical first so no frame's colours are re-attributed. The judge is gif 0.13, a different third-party implementation, which reports the declared VERSION as part of its projection.`,
+    });
   }
-  console.error(`[gif reader generator] ${recipes.length - failed}/${recipes.length} bundle(s) generated${outDir === null ? " into their committed subset roots" : ` into ${outDir}`}${failed > 0 ? `, ${failed} failed` : ""}`);
-  return failed > 0 ? 1 : 0;
-}
-
-async function buildManifests(only: string | null): Promise<number> {
-  const recipes = only === null ? READER_RECIPES : READER_RECIPES.filter((recipe) => recipe.id === only);
-  if (recipes.length === 0) {
-    console.error(`[gif reader generator] no recipe matches ${JSON.stringify(only)} — known: ${READER_RECIPES.map((recipe) => recipe.id).join(", ")}`);
-    return 1;
-  }
-  const manifests = recipes.map((recipe) => {
-    const fixtureRoot = committedFixtureRoot(recipe.id);
-    const dir = join(fixtureRoot, FIXTURE_DIRECTORY_NAMES[recipe.id]!);
-    if (!existsSync(join(dir, BEFORE_FILE)) || !existsSync(join(dir, AFTER_FILE))) throw new Error(`${dir} is missing ${BEFORE_FILE}/${AFTER_FILE} — run "build --only ${recipe.id}" first`);
-    return readerManifestEntry(recipe, fixtureRoot);
-  });
-  console.log(JSON.stringify(manifests, null, 2));
-  return 0;
+  console.log(JSON.stringify(entries, null, 2));
 }
 //#endregion 🚪️Commands
 
-//#region 🚪️Entry
-function flagValue(rest: readonly string[], flag: string): string | null {
-  const index = rest.indexOf(flag);
-  return index === -1 ? null : (rest[index + 1] ?? null);
-}
-
-async function main(argv: readonly string[]): Promise<number> {
-  const [command = "", ...rest] = argv;
-  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
-
-  if (command === "generate") {
-    const outFlag = flagValue(rest, "--out");
-    const outDir = outFlag ?? (fixtureOutRoot !== undefined ? join(fixtureOutRoot, FIXTURE_DIRECTORY) : join(FIXTURES_DIR, FIXTURE_DIRECTORY));
-    await generate(outDir);
-    return 0;
-  }
-  if (command === "manifests") {
-    await manifests();
-    return 0;
-  }
-  if (command === "build") {
-    const outFlag = flagValue(rest, "--out");
-    const outDir = outFlag ?? fixtureOutRoot ?? null;
-    return await build(outDir, flagValue(rest, "--only"));
-  }
-  if (command === "build-manifests") {
-    return await buildManifests(flagValue(rest, "--only"));
-  }
-  if (command === "extensions" || command === "extensions-manifests") {
-    const WRITER = String.raw`
-import os, sys
-from PIL import Image
-
-PALETTE = [255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0] + [0] * (256 * 3 - 12)
-
-def frame(data):
-    im = Image.new('P', (4, 3))
-    im.putpalette(PALETTE)
-    im.putdata(data)
-    return im
-
-A = [0, 1, 2, 3] * 3
-B = [3, 2, 1, 0] * 3
-COMMENT = b'semio 89a fixture comment'
-
-def plain(path):
-    frame(A).save(path, format='GIF')
-
-def commented(path):
-    frame(A).save(path, format='GIF', comment=COMMENT)
-
-def looped(path):
-    frame(A).save(path, format='GIF', save_all=True, append_images=[frame(B)], loop=0)
-
-def unlooped(path):
-    frame(A).save(path, format='GIF', save_all=True, append_images=[frame(B)])
-
-out, kind, directory_name, before_name, after_name = sys.argv[1:6]
-d = os.path.join(out, directory_name); os.makedirs(d, exist_ok=True)
-before = os.path.join(d, before_name); after = os.path.join(d, after_name)
-if kind == 'insert-comment':
-    plain(before); commented(after)
-elif kind == 'remove-comment':
-    commented(before); plain(after)
-elif kind == 'add-app-extension':
-    unlooped(before); looped(after)
-elif kind == 'remove-app-extension':
-    looped(before); unlooped(after)
-else:
-    raise SystemExit('unknown kind ' + kind)
-print(kind + ': written')
-`;
-    const KINDS = ["insert-comment", "remove-comment", "add-app-extension", "remove-app-extension"];
-    const readerDir = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
-    const built = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
-    if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
-    const readerBin = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "reader");
-    const explicitRoot = flagValue(rest, "--out") ?? fixtureOutRoot ?? null;
-    if (command === "extensions") {
-      const failures: string[] = [];
-      for (const kind of KINDS) {
-        const directory = FIXTURE_DIRECTORY_NAMES[kind]!;
-        const root = explicitRoot ?? committedFixtureRoot(kind);
-        const written = spawnToolSyncV1("python3", ["-c", WRITER, root, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
-        if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
-        const cmp = spawnSync(readerBin, ["compare", join(root, directory, BEFORE_FILE), join(root, directory, AFTER_FILE)], { encoding: "utf8" });
-        if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
-        if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind}: not observable in the extension projection`);
-      }
-      for (const failure of failures) console.error(`[generator] ${failure}`);
-      return failures.length > 0 ? 1 : 0;
-    }
-    const entries = [];
-    for (const kind of KINDS) {
-      const directory = FIXTURE_DIRECTORY_NAMES[kind]!;
-      const root = committedFixtureRoot(kind);
-      const files = [];
-      for (const [role, name] of [["expected-before-gif", BEFORE_FILE], ["expected-after-gif", AFTER_FILE]] as const) {
-        const path = join(root, directory, name);
-        files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: await sha256(path), bytes: readFileSync(path).length });
-      }
-      entries.push({
-        id: `extension-${kind}`,
-        class: "third-party-generated",
-        target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },
-        mutation: kind,
-        outcome: "applied",
-        units: { length: "unitless", angle: "degree" },
-        files,
-        provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "gif-89a-extension-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions", platform: currentPlatform() },
-        comparisonProfile: "semantic-gif-89a-extension-v1",
-        reproducible: true,
-        family: "mechanical",
-        notes: `A Pillow-written GIF pair differing only in the extension block this kind touches. gif 0.13's high-level Decoder, this subset's other reader, consumes extension blocks on the way to frames and never surfaces them; its documented low-level StreamingDecoder does. Observability was checked through that reader before the pair was written.`,
-      });
-    }
-    process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
-    return 0;
-  }
-  const ASPECT_OUT = process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR;
+async function aspectMode(command: string): Promise<number> {
+  const ASPECT_OUT = process.env.SEMIO_FIXTURE_OUT ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
   if (command === "aspect" || command === "aspect-manifests") {
     const seedDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     const seedKind = readdirSync(seedDir).find((name) => existsSync(join(seedDir, name, BEFORE_FILE)));
     if (!seedKind) throw new Error(`no committed ${BEFORE_FILE} to seed the aspect pair from`);
     const seed = join(seedDir, seedKind, BEFORE_FILE);
     const kind = "set-pixel-aspect-ratio";
-    const directory = FIXTURE_DIRECTORY_NAMES[kind]!;
+    const directory = FIXTURE_DIRECTORIES[kind]!;
     const dir = join(ASPECT_OUT, directory);
-    const probes = join(import.meta.dir, "..", "🔬️probes", "📜️script.ts");
+    const probes = join(import.meta.dir, "..", "..", "..", "..", "9️⃣89a", "🪆️subsets", "🧱️base", "🔬️probes", "📜️script.ts");
     if (command === "aspect") {
       mkdirSync(dir, { recursive: true });
       const dump = spawnSync("gifbuild", ["-d", seed], { encoding: "utf8" });
@@ -387,7 +263,7 @@ print(kind + ': written')
     process.stdout.write(`${JSON.stringify([{
       id: `aspect-${kind}`,
       class: "third-party-generated",
-      target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },
+      target: { artifact: "s.stdio.gif", standard: "87a", subset: "any" },
       mutation: kind,
       outcome: "applied",
       units: { length: "unitless", angle: "degree" },
@@ -401,11 +277,20 @@ print(kind + ': written')
     }], null, 2)}\n`);
     return 0;
   }
-  console.error(`usage: 📜️script.ts <generate|manifests|build|build-manifests|extensions|extensions-manifests|aspect|aspect-manifests> [--out <dir>] [--only <recipe-id>]`);
   return 2;
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
 export async function runScriptProgram(): Promise<void> {
   
-  if (true) process.exit(await main(process.argv.slice(2)));
+  //#region 🚀️Entry
+  const [command, ...rest] = process.argv.slice(2);
+  const outFlagIndex = rest.indexOf("--out");
+  const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR);
+  if (command === "aspect" || command === "aspect-manifests") process.exit(await aspectMode(command));
+  else if (command === "generate") process.exit(generate(outRoot));
+  else if (command === "manifests") await manifests();
+  else {
+    console.error("usage: bun 📜️script.ts <generate [--out <dir>]|manifests|aspect|aspect-manifests>");
+    process.exit(2);
+  }
 }

@@ -28,7 +28,7 @@ pub(super) struct ArtifactHistorySlot<T> {
     pub(super) next: Option<u32>,
     free_next: Option<u32>,
     value: Option<T>,
-    read: Option<Box<dyn semio_framework_value::retained_clone::original_slot::RetainedOriginalReadOwner<T>>>,
+    read: Option<Box<dyn semio_framework_value_original_slot::RetainedOriginalReadOwner<T>>>,
     read_previous:Option<u32>,
     read_next:Option<u32>,
 }

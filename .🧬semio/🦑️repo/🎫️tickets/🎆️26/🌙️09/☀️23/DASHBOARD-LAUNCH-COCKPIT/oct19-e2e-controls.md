@@ -563,6 +563,9 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/Cargo.lock`
 - `🧰️framework/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🧪️tests/🦀️.rs`
@@ -584,6 +587,7 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/⏱️work/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🏭️factory/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🥒️.feature`
@@ -593,6 +597,10 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs`
@@ -619,6 +627,9 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`
@@ -677,6 +688,7 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🟦️.ts`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/Cargo.toml`
@@ -689,8 +701,10 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🧪️tests/🎯️dispatch/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust/📋️project.json`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/🦀️.rs`
@@ -723,6 +737,8 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🌐️integration/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🎯️dispatch/🦀️.rs`
 - `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/📖️pack-reader-and-recovery/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧱️header-and-footer/🦀️.rs`
 - `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
 - `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
 - `🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts`
@@ -757,6 +773,14 @@ One unchanged retry70494 (e2e-value-persistent-close-current.log) waited through
 - `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json`
 - `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📋️project.json`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/♻️retirement.schema.json`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/✏️edit/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📜️script.ts`
 - `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json`
 - `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json`
 - `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/🦀️.rs`
@@ -879,3 +903,7 @@ Inactive maintenance 3079 refused the capped global kernel observation before de
 ### Latest Actual Native Milestones
 
 Guarded filesystem retirement 43261 exited 0 with 6,696 units and 4,294,966,853 logical bytes retired, restoring 7,841,587,200 available bytes. Focused native session 20690 stopped before Source/compiler/body at the strict post-reboot Rustup identity guard; no cursor trace ran. After the sibling-owned prerequisite repair, focused session 17907 exited 0: exact persistent named-index law 1 passed, 0 failed, 13 filtered, 232.91 seconds, with actual lengths 1/17/65,537. No temporary production trace remains. The full 69-law matrix, two commit laws and pending Source suites remain open gates.
+
+### Read-Only Workspace Selection Flood Observation
+
+The retained Root filesystem gate log `generated/e2e-filesystem-segmented-history-final.log` (actual request 87435, whole 101 before bodies) contains 74 raw `cargo:workspace-selection` activity lines, all with elapsedMs 0, within 121,888 bytes. This bounded observation was sent to the assigned presentation owner; it is not new runtime or frontend acceptance. Controls source stayed frozen.

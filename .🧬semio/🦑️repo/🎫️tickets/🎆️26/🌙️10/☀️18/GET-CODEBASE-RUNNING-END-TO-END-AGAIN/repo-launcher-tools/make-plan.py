@@ -2,7 +2,6 @@
 import hashlib, json, os, re, sys
 root = os.path.abspath(sys.argv[sys.argv.index("--root") + 1]) if "--root" in sys.argv else os.getcwd()
 here = os.path.dirname(os.path.abspath(__file__))
-staged = os.path.join(here, "staged")
 sha = lambda data: hashlib.sha256(data if isinstance(data, bytes) else data.encode("utf-8")).hexdigest()
 M = "🧰️framework/🛍️products/🦑️repo/🔨️modules"
 L0 = M + "/🚀️launcher"
@@ -26,17 +25,15 @@ def rewrite(g, path, content):
     group(g)["rewrites"].append({"path": path, "sha256": sha(live(path)), "afterSha256": sha(content), "content": content})
 def delete(g, path):
     group(g)["deletes"].append({"path": path, "sha256": sha(live(path))})
-# --- creates: everything staged under staged/ (grouped by prefix)
-for dp, dn, fn in os.walk(staged):
-    for f in sorted(fn):
-        full = os.path.join(dp, f); rel = os.path.relpath(full, staged)
-        data = open(full, "rb").read()
-        if os.path.exists(os.path.join(root, rel)) and rel not in ("__none__",):
-            existing = open(os.path.join(root, rel), "rb").read()
-            if existing == data: continue
-            sys.exit(f"staged file collides with an existing different file: {rel}")
-        g = "bootstrap" if rel.startswith(".github/") else "launcher"
-        group(g)["creates"].append({"path": rel, "sha256": sha(data), "mode": os.stat(full).st_mode & 0o777})
+# --- creates: everything in the authored tree, packed into digest-named blobs (pack.py)
+import subprocess
+subprocess.run([sys.executable, os.path.join(here, "pack.py")], check=True, stdout=subprocess.DEVNULL)
+for row in json.load(open(os.path.join(here, "manifest.json"), encoding="utf-8"))["files"]:
+    rel = row["path"]; data = open(os.path.join(here, "blobs", row["sha256"]), "rb").read()
+    if os.path.exists(os.path.join(root, rel)):
+        if open(os.path.join(root, rel), "rb").read() == data: continue
+        sys.exit(f"staged file collides with an existing different file: {rel}")
+    group("bootstrap" if rel.startswith(".github/") else "launcher")["creates"].append({"path": rel, "sha256": row["sha256"], "mode": row["mode"]})
 # --- group launcher: workspace + cli integration
 edit("launcher", "go.work", f"\t./{M}/🚚️move/📦️packages/🐹️go\n", f"\t./{M}/🚚️move/📦️packages/🐹️go\n\t./{L0}/📦️packages/🐹️go\n\t./{L0}/📦️packages/🐹️go/📦️main\n")
 edit("launcher", GO + "/go.mod", "\tgithub.com/usalu/semio/repo/languages v0.0.0\n", "\tgithub.com/usalu/semio/repo/languages v0.0.0\n\tgithub.com/usalu/semio/repo/launcher v0.0.0\n")

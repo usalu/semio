@@ -72,6 +72,9 @@ const current = wireRevisionedComponents({ roster, modules: staticModules, servi
 revisionIdentity.bind(current.modules.revision.implementationRevision());
 loader.adopt(revisionIdentity.revision, current);
 
+/** 📋️ The authored files of the implementation this module loaded with the bytes they had at load: the facts a generation names for every project it built. */
+export const loadedImplementationRowsV1 = Object.freeze(current.modules.revision.implementationRows());
+
 const { invokeCurrentImplementation } = current.modules.invocation;
 
 /** 🧬️ Binds structural parsers to their evaluated implementation and compiler bytes. */

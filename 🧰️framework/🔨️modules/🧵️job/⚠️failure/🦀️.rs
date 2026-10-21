@@ -25,6 +25,7 @@ impl From<Fault> for OriginalTurnPrimary{fn from(primary:Fault)->Self{Self::Faul
 
 /// 🪢️ Original semantic, receipt and context refusals move together without cloning or prose conversion.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct OriginalTurnFailure{pub effects:super::RetainedCloneProgress,pub primary:OriginalTurnPrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
 impl OriginalTurnFailure{
  /// 📊️ Borrows the complete enclosing effect span independently of its last semantic cause.

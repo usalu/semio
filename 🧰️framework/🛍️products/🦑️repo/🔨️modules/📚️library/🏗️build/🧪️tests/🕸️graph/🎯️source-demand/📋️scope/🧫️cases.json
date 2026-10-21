@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "target": "test-build-source-demand",
+      "cache": true,
+      "command": "bun ./📜️script.ts test build-source-demand",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "metadata": {
+        "execution": {
+          "version": 1,
+          "kind": "source"
+        },
+        "sourceInputObservation": "freshness",
+        "runtimeSourceEntries": [
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+        ],
+        "closure": {
+          "resources": [
+            "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+            "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+          ]
+        }
+      }
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "target": "test-build-caller-birth",
+      "cache": false,
+      "command": "bun ./📜️script.ts test build-caller-birth",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
+        "{projectRoot}/../../🏗️build/**/*",
+        "{projectRoot}/../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/**/*",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
+      ],
+      "metadata": {
+        "execution": {
+          "version": 1,
+          "kind": "source"
+        },
+        "sourceInputObservation": "freshness",
+        "runtimeSourceEntries": [
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts"
+        ],
+        "closure": {
+          "resources": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
+          ]
+        }
+      }
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/📋️project.json",
+      "target": "test-catalog-publication",
+      "cache": true,
+      "command": "bun ./📜️script.ts catalog-publication-test",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
+        "{workspaceRoot}/🌎️hub/**/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/**/📋️project.json",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/📇️catalog/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+      ],
+      "metadata": {
+        "execution": {
+          "version": 1,
+          "kind": "source"
+        },
+        "sourceInputObservation": "freshness",
+        "runtimeSourceEntries": [
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🔁️rebuild/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts",
+          "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts"
+        ],
+        "closure": {
+          "resources": [
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
+            "{workspaceRoot}/🌎️hub/📇️catalog/🔣️.json",
+            "{workspaceRoot}/🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+          ]
+        }
+      }
+    }
+  ]
+}

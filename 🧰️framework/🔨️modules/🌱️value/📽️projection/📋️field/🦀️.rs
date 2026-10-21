@@ -28,6 +28,10 @@ impl<T:SnapshotProjection> ProjectionField<T>{
   if cursor.terminal_is_empty(){*self.cursor=None;self.ready=true;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
   let step=cursor.close_step(child)?;Ok(RetainedCloneStep::Progress(admit_retained_clone_close(child,step,cursor.terminal_is_empty(),"immutable original field projection close")?.progress()))
  }
+ /// 👐️ Quotes moving the initialized associated output without materializing its projected payload.
+ pub fn take_output_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}Ok(RetirementDemand{copy_bytes:size_of::<T::Output>()*2,depth:1,..Default::default()})}
+ /// 🎁️ Transfers the same associated owner only after its complete handle grant is admitted.
+ pub fn take_output(&mut self,grant:RetainedCloneGrant)->Result<Option<(T::Output,RetainedCloneProgress)>,ValueError>{let d=self.take_output_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let value=self.value.take().ok_or_else(invalid)?;Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn place_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}Ok(<T::Output as ProjectionOutput<T>>::placement_demand())}
  pub fn place(&mut self,target:&mut MaybeUninit<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let d=self.place_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let value=self.value.take().ok_or_else(invalid)?;match value.place(target,grant){Ok(progress)=>Ok(Some(progress)),Err((error,value))=>{*self.value=Some(value);Err(error)}}}
  pub fn begin_close(&mut self){self.closing=true;if let Some(cursor)=self.cursor.as_mut(){cursor.begin_close();}}

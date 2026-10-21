@@ -10,7 +10,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -22,7 +39,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -34,7 +68,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -58,7 +101,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -70,7 +130,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -82,7 +151,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -94,7 +180,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -106,7 +209,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -154,7 +266,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -234,7 +355,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -246,7 +384,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -725,7 +880,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -737,7 +901,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -749,7 +922,24 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-ordered",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-persistent",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-factory",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-original-aliases",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {
@@ -761,7 +951,16 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework",
-        "semio-framework-value"
+        "semio-framework-value",
+        "semio-framework-value-edit",
+        "semio-framework-value-registry",
+        "semio-framework-value-schema",
+        "semio-framework-value-retained-map",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-retirement-queue",
+        "semio-framework-value-snapshot-read",
+        "semio-framework-value-dictionary",
+        "semio-framework-value-derive-expansion"
       ]
     },
     {

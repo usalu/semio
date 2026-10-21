@@ -73,3 +73,16 @@ Independent review identified that the active-segment census alone did not cover
 A third actual native law replays18 closed phase/change vectors (Checking/Listing/Complete × object/outcome/reconciliation/selection/seal/ancestor) against a sealed retained object; the original exact work vectors remain two full chain walks. The full authored Native FS roster is53. Same-module Ajv validates the closed neutral cases, and the Source law adds an independent SQLite refusal oracle. Native compiler, runtime counters and callback-law execution remain pending.
 
 Current final literal Rust extent at freeze: `{"files":14,"sourceBytes":187168,"testBodies":53,"maximumSourceBytes":262144,"compiled":false}`. This includes the third late-callback law and witnesses; it supersedes the earlier183181-byte two-law authoring observation. It is DATA, not native admission or compiler evidence.
+
+## First Current Native Compiler Result
+
+Owned87435 settled whole101 after genuine admission/compiler execution. The sole compiler error is E0382 in history_page: moving non-Copy `last` into next inside the inner loop does not prove outer-loop termination. No test body or current53-law pass occurred. The independently identified narrow repair is last.take(), preserving consumed cursor without cloning. Source46478 boundary is being coordinated before any Rust input mutation; no shared policy, manifest, lock or JS edit is required. Nine compiler warnings are being audited as owned source hygiene.
+
+At the actual Source46478 whole1 boundary, applied the compiler-confirmed repair: next consumes last.take() rather than moving an uninitialised-in-later-iteration Option. Removed exactly the nine reported unnecessary qualifications in owned worker/management/history tests, preserving assertions, counts, output and all runtime refusal semantics. No JS/manifest/schema/lock/store change from Root. Native53 rerun remains pending after shared Source repair/review.
+
+
+## 21 October — Current Filesystem Runtime Gate
+
+Actual repository-owned process35120 settled with exit0 on21October2026. The current full filesystem library compiled in2.12seconds and ran53 tests:53passed,0failed,0ignored,0filtered,30.74seconds. This supersedes the earlier87435 compile-only refusal after the precise `last.take()` ownership repair. The actual roster includes browser/buffer/worker, segmented recovery/history, two-chain-walk paging counters and18sealed-record callback cuts. One existing unused `remove_empty_in` warning remains.
+
+Evidence: `🗑️generated/e2e-filesystem-segmented-history-hsg3.log`, artifacts `🗑️generated/hsg3`. Whole settlement was observed through the owned execution API, not inferred from the trailing progress event. MacOS runtime only; Windows/Linux checks, Source34, value lifecycle matrix, canonical installation and installed journeys remain pending. Native compiler custody was handed to Controls after actual settlement; selected source remains frozen for the concurrent Source21.

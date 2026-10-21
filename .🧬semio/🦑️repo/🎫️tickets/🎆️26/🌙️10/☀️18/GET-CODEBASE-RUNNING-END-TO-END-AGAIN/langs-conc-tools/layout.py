@@ -12,9 +12,8 @@ BZ = B + "/🔧️tools/🏗️bazel"
 CACHING = L + "/⚡️caching"
 BOOT = CACHING + "/🚀️bootstrap"
 TOOLS = BOOT + "/🛠️tools"
-T = PROC + "/🏗️build/🧰️toolchains"
+T = PKG + "/🏗️build/🧰️toolchains"
 N = TOOLS + "/🧰️native"
-FW = F + "/📦️packages/🟦️typescript"
 NEW = {
     "toolchains.ts": T + "/🟦️.ts",
     "toolchains-policy.json": T + "/🔣️.json",
@@ -35,6 +34,4 @@ NEW = {
     "global.json": ROOT + "/global.json",
     "Directory.Build.props": ROOT + "/Directory.Build.props",
     "pins-test.ts": L + "/🧪️tests/🧰️toolchain-pins/🟦️.ts",
-    "toolchains-stub-process.ts": PKG + "/🏗️build/🧰️toolchains/🟦️.ts",
-    "toolchains-stub-framework.ts": FW + "/🏃️process/🏗️build/🧰️toolchains/🟦️.ts",
 }

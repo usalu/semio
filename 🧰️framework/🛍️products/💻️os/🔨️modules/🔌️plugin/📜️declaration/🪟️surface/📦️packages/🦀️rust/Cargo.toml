@@ -47,7 +47,6 @@ semio-framework-schema-composition = { path = "../../../../../../../../🔨️mo
 semio-framework-schema-registry = { path = "../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
@@ -58,4 +57,5 @@ semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/�
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-tool-run = { workspace = true }

@@ -1,74 +1,108 @@
 import { describe, expect, test } from "bun:test";
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import ts from "typescript";
-import fixtures from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import { maskCommentsV1, readArgumentV1, scanToolCallsV1, scanToolSpawnsV1, shellCommandsV1, toolScanLanguageV1, toolSpawnScopeV1 } from "../../🟦️.ts";
-import { testRipgrepV1 } from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import { spawnSync } from "node:child_process";
+import registryDocument from "../../🔣️.json" with { type: "json" };
+import { findToolV1, probeToolV1, readToolRegistryV1, resolveToolV1, runToolSyncV1, runToolV1, systemToolHostV1, toolCallerFileV1, ToolErrorV1, type ToolAdmissionV1, type ToolProgressV1 } from "../../🟦️.ts";
 
-describe("direct spawn scanner", () => {
-  for (const row of fixtures.cases) {
-    test(`finds exactly the starts of registered tools in ${row.path}`, () => {
-      const found = scanToolSpawnsV1(row.path, row.text).map(site => `${site.line} ${site.form} ${site.tool}`).sort();
-      expect(found).toEqual([...row.expected].sort());
-      if ("scope" in row) expect(scanToolSpawnsV1(row.path, row.text).every(site => site.scope === row.scope)).toBe(true);
-    });
-  }
-  test("reads the first argument across nested brackets, strings and templates", () => {
-    expect(readArgumentV1("f(a(b, c), d)", 2)).toEqual({ text: "a(b, c)", end: 9 });
-    expect(readArgumentV1("f(`x${y(1, 2)}`, 3)", 2).text).toBe("`x${y(1, 2)}`");
-    expect(readArgumentV1("f([1, 2], 3)", 2).text).toBe("[1, 2]");
-    expect(readArgumentV1("f(\"a,b\", 3)", 2).text).toBe("\"a,b\"");
+const row = (id: string, command: string, capacity: unknown, callers: string[]) => ({
+  id, kind: "runtime", summary: { en: "Probe tool.", de: "Prüfwerkzeug." }, capabilities: ["run"], commands: [command], platforms: ["darwin", "linux", "win32"], pin: { state: "system" },
+  provision: { kind: "system", command: "install it" }, locate: [{ kind: "environment", name: "PROBE_" + id.toUpperCase() }], probe: { arguments: ["--version"], pattern: "^([0-9]+\\.[0-9]+\\.[0-9]+)" },
+  adapter: "x/adapter.ts", adapterScope: [], allowedCallers: callers, environment: { mode: "inherit", pass: [], deny: ["LEAK_*"], set: { FIXED: "yes" } }, capacity,
+});
+const document = JSON.parse(JSON.stringify(registryDocument));
+document.tools.push(row("heavy", "heavy-tool", { mode: "admit", operation: "command", kind: "build" }, ["only/here/**"]), row("light", "light-tool", { mode: "none" }, ["**"]));
+const registry = readToolRegistryV1(document);
+const environment = { ...process.env, PROBE_HEAVY: process.execPath, PROBE_LIGHT: process.execPath, LEAK_ME: "1", SEMIO_LANGUAGE: "en" };
+const options = { registry, environment, trusted: true, root: process.cwd() };
+const program = (source: string) => ["-e", source];
+
+describe("runToolV1", () => {
+  test("captures output under the sanitized environment of the registry", async () => {
+    const result = await runToolV1("heavy", program("console.log(process.env.FIXED, process.env.SEMIO_TOOL_RUN, process.env.LEAK_ME)"), { ...options, capture: true, admission: false });
+    expect(result.stdout.trim()).toBe("yes heavy undefined");
+    expect(result.status).toBe(0);
+    expect(result.resolution.source).toBe("environment");
   });
-  test("separates the commands of a shell line and skips wrappers and assignments", () => {
-    expect(shellCommandsV1("A=1 sudo cargo build && cd x; bun test | tee out")).toEqual(["cargo", "cd", "bun", "tee"]);
-    expect(shellCommandsV1("exec nice -n 5 go test")).toEqual(["go"]);
+  test("throws on a failure by default and reports it with check false", async () => {
+    await expect(runToolV1("light", program("process.exit(3)"), { ...options, capture: true })).rejects.toMatchObject({ code: "failed", status: 3 });
+    expect((await runToolV1("light", program("process.exit(3)"), { ...options, capture: true, check: false })).status).toBe(3);
+    expect((await runToolV1("light", program("process.exit(4)"), { ...options, check: false, stdout: "ignore" })).status).toBe(4);
   });
-  test("classifies scope and language", () => {
-    expect(toolSpawnScopeV1("a/🧪️tests/b.ts")).toBe("test");
-    expect(toolSpawnScopeV1("a/b.test.ts")).toBe("test");
-    expect(toolSpawnScopeV1("a/b_test.go")).toBe("test");
-    expect(toolSpawnScopeV1("a/🏭️generator/b.ts")).toBe("prod");
-    expect(toolScanLanguageV1("x/📋️project.json")).toBe("declared");
-    expect(toolScanLanguageV1("x/🐚️.sh")).toBe("shell");
-    expect(toolScanLanguageV1("x/readme.md")).toBeUndefined();
+  test("streams lines of a tool to the caller", async () => {
+    const lines: string[] = [];
+    await runToolV1("light", program("console.error('from the tool')"), { ...options, stdout: "ignore", onLine: (line, stream) => lines.push(`${stream}:${line}`) });
+    expect(lines).toEqual(["stderr:from the tool"]);
   });
-  test("finds the calls of the tool interface with a literal tool id", () => {
-    const text = "// runToolV1(\"cargo\")\nawait runToolV1('bun', []);\nrunToolSyncV1(\"git\", a);\nrunToolV1(id, []);\nconst s = `runToolV1(\"go\")`;";
-    expect(scanToolCallsV1("a/x.ts", text).map(call => `${call.line} ${call.callee} ${call.tool}`)).toEqual(["2 runToolV1 bun", "3 runToolSyncV1 git"]);
+  test("refuses an unknown tool and a caller the registry does not allow, in the chosen language", async () => {
+    await expect(runToolV1("nope", [], options)).rejects.toMatchObject({ code: "unknown-tool" });
+    const refused = await runToolV1("heavy", [], { ...options, trusted: false, caller: "other/place.ts", admission: false }).catch(error => error as ToolErrorV1);
+    expect(refused).toMatchObject({ code: "caller-refused" });
+    expect(refused.message).toContain("other/place.ts may not run heavy");
+    const german = await runToolV1("heavy", [], { ...options, trusted: false, caller: "other/place.ts", environment: { ...environment, SEMIO_LANGUAGE: "de" } }).catch(error => error as ToolErrorV1);
+    expect(german.message).toContain("darf heavy nicht ausführen");
+    await expect(runToolV1("heavy", program("0"), { ...options, trusted: false, caller: "only/here/a.ts", capture: true, admission: false })).resolves.toMatchObject({ status: 0 });
+    await expect(runToolV1("heavy", program("0"), { ...options, trusted: false, caller: "other/place.ts", environment: { ...environment, SEMIO_TOOL_GUARD: "off" }, capture: true, admission: false })).resolves.toMatchObject({ status: 0 });
   });
-  test("counts the same Rust and Go spawns as ripgrep", () => {
-    const rg = testRipgrepV1();
-    if (rg === null) return;
-    const text = fixtures.cases.filter(row => row.path.endsWith(".rs") || row.path.endsWith(".go")).map(row => row.text).join("\n");
-    const count = spawnSync(rg, ["-o", "--no-config", "-e", "Command::new\\(\"[a-z]+\"|exec\\.Command(?:Context)?\\([^\"]*\"[a-z]+\""], { input: text, encoding: "utf8" }).stdout.trim().split("\n").filter(Boolean).length;
-    const mine = fixtures.cases.filter(row => row.path.endsWith(".rs") || row.path.endsWith(".go")).flatMap(row => scanToolSpawnsV1(row.path, row.text)).length;
-    expect(mine).toBe(count - 1);
+  test("names the provisioning command when a tool is missing", async () => {
+    const missing = await runToolV1("light", [], { ...options, environment: { SEMIO_LANGUAGE: "de" } }).catch(error => error as ToolErrorV1);
+    expect(missing).toMatchObject({ code: "tool-missing" });
+    expect(missing.message).toContain("nicht gefunden");
+    expect(missing.message).toContain("install it");
+  });
+  test("cancels a running tool and its process tree", async () => {
+    for (const capture of [true, false]) {
+      const controller = new AbortController(), started = performance.now();
+      setTimeout(() => controller.abort(), 150);
+      await expect(runToolV1("light", program("setTimeout(() => {}, 30000)"), { ...options, capture, signal: controller.signal, stdout: "ignore" })).rejects.toMatchObject({ code: "cancelled" });
+      expect(performance.now() - started).toBeLessThan(10000);
+    }
+  });
+  test("ends a captured run at its deadline", async () => {
+    const result = await runToolV1("light", program("setTimeout(() => {}, 30000)"), { ...options, capture: true, timeoutMs: 200, check: false });
+    expect(result.status).toBeNull();
+    expect(result.signal).not.toBeNull();
+  });
+  test("waits for machine capacity before a heavy tool starts and runs it with the grant", async () => {
+    const asks: string[] = [], events: ToolProgressV1["phase"][] = [];
+    const admission: ToolAdmissionV1 = async (ask, body) => { asks.push(`${ask.tool}:${ask.operation}:${ask.kind}`); return body({ environment: { SEMIO_GRANT: "granted" }, jobs: 2 }); };
+    const result = await runToolV1("heavy", program("console.log(process.env.SEMIO_GRANT)"), { ...options, capture: true, admission, onProgress: event => events.push(event.phase) });
+    expect(result.stdout.trim()).toBe("granted");
+    expect(asks).toEqual(["heavy:command:build"]);
+    expect(events).toEqual(["admitting", "running", "finished"]);
+    await runToolV1("light", program("0"), { ...options, capture: true, admission });
+    expect(asks.length).toBe(1);
+  });
+  test("passes a cancellation that arrives while waiting for capacity to the gate", async () => {
+    const controller = new AbortController();
+    const admission: ToolAdmissionV1 = (_ask, _body, signal) => new Promise((_, reject) => signal!.addEventListener("abort", () => reject(new ToolErrorV1("cancelled", "heavy", "waiting cancelled"))));
+    setTimeout(() => controller.abort(), 50);
+    await expect(runToolV1("heavy", program("0"), { ...options, capture: true, admission, signal: controller.signal })).rejects.toMatchObject({ code: "cancelled" });
   });
 });
 
-describe("comment masking", () => {
-  const directory = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-  const sources = (() => { const out: string[] = []; for (const name of ["📖️registry", "📌️pin", "🔎️resolve", "🏃️run", "🔍️scan", "🛡️guard", "🌿️environment"]) { try { for (const file of readdirSync(join(directory, name))) if (file.endsWith(".ts")) out.push(join(directory, name, file)); } catch { continue; } } return out; })();
-  test("blanks exactly the comments the TypeScript compiler finds and nothing else", () => {
-    expect(sources.length).toBeGreaterThan(3);
-    for (const path of sources) {
-      const text = readFileSync(path, "utf8"), file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true), ranges = new Map<number, number>();
-      const note = (found: ts.CommentRange[] | undefined): void => { for (const range of found ?? []) ranges.set(range.pos, range.end); };
-      const visit = (node: ts.Node): void => { note(ts.getLeadingCommentRanges(text, node.getFullStart())); note(ts.getTrailingCommentRanges(text, node.getEnd())); ts.forEachChild(node, visit); };
-      visit(file);
-      note(ts.getLeadingCommentRanges(text, 0));
-      const masked = maskCommentsV1(text, "ts"), expected = text.split("");
-      for (const [from, to] of ranges) for (let index = from; index < to; index++) if (expected[index] !== "\n") expected[index] = " ";
-      expect(masked).toBe(expected.join(""));
-    }
+describe("runToolSyncV1", () => {
+  test("runs a light tool and refuses a heavy one", () => {
+    const result = runToolSyncV1("light", program("console.log('sync')"), options);
+    expect(result.stdout.trim()).toBe("sync");
+    expect(() => runToolSyncV1("heavy", program("0"), options)).toThrow("cannot run synchronously");
+    expect(runToolSyncV1("light", program("process.exit(2)"), options).status).toBe(2);
+    expect(() => runToolSyncV1("light", program("process.exit(2)"), { ...options, check: true })).toThrow("light failed");
   });
-  test("keeps strings in view and blanks them on request", () => {
-    const text = "const a = \"// not a comment\"; // real\nconst b = `x ${1} y`;";
-    expect(maskCommentsV1(text, "ts")).toBe("const a = \"// not a comment\";        \nconst b = `x ${1} y`;");
-    expect(maskCommentsV1(text, "ts", true)).toBe("const a = \"                \";        \nconst b = `        `;");
-    expect(maskCommentsV1("let r = r#\"// x\"#; /* a /* b */ c */ Command::new(\"go\")", "rust", true)).toContain("Command::new(\"  \")");
+});
+
+describe("caller and probe", () => {
+  test("accepts the declared caller as a path, a file URL or an absolute path", async () => {
+    const allowed = { ...options, trusted: false, capture: true, admission: false };
+    for (const caller of ["only/here/a.ts", "file://" + process.cwd() + "/only/here/a.ts", process.cwd() + "/only/here/a.ts"]) await expect(runToolV1("heavy", program("0"), { ...allowed, caller })).resolves.toMatchObject({ status: 0 });
+    await expect(runToolV1("heavy", program("0"), { ...allowed, caller: process.cwd() + "/elsewhere/a.ts" })).rejects.toMatchObject({ code: "caller-refused" });
+    await expect(runToolV1("heavy", program("0"), { ...allowed, caller: "elsewhere/a.ts", environment: { ...environment, SEMIO_TOOL_GUARD: "warn" } })).resolves.toMatchObject({ status: 0 });
+  });
+  test("finds the first stack frame outside the tools module relative to the root", () => {
+    const stack = ["Error", "    at runToolV1 (/r/🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts:1:1)", "    at job (file:///r/a/b%20c.ts:3:4)", "    at x (/other/z.ts:1:1)"].join("\n");
+    expect(toolCallerFileV1("/r", stack)).toBe("a/b c.ts");
+    expect(toolCallerFileV1("/elsewhere", "    at f (/r/a.ts:1:1)")).toBeUndefined();
+    expect(toolCallerFileV1("/r", "")).toBeUndefined();
+  });
+  test("asks a resolved tool for its version", () => {
+    const entry = findToolV1("light", registry)!, resolution = resolveToolV1(entry, systemToolHostV1(process.cwd(), environment), registry);
+    expect(probeToolV1(entry, resolution, environment)).toBe(Bun.version);
   });
 });

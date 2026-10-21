@@ -57,7 +57,6 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modul
 semio-framework-ui-prepared-staging = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust" }
 semio-framework-ui-scene-mesh = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
 semio-framework-ui-scene-pass = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
@@ -81,6 +80,7 @@ semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
 semio-framework-job-payload = { workspace = true }

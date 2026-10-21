@@ -1,6 +1,7 @@
 import {createHash,randomUUID} from "node:crypto";
 import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes} from "node:fs/promises";
 import {join} from "node:path";
+import {requireRemoteCacheShapeV1} from "../🟦️.ts";
 import {planRemoteCacheCollectionV1,scanRemoteCacheDirectoryV1} from "../🧹️collector/🟦️.ts";
 
 /** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives. */
@@ -46,7 +47,8 @@ export class RemoteCacheStoreV1{
 
  /** 🚪️ Opens the directory, drops the partial writes of dead processes and indexes the stored values, publishing progress and stopping when cancelled. */
  static async open(options:RemoteCacheStoreOptionsV1):Promise<RemoteCacheStoreV1>{
-  if(![options.maximumBytes,options.maximumEntryBytes].every(value=>Number.isSafeInteger(value)&&value>0)||options.maximumEntryBytes>options.maximumBytes)throw Error("Finite remote cache bounds required");
+  requireRemoteCacheShapeV1("StoreBounds",Object.fromEntries(Object.entries({maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeMilliseconds}).filter(([,value])=>value!==undefined)),"Finite remote cache bounds required");
+  if(options.maximumEntryBytes>options.maximumBytes)throw Error("Finite remote cache bounds required: an entry cannot exceed the store");
   const store=new RemoteCacheStoreV1(options);
   await mkdir(store.root,{recursive:true});await mkdir(join(store.root,".tmp"),{recursive:true});
   for(const name of await readdir(join(store.root,".tmp")))if(!alive(Number.parseInt(name,10)))await rm(join(store.root,".tmp",name),{recursive:true,force:true});

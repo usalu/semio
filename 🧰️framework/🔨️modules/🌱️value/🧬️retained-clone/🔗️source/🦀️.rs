@@ -1,6 +1,6 @@
 //! 🔗️ Immutable clone sources capture actual original authority and expose sealed projection leases.
 use super::{RetainedCloneBinding,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneProjection,RetainedCloneRef,RetainedCloneStep,RetainedOwnedProjection,RETAINED_CLONE_SOURCE_IDS};
-use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},shared_issuance::{SealedShared,SharedIssuer}};
+use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,RetainedOwnerGate}},shared_issuance::{SealedShared,SharedIssuer}};
 use std::{mem::ManuallyDrop,ptr::NonNull,sync::atomic::Ordering};
 
 pub(super) struct RetainedCloneLeaseOwner{pub(super) id:u64,payload:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
@@ -40,10 +40,10 @@ impl Drop for RetainedCloneLeaseOwner{fn drop(&mut self){assert!(std::thread::pa
 pub enum RetainedCloneSourceTake<A>{Pending(RetainedCloneProgress),Ready(A,RetainedCloneProgress)}
 
 /// 🔗️ Captures one original authority in a strong-only shared handle and lends a typed projection of it through sealed leases.
-pub struct RetainedCloneSource<T:Sync+'static,A:RetireOwned+Sync=T>{owner:ManuallyDrop<Option<SealedShared<A>>>,value:NonNull<T>,lease:Option<RetainedCloneBinding>,owner_close:ManuallyDrop<Option<ControlledRetirement<SealedShared<A>>>>}
+pub struct RetainedCloneSource<T:Sync+'static,A:RetireOwned+Sync=T>{owner:ManuallyDrop<Option<SealedShared<A>>>,value:NonNull<T>,lease:Option<RetainedCloneBinding>,owner_close:ManuallyDrop<Option<RetainedOwnerGate<ControlledRetirement<SealedShared<A>>>>>}
 /// 🧷️ The projected value lives inside the immutable shared authority that the source or its lease keeps alive.
 unsafe impl<T:Sync+'static,A:RetireOwned+Sync> Send for RetainedCloneSource<T,A>{}
-/// 🪢️ Shared access exposes only immutable references into the sealed authority.
+/// 🪢️ Shared references retain immutable values; closing cursor queries acquire exclusive inline custody.
 unsafe impl<T:Sync+'static,A:RetireOwned+Sync> Sync for RetainedCloneSource<T,A>{}
 
 fn identity<A>(value:&A)->&A{value}
@@ -94,17 +94,17 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<U>,RetainedCloneProgress),ValueError> where F:for<'source>FnOnce(&'source T)->&'source U{unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?.project(discriminator,project),grant)}}
  /// 🪪️ Borrows the retained initiating authority for paid source freshness validation.
  pub fn original_authority(&self)->Option<&A>{self.owner.as_ref().map(|owner|owner.get())}
- pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_copy_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::copy_demand(&self.lease)}}
- pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_capacity_byte_demand(body)}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::capacity_demand(&self.lease,body)}}
- pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_release_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::release_demand(&self.lease)}}
- pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_depth_demand()}else if self.owner.is_some(){Ok(1)}else{RetainedCloneBinding::depth_demand(&self.lease)}}
+ pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_copy_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::copy_demand(&self.lease)}}
+ pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_capacity_byte_demand(body)}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::capacity_demand(&self.lease,body)}}
+ pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_release_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::release_demand(&self.lease)}}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_depth_demand()}else if self.owner.is_some(){Ok(1)}else{RetainedCloneBinding::depth_demand(&self.lease)}}
  /// 🎯️ Quotes the same original header, child spill or body event selected by the caller's actual copy currency.
- pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.selected_demand(body)}else if self.owner.is_some(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.lease,body)}}
+ pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.selected_demand(body)}else if self.owner.is_some(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.lease,body)}}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){*self.owner_close=Some(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|unreachable!("sealed source authority lost its retirement: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
-  if let Some(owner)=self.owner_close.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*self.owner_close=None;}return Ok(step);}
+  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){*self.owner_close=Some(RetainedOwnerGate::new(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|unreachable!("sealed source authority lost its retirement: {error}"))));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
+  if let Some(owner)=self.owner_close.as_mut(){let owner=owner.get_mut();let step=owner.step(grant)?;if owner.terminal_is_empty(){*self.owner_close=None;}return Ok(step);}
   RetainedCloneBinding::close_one(&mut self.lease,grant)
  }
  /// 📫️ Quotes one exact live alias or final original handback without mixing distinct events.

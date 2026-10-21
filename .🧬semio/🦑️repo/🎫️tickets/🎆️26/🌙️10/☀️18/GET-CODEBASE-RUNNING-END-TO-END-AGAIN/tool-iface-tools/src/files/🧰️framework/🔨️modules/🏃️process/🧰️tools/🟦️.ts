@@ -5,7 +5,6 @@ export * from "./🔎️resolve/🟦️.ts";
 export * from "./🌿️environment/🟦️.ts";
 export * from "./🏃️run/🟦️.ts";
 export * from "./🔌️funnel/🟦️.ts";
-export * from "./🔁️compat/🟦️.ts";
 export * from "./🛡️guard/🟦️.ts";
 export * from "./🔍️scan/🟦️.ts";
 export * from "./🌿️git/🟦️.ts";

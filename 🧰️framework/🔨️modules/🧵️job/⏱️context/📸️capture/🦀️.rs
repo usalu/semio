@@ -47,6 +47,7 @@ impl Drop for OriginalCallerTurn<'_,'_>{fn drop(&mut self){assert!(std::thread::
 
 /// 🪢️ Preserves the complete child return and any independent receiving refusal in one owned carrier.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct OriginalCallerCloseReturn{original:Result<InteractiveJobCloseStep,OriginalTurnFailure>,receipt_refusal:Option<ValueError>}
 impl OriginalCallerCloseReturn{pub fn admitted(&self)->Option<&Result<InteractiveJobCloseStep,OriginalTurnFailure>>{self.receipt_refusal.is_none().then_some(&self.original)}pub fn receipt_refusal(&self)->Option<&ValueError>{self.receipt_refusal.as_ref()}pub fn into_original(self)->Result<Result<InteractiveJobCloseStep,OriginalTurnFailure>,Self>{if self.receipt_refusal.is_some(){Err(self)}else{Ok(self.original)}}}
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}

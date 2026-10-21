@@ -7,14 +7,17 @@
   apply.py mirror DIR [--lock-sync] [--apply] scratch tree: real copies of the library and framework modules, symlinks elsewhere, optionally with the round-5 closure batch and this set applied
 Groups: seam (new library), bootstrap, graph, storage, register (suite target and table row), ratchet (the allowlist cut from the mirror). --root R overrides the repository root.
 Phase 1 computes every new text in memory; any refusal prints REFUSED and writes nothing. Phase 2 writes through temp files and os.replace with rollback."""
-import argparse, json, os, shutil, subprocess, sys
+import argparse, hashlib, json, os, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..')))
 from winpath import resolve
 sys.path.insert(0, HERE)
 import paths
-KNOWN = ["seam", "bootstrap", "graph", "storage", "register", "ratchet"]
+def known_groups():
+    path = os.path.join(paths.STAGE, "plan.json")
+    return json.load(open(path, encoding="utf-8")).get("groups", []) if os.path.exists(path) else []
+KNOWN = known_groups()
 FULL = [paths.LIBRARY, "🧰️framework/🔨️modules/🏃️process", "🧰️framework/🔨️modules/📁️filesystem", "🧰️framework/🔨️modules/🧬️schema", "🧰️framework/🔨️modules/📚️compiler"]
 u16 = lambda s: len(s.encode("utf-16-le")) // 2
 
@@ -39,7 +42,7 @@ def busy():
 
 
 def compute(root, groups, undo):
-    plan = json.load(open(os.path.join(HERE, "staged", "plan.json"), encoding="utf-8"))
+    plan = json.load(open(os.path.join(paths.STAGE, "plan.json"), encoding="utf-8"))
     drift, results, outputs, created = [], [], {}, {}
     for item in plan["files"]:
         edits = [e for e in item["edits"] if e["group"] in groups]
@@ -76,11 +79,38 @@ def compute(root, groups, undo):
                 drift.append("%s [%s] anchor counts old=%d new=%d, expected %s: %r" % (item["path"], e["id"], n_old, n_new, counts, old[:70]))
         if changed:
             outputs[item["path"]] = text
+    for item in plan.get("rewrites", []):
+        if item["group"] not in groups:
+            continue
+        path = os.path.join(root, item["path"])
+        if not os.path.isfile(path):
+            drift.append(item["path"] + " (file missing)")
+            continue
+        text = open(path, encoding="utf-8", newline="").read()
+        sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        new = open(resolve(paths.NEW, item["new"]), encoding="utf-8", newline="").read()
+        old = open(resolve(paths.NEW, item["old"]), encoding="utf-8", newline="").read()
+        new_sha = hashlib.sha256(new.encode("utf-8")).hexdigest()
+        if undo:
+            if sha == new_sha:
+                outputs[item["path"]] = old
+                results.append(("undo", item["id"], item["path"]))
+            elif sha == item["oldSha256"]:
+                results.append(("not-applied", item["id"], item["path"]))
+            else:
+                drift.append("%s [%s] cannot undo: foreign content" % (item["path"], item["id"]))
+        elif sha == new_sha:
+            results.append(("already", item["id"], item["path"]))
+        elif sha == item["oldSha256"]:
+            outputs[item["path"]] = new
+            results.append(("rewrite", item["id"], item["path"]))
+        else:
+            drift.append("%s [%s] rewrite expects sha %s, found %s" % (item["path"], item["id"], item["oldSha256"][:12], sha[:12]))
     for n in plan["newFiles"]:
         if n["group"] not in groups:
             continue
         path = os.path.join(root, n["path"])
-        content = open(resolve(os.path.join(HERE, "staged", "new"), n["path"]), encoding="utf-8", newline="").read()
+        content = open(resolve(paths.NEW, n["path"]), encoding="utf-8", newline="").read()
         present = os.path.isfile(path) and open(path, encoding="utf-8", newline="").read()
         if u16(os.path.abspath(path)) > 256:
             drift.append(n["path"] + " exceeds 256 UTF-16 units")
@@ -142,7 +172,7 @@ def run(root, groups, write, undo, guard):
         return 2
     for kind, a, b in results:
         print("%-12s %-34s %s" % (kind, a, b.split("/")[-2] + "/" + b.split("/")[-1]))
-    pending = [r for r in results if r[0] in ("edit", "new", "undo", "remove")]
+    pending = [r for r in results if r[0] in ("edit", "new", "undo", "remove", "rewrite")]
     print("%d operations, %d pending%s" % (len(results), len(pending), "" if write else " (dry run)"))
     if write and pending:
         running = busy() if guard else []
@@ -155,8 +185,8 @@ def run(root, groups, write, undo, guard):
 
 
 def mirror(destination, root, lock_sync, with_set):
-    plan = json.load(open(os.path.join(HERE, "staged", "plan.json"), encoding="utf-8"))
-    targets = {f["path"] for f in plan["files"]} | {n["path"] for n in plan["newFiles"]}
+    plan = json.load(open(os.path.join(paths.STAGE, "plan.json"), encoding="utf-8"))
+    targets = {f["path"] for f in plan["files"]} | {n["path"] for n in plan["newFiles"]} | {r["path"] for r in plan.get("rewrites", [])}
     chain = set()
     for relative in targets:
         parts = relative.split("/")

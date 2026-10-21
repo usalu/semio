@@ -7,6 +7,7 @@ import {fileURLToPath} from "node:url";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "@@PROCROOT@@/🧪️testing/🧰️toolchain/@@TS@@";
+import {testScratchRootV1} from "@@PROC@@/🧪️testing/🎛️execution/@@TS@@";
 import schema from "../@@SCHEMA@@/@@JSON@@" with {type:"json"};
 import scenarios from "../@@SCENARIOS@@/@@JSON@@" with {type:"json"};
 import {buildBackendIdsV1,buildBackendRowV1} from "@@UP@@@@BACKENDS@@/@@TS@@";
@@ -23,8 +24,8 @@ import {startRemoteCacheServerV1} from "@@UP@@@@REMOTECACHE@@/🖥️server/@@TS
 const set=scenarios as unknown as ConformanceSetV1,oracle=join(import.meta.dir,"@@ORACLE@@/@@PY@@"),stubFile=join(import.meta.dir,"../@@STUB@@/@@TS@@");
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
 const python=(input:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
-const spec=conformanceSpecV1(set.workspace,"/tmp/markers.log"),sources=Object.keys(set.workspace.files),files=set.workspace.files as Record<string,string>;
-const scratchRoot=mkdtempSync(join(tmpdir(),"conf-test-"));
+const spec=conformanceSpecV1(set.workspace,join(testScratchRootV1("backend-conformance-spec"),"markers.log")),sources=Object.keys(set.workspace.files),files=set.workspace.files as Record<string,string>;
+const scratchRoot=testScratchRootV1("backend-conformance");
 const marker=(kind:ConformanceMarkerV1["kind"],task:string,at:number):ConformanceMarkerV1=>({kind,task,at});
 
 test("the schema is valid and validates the scenario set and every shape the way the repository validator does",()=>{

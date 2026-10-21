@@ -6,6 +6,7 @@ import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdi
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "@@PROCROOT@@/🧪️testing/🧰️toolchain/@@TS@@";
+import {testScratchRootV1} from "@@PROC@@/🧪️testing/🎛️execution/@@TS@@";
 import {validateJsonSchemaSubset} from "@@VALID@@";
 import schema from "../@@SCHEMA@@/@@JSON@@" with {type:"json"};
 import {SEMIO_POLICY_V1 as policy,semioActionKeyV1,semioCanonicalV1,semioHashV1,semioLowerBoundV1,semioOutputsDigestV1,semioPatternPrefixV1,semioSelectFilesV1,type SemioEntryV1,type SemioEventV1} from "../@@TS@@";
@@ -20,7 +21,7 @@ import type {BuildGraphV1} from "@@UP@@@@GRAPH@@/@@TS@@";
 const oracle=join(import.meta.dir,"../../../@@CONF@@/@@TESTS@@/@@ORACLE@@/@@PY@@");
 const python=(input:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
-const root=mkdtempSync(join(tmpdir(),"semio-test-")),fresh=(name:string)=>{const directory=join(root,name+"-"+Math.random().toString(36).slice(2,8));mkdirSync(directory,{recursive:true});return directory;};
+const root=testScratchRootV1("semio-engine"),fresh=(name:string)=>{const directory=join(root,name+"-"+Math.random().toString(36).slice(2,8));mkdirSync(directory,{recursive:true});return directory;};
 const sha=(text:string)=>semioHashV1(text);
 
 test("the schema is valid, the policy is closed, and entries and records validate the way the repository validator does",()=>{

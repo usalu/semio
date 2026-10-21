@@ -17,6 +17,8 @@ export type LeaseAdmissionV1=Readonly<{floorMegabytes:number;headroomMegabytes:n
 /** 📋️ The whole report (`Report` of the schema). */
 export type LeaseReportV1=Readonly<{version:1;directory:string;atMs:number;holders:readonly LeaseHolderV1[];waiters:readonly LeaseWaiterV1[];waitFor:readonly LeaseEdgeV1[];cycles:readonly LeaseCycleV1[];violations:readonly LeaseViolationV1[];admission?:LeaseAdmissionV1}>;
 
+/** 🎒️ How many leading tickets of an arrival queue hold the lease: the exclusive head alone, or the whole run of shared tickets at the head. */
+const holderRun=(tickets:readonly Readonly<{mode:LeaseModeV1}>[]):number=>{if(tickets[0]?.mode==='exclusive')return 1;let count=0;while(count<tickets.length&&tickets[count]!.mode==='shared')count++;return count;};
 const hash=(resource:string):string=>createHash("sha256").update(resource).digest("hex");
 type Ticket=Readonly<{hash:string;position:number;queued:number;arrivedAtMs:number;pid:number;mode:LeaseModeV1}>;
 
@@ -58,7 +60,7 @@ export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;
  for(const ticket of input.queues)byKey.set(ticket.hash,[...byKey.get(ticket.hash)??[],ticket]);
  for(const [key,tickets] of byKey)for(const ticket of tickets){
   const resource=names.get(key)??"",cls=resource?classifyLeaseResourceV1(policy,resource):{id:"unclassified",rank:0};
-  const id=`${ticket.pid}/q`,asHolder=ticket.position===1;
+  const id=`${ticket.pid}/q`,run=holderRun(tickets),asHolder=ticket.position<=run;
   if(asHolder){
    if(known.has(`h\0${ticket.pid}\0${key}`))continue;
    holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:"queue",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{}});

@@ -44,8 +44,6 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-styling = { workspace = true }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }

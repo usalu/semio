@@ -1,7 +1,8 @@
 //! 🧳️ Original chunk vectors and immutable directory paths remain owned until funded publication or physical close.
 use super::{ToolRunPayloadStream,ToolRunPayloadUpdate,invalid};
 use crate::ToolRunIdentity;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneSource, RetainedCloneClose, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}, retirement::{RetireOwned, RetirementCursor, RetirementStep, shared::sealed::{SealedShared, SharedIssuer}}};
+use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneSource, RetainedCloneClose, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
+use semio_framework_value::shared_issuance::{SealedShared, SharedIssuer};
 use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 use std::mem::{ManuallyDrop,size_of};
 const CONTROL:usize=8*size_of::<usize>()+size_of::<ToolRunIdentity>()+size_of::<ToolRunPayloadUpdate>()+2*size_of::<bool>();
@@ -12,7 +13,7 @@ fn scalar(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes+CONTR
 fn nested(mut d:RetirementDemand)->RetirementDemand{d.copy_bytes+=CONTROL;d.depth+=1;d}
 fn child(g:Grant)->Grant{Grant{maximum_copy_bytes:g.maximum_copy_bytes-CONTROL,maximum_depth:g.maximum_depth-1,..g}}
 fn receipt(mut p:Progress)->Progress{p.copied_items=p.copied_items.max(1);p.copied_bytes+=CONTROL;p}
-fn source_close<T:Sync+'static,A:RetireOwned+Sync>(source:&RetainedCloneSource<T,A>,body:usize)->Result<RetirementDemand,ValueError>{source.next_close_demands(body)}
+fn source_close<T:Sync+'static,A:RetireOwned+Sync>(source:&RetainedCloneSource<T,A>,body:usize)->Result<RetirementDemand,ValueError>{source.next_close_demand(body)}
 
 /// 📬️ A rejected frontier preserves the same original vector, directory root, initialized path and publication identity.
 pub struct ToolRunPayloadStreamUpdate{

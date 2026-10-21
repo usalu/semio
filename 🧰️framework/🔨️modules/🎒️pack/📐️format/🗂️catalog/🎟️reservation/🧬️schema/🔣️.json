@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "countKnown",
+          "maximum",
+          "pageItems",
+          "appends",
+          "expectedTargets",
+          "expectedPayloads"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "observed-chunks",
+              "symbol-scalars",
+              "chunk-ids",
+              "symbol-spans"
+            ]
+          },
+          "countKnown": {
+            "type": "boolean"
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "pageItems": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "appends": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "expectedTargets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            }
+          },
+          "expectedPayloads": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            }
+          }
+        }
+      }
+    }
+  }
+}

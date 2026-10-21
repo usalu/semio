@@ -1,7 +1,7 @@
 //! 🗓️ The schedule of the stage: the changes that are due at a known tick and depend on more than one actor — the next whole second on which a pair may be drawn (`pairing_tick`) and the next on which somebody who waits off stage may arrive (`arrival_tick`).
 //!
 //! The clock jumps to these ticks (`lull`) and the frame reports them (`wake`). A new time horizon of the stage is a function here and a line in both of them.
-//! A part of the stage, not of the crate: everything is `pub(crate)` at most.
+//! A part of the stage, not of the package: the items the parts of the stage in `pets-staging` call are `pub`, the rest stays private to this crate.
 //!
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🗓️schedule/🟦️.ts — the TypeScript twin
@@ -22,9 +22,17 @@ use semio_framework_pets_contract::schema::Perch;
 use semio_framework_pets_contract::schema::Slug;
 use semio_framework_pets_contract::schema::Fixture;
 use semio_framework_pets_contract::schema::Species;
+use crate::draft::hover_of;
+use semio_framework_pets_character::feeling::{CHEMISTRY_BEAT, CONTAGION_BEAT, MOOD_PRIORITIES, MOOD_REST, MOOD_SPREADS, calms_at, held_ticks, settled, state_at, trials_of};
+use semio_framework_pets_contract::schema::MOODS;
+use semio_framework_pets_interaction::gesture::circled;
+use semio_framework_pets_interaction::mischief::{Circumstances, LIFT_RETURNS, LIFT_TICKS, allowed_from, fixture_for, station_for};
+use semio_framework_pets_kinematics::terrain::smaller;
+use semio_framework_pets_kinematics::trigonometry::clamp;
+use semio_framework_pets_traversal::climbing::{cling_of, foot_of, rim_of};
 
 //#region 🔖️Constants
-const WARMUP: Ticks = 1280;
+pub const WARMUP: Ticks = 1280;
 //#endregion 🔖️Constants
 
 //#region 🔖️Schedule
@@ -70,7 +78,7 @@ pub fn arrival_tick<A: Borrow<Actor>>(menagerie: &Menagerie, stage: &Stage, acto
 //#endregion 🔖️Schedule
 
 /// 👀️ Read actors through their closed-form state and mood at the chemistry beat.
-pub(crate) fn sightings_of(menagerie: &Menagerie, stage: &Stage, tick: Ticks) -> Vec<Sighting> {
+pub fn sightings_of(menagerie: &Menagerie, stage: &Stage, tick: Ticks) -> Vec<Sighting> {
     stage.actors.iter().filter_map(|actor| {
         let kind = menagerie.species.iter().find(|kind| kind.id == actor.species)?;
         if actor.leaving { return None; }
@@ -107,7 +115,7 @@ fn due_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ticks {
 }
 
 /// 🥁️ The first beat on which contagion or chemistry can change a resting stage.
-pub(crate) fn beat_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ticks {
+pub fn beat_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ticks {
     if stage.mode == PetMode::Still { return -1; }
     let mut staying = 0;
     let mut stirred = false;
@@ -126,17 +134,17 @@ pub(crate) fn beat_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ti
 }
 
 /// 🖱️ A newly moved pointer or scroll must reach the gesture recogniser on the next tick.
-pub(crate) fn sampling(stage: &Stage, from: Ticks) -> bool {
+pub fn sampling(stage: &Stage, from: Ticks) -> bool {
     stage.play && stage.pointer.is_some() && stage.press.phase == PressPhase::Idle && stage.mode != PetMode::Still && !stage.quiet && (from - stage.pointed <= 1 || from - stage.scrolled <= 1)
 }
 
 //#region 🔖️Mischief
 /// 📮️ A pusher's working position beside a marked element.
 #[derive(Clone)]
-pub(crate) enum Post { Wall { pitch: Pitch, y: f64 }, Perch { perch: Perch, x: f64 } }
+pub enum Post { Wall { pitch: Pitch, y: f64 }, Perch { perch: Perch, x: f64 } }
 
 /// 🔭️ One actor and fixture with a feasible working position.
-pub(crate) struct Prospect { pub actor: Slug, pub fixture: Fixture, pub post: Post, pub side: Facing, pub room: f64 }
+pub struct Prospect { pub actor: Slug, pub fixture: Fixture, pub post: Post, pub side: Facing, pub room: f64 }
 
 /// 🛎️ Choose the post offering most room, then least travel, preserving survey order.
 fn post_of(kind: &Species, fixture: &Fixture, x: f64, y: f64, perches: &[Perch], pitches: &[Pitch], width: f64) -> Option<(Post, Facing, f64)> {
@@ -171,7 +179,7 @@ fn post_of(kind: &Species, fixture: &Fixture, x: f64, y: f64, perches: &[Perch],
 }
 
 /// 🗳️ Collect eligible actors and their covered fixtures in stable authored order.
-pub(crate) fn prospects_of(menagerie: &Menagerie, stage: &Stage, tick: Ticks) -> Vec<Prospect> {
+pub fn prospects_of(menagerie: &Menagerie, stage: &Stage, tick: Ticks) -> Vec<Prospect> {
     let mut prospects = Vec::new();
     if stage.fixtures.is_empty() { return prospects; }
     let movers = stage.actors.iter().filter(|actor| matches!(actor.activity, Activity::Walk | Activity::Hop) || stage.trips.iter().any(|trip| trip.owner == actor.species)).count();
@@ -192,7 +200,7 @@ fn circumstances_of(stage: &Stage, tick: Ticks) -> Circumstances {
 }
 
 /// 🪄️ The next prank transition, including cooldown, push readiness and sheepish recovery.
-pub(crate) fn prank_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ticks {
+pub fn prank_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> Ticks {
     let Some(lift) = &stage.lift else {
         let Some(opens) = allowed_from(circumstances_of(stage, from)) else { return -1; };
         if prospects_of(menagerie, stage, from).is_empty() { return -1; }

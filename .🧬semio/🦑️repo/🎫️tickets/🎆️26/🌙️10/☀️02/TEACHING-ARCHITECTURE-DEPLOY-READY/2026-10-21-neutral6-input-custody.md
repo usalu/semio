@@ -47,3 +47,45 @@ Read-only nofollow physical file checks of the reviewed manifest and its140pins.
 - 2026-10-21T00:22:15.249Z: manifest and all140pins observed stable; ordinary single-link physical paths.
 
 - 2026-10-21T00:23:19.657Z: manifest and all140pins observed stable; ordinary single-link physical paths.
+
+- 2026-10-21T00:24:29.488Z: manifest and all140pins observed stable; ordinary single-link physical paths.
+
+- 2026-10-21T00:25:39.170Z: manifest and all140pins observed stable; ordinary single-link physical paths.
+
+- 2026-10-21T00:26:45.155Z: manifest and all140pins observed stable; ordinary single-link physical paths.
+
+- 2026-10-21T00:27:51.236Z: manifest and all140pins observed stable; ordinary single-link physical paths.
+
+- 2026-10-21T00:28:56.473Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+Drift detail observed 2026-10-21T00:29:06.982Z:
+
+```json
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+  "expected": {
+    "bytes": 37273,
+    "sha256": "b7802a9f54b5e52b34a4ea17bac72a2db69d3f40f5c0bfceb310fd57cfee0dc0"
+  },
+  "actual": {
+    "bytes": 37334,
+    "sha256": "06376a34d7002dce7ada9d3f34a88c4a33f21a2fbb45daeac9c0f8d7f47c77e5"
+  }
+}
+```
+
+- 2026-10-21T00:30:15.696Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+- 2026-10-21T00:31:21.917Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+- 2026-10-21T00:32:28.011Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+- 2026-10-21T00:33:39.921Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+- 2026-10-21T00:34:57.970Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+- 2026-10-21T00:35:12.628Z: DRIFT ["sourceFiles:🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs"]
+
+## Watch Handoff
+
+2026-10-21T00:35:12.629Z: Root acknowledged drift and instructed the sole executor to poll/cancel only its owned62305and await actual terminal. This watcher did not access the TTY, cancel any work, refresh pins, edit Source or execute commands/helpers/tests. Watch ends at Root request to free the review slot. Manifest remains26941B/raw SHA262a2e8969066adb32158208d2746d70cebc1e0e67dd8251a1a2e3b1b2181019. Sole content mismatch remains project-assembly: expected37273B/b7802a9f54b5e52b34a4ea17bac72a2db69d3f40f5c0bfceb310fd57cfee0dc0, observed37334B/06376a34d7002dce7ada9d3f34a88c4a33f21a2fbb45daeac9c0f8d7f47c77e5. Peer bytes were preserved. No terminal status or neutral/production acceptance is inferred.

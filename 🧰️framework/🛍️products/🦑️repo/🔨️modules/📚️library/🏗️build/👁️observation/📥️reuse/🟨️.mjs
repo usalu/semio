@@ -1,4 +1,4 @@
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{readdirSync,statSync}from"node:fs";
 import{resolve}from"node:path";
@@ -12,7 +12,7 @@ const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semi
 const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
 
 /** 🧷️ Rejects a retained helper whose Source or privately captured policies changed. */
-export function requireCurrentInferenceInventoryReuseV1(){if(epochURLs.some((url,index)=>revision(url,index)!==loadedEpoch[index]))throw Error("Stale inference inventory reuse implementation; restart required");}
+export function requireCurrentInferenceInventoryReuseV1(){if(implementationPinnedV1())return;if(epochURLs.some((url,index)=>revision(url,index)!==loadedEpoch[index]))throw Error("Stale inference inventory reuse implementation; restart required");}
 
 /** 📋️ Captures finite inert compact references without retaining mutable caller DATA. */
 export function captureInferenceInventoryReferencesV1(value){

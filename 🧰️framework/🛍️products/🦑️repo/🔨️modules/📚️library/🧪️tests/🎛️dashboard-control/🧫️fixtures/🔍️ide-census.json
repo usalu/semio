@@ -887,5 +887,115 @@
       "expectedReferences": []
     }
   ],
-  "maximumXmlPrologSections": 128
+  "maximumXmlPrologSections": 128,
+  "developerGuiCases": [
+    {
+      "name": "direct GUI",
+      "command": [
+        "gitkraken",
+        "--path",
+        "{workspace}"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "renamed declaration still GUI",
+      "command": [
+        "/opt/gitkraken",
+        "--path",
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Windows mixed case executable",
+      "command": [
+        "C:\\Program Files\\GitKraken\\GitKraken.EXE",
+        "--path",
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "macOS application operand",
+      "command": [
+        "open",
+        "-a",
+        "GitKraken",
+        "--args",
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Windows start operand",
+      "command": [
+        "cmd.exe",
+        "/c",
+        "start",
+        "",
+        "GitKraken.exe"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "PowerShell application operand",
+      "command": [
+        "pwsh",
+        "-Command",
+        "Start-Process",
+        "GitKraken.exe"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "IDE executable",
+      "command": [
+        "/usr/bin/code",
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "terminal editor executable",
+      "command": [
+        "nvim",
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "repository Git controls",
+      "command": [
+        "repo",
+        "file",
+        "diff",
+        "gitkraken"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "domain viewer",
+      "command": [
+        "f3d",
+        "model.glb"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "agent CLI",
+      "command": [
+        "kiro-cli",
+        "chat"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "application name prefix is distinct",
+      "command": [
+        "gitkraken-data-check"
+      ],
+      "accepted": true
+    }
+  ]
 }

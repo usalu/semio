@@ -67,7 +67,7 @@ for f in FILES:
     n = t
     for a, b in RULES:
         n = n.replace(a, b)
-    if f in EDITED:
+    if f in EDITED or f.endswith("Cargo.toml"):
         cur = t
         for a, b in RULES:
             if a != b and a in cur:

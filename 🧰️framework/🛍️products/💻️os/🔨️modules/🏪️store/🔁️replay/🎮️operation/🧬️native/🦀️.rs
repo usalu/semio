@@ -122,7 +122,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   macro_rules! pending{($field:ident,$kind:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$kind>(true,&None,body);}};}
   if self.base.is_some(){return Ok(CapturedSnapshotSource::<P>::constructor_demand());}
   pending!(source_authority,CapturedSnapshotSource<P>);pending!(post,P);pending!(inverse,Vec<M>);pending!(pages,PagedList<M,{usize::MAX}>);pending!(pending,M);pending!(messages,Vec<semio_framework_os_spr::MutationMessage>);
-  if self.next.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::shared::FactorySharedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
+  if self.next.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::factory::shared::FactorySharedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
   if self.snapshots.is_some()||self.mutations.is_some(){return Ok(header::<Arc<dyn semio_framework_value::FactoryRetirement>>());}
   if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return factory.demands(body);}
   Ok(Default::default())
@@ -145,7 +145,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   close!(inverse);close!(pages);
   if self.pending.is_some(){let Some((frame,p))=semio_framework_value::FactoryOwnedRetirement::<M>::admit_original(&mut self.pending,self.mutations.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
   close!(messages);
-  if self.next.is_some(){let Some((frame,p))=semio_framework_value::retirement::shared::FactorySharedRetirement::<P>::admit_original(&mut self.next,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
+  if self.next.is_some(){let Some((frame,p))=semio_framework_value::factory::shared::FactorySharedRetirement::<P>::admit_original(&mut self.next,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
   if let Some(factory)=self.snapshots.take(){self.factory_close[0]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(unit());}
   if let Some(factory)=self.mutations.take(){self.factory_close[1]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(unit());}
   if let Some(index)=self.factory_close.iter().position(Option::is_some){let owner=self.factory_close[index].as_mut().unwrap();let step=owner.step(grant)?;if owner.terminal_is_empty(){self.factory_close[index]=None;}return Ok(step);}

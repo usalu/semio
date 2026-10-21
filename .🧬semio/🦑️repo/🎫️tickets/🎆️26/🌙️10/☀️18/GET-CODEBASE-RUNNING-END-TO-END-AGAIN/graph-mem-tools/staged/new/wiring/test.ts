@@ -16,9 +16,8 @@ function calls(){
 
 test("every project inference starts through the memory governor, bounded by the worker count, and its statistics reach the phase row",()=>{
  const all=calls(),inferences=all.filter(call=>call.callee==="inferProject");
- expect(inferences.length).toBe(1);
- const governed=inferences[0]!.ancestors.some(node=>ts.isCallExpression(node)&&node.expression.getText(tree)==="governor.run");
- expect(governed).toBe(true);
+ expect(inferences.length).toBeGreaterThan(0);
+ for(const inference of inferences)expect(inference.ancestors.some(node=>ts.isCallExpression(node)&&node.expression.getText(tree)==="governor.run"),inference.text).toBe(true);
  const creations=all.filter(call=>call.callee==="createMemoryGovernorV1");
  expect(creations.length).toBe(1);expect(creations[0]!.text).toContain("workers:limit");expect(creations[0]!.text).toContain("graphMemoryBudgetBytesV1(process.env)");
  expect(creations[0]!.text).toContain("signal:context.phaseControl?.signal");

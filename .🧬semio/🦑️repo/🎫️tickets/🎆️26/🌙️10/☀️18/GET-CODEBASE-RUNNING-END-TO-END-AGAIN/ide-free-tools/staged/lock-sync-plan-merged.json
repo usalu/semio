@@ -48,36 +48,6 @@
       1
      ],
      "source": "bzl-default manifest2"
-    },
-    {
-     "id": "manifests-root-1",
-     "group": "manifests",
-     "old": "    \"🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
-    },
-    {
-     "id": "manifests-root-2",
-     "group": "manifests",
-     "old": "    \"@types/vscode\": \"^1.104.0\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
-    },
-    {
-     "id": "manifests-root-3",
-     "group": "manifests",
-     "old": "    \"@vscode/test-cli\": \"^0.0.10\",\n    \"@vscode/vsce\": \"^3.5.0\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   },
@@ -713,16 +683,6 @@
       1
      ],
      "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
-    },
-    {
-     "id": "manifests-♻️mit-bestand-1",
-     "group": "manifests",
-     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   },
@@ -738,16 +698,6 @@
       1
      ],
      "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
-    },
-    {
-     "id": "manifests-✏️s-1",
-     "group": "manifests",
-     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   },
@@ -763,16 +713,6 @@
       1
      ],
      "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
-    },
-    {
-     "id": "manifests-🌎️hub-1",
-     "group": "manifests",
-     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   },
@@ -788,16 +728,6 @@
       1
      ],
      "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
-    },
-    {
-     "id": "manifests-🎓️teaching-1",
-     "group": "manifests",
-     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   },
@@ -813,16 +743,6 @@
       1
      ],
      "source": "lock-sync: parsers workspace row (bzl-default manifest2 only edited the root)"
-    },
-    {
-     "id": "manifests-🏢️semio-tech-1",
-     "group": "manifests",
-     "old": "    \"../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript\",\n",
-     "new": "",
-     "counts": [
-      1
-     ],
-     "source": "ide-free manifests"
     }
    ]
   }

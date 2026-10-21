@@ -34,6 +34,8 @@ semio-framework-replication-causal = { path = "../../../📦️packages/🦀️r
 semio-framework-replication-crypto = { path = "../../../../🔐️crypto/📦️packages/🦀️rust" }
 semio-framework-replication-edit = { path = "../../../../🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 semio-framework-replication-error = { path = "../../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-hash.workspace = true
+semio-framework-pack-error = { path = "../../../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
 semio-framework-replication-history-index = { path = "../../🔁️fold/🗂️index/📦️packages/🦀️rust" }
 semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }

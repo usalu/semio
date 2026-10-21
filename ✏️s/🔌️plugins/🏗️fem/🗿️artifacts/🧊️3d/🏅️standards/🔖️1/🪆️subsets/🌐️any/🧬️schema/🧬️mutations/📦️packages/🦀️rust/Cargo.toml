@@ -76,7 +76,6 @@ semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-artifact-fem-3d-analysis = { workspace = true }
@@ -88,6 +87,7 @@ semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }

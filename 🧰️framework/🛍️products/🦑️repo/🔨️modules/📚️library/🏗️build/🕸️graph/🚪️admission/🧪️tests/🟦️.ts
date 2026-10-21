@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
 import fixture from "./🔣️.json" with {type:"json"};
 import schema from "../../../🧬️schema/🚪️admission.json" with {type:"json"};
-import {closeBuildOwnerAdmissionV1,readBuildOwnerRegistryV1,readBuildGraphSelectionV1} from "../🟦️.ts";
+import {buildSourceContractGroupsV1,closeBuildOwnerAdmissionV1,readBuildOwnerRegistryV1,readBuildGraphSelectionV1} from "../🟦️.ts";
 
 test("catalog activation requires actual consumer tasks, direct input custody or intentional all-owner admission",async()=>{
  const registry=readBuildOwnerRegistryV1(fixture.registry),oracle=new Ajv({strict:false}).compile(schema),db=new Database(":memory:");
@@ -14,4 +14,13 @@ test("catalog activation requires actual consumer tasks, direct input custody or
  const selected=db.query("SELECT DISTINCT consumer.root FROM consumer JOIN owner ON owner.root=consumer.root OR owner.root LIKE consumer.root||'/%' JOIN task ON task.owner=owner.name").all();expect(selection.kind==="all"||selected.length>0||rowInputs.includes("{workspaceRoot}/provider/publication.ts")).toBe(row.expectedProviders.length>0);
  }
  }finally{db.close();}
+});
+
+test("the selected source input walk bounds named references and literal leaves separately, so inferred input lists never exhaust the reference bound",()=>{
+ const scope=(schema as any).$defs.sourceContractScope.const,literal=(index:number)=>"{workspaceRoot}/f/"+index+".ts",many=scope.maximumReferences+1;
+ const project=(inputs:readonly unknown[],namedInputs:Record<string,readonly unknown[]>={})=>({name:"p",targets:{t:{inputs}},namedInputs,metadata:{sourceInputs:{contract:"c.json"}}});
+ expect(scope.maximumLiterals).toBeGreaterThan(scope.maximumReferences);
+ expect(buildSourceContractGroupsV1(project([...Array.from({length:many},(_,index)=>literal(index)),"group"],{group:["contract"]}),{},[])).toEqual(["contract"]);
+ expect(()=>buildSourceContractGroupsV1(project(Array.from({length:many},(_,index)=>({input:"g"+index}))),Object.fromEntries(Array.from({length:many},(_,index)=>["g"+index,[]])),[])).toThrow(/closure required/u);
+ expect(()=>buildSourceContractGroupsV1(project(Array.from({length:scope.maximumLiterals+1},(_,index)=>literal(index))),{},[])).toThrow(/literals required/u);
 });

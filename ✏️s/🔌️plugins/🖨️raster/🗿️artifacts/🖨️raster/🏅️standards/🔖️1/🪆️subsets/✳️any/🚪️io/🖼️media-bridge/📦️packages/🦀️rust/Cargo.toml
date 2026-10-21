@@ -26,7 +26,6 @@ semio-framework-os = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pixels = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-stdio-gif = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
@@ -40,3 +39,7 @@ semio-s-artifact-stdio-semio-image-export = { workspace = true }
 semio-s-artifact-stdio-semio-image-import = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value = { workspace = true }

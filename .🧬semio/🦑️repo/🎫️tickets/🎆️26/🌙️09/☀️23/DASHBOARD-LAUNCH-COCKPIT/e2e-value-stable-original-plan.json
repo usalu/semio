@@ -24,11 +24,86 @@
       "workspace": "🧰️framework/Cargo.toml"
     },
     {
+      "id": "supplemental-source-shared-query-library",
+      "kind": "whole-libraries",
+      "packages": [
+        "semio-framework-value-clone-source"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null,
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "id": "supplemental-paged-allocation-library",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-value-paged-list"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
+      "id": "supplemental-wire-library",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-replication-wire-core"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
+      "id": "supplemental-original-slot-library",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-value-original-slot"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
       "id": "root-artifact-child",
       "kind": "whole-libraries",
       "workspace": "Cargo.toml",
       "packages": [
         "semio-framework-os-store-child"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
+      "id": "supplemental-retained-output-consumers",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-mutation-diff",
+        "semio-framework-replication-mutation-retained"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
+      "id": "supplemental-shared-document-driver",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-pack-record-retained",
+        "semio-framework-pack-intrinsic",
+        "semio-framework-pack-format-catalog"
       ],
       "locked": true,
       "noFailFast": true,
@@ -169,6 +244,60 @@
       "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
       "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/🦀️.rs",
       "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-replication-wire-core",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-paged-list",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-mutation-diff",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-replication-mutation-retained",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-record-retained",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-intrinsic",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-original-slot",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-format-catalog",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-clone-source",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
     }
   ],
   "requiredNewBodies": [
@@ -216,7 +345,8 @@
     "standard_collection_tests::standard_collection_clones_equal_clone_and_serde_oracles_per_fixture_row",
     "standard_collection_tests::standard_collection_clones_cancel_at_every_turn_without_abandoning_ownership",
     "standard_collection_tests::standard_collection_option_and_nesting_clone_through_the_entry_cursor",
-    "standard_collection_tests::standard_collection_scalar_clones_are_fully_quoted_turn_by_turn"
+    "standard_collection_tests::standard_collection_scalar_clones_are_fully_quoted_turn_by_turn",
+    "scalar_lifecycle_tests::borrow_authority_handback_selects_one_event_and_preserves_original_custody"
   ],
   "requiredDoctests": [
     {
@@ -598,7 +728,7 @@
     "allSupplementalPass": true
   },
   "contractFollowUp": {
-    "status": "authored-awaiting-source-review-and-runtime",
+    "status": "source-reviewed-compiler-wiring-repaired-awaiting-runtime",
     "decision": "Remove independent-axis default; require one correlated close_demands implementation per cursor. Preserve both generated explicit methods.",
     "inheritedConsumers": [
       {
@@ -650,12 +780,10 @@
         "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/🦀️.rs"
       }
     ],
-    "execution": "After source review, rerun affected owners including both additional physical packages; retain the original full-fourteen/69 stage independently.",
-    "freeze": "No Rust contract change before affected-seven actual diagnostics; common Source TS/schema edits wait for Root57784 whole.",
+    "execution": "Run affected framework eight, supplemental wire whole-library, Root OS child, four facade doctests, then original framework fifteen plus Root OS child; original69 unchanged, wire is separate seventeenth physical owner.",
+    "freeze": "All predecessor runtime captures settled; source repairs are complete and awaiting final review/freeze before next managed captures.",
     "noActualRed": "Predecessor requests ended at capacity; test-first source order is not an observed compile/body red.",
-    "requiredLockRefresh": [
-      "Cargo.lock"
-    ],
+    "requiredLockRefresh": [],
     "sourceReview": "Independent reviewer accepted exact forwards/harness/docs source; actual Native/kernel/compiler/doc execution not performed.",
     "publicTestCarve": {
       "fromPackage": "semio-framework-value-retained-clone",
@@ -670,6 +798,14 @@
       "unchangedAdvertisedTriples": true,
       "privatePrefixTestRetained": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs",
       "contractSourceReduction": 7419
+    },
+    "completedLockRefresh": {
+      "session": 28597,
+      "wholeExitCode": 0,
+      "rootRegistryUnchanged": 706,
+      "frameworkProjectionUnchanged": true,
+      "addedLocalPackage": "semio-framework-value-testing-allocator",
+      "addedDevEdge": "semio-framework-os-store-child -> semio-framework-value-testing-allocator"
     }
   },
   "requiredDispatchBodies": [
@@ -721,5 +857,422 @@
         "semio-framework-os-store-child"
       ]
     }
-  ]
+  ],
+  "requiredWireBodies": [
+    {
+      "package": "semio-framework-replication-wire-core",
+      "law": "retained::tests::original_wire_retirement_selects_exact_buffer_release_and_terminal_drop",
+      "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs"
+    }
+  ],
+  "supplementalOwners": [
+    {
+      "package": "semio-framework-replication-wire-core",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-paged-list",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-mutation-diff",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-replication-mutation-retained",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-record-retained",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-intrinsic",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-original-slot",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-pack-format-catalog",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-clone-source",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    }
+  ],
+  "requiredAllocationPolicyBodies": [
+    {
+      "package": "semio-framework-value-paged-list",
+      "law": "list::original_reservation_tests::allocation_policy_refuses_empty_metadata_without_hidden_push_allocation",
+      "source": "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-value-paged-list",
+      "law": "list::original_reservation_tests::allocation_policy_quarantines_partial_payload_until_exact_funded_release",
+      "source": "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-value-paged-list",
+      "law": "list::original_reservation_tests::allocation_policy_partial_payload_hands_back_without_hidden_disposal",
+      "source": "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs"
+    }
+  ],
+  "pendingSourceRoute": {
+    "project": "@semio-tech/value-rs",
+    "target": "test-paged-reservation-source",
+    "runtimeEntry": "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🟦️.ts",
+    "status": "registered-awaiting-actual-source-body",
+    "preserveExistingSource26": true
+  },
+  "requiredOutputHandoffBodies": [
+    {
+      "package": "semio-framework-value-snapshot-projection",
+      "law": "snapshot_projection::tests::owned::owned_projection_field_output_handoff_preserves_candidate_and_projected_custody",
+      "source": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-mutation-diff",
+      "law": "tests::retained_fragment_capability_preserves_source_and_refuses_unfunded_closures",
+      "source": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-replication-mutation-retained",
+      "law": "retained::diff::tests::ordered_retained_sequence_preserves_stable_outputs_and_closes_every_prefix",
+      "source": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-value-snapshot-projection",
+      "law": "snapshot_projection::tests::owned::zero_sized_projection_field_output_handoff_requires_only_its_real_axes",
+      "source": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs"
+    }
+  ],
+  "requiredDocumentDriverBodies": [
+    {
+      "package": "semio-framework-pack-record-retained",
+      "law": "original_record_receiving::tests::original_record_receiving_generic_retirement_selects_one_close_event_and_retains_original_source",
+      "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-pack-record-retained",
+      "law": "original_record_receiving::tests::original_record_receiving_document_driver_admits_every_close_currency_before_effect",
+      "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-pack-record-retained",
+      "law": "original_record_receiving::tests::original_record_receiving_complete_pack_preserves_catalog_body_and_actual_receipts",
+      "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs"
+    }
+  ],
+  "existingRetainedSequenceControl": {
+    "project": "@semio-tech/framework-replication-rs",
+    "sourceTarget": "test-retained-diff-sequence-source",
+    "nativeTarget": "test-retained-diff-sequence-native",
+    "workspace": "🧰️framework/Cargo.toml",
+    "package": "semio-framework-replication",
+    "testTarget": "retained_diff_sequence",
+    "requiredBodies": [
+      "retained_diff_sequence_matches_original_intermediate_sqlite_values_and_refusal",
+      "retained_diff_sequence_cancellation_closes_original_sources_diagnostics_and_candidates",
+      "retained_diff_sequence_wide_original_projection_and_every_custody_cut_are_genuine"
+    ],
+    "status": "mandatory pending exact six-case corpus recovery, finite native guards and actual Source/native acceptance",
+    "registration": "physically registered in replication Rust package project and dispatcher; source performs typed compilation then owned Bun test",
+    "declaration": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+    "dispatcher": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+    "typedCompiler": true
+  },
+  "currentIndependentStages": [
+    {
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-pack-record-retained",
+        "semio-framework-pack-intrinsic",
+        "semio-framework-pack-format-catalog"
+      ],
+      "selection": "whole libraries",
+      "status": "actual whole0 46746;48 passed; catalog9/intrinsic18/record21",
+      "session": 46746
+    },
+    {
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework-os-store-child"
+      ],
+      "selection": "whole library",
+      "status": "9284 whole101 before bodies; two test wiring corrections source-reviewed, dev-feature declaration awaiting concurrent Source boundary"
+    },
+    {
+      "project": "@semio-tech/framework-replication-rs",
+      "target": "test-retained-diff-sequence-native",
+      "status": "blocked until original six-case corpus recovered and finite guards reviewed"
+    }
+  ],
+  "requiredOriginalSlotBodies": [
+    "original_slot::tests::original_slot_preserves_native_payload_and_waits_for_every_projected_reader",
+    "original_slot::tests::original_slot_generation_exhaustion_refuses_before_native_exchange",
+    "original_slot::tests::original_slot_exchange_matches_all_independent_portable_outputs",
+    "original_slot::tests::original_slot_retirement_returns_all_readers_then_uses_same_captured_payload_issuer"
+  ],
+  "originalSlotSourceControl": {
+    "project": "@semio-tech/framework-original-slot",
+    "target": "verify-source",
+    "typedCompiler": true,
+    "neutralCases": 4,
+    "thirdPartyOracle": "Ajv2020 and fast-json-patch",
+    "status": "unrun"
+  },
+  "originalSlotActual": {
+    "session": 99223,
+    "exitCode": 0,
+    "passed": 4,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "compileSeconds": 2.75,
+    "bodySeconds": 0.01,
+    "log": "🗑️generated/e2e-original-slot-native-current.log",
+    "advertised69": false
+  },
+  "requiredThreadContractBodies": [
+    "retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate"
+  ],
+  "requiredThreadContractBodiesQualification": "Exact physical retirement root owned_mutex mount and descendant tests mount verified; whole retirement library must execute the real Cell law, no filter substitution",
+  "threadContractSource": {
+    "project": "@semio-tech/value-rs",
+    "target": "test-exclusive-retirement-source",
+    "status": "physically registered awaiting review and actual Source body",
+    "testEntry": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
+    "typedCompiler": false,
+    "thirdPartyOracle": "SQLite conditional UPDATE changes",
+    "corpusCases": 2,
+    "neutralQueryPorts": 3
+  },
+  "threadContractActual": {
+    "session": 58755,
+    "exitCode": 0,
+    "wholeLibrary": true,
+    "package": "semio-framework-value-retirement",
+    "passed": 19,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "compileSeconds": 12.92,
+    "bodySeconds": 0.01,
+    "requiredBody": "retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate",
+    "log": "🗑️generated/e2e-retirement-exclusive-thread-native.log"
+  },
+  "packActual": {
+    "session": 46746,
+    "exitCode": 0,
+    "compileSeconds": 29,
+    "announced": {
+      "catalog": 9,
+      "intrinsic": 18,
+      "recordRetained": 21
+    },
+    "started": 48,
+    "passedBodies": 48,
+    "primaryPanics": 0,
+    "unreachedBodies": 0,
+    "testProcessAborts": 0,
+    "wholePass": true,
+    "log": "🗑️generated/e2e-pack-wire-handback-native.log",
+    "packages": [
+      {
+        "package": "semio-framework-pack-format-catalog",
+        "passed": 9,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0,
+        "bodySeconds": 0.19
+      },
+      {
+        "package": "semio-framework-pack-intrinsic",
+        "passed": 18,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0,
+        "bodySeconds": 1.14
+      },
+      {
+        "package": "semio-framework-pack-record-retained",
+        "passed": 21,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0,
+        "bodySeconds": 0.02
+      }
+    ]
+  },
+  "catalogSelectionActualStatus": "Source-reviewed immutable-max dynamic target and canonical chunk-id append; genuine dev-edge lock resolution pending then actual Pack3",
+  "requiredSharedQueryBody": {
+    "package": "semio-framework-value-clone-source",
+    "law": "shared_query_tests::shared_source_and_projection_quotes_gate_actual_send_only_cell_cursors",
+    "ports": [
+      "source-owner",
+      "source-lease",
+      "projection"
+    ],
+    "source": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs",
+    "status": "source reviewed; actual whole library pending"
+  },
+  "sharedQueryActual": {
+    "session": 99877,
+    "exitCode": 0,
+    "wholeLibrary": true,
+    "package": "semio-framework-value-clone-source",
+    "passed": 5,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "compileSeconds": 3.07,
+    "bodySeconds": 0.01,
+    "log": "🗑️generated/e2e-source-shared-query-selected-native.log"
+  },
+  "catalogReservationSource": {
+    "project": "@semio-tech/framework-pack-rs",
+    "target": "test-catalog-reservation-source",
+    "testEntry": "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts",
+    "typedCompiler": false,
+    "corpusCases": 4,
+    "thirdPartyOracle": "SQLite page extent calculation",
+    "status": "physically registered/source reviewed/unrun"
+  },
+  "catalogAllocatorLockActual": {
+    "framework": {
+      "session": 48799,
+      "exitCode": 0,
+      "packages": 1068,
+      "registry": 612,
+      "addedEdges": [
+        {
+          "package": "semio-framework-pack-format-catalog",
+          "edges": [
+            "semio-framework-value-testing-allocator"
+          ]
+        },
+        {
+          "package": "semio-framework-value-retirement-queue",
+          "edges": [
+            "semio-framework-test-fixtures",
+            "semio-framework-value-factory"
+          ]
+        }
+      ]
+    },
+    "root": {
+      "session": 92144,
+      "exitCode": 0,
+      "packages": 1565,
+      "registry": 706,
+      "addedEdges": [
+        {
+          "package": "semio-framework-artifact-flow-flow-document",
+          "edges": [
+            "semio-framework-value-native-owned"
+          ]
+        },
+        {
+          "package": "semio-framework-plugin-child-group-wire-laws",
+          "edges": [
+            "semio-framework-value-paged-text"
+          ]
+        }
+      ]
+    },
+    "registryCoordinatesExact": true,
+    "removedPackages": 0,
+    "removedEdges": 0,
+    "qualification": "Real offline resolution preserves current concurrent declarations; no exclusive attribution to peer manifest edges"
+  },
+  "intrinsicWholeActual": {
+    "session": 15167,
+    "package": "semio-framework-pack-intrinsic",
+    "passed": 18,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "bodySeconds": 0.17,
+    "qualification": "package whole-body pass within an aggregate command that exited101 for two other packages"
+  },
+  "recordWholeActual": {
+    "session": 50437,
+    "package": "semio-framework-pack-record-retained",
+    "passed": 21,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "bodySeconds": 0.02,
+    "qualification": "complete package body pass inside aggregate command101 for catalog only"
+  },
+  "inlineSymbolSourceControl": {
+    "version": 1,
+    "project": "@semio-tech/framework-pack-rs",
+    "target": "test-inline-symbol-source",
+    "declaration": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📋️project.json",
+    "dispatcher": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+    "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+    "freshnessData": [
+      "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧬️schema/🔣️.json",
+      "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json",
+      "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs",
+      "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🦀️.rs"
+    ],
+    "executionKind": "Source",
+    "sourceInputObservation": "freshness",
+    "runtimeSourceEntries": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts"
+    ],
+    "cache": false,
+    "outputs": [],
+    "forwardAllArgs": false,
+    "control": "existing owned Bun test helper, Original invocation.signal and capped30000ms, closed no args",
+    "typedCompiler": false,
+    "status": "physically registered and Low source-accepted; runtime unrun",
+    "requiredBodies": [
+      "retained inline symbols preserve original wire indices and independent canonical UTF8",
+      "inline source handback separates bounded aliases from exact caller wire retirement"
+    ]
+  },
+  "rootArtifactChildActual": {
+    "session": 9284,
+    "artifacts": "osf3",
+    "wholeExit": 101,
+    "bodies": 0,
+    "status": "test-compile-errors",
+    "errors": [
+      "Job fixture caller dev feature omitted",
+      "RetireOwned derive macro used as trait"
+    ],
+    "report": "oct21-root-artifact-child-gate.md",
+    "retry": {
+      "session": 89986,
+      "artifacts": "osf4",
+      "log": "e2e-root-artifact-child-testkit.log",
+      "status": "live; actual capacity-only at last read",
+      "wholeExit": null
+    }
+  },
+  "acceptanceQualification": "Acceptance is required final criteria, not an actual result. Current full25/all69 and facade4 doctests remain pending."
 }

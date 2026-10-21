@@ -237,15 +237,16 @@
       "project": "@semio-tech/framework-process",
       "target": "test-process-progress",
       "command": "repo run @semio-tech/framework-process:test-process-progress --skip-cache --output=stream",
-      "state": "pending",
-      "log": "🗑️generated/e2e-source-21-current.log",
-      "artifacts": "🗑️generated/p21a",
+      "state": "failed-before-bodies",
+      "log": "🗑️generated/e2e-source-21-current-funding.log",
+      "artifacts": "🗑️generated/p21l",
       "purpose": "Schema-first tooling presentation implementation; all prior red attempts were prebody, current actual acceptance pending.",
       "lastAttempt": {
-        "sessionId": 53440,
+        "sessionId": 19378,
         "exitCode": 1,
-        "log": "🗑️generated/e2e-tooling-progress-red.log",
-        "outcome": "whole1-loaded-build-graph-implementation-changed;no-testbody;stop-request-issued-after-runtime-refusal"
+        "log": "🗑️generated/e2e-source-21-current-funding.log",
+        "artifacts": "🗑️generated/p21l",
+        "outcome": "Natural whole1 before test bodies: resource-directory-admission:v1 lease timed out at acquireUngatedResourceLease leases/TS228. Initial graphSH queue cleared and selected source/compile/declaration/catalog phases ran; one admission refresh preceded the primary. No guard/bound waiver; post25stable0errors, four byte-hash changes retained without actor attribution."
       },
       "attempts": [
         {
@@ -264,8 +265,87 @@
           "exitCode": 1,
           "log": "🗑️generated/e2e-source-21-current.log",
           "outcome": "Exact owned PTY Ctrl+C at parent-authorized quiet boundary; capacity-only wait, no Original/test body, no red/pass."
+        },
+        {
+          "sessionId": 46478,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-consolidated.log",
+          "artifacts": "🗑️generated/p21b",
+          "outcome": "Natural whole1 before test bodies: Original bounded optional ledger file required during optional graph cache publication; guard preserved."
+        },
+        {
+          "sessionId": 32086,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-ledger-diagnostic.log",
+          "artifacts": "🗑️generated/p21c",
+          "outcome": "Natural whole1 before test bodies: loaded graph implementation changed 70a9136f→b9552c60 with publication a4e8db13 unchanged; source guard preserved, no ledger-cause/pass inference."
+        },
+        {
+          "sessionId": 61494,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-finite-stages.log",
+          "artifacts": "🗑️generated/p21d",
+          "outcome": "Natural whole1 after capacity admission before bodies: Bounded physical Source revision required at revision.capture/current→arguments schema import; exact25-point pre/post shows10 changed inputs; no guard change/actor attribution."
+        },
+        {
+          "sessionId": 61470,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-current-revision.log",
+          "artifacts": "🗑️generated/p21e",
+          "outcome": "Exact own PTY Ctrl+C at parent-authorized diagnostic boundary after four opaque graph refreshes; whole1 Original Script process interrupted, no test body/red/pass."
+        },
+        {
+          "sessionId": 72855,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-authority-trace.log",
+          "artifacts": "🗑️generated/p21f",
+          "outcome": "Natural whole1 before bodies: Closed optional graph cache quota required at storage MJS24→148. Existing authority trace enabled; guard preserved."
+        },
+        {
+          "sessionId": 45514,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-quota-observation.log",
+          "artifacts": "🗑️generated/p21g",
+          "outcome": "Natural whole1 before test bodies: SEMIO_LEASE_ORDER hold-and-wait, held exclusive repository-graph-facts shard5 while requested native-fixed-image .cache/b/g shared; enforced guard preserved. No quota diagnostic/body/pass inferred."
+        },
+        {
+          "sessionId": 80585,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-graph-lifetime.log",
+          "artifacts": "🗑️generated/p21h",
+          "outcome": "Parent-authorized exact owned PTY Ctrl+C settled whole1 in0.136s while graph imageSH queue before bodies. Three observed-facts retries retained; no natural failure/red/pass claimed. Quiet boundary for required GUI/load/performance fixes."
+        },
+        {
+          "sessionId": 83655,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-current-owner.log",
+          "artifacts": "🗑️generated/p21i",
+          "outcome": "Natural whole1 before bodies: Authenticated graph cache cannot fund required physical headroom; available971608064<required1073741824,retiredBytes0/retiredFiles0. Strict physical floor/custody preserved."
+        },
+        {
+          "sessionId": 87378,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-headroom-recovery.log",
+          "artifacts": "🗑️generated/p21j",
+          "outcome": "Parent-authorized exact owned PTY Ctrl+C settled whole1 while graph-image SH queued before recovery/test bodies; confirmed expected-pressure rejection poisons maintenance borrower lifetime requires source correction. No natural failure/red/pass."
+        },
+        {
+          "sessionId": 44547,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-pressure-lifetime.log",
+          "artifacts": "🗑️generated/p21k",
+          "outcome": "Natural whole1 before recovery/test bodies: graph-image exclusive queue reached1799s, then Original resource loan deadline exhausted at process remaining213/arm228. No body/red/pass; unchanged deadlines/custody. Post25 stable0errors, three observed SHA changes retained separately, no actor inference."
+        },
+        {
+          "sessionId": 19378,
+          "exitCode": 1,
+          "log": "🗑️generated/e2e-source-21-current-funding.log",
+          "artifacts": "🗑️generated/p21l",
+          "outcome": "Natural whole1 before test bodies: resource-directory-admission:v1 lease timed out at acquireUngatedResourceLease leases/TS228. Initial graphSH queue cleared and selected source/compile/declaration/catalog phases ran; one admission refresh preceded the primary. No guard/bound waiver; post25stable0errors, four byte-hash changes retained without actor attribution."
         }
-      ]
+      ],
+      "currentExpectation": "Registered Source42 continuation held after actual Source21 resource-directory-admission timeout. Diagnose primary/current selected inputs before next producer; all Source bodies/whole results separately authoritative.",
+      "trace": "Existing SEMIO_BUILD_TRACE_AUTHORITY=true bounded owner diagnostic; no source/guard change."
     },
     {
       "index": 22,

@@ -6204,6 +6204,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/value-original-slot-rs",
+      "root": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/value-persistent-rs",
       "root": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/📋️project.json",
@@ -6309,6 +6315,12 @@
       "name": "semio-framework-ui-prepared-laws",
       "root": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-laws/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-laws/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-value-derive-resources",
+      "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

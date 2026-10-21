@@ -16,7 +16,6 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-remodel-remodeling = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor = { workspace = true }
 semio-s-artifact-remodel-remodeling-schema = { workspace = true }
@@ -42,7 +41,6 @@ semio-s-artifact-stdio-stl = { workspace = true }
 number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework = { workspace = true }
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true }

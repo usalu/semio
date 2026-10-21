@@ -1,8 +1,8 @@
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {resolveLanguageV1} from "../🗣️language/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {resolveLanguageV1} from "../../../../🏗️build/🗣️language/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import document from "./🔣️.json" with {type: "json"};
 

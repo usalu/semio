@@ -97,7 +97,7 @@
             labels: vec![LocalizedLabel::native("ä🧩", "ß🎯")],
         };
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         assert_eq!(child.close_one(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(child.ops[0].len(), wire_bytes);
         let mut bytes = 0;

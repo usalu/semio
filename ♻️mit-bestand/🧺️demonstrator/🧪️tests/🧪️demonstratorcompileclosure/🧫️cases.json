@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "entries": [
+    "{projectRoot}/🧪️tests/🎚️config/🟦️.ts",
+    "{projectRoot}/📜️script.ts",
+    "{projectRoot}/🪧️brand.ts",
+    "{projectRoot}/🔨️modules/🧩️runtime/♻️activation/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorpanebranding/🟦️.ts",
+    "{projectRoot}/🧪️tests/🎭️acceptance/🧬️console/🧪️.ts",
+    "{projectRoot}/🧪️tests/🏛️shell-brand/🟦️.ts",
+    "{projectRoot}/🔨️modules/🧩️runtime/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorruntimebuildvariants/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorpanedescription/🟦️.ts",
+    "{projectRoot}/🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratormaptiles/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+  ],
+  "cases": [
+    {
+      "target": "test",
+      "executionKind": "source",
+      "observation": "freshness",
+      "command": "bun ./📜️script.ts test",
+      "executionVersion": 1
+    },
+    {
+      "target": "canonical-architecture",
+      "executionKind": "source",
+      "observation": "freshness",
+      "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
+      "executionVersion": 1
+    }
+  ],
+  "controls": [
+    {
+      "target": "build",
+      "executionKind": null,
+      "observation": null
+    },
+    {
+      "target": "test-e2e",
+      "executionKind": null,
+      "observation": "freshness"
+    }
+  ],
+  "freshnessDataInputs": [
+    "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
+    "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json"
+  ],
+  "dataResources": [
+    "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs",
+    "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+  ]
+}

@@ -16,7 +16,6 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation = { workspace = true }
 semio-framework-job.workspace = true
 semio-s-artifact-stdio-csv = { workspace = true }
@@ -46,7 +45,6 @@ semio-framework = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]

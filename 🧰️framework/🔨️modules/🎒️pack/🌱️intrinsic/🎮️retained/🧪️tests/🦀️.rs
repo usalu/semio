@@ -5,11 +5,11 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep
 
 fn corpus()->Value{serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
+fn close_grant(d:semio_framework_value::RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn close(cursor:&mut RetainedIntrinsicBody<'_>){
  for _ in 0..100000{
   if cursor.terminal_is_empty(){return}
-  let copy=cursor.next_close_copy_byte_demand().unwrap();let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();
-  cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.max(3),maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap();
+  let d=cursor.original_close_demands(4096).unwrap();let grant=close_grant(d);assert_eq!(cursor.original_close_demands(grant.maximum_copy_bytes).unwrap(),d);let step=cursor.close_original_step(grant).result.unwrap();assert!(step.progress().fits(grant));
  }
  panic!("retained intrinsic close did not terminate");
 }
@@ -48,8 +48,8 @@ fn retained_intrinsic_body_exact_requests_and_typed_physical_close_receipts(){
  let mut actual_releases=0;
  for _ in 0..100000{
   if cursor.terminal_is_empty(){break}
-  let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();
-  let(step,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap());
+  let d=cursor.original_close_demands(4096).unwrap();let grant=close_grant(d);assert_eq!(cursor.original_close_demands(grant.maximum_copy_bytes).unwrap(),d);
+  let(step,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_original_step(grant).result.unwrap());assert!(step.progress().fits(grant));
   let receipt=match step{RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;
  }
  assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);
@@ -78,7 +78,7 @@ fn retained_intrinsic_body_terminal_cancellation_withholds_output_until_typed_cl
 }
 
 fn close_document(cursor:&mut RetainedIntrinsicDocument<'_>){
- for _ in 0..1000000{if cursor.terminal_is_empty(){return}let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap();}panic!("retained intrinsic Document close did not terminate");
+ for _ in 0..1000000{if cursor.terminal_is_empty(){return}let d=cursor.original_close_demands(4096).unwrap();let grant=close_grant(d);assert_eq!(cursor.original_close_demands(grant.maximum_copy_bytes).unwrap(),d);let step=cursor.close_original_step(grant).result.unwrap();assert!(step.progress().fits(grant));}panic!("retained intrinsic Document close did not terminate");
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn retained_intrinsic_document_allocator_birth_and_terminal_physical_grants_are_
  let (mut cursor,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),Default::default(),1<<24).unwrap());assert_eq!((requests,releases),(0,0));assert_eq!(cursor.input().unwrap().as_ptr(),pointer);assert_eq!(cursor.admitted_bytes(),backing);
  for _ in 0..1000000{let before=cursor.admitted_bytes();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(1,false));if let Err(error)=result{close_document(&mut cursor);panic!("unexpected document refusal: {error:?}")}let step=result.unwrap();assert_eq!(requests,step.admitted_bytes-before);assert_eq!(releases,0);assert_eq!(cursor.input().unwrap().as_ptr(),pointer);if step.complete{break}}
  let admitted=cursor.admitted_bytes();assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());let mut actual_releases=0;
- for _ in 0..1000000{if cursor.terminal_is_empty(){break}let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}));let receipt=match result.unwrap(){RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;}
+ for _ in 0..1000000{if cursor.terminal_is_empty(){break}let d=cursor.original_close_demands(4096).unwrap();let grant=close_grant(d);assert_eq!(cursor.original_close_demands(grant.maximum_copy_bytes).unwrap(),d);let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_original_step(grant).result);let receipt=match result.unwrap(){RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert!(receipt.fits(grant));assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;}
  assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);
 }
 

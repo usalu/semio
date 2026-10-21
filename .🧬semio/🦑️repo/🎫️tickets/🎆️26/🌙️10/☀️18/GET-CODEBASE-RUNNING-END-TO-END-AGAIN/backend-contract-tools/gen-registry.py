@@ -22,7 +22,7 @@ ops_nx={"run":"native","run-many":"native","affected":"native","exec":"native","
 ops_bz={"run":"adapter","run-many":"adapter","affected":"adapter","exec":"adapter","inputs":"missing","reset":"adapter","tools":"adapter","cache":"adapter"}
 ops_sm={"run":"native","run-many":"native","affected":"native","exec":"native","inputs":"native","reset":"native","tools":"native","cache":"native"}
 doc={"version":1,"backends":[
- {"id":"nx","title":tx("Nx with Bun","Nx mit Bun"),"kind":"external","module":"../@@TOOLS@@/@@NX@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@NX@@/@@CONF@@/@@TS@@","dependencyModel":"consumers",
+ {"id":"nx","title":tx("Nx with Bun","Nx mit Bun"),"kind":"external","default":True,"module":"../@@TOOLS@@/@@NX@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@NX@@/@@CONF@@/@@TS@@","dependencyModel":"consumers",
   "processEnvironment":{"NX_DAEMON":"false"},"nativeSnapshot":{"variable":"SEMIO_NX_NATIVE_SOURCE_SNAPSHOT","environment":{"NX_DAEMON":"false"}},"operations":ops_nx,"capabilities":nx_caps},
  {"id":"bazel","title":tx("Bazel","Bazel"),"kind":"external","module":"../@@TOOLS@@/@@BAZEL@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@BAZEL@@/@@CONF@@/@@TS@@","dependencyModel":"all","operations":ops_bz,"capabilities":bz_caps},
  {"id":"semio","title":tx("Semio build engine","Semio-Build-Engine"),"kind":"in-house","module":"../@@TOOLS@@/@@SEMIO@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@SEMIO@@/@@CONF@@/@@TS@@","dependencyModel":"all","operations":ops_sm,"capabilities":sm_caps},

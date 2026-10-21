@@ -660,11 +660,44 @@
         "sourceRoot": "src"
       },
       "accepted": false
+    },
+    {
+      "id": "optional-reclamation-zero-floor-data",
+      "value": {
+        "minimumAvailableBytes": 0
+      },
+      "accepted": true,
+      "pointer": "#/definitions/OptionalQuota/definitions/Reclamation"
+    },
+    {
+      "id": "optional-reclamation-maximum",
+      "value": {
+        "minimumAvailableBytes": 2684354560
+      },
+      "accepted": true,
+      "pointer": "#/definitions/OptionalQuota/definitions/Reclamation"
+    },
+    {
+      "id": "optional-reclamation-negative",
+      "value": {
+        "minimumAvailableBytes": -1
+      },
+      "accepted": false,
+      "pointer": "#/definitions/OptionalQuota/definitions/Reclamation"
+    },
+    {
+      "id": "optional-reclamation-extra",
+      "value": {
+        "minimumAvailableBytes": 0,
+        "grant": true
+      },
+      "accepted": false,
+      "pointer": "#/definitions/OptionalQuota/definitions/Reclamation"
     }
   ],
   "schemaOwnershipHashes": {
     "Namespace": "17b8534c734b5849c45e792a252eec6bf5df83d79105473928b9eb647282a1f9",
-    "OptionalQuota": "984211e5782bea565dcc01f1ec686101366a9cc7578c59dd952010aac92aea77",
+    "OptionalQuota": "75b1a197dc67cf6a5ea991f7e4be694c0d6a9a8738760b09df0e595e918c0fcd",
     "OptionalLedger": "c51f4436ba05952d4db3a3380c38b42706911ea8bd3265005caeac3575f54557",
     "InferenceDataset": "477f73f937aed0f6a951b14f1ea96502f1f5fba50c4de983b830a71c118bb0e1"
   },
@@ -727,7 +760,7 @@
       "usedBytes": 4435968,
       "expectedFailure": "graph",
       "expectedClosed": true,
-      "expectedAcquired": true
+      "expectedAcquired": false
     },
     {
       "id": "body-primary-survives-cleanup",
@@ -789,5 +822,973 @@
       "expectedClosed": true,
       "expectedAcquired": true
     }
-  ]
+  ],
+  "optionalQuotaCases": [
+    {
+      "id": "physical-pressure-is-valid",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 9,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true,
+      "steps": [
+        {
+          "peakBytes": 0,
+          "retainedDeltaBytes": 0,
+          "accepted": false,
+          "action": "commit",
+          "usedBytes": 20
+        },
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": false,
+          "action": "commit",
+          "usedBytes": 20
+        }
+      ]
+    },
+    {
+      "id": "floor-boundary",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 10,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true,
+      "steps": [
+        {
+          "peakBytes": 0,
+          "retainedDeltaBytes": 0,
+          "accepted": true,
+          "action": "commit",
+          "usedBytes": 20
+        },
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": false,
+          "action": "commit",
+          "usedBytes": 20
+        }
+      ]
+    },
+    {
+      "id": "commit-consumes-headroom",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true,
+      "steps": [
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": true,
+          "action": "commit",
+          "usedBytes": 21
+        },
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": false,
+          "action": "commit",
+          "usedBytes": 21
+        }
+      ]
+    },
+    {
+      "id": "release-restores-reservation",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true,
+      "steps": [
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": true,
+          "action": "release",
+          "usedBytes": 20
+        },
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": true,
+          "action": "commit",
+          "usedBytes": 21
+        }
+      ]
+    },
+    {
+      "id": "logical-cap-boundary",
+      "state": {
+        "maximumBytes": 20,
+        "usedBytes": 20,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true,
+      "steps": [
+        {
+          "peakBytes": 1,
+          "retainedDeltaBytes": 1,
+          "accepted": false,
+          "action": "commit",
+          "usedBytes": 20
+        },
+        {
+          "peakBytes": 0,
+          "retainedDeltaBytes": 0,
+          "accepted": true,
+          "action": "commit",
+          "usedBytes": 20
+        }
+      ]
+    },
+    {
+      "id": "used-exceeds-cap",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 101,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "negative-count",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": -1,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "fractional-count",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 0.5,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "unsafe-count",
+      "state": {
+        "maximumBytes": 9007199254740992,
+        "usedBytes": 20,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "string-count",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": "11",
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "extra-count",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 11,
+        "minimumAvailableBytes": 10,
+        "extra": 0
+      },
+      "accepted": false,
+      "steps": []
+    },
+    {
+      "id": "missing-count",
+      "state": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 11
+      },
+      "accepted": false,
+      "steps": []
+    }
+  ],
+  "graphWriterImageCases": [
+    {
+      "id": "no-pressure",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 0,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "initial-maintenance",
+      "pressure": "initial",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 1,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "initial-deferred",
+      "pressure": "initial",
+      "maintenance": "deferred",
+      "bodyFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 1,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "retained-maintenance",
+      "pressure": "retained",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "expected": {
+        "leases": 2,
+        "maintenanceCalls": 1,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 2,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "retained-deferred",
+      "pressure": "retained",
+      "maintenance": "deferred",
+      "bodyFails": false,
+      "expected": {
+        "leases": 2,
+        "maintenanceCalls": 1,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 2,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "initial-failure",
+      "pressure": "initial",
+      "maintenance": "failed",
+      "bodyFails": false,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 1,
+        "bodyCalls": 0,
+        "error": "maintenance",
+        "tries": 0,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "retained-failure",
+      "pressure": "retained",
+      "maintenance": "failed",
+      "bodyFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 1,
+        "bodyCalls": 0,
+        "error": "maintenance",
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "initial-cancel",
+      "pressure": "initial",
+      "maintenance": "cancel",
+      "bodyFails": false,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 1,
+        "bodyCalls": 0,
+        "error": "cancel",
+        "tries": 0,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "retained-cancel",
+      "pressure": "retained",
+      "maintenance": "cancel",
+      "bodyFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 1,
+        "bodyCalls": 0,
+        "error": "cancel",
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "body-failure",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": true,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 0,
+        "bodyCalls": 1,
+        "error": "body",
+        "tries": 1,
+        "waits": 0
+      },
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": false
+    },
+    {
+      "id": "contended-retry",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "retry",
+      "nested": false,
+      "maintenanceCloseFails": false,
+      "expected": {
+        "leases": 2,
+        "maintenanceCalls": 0,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 2,
+        "waits": 1
+      }
+    },
+    {
+      "id": "contended-cancel",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "cancel",
+      "nested": false,
+      "maintenanceCloseFails": false,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 0,
+        "bodyCalls": 0,
+        "error": "cancel",
+        "tries": 1,
+        "waits": 1
+      }
+    },
+    {
+      "id": "acquire-failure",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "error",
+      "nested": false,
+      "maintenanceCloseFails": false,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 0,
+        "bodyCalls": 0,
+        "error": "acquire",
+        "tries": 1,
+        "waits": 0
+      }
+    },
+    {
+      "id": "nested-contention-refused",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "retry",
+      "nested": true,
+      "maintenanceCloseFails": false,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 0,
+        "bodyCalls": 0,
+        "error": "nested",
+        "tries": 1,
+        "waits": 0
+      }
+    },
+    {
+      "id": "nested-reader-reused",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "none",
+      "nested": true,
+      "maintenanceCloseFails": false,
+      "expected": {
+        "leases": 1,
+        "maintenanceCalls": 0,
+        "bodyCalls": 1,
+        "error": null,
+        "tries": 1,
+        "waits": 0
+      }
+    },
+    {
+      "id": "maintenance-image-close-failure",
+      "pressure": "none",
+      "maintenance": "acquired",
+      "bodyFails": false,
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": true,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 0,
+        "bodyCalls": 0,
+        "error": "image-close",
+        "tries": 0,
+        "waits": 0
+      }
+    },
+    {
+      "id": "maintenance-primary-preserved",
+      "pressure": "initial",
+      "maintenance": "failed",
+      "bodyFails": false,
+      "contention": "none",
+      "nested": false,
+      "maintenanceCloseFails": true,
+      "expected": {
+        "leases": 0,
+        "maintenanceCalls": 1,
+        "bodyCalls": 0,
+        "error": "maintenance",
+        "tries": 0,
+        "waits": 0
+      }
+    }
+  ],
+  "graphMaintenanceProofCases": [
+    {
+      "id": "actual-writer",
+      "canonical": true,
+      "kind": "kernel-ex",
+      "proof": "valid",
+      "accepted": true
+    },
+    {
+      "id": "counterfeit-image",
+      "canonical": false,
+      "kind": "kernel-ex",
+      "proof": "valid",
+      "accepted": false
+    },
+    {
+      "id": "private-image",
+      "canonical": true,
+      "kind": "fresh-private",
+      "proof": "valid",
+      "accepted": false
+    },
+    {
+      "id": "counterfeit",
+      "canonical": true,
+      "kind": "kernel-ex",
+      "proof": "counterfeit",
+      "accepted": false
+    },
+    {
+      "id": "released",
+      "canonical": true,
+      "kind": "kernel-ex",
+      "proof": "released",
+      "accepted": false
+    },
+    {
+      "id": "wrong-image",
+      "canonical": true,
+      "kind": "kernel-ex",
+      "proof": "wrong-image",
+      "accepted": false
+    },
+    {
+      "id": "wrong-control",
+      "canonical": true,
+      "kind": "kernel-ex",
+      "proof": "wrong-control",
+      "accepted": false
+    }
+  ],
+  "optionalHeadroomCases": [
+    {
+      "id": "deferred-then-original-ex",
+      "availableBytes": 943718400,
+      "deferred": true,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 268435456,
+          "changed": false
+        },
+        {
+          "path": "np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+          "bytes": 134217728,
+          "changed": false
+        },
+        {
+          "path": "unknown.input",
+          "bytes": 268435456,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [
+          "np/aaaaaaaaaaaaaaaaaaaaaaaa.json"
+        ],
+        "availableBytes": 1212153856,
+        "error": null,
+        "result": {
+          "retainedOptionalBytes": 134217728,
+          "availableBytes": 1212153856,
+          "requiredAvailableBytes": 1073741824,
+          "retiredBytes": 268435456,
+          "retiredFiles": 1
+        }
+      }
+    },
+    {
+      "id": "opportunistic-original-ex",
+      "availableBytes": 943718400,
+      "deferred": false,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 268435456,
+          "changed": false
+        },
+        {
+          "path": "np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+          "bytes": 134217728,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [
+          "np/aaaaaaaaaaaaaaaaaaaaaaaa.json"
+        ],
+        "availableBytes": 1212153856,
+        "error": null,
+        "result": null
+      }
+    },
+    {
+      "id": "retained-low-water",
+      "availableBytes": 2147483648,
+      "deferred": true,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 419430400,
+          "changed": false
+        },
+        {
+          "path": "np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+          "bytes": 419430400,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [
+          "np/aaaaaaaaaaaaaaaaaaaaaaaa.json"
+        ],
+        "availableBytes": 2566914048,
+        "error": null,
+        "result": {
+          "retainedOptionalBytes": 419430400,
+          "availableBytes": 2566914048,
+          "requiredAvailableBytes": 1073741824,
+          "retiredBytes": 419430400,
+          "retiredFiles": 1
+        }
+      }
+    },
+    {
+      "id": "already-funded",
+      "availableBytes": 2147483648,
+      "deferred": false,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 67108864,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [],
+        "availableBytes": 2147483648,
+        "error": null,
+        "result": null
+      }
+    },
+    {
+      "id": "optional-exhausted",
+      "availableBytes": 943718400,
+      "deferred": true,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 67108864,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [
+          "np/aaaaaaaaaaaaaaaaaaaaaaaa.json"
+        ],
+        "availableBytes": 1010827264,
+        "error": null,
+        "result": {
+          "retainedOptionalBytes": 0,
+          "availableBytes": 1010827264,
+          "requiredAvailableBytes": 1073741824,
+          "retiredBytes": 67108864,
+          "retiredFiles": 1
+        }
+      }
+    },
+    {
+      "id": "changed-original-leaf",
+      "availableBytes": 943718400,
+      "deferred": true,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 268435456,
+          "changed": true
+        }
+      ],
+      "expected": {
+        "removed": [],
+        "availableBytes": 943718400,
+        "error": "identity",
+        "result": null
+      }
+    },
+    {
+      "id": "cancel-before-retirement",
+      "availableBytes": 943718400,
+      "deferred": true,
+      "cancel": true,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 268435456,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [],
+        "availableBytes": 943718400,
+        "error": "cancel",
+        "result": null
+      }
+    },
+    {
+      "id": "opportunistic-exhaustion-refuses",
+      "availableBytes": 943718400,
+      "deferred": false,
+      "cancel": false,
+      "leaves": [
+        {
+          "path": "np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+          "bytes": 67108864,
+          "changed": false
+        }
+      ],
+      "expected": {
+        "removed": [
+          "np/aaaaaaaaaaaaaaaaaaaaaaaa.json"
+        ],
+        "availableBytes": 1010827264,
+        "error": "headroom",
+        "result": null
+      }
+    }
+  ],
+  "graphHeadroomCompositionCases": [
+    {
+      "id": "deferred-optional-funds-original-writer",
+      "optional": "funded",
+      "error": null,
+      "retiredBytes": 16777216,
+      "retiredFiles": 1,
+      "phases": [
+        "selected-underfloor",
+        "scoped-underfloor",
+        "optional-deferred",
+        "reader-close",
+        "coarse-fresh-image",
+        "optional-original-writer",
+        "authenticated-recovery"
+      ]
+    },
+    {
+      "id": "optional-exhausted-continues-authenticated-publications",
+      "optional": "insufficient",
+      "error": null,
+      "retiredBytes": 67108864,
+      "retiredFiles": 2,
+      "phases": [
+        "selected-underfloor",
+        "scoped-underfloor",
+        "optional-deferred",
+        "reader-close",
+        "coarse-fresh-image",
+        "optional-original-writer",
+        "authenticated-recovery"
+      ]
+    },
+    {
+      "id": "optional-identity-refusal-stays-primary",
+      "optional": "identity",
+      "error": "identity",
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "phases": [
+        "selected-underfloor",
+        "scoped-underfloor",
+        "optional-deferred",
+        "reader-close",
+        "coarse-fresh-image",
+        "optional-original-writer"
+      ]
+    },
+    {
+      "id": "cancelled-optional-recovery-stays-primary",
+      "optional": "cancel",
+      "error": "cancel",
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "phases": [
+        "selected-underfloor",
+        "scoped-underfloor",
+        "optional-deferred",
+        "reader-close",
+        "coarse-fresh-image",
+        "optional-original-writer"
+      ]
+    }
+  ],
+  "graphWriterResourceCases": [
+    {
+      "id": "selection-zero",
+      "workspace": "workspace",
+      "graphRoot": "/workspace/.cache/b/g/m",
+      "kind": "selection",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000000",
+      "factAccepted": true,
+      "publicationAccepted": true,
+      "factShard": 8,
+      "publicationResource": "build-graph-state:/workspace/.cache/b/g/m:selected:8"
+    },
+    {
+      "id": "selection-ones",
+      "workspace": "workspace",
+      "graphRoot": "/workspace/.cache/b/g/m",
+      "kind": "selection",
+      "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+      "factAccepted": true,
+      "publicationAccepted": true,
+      "factShard": 44,
+      "publicationResource": "build-graph-state:/workspace/.cache/b/g/m:selected:44"
+    },
+    {
+      "id": "dataset-same-scope",
+      "workspace": "workspace",
+      "graphRoot": "/workspace/.cache/b/g/m",
+      "kind": "dataset",
+      "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+      "factAccepted": true,
+      "publicationAccepted": true,
+      "factShard": 53,
+      "publicationResource": "build-graph-state:/workspace/.cache/b/g/m:selected:44"
+    },
+    {
+      "id": "windows-graph-root",
+      "workspace": "workspace",
+      "graphRoot": "C:\\workspace\\.cache\\b\\g\\m",
+      "kind": "selection",
+      "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "factAccepted": true,
+      "publicationAccepted": true,
+      "factShard": 37,
+      "publicationResource": "build-graph-state:C:\\workspace\\.cache\\b\\g\\m:selected:37"
+    },
+    {
+      "id": "invalid-kind",
+      "workspace": "workspace",
+      "graphRoot": "/graph",
+      "kind": "other",
+      "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "factAccepted": false,
+      "publicationAccepted": true,
+      "factShard": null,
+      "publicationResource": "build-graph-state:/graph:selected:37"
+    },
+    {
+      "id": "uppercase-identity",
+      "workspace": "workspace",
+      "graphRoot": "/graph",
+      "kind": "selection",
+      "identity": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "factAccepted": false,
+      "publicationAccepted": false,
+      "factShard": null,
+      "publicationResource": null
+    },
+    {
+      "id": "short-identity",
+      "workspace": "workspace",
+      "graphRoot": "/graph",
+      "kind": "selection",
+      "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "factAccepted": false,
+      "publicationAccepted": false,
+      "factShard": null,
+      "publicationResource": null
+    },
+    {
+      "id": "empty-root",
+      "workspace": "workspace",
+      "graphRoot": "",
+      "kind": "selection",
+      "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "factAccepted": true,
+      "publicationAccepted": false,
+      "factShard": 20,
+      "publicationResource": null
+    },
+    {
+      "id": "null-root",
+      "workspace": "workspace",
+      "graphRoot": null,
+      "kind": "selection",
+      "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "factAccepted": true,
+      "publicationAccepted": false,
+      "factShard": 20,
+      "publicationResource": null
+    }
+  ],
+  "maintenanceVerification": {
+    "version": 1,
+    "target": "test",
+    "cache": false,
+    "inputs": [
+      "default",
+      "^default",
+      "testEnv",
+      "reads"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "environment": [
+      "SEMIO_TEST_LEVEL",
+      "SEMIO_TEST_BUDGET_MS",
+      "SEMIO_BUILD_BUDGET_MS"
+    ],
+    "metadata": {
+      "execution": {
+        "version": 1,
+        "kind": "source"
+      },
+      "sourceInputObservation": "freshness",
+      "runtimeSourceEntries": [
+        "{projectRoot}/🧪️tests/🟦️.ts",
+        "{projectRoot}/🧪️tests/📒️ledger/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts"
+      ]
+    },
+    "command": "bun ./📜️script.ts test",
+    "forwardAllArgs": false,
+    "roles": [
+      {
+        "observation": "freshness",
+        "role": "freshness",
+        "native": "none"
+      },
+      {
+        "observation": "compile",
+        "role": "compile",
+        "native": "source"
+      },
+      {
+        "observation": null,
+        "role": "compile",
+        "native": "source"
+      }
+    ]
+  }
 }

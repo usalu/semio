@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mkcopy.py OUT: a REAL snapshot (no symlinks) of the process module, the filesystem and schema framework modules and a node_modules subset, for verification outside the checkout. OUT must live under /private/tmp/storage-seam/. Nothing under the checkout is written."""
+"""🧫 mkcopy.py OUT: a REAL snapshot (no symlinks) of the process module, the filesystem and schema framework modules and a node_modules subset, for verification outside the checkout. OUT must live under /private/tmp/storage-seam/. Nothing under the checkout is written."""
 import os, shutil, sys
 ROOT = "/Users/ueli/Documents/semio"
 out = sys.argv[1]

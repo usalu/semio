@@ -1,5 +1,5 @@
 //! 🩹️ Sparse native material patches share original sealed fields and receive only explicitly authored text.
-use semio_framework_value::{Number, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, retained_clone_grant_admits}, retirement::shared::sealed::{SealedShared, SharedIssuer}};
+use semio_framework_value::{Number, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, retained_clone_grant_admits}, shared_issuance::{SealedShared, SharedIssuer}};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::owned::NativeFlatRecord, native_decoding::owned::NativeIntrinsicSharedField};
 use std::mem::ManuallyDrop;
 use std::mem::size_of;

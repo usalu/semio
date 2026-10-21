@@ -45,8 +45,6 @@ semio-framework-typeset = { path = "../../../../../../../../../🧰️framework/
 semio-framework-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-animate-presentation-animate = { path = "../../🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-s-artifact-animate-presentation-examples = { path = "../../🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-animate-presentation-inferences = { path = "../../🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }

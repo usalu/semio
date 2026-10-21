@@ -36,7 +36,6 @@ semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-framework-value-dictionary = { workspace = true }
 semio-s-artifact-layout-layout-diff = { workspace = true }
 semio-s-artifact-layout-layout-engine = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }

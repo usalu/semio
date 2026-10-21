@@ -360,6 +360,12 @@ edit(STORE_COMPILER, "broker", "store-environment",
      'CARGO_BUILD_BUILD_DIR:buildDirectory,TMPDIR:temporary,',
      'CARGO_BUILD_BUILD_DIR:buildDirectory,SEMIO_UNIT_CACHE_ROOT:unitCacheRootV1(opened.root),SEMIO_UNIT_CACHE_SCRIPT:UNIT_CACHE_SCRIPT_V1,TMPDIR:temporary,')
 
+# ================================================================ group `graph`: identical unit-graph edges collapse
+UNITS = F + "/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts"
+edit(UNITS, "graph", "unique-edges",
+     'return{unit:ids[row.index]!,externName:row.extern_crate_name,public:row.public,noprelude:row.noprelude};}).sort((left:any,right:any)=>left.unit.localeCompare(right.unit)),boundary,',
+     'return{unit:ids[row.index]!,externName:row.extern_crate_name,public:row.public,noprelude:row.noprelude};}).sort((left:any,right:any)=>left.unit.localeCompare(right.unit)).filter((edge:any,position:number,all:any[])=>all.findIndex((other:any)=>other.unit===edge.unit&&other.externName===edge.externName&&other.public===edge.public&&other.noprelude===edge.noprelude)===position),boundary,')
+
 # ---------------------------------------------------------------- config: the declared store equals the store in use
 edit(CONFIG, "config", "paths",
      'target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"\nbuild-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/build"',
@@ -368,7 +374,9 @@ edit(CONFIG, "config", "comment",
      '# ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Static paths select its\n# shared namespace; managed prototype and release facades retain their explicitly issued store paths.\n# `fine-grain-locking` serializes compilation units; `checksum-freshness` compares actual source contents.',
      '# ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Every agent compiles in its own lane\n# (`m/u/l/<lane>/{t,b}`) and shares results only through the content-addressed unit cache (`m/u`); the static paths below name the\n# default lane `d`, which an unattributed command uses. No two Cargo processes share a build directory, so Cargo\'s unit locks\n# cannot form a cycle between processes; `fine-grain-locking` stays for the passes of one driver generation.\n# `checksum-freshness` compares actual source contents.')
 
-REWRITES = {FETCHED_TEST: "registry", FETCHED_FIXTURE: "registry"}
-GROUPS = ["lease", "lane", "admit", "registry", "config", "buildscript", "broker"]
+REWRITES = {FETCHED_TEST: "registry", FETCHED_FIXTURE: "registry", F + "/📦️artifacts/🏗️native-build/🎟️admission/🦀️.rs": "scheduler"}
+NEW_TEST_GROUPS = {"/🔁️duplicate-edges/": "graph", "/🔓️tokens/": "scheduler-test", "/♻️replay/": "broker", "/🧠️memo/": "admit", "/🤝️shared/": "lease"}
+GROUPS = ["lease", "lane", "admit", "registry", "config", "buildscript", "broker", "scheduler", "scheduler-test", "graph"]
 GROUPS_1 = ["lease", "lane", "admit", "registry", "config"]
 GROUPS_2 = ["buildscript", "broker"]
+GROUPS_3 = ["scheduler", "scheduler-test"]

@@ -86,7 +86,7 @@ macro_rules! retained_row_patch{
      if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<$patch>(false,&None,body);}
      if self.result.is_some(){return Ok(self.retirement.next_owner_demands::<$patch>(true,&None,body)?);}
      let binding=if self.row.is_some(){&self.row}else{&self.payload};
-     RetainedCloneBinding::demands(binding,body)
+     RetainedCloneBinding::close_demand(binding,body)
     }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
      if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse closure not started"));}

@@ -52,18 +52,32 @@ function dependencyWorkActivityV1(progress:ScriptProgress):{slot:number;family:n
  return null;
 }
 
+/** 🪭️ Selects only the fixed plain bookkeeping frames for bounded presentation. */
+function selectionStageSlotV1(progress:ScriptProgress):number|null{
+ const policy=progressSchema.const.selectionStages;if(Object.keys(progress).sort().join(",")!=="command,owner,stage"||progress.owner!==policy.owner||progress.stage!==policy.stage)return null;const slot=policy.commands.indexOf(progress.command);return slot<0?null:slot;
+}
 /** 📉️ Coalesces typed presentation while retaining Original callbacks and bounded final observations. */
 function createScriptProcessProgressWriterV1(write:(line:string)=>void,environment:Readonly<Record<string,string|undefined>>,now:()=>number=()=>performance.now()){
  type Row={raw:string;message:string|null};type Pending=Row&{rank:number};
  const policy=progressSchema.const.dependencyWork,workPending:(Pending|undefined)[]=policy.slots.map(()=>undefined),counts:(number|undefined)[]=policy.families.map(()=>undefined),elapsed:(number|undefined)[]=policy.families.map(()=>undefined);
  let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined,frame:string|undefined,workAt:number|undefined,workClock:number|undefined,workState:"unopened"|"paced"|"unclocked"="unopened";
  const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write("[script] "+row.message+"\n");};
- const ordered=(family?:number)=>workPending.flatMap((row,slot)=>row&&(family===undefined||policy.families.indexOf(policy.slots[slot]!.family)===family)?[{row,slot}]:[]).sort((a,b)=>a.row.rank-b.row.rank||a.slot-b.slot);
- const drainWork=(family?:number)=>{for(const{row,slot}of ordered(family)){workPending[slot]=undefined;emit(row);}};
- const remember=(slot:number,row:Row)=>{workPending[slot]=undefined;const rows=ordered();rows.forEach(({row},rank)=>{row.rank=rank;});workPending[slot]={...row,rank:rows.length};};
- const flushOld=()=>{if(pending){drainWork();const row=pending;pending=undefined;emit(row);}},emitOld=(row:Row)=>{drainWork();emit(row);},flush=()=>{drainWork();flushOld();};
+ const stagePolicy=progressSchema.const.selectionStages,stagePending:(Pending|undefined)[]=stagePolicy.commands.map(()=>undefined);let stageOpen=false,stageAt:number|undefined,stageClock:number|undefined;
+ const ordered=(family?:number,rows=workPending)=>rows.flatMap((row,slot)=>row&&(family===undefined||policy.families.indexOf(policy.slots[slot]!.family)===family)?[{row,slot}]:[]).sort((a,b)=>a.row.rank-b.row.rank||a.slot-b.slot);
+ const drain=(rows=workPending,family?:number)=>{for(const{row,slot}of ordered(family,rows)){rows[slot]=undefined;emit(row);}},drainWork=(family?:number)=>drain(workPending,family);
+ const remember=(slot:number,row:Row,rows=workPending)=>{rows[slot]=undefined;const previous=ordered(undefined,rows);previous.forEach(({row},rank)=>{row.rank=rank;});rows[slot]={...row,rank:previous.length};};
+ const flushOld=()=>{if(pending){drainWork();const row=pending;pending=undefined;emit(row);}},emitOld=(row:Row)=>{drainWork();emit(row);},flush=()=>{drain(stagePending);drainWork();flushOld();};
  return Object.freeze({flush,publish:(progress:ScriptProgress)=>{
   const row={raw:"[script] "+JSON.stringify(progress)+"\n",message:formatScriptProcessActivityV1(progress,environment)},identity=typeof progress.owner==="string"&&progress.owner.length<=policy.maximumOwnerCharacters&&new RegExp(policy.ownerPattern,"u").test(progress.owner)&&typeof progress.command==="string"&&progress.command.length<=policy.maximumCommandCharacters&&new RegExp(policy.commandPattern,"u").test(progress.command)&&policy.frameStages.includes(progress.stage)?JSON.stringify([progress.owner,progress.command,progress.stage]):undefined;
+  const stageSlot=selectionStageSlotV1(progress);
+  if(stageSlot!==null){
+   if(!stageOpen){flush();stageOpen=true;frame=undefined;key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;}
+   const current=now(),bad=!Number.isFinite(current)||stageClock!==undefined&&current<stageClock;
+   if(bad){drain(stagePending);stageClock=Number.isFinite(current)?current:undefined;stageAt=stageClock;emit(row);return;}
+   stageClock=current;if(stageAt===undefined){stageAt=current;emit(row);return;}
+   remember(stageSlot,row,stagePending);if(current-stageAt>=stagePolicy.minimumPublicationMilliseconds){stageAt=current;drain(stagePending);}return;
+  }
+  drain(stagePending);stageOpen=false;stageAt=undefined;stageClock=undefined;
   if(identity!==undefined&&identity!==frame){flush();frame=identity;workAt=undefined;workClock=undefined;workState="unopened";counts.fill(undefined);elapsed.fill(undefined);}
   const work=dependencyWorkActivityV1(progress);
   if(work!==null){

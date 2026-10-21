@@ -11,7 +11,7 @@ macro_rules! native_node{
   #[derive(Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
   #[canonical_json(owner=semio_framework_pack_json)]
   #[value(rename_all="camelCase")]
-  pub struct FemNode{pub id:semio_framework_value::retirement::shared::sealed::SealedShared<String>,$(pub $field:f64),+}
+  pub struct FemNode{pub id:semio_framework_value::shared_issuance::SealedShared<String>,$(pub $field:f64),+}
   /// ❄️ Canonical authoring and reference algebra keep their explicitly owned node values.
   #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::CanonicalJsonTree)]
   #[canonical_json(owner=semio_framework_pack_json)]
@@ -22,7 +22,7 @@ macro_rules! native_node{
    const NUMBER_FIELDS:[semio_framework_value_native_owned::native_decoding::owned::NativeRecordField;$count]=[$(semio_framework_value_native_owned::native_decoding::owned::NativeRecordField{name:stringify!($field),ordinal:$ordinal}),+];
    fn validation_demand(_:[&str;1],_:[semio_framework_value::Number;$count])->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<&str>()+2*$count*std::mem::size_of::<f64>(),depth:1,..Default::default()}}
    fn validate_parts([id]:[&str;1],coordinates:[semio_framework_value::Number;$count])->Result<(),semio_framework_value::ValueError>{$crate::validate(id,coordinates)}
-   fn from_parts([id]:[semio_framework_value::retirement::shared::sealed::SealedShared<String>;1],coordinates:[semio_framework_value::Number;$count])->Self{Self{id,$($field:coordinates[$ordinal-1].as_f64()),+}}
+   fn from_parts([id]:[semio_framework_value::shared_issuance::SealedShared<String>;1],coordinates:[semio_framework_value::Number;$count])->Self{Self{id,$($field:coordinates[$ordinal-1].as_f64()),+}}
   }
   semio_framework_value_native_owned::native_flat_record_receive!(FemNode,1,$count);
   impl semio_framework_value_native_owned::native_decoding::owned::NativeRecordSource for FemNodeValue{

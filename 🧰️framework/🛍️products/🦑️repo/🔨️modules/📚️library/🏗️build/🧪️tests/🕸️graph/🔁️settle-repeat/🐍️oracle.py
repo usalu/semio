@@ -10,7 +10,7 @@ def model(scenario,limit):
             return {"settled":"value","rounds":index+1,"events":events}
         if outcome=="failure":
             signature=(row.get("code"),None if row.get("undefined") else row.get("message"))
-            if row.get("code")=="BUILD_AUTHORITY_CHANGED" or signature==previous:
+            if row.get("code") in ("BUILD_AUTHORITY_CHANGED","BUILD_COLLECTED_ERRORS") or signature==previous:
                 return {"settled":"failure","rounds":index+1,"failure":signature[1],"events":events}
             if row.get("holds",True) and not row.get("young",True):
                 return {"settled":"failure","rounds":index+1,"failure":signature[1],"events":events}

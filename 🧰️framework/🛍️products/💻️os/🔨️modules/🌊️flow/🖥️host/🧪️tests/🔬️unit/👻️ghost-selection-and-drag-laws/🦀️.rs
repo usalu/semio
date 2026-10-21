@@ -69,7 +69,7 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
     assert_eq!(overlay_ghost_rows.len(), 3);
     let placed_node = {
         let widget = widget_from_descriptor(&serde_json::from_str::<WidgetDescriptor>(descriptor).unwrap(), "placed".into(), &host.kind_infos);
-        let mut layout = protocol::value::ordered::OrderedMap::new();
+        let mut layout = semio_framework_value_ordered::ordered::OrderedMap::new();
         layout.insert("placed".into(), WidgetLayout { x: 80.0, y: 80.0 });
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &host.kind_infos, widget_node_size(&widget, &[], &host.kind_infos));
         widget.retire_cold();

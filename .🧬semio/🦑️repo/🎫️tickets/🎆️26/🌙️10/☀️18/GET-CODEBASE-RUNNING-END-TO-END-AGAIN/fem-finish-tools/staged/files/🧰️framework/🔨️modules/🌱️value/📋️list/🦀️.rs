@@ -47,12 +47,16 @@ impl PagedListAllocationError {
 const FANOUT: usize = 16;
 const PAGE_BYTES: usize = 4096;
 
-pub trait PageAllocation {
+/// 🧷️ Supplies one explicit backing-reservation policy; insufficient successful capacity is refused and retained for funded settlement.
+///
+/// # Safety
+/// Implementations preserve every existing element, order and ownership. An error leaves the vector and its capacity unchanged.
+pub unsafe trait PageAllocation {
     fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError>;
 }
 
 struct ExactAllocation;
-impl PageAllocation for ExactAllocation {
+unsafe impl PageAllocation for ExactAllocation {
     fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError> {
         owner.try_reserve_exact(slots)
     }
@@ -497,8 +501,8 @@ impl<T, const N: usize> PagedList<T, N> {
         self.reserve_page(grant)
     }
 
-    #[cfg(test)]
-    pub(crate) fn reserve_one_using<A: PageAllocation>(&mut self, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
+    /// 🧰️ Reserves through an explicit allocation policy with ordinary admission and retained failure accounting.
+    pub fn reserve_one_using<A: PageAllocation>(&mut self, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         if self.has_reserved_slot() { return Ok(PagedListProgress::default()); }
         self.reserve_page_using::<A>(grant)
     }
@@ -540,6 +544,7 @@ impl<T, const N: usize> PagedList<T, N> {
         if Self::page_height(page) > root_height {
             let mut root = Vec::new();
             A::reserve(&mut root, 1).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed"))?;
+            if root.capacity()<1{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"));}
             let actual = root.capacity() * size_of::<Page<T>>();
             let mut children = std::array::from_fn(|_| Vec::new());
             children[0] = std::mem::take(&mut self.root);
@@ -558,6 +563,7 @@ impl<T, const N: usize> PagedList<T, N> {
         for height in (0..=root_height).rev() {
             if link.is_empty() {
                 A::reserve(link, 1).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed"))?;
+                if link.capacity()<1{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"));}
                 let actual = link.capacity() * size_of::<Page<T>>();
                 link.push(if height == 0 { Page::Leaf { items: Vec::new(), slots: 0 } } else { Page::Branch { height, children: std::array::from_fn(|_| Vec::new()) } });
                 self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
@@ -573,11 +579,13 @@ impl<T, const N: usize> PagedList<T, N> {
                 Page::Branch { children, .. } => link = &mut children[Self::slot(page, height)],
                 Page::Leaf { items, slots } => {
                     let admitted_slots = page_items.min(limit - self.capacity);
+                    if *slots==0&&size_of::<T>()!=0&&items.capacity()!=0{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list partial allocation requires funded settlement before reservation"));}
                     A::reserve(items, admitted_slots).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list payload allocation failed"))?;
                     let actual = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
+                    self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
+                    if items.capacity()<admitted_slots{return Err(PagedListAllocationError{allocated_bytes:actual,kind:PagedListRefusalKind::InvariantViolated,reason:"fixed list payload allocation provided fewer reserved slots; owner retained"});}
                     *slots = admitted_slots;
                     self.capacity += admitted_slots;
-                    self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
                     if self.allocated > isize::MAX as usize {
                         return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
                     }
@@ -665,7 +673,7 @@ impl<T, const N: usize> PagedList<T, N> {
                     if !items.is_empty() {
                         return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload must retire before its page" });
                     }
-                    if *slots != 0 {
+                    if *slots != 0 || (size_of::<T>()!=0&&items.capacity()!=0) {
                         return Ok(if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() });
                     }
                 }
@@ -694,7 +702,7 @@ impl<T, const N: usize> PagedList<T, N> {
                 }
                 Page::Leaf { items, slots } => {
                     if !items.is_empty() { return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload must retire before its page" }); }
-                    if *slots != 0 { return depth.checked_add(1).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list leaf release depth overflow" }); }
+                    if *slots != 0 || (size_of::<T>()!=0&&items.capacity()!=0) { return depth.checked_add(1).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list leaf release depth overflow" }); }
                 }
             }
             Ok(depth)
@@ -720,7 +728,7 @@ impl<T, const N: usize> PagedList<T, N> {
                 }
                 Page::Leaf{items,slots:reserved}=>{
                     if !items.is_empty(){return Err(semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::InvariantViolated,"paged payload must retire before parent backing handoff"));}
-                    if *reserved!=0{
+                    if *reserved!=0||(size_of::<T>()!=0&&items.capacity()!=0){
                         let bytes=items.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::OwnershipLimit,"paged payload backing layout is invalid"))?;
                         if !parent.return_empty_vec(items,1)?{return Ok(PagedListReturnProgress::default());}
                         *slots-=*reserved;*reserved=0;
@@ -756,7 +764,7 @@ impl<T, const N: usize> PagedList<T, N> {
                     if !items.is_empty() {
                         return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload must retire before its page" });
                     }
-                    if *reserved != 0 {
+                    if *reserved != 0 || (size_of::<T>()!=0&&items.capacity()!=0) {
                         let bytes = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
                         if bytes > maximum_bytes { return Ok(PagedListProgress::default()); }
                         *items = Vec::new();

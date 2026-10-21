@@ -79,10 +79,10 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::new() },
         ],
         synapses: vec![SynapseSpec { id: "wire-height".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "in".into() }],
-        layout: protocol::value::ordered::OrderedMap::new(),
+        layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     assert_eq!(wired.dag.graph.host_snapshot.edges.len(), 1, "legacy out/in synapse becomes one workflow edge");
     assert_eq!(wired.dag.graph.host_snapshot.edges[0].source, "height@number");
@@ -95,10 +95,10 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::new() },
         ],
         synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "missing".into() }],
-        layout: protocol::value::ordered::OrderedMap::new(),
+        layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     assert_eq!(refused.dag.graph.host_snapshot.edges.iter().map(|edge| edge.target.as_str()).collect::<Vec<_>>(), ["result@missing"], "an unresolved port stays in the document, unjoined, until it can be joined");
     assert_eq!(refused.dag.graph.engine.edges.len(), 0, "a synapse to a missing port is not a workflow edge");

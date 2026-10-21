@@ -1,431 +1,481 @@
-/** 🚦️ The goal gate: running the repository goal plan against one hub and one serve, provisioning their requirements, the summary tables and the `AcceptanceScript` command. */
-import { type ChildProcess } from "node:child_process";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { isAbsolute, join, resolve } from "node:path";
-import { Script } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { ACCEPTANCE_RESULT_ENV, acceptanceCheckResult, type AcceptanceCheckResult, type AcceptanceRequirement, acceptanceSchemaViolations, type AcceptanceStatus, GOAL_GATE_OUT_REL_PATH, GOAL_PLAN_REL_PATH, type GoalPlan, type GoalPlanCheck, type GoalPlanProvider, type GoalPlanStep, type GoalSummary, type GoalSummaryOutcome, type LocalizedText, type ProvidedRequirement, readGoalPlan } from "../🟦️.ts";
-import { spawnToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, posix, relative, resolve } from "node:path";
+import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
+import { carveWrites } from "../🟦️.ts";
+import { allItems } from "../🗺️plan/🧰️tree-helpers/🟦️.ts";
+import { crateIdent } from "../🗺️plan/🏷️naming/🟦️.ts";
+import { crateRelativeChains, implHeader } from "../🗺️plan/🧭️module-chains/🟦️.ts";
+import { measureRustCrate } from "../🗺️plan/📏️measure/🟦️.ts";
+import { readCargoLib } from "../🗺️plan/📦️cargo-lib/🟦️.ts";
+import { type ArtifactCratePlan } from "../🗺️plan/🧾️model/🟦️.ts";
+import { classifyPackageSource } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { resolveFixturePlaceholders } from "../🧪️test-closure/🟦️.ts";
+import { relativePosix } from "../📝️render/🟦️.ts";
+import { buildSandbox, checkCrossCrateVisibility, checkOrphanRules, compareModuleTrees, diffDiagnostics, patchSandboxSources, resolveCrateModules, runResolutionOracle, rustcUnresolvedCrates } from "../🔬️verify/🟦️.ts";
+import { execToolSyncV1, spawnToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-//#region 🎯️GoalGate
-/** 🎛️ One goal-gate invocation. */
-export type GoalGateOptions = Readonly<{
-  hub: string | null;
-  serve: string | null;
-  localServe: string | null;
-  hubBinary: string | null;
-  hubAdminCapability: string | null;
-  users: readonly Readonly<{ email: string; password: string }>[];
-  planPath: string;
-  outDir: string;
-  only: readonly string[];
-  includeOptional: boolean;
-  maxBrowsers: number;
-  maxParallel: number;
-  signal: AbortSignal;
-  execute?: GoalGateExecutor;
-  provide?: GoalGateProvisioner;
-}>;
-
-/** 🏗️ Stands up one provider (the default spawns `bun repo run <project>:<target> -- <args>` in its own process group and
- * waits for its url), reporting progress lines; resolves once the url answers, rejects on the bound, an early exit with
- * nothing answering, or cancellation, and hands back `stop()` that ends exactly what it started. */
-export type GoalGateProvisioner = (repoRoot: string, requirement: ProvidedRequirement, provider: GoalPlanProvider, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, signal: AbortSignal, onProgress: (line: string) => void) => Promise<Readonly<{ stop: () => Promise<void> }>>;
-
-/** 🚀️ Runs one check's command with its environment and log file and resolves its exit code. The default spawns
- * `bun repo run <project>:<target> -- <args>` in its own process group with the shared build invocation (every invocation of the
- * gate computes its own project graph, so a wedged or foreign daemon cannot stall a check); laws substitute a scripted
- * executor. */
-export type GoalGateExecutor = (repoRoot: string, check: GoalPlanCheck, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, children: Set<ChildProcess>) => Promise<number>;
-
-const spawnGoalGateCheck: GoalGateExecutor = (repoRoot, check, args, env, logPath, children) => {
-  const log = createWriteStream(logPath);
-  const started = Date.now();
-  return new Promise<number>((resolveExit) => {
-    const child = spawnToolV1("bun", ["repo", "run", `${check.project}:${check.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
-    children.add(child);
-    child.stdout?.pipe(log, { end: false });
-    child.stderr?.pipe(log, { end: false });
-    const ticker = setInterval(() => console.log(`[goal-gate] … ${check.id} running ${Math.round((Date.now() - started) / 1000)} s`), 60_000);
-    child.once("error", () => resolveExit(-1));
-    child.once("close", (code) => {
-      clearInterval(ticker);
-      children.delete(child);
-      log.end();
-      resolveExit(code ?? -1);
-    });
-  });
+/** 🧫️ Everything a carve is checked against inside a sandbox copy of the plugin. */
+export type CarveVerification = {
+  census: { name: string; lib: string; test: string; withinHardBudget: boolean; withinTargetBudget: boolean }[];
+  moduleTreeProblems: string[];
+  visibility: unknown[];
+  orphan: unknown[];
+  glue: string[];
+  unresolvedCrates: Record<string, string[]>;
+  inheritedUnresolvedCrates: string[];
+  oracle: Record<string, { original: number; candidate: number; onlyOriginal: number; onlyCandidate: number; sampleOnlyCandidate: string[]; sampleOnlyOriginal: string[] }> | null;
+  layout: Record<string, { union: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> | null;
 };
 
-async function providerAnswers(url: string): Promise<boolean> {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
-    await response.body?.cancel();
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-function terminateGroup(child: ChildProcess): void {
-  if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
-  try {
-    if (process.platform === "win32") child.kill("SIGTERM");
-    else process.kill(-child.pid, "SIGTERM");
-  } catch {
-    child.kill("SIGTERM");
-  }
-}
-
-const provisionGoalGateRequirement: GoalGateProvisioner = async (repoRoot, requirement, provider, args, env, logPath, signal, onProgress) => {
-  const probe = `${provider.url.replace(/\/+$/u, "")}${provider.readyPath}`;
-  if (await providerAnswers(probe)) {
-    onProgress(`${requirement} already answers at ${provider.url} — reused, never stopped`);
-    return { stop: async () => {} };
-  }
-  const log = createWriteStream(logPath);
-  const child = spawnToolV1("bun", ["repo", "run", `${provider.project}:${provider.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
-  child.stdout?.pipe(log, { end: false });
-  child.stderr?.pipe(log, { end: false });
-  const exited = new Promise<void>((resolveExit) => child.once("close", () => resolveExit()));
-  const stop = async (): Promise<void> => {
-    terminateGroup(child);
-    await Promise.race([exited, new Promise((resolveDelay) => setTimeout(resolveDelay, 30_000))]);
-    log.end();
-  };
-  const started = Date.now();
-  let reported = started;
-  for (;;) {
-    if (signal.aborted) {
-      await stop();
-      throw new Error(`${requirement} provisioning cancelled`);
-    }
-    if (await providerAnswers(probe)) {
-      onProgress(`${requirement} ready at ${provider.url} after ${Math.round((Date.now() - started) / 1000)} s (${logPath})`);
-      return { stop };
-    }
-    if (child.exitCode !== null || child.signalCode !== null) {
-      log.end();
-      throw new Error(`${provider.project}:${provider.target} exited ${child.exitCode ?? child.signalCode} before ${probe} answered — see ${logPath}`);
-    }
-    if (Date.now() - started >= provider.readyBoundMs) {
-      await stop();
-      throw new Error(`${probe} did not answer within ${Math.round(provider.readyBoundMs / 1000)} s — see ${logPath}`);
-    }
-    if (Date.now() - reported >= 30_000) {
-      reported = Date.now();
-      onProgress(`${requirement} waiting for ${probe} (${Math.round((reported - started) / 1000)} of ${Math.round(provider.readyBoundMs / 1000)} s)`);
-    }
-    await new Promise((resolveDelay) => setTimeout(resolveDelay, 2_000));
-  }
-};
-
-const STATUS_WORD: Readonly<Record<AcceptanceStatus, LocalizedText>> = {
-  pass: { en: "pass", de: "bestanden" },
-  fail: { en: "fail", de: "fehlgeschlagen" },
-  blocked: { en: "blocked", de: "blockiert" },
-  skipped: { en: "skipped", de: "übersprungen" },
-};
-
-/** 🔣️ Substitutes the gate's tokens: `{hub}`, `{serve}` (a serve joined to that hub), `{localServe}` (a local-only serve
- * where every plugin loads — the program matrix and idle census enumerate its catalog), `{hubBinary}`, `{hubAdminCapability}` (the hub launcher's `0600`
- * admin-capability file, a path) and `{user<N>Email}` / `{user<N>Password}`
- * (1-based, from `--users`). Credentials are only ever substituted into ENVIRONMENT values, never into arguments, so no
- * secret reaches a log line. */
-function substitute(value: string, options: GoalGateOptions): string {
-  return value
-    .replaceAll("{runDir}", options.outDir)
-    .replaceAll("{hub}", options.hub ?? "")
-    .replaceAll("{serve}", options.serve ?? "")
-    .replaceAll("{localServe}", options.localServe ?? "")
-    .replaceAll("{hubBinary}", options.hubBinary ?? "")
-    .replaceAll("{hubAdminCapability}", options.hubAdminCapability ?? "")
-    .replace(/\{user(\d)(Email|Password)\}/gu, (_, index: string, field: string) => options.users[Number(index) - 1]?.[field === "Email" ? "email" : "password"] ?? "");
-}
-
-function syntheticResult(check: GoalPlanCheck, status: AcceptanceStatus, startedAt: Date, measured: Readonly<Record<string, number | string | boolean>>, summary: LocalizedText, evidence: readonly string[]): AcceptanceCheckResult {
-  return acceptanceCheckResult({ check: check.id, status, startedAt, measured, summary, evidence });
-}
-
-/** 🐳️ The pre-step that stands up the shared postgres + neo4j servers once for every check requiring `backends`. */
-const GOAL_GATE_BACKENDS_CHECK: GoalPlanCheck = { id: "backends-up", title: { en: "Shared postgres and neo4j servers", de: "Gemeinsame postgres- und neo4j-Server" }, criteria: ["2.4"], project: "os-hub-ts", target: "backend-up", args: ["all"], requires: [], browsers: 0 };
-
-/** 🧯️ Why a provided requirement is absent: the provider's failure, in the gate's log language. */
-type ProvisionFailures = ReadonlyMap<ProvidedRequirement | "hubAdmin", string>;
-
-function missingRequirement(check: GoalPlanCheck, options: GoalGateOptions, backendsReady: boolean | null): AcceptanceRequirement | undefined {
-  return check.requires.find((requirement) => (requirement === "hub" && !options.hub) || (requirement === "serve" && !options.serve) || (requirement === "localServe" && !options.localServe) || (requirement === "hubAdmin" && !options.hubAdminCapability) || (requirement === "backends" && backendsReady === false));
-}
-
-async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null, provisionFailures: ProvisionFailures = new Map()): Promise<AcceptanceCheckResult> {
-  const startedAt = new Date();
-  const missing = missingRequirement(check, options, backendsReady);
-  if (missing === "backends") return syntheticResult(check, "blocked", startedAt, { missing }, { en: "the shared postgres/neo4j servers did not start (os-hub-ts:backend-up)", de: "die gemeinsamen postgres/neo4j-Server starteten nicht (os-hub-ts:backend-up)" }, []);
-  const provisionFailure = missing === "hub" || missing === "serve" || missing === "localServe" || missing === "hubAdmin" ? provisionFailures.get(missing) : undefined;
-  if (provisionFailure && missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `the gate could not stand up ${missing}: ${provisionFailure}`.slice(0, 1800), de: `das Tor konnte ${missing} nicht bereitstellen: ${provisionFailure}`.slice(0, 1800) }, []);
-  if (missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `needs --${missing} <url>`, de: `benötigt --${missing} <url>` }, []);
-  if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, {}, { en: "cancelled before start", de: "vor dem Start abgebrochen" }, []);
-  const resultPath = join(options.outDir, `${check.id}.json`);
-  const logPath = join(options.outDir, `${check.id}.log`);
-  const args = check.args.map((arg) => substitute(arg, options));
-  const planned = Object.entries(check.env ?? {}).map(([key, value]) => [key, substitute(value, options)] as const).filter(([, value]) => value.length > 0);
-  const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, SEMIO_BUILD_TERMINAL: "false" };
-  console.log(`[goal-gate] ▶ ${check.id}: bun repo run ${check.project}:${check.target}${args.length ? ` -- ${args.join(" ")}` : ""}`);
-  const exitCode = await (options.execute ?? spawnGoalGateCheck)(repoRoot, check, args, env, logPath, children);
-  if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, { exitCode }, { en: "cancelled while running", de: "während der Ausführung abgebrochen" }, [logPath]);
-  if (existsSync(resultPath)) {
-    const written = JSON.parse(readFileSync(resultPath, "utf8")) as AcceptanceCheckResult;
-    const record: AcceptanceCheckResult = { ...written, check: check.id };
-    const violations = acceptanceSchemaViolations(repoRoot, "checkResult", record);
-    if (violations.length) return syntheticResult(check, "fail", startedAt, { exitCode, schemaViolations: violations.length }, { en: `harness wrote an invalid record: ${violations[0]}`, de: `Prüfprogramm schrieb einen ungültigen Datensatz: ${violations[0]}` }, [resultPath, logPath]);
-    if (record.status === "pass" && exitCode !== 0) return { ...record, status: "fail", measured: { ...record.measured, exitCode }, evidence: [...record.evidence, logPath] };
-    return { ...record, evidence: [...record.evidence, logPath] };
-  }
-  const status: AcceptanceStatus = exitCode === 0 ? "pass" : "fail";
-  return syntheticResult(check, status, startedAt, { exitCode }, exitCode === 0 ? { en: `${check.project}:${check.target} exited 0`, de: `${check.project}:${check.target} endete mit 0` } : { en: `${check.project}:${check.target} exited ${exitCode}`, de: `${check.project}:${check.target} endete mit ${exitCode}` }, [logPath]);
-}
-
-async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null, provisionFailures: ProvisionFailures): Promise<AcceptanceCheckResult[]> {
-  const results = new Map<string, AcceptanceCheckResult>();
-  const pending = [...checks];
-  const running = new Map<string, Promise<void>>();
-  let browsers = 0;
-  while (pending.length || running.size) {
-    const index = pending.findIndex((check) => running.size < options.maxParallel && (browsers + check.browsers <= options.maxBrowsers || (running.size === 0 && check.browsers > options.maxBrowsers)));
-    if (index >= 0) {
-      const check = pending.splice(index, 1)[0]!;
-      browsers += check.browsers;
-      running.set(check.id, runCheck(repoRoot, check, options, children, backendsReady, provisionFailures).then((result) => {
-        results.set(check.id, result);
-        browsers -= check.browsers;
-        running.delete(check.id);
-      }));
-      continue;
-    }
-    await Promise.race(running.values());
-  }
-  return checks.map((check) => results.get(check.id)!);
-}
-
-function stepStatus(results: readonly AcceptanceCheckResult[]): AcceptanceStatus {
-  if (results.some((result) => result.status === "fail")) return "fail";
-  if (results.some((result) => result.status === "blocked")) return "blocked";
-  if (results.every((result) => result.status === "skipped")) return "skipped";
-  return results.some((result) => result.status === "skipped") ? "blocked" : "pass";
-}
-
-function emptyTotals(): Record<AcceptanceStatus, number> {
-  return { pass: 0, fail: 0, blocked: 0, skipped: 0 };
-}
-
-/** 🏁️ The verdict of every declared outcome over the checks that serve it (a check serves outcome `N` through any
- * criterion `N.x`): fail when one of them failed, blocked when one was blocked or skipped, pass when all passed, and
- * skipped when the run selected none of them. */
-export function goalOutcomes(plan: GoalPlan, steps: GoalSummary["steps"]): GoalSummaryOutcome[] {
-  const criteria = new Map(plan.steps.flatMap((step) => step.checks).map((check) => [check.id, check.criteria] as const));
-  return plan.outcomes.map((outcome) => {
-    const results = steps.flatMap((step) => step.checks).filter((result) => (criteria.get(result.check) ?? []).some((criterion) => criterion.split(".")[0] === outcome.id));
-    const totals = emptyTotals();
-    for (const result of results) totals[result.status] += 1;
-    const status: AcceptanceStatus = results.length === 0 ? "skipped" : totals.fail > 0 ? "fail" : totals.blocked + totals.skipped > 0 ? "blocked" : "pass";
-    return { id: outcome.id, status, totals, checks: results.map((result) => result.check) };
-  });
-}
-
-/** 🏁️ The per-outcome verdict table of one run in one language — the answer to "is the goal met, and where not". */
-export function goalOutcomeTable(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string[] {
-  const heading = language === "en" ? ["Outcome", "Verdict", "Pass", "Fail", "Blocked", "Skipped"] : ["Ergebnisziel", "Urteil", "Bestanden", "Fehlgeschlagen", "Blockiert", "Übersprungen"];
-  return [`| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`, ...summary.outcomes.map((outcome) => `| ${outcome.id}. ${plan.outcomes.find((candidate) => candidate.id === outcome.id)?.title[language] ?? outcome.id} | **${STATUS_WORD[outcome.status][language]}** | ${outcome.totals.pass} | ${outcome.totals.fail} | ${outcome.totals.blocked} | ${outcome.totals.skipped} |`)];
-}
-
-/** 📝️ The human summary of one run in one language: the verdict, the per-outcome verdict table, the totals and one row
- * per check. */
-export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string {
-  const heading = language === "en" ? ["Step", "Check", "Status", "Seconds", "Summary"] : ["Schritt", "Prüfung", "Status", "Sekunden", "Zusammenfassung"];
-  const lines = [`# ${plan.title[language]}`, "", `${language === "en" ? "Verdict" : "Ergebnis"}: **${STATUS_WORD[summary.verdict][language]}** — ${Object.entries(summary.totals).map(([status, count]) => `${STATUS_WORD[status as AcceptanceStatus][language]} ${count}`).join(", ")}`, "", ...goalOutcomeTable(summary, plan, language), "", `Hub: ${summary.hub ?? "—"} · ${language === "en" ? "Serve" : "Oberfläche"}: ${summary.serve ?? "—"} · ${language === "en" ? "Local-only serve" : "Lokale Oberfläche"}: ${summary.localServe ?? "—"} · ${summary.startedAt} → ${summary.finishedAt}`, "", `| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`];
-  for (const step of summary.steps) {
-    const planned = plan.steps.find((candidate) => candidate.id === step.id);
-    for (const result of step.checks) {
-      const title = planned?.checks.find((check) => check.id === result.check)?.title[language] ?? result.check;
-      lines.push(`| ${planned?.title[language] ?? step.id} | ${title} | ${STATUS_WORD[result.status][language]} | ${Math.round(result.durationMs / 1000)} | ${result.summary[language].replaceAll("|", "\\|")} |`);
-    }
-  }
-  return `${lines.join("\n")}\n`;
-}
-
-const PROVIDED_REQUIREMENTS: readonly ProvidedRequirement[] = ["hub", "serve", "localServe"];
-const ADMIN_CAPABILITY_BOUND_MS = 60_000;
-
-/** 🏗️ Stands up, in dependency order, every requirement the selected checks need that the command line did not name and
- * the plan provides; returns the resolved options, the holders to stop at the end and why any provider failed. */
-async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected: readonly GoalPlanStep[], options: GoalGateOptions): Promise<{ resolved: GoalGateOptions; holders: Readonly<{ stop: () => Promise<void> }>[]; failures: Map<ProvidedRequirement | "hubAdmin", string> }> {
-  const needed = new Set(selected.flatMap((step) => step.checks.flatMap((check) => check.requires)));
-  const values: Record<ProvidedRequirement, string | null> = { hub: options.hub, serve: options.serve, localServe: options.localServe };
-  if (needed.has("serve") && plan.providers?.serve?.requires.includes("hub")) needed.add("hub");
-  if (needed.has("hubAdmin") && !options.hubAdminCapability && plan.providers?.hub?.adminCapability) needed.add("hub");
-  const holders: Readonly<{ stop: () => Promise<void> }>[] = [];
-  const failures = new Map<ProvidedRequirement | "hubAdmin", string>();
-  for (const requirement of PROVIDED_REQUIREMENTS) {
-    const provider = plan.providers?.[requirement];
-    if (!needed.has(requirement) || values[requirement] || !provider) continue;
-    if (options.signal.aborted) break;
-    const missing = provider.requires.find((dependency) => !values[dependency]);
-    if (missing) {
-      failures.set(requirement, `its provider needs ${missing}, which is absent`);
-      continue;
-    }
-    const current: GoalGateOptions = { ...options, ...values };
-    const args = provider.args.map((arg) => substitute(arg, current));
-    const env = { ...process.env, ...Object.fromEntries(Object.entries(provider.env ?? {}).map(([key, value]) => [key, substitute(value, current)])), SEMIO_BUILD_TERMINAL: "false" };
-    const logPath = join(options.outDir, `provider-${requirement}.log`);
-    console.log(`[goal-gate] ▶ provider ${requirement}: bun repo run ${provider.project}:${provider.target}${args.length ? ` -- ${args.join(" ")}` : ""} → ${provider.url}`);
-    try {
-      holders.push(await (options.provide ?? provisionGoalGateRequirement)(repoRoot, requirement, provider, args, env, logPath, options.signal, (line) => console.log(`[goal-gate] … ${line}`)));
-      values[requirement] = provider.url;
-    } catch (error) {
-      const reason = String(error instanceof Error ? error.message : error).split("\n")[0]!.slice(0, 600);
-      failures.set(requirement, reason);
-      console.log(`[goal-gate] provider ${requirement} FAILED: ${reason}`);
-    }
-  }
-  let hubAdminCapability = options.hubAdminCapability;
-  const hubProvider = plan.providers?.hub;
-  if (needed.has("hubAdmin") && !hubAdminCapability && values.hub) {
-    if (hubProvider?.adminCapability && values.hub === hubProvider.url) {
-      const path = isAbsolute(hubProvider.adminCapability) ? hubProvider.adminCapability : join(repoRoot, hubProvider.adminCapability);
-      const deadline = Date.now() + Math.min(hubProvider.readyBoundMs, ADMIN_CAPABILITY_BOUND_MS);
-      while (!existsSync(path) && Date.now() < deadline && !options.signal.aborted) await new Promise((resolveDelay) => setTimeout(resolveDelay, 250));
-      if (existsSync(path)) {
-        hubAdminCapability = path;
-        console.log(`[goal-gate] hubAdmin: the hub provider's admin capability ${path}`);
-      } else failures.set("hubAdmin", `the hub provider published no admin capability at ${path}`);
-    } else failures.set("hubAdmin", "a hub the gate did not stand up needs --hub-admin-capability <file>");
-  }
-  return { resolved: { ...options, ...values, hubAdminCapability }, holders, failures };
-}
-
-/** 🎯️ Runs the goal plan's steps in order — each step's checks serially or in parallel within the browser and process
- * budget — after standing up (zero-touch) every hub/serve the selected checks need and the command line did not name,
- * writes every check's record, `summary.json` (`semio.acceptance.goal-summary/v1`) and `summary.en.md` / `summary.de.md`
- * (per-outcome verdict table first) into `outDir`, stops what it stood up, and returns the summary. A failed gating step
- * blocks every later step; cancellation terminates the running checks' process groups and records the rest as skipped. */
-export async function runGoalGate(repoRoot: string, requested: GoalGateOptions): Promise<GoalSummary> {
-  const plan = readGoalPlan(repoRoot, requested.planPath);
-  mkdirSync(requested.outDir, { recursive: true });
-  const children = new Set<ChildProcess>();
-  const terminate = (): void => {
-    for (const child of children) terminateGroup(child);
-  };
-  requested.signal.addEventListener("abort", terminate, { once: true });
-  const startedAt = new Date().toISOString();
-  const steps: { id: string; status: AcceptanceStatus; checks: AcceptanceCheckResult[] }[] = [];
-  let gatedBy: string | null = null;
-  const selected = plan.steps.filter((step) => (requested.only.length ? requested.only.includes(step.id) : !step.optional || requested.includeOptional));
-  const provisioned = await provisionRequirements(repoRoot, plan, selected, requested);
-  const options = provisioned.resolved;
-  try {
-    let backendsReady: boolean | null = null;
-    if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
-      const backendsLog = join(options.outDir, "backends-up.log");
-      console.log("[goal-gate] ▶ backends: bun repo run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
-      backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, SEMIO_BUILD_TERMINAL: "false" }, backendsLog, children)) === 0;
-      console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
-    }
-    for (const [index, step] of selected.entries()) {
-      console.log(`[goal-gate] step ${index + 1}/${selected.length} ${step.id} (${step.mode}, ${step.checks.length} checks): ${step.title.en}`);
-      let checks: AcceptanceCheckResult[];
-      if (gatedBy !== null) {
-        const now = new Date();
-        const gate = gatedBy;
-        checks = step.checks.map((check) => syntheticResult(check, "blocked", now, { gatedBy: gate }, { en: `blocked: gating step ${gate} did not pass`, de: `blockiert: der vorausgehende Schritt ${gate} ist nicht bestanden` }, []));
-      } else if (step.mode === "parallel") {
-        checks = await runParallel(repoRoot, step.checks, options, children, backendsReady, provisioned.failures);
-      } else {
-        checks = [];
-        for (const check of step.checks) checks.push(await runCheck(repoRoot, check, options, children, backendsReady, provisioned.failures));
+export function mountedOutsideDirectories(repoRoot: string, pluginDir: string, scanRoot = repoRoot): Set<string> {
+  const found = new Set<string>();
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) { if (!/^(node_modules|target|dist)$/u.test(entry.name)) walk(path); continue; }
+      if (!entry.name.endsWith(".rs")) continue;
+      const sourceText = readFileSync(path, "utf8");
+      for (const match of sourceText.matchAll(/include(?:_str|_bytes)?!\(\s*"([^"]+)"\s*\)/gu)) {
+        const target = resolve(directory, match[1]!);
+        const relative = relativePosix(scanRoot, dirname(target));
+        if (!relative.startsWith("..") && !`${relative}/`.startsWith(`${pluginDir}/`) && existsSync(resolve(repoRoot, relative))) found.add(relative);
       }
-      const status = stepStatus(checks);
-      steps.push({ id: step.id, status, checks });
-      for (const check of checks) console.log(`[goal-gate] ${check.status.toUpperCase().padEnd(7)} ${check.check} (${Math.round(check.durationMs / 1000)} s) — ${check.summary.en}`);
-      if (step.gatesRest && status !== "pass" && gatedBy === null) gatedBy = step.id;
-    }
-  } finally {
-    requested.signal.removeEventListener("abort", terminate);
-    for (const holder of provisioned.holders.reverse()) await holder.stop();
-  }
-  const totals = emptyTotals();
-  for (const step of steps) for (const check of step.checks) totals[check.status] += 1;
-  const verdict: AcceptanceStatus = totals.fail > 0 ? "fail" : totals.blocked > 0 || totals.skipped > 0 ? "blocked" : "pass";
-  const summary: GoalSummary = { schema: "semio.acceptance.goal-summary/v1", plan: plan.id, hub: options.hub, serve: options.serve, localServe: options.localServe, startedAt, finishedAt: new Date().toISOString(), verdict, totals, outcomes: goalOutcomes(plan, steps), steps };
-  const violations = acceptanceSchemaViolations(repoRoot, "goalSummary", summary);
-  if (violations.length) throw new Error(`goal summary violates the acceptance schema:\n${violations.join("\n")}`);
-  writeFileSync(join(options.outDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
-  for (const language of ["en", "de"] as const) writeFileSync(join(options.outDir, `summary.${language}.md`), goalSummaryMarkdown(summary, plan, language));
-  return summary;
-}
-
-/** 🔑️ The test principals of the hub under verification, read from a JSON file `{"users":[{"email","password"}…]}`
- * (for example a slice's hub state directory), so no credential is ever typed on a command line. No file (an empty
- * `--users`) leaves every check on its own documented default principals. */
-function readGoalGateUsers(path: string | undefined): readonly Readonly<{ email: string; password: string }>[] {
-  if (!path) return [];
-  const parsed = JSON.parse(readFileSync(resolve(path), "utf8")) as { users?: unknown };
-  if (!Array.isArray(parsed.users) || !parsed.users.every((user) => typeof user?.email === "string" && typeof user?.password === "string")) throw new Error(`--users ${path} must hold {"users":[{"email","password"}…]}`);
-  return parsed.users as { email: string; password: string }[];
-}
-
-function option(segments: readonly string[], flag: string): string | undefined {
-  const index = segments.indexOf(flag);
-  const value = index >= 0 ? segments[index + 1] : undefined;
-  return value === undefined || value.startsWith("--") ? undefined : value;
-}
-
-/** 🎯️ `acceptance goal [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>]
- * [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]` and `acceptance plan` (prints the plan).
- * A hub or serve the command line does not name is stood up by the plan's provider and stopped after the run. */
-export class AcceptanceScript extends Script {
-  async run(segments: string[]): Promise<void> {
-    const [verb, ...rest] = segments;
-    const planPath = resolve(option(rest, "--plan") ?? join(this.repoRoot, GOAL_PLAN_REL_PATH));
-    if (verb === "plan") {
-      const plan = readGoalPlan(this.repoRoot, planPath);
-      for (const step of plan.steps) {
-        console.log(`${step.id} (${step.mode}${step.gatesRest ? ", gates the rest" : ""}${step.optional ? ", optional" : ""}) — ${step.title.en} / ${step.title.de}`);
-        for (const check of step.checks) console.log(`  ${check.id}: bun repo run ${check.project}:${check.target}${check.args.length ? ` -- ${check.args.join(" ")}` : ""} [criteria ${check.criteria.join(",")}; needs ${check.requires.join(",") || "nothing"}; browsers ${check.browsers}]`);
+      for (const match of sourceText.matchAll(/#\[path\s*=\s*"([^"]+)"\s*\]/gu)) {
+        const target = resolve(directory, match[1]!);
+        const relative = relativePosix(scanRoot, dirname(target));
+        if (!relative.startsWith("..") && !`${relative}/`.startsWith(`${pluginDir}/`) && existsSync(resolve(repoRoot, relative))) found.add(relative);
       }
-      return;
     }
-    if (verb !== "goal") throw new Error("usage: acceptance <goal|plan> [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>] [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]");
-    const controller = new AbortController();
-    const cancel = (): void => controller.abort();
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
-    try {
-      const outDir = resolve(option(rest, "--out") ?? join(this.repoRoot, GOAL_GATE_OUT_REL_PATH, new Date().toISOString().replaceAll(":", "-").replace(/\.\d+Z$/u, "Z")));
-      const summary = await runGoalGate(this.repoRoot, {
-        hub: option(rest, "--hub") ?? null,
-        serve: option(rest, "--serve") ?? null,
-        localServe: option(rest, "--local-serve") ?? null,
-        hubBinary: option(rest, "--hub-binary") ?? null,
-        hubAdminCapability: option(rest, "--hub-admin-capability") ?? null,
-        users: readGoalGateUsers(option(rest, "--users")),
-        planPath,
-        outDir,
-        only: (option(rest, "--only") ?? "").split(",").filter(Boolean),
-        includeOptional: rest.includes("--include-optional"),
-        maxBrowsers: Number(option(rest, "--max-browsers") ?? 1),
-        maxParallel: Number(option(rest, "--max-parallel") ?? 4),
-        signal: controller.signal,
-      });
-      const plan = readGoalPlan(this.repoRoot, planPath);
-      console.log(goalSummaryMarkdown(summary, plan, "en"));
-      console.log(goalSummaryMarkdown(summary, plan, "de"));
-      for (const outcome of summary.outcomes) console.log(`[goal-gate] outcome ${outcome.id} ${outcome.status.toUpperCase()} (pass ${outcome.totals.pass}, fail ${outcome.totals.fail}, blocked ${outcome.totals.blocked}, skipped ${outcome.totals.skipped}) — ${plan.outcomes.find((candidate) => candidate.id === outcome.id)?.title.en ?? outcome.id}`);
-      console.log(`[goal-gate] records: ${outDir}`);
-      if (summary.verdict !== "pass") process.exitCode = 1;
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
+  };
+  walk(resolve(scanRoot, pluginDir));
+  return found;
+}
+
+/** 🧵️ Rewrites one source file of a carved crate so that all carved crates can be mounted as modules of one synthetic crate: `crate::` becomes `crate::<module>::` and a dependency crate's name becomes the path of its module. */
+export function rewriteForCombined(text: string, module: string, crateModules: ReadonlyMap<string, string>): string {
+  const tokens = rustTokens(text);
+  const edits: { start: number; end: number; text: string }[] = [];
+  for (let k = 0; k + 1 < tokens.length; k += 1) {
+    const token = tokens[k]!;
+    const previous = tokens[k - 1]?.text;
+    if (tokens[k + 1]!.text !== "::" || previous === "::" || previous === "." || previous === "$") continue;
+    if (token.text === "crate") edits.push({ start: token.start, end: token.end, text: `crate::${module}` });
+    else if (token.kind === "identifier" && crateModules.has(token.text)) edits.push({ start: token.start, end: token.end, text: `crate::${crateModules.get(token.text)}` });
+  }
+  let out = text;
+  for (const edit of edits.sort((left, right) => right.start - left.start)) out = out.slice(0, edit.start) + edit.text + out.slice(edit.end);
+  return out;
+}
+
+/** 🔗️ Whether a diagnostic is about anything but an external crate that the sandbox does not link (an associated type looked up on a generic parameter bound by such a crate's trait is one of them: the base crate aborts at resolution before it type-checks, a carved crate with no unresolved item header does not): a path through the extern prelude (`::semio_ext::x`) names such a crate in the 2021 edition, and rustc reports it as "cannot find `semio_ext` in the crate root". */
+export const external = (line: string): boolean => !line.includes("unlinked crate") && !/\tcannot find `[A-Za-z0-9_]+` in the crate root\t/u.test(line) && !/^E0432\tunresolved import `semio_[A-Za-z0-9_]+`(?:\t|$)/u.test(line) && !/^E0220\tassociated type `[A-Za-z0-9_]+` not found for `[A-Z][A-Za-z0-9_]*`(?:\t|$)/u.test(line);
+
+/** 📍️ Drops the file and label of the diagnostics about unresolved derive helper attributes and derive macros (the sandbox links no macro crate, so every derive reports them): an item that moves to another file keeps its count but changes its location. The label of a type or value that is not found in scope is dropped too: a type that an unlinked macro would have generated is reported with or without a suggestion depending on the imports around it, which the carve legitimately changes. */
+export const placeless = (line: string): string => {
+  if (/^[^\t]*\tcannot find (?:attribute|derive macro) /u.test(line)) return line.split("\t").slice(0, 2).join("\t");
+  return /^[^\t]*\tcannot find (?:type|struct, variant or union type|value|function) `[^`]+` in this scope\t/u.test(line) ? line.split("\t").slice(0, 3).join("\t") : line;
+};
+
+/** 🧩️ The names a stripped diagnostic reports as unresolved (an import, a type, a value, a function or the last segment of a path, `cannot find `Name` in `module``), as the last segment of each backticked path; empty for any other diagnostic. */
+export function unresolvedSubjects(line: string): string[] {
+  const inPath = /^E0433\tcannot find `([^`]+)` in `[^`]+`/u.exec(line);
+  if (inPath) return [inPath[1]!];
+  const match = /^E0(?:412|422|425|432|433)\t(?:unresolved imports? |cannot find (?:type|value|struct, variant or union type|function|trait|macro) )(.*)$/u.exec(line);
+  if (!match) return [];
+  const subject = match[1]!.split(": ")[0]!.split(" in this scope")[0]!.split(" in module")[0]!;
+  return [...subject.matchAll(/`([^`]+)`/gu)].map((entry) => entry[1]!.split("::").pop()!);
+}
+
+/** 🧩️ Drops the carved diagnostics that only re-word an unresolved name the base tree already fails to resolve: a name an unexpanded macro defines is reported as `unresolved import` in one layout and as `cannot find .. in this scope` in the other, so the two spellings must not count as a regression. */
+export function dropBaseUnresolvedNames(baseLines: readonly string[], carvedLines: readonly string[]): string[] {
+  const known = new Set(baseLines.flatMap(unresolvedSubjects));
+  return carvedLines.filter((line) => { const subjects = unresolvedSubjects(line); return !subjects.length || !subjects.every((name) => known.has(name)); });
+}
+
+export const normalizeCombined = (line: string): string => line.replace(/crate::__c_[a-z0-9_]+/gu, "crate").replace(/__c_[a-z0-9_]+(::)?/gu, "").replace(/<sandbox>(?:\/\.\.)+/gu, "<sandbox>/..");
+
+/** 🪞️ Rewrites the imports of the combined layout that name a crate without a following path: `use <crate> as name;` and `use crate as name;`, which the token rewrite of `rewriteForCombined` leaves alone. */
+export function rewriteCrateAliases(text: string, module: string, crateModules: ReadonlyMap<string, string>): string {
+  let out = text.replace(/(\buse\s+)crate(\s+as\b)/gu, `$1crate::${module}$2`);
+  for (const [ident, mounted] of crateModules) out = out.replace(new RegExp(`(\\buse\\s+)${ident}(\\s+as\\b)`, "gu"), `$1crate::${mounted}$2`);
+  return out;
+}
+
+/** 🔗️ A path dependency of an artifact crate that lives in the same plugin outside the artifact, with the extern identifiers the dependents use for it. */
+export type SiblingCrate = Readonly<{ name: string; dir: string; entry: string; idents: readonly string[] }>;
+
+/** 🔗️ Collects the path dependencies of the given crate manifests that live outside the artifact: plugin-local ones transitively, any other repository crate only as a direct dependency. These are the sibling crates an artifact crate may now depend on instead of mounting their sources; the caller keeps the ones whose sources the base tree compiled in-crate. */
+export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactDir: string, manifests: readonly string[], workspaceDir: string = artifactDir): SiblingCrate[] {
+  const found = new Map<string, { name: string; entry: string; idents: Set<string> }>();
+  const inherited = (Bun.TOML.parse(readFileSync(join(repoRoot, workspaceDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
+  const queue = [...manifests];
+  const seen = new Set(queue);
+  while (queue.length) {
+    const manifest = queue.pop()!;
+    const parsed = Bun.TOML.parse(readFileSync(join(repoRoot, manifest), "utf8")) as Record<string, unknown>;
+    const tables: Record<string, { path?: string; package?: string; workspace?: boolean }>[] = [];
+    for (const section of ["dependencies", "dev-dependencies"]) if (parsed[section]) tables.push(parsed[section] as typeof tables[number]);
+    for (const target of Object.values((parsed.target ?? {}) as Record<string, Record<string, unknown>>)) for (const section of ["dependencies", "dev-dependencies"]) if (target[section]) tables.push(target[section] as typeof tables[number]);
+    for (const table of tables) for (const [key, spec] of Object.entries(table)) {
+      if (typeof spec !== "object" || spec === null) continue;
+      const viaWorkspace = spec.workspace === true && typeof inherited[key]?.path === "string";
+      if (typeof spec.path !== "string" && !viaWorkspace) continue;
+      const directory = relativePosix(repoRoot, viaWorkspace ? resolve(repoRoot, workspaceDir, inherited[key]!.path!) : resolve(repoRoot, dirname(manifest), spec.path!));
+      const next = `${directory}/Cargo.toml`;
+      const local = directory.startsWith(`${pluginDir}/`);
+      if (directory.startsWith(`${artifactDir}/`) || directory.startsWith("..") || !existsSync(join(repoRoot, next))) continue;
+      const lib = readCargoLib(join(repoRoot, next));
+      const row = found.get(directory) ?? { name: lib.name, entry: lib.entry, idents: new Set<string>() };
+      row.idents.add(crateIdent(lib.name));
+      row.idents.add(key.replaceAll("-", "_"));
+      found.set(directory, row);
+      if (local && !seen.has(next)) { seen.add(next); queue.push(next); }
     }
   }
+  return [...found].map(([dir, row]) => ({ name: row.name, dir, entry: row.entry, idents: [...row.idents] }));
 }
-//#endregion 🎯️GoalGate
+
+/** 🧫️ Applies a planned carve to a sandbox copy of the plugin and runs every static check and, optionally, the full-resolution differential of the test rewrites. */
+export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot: string, options: { oracle: boolean; keep?: boolean }): Promise<CarveVerification> {
+  const repoRoot = plan.repoRoot;
+  const pluginDir = plan.packageDir.split("/").slice(0, 3).join("/");
+  const outside = new Set<string>();
+  const { writes, rootLib, rootTest } = await carveWrites(plan);
+  const closures = [plan.rootMeasure?.lib, plan.rootMeasure?.test, rootLib, rootTest, ...plan.crates.flatMap((crate) => [crate.lib, crate.test])];
+  for (const closure of closures) for (const path of closure?.paths ?? []) if (!path.startsWith(`${pluginDir}/`)) outside.add(path);
+  const directories = [pluginDir, ...new Set([...[...outside].map((path) => dirname(path)).filter((directory) => existsSync(join(repoRoot, directory))), ...mountedOutsideDirectories(repoRoot, pluginDir)])];
+  buildSandbox(repoRoot, sandboxRoot, directories);
+  const applyWrites = (root: string): void => {
+  for (const write of writes) {
+    const target = join(root, write.path);
+    if (write.action === "delete") rmSync(target, { force: true });
+    else { mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, write.content); }
+  }
+  };
+  applyWrites(sandboxRoot);
+  const census: CarveVerification["census"] = [];
+  const hard = { files: 32, bytes: 262144, lines: 4000 };
+  const target = { files: 28, bytes: 230000, lines: 3500 };
+  const within = (m: { files: number; bytes: number; lines: number }, b: typeof hard): boolean => m.files <= b.files && m.bytes <= b.bytes && m.lines <= b.lines;
+  const rowFor = async (name: string, packageDir: string): Promise<void> => {
+    const manifest = join(sandboxRoot, packageDir);
+    const carvedEntry = join(manifest, "🦀️.rs");
+    const entry = existsSync(carvedEntry) ? carvedEntry : readCargoLib(join(manifest, "Cargo.toml")).entry;
+    const lib = await measureRustCrate(sandboxRoot, entry, false, new Map(), manifest);
+    const test = await measureRustCrate(sandboxRoot, entry, true, new Map(), manifest);
+    census.push({ name, lib: `${lib.files}/${lib.bytes}/${lib.lines}`, test: `${test.files}/${test.bytes}/${test.lines}`, withinHardBudget: within(lib, hard) && within(test, hard), withinTargetBudget: within(lib, target) && within(test, target) });
+  };
+  for (const crate of plan.crates) await rowFor(crate.name, crate.packageDir);
+  await rowFor(plan.artifactCrate, plan.packageDir);
+  const rootAbs = resolve(repoRoot, plan.rootFile);
+  const overlay = new Map<string, string>([...plan.overlay.edits, ...plan.overlay.creates, [rootAbs, plan.tree.source]]);
+  const original = resolveCrateModules(repoRoot, rootAbs, (path) => overlay.get(path) ?? (plan.overlay.deletes.has(path) ? null : existsSync(path) ? readFileSync(path, "utf8") : null));
+  const carved = [resolveCrateModules(sandboxRoot, join(sandboxRoot, plan.rootFile)), ...plan.crates.map((crate) => resolveCrateModules(sandboxRoot, join(sandboxRoot, crate.packageDir, "🦀️.rs")))];
+  const crateInfos = plan.crates.map((crate) => {
+    const rootFile = join(sandboxRoot, crate.packageDir, "🦀️.rs");
+    const sourceFiles = new Map<string, string>();
+    for (const path of [...(crate.lib?.paths ?? []), ...(crate.test?.paths ?? [])]) { const absolute = join(sandboxRoot, path); if (path.endsWith(".rs") && existsSync(absolute)) sourceFiles.set(path, readFileSync(absolute, "utf8")); }
+    return { name: crate.name, unitPaths: crate.attach.map((decl) => [...decl.eff]), rootFile, rootText: readFileSync(rootFile, "utf8"), sourceFiles, lib: new Set(crate.lib?.sourcePaths ?? []) };
+  });
+  const grammar = loadCatalogTaxonomy().packageGlueGrammar.rust!;
+  const unresolvedCrates: Record<string, string[]> = {};
+  const originalDeclared = new Set(Object.keys((Bun.TOML.parse(readFileSync(resolve(repoRoot, plan.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}).map((key) => key.replaceAll("-", "_")));
+  const inheritedUnresolvedCrates = [...new Set([...plan.tree.source.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as [A-Za-z0-9_]+)?;/gu)].map((match) => match[1]!))].filter((name) => !originalDeclared.has(name)).sort();
+  for (const crate of crateInfos) {
+    const declared = new Set(Object.keys({ ...((Bun.TOML.parse(readFileSync(join(sandboxRoot, plan.crates.find((entry) => entry.name === crate.name)!.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}) }).map((key) => key.replaceAll("-", "_")));
+    const aliases = [...crate.rootText.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as ([A-Za-z0-9_]+))?;/gu)].map((match) => match[2] ?? match[1]!);
+    const used = new Set([...rustcUnresolvedCrates(crate.rootFile, crate.name, []).unresolved, ...rustcUnresolvedCrates(crate.rootFile, crate.name, ["--test"]).unresolved]);
+    unresolvedCrates[crate.name] = [...used].filter((name) => !declared.has(name) && !aliases.includes(name) && !inheritedUnresolvedCrates.includes(name));
+  }
+  const report: CarveVerification = {
+    census,
+    moduleTreeProblems: compareModuleTrees(original, carved).problems,
+    visibility: checkCrossCrateVisibility(sandboxRoot, crateInfos, crateRelativeChains),
+    orphan: checkOrphanRules(crateInfos.map((crate) => ({ name: crate.name, sources: new Map([...crate.sourceFiles].filter(([path]) => crate.lib.has(path))) })), implHeader, allItems),
+    glue: crateInfos.map((crate) => { const verdict = classifyPackageSource(crate.rootText, grammar); return verdict.role === "declaration" ? "" : `${crate.name}: ${verdict.role} (${verdict.evidence})`; }).filter(Boolean),
+    unresolvedCrates,
+    inheritedUnresolvedCrates,
+    oracle: null,
+    layout: null,
+  };
+  if (options.oracle) {
+    const rustName = plan.artifactCrate;
+    const unionRoot = `${sandboxRoot}-union`;
+    const originalRoot = `${sandboxRoot}-original`;
+    buildSandbox(repoRoot, originalRoot, directories);
+    buildSandbox(repoRoot, unionRoot, directories);
+    writeFileSync(join(unionRoot, plan.rootFile), plan.tree.source);
+    for (const [absolute, text] of [...plan.overlay.edits, ...plan.overlay.creates]) { const to = join(unionRoot, relativePosix(repoRoot, absolute)); mkdirSync(dirname(to), { recursive: true }); writeFileSync(to, resolveFixturePlaceholders(text, repoRoot, dirname(to))); }
+    for (const absolute of plan.overlay.deletes) rmSync(join(unionRoot, relativePosix(repoRoot, absolute)), { force: true });
+    const prefixes = ["semio_", "serde", "protocol::", "store::", "dsl::", "pack::", "value_derive::", "framework_schema::", "tokio"];
+    patchSandboxSources(originalRoot, prefixes);
+    patchSandboxSources(unionRoot, prefixes);
+    report.oracle = {};
+    const unionDiagnostics = new Map<string, string[]>();
+    for (const flags of [[], ["--test"]] as string[][]) {
+      const before = runResolutionOracle(originalRoot, join(originalRoot, plan.rootFile), rustName, flags);
+      const after = runResolutionOracle(unionRoot, join(unionRoot, plan.rootFile), rustName, flags);
+      unionDiagnostics.set(flags.join(" "), after.diagnostics);
+      const strip = (all: string[]): string[] => { const list = all.filter(external).map(placeless); return [...new Set(flags.includes("--test") ? list.map((line) => line.split("\t").slice(0, 2).join("\t")) : list)].filter((line) => !line.includes("aborting due to")); };
+      const delta = diffDiagnostics(strip(before.diagnostics), dropBaseUnresolvedNames(strip(before.diagnostics), strip(after.diagnostics)));
+      report.oracle[flags.join(" ") || "native"] = { original: before.diagnostics.length, candidate: after.diagnostics.length, onlyOriginal: delta.onlyOriginal.length, onlyCandidate: delta.onlyCandidate.length, sampleOnlyCandidate: delta.onlyCandidate.slice(0, 12).map((line) => { const at = after.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${after.locations[at] ?? ""}` : line; }), sampleOnlyOriginal: delta.onlyOriginal.slice(0, 12) };
+    }
+
+    const combinedRoot = `${sandboxRoot}-combined`;
+    buildSandbox(repoRoot, combinedRoot, directories);
+    applyWrites(combinedRoot);
+    const crateModules = new Map<string, string>(plan.crates.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`]));
+    const facadeModule = `__c_${crateIdent(plan.artifactCrate)}`;
+    const mounts: string[] = [];
+    const owned: { module: string; paths: readonly string[]; root: string }[] = [
+      ...plan.crates.map((crate) => ({ module: crateModules.get(crateIdent(crate.name))!, paths: [...(crate.lib?.sourcePaths ?? []), ...(crate.test?.sourcePaths ?? [])], root: join(crate.packageDir, "🦀️.rs") })),
+      { module: facadeModule, paths: [...rootLib.sourcePaths, ...rootTest.sourcePaths], root: plan.rootFile },
+    ];
+    const rewritten = new Set<string>();
+    for (const entry of owned) {
+      mounts.push(`#[path = ${JSON.stringify(entry.root)}]\npub mod ${entry.module};`);
+      for (const path of new Set([...entry.paths, entry.root])) {
+        if (!path.endsWith(".rs") || rewritten.has(path)) continue;
+        rewritten.add(path);
+        const absolute = join(combinedRoot, path);
+        if (!existsSync(absolute)) continue;
+        writeFileSync(absolute, rewriteForCombined(readFileSync(absolute, "utf8"), entry.module, crateModules));
+      }
+    }
+    writeFileSync(join(combinedRoot, "__combined.rs"), `${mounts.join("\n")}\n`);
+    patchSandboxSources(combinedRoot, prefixes);
+    const rewriteTree = (directory: string, module: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) rewriteTree(path, module);
+        else if (entry.name.endsWith(".rs")) writeFileSync(path, rewriteForCombined(readFileSync(path, "utf8"), module, new Map()));
+      }
+    };
+    rewriteTree(join(originalRoot, pluginDir), "__c_union");
+    writeFileSync(join(originalRoot, "__combined.rs"), `#[path = ${JSON.stringify(plan.rootFile)}]\npub mod __c_union;\n`);
+    void unionDiagnostics;
+    report.layout = {};
+    for (const flags of [[], ["--test"]] as string[][]) {
+      const baseline = runResolutionOracle(originalRoot, join(originalRoot, "__combined.rs"), "combined", flags);
+      const carvedRun = runResolutionOracle(combinedRoot, join(combinedRoot, "__combined.rs"), "combined", flags);
+      const strip = (list: string[], normalize: boolean): string[] => [...new Set(list.filter(external).map((line) => (normalize ? normalizeCombined(line) : line)).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
+      const delta = diffDiagnostics(strip(baseline.diagnostics, true), dropBaseUnresolvedNames(strip(baseline.diagnostics, true), strip(carvedRun.diagnostics, true)));
+      report.layout[flags.join(" ") || "native"] = { union: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, 40).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry], true)[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
+    }
+    if (!options.keep) rmSync(combinedRoot, { recursive: true, force: true });
+  }
+  return report;
+}
+
+/** 🧱️ A Cargo package of one artifact tree: the packages below `📦️packages/🦀️rust` of the artifact, minus the oracle and bridge packages, with the absolute library entry resolved against `root`. */
+export type ArtifactCrate = Readonly<{ dir: string; name: string; entry: string }>;
+
+/** 📋️ Lists the library packages of an artifact tree under `root` (a package that declares no `[lib]` and has no `src/lib.rs`, such as a binary-only tool, is not one); the same rule reads the working tree and the pre-carve archive, so both sides of the layout differential see the crates they own. */
+export function artifactCrates(root: string, artifactDir: string): ArtifactCrate[] {
+  const found: ArtifactCrate[] = [];
+  for (const manifest of new Bun.Glob("**/📦️packages/🦀️rust/Cargo.toml").scanSync({ cwd: join(root, artifactDir) })) {
+    if (manifest.startsWith("🔮️oracles") || manifest.includes("🏭️bridge/")) continue;
+    const path = join(artifactDir, manifest);
+    if (!/^\[package\]/mu.test(readFileSync(join(root, path), "utf8"))) continue;
+    const lib = readCargoLib(join(root, path));
+    if ((Bun.TOML.parse(readFileSync(join(root, path), "utf8")) as { lib?: unknown }).lib === undefined && !existsSync(lib.entry)) continue;
+    found.push({ dir: dirname(path), ...lib });
+  }
+  return found;
+}
+
+/** 🚧️ Whether a rustc message is a tree-structure error (a syntax error, a misplaced inner attribute or a module file that does not exist): rustc stops at it before it resolves a single name, so a tree that has one cannot serve as a baseline. */
+export const treeError = (message: string): boolean => /^(an inner attribute is not permitted|couldn't find file|file not found for module|circular modules|couldn't read|expected |unexpected |this file contains an unclosed|unclosed delimiter|mismatched closing delimiter)/u.test(message);
+
+/** 🔝️ Moves the single-line inner attributes (`#![..]`) and the inner doc lines (`//!`) that sit behind an item to the head of the file, in their order: rustc refuses an inner attribute after a `use` or `extern crate`. Items are never moved, a file without a misplaced line comes back unchanged. */
+export function hoistInnerAttributes(text: string): string {
+  const lines = text.split("\n");
+  let first = -1;
+  let block = false;
+  for (let index = 0; index < lines.length && first < 0; index += 1) {
+    const line = lines[index]!.trim();
+    if (block) { block = !line.includes("*/"); continue; }
+    if (line.startsWith("/*")) { block = !line.includes("*/"); continue; }
+    if (line === "" || (line.startsWith("//") && !line.startsWith("///")) || line.startsWith("#![")) continue;
+    first = index;
+  }
+  if (first < 0) return text;
+  const item = /^(?:pub(?:\([^)]*\))?\s+)?(?:mod|fn|const|static|struct|enum|trait|impl|type|macro_rules!|unsafe|async)\b|^#\[(?:path|derive|cfg_attr|macro_use)/u;
+  const lifted: number[] = [];
+  let stop = false;
+  for (let index = first; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    if (!stop && item.test(line)) stop = true;
+    if (/^#!\[.*\]\s*$/u.test(line) && index < 400) lifted.push(index);
+    else if (!stop && line.startsWith("//!")) lifted.push(index);
+  }
+  if (!lifted.length) return text;
+  const skip = new Set(lifted);
+  const rest = lines.filter((_, index) => !skip.has(index));
+  return [...rest.slice(0, first), ...lifted.map((index) => lines[index]!), ...rest.slice(first)].join("\n");
+}
+
+/** 🪝️ The repository paths of the module files that `text` (the source of `file`) mounts with a flat `#[path = "<relative>"]` attribute: rustc stops at the first missing module file, so the base healing copies the whole mounted subtree at once instead of one file per round. A mount inside an inline module is resolved against the wrong directory and is skipped by the caller when the file does not exist. */
+export function mountedPathFiles(file: string, text: string): string[] {
+  return [...text.matchAll(/#\[path\s*=\s*"([^"]+\.rs)"\]/gu)].map((match) => posix.normalize(posix.join(posix.dirname(file), match[1]!)));
+}
+
+/** 🧩️ One crate of the synthetic layout: the module that mounts it, the repository paths of its sources and its library root. */
+export type OwnedCrate = Readonly<{ module: string; paths: readonly string[]; root: string }>;
+
+/** 🪢️ Mounts every crate as a module of `__combined.rs` below `root` and rewrites each source file for the owner that reaches it first. The pre-carve archive and the carved tree go through this one function, so both sides of the differential see their crates the same way. */
+export function mountCrates(root: string, owned: readonly OwnedCrate[], crateModules: ReadonlyMap<string, string>): void {
+  const mounts: string[] = [];
+  const rewritten = new Set<string>();
+  for (const entry of owned) {
+    mounts.push(`#[path = ${JSON.stringify(entry.root)}]\npub mod ${entry.module};`);
+    for (const path of new Set([...entry.paths, entry.root])) {
+      if (!path.endsWith(".rs") || rewritten.has(path)) continue;
+      rewritten.add(path);
+      const absolute = join(root, path);
+      if (existsSync(absolute)) writeFileSync(absolute, rewriteCrateAliases(rewriteForCombined(readFileSync(absolute, "utf8"), entry.module, crateModules), entry.module, crateModules));
+    }
+  }
+  writeFileSync(join(root, "__combined.rs"), `${mounts.join("\n")}\n`);
+}
+
+/** 🧼️ Removes from `sandbox` the files of `artifactDir` that the pre-carve tree of `baseRef` does not have and that git does not ignore: the sandbox starts as a copy of the working tree, so a crate the carve added would otherwise stay and be taken for a hand-built crate of the base. Ignored files (generated sources) stay, because the base compiles against them as well. */
+export function pruneNonBaseFiles(repoRoot: string, sandbox: string, artifactDir: string, baseRef: string): string[] {
+  const archived = new Set(execToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-tree", "-r", "--name-only", "-z", baseRef, "--", artifactDir], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }).split("\0").filter(Boolean));
+  const extra: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(join(sandbox, directory), { withFileTypes: true })) {
+      const path = `${directory}/${entry.name}`;
+      if (entry.isDirectory()) walk(path);
+      else if (!archived.has(path)) extra.push(path);
+    }
+  };
+  if (existsSync(join(sandbox, artifactDir))) walk(artifactDir);
+  if (!extra.length) return [];
+  const ignored = new Set(spawnToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "check-ignore", "-z", "--stdin"], { cwd: repoRoot, input: `${extra.join("\0")}\0`, encoding: "utf8", maxBuffer: 1 << 28 }).stdout.split("\0").filter(Boolean));
+  const removed = extra.filter((path) => !ignored.has(path));
+  for (const path of removed) rmSync(join(sandbox, path), { force: true });
+  return removed;
+}
+
+/** 🧾️ Result of the layout differential of an applied carve: diagnostics only the mounted crates have, per cfg. */
+export type AppliedLayoutReport = { crates: number; baseCrates: number; siblings: string[]; healedBase: string[]; layout: Record<string, { base: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> };
+
+/** 🧾️ Gate for an applied carve: mounts the crates of the working tree as modules of one synthetic crate and compares the rustc resolution diagnostics (lib and test) with the pre-carve tree of `baseRef`. Zero `onlyCombined` means the carve introduced no unresolved name. */
+export async function verifyAppliedLayout(repoRoot: string, artifactDir: string, sandboxRoot: string, baseRef = "HEAD", keep = false, sampleLimit = 12): Promise<AppliedLayoutReport> {
+  const baseDirectory = baseRef.startsWith("dir:") ? resolve(baseRef.slice("dir:".length)) : null;
+  const pluginDir = artifactDir.split("/").length >= 3 ? artifactDir.split("/").slice(0, 3).join("/") : artifactDir;
+  const named = artifactCrates(repoRoot, artifactDir);
+  const facadeDirectory = `${artifactDir}/📦️packages/🦀️rust`;
+  const facadeName = named.find((entry) => entry.dir === facadeDirectory)?.name;
+  if (!facadeName) throw new Error(`verifyAppliedLayout: ${artifactDir} has no artifact package`);
+  const crates = named.filter((entry) => entry.name === facadeName || entry.name.startsWith(`${facadeName}-`));
+  const facade = crates.find((crate) => crate.dir === facadeDirectory)!;
+  const carved = crates.filter((crate) => crate !== facade);
+  const outside = new Set<string>();
+  const measured = new Map<string, string[]>();
+  for (const crate of crates) {
+    const lib = await measureRustCrate(repoRoot, crate.entry, false, new Map(), join(repoRoot, crate.dir));
+    const test = await measureRustCrate(repoRoot, crate.entry, true, new Map(), join(repoRoot, crate.dir));
+    measured.set(crate.name, [...lib.sourcePaths, ...test.sourcePaths]);
+    for (const path of [...lib.paths, ...test.paths]) if (!path.startsWith(`${pluginDir}/`)) outside.add(path);
+  }
+  const directories = [pluginDir, ...new Set([...[...outside].map((path) => dirname(path)).filter((directory) => existsSync(join(repoRoot, directory))), ...mountedOutsideDirectories(repoRoot, pluginDir)])];
+  const combined = `${sandboxRoot}-combined`;
+  const base = `${sandboxRoot}-base`;
+  const prefixes = ["semio_", "serde", "protocol::", "store::", "dsl::", "pack::", "value_derive::", "framework_schema::", "tokio"];
+  const relativeEntry = (crate: { entry: string }): string => relative(repoRoot, crate.entry).replaceAll("\\", "/");
+  const closureFiles = (root: string, entry: string): string[] => [entry, ...resolveCrateModules(root, join(root, entry), (file) => (existsSync(file) ? readFileSync(file, "utf8") : "")).flatMap((module) => (module.file !== null && module.file !== "unresolved" ? [module.file] : []))];
+  const baseCarved = (): ArtifactCrate[] => artifactCrates(base, artifactDir).filter((crate) => crate.dir !== facadeDirectory && crate.name.startsWith(`${facadeName}-`));
+  const baseEntry = (crate: ArtifactCrate): string => relative(base, crate.entry).replaceAll("\\", "/");
+  const prepareBase = async (healed: ReadonlyMap<string, string>): Promise<Set<string>> => {
+    rmSync(base, { recursive: true, force: true });
+    buildSandbox(repoRoot, base, directories);
+    mkdirSync(base, { recursive: true });
+    if (baseDirectory) { rmSync(join(base, artifactDir), { recursive: true, force: true }); cpSync(join(baseDirectory, artifactDir), join(base, artifactDir), { recursive: true }); }
+    else execFileSync("tar", ["-x", "-C", base], { input: execToolSyncV1("git", ["-c", "core.quotepath=false", "archive", baseRef, pluginDir], { cwd: repoRoot, maxBuffer: 1 << 30 }) });
+    if (!baseDirectory) pruneNonBaseFiles(repoRoot, base, artifactDir, baseRef);
+    for (const directory of mountedOutsideDirectories(repoRoot, pluginDir, base)) {
+      if (existsSync(join(base, directory))) continue;
+      mkdirSync(dirname(join(base, directory)), { recursive: true });
+      cpSync(resolve(repoRoot, directory), join(base, directory), { recursive: true, filter: (path) => !/\/(node_modules|target|dist)(\/|$)/u.test(path) });
+    }
+    for (const [path, text] of healed) { mkdirSync(dirname(join(base, path)), { recursive: true }); writeFileSync(join(base, path), text); }
+    const carvedAtBase = baseCarved();
+    const roots: ArtifactCrate[] = [...carvedAtBase, { dir: facadeDirectory, name: facade.name, entry: join(base, relativeEntry(facade)) }];
+    const files = new Set(roots.flatMap((crate) => closureFiles(base, baseEntry(crate))));
+    const modules = new Map<string, string>(carvedAtBase.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`] as const));
+    const baseOwned: OwnedCrate[] = [];
+    for (const crate of roots) {
+      let paths: string[];
+      try {
+        const lib = await measureRustCrate(base, crate.entry, false, new Map(), join(base, crate.dir));
+        const test = await measureRustCrate(base, crate.entry, true, new Map(), join(base, crate.dir));
+        paths = [...lib.sourcePaths, ...test.sourcePaths];
+      } catch { paths = closureFiles(base, baseEntry(crate)); }
+      baseOwned.push({ module: `__c_${crateIdent(crate.name)}`, paths, root: baseEntry(crate) });
+    }
+    mountCrates(base, baseOwned, modules);
+    patchSandboxSources(base, prefixes);
+    return files;
+  };
+  const baseFiles = await prepareBase(new Map());
+  const workspaceDir = relativePosix(repoRoot, resolve(repoRoot, facadeDirectory, (Bun.TOML.parse(readFileSync(join(repoRoot, facadeDirectory, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? "../.."));
+  const siblings = siblingPathCrates(repoRoot, pluginDir, artifactDir, crates.map((crate) => `${crate.dir}/Cargo.toml`), workspaceDir).filter((sibling) => { const roots = [dirname(relative(repoRoot, sibling.entry)), dirname(dirname(sibling.dir))].map((root) => `${root.replaceAll("\\", "/")}/`); return [...baseFiles].some((file) => roots.some((root) => file.startsWith(root))); }).map((sibling) => ({ ...sibling, files: closureFiles(repoRoot, relative(repoRoot, sibling.entry).replaceAll("\\", "/")) })).filter((sibling) => sibling.files.some((file) => baseFiles.has(file)));
+  buildSandbox(repoRoot, combined, [...new Set([...directories, ...siblings.flatMap((sibling) => sibling.files.filter((file) => !file.startsWith(`${pluginDir}/`)).map((file) => dirname(file)))])]);
+  const crateModules = new Map<string, string>([...carved.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`] as const), ...siblings.flatMap((sibling) => sibling.idents.map((ident) => [ident, `__c_${crateIdent(sibling.name)}`] as const))]);
+  const owned = [...carved.map((crate) => ({ module: crateModules.get(crateIdent(crate.name))!, paths: measured.get(crate.name)!, root: relativeEntry(crate) })), { module: `__c_${crateIdent(facade.name)}`, paths: measured.get(facade.name)!, root: relativeEntry(facade) }, ...siblings.map((sibling) => ({ module: `__c_${crateIdent(sibling.name)}`, paths: sibling.files, root: relative(repoRoot, sibling.entry).replaceAll("\\", "/") }))];
+  mountCrates(combined, owned, crateModules);
+  patchSandboxSources(combined, prefixes);
+  const declaresFeature = (feature: string): boolean => [...siblings.map((sibling) => sibling.dir), ...crates.map((crate) => crate.dir)].some((dir) => Object.hasOwn((Bun.TOML.parse(readFileSync(join(repoRoot, dir, "Cargo.toml"), "utf8")) as { features?: Record<string, unknown> }).features ?? {}, feature));
+  const testingFlags = ["testing", "testkit"].filter(declaresFeature).flatMap((feature) => ["--cfg", `feature="${feature}"`]);
+  const flagSets = [[], ["--test", ...testingFlags]] as string[][];
+  const archivedAt = (file: string): boolean => { if (baseDirectory) return existsSync(join(baseDirectory, file)); try { execToolSyncV1("git", ["-c", "core.quotepath=false", "cat-file", "-e", `${baseRef}:${file}`], { cwd: repoRoot, stdio: "pipe" }); return true; } catch { return false; } };
+  const healed = new Map<string, string>();
+  for (let round = 0; round < 64; round += 1) {
+    const fresh = new Map<string, string>();
+    for (const flags of flagSets) for (const diagnostic of runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags).diagnostics) {
+      const [, message = "", file = ""] = diagnostic.split("\t");
+      const missing = /^couldn't find file `([^`]+)`/u.exec(message)?.[1]?.replace(`${base}/`, "").replace("<sandbox>/", "");
+      if (missing && !healed.has(missing) && existsSync(join(repoRoot, missing)) && !existsSync(join(base, missing)) && !archivedAt(missing)) fresh.set(missing, readFileSync(join(repoRoot, missing), "utf8"));
+      if (!treeError(message) || !file || healed.has(file) || !existsSync(join(repoRoot, file))) continue;
+      const current = readFileSync(join(repoRoot, file), "utf8");
+      let archived: string | null = null;
+      if (baseDirectory) archived = existsSync(join(baseDirectory, file)) ? readFileSync(join(baseDirectory, file), "utf8") : null;
+      else try { archived = execToolSyncV1("git", ["-c", "core.quotepath=false", "show", `${baseRef}:${file}`], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }); } catch { archived = null; }
+      if (current === archived) continue;
+      if (archived !== null && /^(an inner attribute is not permitted|expected outer doc comment)/u.test(message)) {
+        if (hoistInnerAttributes(current) === current && hoistInnerAttributes(archived) !== archived) fresh.set(file, hoistInnerAttributes(archived));
+        continue;
+      }
+      fresh.set(file, current);
+    }
+    if (!fresh.size) break;
+    for (const pending = [...fresh.keys()]; pending.length;) {
+      const file = pending.pop()!;
+      for (const mounted of mountedPathFiles(file, fresh.get(file)!)) {
+        if (fresh.has(mounted) || healed.has(mounted) || !existsSync(join(repoRoot, mounted)) || existsSync(join(base, mounted)) || archivedAt(mounted)) continue;
+        fresh.set(mounted, readFileSync(join(repoRoot, mounted), "utf8"));
+        pending.push(mounted);
+      }
+    }
+    for (const [file, text] of fresh) healed.set(file, text);
+    await prepareBase(healed);
+  }
+  const report: AppliedLayoutReport = { crates: carved.length, baseCrates: baseCarved().length, siblings: siblings.map((sibling) => sibling.name), healedBase: [...healed.keys()], layout: {} };
+  for (const flags of flagSets) {
+    const baseline = runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags);
+    const carvedRun = runResolutionOracle(combined, join(combined, "__combined.rs"), "combined", flags);
+    const strip = (list: string[]): string[] => [...new Set(list.filter(external).map(normalizeCombined).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
+    const baselineLines = strip(baseline.diagnostics);
+    const delta = diffDiagnostics(baselineLines, dropBaseUnresolvedNames(baselineLines, strip(carvedRun.diagnostics)));
+    report.layout[flags.includes("--test") ? "--test" : "native"] = { base: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, sampleLimit).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
+  }
+  if (!keep) {
+    rmSync(combined, { recursive: true, force: true });
+    rmSync(base, { recursive: true, force: true });
+  }
+  return report;
+}

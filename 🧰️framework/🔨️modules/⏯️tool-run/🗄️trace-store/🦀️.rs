@@ -13,7 +13,7 @@ pub enum ToolRunTraceSubject {
 }
 
 impl ToolRunTraceSubject {
-    pub(crate) fn ordinal(self) -> u8 {
+    pub fn ordinal(self) -> u8 {
         match self {
             Self::Instance3d { .. } => 0,
             Self::Placement2d { .. } => 1,

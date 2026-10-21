@@ -205,6 +205,114 @@
           "$ref": "#/definitions/CapturedReadRefusal"
         }
       }
+    },
+    "ImplementationPinCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "scopes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "parent",
+              "module",
+              "pin",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parent": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "module": {
+                "enum": [
+                  "main",
+                  "copy"
+                ]
+              },
+              "pin": {
+                "type": "boolean"
+              },
+              "expected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ImplementationPinLifetimeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "innerFailure",
+        "outerFailure",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "innerFailure": {
+          "type": "boolean"
+        },
+        "outerFailure": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outer",
+            "inner",
+            "afterInner",
+            "innerDescendant",
+            "afterOuter",
+            "outerDescendant"
+          ],
+          "properties": {
+            "outer": {
+              "type": "boolean"
+            },
+            "inner": {
+              "type": "boolean"
+            },
+            "afterInner": {
+              "type": "boolean"
+            },
+            "innerDescendant": {
+              "type": "boolean"
+            },
+            "afterOuter": {
+              "type": "boolean"
+            },
+            "outerDescendant": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
     }
   }
 }

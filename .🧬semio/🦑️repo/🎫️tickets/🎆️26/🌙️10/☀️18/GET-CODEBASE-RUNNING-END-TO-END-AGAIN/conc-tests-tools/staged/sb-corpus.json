@@ -133,6 +133,79 @@
    ]
   },
   {
+   "id": "graph-store-on-the-real-checkout",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{await withRepositoryBuildGraphFactStoreV1(process.cwd(),original,control,body);});\n",
+   "expected": [
+    {
+     "rule": "real-graph-image",
+     "line": 2
+    }
+   ]
+  },
+  {
+   "id": "graph-store-on-workspace-variable",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{await withRepositoryBuildGraphArtifactV1(workspace,graph,original,control,body);});\n",
+   "expected": [
+    {
+     "rule": "real-graph-image",
+     "line": 2
+    }
+   ]
+  },
+  {
+   "id": "graph-store-on-a-sandbox-workspace",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{await withRepositoryBuildGraphFactStoreV1(sandboxWorkspace,original,control,body);});\n",
+   "expected": []
+  },
+  {
+   "id": "cache-store-graph-partition-of-the-checkout",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{await withRepositoryCacheStoreV1(workspace,\"graph\",original,phase,body);});\n",
+   "expected": [
+    {
+     "rule": "real-graph-image",
+     "line": 2
+    }
+   ]
+  },
+  {
+   "id": "cache-store-diagnostics-partition-is-by-design",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{await withRepositoryCacheStoreV1(workspace,\"diagnostics\",original,phase,body);});\n",
+   "expected": []
+  },
+  {
+   "id": "real-image-lease-path",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{const r=\"native-fixed-image:\"+join(process.cwd(),\".cache/b/g\");});\n",
+   "expected": [
+    {
+     "rule": "real-image-lease",
+     "line": 2
+    },
+    {
+     "rule": "real-cache-path",
+     "line": 2
+    }
+   ]
+  },
+  {
+   "id": "scratch-image-lease-is-fine",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{const r=\"native-fixed-image:\"+directory;});\n",
+   "expected": []
+  },
+  {
    "id": "persistent-call",
    "path": "x/🧪️tests/a/🟦️.ts",
    "language": "ts",
@@ -693,6 +766,62 @@
    },
    "function": "writeFile",
    "target": "/work/repo/.cache/b/o/m/tests/t/r/x",
+   "expected": null
+  },
+  {
+   "id": "sqlite-lease-database-of-the-checkout",
+   "context": {
+    "cwd": "/work/repo/pkg",
+    "platform": "linux",
+    "checkout": "/work/repo",
+    "allowed": [
+     "/tmp/st/ab12cd34",
+     "/private/tmp",
+     "/tmp"
+    ],
+    "sandboxRoots": [
+     "/tmp/st/ab12cd34"
+    ],
+    "protectedPrefixes": [
+     ".cache",
+     ".🧬semio",
+     ".git",
+     "node_modules"
+    ],
+    "allowedCheckoutPrefixes": [
+     ".cache/b/o/m/tests"
+    ]
+   },
+   "function": "Database",
+   "target": "/work/repo/.cache/b/l/m/data/x.sqlite",
+   "expected": "protected-write"
+  },
+  {
+   "id": "sqlite-database-in-the-sandbox",
+   "context": {
+    "cwd": "/work/repo/pkg",
+    "platform": "linux",
+    "checkout": "/work/repo",
+    "allowed": [
+     "/tmp/st/ab12cd34",
+     "/private/tmp",
+     "/tmp"
+    ],
+    "sandboxRoots": [
+     "/tmp/st/ab12cd34"
+    ],
+    "protectedPrefixes": [
+     ".cache",
+     ".🧬semio",
+     ".git",
+     "node_modules"
+    ],
+    "allowedCheckoutPrefixes": [
+     ".cache/b/o/m/tests"
+    ]
+   },
+   "function": "Database",
+   "target": "/tmp/st/ab12cd34/tmp/x.sqlite",
    "expected": null
   },
   {

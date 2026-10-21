@@ -31,7 +31,19 @@
     "compactionFactor": 2,
     "compactionFloor": 1024,
     "brotliQuality": 5,
-    "brotliWindow": 22
+    "brotliWindow": 22,
+    "implementation": {
+     "none": [
+      "🏗️build/📥️inputs/💾️storage/📒️ledger/"
+     ],
+     "projects": [
+      "🏗️build/🕸️graph/📥️inference/📦️project-nodes/",
+      "🏗️build/🕸️graph/📥️inference/🎯️target-policy/",
+      "🏗️build/🕸️graph/📥️inference/🎮️playground-targets/",
+      "🏗️build/🕸️graph/📥️inference/🧩️component-targets/",
+      "🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/"
+     ]
+    }
    }
   },
   "Messages": {
@@ -43,7 +55,8 @@
      "building": "graph: refreshing {dirty} projects (generation {generation})",
      "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
      "closure": "graph: {count} projects of the closure verified, no other project read",
-     "cold": "graph: no usable generation ({reason}), building the first one"
+     "cold": "graph: no usable generation ({reason}), building the first one",
+     "stale": "graph: serving generation {generation} built by another implementation (graph policy current)"
     },
     "de": {
      "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -52,7 +65,8 @@
      "building": "Graph: {dirty} Projekte werden erneuert (Generation {generation})",
      "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
      "closure": "Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
-     "cold": "Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut"
+     "cold": "Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
+     "stale": "Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)"
     }
    }
   },
@@ -174,6 +188,7 @@
     "generation",
     "parent",
     "identity",
+    "implementation",
     "env",
     "membership",
     "frontier",
@@ -203,6 +218,10 @@
      ]
     },
     "identity": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "implementation": {
      "type": "string",
      "pattern": "^[a-f0-9]{64}$"
     },

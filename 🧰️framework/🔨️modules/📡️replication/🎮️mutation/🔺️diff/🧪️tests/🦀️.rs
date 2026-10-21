@@ -18,3 +18,14 @@ impl FromValue for Record{fn from_value(value:DslValue)->Result<Self,ValueError>
 crate::sparse_whole_diff!{record:Record,diff:WholeRecordDiff}
 #[test]
 fn actual_whole_sparse_macro_preserves_exact_original_inverse_and_wire(){let base=Record{count:1,items:BTreeMap::new()};let next=Record{count:3,items:[("x".into(),9)].into_iter().collect()};let diff=WholeRecordDiff::changing(&base,&next);assert_eq!(apply_diff_cold(&diff,&base).unwrap(),next);assert_eq!(apply_diff_cold(&diff.inverse(&base),&next).unwrap(),base);assert_eq!(WholeRecordDiff::from_value(diff.to_value()).unwrap(),diff);assert!(WholeRecordDiff::default().is_empty());}
+
+/// 🗝️ A retained nonroot fragment receives central capability only after every structural grant axis is admitted.
+#[test]
+fn retained_fragment_capability_preserves_source_and_refuses_unfunded_closures(){
+ use semio_framework_value_clone_source::RetainedCloneSource;
+ use semio_framework_value_intrinsic::RetainedCloneGrant;
+ let birth=RetainedCloneSource::<i64>::owned_constructor_demand::<()>();let(mut source,_)=RetainedCloneSource::admit_owned(73i64,(),RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<i64>::constructor_copy_bytes(),maximum_capacity_bytes:birth.capacity_bytes,maximum_depth:birth.depth,..Default::default()}).map_err(|(error,..)|error).unwrap();
+ let pointer=source.borrow().get()as*const i64;
+ for row in fixture()["fragmentCapabilities"].as_array().unwrap(){let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:row["depth"].as_u64().unwrap()as usize,..Default::default()};let mut calls=0;let(result,heap)=crate::observe_retirement_allocations(||with_retained_apply_capability::<i64,_>(source.borrow(),grant,|_|{calls+=1;Ok(73)}));let admitted=row["admitted"].as_bool().unwrap();assert_eq!(result.is_ok(),admitted);assert_eq!(calls,usize::from(admitted));assert_eq!(heap,(0,0));assert_eq!(source.borrow().get()as*const i64,pointer);assert_eq!(*source.borrow().get(),73);}
+ for _ in 0..128{if source.terminal_is_empty(){break;}let d=source.next_close_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(source.next_close_demand(grant.maximum_copy_bytes).unwrap(),d);let(step,heap)=crate::observe_retirement_allocations(||source.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(source.terminal_is_empty());
+}

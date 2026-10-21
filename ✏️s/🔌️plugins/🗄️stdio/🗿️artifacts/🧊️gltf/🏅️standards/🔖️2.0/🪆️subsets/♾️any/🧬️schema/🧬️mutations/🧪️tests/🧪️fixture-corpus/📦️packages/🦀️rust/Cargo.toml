@@ -24,8 +24,6 @@ semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { workspace = true }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-gltf-mutations-add-required-extension = { path = "../../../../✅️required/➕️add/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf-mutations-mutations = { path = "../../../../🔤️primitive/🔗️bind/📦️packages/🦀️rust" }
@@ -33,8 +31,10 @@ serde_json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }

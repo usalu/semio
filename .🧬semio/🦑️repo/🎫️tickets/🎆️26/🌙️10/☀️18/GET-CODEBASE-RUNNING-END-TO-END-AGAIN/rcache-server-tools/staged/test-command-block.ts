@@ -99,3 +99,24 @@ test("remote-cache gc plans first, then removes exactly the planned entries, in 
  expect(await collectRemoteCacheV1(["--directory",folder,"--dry-run"],{...context(()=>{},{SEMIO_LANGUAGE:"en"}),signal:cancelling.signal})).toEqual({exitCode:130});
 });
 
+test("the public JSON of the remote cache is schema-first: status, gc results and the message catalogue validate against the contract schema, and drifted documents are refused",async()=>{
+ const server=await serve({tokens:{}}),status=await (await fetch(server.url+"/status")).json() as Record<string,any>;
+ try{
+  expect(validator("ServerStatus")(status),JSON.stringify(validator("ServerStatus").errors)).toBe(true);requireRemoteCacheShapeV1("ServerStatus",status,"x");
+  const drifted:[string,(value:Record<string,any>)=>void][]=[["extra key",value=>{value.extra=1;}],["missing counter",value=>{delete value.counters.nx;}],["negative count",value=>{value.counters.ac.hits=-1;}],["extra counter field",value=>{value.counters.cas.errors=0;}],["unknown validation",value=>{value.validation="weird";}],["protocol order",value=>{value.protocols.reverse();}],["start time",value=>{value.startedAt="yesterday";}],["version",value=>{value.version=2;}]];
+  for(const [name,mutate] of drifted){const copy=structuredClone(status);mutate(copy);expect(validator("ServerStatus")(copy),name).toBe(false);expect(()=>requireRemoteCacheShapeV1("ServerStatus",copy,"x"),name).toThrow();}
+  expect(validator("TextCatalogue")(texts),JSON.stringify(validator("TextCatalogue").errors)).toBe(true);
+  for(const bad of [{...texts,languages:["de","en"]},{...texts,messages:{...texts.messages,"x.y":{en:"only"}}},{...texts,messages:{...texts.messages,"Bad Key":{en:"a",de:"b"}}},{...texts,extra:true}])expect(validator("TextCatalogue")(bad)).toBe(false);
+  const folder=directory("json"),store=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**22,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});
+  for(let index=0;index<6;index++)await store.put("main","nx",`k${index}`,(async function*(){yield new Uint8Array(1000);})(),{mode:"keep",declaredLength:1000});await store.close();
+  const context:RemoteCacheCommandContextV1={root:directory("root"),environment:{},signal:new AbortController().signal,progress:async()=>{},write:()=>{},tools:toolsFor};
+  const results:unknown[]=[];
+  for(const args of [["--directory",join(folder,"none"),"--json"],["--directory",folder,"--json","--dry-run"],["--directory",folder,"--json","--max-bytes","1048576"]]){const outcome=await collectRemoteCacheV1(args,context) as {result:unknown};results.push(outcome.result);expect(validator("GcResult")(outcome.result),JSON.stringify(validator("GcResult").errors)).toBe(true);}
+  expect(results[0]).toMatchObject({present:false});expect(results[1]).toMatchObject({dryRun:true,scanned:{entries:6}});
+  for(const bad of [{...(results[0] as object),present:true},{...(results[1] as object),extra:1},{version:1,dryRun:true,directory:"x"}])expect(validator("GcResult")(bad)).toBe(false);
+ }finally{await server.stop();}
+ for(const bad of [{maximumBytes:0,maximumEntryBytes:1,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1.5,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:-1},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:0,extra:1},{maximumBytes:10,maximumEntryBytes:1}]){
+  expect(validator("StoreBounds")(bad)).toBe(false);if(!("extra" in bad))await expect(RemoteCacheStoreV1.open({directory:directory("bounds"),...bad} as never)).rejects.toThrow("Finite remote cache bounds required");
+ }
+ expect(validator("StoreBounds")({maximumBytes:10,maximumEntryBytes:10,maximumAgeMilliseconds:0})).toBe(true);
+});

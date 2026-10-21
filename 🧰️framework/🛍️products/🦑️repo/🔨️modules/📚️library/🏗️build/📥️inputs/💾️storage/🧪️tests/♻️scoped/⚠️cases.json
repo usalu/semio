@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "faults": [
+    {
+      "fault": "none",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 1,
+      "dirty": 0,
+      "closes": 1,
+      "releases": 2,
+      "error": null,
+      "id": "successful-clean-retirement"
+    },
+    {
+      "fault": "busy-open",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 0,
+      "closes": 0,
+      "releases": 2,
+      "error": null,
+      "id": "ledger-open-busy-skips"
+    },
+    {
+      "fault": "busy-before",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 0,
+      "closes": 1,
+      "releases": 2,
+      "error": null,
+      "id": "busy-before-effect-skips"
+    },
+    {
+      "fault": "busy-after",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 1,
+      "dirty": 1,
+      "closes": 1,
+      "releases": 2,
+      "error": "busy",
+      "id": "busy-after-effect-retains-dirty"
+    },
+    {
+      "fault": "undefined",
+      "closeFails": true,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 1,
+      "closes": 1,
+      "releases": 2,
+      "error": "undefined",
+      "id": "undefined-primary-survives-close"
+    },
+    {
+      "fault": "primary",
+      "closeFails": true,
+      "releaseFails": true,
+      "effects": 0,
+      "dirty": 1,
+      "closes": 1,
+      "releases": 2,
+      "error": "primary",
+      "id": "primary-survives-close-and-release"
+    },
+    {
+      "fault": "none",
+      "closeFails": true,
+      "releaseFails": false,
+      "effects": 1,
+      "dirty": 0,
+      "closes": 1,
+      "releases": 2,
+      "error": "close",
+      "id": "successful-body-close-failure"
+    },
+    {
+      "fault": "none",
+      "closeFails": false,
+      "releaseFails": true,
+      "effects": 1,
+      "dirty": 0,
+      "closes": 1,
+      "releases": 2,
+      "error": "release",
+      "id": "successful-body-release-failure"
+    },
+    {
+      "fault": "scope",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 1,
+      "closes": 1,
+      "releases": 2,
+      "error": "identity",
+      "id": "changed-scope-retains-leaf"
+    },
+    {
+      "fault": "leaf",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 1,
+      "closes": 1,
+      "releases": 2,
+      "error": "identity",
+      "id": "changed-leaf-retains-leaf"
+    },
+    {
+      "fault": "cancel",
+      "closeFails": false,
+      "releaseFails": false,
+      "effects": 0,
+      "dirty": 0,
+      "closes": 0,
+      "releases": 1,
+      "error": "cancel",
+      "id": "cancel-after-fact-lease-releases"
+    }
+  ],
+  "ingress": [
+    {
+      "receiver": "canonical",
+      "request": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "mutateTo": null,
+      "validRequest": true,
+      "accepted": true,
+      "id": "factory-facade-is-admitted"
+    },
+    {
+      "receiver": "copy",
+      "request": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "mutateTo": null,
+      "validRequest": true,
+      "accepted": false,
+      "id": "copied-facade-refuses"
+    },
+    {
+      "receiver": "raw",
+      "request": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "mutateTo": null,
+      "validRequest": true,
+      "accepted": false,
+      "id": "raw-image-refuses"
+    },
+    {
+      "receiver": "closed",
+      "request": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "mutateTo": null,
+      "validRequest": true,
+      "accepted": false,
+      "id": "closed-facade-refuses"
+    },
+    {
+      "receiver": "canonical",
+      "request": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "mutateTo": 2147483648,
+      "validRequest": true,
+      "accepted": true,
+      "id": "request-detached-before-enrollment"
+    },
+    {
+      "receiver": "canonical",
+      "request": {},
+      "mutateTo": null,
+      "validRequest": false,
+      "accepted": false,
+      "id": "missing-floor-refuses"
+    },
+    {
+      "receiver": "canonical",
+      "request": {
+        "minimumAvailableBytes": 1073741824,
+        "extra": true
+      },
+      "mutateTo": null,
+      "validRequest": false,
+      "accepted": false,
+      "id": "extra-field-refuses"
+    },
+    {
+      "receiver": "canonical",
+      "request": {
+        "minimumAvailableBytes": 1
+      },
+      "mutateTo": null,
+      "validRequest": false,
+      "accepted": false,
+      "id": "underfloor-request-refuses"
+    }
+  ]
+}

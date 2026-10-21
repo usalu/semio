@@ -32,8 +32,6 @@ semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/�
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
@@ -41,5 +39,7 @@ serde_json = "1.0.140"
 semio-framework-os-pack-tools = { path = "../../../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }

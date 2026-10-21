@@ -541,5 +541,223 @@
   "^1.0.0 || ^10.0.0",
   "<1.2.3",
   "^1.2.3-beta.2"
+ ],
+ "yamlValid": [
+  [
+   "mapping",
+   "a: 1\nb: two\nc: true\nd: null\ne: 1.5\n",
+   {
+    "a": 1,
+    "b": "two",
+    "c": true,
+    "d": null,
+    "e": 1.5
+   }
+  ],
+  [
+   "sequence",
+   "- a\n- 1\n- true\n",
+   [
+    "a",
+    1,
+    true
+   ]
+  ],
+  [
+   "nested",
+   "a:\n  b:\n    c: 1\n  d: [1, 2]\n",
+   {
+    "a": {
+     "b": {
+      "c": 1
+     },
+     "d": [
+      1,
+      2
+     ]
+    }
+   }
+  ],
+  [
+   "sequence-of-maps",
+   "items:\n  - name: x\n    v: 1\n  - name: y\n    v: 2\n",
+   {
+    "items": [
+     {
+      "name": "x",
+      "v": 1
+     },
+     {
+      "name": "y",
+      "v": 2
+     }
+    ]
+   }
+  ],
+  [
+   "quotes",
+   "a: \"x\\ty\"\nb: 'it''s'\nc: \"# not a comment\"\n",
+   {
+    "a": "x\ty",
+    "b": "it's",
+    "c": "# not a comment"
+   }
+  ],
+  [
+   "comments",
+   "# top\na: 1 # trailing\n",
+   {
+    "a": 1
+   }
+  ],
+  [
+   "block-literal",
+   "a: |\n  line1\n  line2\nb: 1\n",
+   {
+    "a": "line1\nline2\n",
+    "b": 1
+   }
+  ],
+  [
+   "block-folded",
+   "a: >\n  one\n  two\n",
+   {
+    "a": "one two\n"
+   }
+  ],
+  [
+   "flow",
+   "a: {x: 1, y: [a, b]}\n",
+   {
+    "a": {
+     "x": 1,
+     "y": [
+      "a",
+      "b"
+     ]
+    }
+   }
+  ],
+  [
+   "anchors",
+   "base: &b\n  k: 1\nuse: *b\n",
+   {
+    "base": {
+     "k": 1
+    },
+    "use": {
+     "k": 1
+    }
+   }
+  ],
+  [
+   "same-indent-sequence",
+   "a:\n- 1\n- 2\n",
+   {
+    "a": [
+     1,
+     2
+    ]
+   }
+  ],
+  [
+   "dependabot",
+   "version: 2\nupdates:\n  - package-ecosystem: \"cargo\"\n    directory: \"/\"\n    schedule:\n      interval: weekly\n",
+   {
+    "version": 2,
+    "updates": [
+     {
+      "package-ecosystem": "cargo",
+      "directory": "/",
+      "schedule": {
+       "interval": "weekly"
+      }
+     }
+    ]
+   }
+  ]
+ ],
+ "yamlInvalid": [
+  [
+   "unterminated-flow",
+   "a: [1, 2\n"
+  ],
+  [
+   "unknown-alias",
+   "a: *missing\n"
+  ],
+  [
+   "duplicate-key",
+   "a: 1\na: 2\n"
+  ]
+ ],
+ "imports": [
+  [
+   "static",
+   "import a from \"./a.ts\";\nimport { b } from \"b\";\nimport \"./side.ts\";\nexport { c } from \"./c.ts\";\nexport * from \"./d.ts\";\n",
+   [
+    [
+     "./a.ts",
+     "import-statement"
+    ],
+    [
+     "b",
+     "import-statement"
+    ],
+    [
+     "./side.ts",
+     "import-statement"
+    ],
+    [
+     "./c.ts",
+     "import-statement"
+    ],
+    [
+     "./d.ts",
+     "import-statement"
+    ]
+   ]
+  ],
+  [
+   "type-only",
+   "import type { T } from \"./t.ts\";\nimport { type U } from \"./u.ts\";\nexport type { V } from \"./v.ts\";\nconst x = 1;\n",
+   []
+  ],
+  [
+   "dynamic-and-require",
+   "const a = await import(\"./a.ts\");\nconst b = require(\"node:fs\");\n",
+   [
+    [
+     "./a.ts",
+     "dynamic-import"
+    ],
+    [
+     "node:fs",
+     "require-call"
+    ]
+   ]
+  ],
+  [
+   "comments-and-strings",
+   "// import x from \"./no.ts\"\nconst s = \"import y from './no2.ts'\";\n/* import z from \"./no3.ts\" */\nimport w from \"./yes.ts\";\n",
+   [
+    [
+     "./yes.ts",
+     "import-statement"
+    ]
+   ]
+  ],
+  [
+   "typeof-import",
+   "type T = typeof import(\"./t.ts\");\nconst v = 1;\n",
+   []
+  ]
+ ],
+ "transform": [
+  [
+   "define-and-dead-code",
+   "export const a: number = 1;\nif (import.meta.vitest) { console.log(\"dead\"); }\nexport const b = 2;\n",
+   "dead"
+  ]
  ]
 }

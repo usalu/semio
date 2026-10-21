@@ -43,6 +43,7 @@ semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
 semio-framework-schema = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }

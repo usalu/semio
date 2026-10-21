@@ -422,6 +422,33 @@
         "running",
         "complete"
       ]
+    },
+    "selectionStages": {
+      "owner": "repository:build",
+      "stage": "running",
+      "commands": [
+        "build:selected-declaration",
+        "build:selected-catalog-targets",
+        "build:selected-command-sources",
+        "build:selected-native-closure",
+        "build:selected-compile-closure",
+        "build:projects",
+        "build:modules",
+        "build:selected-normalization",
+        "build:selected-native-preparation",
+        "build:selected-source-closure",
+        "build:selected-source-inputs",
+        "build:selected-compile-imports",
+        "build:command-source-imports",
+        "build:project-assembly"
+      ],
+      "minimumPublicationMilliseconds": 250,
+      "maximumPendingRows": 14,
+      "clockReversal": "drain-and-rebase",
+      "clockNonfinite": "drain-and-await-finite-observation",
+      "ordering": "latest-observation-order",
+      "scope": "presentation-only",
+      "maximumObservationRank": 13
     }
   },
   "definitions": {
@@ -928,6 +955,62 @@
           },
           "oracle": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "SelectionStageClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "progress"
+              ],
+              "properties": {
+                "at": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "progress": {
+                  "type": "object",
+                  "maxProperties": 5
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uniqueItems": true
           }
         }
       }

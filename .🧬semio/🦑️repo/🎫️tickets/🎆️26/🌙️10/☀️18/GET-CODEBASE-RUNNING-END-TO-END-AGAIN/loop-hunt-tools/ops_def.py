@@ -1,41 +1,33 @@
-"""Defines the staged operations and writes staged/ops.json (anchors are exact live text; apply.py refuses drift)."""
+"""Defines the staged operations of set 2 (diagnostic collect-errors mode) and writes staged/ops.json; set 1 (settle repeat law) is archived in staged/ops-applied-1.json. Anchors are exact live text; apply.py refuses drift."""
 import json,pathlib
 HERE=pathlib.Path(__file__).resolve().parent
 L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+G=f"{L}/🏗️build/🕸️graph"
 OBS=f"{L}/🏗️build/👁️observation/🟨️.mjs"
-NODES=f"{L}/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs"
-PHASES=f"{L}/🏗️build/🕸️graph/⏱️phases/🟨️.mjs"
-PHASES_D=f"{L}/🏗️build/🕸️graph/⏱️phases/🟨️.d.mts"
-TEST=f"{L}/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat"
+NODES=f"{G}/📥️inference/📦️project-nodes/🟨️.mjs"
+SETTLE_TEST=f"{L}/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat"
+COLLECT=f"{G}/🧾️collect-errors"
 edits=[]
 def edit(file,anchor,replacement):edits.append({"file":file,"anchor":anchor,"replacement":replacement})
 
-edit(OBS," * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written\n * file); otherwise its failure is genuine and rethrown with its facts retained.",
-" * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written\n * file); otherwise its failure is genuine and rethrown with its facts retained. A failure that demands a restart (`BUILD_AUTHORITY_CHANGED`) or\n * that returns unchanged (same code and message) in the next round is genuine as well: a peer editing the tree must not keep a deterministic\n * failure looking transient for `limit` whole-inference rounds.")
-edit(OBS,"accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};\n for(let round=0;;round++){",
-"accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};\n let previousFailure;\n for(let round=0;;round++){")
-edit(OBS,"  if(consistent&&!failed){accept(rows,captured.values());return value;}\n  if(consistent&&await observationsHold(",
-"  if(consistent&&!failed){accept(rows,captured.values());return value;}\n  const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return\"\";}})()]):undefined;\n  if(failed&&(failure?.code===\"BUILD_AUTHORITY_CHANGED\"||signature===previousFailure)){accept(rows,captured.values());throw failure;}\n  previousFailure=signature;\n  if(consistent&&await observationsHold(")
+edit(OBS,'if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||signature===previousFailure))','if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure))')
+edit(f"{SETTLE_TEST}/🔣️.json",'    { "name": "accepted-first-round",','    { "name": "collected-errors-are-final", "rounds": [{ "outcome": "failure", "message": "Error collection finished", "code": "BUILD_COLLECTED_ERRORS", "young": true }, { "outcome": "value" }], "expect": { "settled": "failure", "rounds": 1, "failure": "Error collection finished", "events": [] } },\n    { "name": "accepted-first-round",')
+edit(f"{SETTLE_TEST}/🐍️oracle.py",'if row.get("code")=="BUILD_AUTHORITY_CHANGED" or signature==previous:','if row.get("code") in ("BUILD_AUTHORITY_CHANGED","BUILD_COLLECTED_ERRORS") or signature==previous:')
 
-edit(PHASES,"/** 🖨️ Writes the summary of a finished construction: always one line, so a slow cold build explains itself. */",
-"/** 🔁️ Writes one machine readable row per repeated settlement round: the round, the first conflicting source or the failure (message, code, project) that made the whole inference start over; never silent, at most one row per round. */\nexport function writeGraphSettleRowV1(round){\n const text=value=>{try{return String(value?.message??value).slice(0,512);}catch{return\"\";}};\n process.stderr.write(\"[graph-settle] \"+JSON.stringify({round:round.round,...(round.conflict===undefined?{}:{conflict:round.conflict}),...(Object.hasOwn(round,\"failure\")?{failure:text(round.failure),...(round.failure?.code?{code:String(round.failure.code)}:{}),...(round.failure?.semioProject?{project:String(round.failure.semioProject)}:{})}:{})})+\"\\n\");\n}\n\n/** 🖨️ Writes the summary of a finished construction: always one line, so a slow cold build explains itself. */")
-edit(PHASES_D,"export function writeGraphPhaseSummaryV1(rows:readonly GraphPhaseRowV1[]):void;",
-"export function writeGraphPhaseSummaryV1(rows:readonly GraphPhaseRowV1[]):void;\n/** 🔁️ One repeated settlement round: its index, the first conflicting source or the failure that made the whole inference start over. */\nexport interface GraphSettleRoundV1{readonly round:number;readonly conflict?:string;readonly failure?:unknown}\nexport function writeGraphSettleRowV1(round:GraphSettleRoundV1):void;")
-
-edit(NODES,'import { createGraphPhaseClockV1, writeGraphPhaseRowV1 } from "../../⏱️phases/🟨️.mjs";','import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";')
-edit(NODES,'/** 🧵️ Bounds concurrently inferred projects; one worker is the serial reference order. */',
-'/** 🏷️ Names the project a failing inference belongs to without replacing the error, so a repeated settlement round says which project stops the build. */\nasync function tagProjectFailureV1(root, run) {\n  try { return await run(); }\n  catch (error) { if (error !== null && typeof error === "object" && !Object.hasOwn(error, "semioProject") && Object.isExtensible(error)) Object.defineProperty(error, "semioProject", { value: root, configurable: true }); throw error; }\n}\n\n/** 🧵️ Bounds concurrently inferred projects; one worker is the serial reference order. */')
-edit(NODES,'  return { signal: context.phaseControl?.signal, onRound: async () => { await yieldInferenceV1(context,"build:settle",0,true); } };',
-'  return { signal: context.phaseControl?.signal, onRound: async round => { writeGraphSettleRowV1(round); await yieldInferenceV1(context,"build:settle",0,true); } };')
-edit(NODES,'    result.projects[name]=await observeProjectInferenceV1({cachePath,','    result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,')
-edit(NODES,'return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}\n    });','return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}\n    }));')
+edit(NODES,'import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";','import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";\nimport { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";')
+edit(NODES,'wanted = root => !wantedRoots || wantedRoots.has(root);','wanted = root => !wantedRoots || wantedRoots.has(root);\n  const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal });')
+edit(NODES,'    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);\n    const project = {','    const build = async () => {\n    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);\n    const project = {')
+edit(NODES,'    results.push([configFile, { projects: { [name]: project } }]);\n  }\n','    results.push([configFile, { projects: { [name]: project } }]);\n    };\n    if (collector) await collector.guard({ project: name, root, phase: "cargo-targets" }, build); else await build();\n  }\n')
+edit(NODES,'await inferProject(jobs[cursor++]);await phases?.advance("inference",++finished);','{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);}await phases?.advance("inference",++finished);')
+edit(NODES,'  await phases?.end("inference",{projects:jobs.length});\n','  await phases?.end("inference",{projects:jobs.length});\n  if (collector) await collector.finish({ projects: jobs.length });\n')
 
 newFiles=[
- {"file":f"{TEST}/🟦️.ts","from":"staged/new/settle-repeat/test.ts"},
- {"file":f"{TEST}/🔣️.json","from":"staged/new/settle-repeat/fixture.json"},
- {"file":f"{TEST}/🧬️schema/🔣️.json","from":"staged/new/settle-repeat/schema.json"},
- {"file":f"{TEST}/🐍️oracle.py","from":"staged/new/settle-repeat/oracle.py"},
+ {"file":f"{COLLECT}/🟨️.mjs","from":"staged/new/collect/module.mjs"},
+ {"file":f"{COLLECT}/🟨️.d.mts","from":"staged/new/collect/module.d.mts"},
+ {"file":f"{COLLECT}/🧬️schema/🔣️.json","from":"staged/new/collect/schema.json"},
+ {"file":f"{COLLECT}/🧪️tests/🟦️.ts","from":"staged/new/collect/test.ts"},
+ {"file":f"{COLLECT}/🧪️tests/🔣️.json","from":"staged/new/collect/fixture.json"},
+ {"file":f"{COLLECT}/🧪️tests/🐍️oracle.py","from":"staged/new/collect/oracle.py"},
 ]
-(HERE/"staged").mkdir(exist_ok=True)
-(HERE/"staged/ops.json").write_text(json.dumps({"version":1,"edits":edits,"newFiles":newFiles},ensure_ascii=False,indent=1),encoding="utf8")
+(HERE/"staged/ops.json").write_text(json.dumps({"version":2,"edits":edits,"newFiles":newFiles},ensure_ascii=False,indent=1),encoding="utf8")
 print(len(edits),"edits",len(newFiles),"new files")

@@ -1,0 +1,7 @@
+{
+ "host": "macOS arm64, 10 cores, load average 10-28 during these runs",
+ "goLauncherWarmNoop": {"what": "real Go launcher binary (staged repo-launcher + resident client) -> resident service, run p0599:build, 100 runs, process spawn included", "wallMs": {"n": 100, "min": 10.52, "p50": 12.9, "p90": 30.1, "p99": 47.25}, "bunClientForComparison": {"n": 60, "p50": 31.62, "p90": 44.17, "p99": 63.08}},
+ "goLauncherEditToToolStart": {"what": "append to one source file, immediately run p0599:build through the Go launcher; first tool process stamp minus write time (fake tool, 600 owners, 12.7k files)", "ms": {"n": 40, "min": 13.14, "p50": 17.4, "p90": 62.78, "p99": 124.27}, "staleTasksPerRun": {"p50": 6}},
+ "custodyOnRealStoreCode": {"what": "openRepositoryCustodySessionV1 + withRepositoryCacheStoreV1 from the live library in a scratch workspace (custody-probe.ts), partitions leases+diagnostics", "coldOpenEachTimeMs": [8572, 2351.6, 1317.2, 980.5, 873], "residentSessionOpenMs": 1256.3, "residentRunMs": [177.2, 158, 367.2, 178, 155.6, 206.3, 176.7, 152.2, 143.9, 177, 182.9, 151.4, 188.4, 129, 115.8, 149, 131.2, 127.4, 113.7, 126.8], "note": "first cold row creates the images; resident rows are the per-request cost inside one retained custody"},
+ "warmWorkerOnRealClosure": {"source": "warm-pool-real-closure.json", "coldImportsMs": [728, 2273, 1257], "warmImportsMs": [0.4, 0.5, 0.3], "requestToExitMs": [68, 35, 26]}
+}

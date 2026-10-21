@@ -5,6 +5,8 @@ import {join} from "node:path";
 import {pathToFileURL} from "node:url";
 import {test} from "bun:test";
 import { testDemonstratorBrowserCatalog } from "../📇️catalog/🧪️tests/🟦️.ts";
+import * as runtime from "../🟦️.ts";
+import { demonstratorRuntimeAssetSources } from "../📦️assets/🟦️.ts";
 /** 🎪️ Keeps Vite's runtime description independent of build commands and brand implementations. */
 export async function testDemonstratorRuntime(workspace: string): Promise<void> {
   await testDemonstratorBrowserCatalog(workspace);
@@ -12,8 +14,51 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   const catalog = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")), fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
   validator.addSchema(schema);
+  const contract = fixture.catalogTest;
+  assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/DemonstratorRuntimeTestContract" }, contract));
+  const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8")), target = project.targets[contract.target], semio = target.metadata?.semio;
+  const executionSchema = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json"), "utf8"));
+  const validateExecution = new (require("ajv").default)({ strict: true }).compile({ ...executionSchema, $ref: "#/definitions/Source" });
+  assert.equal(validateExecution({ kind: "source" }), false);
+  assert.ok(validateExecution(semio?.execution));
+  assert.equal(semio.execution.version, contract.executionVersion);
+  assert.equal(semio.execution.kind, contract.executionKind);
+  assert.equal(semio.sourceInputObservation, contract.observation);
+  assert.deepEqual(semio.runtimeSourceEntries, contract.runtimeSourceEntries);
+  assert.deepEqual(target.dependsOn, contract.dependsOn);
+  assert.equal(target.options.command, contract.command);
+  const compiler = require("typescript"), routerPath = join(directory, "../../📜️script.ts"), router = compiler.createSourceFile(routerPath, readFileSync(routerPath, "utf8"), compiler.ScriptTarget.Latest, true);
+  const helperPath = join(directory, "../..", contract.runtimeSourceEntries[0].replace("{projectRoot}/", "")), helper = compiler.createSourceFile(helperPath, readFileSync(helperPath, "utf8"), compiler.ScriptTarget.Latest, true);
+  const runtimeImports = helper.statements.filter((node: any) => compiler.isImportDeclaration(node) && compiler.isStringLiteral(node.moduleSpecifier) && contract.runtimeImports.includes(node.moduleSpecifier.text)).map((node: any) => node.moduleSpecifier.text);
+  assert.deepEqual(runtimeImports.sort(), [...contract.runtimeImports].sort());
+  const routes: string[] = [], entries: string[] = [];
+  const visitRoutes = (node: any): void => {
+    if (compiler.isCallExpression(node) && compiler.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments.length === 2 && compiler.isStringLiteral(node.arguments[0]) && node.arguments[0].text === contract.route && compiler.isIdentifier(node.arguments[1])) routes.push(node.arguments[1].text);
+    compiler.forEachChild(node, visitRoutes);
+  };
+  visitRoutes(router);
+  assert.equal(routes.length, 1);
+  const visitClasses = (node: any): void => {
+    if (compiler.isClassDeclaration(node) && node.name?.text === routes[0]) {
+      const visitCommand = (child: any): void => {
+        if (compiler.isCallExpression(child) && compiler.isIdentifier(child.expression) && child.expression.text === "runOwnedCommand") {
+          assert.ok(compiler.isPropertyAccessExpression(child.arguments[0]) && child.arguments[0].expression.getText(router) === "process" && child.arguments[0].name.text === "execPath");
+          const argumentsNode = child.arguments[1];
+          assert.ok(compiler.isArrayLiteralExpression(argumentsNode) && argumentsNode.elements.length === 2 && compiler.isStringLiteral(argumentsNode.elements[0]) && argumentsNode.elements[0].text === "test");
+          const entry = argumentsNode.elements[1];
+          assert.ok(compiler.isCallExpression(entry) && compiler.isIdentifier(entry.expression) && entry.expression.text === "join" && entry.arguments.length === 2 && compiler.isPropertyAccessExpression(entry.arguments[0]) && entry.arguments[0].expression.kind === compiler.SyntaxKind.ThisKeyword && entry.arguments[0].name.text === "root" && compiler.isStringLiteral(entry.arguments[1]));
+          entries.push("{projectRoot}/" + entry.arguments[1].text);
+        }
+        compiler.forEachChild(child, visitCommand);
+      };
+      visitCommand(node);
+    }
+    compiler.forEachChild(node, visitClasses);
+  };
+  visitClasses(router);
+  assert.deepEqual(entries, contract.runtimeSourceEntries);
   assert.ok(validator.validate(schema.$id, catalog));
-  const runtime = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
+
   const bundle = await require("esbuild").build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   const inputs = Object.keys(bundle.metafile.inputs);
   assert.ok(inputs.every(path => !path.endsWith("📜️script.ts") && !path.endsWith("🪧️brand.ts")), "Runtime descriptions must not load task or brand implementations");
@@ -39,8 +84,13 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   const pipeline = JSON.parse(readFileSync(join(directory, "🧫️pipeline.json"), "utf8"));
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/DemonstratorPipelineContract" }, pipeline));
   assert.deepEqual(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.variant).sort(), pipeline.variants);
-  const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8"));
-  assert.deepEqual(project.targets.build.dependsOn, ["prepare-release", ...pipeline.wasmTargets]);
+
+  const releasePrerequisites=["prepare-release",...pipeline.wasmTargets,...pipeline.site.artifactTargets],independentProject=compiler.parseConfigFileTextToJson("project.json",readFileSync(join(directory,"../../📋️project.json"),"utf8"));
+  assert.equal(independentProject.error,undefined);
+  assert.deepEqual(project.targets.build.dependsOn,releasePrerequisites);
+  assert.deepEqual(independentProject.config.targets.build.dependsOn,releasePrerequisites);
+  const owners=JSON.parse(readFileSync(join(workspace,"📋️build-owners.json"),"utf8")).owners;
+  for(const identity of pipeline.site.artifactTargets){const separator=identity.lastIndexOf(":"),owner=owners.find((row:any)=>row.name===identity.slice(0,separator));assert.ok(owner,identity);const producer=JSON.parse(readFileSync(join(workspace,owner.manifest),"utf8"));assert.ok(producer.targets[identity.slice(separator+1)],identity);assert.equal(typeof producer.targets[identity.slice(separator+1)].options.command,"string");}
   assert.equal(project.targets.prepare, undefined, "Only profile-qualified preparation targets exist");
   assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/.🧾️store/build.json"]);
   assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
@@ -77,7 +127,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
     assert.equal(preparation.cache, true, `prepare-${profile} only validates already build-materialized bytes and writes nothing`);
     assert.deepEqual(preparation.dependsOn, [...pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`), ...pipeline.wasmTargets]);
   }
-  const { demonstratorRuntimeAssetSources } = await import(pathToFileURL(join(directory, "📦️assets/🟦️.ts")).href);
+
   for (const profile of pipeline.profiles) {
     const sources = demonstratorRuntimeAssetSources(workspace, profile);
     const components = sources.filter((row: any) => row.owner.endsWith(`:browser:${profile}`)), support = sources.filter((row: any) => !components.includes(row));

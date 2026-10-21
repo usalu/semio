@@ -349,7 +349,6 @@ semio-framework-job-worker = { path = "../../../../../../../../../🔨️modules
 semio-framework-job-worker-authority = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-framework-canvas = { path = "../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

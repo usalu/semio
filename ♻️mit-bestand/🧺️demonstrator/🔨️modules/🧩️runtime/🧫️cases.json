@@ -48,5 +48,24 @@
   "supportDirectories": [
     "🪞️vendor",
     "🧵️shard"
-  ]
+  ],
+  "catalogTest": {
+    "version": 1,
+    "target": "test-runtime-catalog",
+    "executionVersion": 1,
+    "executionKind": "source",
+    "observation": "freshness",
+    "command": "bun ./📜️script.ts runtime-catalog-test",
+    "route": "runtime-catalog-test",
+    "runtimeSourceEntries": [
+      "{projectRoot}/🔨️modules/🧩️runtime/🧪️tests/🟦️.ts"
+    ],
+    "dependsOn": [
+      "@semio-tech/s-dev-composition:generate"
+    ],
+    "runtimeImports": [
+      "../🟦️.ts",
+      "../📦️assets/🟦️.ts"
+    ]
+  }
 }

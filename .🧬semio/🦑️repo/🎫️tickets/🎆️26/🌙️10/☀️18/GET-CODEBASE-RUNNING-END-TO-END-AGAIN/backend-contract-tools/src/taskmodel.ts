@@ -78,11 +78,11 @@ export function planBuildTasksV1(graph:BuildGraphV1,request:BuildTaskRequestV1):
 }
 
 /** 📥️ One expanded declared input of a task. */
-export type BuildTaskInputV1=Readonly<{kind:"file";pattern:string;exclude:boolean}>|Readonly<{kind:"environment";name:string}>|Readonly<{kind:"dependency-outputs"}>|Readonly<{kind:"unsupported";description:string}>;
+export type BuildTaskInputV1=Readonly<{kind:"file";pattern:string;exclude:boolean}>|Readonly<{kind:"environment";name:string}>|Readonly<{kind:"runtime";command:string}>|Readonly<{kind:"external";names:readonly string[]}>|Readonly<{kind:"dependency-outputs"}>|Readonly<{kind:"unsupported";description:string}>;
 
 const POLICY=Object.freeze({maximumDepth:128,maximumEntries:1000000});
 
-/** 🧾️ Expands the declared inputs of a task over the portable graph: named groups, `^` dependency groups, project references, environment variables, exclusions and dependency outputs. Anything it cannot interpret becomes `unsupported`, so a cache never trusts an input it did not understand. */
+/** 🧾️ Expands the declared inputs of a task over the portable graph: named groups, `^` dependency groups, project references, environment variables, runtime commands, external dependencies, exclusions and dependency outputs. Anything it cannot interpret becomes `unsupported`, so a cache never trusts an input it did not understand. */
 export function buildTaskInputsV1(graph:BuildGraphV1,task:Pick<BuildTaskV1,"project"|"definition">):BuildTaskInputV1[]{
  const active=new Set<string>(),adjacency=new Map<string,string[]>(),closures=new Map<string,string[]>();let entries=0;
  const groups=(project:string):Record<string,unknown[]>=>{if(!graph.projects[project])throw Error("Unknown build input project: "+project);return{default:["{projectRoot}/**/*"],...graph.namedInputs,...graph.projects[project]!.namedInputs as Record<string,unknown[]>|undefined};};
@@ -107,7 +107,8 @@ export function buildTaskInputsV1(graph:BuildGraphV1,task:Pick<BuildTaskV1,"proj
     const row=input as Record<string,unknown>;
     if(typeof row.env==="string")return [{kind:"environment",name:row.env}];
     if(typeof row.fileset==="string")return [file(row.fileset,project)];
-    if(Array.isArray(row.externalDependencies))return [];
+    if(Array.isArray(row.externalDependencies))return [{kind:"external",names:(row.externalDependencies as unknown[]).filter((name):name is string=>typeof name==="string").sort()}];
+    if(typeof row.runtime==="string")return [{kind:"runtime",command:row.runtime}];
     if("dependentTasksOutputFiles" in row)return [{kind:"dependency-outputs"}];
     if(typeof row.input==="string"){const owners=row.dependencies===true?dependencies(project):row.projects===undefined?[project]:typeof row.projects==="string"?[row.projects]:row.projects as string[];return owners.flatMap(owner=>named(row.input as string,owner,depth));}
     return [{kind:"unsupported",description:Object.keys(row).sort().join(",")}];

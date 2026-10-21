@@ -18,6 +18,8 @@ use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use semio_framework_pets_contract::schema::ToolFrame;
+use semio_framework_pets_contract::schema::{ACTIVITIES, FOOTINGS, MOODS, Pitch};
+use semio_framework_pets_staging_draft::spacing::extent_of;
 
 fn sources() -> [(&'static str, &'static str); 20] {
     [

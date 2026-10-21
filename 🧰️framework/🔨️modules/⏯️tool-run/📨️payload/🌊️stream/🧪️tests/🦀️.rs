@@ -1,6 +1,7 @@
 //! 🧪️ Original payload pages survive denied publication, captured reads and funded cancellation.
 use super::*;
-use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::{controlled::ControlledRetirement,shared::sealed::SealedShared}};
+use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::{controlled::ControlledRetirement}};
+use semio_framework_value::shared_issuance::SealedShared;
 use update::ToolRunPayloadStreamUpdate;
 fn observe<T>(f:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(f);(value,(heap.requested_bytes,heap.released_bytes))}
 fn check_read<const N:usize>(view:ToolRunPayloadView<'_>,offset:usize){let(bytes,heap)=observe(||view.read_fixed::<N>(offset).unwrap());assert_eq!(heap,(0,0));assert_eq!(bytes,std::array::from_fn(|i|(((offset+i)*17+3)%251)as u8));}

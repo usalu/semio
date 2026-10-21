@@ -1,0 +1,370 @@
+{
+  "version": 1,
+  "projection": [
+    {
+      "id": "exact-captured-row",
+      "paths": [
+        "src/a.ts"
+      ],
+      "rows": [
+        {
+          "path": "src/a.ts",
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "accepted": true,
+      "expected": {
+        "src/a.ts": {
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "id": "missing-captured-row",
+      "paths": [
+        "src/a.ts"
+      ],
+      "rows": [],
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "duplicate-captured-row",
+      "paths": [
+        "src/a.ts"
+      ],
+      "rows": [
+        {
+          "path": "src/a.ts",
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "path": "src/a.ts",
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "uncanonical-captured-row",
+      "paths": [
+        "../outside"
+      ],
+      "rows": [
+        {
+          "path": "../outside",
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "missing-request-cannot-use-host",
+      "paths": [
+        "src/a.ts"
+      ],
+      "rows": [
+        {
+          "path": "src/b.ts",
+          "bytes": 3,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "negative-extent",
+      "paths": [
+        "src/a.ts"
+      ],
+      "rows": [
+        {
+          "path": "src/a.ts",
+          "bytes": -1,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "accepted": false,
+      "expected": null
+    }
+  ],
+  "settlements": [
+    {
+      "id": "joined-zero-all-proof",
+      "joined": true,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "accepted": true
+    },
+    {
+      "id": "transport-zero-not-terminal",
+      "joined": false,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "native-failed",
+      "joined": true,
+      "status": 1,
+      "signal": null,
+      "checks": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "native-signal",
+      "joined": true,
+      "status": null,
+      "signal": "SIGTERM",
+      "checks": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-proof-0",
+      "joined": true,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        false,
+        true,
+        true,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-proof-1",
+      "joined": true,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-proof-2",
+      "joined": true,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        true,
+        true,
+        false,
+        true
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-proof-3",
+      "joined": true,
+      "status": 0,
+      "signal": null,
+      "checks": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "accepted": false
+    }
+  ],
+  "transferFaults": [
+    "short-write",
+    "partial-input",
+    "duplicate-path",
+    "existing-leaf",
+    "parent-symlink",
+    "hardlink",
+    "wrong-hash",
+    "extra-file",
+    "manifest-source-missing",
+    "duplicate-worker-claim",
+    "cancel-wrong-operation",
+    "terminal-write-failure"
+  ],
+  "primaries": [
+    "undefined",
+    "false",
+    "zero",
+    "object"
+  ],
+  "terminalMutations": [
+    {
+      "id": "binding",
+      "scope": "terminal",
+      "path": [
+        "binding"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "operation",
+      "scope": "terminal",
+      "path": [
+        "operation"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "cohort",
+      "scope": "terminal",
+      "path": [
+        "cohort"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "container",
+      "scope": "terminal",
+      "path": [
+        "containerId"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "source-manifest",
+      "scope": "terminal",
+      "path": [
+        "sourceManifestSha256"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "package",
+      "scope": "terminal",
+      "path": [
+        "packageSha256"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "raw-manifest",
+      "scope": "terminal",
+      "path": [
+        "manifestSha256"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "native",
+      "scope": "terminal",
+      "path": [
+        "nativeSha256"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "receipt-bytes",
+      "scope": "terminal",
+      "path": [
+        "receipt",
+        "bytes"
+      ],
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "receipt-hash",
+      "scope": "terminal",
+      "path": [
+        "receipt",
+        "sha256"
+      ],
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "id": "phase-count",
+      "scope": "receipt",
+      "path": [
+        "phaseCount"
+      ],
+      "value": 17,
+      "accepted": false
+    },
+    {
+      "id": "phase-order",
+      "scope": "receipt",
+      "path": [
+        "results",
+        "0",
+        "id"
+      ],
+      "value": "wrong",
+      "accepted": false
+    },
+    {
+      "id": "collection",
+      "scope": "receipt",
+      "path": [
+        "results",
+        "0",
+        "collection",
+        "accepted"
+      ],
+      "value": false,
+      "accepted": false
+    },
+    {
+      "id": "not-drained",
+      "scope": "terminal",
+      "path": [
+        "drained"
+      ],
+      "value": false,
+      "accepted": false
+    },
+    {
+      "id": "not-native-terminal",
+      "scope": "terminal",
+      "path": [
+        "native",
+        "joined"
+      ],
+      "value": false,
+      "accepted": false
+    }
+  ]
+}

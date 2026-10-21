@@ -118,5 +118,39 @@
       "hex": "01818010",
       "refusal": "symbol-length"
     }
-  ]
+  ],
+  "sourceOwnership": {
+    "sourceExit": "original-wire-handback",
+    "callerRetirement": "actual-wire-backing",
+    "fixedCloseTurns": 1024,
+    "cases": [
+      {
+        "wireBytes": 0,
+        "backingBytes": 0,
+        "expected": {
+          "returnedBytes": 0,
+          "inlineWireReleased": 0,
+          "callerWireReleased": 0
+        }
+      },
+      {
+        "wireBytes": 3,
+        "backingBytes": 8,
+        "expected": {
+          "returnedBytes": 3,
+          "inlineWireReleased": 0,
+          "callerWireReleased": 8
+        }
+      },
+      {
+        "wireBytes": 140004,
+        "backingBytes": 262144,
+        "expected": {
+          "returnedBytes": 140004,
+          "inlineWireReleased": 0,
+          "callerWireReleased": 262144
+        }
+      }
+    ]
+  }
 }

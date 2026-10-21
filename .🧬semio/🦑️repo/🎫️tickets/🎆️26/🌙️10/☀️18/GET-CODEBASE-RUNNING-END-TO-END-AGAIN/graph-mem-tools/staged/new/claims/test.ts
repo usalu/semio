@@ -23,11 +23,11 @@ test("owner claims equal the recorded answers and the independent naive scan ove
   const independent=JSON.parse(Bun.spawnSync([python!,"-I",oracle,"expect",path]).stdout.toString());
   fixture.worlds.forEach((world,index)=>{
    expect(independent[index],"world "+index).toEqual(world.expect);
-   const rows=world.rows.map(row=>({...row})),identity=new Map(rows.map((row,at)=>[row,at]));
+   const rows=world.rows.map(row=>({...row})),identity=new Map<unknown,number>(rows.map((row,at)=>[row,at]));
    const part={owners:world.owners.map(owner=>({name:owner.name,root:owner.root,...("nativeRoot" in owner?{nativeRoot:(owner as {nativeRoot:string}).nativeRoot}:{}),node:{},nodeRows:owner.nodeRows.map(at=>rows[at]!)})),edgeOnly:world.edgeOnly,edges:[],rows:world.partRows.map(at=>rows[at]!),env:{digest:"e".repeat(64),rows:[]}};
    const shaped=shapeComputeResultV1({workspaceRoot:world.workspaceRoot,part:part as never,stubs:world.stubs as never});
-   const owners=Object.fromEntries(shaped.owners.map(owner=>[owner.name,(owner.rows??[]).map(row=>identity.get(row)!)]));
-   expect(owners,"world "+index).toEqual(world.expect.owners);
+   const owners=Object.fromEntries(shaped.owners.map(owner=>[owner.name,(owner.rows??[]).map(row=>identity.get(row)!)] as [string,number[]]));
+   expect(owners,"world "+index).toEqual(world.expect.owners as never);
    expect(shaped.env.rows.map(row=>identity.get(row)!),"world "+index).toEqual(world.expect.environment);
   });
  }finally{rmSync(directory,{recursive:true,force:true});}

@@ -4,12 +4,11 @@ import { resolveTestLevel } from "../../🧰️framework/🔨️modules/🏃️p
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <test> [args…]`. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    const { runVitest } = await import("../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts");
+    const { runVitest } = await import("../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts");
     await runVitest(this.root, rest, "./🧪️tests/🎚️config/🟦️.ts");
   }
 }
@@ -27,6 +26,7 @@ const router = new ScriptRouter(import.meta.dir).register("test", TestScript).re
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => router.run(process.argv.slice(2), original));
 
 if (import.meta.vitest) {
+  const { demonstratorRuntimeBuildVariants } = await import("./🔨️modules/🧩️runtime/🟦️.ts");
   const { registerTests1 } = await import("./🧪️tests/🧪️demonstratorruntimebuildvariants/🟦️.ts");
   await registerTests1(import.meta.vitest, { demonstratorRuntimeBuildVariants, join }, { directory: import.meta.dir, url: import.meta.url });
   const { DEMONSTRATOR_PANES, demonstratorPaneDescriptionParagraphs } = await import("./🪧️brand.ts");

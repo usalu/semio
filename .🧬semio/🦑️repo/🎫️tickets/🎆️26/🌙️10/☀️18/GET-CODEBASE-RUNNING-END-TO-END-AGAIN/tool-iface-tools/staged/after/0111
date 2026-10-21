@@ -1,481 +1,316 @@
-import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, posix, relative, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
-import { carveWrites } from "../🟦️.ts";
-import { allItems } from "../🗺️plan/🧰️tree-helpers/🟦️.ts";
-import { crateIdent } from "../🗺️plan/🏷️naming/🟦️.ts";
-import { crateRelativeChains, implHeader } from "../🗺️plan/🧭️module-chains/🟦️.ts";
-import { measureRustCrate } from "../🗺️plan/📏️measure/🟦️.ts";
-import { readCargoLib } from "../🗺️plan/📦️cargo-lib/🟦️.ts";
-import { type ArtifactCratePlan } from "../🗺️plan/🧾️model/🟦️.ts";
-import { classifyPackageSource } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
-import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { resolveFixturePlaceholders } from "../🧪️test-closure/🟦️.ts";
-import { relativePosix } from "../📝️render/🟦️.ts";
-import { buildSandbox, checkCrossCrateVisibility, checkOrphanRules, compareModuleTrees, diffDiagnostics, patchSandboxSources, resolveCrateModules, runResolutionOracle, rustcUnresolvedCrates } from "../🔬️verify/🟦️.ts";
-import { execToolSyncV1, spawnToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
+import { join, posix } from "node:path";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { policyReaddirSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { POLICY_RS_COMPONENT_LEAF_NAME, policyLeadingEmojiPrefix, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { createFixedContractResolver, fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { type PathEmojiEntry, pathEmojiStatuteFindings } from "../../../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
+import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
+import { bunSpawnToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-/** 🧫️ Everything a carve is checked against inside a sandbox copy of the plugin. */
-export type CarveVerification = {
-  census: { name: string; lib: string; test: string; withinHardBudget: boolean; withinTargetBudget: boolean }[];
-  moduleTreeProblems: string[];
-  visibility: unknown[];
-  orphan: unknown[];
-  glue: string[];
-  unresolvedCrates: Record<string, string[]>;
-  inheritedUnresolvedCrates: string[];
-  oracle: Record<string, { original: number; candidate: number; onlyOriginal: number; onlyCandidate: number; sampleOnlyCandidate: string[]; sampleOnlyOriginal: string[] }> | null;
-  layout: Record<string, { union: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> | null;
-};
+const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
 
-export function mountedOutsideDirectories(repoRoot: string, pluginDir: string, scanRoot = repoRoot): Set<string> {
-  const found = new Set<string>();
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) { if (!/^(node_modules|target|dist)$/u.test(entry.name)) walk(path); continue; }
-      if (!entry.name.endsWith(".rs")) continue;
-      const sourceText = readFileSync(path, "utf8");
-      for (const match of sourceText.matchAll(/include(?:_str|_bytes)?!\(\s*"([^"]+)"\s*\)/gu)) {
-        const target = resolve(directory, match[1]!);
-        const relative = relativePosix(scanRoot, dirname(target));
-        if (!relative.startsWith("..") && !`${relative}/`.startsWith(`${pluginDir}/`) && existsSync(resolve(repoRoot, relative))) found.add(relative);
+const POLICY_BANNED_STEM_SCAN_ROOTS = ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"] as const;
+
+const POLICY_VS16 = "\uFE0F";
+
+/**
+ * 🚫️ Bans emoji-stripped directory/file stems listed in `taxonomy.bannedNameStems` (e.g. `core`, `shared`).
+ * Medium during migration; Wave 4 flips to high once cores are dissolved.
+ * Stems in `taxonomy.bannedNameStemExemptions.subsetDirectories` stay legal as a direct child directory of a `subsetsDirName` owner; the files in `taxonomy.bannedNameStemExemptions.vendoredFiles` are installed third-party modules and never count.
+ */
+export function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const stems = new Set((taxonomy.bannedNameStems ?? []).map((s) => s.toLowerCase()));
+  if (stems.size === 0) return [];
+  const subsetExempt = new Set(taxonomy.bannedNameStemExemptions.subsetDirectories.map((s) => s.toLowerCase()));
+  const vendored = new Set(taxonomy.bannedNameStemExemptions.vendoredFiles);
+  const breaches: BreachRecord[] = [];
+  const walk = (relDir: string): void => {
+    const subsetOwner = relDir.split("/").at(-1) === taxonomy.subsetsDirName;
+    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
+      const childRel = `${relDir}/${entry.name}`;
+      const stem = policyStripEmoji(entry.name.replace(/\.(rs|ts|tsx|js|mjs|cjs|go|py|cs)$/, "")).toLowerCase();
+      if (stems.has(stem) && !(subsetOwner && entry.isDirectory && subsetExempt.has(stem)) && !vendored.has(childRel)) {
+        breaches.push({
+          id: `banned-name-stem-${childRel}`,
+          summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,
+          kind: "taxonomy/banned-name-stem",
+          scope: childRel,
+          priority: "high",
+          reason: "Clean mechanism: bannedNameStems forbids vague grab-bag folders (core/shared/util/…).",
+          solution: `Rename "${entry.name}" to a domain-specific concept folder and update #[path]/imports.`,
+        });
       }
-      for (const match of sourceText.matchAll(/#\[path\s*=\s*"([^"]+)"\s*\]/gu)) {
-        const target = resolve(directory, match[1]!);
-        const relative = relativePosix(scanRoot, dirname(target));
-        if (!relative.startsWith("..") && !`${relative}/`.startsWith(`${pluginDir}/`) && existsSync(resolve(repoRoot, relative))) found.add(relative);
-      }
+      if (entry.isDirectory) walk(childRel);
     }
   };
-  walk(resolve(scanRoot, pluginDir));
-  return found;
+  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
+  return breaches;
 }
 
-/** 🧵️ Rewrites one source file of a carved crate so that all carved crates can be mounted as modules of one synthetic crate: `crate::` becomes `crate::<module>::` and a dependency crate's name becomes the path of its module. */
-export function rewriteForCombined(text: string, module: string, crateModules: ReadonlyMap<string, string>): string {
-  const tokens = rustTokens(text);
-  const edits: { start: number; end: number; text: string }[] = [];
-  for (let k = 0; k + 1 < tokens.length; k += 1) {
-    const token = tokens[k]!;
-    const previous = tokens[k - 1]?.text;
-    if (tokens[k + 1]!.text !== "::" || previous === "::" || previous === "." || previous === "$") continue;
-    if (token.text === "crate") edits.push({ start: token.start, end: token.end, text: `crate::${module}` });
-    else if (token.kind === "identifier" && crateModules.has(token.text)) edits.push({ start: token.start, end: token.end, text: `crate::${crateModules.get(token.text)}` });
-  }
-  let out = text;
-  for (const edit of edits.sort((left, right) => right.start - left.start)) out = out.slice(0, edit.start) + edit.text + out.slice(edit.end);
-  return out;
-}
-
-/** 🔗️ Whether a diagnostic is about anything but an external crate that the sandbox does not link (an associated type looked up on a generic parameter bound by such a crate's trait is one of them: the base crate aborts at resolution before it type-checks, a carved crate with no unresolved item header does not): a path through the extern prelude (`::semio_ext::x`) names such a crate in the 2021 edition, and rustc reports it as "cannot find `semio_ext` in the crate root". */
-export const external = (line: string): boolean => !line.includes("unlinked crate") && !/\tcannot find `[A-Za-z0-9_]+` in the crate root\t/u.test(line) && !/^E0432\tunresolved import `semio_[A-Za-z0-9_]+`(?:\t|$)/u.test(line) && !/^E0220\tassociated type `[A-Za-z0-9_]+` not found for `[A-Z][A-Za-z0-9_]*`(?:\t|$)/u.test(line);
-
-/** 📍️ Drops the file and label of the diagnostics about unresolved derive helper attributes and derive macros (the sandbox links no macro crate, so every derive reports them): an item that moves to another file keeps its count but changes its location. The label of a type or value that is not found in scope is dropped too: a type that an unlinked macro would have generated is reported with or without a suggestion depending on the imports around it, which the carve legitimately changes. */
-export const placeless = (line: string): string => {
-  if (/^[^\t]*\tcannot find (?:attribute|derive macro) /u.test(line)) return line.split("\t").slice(0, 2).join("\t");
-  return /^[^\t]*\tcannot find (?:type|struct, variant or union type|value|function) `[^`]+` in this scope\t/u.test(line) ? line.split("\t").slice(0, 3).join("\t") : line;
-};
-
-/** 🧩️ The names a stripped diagnostic reports as unresolved (an import, a type, a value, a function or the last segment of a path, `cannot find `Name` in `module``), as the last segment of each backticked path; empty for any other diagnostic. */
-export function unresolvedSubjects(line: string): string[] {
-  const inPath = /^E0433\tcannot find `([^`]+)` in `[^`]+`/u.exec(line);
-  if (inPath) return [inPath[1]!];
-  const match = /^E0(?:412|422|425|432|433)\t(?:unresolved imports? |cannot find (?:type|value|struct, variant or union type|function|trait|macro) )(.*)$/u.exec(line);
-  if (!match) return [];
-  const subject = match[1]!.split(": ")[0]!.split(" in this scope")[0]!.split(" in module")[0]!;
-  return [...subject.matchAll(/`([^`]+)`/gu)].map((entry) => entry[1]!.split("::").pop()!);
-}
-
-/** 🧩️ Drops the carved diagnostics that only re-word an unresolved name the base tree already fails to resolve: a name an unexpanded macro defines is reported as `unresolved import` in one layout and as `cannot find .. in this scope` in the other, so the two spellings must not count as a regression. */
-export function dropBaseUnresolvedNames(baseLines: readonly string[], carvedLines: readonly string[]): string[] {
-  const known = new Set(baseLines.flatMap(unresolvedSubjects));
-  return carvedLines.filter((line) => { const subjects = unresolvedSubjects(line); return !subjects.length || !subjects.every((name) => known.has(name)); });
-}
-
-export const normalizeCombined = (line: string): string => line.replace(/crate::__c_[a-z0-9_]+/gu, "crate").replace(/__c_[a-z0-9_]+(::)?/gu, "").replace(/<sandbox>(?:\/\.\.)+/gu, "<sandbox>/..");
-
-/** 🪞️ Rewrites the imports of the combined layout that name a crate without a following path: `use <crate> as name;` and `use crate as name;`, which the token rewrite of `rewriteForCombined` leaves alone. */
-export function rewriteCrateAliases(text: string, module: string, crateModules: ReadonlyMap<string, string>): string {
-  let out = text.replace(/(\buse\s+)crate(\s+as\b)/gu, `$1crate::${module}$2`);
-  for (const [ident, mounted] of crateModules) out = out.replace(new RegExp(`(\\buse\\s+)${ident}(\\s+as\\b)`, "gu"), `$1crate::${mounted}$2`);
-  return out;
-}
-
-/** 🔗️ A path dependency of an artifact crate that lives in the same plugin outside the artifact, with the extern identifiers the dependents use for it. */
-export type SiblingCrate = Readonly<{ name: string; dir: string; entry: string; idents: readonly string[] }>;
-
-/** 🔗️ Collects the path dependencies of the given crate manifests that live outside the artifact: plugin-local ones transitively, any other repository crate only as a direct dependency. These are the sibling crates an artifact crate may now depend on instead of mounting their sources; the caller keeps the ones whose sources the base tree compiled in-crate. */
-export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactDir: string, manifests: readonly string[], workspaceDir: string = artifactDir): SiblingCrate[] {
-  const found = new Map<string, { name: string; entry: string; idents: Set<string> }>();
-  const inherited = (Bun.TOML.parse(readFileSync(join(repoRoot, workspaceDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
-  const queue = [...manifests];
-  const seen = new Set(queue);
-  while (queue.length) {
-    const manifest = queue.pop()!;
-    const parsed = Bun.TOML.parse(readFileSync(join(repoRoot, manifest), "utf8")) as Record<string, unknown>;
-    const tables: Record<string, { path?: string; package?: string; workspace?: boolean }>[] = [];
-    for (const section of ["dependencies", "dev-dependencies"]) if (parsed[section]) tables.push(parsed[section] as typeof tables[number]);
-    for (const target of Object.values((parsed.target ?? {}) as Record<string, Record<string, unknown>>)) for (const section of ["dependencies", "dev-dependencies"]) if (target[section]) tables.push(target[section] as typeof tables[number]);
-    for (const table of tables) for (const [key, spec] of Object.entries(table)) {
-      if (typeof spec !== "object" || spec === null) continue;
-      const viaWorkspace = spec.workspace === true && typeof inherited[key]?.path === "string";
-      if (typeof spec.path !== "string" && !viaWorkspace) continue;
-      const directory = relativePosix(repoRoot, viaWorkspace ? resolve(repoRoot, workspaceDir, inherited[key]!.path!) : resolve(repoRoot, dirname(manifest), spec.path!));
-      const next = `${directory}/Cargo.toml`;
-      const local = directory.startsWith(`${pluginDir}/`);
-      if (directory.startsWith(`${artifactDir}/`) || directory.startsWith("..") || !existsSync(join(repoRoot, next))) continue;
-      const lib = readCargoLib(join(repoRoot, next));
-      const row = found.get(directory) ?? { name: lib.name, entry: lib.entry, idents: new Set<string>() };
-      row.idents.add(crateIdent(lib.name));
-      row.idents.add(key.replaceAll("-", "_"));
-      found.set(directory, row);
-      if (local && !seen.has(next)) { seen.add(next); queue.push(next); }
+/** 🧷️Whether an exact filename contract applies at this precise scope. */
+function policyFilenameContractApplies(repoRoot: string, relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>, resolver?: ReturnType<typeof createFixedContractResolver>): boolean {
+  const segments = relDir.split("/").filter(Boolean);
+  let packagesIndex = -1;
+  for (let index = segments.length - 1; index >= 0; index--) {
+    if (semanticDirectoryKindId(segments[index]!, taxonomy) === "packages") {
+      packagesIndex = index;
+      break;
     }
   }
-  return [...found].map(([dir, row]) => ({ name: row.name, dir, entry: row.entry, idents: [...row.idents] }));
+  const adjacentEcosystem = ([
+    ["Cargo.toml", "🦀️rust"],
+    ["go.mod", "🐹️go"],
+    ["package.json", "🟦️typescript"],
+  ] as const).find(([manifest]) => name === manifest || existsSync(join(repoRoot, relDir, manifest)))?.[1];
+  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : adjacentEcosystem;
+  const packageRoot = packagesIndex === segments.length - 2 || adjacentEcosystem !== undefined;
+  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["build-project-manifest"] : undefined;
+  for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
+    if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
+  }
+  const path = relDir ? `${relDir}/${name}` : name;
+  return (resolver?.filenameIdsForPath(path, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  }) ?? fixedFilenameContractIdsForPath(path, taxonomy, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  })).length > 0;
 }
 
-/** 🧫️ Applies a planned carve to a sandbox copy of the plugin and runs every static check and, optionally, the full-resolution differential of the test rewrites. */
-export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot: string, options: { oracle: boolean; keep?: boolean }): Promise<CarveVerification> {
-  const repoRoot = plan.repoRoot;
-  const pluginDir = plan.packageDir.split("/").slice(0, 3).join("/");
-  const outside = new Set<string>();
-  const { writes, rootLib, rootTest } = await carveWrites(plan);
-  const closures = [plan.rootMeasure?.lib, plan.rootMeasure?.test, rootLib, rootTest, ...plan.crates.flatMap((crate) => [crate.lib, crate.test])];
-  for (const closure of closures) for (const path of closure?.paths ?? []) if (!path.startsWith(`${pluginDir}/`)) outside.add(path);
-  const directories = [pluginDir, ...new Set([...[...outside].map((path) => dirname(path)).filter((directory) => existsSync(join(repoRoot, directory))), ...mountedOutsideDirectories(repoRoot, pluginDir)])];
-  buildSandbox(repoRoot, sandboxRoot, directories);
-  const applyWrites = (root: string): void => {
-  for (const write of writes) {
-    const target = join(root, write.path);
-    if (write.action === "delete") rmSync(target, { force: true });
-    else { mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, write.content); }
+/** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
+function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: string): boolean {
+  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__";
+}
+
+/** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
+function policyEmojiEntryIsRenamable(repoRoot: string, relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
+  if (isDirectory) return true;
+  return !policyFilenameContractApplies(repoRoot, relDir, name, taxonomy);
+}
+
+/** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
+function policyHasLeadingEmoji(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  return prefix.length > 0 && /[^\x00-\x7f]/u.test(prefix);
+}
+
+/** 🎨️Whether a Latin-stemmed emoji identity is missing the required emoji presentation selector. */
+function policyEmojiPrefixNeedsVs16(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  const first = [...prefix][0] ?? "";
+  return policyHasLeadingEmoji(name) && /^[A-Za-z]/.test(name.slice(prefix.length)) && !/\p{Emoji_Presentation}/u.test(first) && !prefix.includes(POLICY_VS16);
+}
+
+/** ✅️Every Git-visible, non-reserved entry has a semantic canonical emoji identity unique among all siblings. */
+export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const result = bunSpawnToolSyncV1(["git", "ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
+  if (result.exitCode !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
+  const inventory = result.stdout.toString().split("\0").filter(Boolean)
+    .map((path) => path.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC"))
+    .flatMap((path) => {
+      try { return [{ path, directory: lstatSync(join(repoRoot, path)).isDirectory() }]; } catch { return []; }
+    });
+  const files = inventory.filter((entry) => !entry.directory).map((entry) => entry.path);
+  const directories = new Set<string>();
+  for (const entry of inventory) {
+    if (entry.directory) directories.add(entry.path);
+    for (let parent = posix.dirname(entry.path); parent !== "." && parent !== ""; parent = posix.dirname(parent)) directories.add(parent);
   }
-  };
-  applyWrites(sandboxRoot);
-  const census: CarveVerification["census"] = [];
-  const hard = { files: 32, bytes: 262144, lines: 4000 };
-  const target = { files: 28, bytes: 230000, lines: 3500 };
-  const within = (m: { files: number; bytes: number; lines: number }, b: typeof hard): boolean => m.files <= b.files && m.bytes <= b.bytes && m.lines <= b.lines;
-  const rowFor = async (name: string, packageDir: string): Promise<void> => {
-    const manifest = join(sandboxRoot, packageDir);
-    const carvedEntry = join(manifest, "🦀️.rs");
-    const entry = existsSync(carvedEntry) ? carvedEntry : readCargoLib(join(manifest, "Cargo.toml")).entry;
-    const lib = await measureRustCrate(sandboxRoot, entry, false, new Map(), manifest);
-    const test = await measureRustCrate(sandboxRoot, entry, true, new Map(), manifest);
-    census.push({ name, lib: `${lib.files}/${lib.bytes}/${lib.lines}`, test: `${test.files}/${test.bytes}/${test.lines}`, withinHardBudget: within(lib, hard) && within(test, hard), withinTargetBudget: within(lib, target) && within(test, target) });
-  };
-  for (const crate of plan.crates) await rowFor(crate.name, crate.packageDir);
-  await rowFor(plan.artifactCrate, plan.packageDir);
-  const rootAbs = resolve(repoRoot, plan.rootFile);
-  const overlay = new Map<string, string>([...plan.overlay.edits, ...plan.overlay.creates, [rootAbs, plan.tree.source]]);
-  const original = resolveCrateModules(repoRoot, rootAbs, (path) => overlay.get(path) ?? (plan.overlay.deletes.has(path) ? null : existsSync(path) ? readFileSync(path, "utf8") : null));
-  const carved = [resolveCrateModules(sandboxRoot, join(sandboxRoot, plan.rootFile)), ...plan.crates.map((crate) => resolveCrateModules(sandboxRoot, join(sandboxRoot, crate.packageDir, "🦀️.rs")))];
-  const crateInfos = plan.crates.map((crate) => {
-    const rootFile = join(sandboxRoot, crate.packageDir, "🦀️.rs");
-    const sourceFiles = new Map<string, string>();
-    for (const path of [...(crate.lib?.paths ?? []), ...(crate.test?.paths ?? [])]) { const absolute = join(sandboxRoot, path); if (path.endsWith(".rs") && existsSync(absolute)) sourceFiles.set(path, readFileSync(absolute, "utf8")); }
-    return { name: crate.name, unitPaths: crate.attach.map((decl) => [...decl.eff]), rootFile, rootText: readFileSync(rootFile, "utf8"), sourceFiles, lib: new Set(crate.lib?.sourcePaths ?? []) };
+  const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => name.normalize("NFC").replaceAll(POLICY_VS16, "")));
+  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(policyStripEmoji(name));
+  const resolver = createFixedContractResolver(taxonomy);
+  const fixedDirectoryIds = new Map([...directories].map((path) => [path, resolver.directoryIdsForPath(path, {
+    parentDirectoryKindId: semanticDirectoryKindId(posix.basename(posix.dirname(path)), taxonomy) ?? undefined,
+  })] as const));
+  const fixedReservedSubtreeRoots = [...fixedDirectoryIds].filter(([, ids]) => ids.some((id) => taxonomy.fixedDirectoryContracts[id]?.descendants === "reserved")).map(([path]) => path);
+  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName) || fixedReservedSubtreeRoots.some((reservedRoot) => path.startsWith(`${reservedRoot}/`));
+  const directoryReserved = (path: string): boolean => (fixedDirectoryIds.get(path) ?? []).length > 0;
+  const entries: PathEmojiEntry[] = [
+    ...[...directories].map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(name) || directoryReserved(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, true, taxonomy) };
+    }),
+    ...files.map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "file", reserved: underReservedSubtree(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, false, taxonomy) || policyFilenameContractApplies(repoRoot, relDir, name, taxonomy, resolver) };
+    }),
+  ].filter((entry) => !taxonomyRelativePathIsExcluded(entry.path, taxonomy));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return pathEmojiStatuteFindings(entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities).map((finding): BreachRecord => {
+    const entity = byPath.get(finding.path)?.nodeKind === "directory" ? "folder" : "file";
+    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique", multiple: "multiple-emojis", "reserved-emoji": "reserved-name-has-emoji" }[finding.kind];
+    const detail = finding.kind === "duplicate" ? ` duplicates sibling "${finding.sibling}"` : finding.emoji ? ` uses "${finding.emoji}"` : "";
+    return {
+      id: `path-emoji-${finding.kind}-${finding.path}`,
+      summary: `"${finding.path}" breaches ${label}${detail}`,
+      kind: `${entity}/name/${label}`,
+      scope: finding.path,
+      priority: "high",
+      reason: "Every non-reserved file and folder has exactly one handpicked, meaningful emoji, unique among siblings. Reserved filenames remain literal and unprefixed.",
+      solution: finding.kind === "reserved-emoji" ? `Restore the literal reserved basename of "${posix.basename(finding.path)}" and update its exact references.` : `Handpick one meaningful sibling-unique emoji for "${posix.basename(finding.path)}" and update only resolved path references.`,
+    };
   });
-  const grammar = loadCatalogTaxonomy().packageGlueGrammar.rust!;
-  const unresolvedCrates: Record<string, string[]> = {};
-  const originalDeclared = new Set(Object.keys((Bun.TOML.parse(readFileSync(resolve(repoRoot, plan.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}).map((key) => key.replaceAll("-", "_")));
-  const inheritedUnresolvedCrates = [...new Set([...plan.tree.source.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as [A-Za-z0-9_]+)?;/gu)].map((match) => match[1]!))].filter((name) => !originalDeclared.has(name)).sort();
-  for (const crate of crateInfos) {
-    const declared = new Set(Object.keys({ ...((Bun.TOML.parse(readFileSync(join(sandboxRoot, plan.crates.find((entry) => entry.name === crate.name)!.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}) }).map((key) => key.replaceAll("-", "_")));
-    const aliases = [...crate.rootText.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as ([A-Za-z0-9_]+))?;/gu)].map((match) => match[2] ?? match[1]!);
-    const used = new Set([...rustcUnresolvedCrates(crate.rootFile, crate.name, []).unresolved, ...rustcUnresolvedCrates(crate.rootFile, crate.name, ["--test"]).unresolved]);
-    unresolvedCrates[crate.name] = [...used].filter((name) => !declared.has(name) && !aliases.includes(name) && !inheritedUnresolvedCrates.includes(name));
-  }
-  const report: CarveVerification = {
-    census,
-    moduleTreeProblems: compareModuleTrees(original, carved).problems,
-    visibility: checkCrossCrateVisibility(sandboxRoot, crateInfos, crateRelativeChains),
-    orphan: checkOrphanRules(crateInfos.map((crate) => ({ name: crate.name, sources: new Map([...crate.sourceFiles].filter(([path]) => crate.lib.has(path))) })), implHeader, allItems),
-    glue: crateInfos.map((crate) => { const verdict = classifyPackageSource(crate.rootText, grammar); return verdict.role === "declaration" ? "" : `${crate.name}: ${verdict.role} (${verdict.evidence})`; }).filter(Boolean),
-    unresolvedCrates,
-    inheritedUnresolvedCrates,
-    oracle: null,
-    layout: null,
-  };
-  if (options.oracle) {
-    const rustName = plan.artifactCrate;
-    const unionRoot = `${sandboxRoot}-union`;
-    const originalRoot = `${sandboxRoot}-original`;
-    buildSandbox(repoRoot, originalRoot, directories);
-    buildSandbox(repoRoot, unionRoot, directories);
-    writeFileSync(join(unionRoot, plan.rootFile), plan.tree.source);
-    for (const [absolute, text] of [...plan.overlay.edits, ...plan.overlay.creates]) { const to = join(unionRoot, relativePosix(repoRoot, absolute)); mkdirSync(dirname(to), { recursive: true }); writeFileSync(to, resolveFixturePlaceholders(text, repoRoot, dirname(to))); }
-    for (const absolute of plan.overlay.deletes) rmSync(join(unionRoot, relativePosix(repoRoot, absolute)), { force: true });
-    const prefixes = ["semio_", "serde", "protocol::", "store::", "dsl::", "pack::", "value_derive::", "framework_schema::", "tokio"];
-    patchSandboxSources(originalRoot, prefixes);
-    patchSandboxSources(unionRoot, prefixes);
-    report.oracle = {};
-    const unionDiagnostics = new Map<string, string[]>();
-    for (const flags of [[], ["--test"]] as string[][]) {
-      const before = runResolutionOracle(originalRoot, join(originalRoot, plan.rootFile), rustName, flags);
-      const after = runResolutionOracle(unionRoot, join(unionRoot, plan.rootFile), rustName, flags);
-      unionDiagnostics.set(flags.join(" "), after.diagnostics);
-      const strip = (all: string[]): string[] => { const list = all.filter(external).map(placeless); return [...new Set(flags.includes("--test") ? list.map((line) => line.split("\t").slice(0, 2).join("\t")) : list)].filter((line) => !line.includes("aborting due to")); };
-      const delta = diffDiagnostics(strip(before.diagnostics), dropBaseUnresolvedNames(strip(before.diagnostics), strip(after.diagnostics)));
-      report.oracle[flags.join(" ") || "native"] = { original: before.diagnostics.length, candidate: after.diagnostics.length, onlyOriginal: delta.onlyOriginal.length, onlyCandidate: delta.onlyCandidate.length, sampleOnlyCandidate: delta.onlyCandidate.slice(0, 12).map((line) => { const at = after.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${after.locations[at] ?? ""}` : line; }), sampleOnlyOriginal: delta.onlyOriginal.slice(0, 12) };
-    }
+}
 
-    const combinedRoot = `${sandboxRoot}-combined`;
-    buildSandbox(repoRoot, combinedRoot, directories);
-    applyWrites(combinedRoot);
-    const crateModules = new Map<string, string>(plan.crates.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`]));
-    const facadeModule = `__c_${crateIdent(plan.artifactCrate)}`;
-    const mounts: string[] = [];
-    const owned: { module: string; paths: readonly string[]; root: string }[] = [
-      ...plan.crates.map((crate) => ({ module: crateModules.get(crateIdent(crate.name))!, paths: [...(crate.lib?.sourcePaths ?? []), ...(crate.test?.sourcePaths ?? [])], root: join(crate.packageDir, "🦀️.rs") })),
-      { module: facadeModule, paths: [...rootLib.sourcePaths, ...rootTest.sourcePaths], root: plan.rootFile },
-    ];
-    const rewritten = new Set<string>();
-    for (const entry of owned) {
-      mounts.push(`#[path = ${JSON.stringify(entry.root)}]\npub mod ${entry.module};`);
-      for (const path of new Set([...entry.paths, entry.root])) {
-        if (!path.endsWith(".rs") || rewritten.has(path)) continue;
-        rewritten.add(path);
-        const absolute = join(combinedRoot, path);
-        if (!existsSync(absolute)) continue;
-        writeFileSync(absolute, rewriteForCombined(readFileSync(absolute, "utf8"), entry.module, crateModules));
+/**
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and every REQUIRED facet directly
+ * at its root. `pluginChildDirs` is the ADMITTED set (`policyPluginClosedShapeBreaches` reads it, and it now
+ * admits the plugin-root `🧬️schema` scope); `pluginRequiredChildDirs` is the set every plugin owes.
+ */
+export function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const children = taxonomy.pluginRequiredChildDirs;
+  const pluginsRoot = "✏️s/🔌️plugins";
+  const breaches: BreachRecord[] = [];
+  for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!entry.isDirectory) continue;
+    const ownerRel = `${pluginsRoot}/${entry.name}`;
+    const nestedContractRel = `${ownerRel}/🔌️plugin`;
+    if (existsSync(join(repoRoot, nestedContractRel))) {
+      breaches.push({
+        id: `plugin-root-nested-${ownerRel}`,
+        summary: `"${ownerRel}" contains a redundant 🔌️plugin/ directory`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "Plugin contracts and facets are direct children of the plugin root.",
+        solution: `Move ${nestedContractRel}/${POLICY_RS_COMPONENT_LEAF_NAME} and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
+      });
+    }
+    if (!existsSync(join(repoRoot, ownerRel, (POLICY_RS_COMPONENT_LEAF_NAME)))) {
+      breaches.push({
+        id: `plugin-root-leaf-${ownerRel}`,
+        summary: `"${ownerRel}" is missing root ${POLICY_RS_COMPONENT_LEAF_NAME}`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "The plugin root must have a leaf component that returns Plugin via Plugin::builder.",
+        solution: `Add ${ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME} exporting pub fn plugin() -> Plugin.`,
+      });
+    }
+    for (const child of children) {
+      const childLeaf = join(repoRoot, ownerRel, child, (POLICY_RS_COMPONENT_LEAF_NAME));
+      if (!existsSync(childLeaf)) {
+        breaches.push({
+          id: `plugin-root-child-${ownerRel}/${child}`,
+          summary: `"${ownerRel}" is missing direct facet ${child}/${POLICY_RS_COMPONENT_LEAF_NAME}`,
+          kind: "taxonomy/plugin-root-shape",
+          scope: ownerRel,
+          priority: "high",
+          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginRequiredChildDirs).`,
+          solution: `Add ${ownerRel}/${child}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
+        });
       }
     }
-    writeFileSync(join(combinedRoot, "__combined.rs"), `${mounts.join("\n")}\n`);
-    patchSandboxSources(combinedRoot, prefixes);
-    const rewriteTree = (directory: string, module: string): void => {
-      for (const entry of readdirSync(directory, { withFileTypes: true })) {
-        const path = join(directory, entry.name);
-        if (entry.isDirectory()) rewriteTree(path, module);
-        else if (entry.name.endsWith(".rs")) writeFileSync(path, rewriteForCombined(readFileSync(path, "utf8"), module, new Map()));
+  }
+  return breaches;
+}
+
+/**
+ * 🏗️ Bans `semio_plugin!` and `PluginBundle::new` outside the SDK; prefers `Plugin::builder(`.
+ * Medium until Wave 3 finishes migrating all plugins.
+ */
+export function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const sdkRel = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/";
+  for (const crate of crates) {
+    if (crate.role !== "plugin" && crate.role !== "extension") continue;
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    if (crate.libRelPath.replaceAll("\\", "/").startsWith(sdkRel)) continue;
+    const content = readFileSync(abs, "utf8");
+    if (content.includes("semio_plugin!")) {
+      breaches.push({
+        id: `plugin-builder-macro-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder at the plugin root`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: ("semio_plugin! is retired; plugin identity lives in the root " + POLICY_RS_COMPONENT_LEAF_NAME + " via typestate PluginBuilder."),
+        solution: ("Move registration into the plugin-root " + POLICY_RS_COMPONENT_LEAF_NAME + " using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin)."),
+      });
+    }
+    if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {
+      breaches.push({
+        id: `plugin-builder-bundle-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still references PluginBundle — use Plugin::builder / Plugin::new`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: "PluginBundle was renamed to Plugin; registration goes through Plugin::builder.",
+        solution: "Replace PluginBundle with Plugin::builder(...).",
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type`
+ * identifier fragment named "protocol" may exist under a migrated plugin — `📡️spr` is the only accepted
+ * name for that concept going forward. Scoped to `role = "plugin"` owners on purpose: the rename is a
+ * plugin-tree contract today, while the framework's own `📡️protocol` kernel module is renamed by the
+ * os-kernel merge (plan wave W8c) — flagging it here would report a rename that is scheduled, not late.
+ */
+export function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const crate of crates) {
+    if (crate.shape !== "taxonomy" || crate.role !== "plugin") continue;
+    const ownerRoot = crate.ownerRel;
+    const pluginId = crate.pluginId;
+
+    const walk = (relDir: string): void => {
+      for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+        const childRel = `${relDir}/${entry.name}`;
+        const stem = policyStripEmoji(entry.name.replace(/\.rs$/, ""));
+        if (POLICY_PROTOCOL_SEGMENT_RE.test(stem)) {
+          breaches.push({
+            id: `spr-naming-path-${childRel}`,
+            summary: `"${childRel}" uses the retired "protocol" name — the taxonomy concept is "spr" (state patch representation)`,
+            kind: "taxonomy/spr-naming",
+            scope: pluginId,
+            priority: "medium",
+            reason: "Discovery contract: no 📡️protocol path segment may remain under a migrated plugin; 📡️spr is the only accepted name.",
+            solution: `Rename "${entry.name}" to its 📡️spr equivalent.`,
+          });
+        }
+        if (entry.isDirectory) walk(childRel);
       }
     };
-    rewriteTree(join(originalRoot, pluginDir), "__c_union");
-    writeFileSync(join(originalRoot, "__combined.rs"), `#[path = ${JSON.stringify(plan.rootFile)}]\npub mod __c_union;\n`);
-    void unionDiagnostics;
-    report.layout = {};
-    for (const flags of [[], ["--test"]] as string[][]) {
-      const baseline = runResolutionOracle(originalRoot, join(originalRoot, "__combined.rs"), "combined", flags);
-      const carvedRun = runResolutionOracle(combinedRoot, join(combinedRoot, "__combined.rs"), "combined", flags);
-      const strip = (list: string[], normalize: boolean): string[] => [...new Set(list.filter(external).map((line) => (normalize ? normalizeCombined(line) : line)).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
-      const delta = diffDiagnostics(strip(baseline.diagnostics, true), dropBaseUnresolvedNames(strip(baseline.diagnostics, true), strip(carvedRun.diagnostics, true)));
-      report.layout[flags.join(" ") || "native"] = { union: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, 40).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry], true)[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
-    }
-    if (!options.keep) rmSync(combinedRoot, { recursive: true, force: true });
-  }
-  return report;
-}
+    walk(ownerRoot);
 
-/** 🧱️ A Cargo package of one artifact tree: the packages below `📦️packages/🦀️rust` of the artifact, minus the oracle and bridge packages, with the absolute library entry resolved against `root`. */
-export type ArtifactCrate = Readonly<{ dir: string; name: string; entry: string }>;
-
-/** 📋️ Lists the library packages of an artifact tree under `root` (a package that declares no `[lib]` and has no `src/lib.rs`, such as a binary-only tool, is not one); the same rule reads the working tree and the pre-carve archive, so both sides of the layout differential see the crates they own. */
-export function artifactCrates(root: string, artifactDir: string): ArtifactCrate[] {
-  const found: ArtifactCrate[] = [];
-  for (const manifest of new Bun.Glob("**/📦️packages/🦀️rust/Cargo.toml").scanSync({ cwd: join(root, artifactDir) })) {
-    if (manifest.startsWith("🔮️oracles") || manifest.includes("🏭️bridge/")) continue;
-    const path = join(artifactDir, manifest);
-    if (!/^\[package\]/mu.test(readFileSync(join(root, path), "utf8"))) continue;
-    const lib = readCargoLib(join(root, path));
-    if ((Bun.TOML.parse(readFileSync(join(root, path), "utf8")) as { lib?: unknown }).lib === undefined && !existsSync(lib.entry)) continue;
-    found.push({ dir: dirname(path), ...lib });
-  }
-  return found;
-}
-
-/** 🚧️ Whether a rustc message is a tree-structure error (a syntax error, a misplaced inner attribute or a module file that does not exist): rustc stops at it before it resolves a single name, so a tree that has one cannot serve as a baseline. */
-export const treeError = (message: string): boolean => /^(an inner attribute is not permitted|couldn't find file|file not found for module|circular modules|couldn't read|expected |unexpected |this file contains an unclosed|unclosed delimiter|mismatched closing delimiter)/u.test(message);
-
-/** 🔝️ Moves the single-line inner attributes (`#![..]`) and the inner doc lines (`//!`) that sit behind an item to the head of the file, in their order: rustc refuses an inner attribute after a `use` or `extern crate`. Items are never moved, a file without a misplaced line comes back unchanged. */
-export function hoistInnerAttributes(text: string): string {
-  const lines = text.split("\n");
-  let first = -1;
-  let block = false;
-  for (let index = 0; index < lines.length && first < 0; index += 1) {
-    const line = lines[index]!.trim();
-    if (block) { block = !line.includes("*/"); continue; }
-    if (line.startsWith("/*")) { block = !line.includes("*/"); continue; }
-    if (line === "" || (line.startsWith("//") && !line.startsWith("///")) || line.startsWith("#![")) continue;
-    first = index;
-  }
-  if (first < 0) return text;
-  const item = /^(?:pub(?:\([^)]*\))?\s+)?(?:mod|fn|const|static|struct|enum|trait|impl|type|macro_rules!|unsafe|async)\b|^#\[(?:path|derive|cfg_attr|macro_use)/u;
-  const lifted: number[] = [];
-  let stop = false;
-  for (let index = first; index < lines.length; index += 1) {
-    const line = lines[index]!;
-    if (!stop && item.test(line)) stop = true;
-    if (/^#!\[.*\]\s*$/u.test(line) && index < 400) lifted.push(index);
-    else if (!stop && line.startsWith("//!")) lifted.push(index);
-  }
-  if (!lifted.length) return text;
-  const skip = new Set(lifted);
-  const rest = lines.filter((_, index) => !skip.has(index));
-  return [...rest.slice(0, first), ...lifted.map((index) => lines[index]!), ...rest.slice(first)].join("\n");
-}
-
-/** 🪝️ The repository paths of the module files that `text` (the source of `file`) mounts with a flat `#[path = "<relative>"]` attribute: rustc stops at the first missing module file, so the base healing copies the whole mounted subtree at once instead of one file per round. A mount inside an inline module is resolved against the wrong directory and is skipped by the caller when the file does not exist. */
-export function mountedPathFiles(file: string, text: string): string[] {
-  return [...text.matchAll(/#\[path\s*=\s*"([^"]+\.rs)"\]/gu)].map((match) => posix.normalize(posix.join(posix.dirname(file), match[1]!)));
-}
-
-/** 🧩️ One crate of the synthetic layout: the module that mounts it, the repository paths of its sources and its library root. */
-export type OwnedCrate = Readonly<{ module: string; paths: readonly string[]; root: string }>;
-
-/** 🪢️ Mounts every crate as a module of `__combined.rs` below `root` and rewrites each source file for the owner that reaches it first. The pre-carve archive and the carved tree go through this one function, so both sides of the differential see their crates the same way. */
-export function mountCrates(root: string, owned: readonly OwnedCrate[], crateModules: ReadonlyMap<string, string>): void {
-  const mounts: string[] = [];
-  const rewritten = new Set<string>();
-  for (const entry of owned) {
-    mounts.push(`#[path = ${JSON.stringify(entry.root)}]\npub mod ${entry.module};`);
-    for (const path of new Set([...entry.paths, entry.root])) {
-      if (!path.endsWith(".rs") || rewritten.has(path)) continue;
-      rewritten.add(path);
-      const absolute = join(root, path);
-      if (existsSync(absolute)) writeFileSync(absolute, rewriteCrateAliases(rewriteForCombined(readFileSync(absolute, "utf8"), entry.module, crateModules), entry.module, crateModules));
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    const content = readFileSync(abs, "utf8");
+    const identRe = /\b(?:mod|struct|enum|type)\s+(\w*[Pp]rotocol\w*)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = identRe.exec(content))) {
+      breaches.push({
+        id: `spr-naming-ident-${crate.libRelPath}-${m.index}`,
+        summary: `"${crate.libRelPath}" declares "${m[1]}" — identifiers naming the protocol concept must say "Spr"/"spr" instead`,
+        kind: "taxonomy/spr-naming",
+        scope: pluginId,
+        line: policyLineOfIndex(content, m.index),
+        priority: "medium",
+        reason: "Discovery contract: no protocol-named identifier fragment tied to the app protocol module may remain under a migrated plugin.",
+        solution: `Rename "${m[1]}" to its 📡️spr equivalent.`,
+      });
     }
   }
-  writeFileSync(join(root, "__combined.rs"), `${mounts.join("\n")}\n`);
-}
-
-/** 🧼️ Removes from `sandbox` the files of `artifactDir` that the pre-carve tree of `baseRef` does not have and that git does not ignore: the sandbox starts as a copy of the working tree, so a crate the carve added would otherwise stay and be taken for a hand-built crate of the base. Ignored files (generated sources) stay, because the base compiles against them as well. */
-export function pruneNonBaseFiles(repoRoot: string, sandbox: string, artifactDir: string, baseRef: string): string[] {
-  const archived = new Set(execToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-tree", "-r", "--name-only", "-z", baseRef, "--", artifactDir], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }).split("\0").filter(Boolean));
-  const extra: string[] = [];
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(join(sandbox, directory), { withFileTypes: true })) {
-      const path = `${directory}/${entry.name}`;
-      if (entry.isDirectory()) walk(path);
-      else if (!archived.has(path)) extra.push(path);
-    }
-  };
-  if (existsSync(join(sandbox, artifactDir))) walk(artifactDir);
-  if (!extra.length) return [];
-  const ignored = new Set(spawnToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "check-ignore", "-z", "--stdin"], { cwd: repoRoot, input: `${extra.join("\0")}\0`, encoding: "utf8", maxBuffer: 1 << 28 }).stdout.split("\0").filter(Boolean));
-  const removed = extra.filter((path) => !ignored.has(path));
-  for (const path of removed) rmSync(join(sandbox, path), { force: true });
-  return removed;
-}
-
-/** 🧾️ Result of the layout differential of an applied carve: diagnostics only the mounted crates have, per cfg. */
-export type AppliedLayoutReport = { crates: number; baseCrates: number; siblings: string[]; healedBase: string[]; layout: Record<string, { base: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> };
-
-/** 🧾️ Gate for an applied carve: mounts the crates of the working tree as modules of one synthetic crate and compares the rustc resolution diagnostics (lib and test) with the pre-carve tree of `baseRef`. Zero `onlyCombined` means the carve introduced no unresolved name. */
-export async function verifyAppliedLayout(repoRoot: string, artifactDir: string, sandboxRoot: string, baseRef = "HEAD", keep = false, sampleLimit = 12): Promise<AppliedLayoutReport> {
-  const baseDirectory = baseRef.startsWith("dir:") ? resolve(baseRef.slice("dir:".length)) : null;
-  const pluginDir = artifactDir.split("/").length >= 3 ? artifactDir.split("/").slice(0, 3).join("/") : artifactDir;
-  const named = artifactCrates(repoRoot, artifactDir);
-  const facadeDirectory = `${artifactDir}/📦️packages/🦀️rust`;
-  const facadeName = named.find((entry) => entry.dir === facadeDirectory)?.name;
-  if (!facadeName) throw new Error(`verifyAppliedLayout: ${artifactDir} has no artifact package`);
-  const crates = named.filter((entry) => entry.name === facadeName || entry.name.startsWith(`${facadeName}-`));
-  const facade = crates.find((crate) => crate.dir === facadeDirectory)!;
-  const carved = crates.filter((crate) => crate !== facade);
-  const outside = new Set<string>();
-  const measured = new Map<string, string[]>();
-  for (const crate of crates) {
-    const lib = await measureRustCrate(repoRoot, crate.entry, false, new Map(), join(repoRoot, crate.dir));
-    const test = await measureRustCrate(repoRoot, crate.entry, true, new Map(), join(repoRoot, crate.dir));
-    measured.set(crate.name, [...lib.sourcePaths, ...test.sourcePaths]);
-    for (const path of [...lib.paths, ...test.paths]) if (!path.startsWith(`${pluginDir}/`)) outside.add(path);
-  }
-  const directories = [pluginDir, ...new Set([...[...outside].map((path) => dirname(path)).filter((directory) => existsSync(join(repoRoot, directory))), ...mountedOutsideDirectories(repoRoot, pluginDir)])];
-  const combined = `${sandboxRoot}-combined`;
-  const base = `${sandboxRoot}-base`;
-  const prefixes = ["semio_", "serde", "protocol::", "store::", "dsl::", "pack::", "value_derive::", "framework_schema::", "tokio"];
-  const relativeEntry = (crate: { entry: string }): string => relative(repoRoot, crate.entry).replaceAll("\\", "/");
-  const closureFiles = (root: string, entry: string): string[] => [entry, ...resolveCrateModules(root, join(root, entry), (file) => (existsSync(file) ? readFileSync(file, "utf8") : "")).flatMap((module) => (module.file !== null && module.file !== "unresolved" ? [module.file] : []))];
-  const baseCarved = (): ArtifactCrate[] => artifactCrates(base, artifactDir).filter((crate) => crate.dir !== facadeDirectory && crate.name.startsWith(`${facadeName}-`));
-  const baseEntry = (crate: ArtifactCrate): string => relative(base, crate.entry).replaceAll("\\", "/");
-  const prepareBase = async (healed: ReadonlyMap<string, string>): Promise<Set<string>> => {
-    rmSync(base, { recursive: true, force: true });
-    buildSandbox(repoRoot, base, directories);
-    mkdirSync(base, { recursive: true });
-    if (baseDirectory) { rmSync(join(base, artifactDir), { recursive: true, force: true }); cpSync(join(baseDirectory, artifactDir), join(base, artifactDir), { recursive: true }); }
-    else execFileSync("sh", ["-c", `cd '${repoRoot}' && git -c core.quotepath=false archive ${baseRef} '${pluginDir}' | tar -x -C '${base}'`]);
-    if (!baseDirectory) pruneNonBaseFiles(repoRoot, base, artifactDir, baseRef);
-    for (const directory of mountedOutsideDirectories(repoRoot, pluginDir, base)) {
-      if (existsSync(join(base, directory))) continue;
-      mkdirSync(dirname(join(base, directory)), { recursive: true });
-      cpSync(resolve(repoRoot, directory), join(base, directory), { recursive: true, filter: (path) => !/\/(node_modules|target|dist)(\/|$)/u.test(path) });
-    }
-    for (const [path, text] of healed) { mkdirSync(dirname(join(base, path)), { recursive: true }); writeFileSync(join(base, path), text); }
-    const carvedAtBase = baseCarved();
-    const roots: ArtifactCrate[] = [...carvedAtBase, { dir: facadeDirectory, name: facade.name, entry: join(base, relativeEntry(facade)) }];
-    const files = new Set(roots.flatMap((crate) => closureFiles(base, baseEntry(crate))));
-    const modules = new Map<string, string>(carvedAtBase.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`] as const));
-    const baseOwned: OwnedCrate[] = [];
-    for (const crate of roots) {
-      let paths: string[];
-      try {
-        const lib = await measureRustCrate(base, crate.entry, false, new Map(), join(base, crate.dir));
-        const test = await measureRustCrate(base, crate.entry, true, new Map(), join(base, crate.dir));
-        paths = [...lib.sourcePaths, ...test.sourcePaths];
-      } catch { paths = closureFiles(base, baseEntry(crate)); }
-      baseOwned.push({ module: `__c_${crateIdent(crate.name)}`, paths, root: baseEntry(crate) });
-    }
-    mountCrates(base, baseOwned, modules);
-    patchSandboxSources(base, prefixes);
-    return files;
-  };
-  const baseFiles = await prepareBase(new Map());
-  const workspaceDir = relativePosix(repoRoot, resolve(repoRoot, facadeDirectory, (Bun.TOML.parse(readFileSync(join(repoRoot, facadeDirectory, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? "../.."));
-  const siblings = siblingPathCrates(repoRoot, pluginDir, artifactDir, crates.map((crate) => `${crate.dir}/Cargo.toml`), workspaceDir).filter((sibling) => { const roots = [dirname(relative(repoRoot, sibling.entry)), dirname(dirname(sibling.dir))].map((root) => `${root.replaceAll("\\", "/")}/`); return [...baseFiles].some((file) => roots.some((root) => file.startsWith(root))); }).map((sibling) => ({ ...sibling, files: closureFiles(repoRoot, relative(repoRoot, sibling.entry).replaceAll("\\", "/")) })).filter((sibling) => sibling.files.some((file) => baseFiles.has(file)));
-  buildSandbox(repoRoot, combined, [...new Set([...directories, ...siblings.flatMap((sibling) => sibling.files.filter((file) => !file.startsWith(`${pluginDir}/`)).map((file) => dirname(file)))])]);
-  const crateModules = new Map<string, string>([...carved.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`] as const), ...siblings.flatMap((sibling) => sibling.idents.map((ident) => [ident, `__c_${crateIdent(sibling.name)}`] as const))]);
-  const owned = [...carved.map((crate) => ({ module: crateModules.get(crateIdent(crate.name))!, paths: measured.get(crate.name)!, root: relativeEntry(crate) })), { module: `__c_${crateIdent(facade.name)}`, paths: measured.get(facade.name)!, root: relativeEntry(facade) }, ...siblings.map((sibling) => ({ module: `__c_${crateIdent(sibling.name)}`, paths: sibling.files, root: relative(repoRoot, sibling.entry).replaceAll("\\", "/") }))];
-  mountCrates(combined, owned, crateModules);
-  patchSandboxSources(combined, prefixes);
-  const declaresFeature = (feature: string): boolean => [...siblings.map((sibling) => sibling.dir), ...crates.map((crate) => crate.dir)].some((dir) => Object.hasOwn((Bun.TOML.parse(readFileSync(join(repoRoot, dir, "Cargo.toml"), "utf8")) as { features?: Record<string, unknown> }).features ?? {}, feature));
-  const testingFlags = ["testing", "testkit"].filter(declaresFeature).flatMap((feature) => ["--cfg", `feature="${feature}"`]);
-  const flagSets = [[], ["--test", ...testingFlags]] as string[][];
-  const archivedAt = (file: string): boolean => { if (baseDirectory) return existsSync(join(baseDirectory, file)); try { execToolSyncV1("git", ["-c", "core.quotepath=false", "cat-file", "-e", `${baseRef}:${file}`], { cwd: repoRoot, stdio: "pipe" }); return true; } catch { return false; } };
-  const healed = new Map<string, string>();
-  for (let round = 0; round < 64; round += 1) {
-    const fresh = new Map<string, string>();
-    for (const flags of flagSets) for (const diagnostic of runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags).diagnostics) {
-      const [, message = "", file = ""] = diagnostic.split("\t");
-      const missing = /^couldn't find file `([^`]+)`/u.exec(message)?.[1]?.replace(`${base}/`, "").replace("<sandbox>/", "");
-      if (missing && !healed.has(missing) && existsSync(join(repoRoot, missing)) && !existsSync(join(base, missing)) && !archivedAt(missing)) fresh.set(missing, readFileSync(join(repoRoot, missing), "utf8"));
-      if (!treeError(message) || !file || healed.has(file) || !existsSync(join(repoRoot, file))) continue;
-      const current = readFileSync(join(repoRoot, file), "utf8");
-      let archived: string | null = null;
-      if (baseDirectory) archived = existsSync(join(baseDirectory, file)) ? readFileSync(join(baseDirectory, file), "utf8") : null;
-      else try { archived = execToolSyncV1("git", ["-c", "core.quotepath=false", "show", `${baseRef}:${file}`], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }); } catch { archived = null; }
-      if (current === archived) continue;
-      if (archived !== null && /^(an inner attribute is not permitted|expected outer doc comment)/u.test(message)) {
-        if (hoistInnerAttributes(current) === current && hoistInnerAttributes(archived) !== archived) fresh.set(file, hoistInnerAttributes(archived));
-        continue;
-      }
-      fresh.set(file, current);
-    }
-    if (!fresh.size) break;
-    for (const pending = [...fresh.keys()]; pending.length;) {
-      const file = pending.pop()!;
-      for (const mounted of mountedPathFiles(file, fresh.get(file)!)) {
-        if (fresh.has(mounted) || healed.has(mounted) || !existsSync(join(repoRoot, mounted)) || existsSync(join(base, mounted)) || archivedAt(mounted)) continue;
-        fresh.set(mounted, readFileSync(join(repoRoot, mounted), "utf8"));
-        pending.push(mounted);
-      }
-    }
-    for (const [file, text] of fresh) healed.set(file, text);
-    await prepareBase(healed);
-  }
-  const report: AppliedLayoutReport = { crates: carved.length, baseCrates: baseCarved().length, siblings: siblings.map((sibling) => sibling.name), healedBase: [...healed.keys()], layout: {} };
-  for (const flags of flagSets) {
-    const baseline = runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags);
-    const carvedRun = runResolutionOracle(combined, join(combined, "__combined.rs"), "combined", flags);
-    const strip = (list: string[]): string[] => [...new Set(list.filter(external).map(normalizeCombined).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
-    const baselineLines = strip(baseline.diagnostics);
-    const delta = diffDiagnostics(baselineLines, dropBaseUnresolvedNames(baselineLines, strip(carvedRun.diagnostics)));
-    report.layout[flags.includes("--test") ? "--test" : "native"] = { base: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, sampleLimit).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
-  }
-  if (!keep) {
-    rmSync(combined, { recursive: true, force: true });
-    rmSync(base, { recursive: true, force: true });
-  }
-  return report;
+  return breaches;
 }

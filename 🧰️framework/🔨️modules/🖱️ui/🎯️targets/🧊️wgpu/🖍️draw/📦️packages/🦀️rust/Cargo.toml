@@ -40,7 +40,6 @@ semio-framework-ui-raster-owner = { path = "../../../../../🖼️raster/🧵️
 semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-canvas-scene = { path = "../../../../../../🖼️canvas/🎬️scene/📦️packages/🦀️rust", optional = true }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }

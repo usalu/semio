@@ -1,0 +1,425 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Captured Source Separate Neutral Validation",
+  "definitions": {
+    "policy": {
+      "const": {
+        "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY",
+        "files": [
+          "📦️fresh/schema.json",
+          "📦️fresh/cases.json",
+          "📦️fresh/contract.ts",
+          "📦️fresh/core.ts",
+          "📦️fresh/host.ts",
+          "📦️fresh/script.ts",
+          "📦️fresh/tests.ts",
+          "📦️fresh/critical-paths.json",
+          "📦️fresh/git.schema.json",
+          "📦️fresh/git.cases.json",
+          "📦️fresh/git.ts",
+          "📦️fresh/git.tests.ts",
+          "📦️fresh/git-entry.ts",
+          "📦️fresh/fresh-git.py",
+          "📦️fresh/capture-git.ts",
+          "📦️fresh/git-archive.schema.json",
+          "📦️fresh/git-archive.ts",
+          "📦️fresh/git-transfer.ts",
+          "🌱️linux/git.schema.json",
+          "🌱️linux/git.cases.json",
+          "🌱️linux/git.ts",
+          "🌱️linux/git.tests.ts",
+          "🌱️linux/git-receiver.py",
+          "🌱️linux/receiver.py",
+          "🌱️linux/script.ts",
+          "🌱️linux/schema.json",
+          "🧰️native/script.ts",
+          "📦️fresh/combined.schema.json",
+          "📦️fresh/combined.cases.json",
+          "📦️fresh/combined.ts",
+          "📦️fresh/git-format.schema.json",
+          "📦️fresh/git-format.cases.json",
+          "📦️fresh/git-format.tests.ts",
+          "🧰️native/schema.json",
+          "🧰️native/cases.json",
+          "🧰️native/tests.ts",
+          "🌱️linux/cases.json",
+          "🌱️linux/plan.json",
+          "🌱️linux/tests.ts",
+          "🌱️linux/entry.schema.json",
+          "🌱️linux/entry.cases.json",
+          "🌱️linux/entry.ts",
+          "🌱️linux/entry.tests.ts",
+          "🌱️linux/receiver.cases.json",
+          "🌱️linux/verify.ts",
+          "📤️fresh/modes.ts",
+          "🔬️final/archive.py",
+          "🔬️final/boundary-entry.ts",
+          "🔬️final/boundary.cases.json",
+          "🔬️final/boundary.schema.json",
+          "🔬️final/boundary.ts",
+          "🔬️final/cases.json",
+          "🔬️final/core.ts",
+          "🔬️final/entry.ts",
+          "🔬️final/integration.ts",
+          "🔬️final/oracle.py",
+          "🔬️final/schema.json",
+          "🔬️final/tests.ts",
+          "📤️fresh/cases.json",
+          "📤️fresh/core.ts",
+          "📤️fresh/entry.ts",
+          "📤️fresh/oracle.py",
+          "📤️fresh/promotion.ts",
+          "📤️fresh/schema.json",
+          "📤️fresh/tests.ts",
+          "🚀️run/📜️script.ts",
+          "👁️facts/cases.json",
+          "👁️facts/core.ts",
+          "👁️facts/entry.ts",
+          "👁️facts/oracle.py",
+          "👁️facts/schema.json",
+          "👁️facts/tests.ts",
+          "🚀️fresh/schema.json",
+          "🚀️fresh/cases.json",
+          "🚀️fresh/parent.ts",
+          "🚀️fresh/tests.ts",
+          "🚀️fresh/derive.schema.json",
+          "🚀️fresh/derive.cases.json",
+          "🚀️fresh/derive.ts",
+          "🚀️fresh/derive.tests.ts",
+          "🚀️fresh/physical.schema.json",
+          "🚀️fresh/physical.cases.json",
+          "🚀️fresh/physical.tests.ts"
+        ],
+        "phases": [
+          "source",
+          "git-producer",
+          "git-format",
+          "git-transfer",
+          "native-helper",
+          "controller",
+          "final-verifier",
+          "fresh-exporter",
+          "facts-observer",
+          "cache-descriptors",
+          "reset-boundaries",
+          "emitted-entry",
+          "nx-pointer",
+          "production-parent",
+          "cargo-inference",
+          "declared-project",
+          "dependency-progress",
+          "implementation-pin",
+          "execution-contracts"
+        ],
+        "nativeSha256": "a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c",
+        "nativeBytes": 11767992,
+        "image": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b",
+        "maximumFileBytes": 16777216,
+        "maximumPackageBytes": 33554432,
+        "maximumSourceManifestBytes": 134217728,
+        "workerMilliseconds": 3540000,
+        "cleanupMilliseconds": 60000,
+        "outputBytes": 67108864,
+        "outputLines": 262144,
+        "sourcePaths": [
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile",
+          "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json",
+          "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧬️schema/📐️law.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.d.mts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🗂️components/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🥒️.feature",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+          "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/📥️preparation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts",
+          "📋️build-owners.json",
+          "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
+        ]
+      }
+    },
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 134217728
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "cohort",
+        "captureId",
+        "operation",
+        "template",
+        "evidence"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "captured-source-neutral-plan"
+        },
+        "cohort": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "template": {
+          "$ref": "#/definitions/pin"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "source",
+            "manifest",
+            "git",
+            "provision"
+          ],
+          "properties": {
+            "identity": {
+              "$ref": "#/definitions/pin"
+            },
+            "source": {
+              "$ref": "#/definitions/pin"
+            },
+            "manifest": {
+              "$ref": "#/definitions/pin"
+            },
+            "git": {
+              "$ref": "#/definitions/pin"
+            },
+            "provision": {
+              "$ref": "#/definitions/pin"
+            }
+          }
+        }
+      }
+    },
+    "projectionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "paths",
+        "rows",
+        "accepted",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "bytes": {
+                "type": "integer"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "settlementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "joined",
+        "status",
+        "signal",
+        "checks",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "joined": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "terminalMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "scope",
+        "path",
+        "value",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "terminal",
+            "receipt"
+          ]
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "string"
+          }
+        },
+        "value": {},
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/plan"
+}

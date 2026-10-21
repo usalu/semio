@@ -36,14 +36,14 @@ semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️
 semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-value = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

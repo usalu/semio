@@ -17,7 +17,10 @@ use semio_s_fem_static::Elements;
 use semio_s_fem_sparse::rcm_order;
 
 pub const MOUNTED_OWNER_PAGE_BYTES: usize = 4_096;
-pub const ASSEMBLY_TRIPLET_INDEX_SPACE: usize = usize::MAX;
+pub const ASSEMBLY_TRIPLET_INDEX_SPACE: usize = semio_s_fem_sparse::SPARSE_INDEX_SPACE;
+
+/// 📚️ A funded paged owner of assembly scalars: every backing page is admitted, placed and retired under its own grant.
+pub type AssemblyOrder<T> = PagedList<T, ASSEMBLY_TRIPLET_INDEX_SPACE>;
 
 pub fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
     semio_framework_os_pack::pack_rt::encode_wire_value(&value.to_value())
@@ -464,43 +467,9 @@ pub struct BucklingResult {
 // #endregion 🔖️Model
 
 // #region 🔖️DofMap
-/// 🔢️ Numbers each node's active DOFs (the union of `dofs_per_node()` over elements touching it) —
-/// a small, self-contained reimplementation of `lib.rs`'s private `build_dof_map`/`DofMap` (not
-/// `pub`, so not importable here), kept byte-for-byte equivalent in ordering behavior.
-pub struct DofMap {
-    pub order: Vec<(String, Dof)>,
-    pub slots: HashMap<String, [Option<usize>; 6]>,
-}
-
-impl DofMap {
-    /// 🔢️ Wraps an ordered `(node, dof)` run with its per-node slot index, so a lookup is one hash
-    /// probe instead of a scan of the whole order — the scan made every assembly and recovery pass
-    /// quadratic in the mesh (`elements × dofs × order`), which is what dominated a two-thousand-node
-    /// continuum model before the factorization even started.
-    pub fn from_order(order: Vec<(String, Dof)>) -> Self {
-        let mut slots: HashMap<String, [Option<usize>; 6]> = HashMap::new();
-        for (index, (node_id, dof)) in order.iter().enumerate() {
-            slots.entry(node_id.clone()).or_insert([None; 6])[dof.index()] = Some(index);
-        }
-        Self { order, slots }
-    }
-
-    pub fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
-        self.slots.get(node_id)?[dof.index()]
-    }
-
-    /// 🔢️ Appends one `(node, dof)` owner at the end of the order and indexes it — the mounted
-    /// construction emits the order one owner per step.
-    pub fn push(&mut self, owner: (String, Dof)) {
-        let index = self.order.len();
-        self.slots.entry(owner.0.clone()).or_insert([None; 6])[owner.1.index()] = Some(index);
-        self.order.push(owner);
-    }
-
-    pub fn len(&self) -> usize {
-        self.order.len()
-    }
-}
+#[path = "🧭️dof-map/🦀️.rs"]
+mod dof_map;
+pub use dof_map::*;
 
 pub fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
     let mut active_of: HashMap<String, Vec<Dof>> = HashMap::new();

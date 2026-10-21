@@ -50,6 +50,17 @@ export function stateConfigurationFromBuildGraphV1(graph,{environmentPaths=[],en
  return{owners,env:{paths:environmentPaths,prefixes:environmentPrefixes}};
 }
 
+/** 🔗 The projects a client that named `named` may have built on its behalf: every project reachable from them through task dependencies. */
+export function taskClosureV1(graph,named){
+ const tasks=new Map(),projectOf=id=>id.split(":")[0];
+ for(const owner of stateConfigurationFromBuildGraphV1(graph).owners)for(const task of owner.tasks)tasks.set(owner.name+":"+task.name,task.dependsOn);
+ const projects=new Set(named),pending=[...tasks.keys()].filter(id=>projects.has(projectOf(id))),seen=new Set(pending);
+ while(pending.length){
+  for(const next of tasks.get(pending.pop())??[]){projects.add(projectOf(next));if(!seen.has(next)){seen.add(next);pending.push(next);}}
+ }
+ return projects;
+}
+
 /** 🔌 The graph port of the service over a loader that returns a neutral graph and a salt. */
 export function createBuildGraphPortV1({loadGraph,salt,listing,environmentPaths,environmentPrefixes,generation}){
  return{

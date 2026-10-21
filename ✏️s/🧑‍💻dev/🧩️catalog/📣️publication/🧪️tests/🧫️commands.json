@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "entry": "./🧩️catalog/📣️publication/📜️script.ts",
+  "cases": [
+    {
+      "target": "generate",
+      "operation": "generate"
+    },
+    {
+      "target": "check-generated",
+      "operation": "check"
+    },
+    {
+      "target": "preview-generated",
+      "operation": "preview"
+    },
+    {
+      "target": "verify-catalog",
+      "operation": "verify"
+    }
+  ],
+  "generator": {
+    "id": "plugin-registry",
+    "ownerPath": "✏️s/🧑‍💻dev",
+    "entryPath": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
+    "previewArguments": [
+      "preview"
+    ]
+  }
+}

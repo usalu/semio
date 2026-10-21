@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{DslValue, RetirementDemand, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor}, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value::{DslValue, RetirementDemand, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver};
 use protocol::mutation::retained::{RetainedRowPatchFields,RetainedPatchSource};
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧳️state/🔣️.json")).unwrap()}

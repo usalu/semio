@@ -6,8 +6,8 @@ import {constants, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rea
 import {tmpdir} from "node:os";
 import {dirname, join} from "node:path";
 import Ajv from "ajv";
-import {testPythonV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {testPythonV1} from "../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import * as toolchains from "../🟦️.ts";
 import policy from "../🔣️.json" with {type: "json"};
 import schema from "../🧬️schema/🔣️.json" with {type: "json"};

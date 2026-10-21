@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent oracle for the resident service: hashlib/hmac vectors, jsonschema verdicts on a mutated frame corpus, owner digests of a directory.
+"""🔎 Independent oracle for the resident service: hashlib/hmac vectors, jsonschema verdicts on a mutated frame corpus, owner digests of a directory.
 usage: oracle.py fixtures OUT.json | oracle.py digest ROOT RELPATH..."""
 import hashlib, hmac, json, os, random, sys, base64
 

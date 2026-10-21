@@ -25,7 +25,11 @@ export type NativeImageRetirementRequestV1=Readonly<{version:1;wait:boolean;expe
 export function readNativeImageRetirementRequestV1(value:unknown):NativeImageRetirementRequestV1{if(validateJsonSchemaSubset(schema.definitions.ImageRetirementRequest,value,schema).length)throw Error("Closed original image retirement request required");const request=value as NativeImageRetirementRequestV1,expected=request.expectedImage;const captured={version:1 as const,wait:request.wait,...(expected?{expectedImage:Object.freeze({receiptSha256:expected.receiptSha256,dev:expected.dev,ino:expected.ino,size:expected.size,allocatedBytes:expected.allocatedBytes})}:{})};if(validateJsonSchemaSubset(schema.definitions.ImageRetirementRequest,captured,schema).length)throw Error("Closed original image retirement request required");return Object.freeze(captured);}
 
 /** 📎️ Distinguishes retained readers from an actual exclusive maintenance result. */
-export type NativeImageMaintenanceResultV1<T>=Readonly<{acquired:false}|{acquired:true;value:T}>;
+export type NativeImageMaintenanceResultV1<T>=Readonly<{acquired:false;withdrawn?:true}|{acquired:true;value:T}>;
+/** 📊️ Carries immutable privately verified free space without image or control authority. */
+export type NativeImageMaintenanceWaitObservationV1=Readonly<{version:1;availableBytes:number}>;
+/** 🚦️ Requests withdrawal of this queued writer, never admission or writable custody. */
+export type NativeImageMaintenanceWaitObserverV1=(observation:NativeImageMaintenanceWaitObservationV1)=>boolean;
 /** 🛂️ Refuses undeclared image maintenance authority before releasing a reader. */
 export function readNativeImageMaintenanceRequestV1(value:unknown):NativeImageMaintenanceRequestV1{if(validateJsonSchemaSubset(schema.definitions.ImageMaintenanceRequest,value,schema).length)throw Error("Closed original image maintenance request required");return Object.freeze({version:1,wait:(value as NativeImageMaintenanceRequestV1).wait});}
 
@@ -41,7 +45,7 @@ export interface NativeImageStorageV1{
  readonly port:NativeStoragePortV1;
  recheck():Promise<void>;
  close():Promise<void>;
- withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1,custody:NativeImageMaintenanceCustodyV1)=>Promise<T>):Promise<NativeImageMaintenanceResultV1<T>>;
+ withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1,custody:NativeImageMaintenanceCustodyV1)=>Promise<T>,withdrawWhen?:NativeImageMaintenanceWaitObserverV1):Promise<NativeImageMaintenanceResultV1<T>>;
 }
 
 /** 🧭️ Resolves the compact canonical mount namespace without a path alias. */

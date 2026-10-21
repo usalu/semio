@@ -1,6 +1,6 @@
 //! 🌱️ Original builtin seed dictionaries retain exact projected parameter value leases.
 use super::*;
-use protocol::value::ordered::SharedOwner;
+use semio_framework_value_ordered::ordered::SharedOwner;
 
 #[derive(semio_framework_value::RetireOwned)]
 enum SeedDisplaced{Dictionary(Dictionary)}

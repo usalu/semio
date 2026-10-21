@@ -7,6 +7,7 @@ import {createResidentServiceV1} from "../service/index.mjs";
 import {createBuildGraphPortV1} from "../ports/graph.mjs";
 import {scanListingV1} from "../ports/listing.mjs";
 import {createDelegatedExecutionPortV1,createWarmPoolV1,writeWarmPreloadV1} from "../delegate/index.mjs";
+import {createExecutorPoolV1} from "../delegate/executor.mjs";
 import {POLICY_V1} from "../protocol/policy.mjs";
 import {RESIDENT_EXCLUDES_V1,RESIDENT_FENCE_DIRECTORY_V1} from "../command/index.mjs";
 
@@ -28,19 +29,20 @@ export function custodyPortFromPoolV1(pool){
 
 /** ▶ Builds the foreground runner. `dependencies` are injected by the CLI wiring so this module imports nothing from the repository. */
 export function createForegroundRunnerV1(dependencies){
- const{loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,capacity,log=()=>{}}=dependencies;
+ const{loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,executorSize=Number(dependencies.environment?.SEMIO_RESIDENT_EXECUTORS??process.env.SEMIO_RESIDENT_EXECUTORS??0),capacity,log=()=>{}}=dependencies;
  return async({runtime,root,environment})=>{
   const binary=watcherBinary&&existsSync(watcherBinary)?watcherBinary:undefined,{implementation,implementationPaths}=dependencies.implementation??residentImplementationV1(root);
   const preload=writeWarmPreloadV1(runtime.directory);
   const pool=createWarmPoolV1({command:[execPath,"--preload",preload,script],environment:{...environment,SEMIO_WARM_MODULES:JSON.stringify(warmModules),SEMIO_BUILD_SERVICE:"off"},cwd:root,size:warmSize,idleMilliseconds:POLICY_V1.idleShutdownMilliseconds,log});
   const filterHolder={excluded:()=>false};
   const graph=createBuildGraphPortV1({loadGraph,salt,generation:generationOf,environmentPaths,environmentPrefixes,listing:async({root:r,exclude,filter})=>{Object.assign(filterHolder,filter);return scanListingV1({root:r,binary,exclude,filter});}});
-  const execution=createDelegatedExecutionPortV1({pool,coldCommand:[execPath,script],argvFor:id=>["repo","run",id,"--service=off"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root});
+  const executors=executorSize>0&&process.platform!=="win32"?createExecutorPoolV1({command:[execPath,script,"repo","service","executor"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root,size:executorSize,log}):undefined;
+  const execution=createDelegatedExecutionPortV1({pool,executors,coldCommand:[execPath,script],argvFor:id=>["repo","run",id,"--service=off"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root});
   const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:binary?"auto":"portable",watcherBinary:binary,exclude:{rooted:[...RESIDENT_EXCLUDES_V1.rooted],names:[...RESIDENT_EXCLUDES_V1.names]},fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},log});
   const stop=reason=>void service.stop(reason);
   process.once("SIGTERM",()=>stop("SIGTERM"));process.once("SIGINT",()=>stop("SIGINT"));
-  await service.start();pool.top();
-  const reason=await service.closed;await pool.close();
+  await service.start();pool.top();executors?.top();
+  const reason=await service.closed;await pool.close();await executors?.close();
   return reason==="stale"||reason==="memory"?75:0;
  };
 }

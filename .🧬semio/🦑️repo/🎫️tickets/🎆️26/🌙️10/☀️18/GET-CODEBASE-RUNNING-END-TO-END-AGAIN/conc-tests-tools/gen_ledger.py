@@ -8,6 +8,9 @@ for x in scan["findings"]:
     if x["severity"]!="error": continue
     groups[(x["file"],x["rule"])]=groups.get((x["file"],x["rule"]),0)+1
 R=[
+ ("native-image-unsandboxed",r"dispatch","source-text assertion on the backend selection (the call appears inside an expected-source template); no image is created"),
+ ("real-graph-image",r".*","opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"),
+ ("real-image-lease",r".*","names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"),
  ("fixed-tmp-dir",r"\.rs$","Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"),
  ("fixed-tmp-dir",r"hub-freshness","probes a path that must stay absent; nothing is written"),
  ("fixed-tmp-dir",r"providers/.*tests","builds provider-map strings only; nothing is written"),

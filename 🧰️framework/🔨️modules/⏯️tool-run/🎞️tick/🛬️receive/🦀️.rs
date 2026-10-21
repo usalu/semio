@@ -90,7 +90,7 @@ impl ToolRunTickNativeCursor{
    (Container::List,Kind::Tick,4)=>{born=reserve(&mut self.tick_mut().steps,count)?;Kind::Steps},
    (Container::List,Kind::Tick,5)=>{born=reserve(&mut self.tick_mut().trace,count)?;Kind::Trace},
    (Container::List,Kind::Tick,6)=>{born=reserve(&mut self.tick_mut().append_ops,count)?;Kind::Ops},
-   (Container::List,Kind::Progress,10)=>{let steps=&mut self.tick_mut().progress.as_mut().unwrap().steps.steps;steps.try_reserve_exact(count).map_err(|_|malformed("native progress step backing refused"))?;born=steps.capacity()*size_of::<ToolRunStep>();Kind::ProgressSteps},
+   (Container::List,Kind::Progress,10)=>{let steps=self.tick_mut().progress.as_mut().unwrap().steps.original_steps_mut();steps.try_reserve_exact(count).map_err(|_|malformed("native progress step backing refused"))?;born=steps.capacity()*size_of::<ToolRunStep>();Kind::ProgressSteps},
    _=>return Err(malformed("native Tick container shape is undeclared")),
   };self.push(semantic,count)?;Ok(born)
  }
@@ -117,7 +117,7 @@ impl ToolRunTickNativeCursor{
   match frame.kind{
    Kind::Identity=>{let identity=ToolRunIdentity{id:ToolRunId{app_instance_id:u32::try_from(frame.values[0]).map_err(|_|malformed("native app identity overflow"))?,run:frame.values[1]},generation:u32::try_from(frame.values[2]).map_err(|_|malformed("native generation overflow"))?,base_revision:frame.revision};if self.frame()?.kind==Kind::Progress{self.tick_mut().progress.as_mut().unwrap().identity=identity}else{self.tick_mut().identity=identity}},
    Kind::Tick=>validate_tick_payload(self.tick().payload.as_deref(),self.tick().payload_update).map_err(|_|malformed("native Tick publication extent refused"))?,
-   Kind::Step=>{if self.owned.step.as_ref().unwrap().repeat==0{return Err(malformed("native Tick zero repeat"))}let step=self.owned.step.take().unwrap();if self.frame()?.kind==Kind::ProgressSteps{self.tick_mut().progress.as_mut().unwrap().steps.steps.push_back(step)}else{self.tick_mut().steps.push(step)}self.element()?;},
+   Kind::Step=>{if self.owned.step.as_ref().unwrap().repeat==0{return Err(malformed("native Tick zero repeat"))}let step=self.owned.step.take().unwrap();if self.frame()?.kind==Kind::ProgressSteps{self.tick_mut().progress.as_mut().unwrap().steps.original_steps_mut().push_back(step)}else{self.tick_mut().steps.push(step)}self.element()?;},
    Kind::Update=>{self.tick_mut().payload_update=Some(match(frame.values[0],frame.seen){(0,1)=>ToolRunPayloadUpdate::Replace,(1,63)=>ToolRunPayloadUpdate::Range{publication:frame.values[1],total_bytes:frame.values[2],offset:frame.values[3],chunk_bytes:u32::try_from(frame.values[4]).map_err(|_|malformed("native publication stride overflow"))?,final_chunk:match frame.values[5]{0=>false,1=>true,_=>return Err(malformed("native publication finality ordinal"))}},_=>return Err(malformed("native publication update is not closed"))});},
    _=>{}
   }Ok(())

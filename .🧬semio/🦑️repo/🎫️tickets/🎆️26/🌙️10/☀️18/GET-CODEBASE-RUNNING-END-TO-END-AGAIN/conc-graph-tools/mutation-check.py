@@ -18,6 +18,8 @@ INF = os.path.join(G, E(0x1F4E5) + "inference")
 SCRIPT_INPUTS, ENTRY = os.path.join(INF, E(0x1F9ED) + "script-inputs", MJS), os.path.join(INF, E(0x1F6A6) + "invocation", MJS)
 T_FACTS = os.path.join(INF, TESTS, E(0x1F9F7) + "closure-facts", TS)
 OBSERVATION = os.path.join(L, E(0x1F3D7) + "build", E(0x1F441) + "observation", MJS)
+REVISION, T_REVISION = os.path.join(L, E(0x1F3D7) + "build", E(0x1F4E5) + "inputs", E(0x1F50F) + "revision", MJS), os.path.join(L, E(0x1F3D7) + "build", E(0x1F4E5) + "inputs", E(0x1F50F) + "revision", TESTS, TS)
+STORE = os.path.join(L, E(0x26A1) + "caching", E(0x1F4BE) + "storage", E(0x1F512) + "enforcement", E(0x1F4E6) + "budget", E(0x1F4E5) + "opening", E(0x1F3EA) + "store", TS)
 checks = [
     ("engine: compare-and-swap ignores the generation", ENGINE, "if((pointer?.generation??-1)!==expectedGeneration){", "if(false){", T_GEN, "compare-and-swap"),
     ("engine: stale classes name no owner", ENGINE, "else if(manifest.owners[name])dirty.add(name);}", "else if(manifest.owners[name]){}}", T_GEN, "scenario ring"),
@@ -34,6 +36,17 @@ checks = [
     ("load: the graph policy is not read", LOAD, "if(argument.startsWith(\"--graph-policy=\")){policy=argument.slice(\"--graph-policy=\".length);explicit=true;continue;}", "", T_LOAD, "policy flag"),
     ("load: a closure expands every project", LOAD, "const projects=await host.expand(assembled.projects,control);", "const projects=await host.expand(assembled.projects,control);host.expand({a:1,b:1,c:1,d:1,e:1},control);", T_LOAD, "closure reads and expands"),
     ("environment: the lock is not part of the digest", ENV, "lock:lockDigest,", "lock:null,", T_ENV, "digest equals"),
+    ("pin: the revision reader ignores the pin", REVISION, "function current(){if(implementationPinnedV1())return;", "function current(){", T_REVISION, "pinned invocation"),
+    ("pin: a failing body keeps its pin", REVISION, "finally{pin.active=false;}", "finally{}", T_REVISION, "pinned invocation"),
+    ("pin: a self-check site ignores the pin", STORE, "requireCurrentRepositoryCacheStoreV1():void{if(implementationPinnedV1())return;", "requireCurrentRepositoryCacheStoreV1():void{", T_PROTOCOL, "every self-check"),
+    ("pin: the graph module check ignores the pin", GRAPH, "const requireCurrentGraphModuleV1=():void=>{if(implementationPinnedV1())return;", "const requireCurrentGraphModuleV1=():void=>{", T_PROTOCOL, "every self-check"),
+    ("pin: the generation load is not pinned", GRAPH, "return withImplementationPinV1(()=>loadBuildGraphUnpinnedV1(root,invocation,phaseControl,options));", "return loadBuildGraphUnpinnedV1(root,invocation,phaseControl,options);", T_PROTOCOL, "pinned to the implementation it loaded"),
+    ("stamp: the manifest names no implementation", ENGINE, "parent:current?.pointer.manifest??null,identity,implementation,env:envDigest", "parent:current?.pointer.manifest??null,identity,implementation:sha256(\"x\"),env:envDigest", T_LOAD, "names the implementation modules"),
+    ("scope: an inert module is a consumer", LOAD, "scopes.none.some(prefix=>row.path.includes(prefix)))continue;", "false)continue;", T_LOAD, "implementation facts are scoped"),
+    ("scope: a node module belongs to every project", LOAD, "(scopes.projects.some(prefix=>row.path.includes(prefix))?projects:all).push(row);", "all.push(row);", T_LOAD, "implementation facts are scoped"),
+    ("scope: the environment names no implementation facts", LOAD, "...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all]", "...part.rows.filter(row=>!claimed.has(rowKeyV1(row)))]", T_LOAD, "shaping adds the implementation facts"),
+    ("scope: a reader of another implementation says nothing", LOAD, 'result.current.manifest.implementation===implementation?"current":"stale"', '"current"', T_LOAD, "names the implementation modules"),
+    ("identity: the generation identity depends on the implementation", GRAPH, '["graph-generations-v2",registryDigest]', '["graph-generations-v2",registryDigest,loadedGraphModuleAuthorityV1]', T_PROTOCOL, "never contains the module authority"),
     ("glue: the builder queues on the unscoped writer", GRAPH, "withBuildGraphStateV1(root,invocation,phaseControl,body,generationScopeV1)", "withBuildGraphStateV1(root,invocation,phaseControl,body)", T_PROTOCOL, "builder queues"),
     ("glue: the part infers every owner", GRAPH, "...(part.cold?{}:{ownerRoots:part.roots})", "", T_PROTOCOL, "infers only the named roots"),
     ("glue: the shared reader takes the facts writer", GRAPH, "withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return body(store,control);})", "withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return body(store,control);})", T_PROTOCOL, "shared reader"),

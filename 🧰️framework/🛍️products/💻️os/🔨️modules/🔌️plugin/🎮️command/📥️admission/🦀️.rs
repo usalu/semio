@@ -27,7 +27,7 @@ pub mod original_latest_key;
 use crate::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
 
 pub(crate) struct ToolLatestWinsScope {
-    pub key: semio_framework_value::ordered::SharedOwner<String>,
+    pub key: semio_framework_value_ordered::ordered::SharedOwner<String>,
     pub operation: u64,
     pub token: semio_framework_job::CancelToken,
     pub claim: PublicationClaimHandle,
@@ -42,16 +42,16 @@ impl ToolLatestWinsScope {
 
 #[doc(hidden)]
 pub struct ToolLatestWinsRegistry {
-    pub map: Option<semio_framework_value::ordered::OrderedMap<ToolLatestWinsScope>>,
-    pub update: Option<semio_framework_value::ordered::UpdateCursor<ToolLatestWinsScope>>,
-    pub retirement: Option<semio_framework_value::ordered::Retirement<ToolLatestWinsScope>>,
+    pub map: Option<semio_framework_value_ordered::ordered::OrderedMap<ToolLatestWinsScope>>,
+    pub update: Option<semio_framework_value_ordered::ordered::UpdateCursor<ToolLatestWinsScope>>,
+    pub retirement: Option<semio_framework_value_ordered::ordered::Retirement<ToolLatestWinsScope>>,
     pub retired_key: Option<String>,
-    retired_shared_key: Option<semio_framework_value::ordered::SharedOwner<String>>,
+    retired_shared_key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
     retired_token: Option<semio_framework_job::CancelToken>,
     retired_claim: Option<PublicationClaimHandle>,
     token_retirement: Option<ControlledRetirement<semio_framework_job::CancelToken>>,
     claim_retirement: Option<ControlledRetirement<PublicationClaimHandle>>,
-    removed_scope: Option<semio_framework_value::ordered::SharedOwner<ToolLatestWinsScope>>,
+    removed_scope: Option<semio_framework_value_ordered::ordered::SharedOwner<ToolLatestWinsScope>>,
     retired_scope:ManuallyDrop<Option<ToolLatestWinsScope>>,
     pending_scope:ManuallyDrop<Option<ToolLatestWinsScope>>,
     pub active_operation: Option<u64>,
@@ -64,19 +64,19 @@ pub struct ToolLatestWinsRegistry {
 
 impl ToolLatestWinsRegistry {
     pub fn new() -> Self {
-        Self { map: Some(semio_framework_value::ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, retired_shared_key: None, retired_token: None, retired_claim: None, token_retirement: None, claim_retirement: None, removed_scope: None, retired_scope:ManuallyDrop::new(None),pending_scope:ManuallyDrop::new(None),active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
+        Self { map: Some(semio_framework_value_ordered::ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, retired_shared_key: None, retired_token: None, retired_claim: None, token_retirement: None, claim_retirement: None, removed_scope: None, retired_scope:ManuallyDrop::new(None),pending_scope:ManuallyDrop::new(None),active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
     }
 
     pub fn can_begin(&self) -> bool {
         !self.closing && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.retired_shared_key.is_none() && self.removed_scope.is_none() && self.retired_scope.is_none()&&self.pending_scope.is_none()&&self.retired_token.is_none()&&self.retired_claim.is_none()&&self.token_retirement.is_none()&&self.claim_retirement.is_none()&&self.outcome.is_none()
     }
 
-    pub fn begin(&mut self,operation:u64,key:&semio_framework_value::ordered::SharedOwner<String>,lease:&ToolCancellationLease,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,Fault>{
-        let capacity=semio_framework_value::ordered::SharedOwner::<ToolLatestWinsScope>::allocation_bytes();
+    pub fn begin(&mut self,operation:u64,key:&semio_framework_value_ordered::ordered::SharedOwner<String>,lease:&ToolCancellationLease,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,Fault>{
+        let capacity=semio_framework_value_ordered::ordered::SharedOwner::<ToolLatestWinsScope>::allocation_bytes();
         if !self.can_begin()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(None);}
         if self.map.as_ref().expect("live original key map").len()>=ARTIFACT_LIVE_OUTPUT_SLOTS{match self.admission_scan{None=>{self.admission_scan=Some(ARTIFACT_LIVE_OUTPUT_SLOTS);return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}));},Some(0)=>{},Some(_)=>return Ok(None)}}
         let scope=ToolLatestWinsScope{key:key.clone(),operation,token:lease.token.clone(),claim:lease.publication_claim.clone()};
-        let(scope,progress)=match semio_framework_value::ordered::SharedOwner::admit(scope,grant){Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}};
+        let(scope,progress)=match semio_framework_value_ordered::ordered::SharedOwner::admit(scope,grant){Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}};
         self.update=Some(self.map.as_ref().expect("original live key map").begin_set_shared(key.clone(),scope));self.active_operation=Some(operation);self.update_closing=false;Ok(Some(progress))
     }
 
@@ -99,8 +99,8 @@ impl ToolLatestWinsRegistry {
     }
 
     fn retire_scope(&mut self,scope:ToolLatestWinsScope){assert!(self.retired_scope.is_none(),"one original latest scope frontier");*self.retired_scope=Some(scope);}
-    pub fn retirement_step(&mut self,step:semio_framework_value::ordered::RetirementStep<ToolLatestWinsScope>)->Result<RetainedCloneStep,Fault>{
-        use semio_framework_value::ordered::RetirementStep;
+    pub fn retirement_step(&mut self,step:semio_framework_value_ordered::ordered::RetirementStep<ToolLatestWinsScope>)->Result<RetainedCloneStep,Fault>{
+        use semio_framework_value_ordered::ordered::RetirementStep;
         Ok(match step{RetirementStep::Blocked=>RetainedCloneStep::Progress(Default::default()),RetirementStep::Progress{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),RetirementStep::ProcessedBytes(copied_bytes)=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}),RetirementStep::OwnedValue(scope)=>{self.retire_scope(scope);RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})},RetirementStep::Failure(error)=>return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error)),RetirementStep::Complete=>RetainedCloneStep::Progress(Default::default())})
     }
     /// 📏️ Quotes the exact next [`Self::advance`] turn, one original owner at a time in the same order.
@@ -189,7 +189,7 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub revision: [u8; 32],
     pub lease: Option<ToolCancellationLease>,
     pub key_copy: Option<ToolLatestWinsKeyCopy>,
-    pub key: Option<semio_framework_value::ordered::SharedOwner<String>>,
+    pub key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
     pub retired_key: Option<String>,
     pub lookup_started: bool,
     pub accepted: bool,

@@ -49,3 +49,7 @@ Second goal turn classification: verified wait. Unit97994 and E2E83869 were auth
 ## Third-Turn Blocked Audit
 
 The same external capacity blocker recurred a third consecutive time. Both own pending owners were confirmed live at admission, then intentionally cancelled and confirmed terminal before any substantive work began: unit97994 exit1, E2E83869 exit1, each explicitly Host capacity wait cancelled by SIGINT. No own queued owner or running agent remains. The application is not verified end to end; the ticket stays open. The current state and exact fresh-owner resume sequence are in blocked-2026-10-21.md. The goal is being marked blocked, not complete. Earlier keep-alive instructions are superseded by this terminal-state checkpoint.
+
+## User-Requested Resume
+
+The user resumed the goal and explicitly requested resolution of memory admission without stopping other agents, all pending checks, and full end-to-end completion. The blocked audit resets for this resumed run. Workspace repository MCP was initialized, repo://goals was read again, and the existing ticket was reused. Fleet: High runtime execution for fresh unit and downstream verification; High capacity-owner implementation; Low independent memory/admission audit; main integration. Old cancelled handles remain terminal.

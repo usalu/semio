@@ -1,6 +1,7 @@
 //! 📨️ Original command custody separates a paid inline slot from its reserved native semantic frame.
 use crate::{TimeTravelDiscardCursor,TimeTravelEvent};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retirement_queue::RetirementQueue,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_retirement_queue::RetirementQueue;
 
 /// 🎟️ Retains received native event fields before semantic construction or cancellation.
 pub struct TimeTravelCommandCustody {

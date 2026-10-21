@@ -1,7 +1,7 @@
 import {availableParallelism} from "node:os";
 import {lstat,readdir} from "node:fs/promises";
 import {join,resolve} from "node:path";
-import {spawn} from "node:child_process";
+import {gitV1} from "@@PROCROOT@@/🧰️tools/🌿️git/@@TS@@";
 import {semioActionKeyV1,semioSelectFilesV1,type SemioEntryV1,type SemioEventV1,type SemioRecordTaskV1,type SemioRecordV1,type SemioStatusV1} from "../@@TS@@";
 import {SemioStoreV1,semioFileDigestV1} from "../@@STORE@@/@@TS@@";
 import {packSemioEntryV1,unpackSemioEntryV1,type SemioRemoteV1} from "../@@REMOTE@@/@@TS@@";
@@ -19,11 +19,7 @@ const order=(left:string,right:string)=>left<right?-1:left>right?1:0;
 
 /** 📚️ Lists the workspace's source files: Git's tracked and untracked-but-not-ignored files, or a portable walk when Git is absent. */
 export async function semioInventoryV1(workspace:string):Promise<string[]>{
- const git=await new Promise<string[]|undefined>(accept=>{
-  const child=spawn("git",["-c","core.fsmonitor=false","ls-files","-co","--exclude-standard","-z"],{cwd:workspace,stdio:["ignore","pipe","ignore"],windowsHide:true}),chunks:Buffer[]=[];
-  child.stdout.on("data",chunk=>chunks.push(chunk));child.once("error",()=>accept(undefined));
-  child.once("close",code=>accept(code===0?Buffer.concat(chunks).toString().split("\0").filter(Boolean):undefined));
- });
+ const git=await gitV1(["-c","core.fsmonitor=false","ls-files","-co","--exclude-standard","-z"],{cwd:workspace}).then(result=>result.status===0?result.stdout.split("\0").filter(Boolean):undefined,()=>undefined);
  if(git)return [...new Set(git)].filter(path=>!path.split("/").some(part=>EXCLUDED.has(part))).sort(order);
  const files:string[]=[],pending=[""];
  while(pending.length){

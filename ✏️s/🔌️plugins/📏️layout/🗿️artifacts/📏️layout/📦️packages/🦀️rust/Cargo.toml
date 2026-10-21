@@ -25,7 +25,6 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-layout-layout-descriptor = { workspace = true }
 semio-s-artifact-layout-layout-diff = { workspace = true }

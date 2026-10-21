@@ -7,6 +7,7 @@ use semio_framework_pets_staging_draft::schedule::*;
 use crate::stage::advance;
 use crate::stage::tests::{meadow, ticked, troupe};
 use semio_framework_pets_contract::schema::PetMode;
+use semio_framework_pets_staging_draft::schedule::WARMUP;
 
 #[test]
 fn pairs_are_drawn_on_whole_seconds_after_the_warm_up() {

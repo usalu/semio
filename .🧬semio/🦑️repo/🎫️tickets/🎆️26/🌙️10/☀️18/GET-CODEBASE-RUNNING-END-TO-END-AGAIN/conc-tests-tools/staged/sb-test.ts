@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import {testPythonV1,testRipgrepV1} from "../../🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
@@ -16,7 +17,7 @@ import {
 } from "../🟦️.ts";
 
 const declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, "..");
-const names = declared.environment, python = spawnSync("python3", ["--version"], { encoding: "utf8" }).status === 0, ripgrep = spawnSync("rg", ["--version"], { encoding: "utf8" }).status === 0;
+const names = declared.environment, python = spawnSync(testPythonV1()??"python3", ["--version"], { encoding: "utf8" }).status === 0, ripgrep = spawnSync(testRipgrepV1()??"rg", ["--version"], { encoding: "utf8" }).status === 0;
 
 function context(row: (typeof corpus.writes)[number]["context"]): GuardContextV1 {
   return { mode: "enforce", checkout: row.checkout, cwd: row.cwd, platform: row.platform as NodeJS.Platform, allowed: row.allowed, sandboxRoots: row.sandboxRoots, protectedPrefixes: row.protectedPrefixes, allowedCheckoutPrefixes: row.allowedCheckoutPrefixes, portsDirectory: undefined, sandbox: undefined, declared };
@@ -60,7 +61,7 @@ describe("protocol and corpus", () => {
     }
   });
   test.skipIf(!python)("the independent Python oracle replays the same corpus with the same outcome", () => {
-    const run = spawnSync("python3", ["-I", join(import.meta.dir, "🐍️oracle.py"), join(root, "🔣️.json"), join(import.meta.dir, "🧫️fixtures/🔣️.json")], { encoding: "utf8" });
+    const run = spawnSync(testPythonV1()??"python3", ["-I", join(import.meta.dir, "🐍️oracle.py"), join(root, "🔣️.json"), join(import.meta.dir, "🧫️fixtures/🔣️.json")], { encoding: "utf8" });
     expect(run.stdout + run.stderr).toContain("mismatches 0");
     expect(run.status).toBe(0);
   });
@@ -73,7 +74,7 @@ describe("protocol and corpus", () => {
         if (rule.scope !== "line" || rule.also?.length || rule.exempt?.length) continue;
         const lines = corpus.scans.filter(row => (rule.languages as readonly string[]).includes(row.language)).flatMap(row => row.text.split("\n").map(line => law.comment[row.language]!.test(line) ? "" : line)), file = join(directory, "case.txt");
         writeFileSync(file, lines.join("\n"));
-        const run = spawnSync("rg", ["--no-config", "--line-number", "--no-heading", "--no-filename", ...(rule.flags === "i" ? ["-i"] : []), "-e", rule.pattern!, file], { encoding: "utf8" });
+        const run = spawnSync(testRipgrepV1()??"rg", ["--no-config", "--line-number", "--no-heading", "--no-filename", ...(rule.flags === "i" ? ["-i"] : []), "-e", rule.pattern!, file], { encoding: "utf8" });
         expect(run.status === 0 || run.status === 1, `${rule.id}: ${run.stderr}`).toBe(true);
         expect(run.stdout.split("\n").filter(Boolean).map(line => Number(line.split(":")[0])), rule.id).toEqual(lines.flatMap((line, index) => compiled.pattern!.test(line) ? [index + 1] : []));
         checked += lines.length;
@@ -256,7 +257,7 @@ describe("runtime guard", () => {
     try {
       mkdirSync(join(checkout, ".cache"), { recursive: true });
       const file = join(sandbox.tmp, "guard.test.ts");
-      writeFileSync(file, `import {test} from "bun:test";import {writeFileSync,mkdirSync,rmSync} from "node:fs";import {writeFile} from "node:fs/promises";import {spawnSync} from "node:child_process";import {createServer} from "node:net";import {join} from "node:path";import Ajv from ${JSON.stringify(Bun.resolveSync("ajv", import.meta.dir))};\nconst checkout=${JSON.stringify(checkout)},tmp=${JSON.stringify(sandbox.tmp)};\n${body}\n`);
+      writeFileSync(file, `import {test} from "bun:test";import {writeFileSync,mkdirSync,rmSync} from "node:fs";import {writeFile} from "node:fs/promises";import {spawnSync} from "node:child_process";import {createServer} from "node:net";import {join} from "node:path";import {Database} from "bun:sqlite";import Ajv from ${JSON.stringify(Bun.resolveSync("ajv", import.meta.dir))};\nconst checkout=${JSON.stringify(checkout)},tmp=${JSON.stringify(sandbox.tmp)};\n${body}\n`);
       const env: NodeJS.ProcessEnv = { ...process.env, ...sandbox.environment, [names.checkout]: checkout };
       const child = spawnSync(process.execPath, ["test", "--preload", preload, file], { cwd: sandbox.root, env, encoding: "utf8" });
       expect(child.status === 0, child.stdout + child.stderr).toBe(!expectFail);
@@ -274,7 +275,10 @@ describe("runtime guard", () => {
     expect(kernel.output).toContain("kernel-image refused: hdiutil attach");
     const kill = await run("enforce", `test("x",()=>{spawnSync("pkill",["-f","semio-test-never-matches"]);});`, true);
     expect(kill.output).toContain("process-kill refused: pkill");
-    const fine = await run("enforce", `test("f",async()=>{if(!new Ajv().compile({type:"object"})({}))throw Error("CommonJS dependency broke");mkdirSync(join(tmp,"d"));await writeFile(join(tmp,"d","f"),"x");rmSync(join(tmp,"d"),{recursive:true});const s=createServer();await new Promise<void>(r=>s.listen(0,"127.0.0.1",r));s.close();});`, false);
+    const database = await run("enforce", `test("d",()=>{new Database(":memory:").close();const ok=new Database(join(tmp,"ok.sqlite"));ok.close();new Database(join(checkout,".cache","lease.sqlite")).close();});`, true);
+    expect(database.output).toContain("protected-write refused: Database");
+    expect(database.checkout).not.toContain("lease.sqlite");
+    const fine = await run("enforce", `test("f",async()=>{if(!new Ajv().compile({type:"object"})({}))throw Error("CommonJS dependency broke");new Database(":memory:").close();new Database(join(tmp,"fine.sqlite"),{readonly:false,create:true}).close();mkdirSync(join(tmp,"d"));await writeFile(join(tmp,"d","f"),"x");rmSync(join(tmp,"d"),{recursive:true});const s=createServer();await new Promise<void>(r=>s.listen(0,"127.0.0.1",r));s.close();});`, false);
     expect(fine.report).toBe("");
   });
   test("report records every violation as a schema-valid row, lets the run finish and flags fixed ports", async () => {
@@ -300,5 +304,6 @@ describe("runtime guard", () => {
     for (const name of ["writeFile", "appendFile", "mkdir", "rm", "rmdir", "unlink", "rename", "copyFile", "cp", "truncate", "symlink", "link"]) expect(fsp, name).toContain(`export const ${name} = writes("${name}"`);
     for (const name of declared.guard.openFunctions) expect(fs, name).toContain(`export const ${name} = opens("${name}"`);
     for (const name of ["spawn", "spawnSync", "execFile", "execFileSync", "exec", "execSync"]) expect(child, name).toContain(`export const ${name} =`);
+    for (const name of Object.keys(declared.guard.sqliteTargets)) expect(readFileSync(join(root, "🛡️guard/🩻️sqlite/🟦️.ts"), "utf8"), name).toContain(`class ${name} extends`);
   });
 });

@@ -9,7 +9,7 @@ BUILDER_SCHEMA = ROOT + "/🧰️framework/🔨️modules/🖱️ui/🎨️styli
 
 def oracle(text):
     return chain(text, [
-        ("oracle-import", 'import { BundleScript } from "@semio-tech/framework/process/routing";\n', 'import { BundleScript } from "@semio-tech/framework/process/routing";\nimport { pythonEnvironmentOfProjectV1 } from "@semio-tech/framework/process/toolchains";\n'),
+        ("oracle-import", 'import { BundleScript } from "@semio-tech/framework/process/routing";\n', 'import { BundleScript } from "@semio-tech/framework/process/routing";\nimport { pythonEnvironmentOfProjectV1 } from "@semio-tech/process/toolchains";\n'),
         ("oracle-run", '  env.PYTHONDONTWRITEBYTECODE = "1";\n', '  env.PYTHONDONTWRITEBYTECODE = "1";\n  Object.assign(env, pythonEnvironmentOfProjectV1(repoRoot, "energy-oracle").variables);\n'),
         ("oracle-deps", '    runCmd("uv", ["sync", "--locked", "--project", this.root], { cwd: this.root });\n',
          '    const plan = pythonEnvironmentOfProjectV1(this.repoRoot, "energy-oracle"), env = { ...process.env, ...plan.variables };\n    runCmd("uv", [...plan.installArguments], { cwd: this.repoRoot, env });\n    runCmd("uv", [...plan.syncArguments], { cwd: this.repoRoot, env });\n'),
@@ -36,8 +36,12 @@ def styling_lock(text):
 def builder_schema(text):
     return chain(text, [("styling-schema", '"requires-python": ">=3.12"', '"requires-python": ">=3.14,<3.15"')])
 
+def energy_package(text):
+    return chain(text, [("energy-process-dependency", '    "typescript": "^5.9.3",\n    "@semio-tech/framework": "workspace:*"\n', '    "typescript": "^5.9.3",\n    "@semio-tech/framework": "workspace:*",\n    "@semio-tech/process": "workspace:*"\n')])
+
 def edits():
     return [
+        (ROOT + "/✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json", energy_package),
         (ORACLE + "/🏃️execution/🟦️.ts", oracle),
         (BUILDER + "/🟦️.ts", builder),
         (STYLING_PY + "/pyproject.toml", styling_pyproject),

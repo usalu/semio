@@ -259,7 +259,8 @@ fn canonical_native_ordered_and_hashed_maps_match_independent_serde_json_output(
 
 #[test]
 fn canonical_native_ordered_roots_match_serde_json_and_their_to_value_wire() {
-    use semio_framework_value::{ToValue, ordered::{OrderedMap, OrderedSet}};
+    use semio_framework_value::ToValue;
+    use semio_framework_value_ordered::ordered::{OrderedMap, OrderedSet};
     let names=["zeta","alpha","é","Beta","","a\"q","mid dle","α","10","9"];
     let mut ordered=OrderedMap::<f64>::new();
     for(index,name)in names.iter().enumerate(){assert!(ordered.insert(name.to_string(),index as f64*0.5-1.0).is_none());}

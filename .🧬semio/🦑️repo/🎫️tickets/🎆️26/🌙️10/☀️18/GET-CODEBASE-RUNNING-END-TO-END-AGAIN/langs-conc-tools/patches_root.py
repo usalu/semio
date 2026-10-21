@@ -151,7 +151,6 @@ def edits():
     return _edits() + [(DOTNET_SCRIPT, dotnet_script)]
 
 GO_PLAN = L + "/🧪️testing/🐹️go-plan/🟦️.ts"
-GO_BUILD = PROC + "/📦️artifacts/🐹️go-build/🟦️.ts"
 GO_IDENTITY = BZ + "/🐹️go/🟦️.ts"
 NATIVE_LIB = "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native"
 
@@ -161,12 +160,6 @@ def go_plan(text):
         ("go-plan-env", '    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, signal: opts.signal, throwOnFailure: true });',
          '    const root = getWorkspaceRoot(), base = opts.env ?? process.env, pinned = await pinnedGoEnvironmentV1(base, repositoryCachePartitionRootV1(root, "tools"), systemNativeToolPortV1(root, base.CARGO_NET_OFFLINE === "true"), opts.signal ?? new AbortController().signal);\n    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...pinned, SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, signal: opts.signal, throwOnFailure: true });'),
         ("go-build-environment", "environment = repoToolCacheEnv(root, opts.env ?? process.env), plan = canonicalGoPlan(moduleRoot);", "environment = await pinnedGoEnvironmentV1(repoToolCacheEnv(root, opts.env ?? process.env), repositoryCachePartitionRootV1(root, \"tools\"), systemNativeToolPortV1(root, (opts.env ?? process.env).CARGO_NET_OFFLINE === \"true\"), control.signal), plan = canonicalGoPlan(moduleRoot);"),
-    ])
-
-def go_build(text):
-    return chain(text, [
-        ("go-build-import", 'import { readBuildMode,type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";\n', 'import { readBuildMode,type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";\nimport { NATIVE_TOOLCHAINS_V1 } from "../../🏗️build/🧰️toolchains/🟦️.ts";\n'),
-        ("go-build-env", 'const environment={...(options.environment??process.env),SEMIO_COMPILER_PARALLELISM:', 'const environment={...(options.environment??process.env),...NATIVE_TOOLCHAINS_V1.go.variables,SEMIO_COMPILER_PARALLELISM:'),
     ])
 
 def go_identity(text):
@@ -237,4 +230,4 @@ def ps1_go(text):
 
 _edits_go = edits
 def edits():
-    return _edits_go() + [(GO_PLAN, go_plan), (GO_BUILD, go_build), (GO_IDENTITY, go_identity), (SH, sh_go), (PS1, ps1_go)]
+    return _edits_go() + [(GO_PLAN, go_plan), (GO_IDENTITY, go_identity), (SH, sh_go), (PS1, ps1_go)]

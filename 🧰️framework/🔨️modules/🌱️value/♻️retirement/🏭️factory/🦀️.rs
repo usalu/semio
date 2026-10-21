@@ -3,7 +3,7 @@ pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetireOwned,factory_ticket_demands,close_factory_ticket};
 pub use semio_framework_value_retirement::retirement;
-pub use semio_framework_value_derive::FactoryPayloadRetirement;
+pub use semio_framework_value_derive::{FactoryPayloadRetirement,RetireOwned};
 use std::{alloc::Layout, sync::Arc, mem::ManuallyDrop, marker::PhantomData};
 
 #[path="📋️vector/🦀️.rs"]

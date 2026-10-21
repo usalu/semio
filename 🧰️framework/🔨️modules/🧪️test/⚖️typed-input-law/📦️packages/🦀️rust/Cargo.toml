@@ -25,4 +25,7 @@ doctest = false
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

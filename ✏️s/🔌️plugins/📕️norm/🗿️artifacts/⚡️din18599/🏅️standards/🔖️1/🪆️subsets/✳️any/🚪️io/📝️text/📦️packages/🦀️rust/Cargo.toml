@@ -26,7 +26,6 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }
 semio-s-artifact-norm-din18599-diff = { workspace = true }
 semio-s-artifact-norm-din18599-model = { workspace = true }

@@ -26,9 +26,9 @@ path = "../../🦀️.rs"
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
-semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
 serde_json = { workspace = true }

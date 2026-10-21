@@ -22,5 +22,28 @@
   ],
   "metadataCopy": 0,
   "sourceIdentity": "original-pointer-extent-per-turn-borrow",
-  "recipient": "original-granted-bytes-retirement"
+  "recipient": "original-granted-bytes-retirement",
+  "retirement": {
+    "bodies": [
+      0,
+      1,
+      4096
+    ],
+    "cuts": [
+      0,
+      1,
+      2,
+      32
+    ],
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "liveDepth": 1,
+    "release": "owned-buffer-capacity",
+    "terminal": {
+      "copyBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 0,
+      "depth": 0
+    }
+  }
 }

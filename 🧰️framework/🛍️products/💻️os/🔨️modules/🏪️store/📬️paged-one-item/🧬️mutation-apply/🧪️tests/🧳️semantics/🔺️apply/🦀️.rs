@@ -1,7 +1,7 @@
 //! 🔺️ Central fixture plans preflight every index and stage shared roots before capability-authorized exchange.
 use super::*;
 use protocol::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance};
-use semio_framework_value::{retirement::shared::sealed::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake}};
+use semio_framework_value::{shared_issuance::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake}};
 use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSet, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 impl RetainedDiff<Document> for Diff{type Apply=Plan;}
 pub(crate) struct Plan{

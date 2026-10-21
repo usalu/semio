@@ -1,5 +1,5 @@
 //! 🌐️ Canonical membership Value traits consume the actual immutable set owner.
-use semio_framework_value_ordered::ordered::{OrderedMap,OrderedSet};
+use crate::ordered::{OrderedMap,OrderedSet};
 use crate::{DslValue,FromValue,ToValue,ValueError};
 //#region 🔁️ValueCodec
 /// 🔁️ Mirrors the hand-written `Serialize`/`Deserialize` below: a plain string array.

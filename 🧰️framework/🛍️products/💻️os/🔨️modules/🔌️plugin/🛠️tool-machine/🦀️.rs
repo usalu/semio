@@ -50,7 +50,7 @@ use semio_framework_plugin_window_config::{WindowConfigMutation, WindowConfigSna
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_ui_contract::*;
-use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
+use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger};
 use std::collections::BTreeMap;
 use std::sync::Arc;

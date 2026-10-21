@@ -1,144 +1,346 @@
-import { writeSync } from "node:fs";
-import { isAbsolute, join, sep } from "node:path";
+// #region 🧲️Header
 
-import { buildMicroCommitMessage, clearStaleTemplatesBeforePrepare, handlePrepareCommitMsg, wipeAfterCommit, writeMicroCommitTemplates } from "../📄️prepared-message/🟦️.ts";
-import { git, gitDir, gitEmail, gitRepoRoot } from "../🌳️git/🟦️.ts";
-import { installMicroCommitGitHooks } from "../🪝️hooks/🟦️.ts";
-import { branchValidationError, currentBranch, findContributor, loadLevel } from "../👤️contributor/🟦️.ts";
-import { listCachedPaths, readDiffBulletsInput, validateBulletEmojis, validateBulletsAgainstStaged, validateBulletSpacing, writePreparedBullets } from "../🔸️bullets/🟦️.ts";
-import { gitSpawnEnv } from "../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-export function resetMicroCommitTemplates(root: string): void {
-  wipeAfterCommit(root);
+// Path emoji statute findings and inventory.
+
+// #endregion 🧲️Header
+
+package client
+
+import (
+	"encoding/json"
+	glob "github.com/usalu/semio/repo/client/internal/glob"
+	workspace "github.com/usalu/semio/repo/workspace"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"unicode"
+)
+
+// 🔏️pathEmojiEntry is one language-neutral file or directory identity fact.
+type pathEmojiEntry struct {
+	Path     string `json:"path"`
+	NodeKind string `json:"nodeKind"`
+	Reserved bool   `json:"reserved,omitempty"`
 }
 
-function emitPrepareStdout(message: string): void {
-  writeSync(1, Buffer.from(message.endsWith("\n") ? message : `${message}\n`));
+// ⚠️pathEmojiFinding is one deterministic naming statute result.
+type pathEmojiFinding struct {
+	Kind    string `json:"kind"`
+	Path    string `json:"path"`
+	Sibling string `json:"sibling,omitempty"`
+	Emoji   string `json:"emoji,omitempty"`
 }
 
-function stageMicroCommitChanges(root: string): ReturnType<typeof git> {
-  const excludedPaths = new Set<string>();
-  for (;;) {
-    const args = ["add", "-A"];
-    if (excludedPaths.size > 0) args.push("--", ".", ...[...excludedPaths].map((path) => `:(exclude)${path}`));
-    const staged = git(root, args);
-    if (staged.ok) return staged;
-    const rejectedPaths = [...staged.out.matchAll(/^error: '(.+)' does not have a commit checked out$/gm)]
-      .map((match) => match[1]!)
-      .filter((path) => !isAbsolute(path) && path !== "." && !path.startsWith(`..${sep}`));
-    if (rejectedPaths.length === 0 || rejectedPaths.every((path) => excludedPaths.has(path))) return staged;
-    for (const path of rejectedPaths) excludedPaths.add(path);
-  }
+// 🪞️foldPathEmojiIdentity removes presentation selectors from a logical emoji identity.
+func foldPathEmojiIdentity(value string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(value, "\uFE0E", ""), "\uFE0F", "")
 }
 
-export function runMicroCommit(root: string, segments: string[]): void {
-  root = gitRepoRoot(root);
-  const cmd = segments[0] ?? "prepare";
-  if (cmd === "reset") {
-    resetMicroCommitTemplates(root);
-    process.exit(0);
-  }
-  if (cmd === "install-hooks") {
-    installMicroCommitGitHooks(root);
-    process.exit(0);
-  }
-  if (cmd === "prepare-commit-msg") {
-    const msgFile = segments[1];
-    if (!msgFile) process.exit(1);
-    handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
-    process.exit(0);
-  }
-  const branchError = branchValidationError("micro-commit", currentBranch(root));
-  if (branchError) {
-    console.error(branchError);
-    process.exit(1);
-  }
-  const contributor = findContributor(root);
-  if (!contributor) {
-    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
-    process.exit(1);
-  }
-  if (cmd === "stage") {
-    clearStaleTemplatesBeforePrepare(root);
-    const staged = stageMicroCommitChanges(root);
-    if (!staged.ok) {
-      console.error(staged.out || "git add -A failed");
-      process.exit(1);
-    }
-    process.exit(0);
-  }
-  if (cmd === "diff") {
-    const patch = git(root, ["diff", "--cached"]);
-    if (!patch.ok) {
-      console.error(patch.out || "git diff --cached failed");
-      process.exit(1);
-    }
-    process.stdout.write(patch.out ? `${patch.out}\n` : "");
-    process.exit(0);
-  }
-  if (cmd !== "prepare") {
-    console.error("[micro-commit] usage: bun ./📜️script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]");
-    process.exit(1);
-  }
+// 😀️leadingPathEmojiIdentity extracts every contiguous leading emoji grapheme.
+func leadingPathEmojiIdentity(value string) (string, string, string) {
+	first, rest := extractEntityEmoji(value)
+	if first == "" {
+		return "", value, ""
+	}
+	identity := first
+	for {
+		next, remaining := extractEntityEmoji(rest)
+		if next == "" {
+			break
+		}
+		identity += next
+		rest = remaining
+	}
+	return identity, rest, first
+}
 
-  const dash = segments.indexOf("--");
-  const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
-  let bulletsFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
-  if (!bulletsFile) {
-    const last = segments[segments.length - 1];
-    if (last && (last.endsWith(".txt") || last.includes("/") || last.includes("\\"))) {
-      bulletsFile = last;
-    }
-  }
+// ⚖️pathEmojiStatuteFindings evaluates the shared file/folder sibling namespace.
+func pathEmojiStatuteFindings(entries []pathEmojiEntry, genericEmojiIdentities []string) []pathEmojiFinding {
+	generic := map[string]bool{}
+	for _, emoji := range genericEmojiIdentities {
+		generic[foldPathEmojiIdentity(emoji)] = true
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Path < entries[j].Path })
+	seen := map[string]pathEmojiEntry{}
+	findings := []pathEmojiFinding{}
+	for _, entry := range entries {
+		name := entry.Path
+		if index := strings.LastIndex(name, "/"); index >= 0 {
+			name = name[index+1:]
+		}
+		identity, rest, first := leadingPathEmojiIdentity(name)
+		reservedDocumentation := rest == "README" || strings.HasPrefix(rest, "README.") || rest == "LICENSE" || strings.HasPrefix(rest, "LICENSE.") || rest == "AGENTS.md"
+		if entry.NodeKind == "file" && reservedDocumentation {
+			if identity != "" {
+				findings = append(findings, pathEmojiFinding{Kind: "reserved-emoji", Path: entry.Path, Emoji: identity})
+			}
+			continue
+		}
+		if entry.Reserved {
+			continue
+		}
+		if identity == "" {
+			findings = append(findings, pathEmojiFinding{Kind: "missing", Path: entry.Path})
+			continue
+		}
+		multiple := identity != first
+		for index := range rest {
+			if emoji, _ := extractEntityEmoji(rest[index:]); emoji != "" {
+				multiple = true
+				break
+			}
+		}
+		if multiple {
+			findings = append(findings, pathEmojiFinding{Kind: "multiple", Path: entry.Path, Emoji: identity})
+		}
+		if generic[foldPathEmojiIdentity(first)] {
+			findings = append(findings, pathEmojiFinding{Kind: "generic", Path: entry.Path, Emoji: first})
+		}
+		if (emojiText(first) != strings.ReplaceAll(first, "\uFE0E", "") || strings.Contains(first, "\u20E3")) && !strings.Contains(first, "\uFE0F") {
+			findings = append(findings, pathEmojiFinding{Kind: "presentation", Path: entry.Path, Emoji: first})
+		}
+		if rest != "" {
+			firstRest, _ := utf8DecodeRuneInString(rest)
+			if unicode.IsSpace(firstRest) {
+				findings = append(findings, pathEmojiFinding{Kind: "spacing", Path: entry.Path, Emoji: identity})
+			}
+		}
+		parent := ""
+		if index := strings.LastIndex(entry.Path, "/"); index >= 0 {
+			parent = entry.Path[:index]
+		}
+		key := parent + "\x00" + foldPathEmojiIdentity(first)
+		if previous, ok := seen[key]; ok {
+			findings = append(findings, pathEmojiFinding{Kind: "duplicate", Path: entry.Path, Sibling: previous.Path, Emoji: foldPathEmojiIdentity(first)})
+		} else {
+			seen[key] = entry
+		}
+	}
+	return findings
+}
 
-  const level = loadLevel(root, contributor, levelSegments);
-  clearStaleTemplatesBeforePrepare(root);
-  const stagedPaths = listCachedPaths(root);
-  if (stagedPaths.length === 0) {
-    console.error("micro-commit: nothing is staged; stage the intended changes before prepare");
-    process.exit(1);
-  }
+// 🔡️utf8DecodeRuneInString isolates the standard-library decoding call for path spacing checks.
+func utf8DecodeRuneInString(value string) (rune, int) {
+	for _, character := range value {
+		return character, len(string(character))
+	}
+	return 0, 0
+}
 
-  const diffBullets = readDiffBulletsInput(root, bulletsFile);
-  if (diffBullets.length === 0) {
-    for (const p of stagedPaths) console.error(p);
-    console.error("");
-    const patch = git(root, ["diff", "--cached"]);
-    if (patch.out) console.error(patch.out);
-    console.error("\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆️ 📊️ 🔢️ 🚩️)");
-    process.exit(1);
-  }
+type pathEmojiFixedContract struct {
+	PathPattern string `json:"pathPattern"`
+	Descendants string `json:"descendants"`
+	Scope       struct {
+		Kind                     string `json:"kind"`
+		EcosystemID              string `json:"ecosystemId"`
+		FixedFilenameContractID  string `json:"fixedFilenameContractId"`
+		FixedDirectoryContractID string `json:"fixedDirectoryContractId"`
+		Path                     string `json:"path"`
+	} `json:"scope"`
+}
 
-  validateBulletSpacing(diffBullets);
-  validateBulletEmojis(diffBullets);
-  validateBulletsAgainstStaged(diffBullets, stagedPaths);
-  writePreparedBullets(root, diffBullets);
-  let message: string;
-  try {
-    message = buildMicroCommitMessage(root, contributor, diffBullets);
-  } catch (e) {
-    console.error(e instanceof Error ? e.message : String(e));
-    process.exit(1);
-  }
-  writeMicroCommitTemplates(root, message);
-  emitPrepareStdout(message);
+type pathEmojiTaxonomy struct {
+	PathEmojiPolicy struct {
+		GenericEmojiIdentities        []string `json:"genericEmojiIdentities"`
+		ReservedSubtreeDirectoryNames []string `json:"reservedSubtreeDirectoryNames"`
+	} `json:"pathEmojiPolicy"`
+	FixedFilenameContracts  map[string]pathEmojiFixedContract `json:"fixedFilenameContracts"`
+	FixedDirectoryContracts map[string]pathEmojiFixedContract `json:"fixedDirectoryContracts"`
+	PathExclusions          map[string]struct {
+		Path string `json:"path"`
+	} `json:"pathExclusions"`
+}
 
-  if (level === "prepare-only") process.exit(0);
+func pathEmojiPackageContext(root, path string) (bool, string) {
+	parts := strings.Split(path, "/")
+	parent := parts[:len(parts)-1]
+	packagesIndex := -1
+	for index := len(parent) - 1; index >= 0; index-- {
+		_, rest, first := leadingPathEmojiIdentity(parent[index])
+		if rest == "packages" && foldPathEmojiIdentity(first) == foldPathEmojiIdentity("📦️") {
+			packagesIndex = index
+			break
+		}
+	}
+	ecosystemID := ""
+	if packagesIndex >= 0 && packagesIndex+1 < len(parent) {
+		ecosystemID = parent[packagesIndex+1]
+	}
+	parentPath := filepath.Join(root, filepath.FromSlash(strings.Join(parent, "/")))
+	adjacentEcosystem := ""
+	for _, manifest := range []struct{ name, ecosystemID string }{{"Cargo.toml", "🦀️rust"}, {"go.mod", "🐹️go"}, {"package.json", "🟦️typescript"}} {
+		_, manifestError := os.Lstat(filepath.Join(parentPath, manifest.name))
+		if filepath.Base(path) == manifest.name || manifestError == nil {
+			adjacentEcosystem = manifest.ecosystemID
+			break
+		}
+	}
+	if ecosystemID == "" {
+		ecosystemID = adjacentEcosystem
+	}
+	packageRoot := packagesIndex == len(parent)-2 || adjacentEcosystem != ""
+	return packageRoot, ecosystemID
+}
 
-  const dir = gitDir(root);
-  const commit = spawnToolSyncV1("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
-  if (commit.status !== 0) {
-    console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
-    process.exit(commit.status ?? 1);
-  }
-  wipeAfterCommit(root);
-  if (level === "prepare-and-commit") process.exit(0);
+func pathEmojiContractApplies(root, path string, contract pathEmojiFixedContract, taxonomy pathEmojiTaxonomy) bool {
+	matched, err := glob.Match(contract.PathPattern, path)
+	if err != nil || !matched {
+		return false
+	}
+	switch contract.Scope.Kind {
+	case "exact-path":
+		return path == contract.Scope.Path
+	case "repository-root":
+		return !strings.Contains(path, "/")
+	case "package-root":
+		packageRoot, ecosystemID := pathEmojiPackageContext(root, path)
+		return packageRoot && ecosystemID == contract.Scope.EcosystemID
+	case "sibling-fixed-filename-contract":
+		sibling, ok := taxonomy.FixedFilenameContracts[contract.Scope.FixedFilenameContractID]
+		if !ok {
+			return false
+		}
+		siblingPath := filepath.Join(root, filepath.FromSlash(filepath.ToSlash(filepath.Dir(path))), filepath.Base(sibling.PathPattern))
+		_, siblingError := os.Lstat(siblingPath)
+		return siblingError == nil
+	case "fixed-directory-contract":
+		parent, ok := taxonomy.FixedDirectoryContracts[contract.Scope.FixedDirectoryContractID]
+		return ok && pathEmojiContractApplies(root, filepath.ToSlash(filepath.Dir(path)), parent, taxonomy)
+	default:
+		return true
+	}
+}
 
-  const push = spawnToolSyncV1("git", ["push"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
-  if (push.status !== 0) {
-    console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
-    process.exit(push.status ?? 1);
-  }
-  process.exit(0);
+func pathEmojiInventory(ctx *PolicyContext) ([]pathEmojiEntry, []string, error) {
+	data, err := os.ReadFile(filepath.Join(ctx.RootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🔣️taxonomy.json"))
+	if err != nil {
+		return nil, nil, err
+	}
+	var taxonomy pathEmojiTaxonomy
+	if err := json.Unmarshal(data, &taxonomy); err != nil {
+		return nil, nil, err
+	}
+	output, err := workspace.ToolCommand("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
+	if err != nil {
+		return nil, nil, err
+	}
+	rawFiles := strings.Split(string(output), "\x00")
+	files := []string{}
+	directories := map[string]bool{}
+	for _, rawFile := range rawFiles {
+		if rawFile == "" {
+			continue
+		}
+		file := strings.TrimSuffix(NormalizePath(rawFile), "/")
+		if file == "" {
+			continue
+		}
+		info, statError := os.Lstat(filepath.Join(ctx.RootDir, filepath.FromSlash(file)))
+		if statError != nil {
+			continue
+		}
+		if info.IsDir() {
+			directories[file] = true
+		} else {
+			files = append(files, file)
+		}
+		for parent := filepath.ToSlash(filepath.Dir(file)); parent != "." && parent != ""; parent = filepath.ToSlash(filepath.Dir(parent)) {
+			directories[parent] = true
+		}
+	}
+	reservedSubtrees := map[string]bool{}
+	for _, name := range taxonomy.PathEmojiPolicy.ReservedSubtreeDirectoryNames {
+		reservedSubtrees[foldPathEmojiIdentity(name)] = true
+	}
+	isExcluded := func(path string) bool {
+		for _, exclusion := range taxonomy.PathExclusions {
+			if strings.HasPrefix(path+"/", exclusion.Path) {
+				return true
+			}
+		}
+		return false
+	}
+	underReserved := func(path string) bool {
+		parts := strings.Split(path, "/")
+		for _, part := range parts[:len(parts)-1] {
+			_, rest, _ := leadingPathEmojiIdentity(part)
+			if reservedSubtrees[foldPathEmojiIdentity(part)] || reservedSubtrees[foldPathEmojiIdentity(rest)] {
+				return true
+			}
+		}
+		return false
+	}
+	isReservedSubtreeName := func(path string) bool {
+		name := path
+		if index := strings.LastIndex(name, "/"); index >= 0 {
+			name = name[index+1:]
+		}
+		_, rest, _ := leadingPathEmojiIdentity(name)
+		return reservedSubtrees[foldPathEmojiIdentity(name)] || reservedSubtrees[foldPathEmojiIdentity(rest)]
+	}
+	contractReserved := func(path string, contracts map[string]pathEmojiFixedContract) bool {
+		for _, contract := range contracts {
+			if pathEmojiContractApplies(ctx.RootDir, path, contract, taxonomy) {
+				return true
+			}
+		}
+		return false
+	}
+	fixedReservedRoots := []string{}
+	for directory := range directories {
+		for _, contract := range taxonomy.FixedDirectoryContracts {
+			if contract.Descendants == "reserved" && pathEmojiContractApplies(ctx.RootDir, directory, contract, taxonomy) {
+				fixedReservedRoots = append(fixedReservedRoots, directory)
+				break
+			}
+		}
+	}
+	underFixedReserved := func(path string) bool {
+		for _, reservedRoot := range fixedReservedRoots {
+			if strings.HasPrefix(path, reservedRoot+"/") {
+				return true
+			}
+		}
+		return false
+	}
+	entries := []pathEmojiEntry{}
+	for directory := range directories {
+		if !isExcluded(directory) {
+			entries = append(entries, pathEmojiEntry{Path: directory, NodeKind: "directory", Reserved: underReserved(directory) || underFixedReserved(directory) || isReservedSubtreeName(directory) || contractReserved(directory, taxonomy.FixedDirectoryContracts)})
+		}
+	}
+	for _, file := range files {
+		file = NormalizePath(file)
+		if file != "" && !isExcluded(file) {
+			entries = append(entries, pathEmojiEntry{Path: file, NodeKind: "file", Reserved: underReserved(file) || underFixedReserved(file) || contractReserved(file, taxonomy.FixedFilenameContracts)})
+		}
+	}
+	return entries, taxonomy.PathEmojiPolicy.GenericEmojiIdentities, nil
+}
+
+func pathEmojiBreaches(ctx *PolicyContext, nodeKind string) []Breach {
+	entries, generic, err := pathEmojiInventory(ctx)
+	if err != nil {
+		return nil
+	}
+	byPath := map[string]string{}
+	for _, entry := range entries {
+		byPath[entry.Path] = entry.NodeKind
+	}
+	kinds := map[string]map[string]Statute{
+		"directory": {"missing": BreachFolderNameMissingEmoji, "generic": BreachFolderNameGenericEmoji, "presentation": BreachFolderNameNoncanonicalEmojiPresentation, "spacing": BreachFolderNameWhitespaceAfterEmoji, "duplicate": BreachFolderNameEmojiNotUnique, "multiple": BreachFolderNameMultipleEmojis},
+		"file":      {"missing": BreachFileNameMissingEmoji, "generic": BreachFileNameGenericEmoji, "presentation": BreachFileNameNoncanonicalEmojiPresentation, "spacing": BreachFileNameWhitespaceAfterEmoji, "duplicate": BreachFileNameEmojiNotUnique, "multiple": BreachFileNameMultipleEmojis, "reserved-emoji": BreachFileNameReservedEmoji},
+	}
+	breachs := []Breach{}
+	for _, finding := range pathEmojiStatuteFindings(entries, generic) {
+		if byPath[finding.Path] != nodeKind {
+			continue
+		}
+		summary := "Path \"" + finding.Path + "\" breaches the " + finding.Kind + " emoji statute"
+		breachs = append(breachs, ctx.CreateBreach(summary, kinds[nodeKind][finding.Kind], finding.Path, 0, 0, finding.Path))
+	}
+	return breachs
 }

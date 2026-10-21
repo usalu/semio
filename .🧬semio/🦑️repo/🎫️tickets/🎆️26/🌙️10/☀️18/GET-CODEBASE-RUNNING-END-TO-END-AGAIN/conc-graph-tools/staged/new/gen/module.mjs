@@ -13,6 +13,7 @@ export const GENERATION_POLICY_V1=Object.freeze({
  publishWaitMilliseconds:30000,pollMaximumMilliseconds:250,
  maximumOwners:65536,maximumManifestBytes:134217728,maximumFragmentBytes:67108864,maximumIndexBytes:536870912,
  compactionFactor:2,compactionFloor:1024,brotliQuality:5,brotliWindow:22,
+ implementation:Object.freeze({none:Object.freeze(["🏗️build/📥️inputs/💾️storage/📒️ledger/"]),projects:Object.freeze(["🏗️build/🕸️graph/📥️inference/📦️project-nodes/","🏗️build/🕸️graph/📥️inference/🎯️target-policy/","🏗️build/🕸️graph/📥️inference/🎮️playground-targets/","🏗️build/🕸️graph/📥️inference/🧩️component-targets/","🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/"])}),
 });
 const P=GENERATION_POLICY_V1,HEX=/^[a-f0-9]{64}$/u,sha256=bytes=>createHash("sha256").update(bytes).digest("hex"),isObject=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
 
@@ -57,11 +58,11 @@ export function readGenerationPointerV1(bytes){
 /** 📜️ Admits one closed immutable generation manifest. */
 export function readGenerationManifestV1(bytes){
  const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","generation","parent","identity","env","membership","frontier","factIndex","global","owners","built"],[],"generation manifest");
+ requireKeys(value,["version","generation","parent","identity","implementation","env","membership","frontier","factIndex","global","owners","built"],[],"generation manifest");
  if(value.version!==1)throw fail("Generation manifest version 1 required");
  requireCount(value.generation,"generation");
  if(value.parent!==null)requireHex(value.parent,"parent");
- for(const key of["identity","env","membership","factIndex","global"])requireHex(value[key],key);
+ for(const key of["identity","implementation","env","membership","factIndex","global"])requireHex(value[key],key);
  if(value.frontier!==null)requireHex(value.frontier,"frontier");
  if(!isObject(value.owners)||Object.keys(value.owners).length>P.maximumOwners)throw fail("Bounded owner table required");
  for(const[name,row]of Object.entries(value.owners)){
@@ -278,7 +279,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    const bytes=await fs.read(manifestPath(pointer.manifest));
    if(!bytes){if(attempt===7)return{pointer,manifest:undefined,missing:true};await sleep(5*(attempt+1),signal);continue;}
    if(bytes.length>P.maximumManifestBytes||sha256(bytes)!==pointer.manifest)throw fail("Generation manifest content differs from its name","GENERATION_CORRUPT");
-   const manifest=readGenerationManifestV1(bytes);if(manifest.generation!==pointer.generation)throw fail("Generation manifest differs from its pointer","GENERATION_CORRUPT");
+   let manifest;try{manifest=readGenerationManifestV1(bytes);}catch{return{pointer,manifest:undefined};}if(manifest.generation!==pointer.generation)throw fail("Generation manifest differs from its pointer","GENERATION_CORRUPT");
    return{pointer,manifest};
   }
   throw fail("Generation manifest unreadable","GENERATION_UNREADABLE");
@@ -346,7 +347,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. */
- async function build({identity,membership,compute,signal,progress,hint}){
+ async function build({identity,implementation,membership,compute,signal,progress,hint}){
   const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
   const reuse=hint&&usable&&current.pointer.generation===hint.generation;
   const previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await membership(previous?.frontier?previous:undefined,signal);
@@ -390,7 +391,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const globalStored=await store(P.fragments,{version:1,name:"@global",value:result.global??null},".json.br",P.maximumFragmentBytes);
   const frontierStored=await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes);
   const expectedGeneration=current?.pointer.generation??-1;
-  const next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
+  const next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
   const manifestDigest=await writeManifest(next);aborted(signal);
   const outcome=await publish({manifestDigest,expectedGeneration,signal});
   if(!outcome.published)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
@@ -410,7 +411,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds under the builder lease otherwise, where a holder that finds the work done by a peer returns that generation untouched. */
- async function refresh({identity,policy="fresh",only,membership,compute,signal,progress,builder}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,signal,progress,builder}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
@@ -424,7 +425,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    }
    if(!only&&verdict.kind==="delta"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live};
   }
-  const body=()=>build({identity,membership,compute,signal,progress,hint});
+  const body=()=>build({identity,implementation,membership,compute,signal,progress,hint});
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body):lease?lease.exclusive(resources.builder,body,{signal}):body());
    if(result.published||!result.built)return{...result,served:"built"};
@@ -481,10 +482,10 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🎯️ Brings the caller to a generation that holds for the closure of `roots`: only the facts those projects consume are verified, so an edit elsewhere neither waits for a builder nor is refreshed for this caller. */
- async function refreshClosure({roots,neighbors,identity,policy="fresh",membership,compute,signal,progress,builder}){
+ async function refreshClosure({roots,neighbors,identity,implementation,policy="fresh",membership,compute,signal,progress,builder}){
   const first=await read(signal);let names;
   if(first?.manifest&&first.manifest.identity===identity){try{names=await closureOf(first,roots,{neighbors,signal});}catch(error){if(error?.code!=="GENERATION_INCOMPLETE")throw error;}}
-  const result=await refresh({identity,policy,only:names,membership,compute,signal,progress,builder});
+  const result=await refresh({identity,implementation,policy,only:names,membership,compute,signal,progress,builder});
   if(result.needsBuild)return result;
   const same=names&&result.current.pointer.generation===first.pointer.generation;
   return{...result,names:same?names:await closureOf(result.current,roots,{neighbors,signal})};

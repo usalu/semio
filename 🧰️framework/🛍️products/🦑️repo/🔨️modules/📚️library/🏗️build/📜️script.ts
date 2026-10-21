@@ -85,7 +85,8 @@ export class RepoScript extends Script {
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
 export async function runOwnedBuildInvocationV1(root:string,typed:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
  const{normalizeBuildOptionsV1}=await import("./⚙️operations/🔤️options/🟦️.ts"),args=normalizeBuildOptionsV1(typed),{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
- await withBuildCapacityV1(args,process.env,granted=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl),{control:phaseControl});
+ const{withImplementationPinV1}=await import("./📥️inputs/🔏️revision/🟨️.mjs");
+ await withBuildCapacityV1(args,process.env,granted=>withImplementationPinV1(()=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl)),{control:phaseControl});
 }
 
 /** 🌡️ Runs an invocation whose machine capacity is already granted, inherited from the CLI door or taken here for scripts routed around it. */
@@ -265,10 +266,12 @@ export async function runBuildCliV1(root:string,typed:readonly string[],environm
   const chosen=resolveBuildCliLanguageV1(args,environment);
   if(environment===process.env)process.env.SEMIO_LANGUAGE=chosen;
   const prefix=args[0]==="repo"||args[0]==="build"?1:0;
-  if(args[prefix]==="leases"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runLeasesCliV1}=await import("./🔒️leases/⌨️command/🟦️.ts");process.exitCode=await runLeasesCliV1(root,args.slice(prefix+1),environment);return;}
-  if(args[prefix]==="capacity"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(args.slice(prefix))){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(args.slice(prefix),environment));return;}const{runCapacityCommandV1}=await import("./🌡️host-capacity/⌨️command/🟦️.ts");process.exitCode=await runCapacityCommandV1(args.slice(prefix+1),{environment,write:line=>console.log(line)});return;}
+  const{parseBuildInvocationV1}=await import("./🧭️invocation/🟦️.ts"),diagnostic=parseBuildInvocationV1(args.slice(prefix),environment).args,diagnosticEnvironment={...environment,SEMIO_LANGUAGE:chosen};
+  if(diagnostic[0]==="leases"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{runLeasesCliV1}=await import("./🔒️leases/⌨️command/🟦️.ts");process.exitCode=await runLeasesCliV1(root,diagnostic.slice(1),diagnosticEnvironment);return;}
+  if(diagnostic[0]==="capacity"){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");console.log(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{runCapacityCommandV1}=await import("./🌡️host-capacity/⌨️command/🟦️.ts");process.exitCode=await runCapacityCommandV1(diagnostic.slice(1),{environment:diagnosticEnvironment,write:line=>console.log(line)});return;}
   const{withBuildCapacityV1}=await import("./🌡️host-capacity/🟦️.ts");
-  await withBuildCapacityV1(args.slice(prefix),environment,granted=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment));
+  const{withImplementationPinV1}=await import("./📥️inputs/🔏️revision/🟨️.mjs");
+  await withBuildCapacityV1(args.slice(prefix),environment,granted=>withImplementationPinV1(()=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment)));
 }
 
 /** 🌡️ Creates the original script envelope and runs the CLI once the machine has admitted the invocation, so its budget starts with the grant and not with the queue. */

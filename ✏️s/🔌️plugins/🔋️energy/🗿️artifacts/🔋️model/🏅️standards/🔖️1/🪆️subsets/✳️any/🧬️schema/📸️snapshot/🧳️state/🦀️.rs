@@ -1,6 +1,6 @@
 //! 🧳️ Typed immutable Energy authority separates path-local persisted fields from numerical runtime views.
 use crate::model::*;
-use semio_framework_value::retirement::shared::sealed::SealedShared;
+use semio_framework_value::shared_issuance::SealedShared;
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_framework_value_derive::ToValue;
 #[path="🔺️diff/🦀️.rs"]pub mod diff;
@@ -612,7 +612,7 @@ pub struct EnergyModelState{
  #[value(flatten)]pub outputs:SealedShared<ModelOutputState>,
 }
 macro_rules! id_projection{
- ($($id:ty),*)=>{$(impl semio_framework_value::snapshot_projection::ImmutableRootProjection for $id{
+ ($($id:ty),*)=>{$(impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection for $id{
   fn root_projection_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()*2,depth:1,..Default::default()})}
   fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{let demand=Self::root_projection_demand(original)?;Ok(semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand).then(||(*original.get(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
  }

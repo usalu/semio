@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "project": "@semio-tech/value-rs",
+  "target": "test-exclusive-retirement-source",
+  "declaration": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json",
+  "dispatcher": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+  "source": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
+  "freshnessData": [
+    "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs"
+  ],
+  "executionKind": "Source",
+  "sourceInputObservation": "freshness",
+  "runtimeSourceEntries": [
+    "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts"
+  ],
+  "cache": false,
+  "outputs": [],
+  "forwardAllArgs": false,
+  "control": "existing actual owned Bun test helper, invocation.signal and capped30000ms, no args",
+  "typedCompiler": false,
+  "status": "physically registered, awaiting final source review and actual Source body",
+  "requiredBodies": [
+    "original mutex payload survives poisoned status and independent owned transfer replay",
+    "exclusive retirement cursor transfer matches independent SQLite admission",
+    "shared close query admission matches independent SQLite serialization"
+  ]
+}

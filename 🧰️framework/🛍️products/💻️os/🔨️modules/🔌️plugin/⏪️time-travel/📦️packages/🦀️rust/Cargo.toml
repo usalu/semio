@@ -38,6 +38,7 @@ semio-framework-schema-composition = { path = "../../../../../../../🔨️modul
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-time-travel = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-retirement-queue = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

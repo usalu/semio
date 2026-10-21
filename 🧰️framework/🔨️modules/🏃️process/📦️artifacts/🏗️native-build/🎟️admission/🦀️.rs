@@ -1,7 +1,8 @@
 //! 🎟️ `semio-build-scheduler`: the `RUSTC_WRAPPER` of the release build driver.
 //!
 //! Every rustc invocation that compiles a crate asks the driver's broker for memory admission with its
-//! unit identity, hands its jobserver token back while it waits, reacquires it, runs rustc, streams the
+//! unit identity, keeps the jobserver token Cargo gave its job while it waits (handing it back would let Cargo's
+//! helper thread spend it on another unit while this one can never reacquire it), runs rustc, streams the
 //! child's resident memory every second and reports the measured peak, CPU time and rmeta time. Any
 //! other invocation (version and print probes) and any build without a broker runs rustc unchanged.
 //! The wire protocol is the `🎟️admission/🧬️schema/🔣️.json` `$defs` `AdmitRequestV1`, `VerdictV1`,
@@ -10,7 +11,7 @@
 
 use std::env;
 use std::ffi::OsString;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, ExitCode, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -122,78 +123,6 @@ fn now_ms() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as u64).unwrap_or(0)
 }
 
-/// 🪪️ The `--jobserver-auth` value Cargo hands its rustc children, newest declaration winning.
-fn jobserver_auth(var: &dyn Fn(&str) -> Option<String>) -> Option<String> {
-    ["CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS"].iter().filter_map(|name| var(name)).find_map(|flags| flags.split_whitespace().filter_map(|word| word.strip_prefix("--jobserver-auth=")).last().map(str::to_string))
-}
-
-/// 🎰️ One jobserver client token channel: a named fifo or inherited descriptors on Unix, a named semaphore on Windows.
-enum Jobserver {
-    #[cfg(unix)]
-    Fifo(std::fs::File),
-    #[cfg(unix)]
-    Descriptors(std::mem::ManuallyDrop<std::fs::File>, std::mem::ManuallyDrop<std::fs::File>),
-    #[cfg(windows)]
-    Semaphore(isize),
-}
-
-impl Jobserver {
-    /// 🔌️ Opens the token channel named by an auth value.
-    fn open(auth: &str) -> Option<Jobserver> {
-        #[cfg(unix)]
-        {
-            if let Some(path) = auth.strip_prefix("fifo:") { return std::fs::OpenOptions::new().read(true).write(true).open(path).ok().map(Jobserver::Fifo); }
-            use std::os::fd::FromRawFd;
-            let (read_fd, write_fd) = auth.split_once(',')?;
-            let (read_fd, write_fd): (i32, i32) = (read_fd.parse().ok()?, write_fd.parse().ok()?);
-            Some(Jobserver::Descriptors(std::mem::ManuallyDrop::new(unsafe { std::fs::File::from_raw_fd(read_fd) }), std::mem::ManuallyDrop::new(unsafe { std::fs::File::from_raw_fd(write_fd) })))
-        }
-        #[cfg(windows)]
-        {
-            let name: Vec<u16> = auth.encode_utf16().chain(Some(0)).collect();
-            let handle = unsafe { windows::OpenSemaphoreW(0x0010_0000 | 0x0002, 0, name.as_ptr()) };
-            (handle != 0).then_some(Jobserver::Semaphore(handle))
-        }
-    }
-
-    /// 🔙️ Returns one token to the pool.
-    fn release(&mut self) -> bool {
-        match self {
-            #[cfg(unix)]
-            Jobserver::Fifo(file) => file.write_all(b"+").is_ok(),
-            #[cfg(unix)]
-            Jobserver::Descriptors(_, file) => file.write_all(b"+").is_ok(),
-            #[cfg(windows)]
-            Jobserver::Semaphore(handle) => unsafe { windows::ReleaseSemaphore(*handle, 1, std::ptr::null_mut()) != 0 },
-        }
-    }
-
-    /// 🎫️ Blocks until one token is taken from the pool.
-    fn acquire(&mut self) -> bool {
-        match self {
-            #[cfg(unix)]
-            Jobserver::Fifo(file) => read_token(file),
-            #[cfg(unix)]
-            Jobserver::Descriptors(file, _) => read_token(file),
-            #[cfg(windows)]
-            Jobserver::Semaphore(handle) => unsafe { windows::WaitForSingleObject(*handle, 0xFFFF_FFFF) == 0 },
-        }
-    }
-}
-
-/// 🪙️ Reads exactly one token byte, retrying interrupted reads.
-#[cfg(unix)]
-fn read_token(mut file: &std::fs::File) -> bool {
-    let mut byte = [0u8; 1];
-    loop {
-        match file.read(&mut byte) {
-            Ok(1) => return true,
-            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
-            _ => return false,
-        }
-    }
-}
-
 /// 📏️ Peak resident bytes and CPU milliseconds of a reaped child.
 struct Usage {
     exit: i32,
@@ -269,9 +198,6 @@ mod windows {
 
     #[link(name = "kernel32")]
     unsafe extern "system" {
-        pub fn OpenSemaphoreW(access: u32, inherit: i32, name: *const u16) -> isize;
-        pub fn ReleaseSemaphore(handle: isize, count: i32, previous: *mut i32) -> i32;
-        pub fn WaitForSingleObject(handle: isize, milliseconds: u32) -> u32;
         pub fn K32GetProcessMemoryInfo(process: isize, counters: *mut MemoryCounters, cb: u32) -> i32;
         pub fn GetProcessTimes(process: isize, creation: *mut FileTime, exit: *mut FileTime, kernel: *mut FileTime, user: *mut FileTime) -> i32;
     }
@@ -409,16 +335,20 @@ fn passthrough(rustc: &OsString, args: &[OsString]) -> ExitCode {
     }
 }
 
+/// ⏳️ Waits for the broker's admission while KEEPING the jobserver token Cargo gave this job. The token is never written back: Cargo's helper
+/// thread reads every freed token to start or park for another unit, so a unit that handed its token back could not reacquire it while the
+/// units that took it wait for admission in turn (no rustc running, fifo empty). Holding it cannot starve admission: a broker with nothing
+/// running always admits its first waiter.
+fn await_admission(mut verdict: impl FnMut() -> Result<bool, String>) -> Result<(), String> {
+    while !verdict()? {}
+    Ok(())
+}
+
 /// 🎟️ Admits, runs and reports one rustc unit through the broker.
 fn scheduled(rustc: &OsString, args: &[OsString], unit: &Unit, endpoint: &str, pass: &str) -> Result<ExitCode, String> {
     let broker = Arc::new(Broker::connect(endpoint).map_err(|error| format!("build broker unreachable at {endpoint}: {error}"))?);
     broker.send(&admit_request(unit, pass, std::process::id())).map_err(|error| format!("broker admission request failed: {error}"))?;
-    let mut jobserver = jobserver_auth(&|name| env::var(name).ok()).and_then(|auth| Jobserver::open(&auth));
-    let mut handed_back = false;
-    while !broker.verdict().map_err(|error| format!("broker verdict failed: {error}"))? {
-        if !handed_back { handed_back = jobserver.as_mut().is_some_and(Jobserver::release); }
-    }
-    if handed_back && !jobserver.as_mut().is_some_and(Jobserver::acquire) { return Err("jobserver token could not be reacquired".to_string()); }
+    await_admission(|| broker.verdict().map_err(|error| format!("broker verdict failed: {error}")))?;
     let start_ms = now_ms();
     let mut child = Command::new(rustc).args(args).stdin(Stdio::inherit()).stdout(Stdio::inherit()).stderr(Stdio::piped()).spawn().map_err(|error| format!("cannot run {}: {error}", rustc.to_string_lossy()))?;
     let stderr = child.stderr.take().ok_or("rustc stderr unavailable")?;
@@ -508,11 +438,16 @@ mod tests {
         }
     }
 
-    /// 🧪️ The newest `--jobserver-auth` of Cargo's flags wins.
+    /// 🧪️ Admission waits through any number of refusals without asking for or giving back a token, and reports a broker fault.
     #[test]
-    fn reads_jobserver_auth() {
-        let env = |name: &str| (name == "CARGO_MAKEFLAGS").then(|| "-j --jobserver-fds=fifo:/x --jobserver-auth=fifo:/x".to_string());
-        assert_eq!(jobserver_auth(&env).as_deref(), Some("fifo:/x"));
+    fn waits_through_refusals() {
+        for refusals in [0usize, 1, 7] {
+            let mut calls = 0;
+            let result = await_admission(|| { calls += 1; Ok(calls > refusals) });
+            assert_eq!(result, Ok(()));
+            assert_eq!(calls, refusals + 1);
+        }
+        assert_eq!(await_admission(|| Err("broker closed".to_string())), Err("broker closed".to_string()));
     }
 
     /// 🧪️ Strings escape exactly the JSON control set.

@@ -1,0 +1,296 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Graph memory law fixture / Gesetz der Speichergrenze",
+ "description": "EN: Closed tables of the admission decision, the budget resolution, the language choice, the rendered messages and governor scenarios whose recorded traces an independent model checks. DE: Geschlossene Tabellen der Zulassungsentscheidung, der Budgetauflösung, der Sprachwahl, der Texte und Szenarien des Reglers, deren Spuren ein unabhängiges Modell prüft.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "policy",
+  "messages",
+  "admission",
+  "budgets",
+  "languages",
+  "messageCases",
+  "governor"
+ ],
+ "definitions": {
+  "State": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "used",
+    "budget",
+    "running",
+    "workers",
+    "blocked",
+    "collected"
+   ],
+   "properties": {
+    "used": {
+     "type": "number",
+     "minimum": 0
+    },
+    "budget": {
+     "type": "number",
+     "exclusiveMinimum": 0
+    },
+    "running": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "workers": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "blocked": {
+     "type": "boolean"
+    },
+    "collected": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Environment": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "Task": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "memoryMegabytes",
+    "durationMilliseconds"
+   ],
+   "properties": {
+    "memoryMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "durationMilliseconds": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  }
+ },
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "policy": {
+   "type": "object"
+  },
+  "messages": {
+   "type": "object"
+  },
+  "admission": {
+   "type": "array",
+   "minItems": 9,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "state",
+     "expect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+     },
+     "state": {
+      "$ref": "#/definitions/State"
+     },
+     "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "admit",
+       "collect",
+       "reason"
+      ],
+      "properties": {
+       "admit": {
+        "type": "boolean"
+       },
+       "collect": {
+        "type": "boolean"
+       },
+       "reason": {
+        "enum": [
+         "workers",
+         "within",
+         "collect",
+         "over",
+         "forced"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "budgets": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "environment",
+     "expect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "environment": {
+      "$ref": "#/definitions/Environment"
+     },
+     "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "bytes": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "error": {
+        "const": true
+       }
+      }
+     }
+    }
+   }
+  },
+  "languages": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "environment",
+     "expect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "environment": {
+      "$ref": "#/definitions/Environment"
+     },
+     "expect": {
+      "enum": [
+       "en",
+       "de"
+      ]
+     }
+    }
+   }
+  },
+  "messageCases": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "key",
+     "fields",
+     "environment",
+     "expect"
+    ],
+    "properties": {
+     "key": {
+      "enum": [
+       "waiting",
+       "serial",
+       "resumed"
+      ]
+     },
+     "fields": {
+      "type": "object"
+     },
+     "environment": {
+      "$ref": "#/definitions/Environment"
+     },
+     "expect": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "governor": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "workers",
+     "budgetMegabytes",
+     "baseMegabytes",
+     "garbageShare",
+     "tasks"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "workers": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "budgetMegabytes": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "baseMegabytes": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "garbageShare": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+     },
+     "abortAtMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "expectParallel": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "expectSerial": {
+      "type": "boolean"
+     },
+     "expectWaits": {
+      "type": "boolean"
+     },
+     "language": {
+      "enum": [
+       "en",
+       "de"
+      ]
+     },
+     "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "$ref": "#/definitions/Task"
+      }
+     }
+    }
+   }
+  }
+ }
+}

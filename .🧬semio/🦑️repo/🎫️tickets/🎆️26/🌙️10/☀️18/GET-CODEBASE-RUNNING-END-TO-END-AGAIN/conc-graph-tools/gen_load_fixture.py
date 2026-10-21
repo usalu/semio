@@ -72,7 +72,8 @@ def key(row):
     return json.dumps([row["kind"], row["path"], row["fact"]], sort_keys=True, separators=(",", ":"))
 
 
-def shape_model(workspace, part, stubs):
+def shape_model(workspace, part, stubs, implementation=None):
+    implementation = implementation or {"all": [], "projects": []}
     processed = {o["name"] for o in part["owners"]} | {o["name"] for o in part["edgeOnly"]}
     edges_of, other = {}, []
     for edge in part["edges"]:
@@ -93,6 +94,7 @@ def shape_model(workspace, part, stubs):
         return rows
 
     for o in part["owners"]:
+        unavailable = bool(o.get("unavailable"))
         entry = {"name": o["name"], "root": o["root"], "kind": "unavailable" if o.get("unavailable") else "project", "node": o.get("unavailable") or o["node"], "edges": edges_of.get(o["name"], []), "targets": [] if o.get("unavailable") else sorted(o["node"].get("targets", {})), "rows": claim(o.get("nodeRows", []), [o["root"], o.get("nativeRoot")])}
         for field in ("config", "nativeRoot", "tag"):
             if o.get(field):
@@ -101,25 +103,78 @@ def shape_model(workspace, part, stubs):
     for o in part["edgeOnly"]:
         stub = stubs[o["name"]]
         owners.append({"name": o["name"], "partial": "edges", "edges": edges_of.get(o["name"], []), "rows": claim([], [stub["root"], stub.get("nativeRoot")])})
-    env_rows = part["env"]["rows"] + [r for r in part["rows"] if key(r) not in claimed]
+    for entry in owners:
+        if "partial" not in entry:
+            entry["rows"] = entry["rows"] + implementation["all"] + ([] if entry["kind"] == "unavailable" else implementation["projects"])
+    env_rows = part["env"]["rows"] + [r for r in part["rows"] if key(r) not in claimed] + implementation["all"]
     return {"owners": owners, "env": {"digest": part["env"]["digest"], "rows": env_rows}, "global": {"version": 1, "externalNodes": part["externalNodes"], "edges": other, "unavailable": part["parseUnavailable"]}, "replaceTags": part["replaceTags"]}
 
+
+def library_policy():
+    root = os.path.abspath(os.path.join(HERE, *([".."] * 8)))
+    if "--root" in __import__("sys").argv:
+        root = os.path.abspath(__import__("sys").argv[__import__("sys").argv.index("--root") + 1])
+    base = os.path.join(root, *[n for n in os.listdir(root) if n.replace("\ufe0f", "") == "\U0001F9F0framework"])
+    for part_ in ["\U0001F6CDproducts", "\U0001F991repo", "\U0001F528modules", "\U0001F4DAlibrary", "\U0001F3D7build", "\U0001F578graph", "\U0001F570generations", "\U0001F9ECschema"]:
+        base = os.path.join(base, [n for n in os.listdir(base) if n.replace("\ufe0f", "") == part_][0])
+    with open(os.path.join(base, os.listdir(base)[0]), encoding="utf8") as handle:
+        return json.load(handle)["definitions"]["Policy"]["const"]["implementation"]
+
+
+def canonical(value):
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+
+def implementation_model(rows):
+    import hashlib
+    scopes, seen, out = library_policy(), set(), {"all": [], "projects": []}
+    for row in rows:
+        identity = canonical([row["kind"], row["path"], row["fact"]])
+        if identity in seen or any(p in row["path"] for p in scopes["none"]):
+            continue
+        seen.add(identity)
+        out["projects" if any(p in row["path"] for p in scopes["projects"]) else "all"].append(row)
+    pairs = sorted([[row["path"], row["fact"]["sha256"]] for row in rows])
+    out["digest"] = hashlib.sha256(canonical(pairs).encode("utf8")).hexdigest()
+    return out
+
+
+def digest_row(path, tag, size=10):
+    return {"kind": "digest", "path": path, "fact": {"sha256": tag * 64, "size": size, "mtimeMs": 1700000000000.5}}
+
+
+POLICY_IMPL = library_policy()
+implementation_vectors = [
+    [],
+    [digest_row("lib/" + POLICY_IMPL["none"][0] + "x.mjs", "1")],
+    [digest_row("lib/" + POLICY_IMPL["projects"][0] + "x.mjs", "2"), digest_row("lib/" + POLICY_IMPL["projects"][1] + "y.mjs", "3")],
+    [digest_row("lib/core/a.mjs", "4"), digest_row("lib/core/b.json", "5"), digest_row("lib/core/a.mjs", "4")],
+    [digest_row("lib/core/a.mjs", "4"), digest_row("lib/core/a.mjs", "6")],
+    [digest_row("lib/" + POLICY_IMPL["none"][0] + "x.mjs", "1"), digest_row("lib/" + POLICY_IMPL["projects"][2] + "p.mjs", "7"), digest_row("lib/core/\u00fc\U0001F600.mjs", "8"), digest_row("lib/core/b.json", "5")],
+]
+implementation_rows = [digest_row("lib/core/a.mjs", "4"), digest_row("lib/" + POLICY_IMPL["projects"][0] + "x.mjs", "2")]
+shape_implementation = {"workspaceRoot": W, "part": part, "stubs": stubs, "implementation": {"all": implementation_rows[:1], "projects": implementation_rows[1:]}}
+shape_implementation["expected"] = shape_model(W, part, stubs, shape_implementation["implementation"])
 
 fixture = {
     "version": 1,
     "policy": [{"args": a, "env": e, "expected": policy_model(a, e)} for a, e in policy_vectors],
     "language": [{"env": e, "expected": language_model(e)} for e in language_vectors],
     "shape": {"workspaceRoot": W, "part": part, "stubs": stubs, "expected": shape_model(W, part, stubs)},
+    "shapeImplementation": shape_implementation,
+    "implementation": [{"rows": rows, "expected": implementation_model(rows)} for rows in implementation_vectors],
 }
 with open(os.path.join(OUT, "fixture.json"), "w", encoding="utf8") as handle:
     json.dump(fixture, handle, ensure_ascii=False, indent=1, sort_keys=True)
     handle.write("\n")
 row_schema = {"type": "object", "required": ["kind", "path", "fact"], "properties": {"kind": {"type": "string"}, "path": {"type": "string"}, "fact": {}}}
-schema = {"type": "object", "additionalProperties": False, "required": ["version", "policy", "language", "shape"], "properties": {
+schema = {"type": "object", "additionalProperties": False, "required": ["version", "policy", "language", "shape", "shapeImplementation", "implementation"], "properties": {
     "version": {"const": 1},
     "policy": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["args", "env", "expected"], "properties": {"args": {"type": "array", "items": {"type": "string"}}, "env": {"type": "object", "additionalProperties": {"type": "string"}}, "expected": {"type": "object"}}}},
     "language": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["env", "expected"], "properties": {"env": {"type": "object", "additionalProperties": {"type": "string"}}, "expected": {"enum": ["en", "de"]}}}},
-    "shape": {"type": "object", "additionalProperties": False, "required": ["workspaceRoot", "part", "stubs", "expected"], "properties": {"workspaceRoot": {"type": "string"}, "part": {"type": "object"}, "stubs": {"type": "object"}, "expected": {"type": "object"}}}}}
+    "shape": {"type": "object", "additionalProperties": False, "required": ["workspaceRoot", "part", "stubs", "expected"], "properties": {"workspaceRoot": {"type": "string"}, "part": {"type": "object"}, "stubs": {"type": "object"}, "expected": {"type": "object"}}},
+    "shapeImplementation": {"type": "object", "additionalProperties": False, "required": ["workspaceRoot", "part", "stubs", "implementation", "expected"], "properties": {"workspaceRoot": {"type": "string"}, "part": {"type": "object"}, "stubs": {"type": "object"}, "implementation": {"type": "object"}, "expected": {"type": "object"}}},
+    "implementation": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["rows", "expected"], "properties": {"rows": {"type": "array", "items": row_schema}, "expected": {"type": "object"}}}}}}
 with open(os.path.join(OUT, "fixture-schema.json"), "w", encoding="utf8") as handle:
     json.dump(schema, handle, ensure_ascii=False, indent=1)
     handle.write("\n")

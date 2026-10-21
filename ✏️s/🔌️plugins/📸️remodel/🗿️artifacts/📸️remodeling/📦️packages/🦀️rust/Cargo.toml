@@ -23,7 +23,6 @@ semio-framework-dsl = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
 semio-s-artifact-remodel-remodeling-io = { workspace = true }
@@ -36,6 +35,7 @@ semio-s-artifact-remodel-remodeling-viewer = { workspace = true }
 semio-s-artifact-remodel-remodeling-write = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 base64_codec = { workspace = true }
 number = { workspace = true }
 png = "0.17.16"

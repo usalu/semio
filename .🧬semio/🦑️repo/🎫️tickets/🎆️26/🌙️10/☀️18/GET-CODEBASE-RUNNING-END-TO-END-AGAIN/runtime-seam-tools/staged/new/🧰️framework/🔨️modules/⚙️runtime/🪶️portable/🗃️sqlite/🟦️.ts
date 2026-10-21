@@ -1,16 +1,17 @@
 import { existsSync } from "node:fs";
-import type { RuntimeSqliteConstructorV1, RuntimeSqliteDatabaseV1, RuntimeSqliteOptionsV1, RuntimeSqliteStatementV1 } from "../../📋️contract/🟦️.ts";
+import type { RuntimeSqliteChangesV1, RuntimeSqliteConstructorV1, RuntimeSqliteDatabaseV1, RuntimeSqliteOptionsV1, RuntimeSqliteStatementV1 } from "../../📋️contract/🟦️.ts";
 
-type NodeStatementV1 = { all(...parameters: unknown[]): any[]; get(...parameters: unknown[]): any; run(...parameters: unknown[]): unknown; setReturnArrays?(enabled: boolean): void };
+type NodeStatementV1 = { all(...parameters: any[]): any[]; get(...parameters: any[]): any; run(...parameters: any[]): { changes: number | bigint; lastInsertRowid: number | bigint }; setReturnArrays?(enabled: boolean): void };
 type NodeDatabaseV1 = { prepare(sql: string): NodeStatementV1; exec(sql: string): void; close(): void };
 type NodeModuleV1 = { DatabaseSync: new (path: string, options?: { readOnly?: boolean }) => NodeDatabaseV1 };
 
 function wrapStatement(prepare: () => NodeStatementV1): RuntimeSqliteStatementV1 {
+  const changes = (row: { changes: number | bigint; lastInsertRowid: number | bigint }): RuntimeSqliteChangesV1 => ({ changes: Number(row.changes), lastInsertRowid: row.lastInsertRowid });
   const statement = prepare();
   return {
     all: (...parameters) => statement.all(...parameters),
     get: (...parameters) => statement.get(...parameters) ?? null,
-    run: (...parameters) => statement.run(...parameters),
+    run: (...parameters) => changes(statement.run(...parameters)),
     values: (...parameters) => {
       if (statement.setReturnArrays !== undefined) { statement.setReturnArrays(true); try { return statement.all(...parameters) as any[][]; } finally { statement.setReturnArrays(false); } }
       return statement.all(...parameters).map(row => Object.values(row));
@@ -30,9 +31,9 @@ export function nodeSqliteConstructorV1(): RuntimeSqliteConstructorV1 {
       if (options.create === false && path !== ":memory:" && !existsSync(path)) throw new Error(`unable to open database file: ${path}`);
       this.database = new module.DatabaseSync(path, { readOnly: options.readonly === true });
     }
-    query(sql: string): RuntimeSqliteStatementV1 { return wrapStatement(() => this.database.prepare(sql)); }
-    prepare(sql: string): RuntimeSqliteStatementV1 { return wrapStatement(() => this.database.prepare(sql)); }
-    run(sql: string, ...parameters: unknown[]): unknown { return this.database.prepare(sql).run(...parameters); }
+    query<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params> { return wrapStatement(() => this.database.prepare(sql)); }
+    prepare<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params> { return wrapStatement(() => this.database.prepare(sql)); }
+    run(sql: string, ...parameters: any[]): RuntimeSqliteChangesV1 { const row = this.database.prepare(sql).run(...parameters); return { changes: Number(row.changes), lastInsertRowid: row.lastInsertRowid }; }
     exec(sql: string): unknown { return this.database.exec(sql); }
     transaction<T extends (...arguments_: any[]) => any>(body: T): T {
       const database = this.database;

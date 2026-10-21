@@ -74,7 +74,7 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[cfg(test)] use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as ProjectionView, projection_path_error};
 #[cfg(test)] use semio_framework_artifact_flow_flow::{FlowUi, FlowNodeGui, NodeChrome, FlowPreviewGui, FlowChannelRef};
 #[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
-#[cfg(test)] use semio_framework_value::ordered::{OrderedMap, OrderedSet};
+#[cfg(test)] use semio_framework_value_ordered::ordered::{OrderedMap, OrderedSet};
 #[cfg(test)] use semio_framework_value::{DslValue, Number, ValueError};
 use semio_s_artifact_procedural_3d_io_text::snapshot::Generation3dSnapshotDsl;
 use semio_s_artifact_procedural_3d_io_text::snapshot::generation3d_document_to_dsl;

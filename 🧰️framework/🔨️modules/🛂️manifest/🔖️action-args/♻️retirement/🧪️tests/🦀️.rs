@@ -1,7 +1,7 @@
 //! 🧪️ Original typed descriptor fields keep their native allocations until their separately paid retirement turn.
 use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_value::retirement_queue::RetirementQueue;
+use semio_framework_value_retirement_queue::RetirementQueue;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 #[test]
 fn manifest_argument_retirement_original_typed_fields_preserve_denied_pointers_and_physical_receipts(){

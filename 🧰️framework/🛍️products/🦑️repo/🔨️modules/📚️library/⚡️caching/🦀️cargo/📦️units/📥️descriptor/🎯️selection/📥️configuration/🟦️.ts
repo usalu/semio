@@ -9,11 +9,11 @@ import{captureRepositorySourceRootV1,captureExactSourcePathV1,captureSourceInput
 import{withExactSourceReadBatchV1,readExactSourceFileV1}from"../../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import { type RustUnitInputV1 } from "../../../🧬️definition/🟦️.ts";
 import type schemaContract from"./🧬️schema/🔣️.json";
-import{captureBoundedSourceRevisionV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 const sourcePath=fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),policyPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)));
 function revision(path:string,maximumBytes:number,retainText=false){try{return captureBoundedSourceRevisionV1(path,maximumBytes,retainText);}catch(error){if(error instanceof Error&&error.message==="Bounded physical Source revision required")throw Error("Bounded physical Cargo reader Source required");throw error;}}
 const sourceRevision=revision(sourcePath,8388608),policyRevision=revision(policyPath,65536,true),schema=JSON.parse(policyRevision.text!) as typeof schemaContract,policy=Object.freeze({...schema.definitions.Policy.const});
-function requireCurrent():void{if(revision(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||revision(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256)throw Error("Stale loaded Cargo configuration reader; restart required");}
+function requireCurrent():void{if(implementationPinnedV1())return;if(revision(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||revision(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256)throw Error("Stale loaded Cargo configuration reader; restart required");}
 export interface SelectedCargoConfigurationV1 {readonly planningInputs:readonly Readonly<{path:string;digest:string;bytes:number}>[];readonly compilerInputs:readonly RustUnitInputV1[]}
 /** 🧭️ Binds a finite configuration snapshot to one workspace, Cargo root, cwd and sealed pair. */
 export interface SelectedCargoConfigurationScopeV1{readonly workspace:string;readonly cargoWorkspace:string;readonly cwd:string;readonly definingInputs:readonly string[]}

@@ -1,0 +1,33 @@
+{
+  "summaries": [
+    {
+      "name": "nested phases subtract from the parent self time",
+      "total": 100,
+      "records": [
+        { "id": 1, "parent": 0, "depth": 0, "phase": "door.capacity", "start": 10, "end": 60 },
+        { "id": 2, "parent": 1, "depth": 1, "phase": "capacity.sample", "start": 15, "end": 35 },
+        { "id": 3, "parent": 1, "depth": 1, "phase": "capacity.grant", "start": 40, "end": 50 }
+      ],
+      "expect": { "covered": 50, "uncovered": 50, "rows": [["door.capacity", 0, 10, 50, 20], ["capacity.sample", 1, 15, 20, 20], ["capacity.grant", 1, 40, 10, 10]] }
+    },
+    {
+      "name": "overlapping children are counted once",
+      "total": 80,
+      "records": [
+        { "id": 1, "parent": 0, "depth": 0, "phase": "graph.load", "start": 0, "end": 60 },
+        { "id": 2, "parent": 1, "depth": 1, "phase": "graph.shard-a", "start": 10, "end": 40 },
+        { "id": 3, "parent": 1, "depth": 1, "phase": "graph.shard-b", "start": 20, "end": 50 }
+      ],
+      "expect": { "covered": 60, "uncovered": 20, "rows": [["graph.load", 0, 0, 60, 20], ["graph.shard-a", 1, 10, 30, 30], ["graph.shard-b", 1, 20, 30, 30]] }
+    },
+    {
+      "name": "disjoint top level phases leave the gaps uncovered",
+      "total": 50,
+      "records": [
+        { "id": 1, "parent": 0, "depth": 0, "phase": "a", "start": 5, "end": 15 },
+        { "id": 2, "parent": 0, "depth": 0, "phase": "b", "start": 20, "end": 25 }
+      ],
+      "expect": { "covered": 15, "uncovered": 35, "rows": [["a", 0, 5, 10, 10], ["b", 0, 20, 5, 5]] }
+    }
+  ]
+}

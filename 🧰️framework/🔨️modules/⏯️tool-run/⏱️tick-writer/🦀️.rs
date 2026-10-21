@@ -132,7 +132,8 @@ pub struct ToolRunTickWriter {
     #[cfg(not(feature = "testkit"))] pub(crate) retract_to: Option<u32>,
     #[cfg(feature = "testkit")] #[doc(hidden)] pub payload: Option<Vec<u8>>,
     #[cfg(not(feature = "testkit"))] pub(crate) payload: Option<Vec<u8>>,
-    payload_update:Option<ToolRunPayloadUpdate>,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub payload_update: Option<ToolRunPayloadUpdate>,
+    #[cfg(not(feature = "testkit"))] pub(crate) payload_update: Option<ToolRunPayloadUpdate>,
     original_payload_source: Option<(usize,usize)>,
     pending_bytes: usize,
 }
@@ -143,6 +144,18 @@ fn admit_original_column<T>(column:&mut Vec<T>,grant:semio_framework_value::Reta
 }
 
 impl ToolRunTickWriter {
+    /// 🔭️ Borrows the complete original writer rows for the tick wire cursor without cloning or moving them.
+    pub fn next_sequence(&self)->u64{self.next_sequence}
+    pub fn next_page(&self)->u32{self.next_page}
+    pub fn original_progress(&self)->&Option<ToolRunProgress>{&self.progress}
+    pub fn steps(&self)->&[ToolRunStep]{&self.steps}
+    pub fn pages(&self)->&[ToolRunTracePage]{&self.pages}
+    pub fn page_ops(&self)->&[ToolRunTraceOp]{&self.page_ops}
+    pub fn append_ops(&self)->&[Vec<u8>]{&self.append_ops}
+    pub fn append_entities(&self)->&[u64]{&self.append_entities}
+    pub fn original_retract_to(&self)->Option<u32>{self.retract_to}
+    pub fn original_payload(&self)->Option<&[u8]>{self.payload.as_deref()}
+    pub fn payload_update(&self)->Option<ToolRunPayloadUpdate>{self.payload_update}
     pub fn new(identity: ToolRunIdentity) -> Self {
         Self::with_provisional_base(identity, 0)
     }

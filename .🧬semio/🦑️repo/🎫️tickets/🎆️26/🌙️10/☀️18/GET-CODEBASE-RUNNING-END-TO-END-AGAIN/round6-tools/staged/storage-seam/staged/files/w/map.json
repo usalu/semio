@@ -1,0 +1,19 @@
+{
+ "files": {
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts": "3b1c9686b9df.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🧫️fixtures/🔣️.json": "6eec2c9c2110.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts": "df6ce058c8a1.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/📐️geometry/🟦️.ts": "64410f64cec8.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/🟦️.ts": "ec4e5a22f425.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/🏠️host/🟦️.ts": "da789214f4a8.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/📐️geometry/🟦️.ts": "7762222d2b1f.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/🟦️.ts": "f435ce2fcdbf.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🔌️operations/🟦️.ts": "f6592c22f641.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/⚖️laws/🟦️.ts": "b6715eec25c9.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/⚖️laws/🧫️fixtures/🔣️.json": "f9a9225b07cd.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/✅️conformance/🟦️.ts": "71362aa01863.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🐍️oracle.py": "b67a32a67260.py",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🟦️.ts": "15fa4432e5e8.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🧫️fixtures/🔣️.json": "4f67fab0118b.json"
+ }
+}

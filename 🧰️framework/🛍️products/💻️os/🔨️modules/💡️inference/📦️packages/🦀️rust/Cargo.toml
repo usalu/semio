@@ -26,7 +26,6 @@ semio-framework-value-snapshot-read = { path = "../../../../../../🔨️modules
 protocol = { path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
@@ -35,6 +34,7 @@ semio-framework-os-command = { path = "../../../📡️spr/🎮️command/📦�
 semio-framework-value-retirement = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

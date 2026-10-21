@@ -27,6 +27,8 @@ semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-retirement-queue = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-replication = { workspace = true }

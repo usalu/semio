@@ -1,0 +1,7 @@
+# Directory Admission Timeout Source Audit
+
+Bounded static read at 2026-10-21T04:14:35.460Z. Actual create00b4 TTY66069 returned exit1; frozen log251569B/SHA81c5693116d2ee0b8e246cbc290e79f66563ee451a6cf8f5dad7ac83afed7a29 ends with directory-admission timeout at leases/🟦️.ts228. No creator receipt exists.
+
+Observed current leases Source SHA-256 `16ed6359b1dc34cde9da6bdc252f454347805ec096592255945d94d215916a6d`, identity `16777229:456686863:33188:71714:1792551864993410482:1792551864993524357:1`. The current acquisition code303–307 normalizes a directory-admission timeout into the requested-resource timeout before normal wait retries. Other direct admission callers are catalog open343, claim identity352, retirement361, and claim retirement378. Existing retirement error classification accepts timeout prefixes. The actual terminal log retains only the innermost stack; it does not establish which caller emitted the refusal, which kernel lock was held, or a cycle or stale-holder cause. No Source change, lease inspection mutation, process probe, cache reset, unmount or kill was performed or justified.
+
+The build skill recovery instruction is to retain refusal/current receipts and retry the declared operation through repo so owned recovery can settle. The next reviewed new prefix folds real unit children and capture into one Native invocation. A normal retry remains within scope after the final static gate reviews; this audit is not an executed regression or proof of a repaired lease implementation.

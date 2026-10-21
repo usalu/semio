@@ -1,6 +1,6 @@
 import {lstatSync,realpathSync,readdirSync} from "node:fs";
 import{nativeStatfsSyncV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {dirname,resolve,join,relative,sep} from "node:path";
+import {basename,dirname,resolve,join,relative,sep} from "node:path";
 import componentSchema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -13,6 +13,12 @@ function inventoryV1(root,control){
  const base=join(root,"inference"),pending=[base],device=lstatSync(root).dev,optional=new RegExp(quotaSchema.optionalPath,"u");let entries=0,bytes=0;
  while(pending.length){checkResourceLeaseControl(control);if(++entries>schema.protocol.inventoryEntryLimit)throw Error("Finite optional graph inventory exceeded");const path=pending.pop();let row;try{row=lstatSync(path);}catch(error){if(error.code==="ENOENT")continue;throw error;}if(row.isSymbolicLink()||row.dev!==device)throw Error("Original optional graph physical ancestry required");if(row.isDirectory()){for(const name of readdirSync(path))pending.push(join(path,name));continue;}if(!optional.test(relative(base,path).split(sep).join("/")))continue;if(!row.isFile()||row.nlink!==1)throw Error("Original optional graph regular leaf required");bytes+=row.size;}
  return bytes;
+}
+
+/** 🔎️ Retains only the fixed ledger leaf and first failed physical predicate. */
+function optionalLedgerFileObservationV1(file,maximum,row,parent){
+ const regular=row.isFile(),symbolicLink=row.isSymbolicLink(),links=row.nlink,sameDevice=row.dev===parent.dev,bytes=row.size,reason=!regular?"not-regular":symbolicLink?"symbolic-link":links!==1?"link-count":!sameDevice?"device":bytes>maximum?"extent":null;
+ return Object.freeze({version:1,leaf:basename(file),regular,symbolicLink,links,sameDevice,bytes,maximumBytes:maximum,reason});
 }
 
 const busy=error=>error?.code==="SQLITE_BUSY"||error?.errcode===5||error?.errno===5;
@@ -30,7 +36,7 @@ export async function openBuildGraphOptionalLedgerV1(options){
  checkResourceLeaseControl(control);await image.recheck();const root=image.root,path=requireNativeStoragePathV1(root,join(root,protocol.filename)),gatePath=requireNativeStoragePathV1(root,join(root,protocol.gateFilename)),backing=await image.port.observe({version:1,root,leaseDirectory,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:image.filesystemBytes,maximumArtifactBytes:image.filesystemBytes},control);if(!backing||backing.root!==root||backing.maximumPhysicalBytes!==image.maximumPhysicalBytes)throw Error("Original enforcing optional graph image required");
  const check=()=>checkResourceLeaseControl(control),inventory=()=>inventoryV1(root,control),available=()=>{const space=nativeStatfsSyncV1(root);return space.bavail*space.bsize;},journalBound=bytes=>protocol.maximumJournalHeaderBytes+bytes/protocol.pageBytes*(protocol.pageBytes+protocol.journalPageOverheadBytes),metadataPeak=protocol.maximumDatabaseBytes+protocol.maximumGateDatabaseBytes+journalBound(protocol.maximumDatabaseBytes)+journalBound(protocol.maximumGateDatabaseBytes);
  check();const parent=lstatSync(root);if(!parent.isDirectory()||parent.isSymbolicLink()||realpathSync(root)!==root)throw Error("Original optional ledger ancestry required");
- const regular=(file,maximum)=>{const row=lstatSync(file);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.dev!==parent.dev||row.size>maximum)throw Error("Original bounded optional ledger file required");return row;},optional=(file,maximum)=>{try{return regular(file,maximum);}catch(error){if(error.code!=="ENOENT")throw error;}};
+ const regular=(file,maximum)=>{const row=lstatSync(file);if(row.nlink===0)throw Object.assign(Error("Unlinked optional ledger file"),{code:"ENOENT"});if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.dev!==parent.dev||row.size>maximum)throw Error("Original bounded optional ledger file required: "+JSON.stringify(optionalLedgerFileObservationV1(file,maximum,row,parent)));return row;},optional=(file,maximum)=>{try{return regular(file,maximum);}catch(error){if(error.code!=="ENOENT")throw error;}};
  for(const[file,maximum]of[[path,protocol.maximumDatabaseBytes],[gatePath,protocol.maximumGateDatabaseBytes]])optional(file,maximum);
  const free=available();if(!Number.isSafeInteger(free)||free<metadataPeak)throw Error("Exact optional ledger metadata headroom required");
  let database,gate,identity,gateIdentity,live=true;

@@ -29921,7 +29921,6 @@
       "target": "@semio-tech/s-dev-composition:generate",
       "previewTarget": "@semio-tech/s-dev-composition:preview-generated",
       "previewArguments": [
-        "catalog-publication",
         "preview"
       ],
       "checkTarget": "@semio-tech/s-dev-composition:check-generated",
@@ -29929,7 +29928,7 @@
         "nx.json",
         "package.json",
         "✏️s/🧑‍💻dev/📋️project.json",
-        "✏️s/🧑‍💻dev/📜️script.ts",
+        "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts",
         "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🔣️.json",
         "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
         "🌎️hub/📇️catalog/🔣️.json",
@@ -29977,7 +29976,7 @@
         "exampleDirectoryName": "📚️examples",
         "exampleFileKindId": "rust-source",
         "implementationEntryPaths": [
-          "✏️s/🧑‍💻dev/📜️script.ts"
+          "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/📜️script.ts"
         ],
         "workspaceImports": {
           "@semio-tech/framework": {

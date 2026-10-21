@@ -164,7 +164,7 @@ const klass = (p: Pkg, touchedOnly: boolean) => `${p.ws}|${p.hasLib ? "L" : "B"}
 const flagsFor = (sub: string, hasLib: boolean, touched: boolean) => {
   const base = sub === "test" ? "--no-fail-fast --lib --bins --tests" : touched ? "--lib --bins --tests" : "--lib --bins";
   const lb = hasLib ? base : base.replace("--lib ", "");
-  return `${lb} --keep-going --message-format=short`;
+  return `${lb}${sub === "test" ? "" : " --keep-going"} --message-format=short`;
 };
 
 /** 🧱 Chunks an ordered package list into runs of at most MAXP crates of one workspace and one flag class; order is preserved so every dependency precedes its dependents. */

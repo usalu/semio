@@ -166,6 +166,127 @@
       "mode": "prototype",
       "main": null,
       "javascript": false
+    },
+    {
+      "name": "capacity-status",
+      "args": [
+        "--tool=nx",
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "capacity-help",
+      "args": [
+        "--tool=nx",
+        "capacity",
+        "--help"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "capacity-run",
+      "args": [
+        "--tool=nx",
+        "capacity",
+        "run",
+        "--memory=2048",
+        "--",
+        "repo",
+        "run",
+        "app:build"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "leases-status",
+      "args": [
+        "--tool=nx",
+        "leases",
+        "status",
+        "--all",
+        "--json"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "remote-execution-status",
+      "args": [
+        "--tool=nx",
+        "remote-execution",
+        "status"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "remote-execution-env",
+      "args": [
+        "--tool=nx",
+        "remote-execution",
+        "env"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "bazel-capacity",
+      "args": [
+        "--tool=bazel",
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "bazel-leases",
+      "args": [
+        "--tool=bazel",
+        "leases",
+        "status"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "bazel-remote-execution",
+      "args": [
+        "--tool=bazel",
+        "remote-execution",
+        "status"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
+    },
+    {
+      "name": "localized-neutral-control",
+      "args": [
+        "--lang=de",
+        "--workers=off",
+        "--tool=nx",
+        "capacity",
+        "status"
+      ],
+      "mode": "prototype",
+      "main": null,
+      "javascript": false
     }
   ],
   "childArguments": [
@@ -249,6 +370,299 @@
       "kind": "copied-original",
       "accepted": false,
       "effects": 0
+    }
+  ],
+  "controlCases": [
+    {
+      "operation": "dependencies",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "cargo",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "preflight",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "incremental",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "concurrency",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "capacity",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "leases",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "remote-execution",
+      "neutralBootstrap": true
+    },
+    {
+      "operation": "run",
+      "neutralBootstrap": false
+    },
+    {
+      "operation": "watch",
+      "neutralBootstrap": false
+    },
+    {
+      "operation": "tools",
+      "neutralBootstrap": false
+    },
+    {
+      "operation": "reset",
+      "neutralBootstrap": false
+    },
+    {
+      "operation": "cache",
+      "neutralBootstrap": false
+    },
+    {
+      "operation": "unknown-operation",
+      "neutralBootstrap": false
+    }
+  ],
+  "diagnosticCases": [
+    {
+      "name": "bare-capacity",
+      "args": [
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "route": "capacity",
+      "expected": [
+        "status",
+        "--json"
+      ]
+    },
+    {
+      "name": "prefixed-nx-capacity",
+      "args": [
+        "repo",
+        "--tool=nx",
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "route": "capacity",
+      "expected": [
+        "status",
+        "--json"
+      ]
+    },
+    {
+      "name": "separate-bazel-capacity",
+      "args": [
+        "build",
+        "--tool",
+        "bazel",
+        "capacity",
+        "status"
+      ],
+      "route": "capacity",
+      "expected": [
+        "status"
+      ]
+    },
+    {
+      "name": "prefixed-nx-leases",
+      "args": [
+        "repo",
+        "--tool=nx",
+        "leases",
+        "status",
+        "--all"
+      ],
+      "route": "leases",
+      "expected": [
+        "status",
+        "--all"
+      ]
+    },
+    {
+      "name": "capacity-help-after-option",
+      "args": [
+        "--tool=nx",
+        "capacity",
+        "--help"
+      ],
+      "route": "help",
+      "expected": [
+        "capacity",
+        "--help"
+      ]
+    },
+    {
+      "name": "leases-help-after-option",
+      "args": [
+        "repo",
+        "--tool=bazel",
+        "leases",
+        "--help"
+      ],
+      "route": "help",
+      "expected": [
+        "leases",
+        "--help"
+      ]
+    },
+    {
+      "name": "ordinary-build-keeps-global-option",
+      "args": [
+        "repo",
+        "--tool=nx",
+        "run",
+        "app:test"
+      ],
+      "route": "admitted",
+      "expected": [
+        "repo",
+        "--tool=nx",
+        "run",
+        "app:test"
+      ]
+    },
+    {
+      "name": "opaque-capacity-child",
+      "args": [
+        "repo",
+        "--tool=nx",
+        "capacity",
+        "run",
+        "--memory=2048",
+        "--",
+        "repo",
+        "run",
+        "app:test"
+      ],
+      "route": "capacity",
+      "expected": [
+        "run",
+        "--memory=2048",
+        "--",
+        "repo",
+        "run",
+        "app:test"
+      ]
+    },
+    {
+      "name": "language-before-capacity",
+      "args": [
+        "repo",
+        "--lang",
+        "en",
+        "capacity",
+        "status",
+        "--json"
+      ],
+      "route": "capacity",
+      "expected": [
+        "status",
+        "--json"
+      ]
+    },
+    {
+      "name": "all-global-options-before-leases",
+      "args": [
+        "build",
+        "--lang=de",
+        "--workers",
+        "off",
+        "--tool=bazel",
+        "--graph-policy=current",
+        "leases",
+        "status"
+      ],
+      "route": "leases",
+      "expected": [
+        "status"
+      ],
+      "language": "de"
+    },
+    {
+      "name": "localized-capacity-help",
+      "args": [
+        "--lang=de",
+        "--tool=nx",
+        "capacity",
+        "--help"
+      ],
+      "route": "help",
+      "expected": [
+        "capacity",
+        "--help"
+      ],
+      "language": "de"
+    },
+    {
+      "name": "ordinary-build-keeps-language-option",
+      "args": [
+        "repo",
+        "--lang=en",
+        "--workers=off",
+        "run",
+        "app:test"
+      ],
+      "route": "admitted",
+      "expected": [
+        "repo",
+        "--lang=en",
+        "--workers=off",
+        "run",
+        "app:test"
+      ]
+    },
+    {
+      "name": "opaque-language-child",
+      "args": [
+        "--lang=en",
+        "capacity",
+        "run",
+        "--memory=2048",
+        "--",
+        "repo",
+        "--lang=de",
+        "run",
+        "app:test"
+      ],
+      "route": "capacity",
+      "expected": [
+        "run",
+        "--memory=2048",
+        "--",
+        "repo",
+        "--lang=de",
+        "run",
+        "app:test"
+      ]
+    },
+    {
+      "name": "ordinary-build-normalizes-scoped-option",
+      "args": [
+        "repo",
+        "--lang=en",
+        "run",
+        "app:test",
+        "--configuration",
+        "release"
+      ],
+      "route": "admitted",
+      "expected": [
+        "repo",
+        "--lang=en",
+        "run",
+        "app:test",
+        "--configuration=release"
+      ]
     }
   ]
 }

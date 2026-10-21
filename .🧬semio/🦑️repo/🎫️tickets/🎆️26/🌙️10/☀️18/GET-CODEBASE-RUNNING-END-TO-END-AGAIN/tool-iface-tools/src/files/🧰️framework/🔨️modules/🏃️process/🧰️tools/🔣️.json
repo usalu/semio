@@ -196,6 +196,7 @@
   "testSegments": [
    "🧪️tests",
    "🧫️fixtures",
+   "🧰️testing",
    "tests",
    "e2e"
   ],
@@ -347,6 +348,13 @@
     {
      "kind": "environment",
      "name": "SEMIO_TOOL_REPO"
+    },
+    {
+     "kind": "path",
+     "directories": [
+      "~/.local/bin",
+      "~/.local/share/semio/launcher/bin"
+     ]
     },
     {
      "kind": "script",

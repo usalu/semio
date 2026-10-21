@@ -4,7 +4,7 @@ import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,finishResourceLeaseCleanupV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
+import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,holdsSharedInProcessV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
 export {LeaseOrderErrorV1,formatLeaseViolationV1,leaseInheritanceEnvironmentV1,withLeaseTaskV1} from "./🧭️order/🟦️.ts";
 import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
@@ -417,6 +417,7 @@ function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
 /** 🚦️ Serves original kernel-held tickets in arrival order; an exclusive SQLite claim alone proves abandoned custody. */
 export function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {return traceLeaseV1(options,()=>acquireOrderedQueuedResourceLeaseV1(options));}
 async function acquireOrderedQueuedResourceLeaseV1(options: QueuedLeaseOptions): Promise<ResourceLease> {
+  if(options.mode==="shared"&&typeof options.resource==="string"&&!internalLeaseResource(options.resource)&&leaseOrderPolicyV1().fairness.reentrantShared!==false&&holdsSharedInProcessV1(resolve(options.directory),options.resource)&&exclusiveTicketQueued(options.directory,options.resource)){const{owner:_owner,sharedCohort:_cohort,...raw}=options;return acquireResourceLease(raw);}
   const guard=orderGuard(options,true);
   if(!guard)return acquireQueuedResourceLeaseBody(options);
   let lease:ResourceLease;
@@ -443,6 +444,11 @@ async function acquireQueuedResourceLeaseBody(options: QueuedLeaseOptions,guard?
   return awaitQueuedTurn(options,started,queue,ticket,claim,guard);
 }
 
+/** 🎟️ Whether an exclusive request is queued on a lease: only then can a further shared request of a holder be stuck behind a writer, so only then does it skip the queue; otherwise it queues normally and stays upgradeable. */
+function exclusiveTicketQueued(directory:string,resource:string):boolean{
+  try{const queue=resourceLeasePathV1(directory,resource).replace(/\.sqlite$/u,".queue");for(const name of readdirSync(queue))if(queueTicketRow(queue,name)?.mode==="exclusive")return true;}catch{}
+  return false;
+}
 /** ⬆️ Converts a held queued shared lease into an exclusive one at its original arrival position; the shared hold is consumed, so a failed upgrade holds nothing and concurrent upgraders cannot deadlock each other. */
 export async function upgradeQueuedResourceLease(lease:ResourceLease,limits:{readonly timeoutMs?:number}={}):Promise<ResourceLease>{
   const turn=queuedTurns.get(lease),issued=originalLeases.get(lease);

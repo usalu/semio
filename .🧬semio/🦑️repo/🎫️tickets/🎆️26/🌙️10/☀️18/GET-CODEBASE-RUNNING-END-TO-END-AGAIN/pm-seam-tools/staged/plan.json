@@ -1,5 +1,13 @@
 {
  "version": 1,
+ "groups": [
+  "seam",
+  "bootstrap",
+  "graph",
+  "storage",
+  "register",
+  "ratchet"
+ ],
  "files": [
   {
    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
@@ -180,10 +188,10 @@
     {
      "id": "storage-runtime-identity",
      "group": "storage",
-     "old": "process.versions.bun",
-     "new": "packageManagerRuntimeV1()",
+     "old": "sourceRoot,process.versions.bun,process.platform,process.arch",
+     "new": "sourceRoot,packageManagerRuntimeV1(),process.platform,process.arch",
      "counts": [
-      2
+      1
      ]
     },
     {
@@ -193,33 +201,6 @@
      "new": "readLockDocumentV1(",
      "counts": [
       3
-     ]
-    },
-    {
-     "id": "storage-generation-directory",
-     "group": "storage",
-     "old": "\"j\"",
-     "new": "generationDirectoryV1",
-     "counts": [
-      36
-     ]
-    },
-    {
-     "id": "storage-generation-root",
-     "group": "storage",
-     "old": "roots:[\"j/\"+plan.generation.slice(0,20)]",
-     "new": "roots:[generationDirectoryV1+\"/\"+plan.generation.slice(0,20)]",
-     "counts": [
-      1
-     ]
-    },
-    {
-     "id": "storage-profiles",
-     "group": "storage",
-     "old": "for(const profile of[\"bun-import\",\"bun-require\"]as const){",
-     "new": "for(const profile of packageManagerV1.resolutionProfiles()){",
-     "counts": [
-      1
      ]
     }
    ]
@@ -235,17 +216,12 @@
      "counts": [
       1
      ]
-    }
-   ]
-  },
-  {
-   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
-   "edits": [
+    },
     {
-     "id": "storage-pin-generation-binding",
+     "id": "storage-pin-environment-candidates",
      "group": "storage",
-     "old": "posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,\"\")).join(\"\\n\")+\";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};\"",
-     "new": "generationDirectoryV1:\"j\",posix:path.posix,win32:path.win32,sep:path.sep},api=new Function(...Object.keys(ports),ts.transpileModule(nodes.map(node=>node.getText(tree).replace(/^export\\s/u,\"\")).join(\"\\n\")+\";return {read:readJavascriptDependencySourceOwnerExecutionV1,publish:publishJavascriptDependencyBorrowedProvidersDescriptorV1};\"",
+     "old": "expect(source).toContain(\"for(const candidate of[path.join(home,\\\".bunfig.toml\\\"),path.join(config,\\\".bunfig.toml\\\"),path.join(home,\\\".npmrc\\\")])\");",
+     "new": "expect(source).toContain(\"for(const candidate of[...packageManagerV1.configurationNames(\\\"home\\\").map(name=>path.join(home,name)),...packageManagerV1.configurationNames(\\\"config\\\").map(name=>path.join(config,name))])\");",
      "counts": [
       1
      ]

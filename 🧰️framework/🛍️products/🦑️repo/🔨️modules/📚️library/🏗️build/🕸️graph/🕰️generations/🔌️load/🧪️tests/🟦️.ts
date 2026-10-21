@@ -1,7 +1,8 @@
 /** 🔌️ Contract: the repository protocol of the graph generation. A shared reader serves a verified or current generation without ever entering the builder custody; only a stale generation under a fresh policy enters it, the facts resource is held only for the pointer swap, closures read only their own projects, texts come in English and German, and partial inference results are shaped into exactly the facts and edges each owner consumed. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
-import {mkdtempSync,realpathSync,rmSync} from "node:fs";
+import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
+import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -9,13 +10,14 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,loadGenerationGraphV1,renderGenerationMessageV1,selectGenerationLanguageV1,shapeComputeResultV1} from "../🟨️.mjs";
-import {canonicalJsonV1} from "../../🟨️.mjs";
+import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,selectGenerationLanguageV1,shapeComputeResultV1} from "../🟨️.mjs";
+import {GENERATION_POLICY_V1,canonicalJsonV1} from "../../🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"..","..","🧪️tests","🐍️oracle.py");
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-load-"));
 const clean=(dir:string)=>rmSync(dir,{recursive:true,force:true});
+const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const pythonGraph=(dir:string,names?:string[])=>{const graph=JSON.parse(Bun.spawnSync([python!,"-I",oracle,"graph",dir]).stdout.toString());if(!names)return graph;return{...graph,projects:Object.fromEntries(Object.entries(graph.projects).filter(([name])=>names.includes(name))),dependencies:graph.dependencies.filter((edge:any)=>names.includes(edge.source)&&names.includes(edge.target))};};
 const normalized=(value:unknown)=>JSON.parse(canonicalJsonV1(value));
 const shape=(graph:any)=>normalized({projects:graph.projects,dependencies:graph.dependencies,externalNodes:graph.externalNodes,unavailable:graph.unavailable??[]});
@@ -121,3 +123,62 @@ test("progress counters are the shared graph phases and a cancelled load leaves 
   const after=createMockHost(dir),graph=await loadGenerationGraphV1(after.host) as any;expect(shape(graph)).toEqual(pythonGraph(dir));expect(after.log.length).toBe(1);
  }finally{clean(dir);}
 },60000);
+
+for(const[index,row]of fixture.implementation.entries())test("implementation facts are scoped and stamped like the independent model "+index,()=>{
+ const scoped=scopeImplementationRowsV1(row.rows as never),expected=row.expected as {all:unknown[];projects:unknown[];digest:string};
+ expect({all:scoped.all,projects:scoped.projects}).toEqual({all:expected.all,projects:expected.projects} as never);
+ expect(implementationDigestV1(row.rows as never)).toBe(expected.digest);
+});
+
+test("shaping adds the implementation facts of the consumers: valid projects the shared and their own, unavailable ones and the environment only the shared",()=>{
+ const{workspaceRoot,part,stubs,implementation,expected}=fixture.shapeImplementation;
+ expect(shapeComputeResultV1({workspaceRoot,part:part as never,stubs:stubs as never,implementation:implementation as never})).toEqual(expected as never);
+});
+
+test("the stale generation text is declared in both languages",()=>{
+ expect(renderGenerationMessageV1("stale",{generation:2},{})).toBe("graph: serving generation 2 built by another implementation (graph policy current)");
+ expect(renderGenerationMessageV1("stale",{generation:2},{LANG:"de_DE.UTF-8"})).toBe("Graph: Generation 2 stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)");
+});
+
+const implementationPathsV1=()=>{const scopes=GENERATION_POLICY_V1.implementation;return{inert:"impl/"+scopes.none[0]+"ledger.mjs",nodes:"impl/"+scopes.projects[0]+"nodes.mjs",core:"impl/core/graph.mjs"};};
+const stampOf=(dir:string):string=>{const pointer=JSON.parse(readFileSync(join(dir,".gen","current.json"),"utf8"));return JSON.parse(readFileSync(join(dir,".gen","m",pointer.manifest+".json"),"utf8")).implementation;};
+const brokenRing=(count:number,broken:number)=>{const files=ringFiles(count);for(let i=count-broken;i<count;i++)files[`pkg/p${i}/project.json`]=JSON.stringify({name:`p${i}`,broken:true});return files;};
+const names=(count:number)=>Array.from({length:count},(_,i)=>"p"+i).sort();
+
+test("a build names the implementation modules it loaded: an inert module refreshes nothing, a node module the valid projects, a shared module every project, and a reader of another implementation is served or verified without a rebuild",async()=>{
+ const dir=scratch(),paths=implementationPathsV1(),files={...brokenRing(12,2),[paths.inert]:"1",[paths.nodes]:"1",[paths.core]:"1"},valid=names(10),every=names(12);
+ try{
+  await seed(dir,files);const options={implementationFiles:Object.values(paths)};
+  const loader=createMockHost(dir,options);await loadGenerationGraphV1(loader.host);
+  const stampA=implementationDigestV1(await loader.host.implementationRows());expect(stampOf(dir)).toBe(stampA);expect(loader.log).toEqual([{full:every,edges:[],cold:true}]);
+  await applyOps(dir,[{op:"write",path:paths.inert,content:"2"}]);
+  const inert=createMockHost(dir,options);await loadGenerationGraphV1(inert.host);
+  expect(inert.events).toEqual(["shared"]);expect(inert.log).toEqual([]);expect(stampOf(dir)).toBe(stampA);
+  await applyOps(dir,[{op:"write",path:paths.nodes,content:"2"}]);
+  const nodes=createMockHost(dir,options),graph=await loadGenerationGraphV1(nodes.host) as any;
+  expect(nodes.log).toEqual([{full:valid,edges:[],cold:false}]);expect(Object.keys(graph.projects).sort()).toEqual(valid);expect(graph.unavailable.map((row:any)=>row.project).sort()).toEqual(["p10","p11"]);
+  const stampB=implementationDigestV1(await nodes.host.implementationRows());expect(stampB).not.toBe(stampA);expect(stampOf(dir)).toBe(stampB);
+  await applyOps(dir,[{op:"write",path:paths.core,content:"2"}]);
+  const core=createMockHost(dir,options);await loadGenerationGraphV1(core.host);
+  expect(core.log).toEqual([{full:every,edges:[],cold:false}]);const stampC=implementationDigestV1(await core.host.implementationRows());expect(stampOf(dir)).toBe(stampC);
+  loader.events.length=0;loader.said.length=0;const stale=await loadGenerationGraphV1(loader.host,{policy:"current"}) as any;
+  expect(loader.events).toEqual(["shared"]);expect(loader.said.map(row=>row.text)).toEqual(["graph: serving generation 2 built by another implementation (graph policy current)"]);expect(Object.keys(stale.projects).length).toBe(10);
+  loader.events.length=0;await loadGenerationGraphV1(loader.host);expect(loader.events).toEqual(["shared"]);expect(loader.log.length).toBe(1);expect(stampOf(dir)).toBe(stampC);
+ }finally{clean(dir);}
+},120000);
+
+test("an implementation module edited every few hundred milliseconds never restarts a 300 project build: it publishes the generation of the implementation it loaded and the next fresh load refreshes exactly the consumers of the edited module",async()=>{
+ const count=300,broken=30,paths=implementationPathsV1(),files={...brokenRing(count,broken),[paths.inert]:"0",[paths.nodes]:"0",[paths.core]:"0"},valid=names(count-broken);
+ const quiet=scratch(),busy=scratch(),options={implementationFiles:Object.values(paths),ownerDelayMs:8};
+ try{
+  await seed(quiet,files);const timed=createMockHost(quiet,options),started=Date.now();await loadGenerationGraphV1(timed.host);const quietMs=Date.now()-started;
+  await seed(busy,files);const loaded=createMockHost(busy,options),loadedStamp=implementationDigestV1(await loaded.host.implementationRows());
+  let editing=true,edits=0;const editor=(async()=>{while(editing){await sleep(250);edits++;await writeFile(join(busy,paths.nodes),String(edits));}})();
+  const begin=Date.now(),graph=await loadGenerationGraphV1(loaded.host) as any,busyMs=Date.now()-begin;editing=false;await editor;
+  expect(edits).toBeGreaterThanOrEqual(3);expect(loaded.log.length).toBe(1);expect(loaded.said.at(-1)!.text).toContain("published");expect(busyMs).toBeLessThanOrEqual(1.2*quietMs+500);
+  expect(stampOf(busy)).toBe(loadedStamp);expect(Object.keys(graph.projects).length).toBe(count-broken);
+  const next=createMockHost(busy,options);await loadGenerationGraphV1(next.host);
+  expect(next.log).toEqual([{full:valid,edges:[],cold:false}]);expect(stampOf(busy)).toBe(implementationDigestV1(await next.host.implementationRows()));
+  const again=createMockHost(busy,options);await loadGenerationGraphV1(again.host);expect(again.log).toEqual([]);expect(again.events).toEqual(["shared"]);
+ }finally{clean(quiet);clean(busy);}
+},240000);

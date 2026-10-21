@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-original-slot"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original native slots and captured issuer read custody."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-original-slot"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-factory = { path = "../../../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

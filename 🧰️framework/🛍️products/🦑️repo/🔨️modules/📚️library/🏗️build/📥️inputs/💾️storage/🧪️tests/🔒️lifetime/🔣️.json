@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "healthy",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "none",
+      "cleanupFails": false,
+      "bodyCalls": 1
+    },
+    {
+      "id": "initial-pressure",
+      "initialPressure": true,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "none",
+      "cleanupFails": false,
+      "bodyCalls": 1
+    },
+    {
+      "id": "census-pressure",
+      "initialPressure": false,
+      "censusPressure": true,
+      "busyProbes": 0,
+      "failAt": "none",
+      "cleanupFails": false,
+      "bodyCalls": 1
+    },
+    {
+      "id": "one-busy-probe",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 1,
+      "failAt": "none",
+      "cleanupFails": false,
+      "bodyCalls": 1
+    },
+    {
+      "id": "two-busy-probes",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 2,
+      "failAt": "none",
+      "cleanupFails": false,
+      "bodyCalls": 1
+    },
+    {
+      "id": "cancel-after-wait",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 1,
+      "failAt": "cancel",
+      "cleanupFails": false,
+      "bodyCalls": 0
+    },
+    {
+      "id": "body-and-cleanup",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "body",
+      "cleanupFails": true,
+      "bodyCalls": 1
+    },
+    {
+      "id": "undefined-body-and-cleanup",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "undefined",
+      "cleanupFails": true,
+      "bodyCalls": 1
+    },
+    {
+      "id": "maintenance-and-close",
+      "initialPressure": true,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "maintenance",
+      "cleanupFails": true,
+      "bodyCalls": 0
+    },
+    {
+      "id": "ledger-and-cleanup",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "ledger",
+      "cleanupFails": true,
+      "bodyCalls": 0
+    },
+    {
+      "id": "nonbusy-probe-failure",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 0,
+      "failAt": "probe",
+      "cleanupFails": false,
+      "bodyCalls": 0
+    },
+    {
+      "id": "nested-different-namespace-busy",
+      "initialPressure": false,
+      "censusPressure": false,
+      "busyProbes": 1,
+      "failAt": "nested-busy",
+      "cleanupFails": false,
+      "bodyCalls": 0
+    }
+  ]
+}

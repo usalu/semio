@@ -3,7 +3,7 @@
   {
    "name": "app",
    "version": "0.2.0",
-   "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0",
+   "id": "path+file:///workspace/app#0.2.0",
    "license": null,
    "license_file": null,
    "description": null,
@@ -20,7 +20,7 @@
      "features": [],
      "target": null,
      "registry": null,
-     "path": "/private/tmp/polyglot-units/lab/cargo-ws/core"
+     "path": "/workspace/core"
     },
     {
      "name": "mac",
@@ -33,7 +33,7 @@
      "features": [],
      "target": null,
      "registry": null,
-     "path": "/private/tmp/polyglot-units/lab/cargo-ws/mac"
+     "path": "/workspace/mac"
     }
    ],
    "targets": [
@@ -45,7 +45,7 @@
       "lib"
      ],
      "name": "app",
-     "src_path": "/private/tmp/polyglot-units/lab/cargo-ws/app/src/lib.rs",
+     "src_path": "/workspace/app/src/lib.rs",
      "edition": "2021",
      "doc": true,
      "doctest": true,
@@ -59,7 +59,7 @@
       "bin"
      ],
      "name": "app-cli",
-     "src_path": "/private/tmp/polyglot-units/lab/cargo-ws/app/src/main.rs",
+     "src_path": "/workspace/app/src/main.rs",
      "edition": "2021",
      "doc": true,
      "doctest": false,
@@ -67,7 +67,7 @@
     }
    ],
    "features": {},
-   "manifest_path": "/private/tmp/polyglot-units/lab/cargo-ws/app/Cargo.toml",
+   "manifest_path": "/workspace/app/Cargo.toml",
    "metadata": null,
    "publish": null,
    "authors": [],
@@ -85,7 +85,7 @@
   {
    "name": "core-lib",
    "version": "0.1.0",
-   "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
+   "id": "path+file:///workspace/core#core-lib@0.1.0",
    "license": null,
    "license_file": null,
    "description": null,
@@ -100,7 +100,7 @@
       "lib"
      ],
      "name": "core_lib",
-     "src_path": "/private/tmp/polyglot-units/lab/cargo-ws/core/src/lib.rs",
+     "src_path": "/workspace/core/src/lib.rs",
      "edition": "2021",
      "doc": true,
      "doctest": true,
@@ -108,7 +108,7 @@
     }
    ],
    "features": {},
-   "manifest_path": "/private/tmp/polyglot-units/lab/cargo-ws/core/Cargo.toml",
+   "manifest_path": "/workspace/core/Cargo.toml",
    "metadata": null,
    "publish": null,
    "authors": [],
@@ -126,7 +126,7 @@
   {
    "name": "mac",
    "version": "0.1.0",
-   "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0",
+   "id": "path+file:///workspace/mac#0.1.0",
    "license": null,
    "license_file": null,
    "description": null,
@@ -141,7 +141,7 @@
       "proc-macro"
      ],
      "name": "mac",
-     "src_path": "/private/tmp/polyglot-units/lab/cargo-ws/mac/src/lib.rs",
+     "src_path": "/workspace/mac/src/lib.rs",
      "edition": "2021",
      "doc": true,
      "doctest": true,
@@ -149,7 +149,7 @@
     }
    ],
    "features": {},
-   "manifest_path": "/private/tmp/polyglot-units/lab/cargo-ws/mac/Cargo.toml",
+   "manifest_path": "/workspace/mac/Cargo.toml",
    "metadata": null,
    "publish": null,
    "authors": [],
@@ -167,7 +167,7 @@
   {
    "name": "tool",
    "version": "0.3.0",
-   "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/tool#0.3.0",
+   "id": "path+file:///workspace/tool#0.3.0",
    "license": null,
    "license_file": null,
    "description": null,
@@ -184,7 +184,7 @@
      "features": [],
      "target": null,
      "registry": null,
-     "path": "/private/tmp/polyglot-units/lab/cargo-ws/app"
+     "path": "/workspace/app"
     }
    ],
    "targets": [
@@ -196,7 +196,7 @@
       "bin"
      ],
      "name": "tool",
-     "src_path": "/private/tmp/polyglot-units/lab/cargo-ws/tool/src/main.rs",
+     "src_path": "/workspace/tool/src/main.rs",
      "edition": "2021",
      "doc": true,
      "doctest": false,
@@ -204,7 +204,7 @@
     }
    ],
    "features": {},
-   "manifest_path": "/private/tmp/polyglot-units/lab/cargo-ws/tool/Cargo.toml",
+   "manifest_path": "/workspace/tool/Cargo.toml",
    "metadata": null,
    "publish": null,
    "authors": [],
@@ -221,29 +221,29 @@
   }
  ],
  "workspace_members": [
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/tool#0.3.0"
+  "path+file:///workspace/core#core-lib@0.1.0",
+  "path+file:///workspace/mac#0.1.0",
+  "path+file:///workspace/app#0.2.0",
+  "path+file:///workspace/tool#0.3.0"
  ],
  "workspace_default_members": [
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0",
-  "path+file:///private/tmp/polyglot-units/lab/cargo-ws/tool#0.3.0"
+  "path+file:///workspace/core#core-lib@0.1.0",
+  "path+file:///workspace/mac#0.1.0",
+  "path+file:///workspace/app#0.2.0",
+  "path+file:///workspace/tool#0.3.0"
  ],
  "resolve": {
   "nodes": [
    {
-    "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0",
+    "id": "path+file:///workspace/app#0.2.0",
     "dependencies": [
-     "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
-     "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0"
+     "path+file:///workspace/core#core-lib@0.1.0",
+     "path+file:///workspace/mac#0.1.0"
     ],
     "deps": [
      {
       "name": "core_lib",
-      "pkg": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
+      "pkg": "path+file:///workspace/core#core-lib@0.1.0",
       "dep_kinds": [
        {
         "kind": null,
@@ -253,7 +253,7 @@
      },
      {
       "name": "mac",
-      "pkg": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0",
+      "pkg": "path+file:///workspace/mac#0.1.0",
       "dep_kinds": [
        {
         "kind": null,
@@ -265,26 +265,26 @@
     "features": []
    },
    {
-    "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/core#core-lib@0.1.0",
+    "id": "path+file:///workspace/core#core-lib@0.1.0",
     "dependencies": [],
     "deps": [],
     "features": []
    },
    {
-    "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/mac#0.1.0",
+    "id": "path+file:///workspace/mac#0.1.0",
     "dependencies": [],
     "deps": [],
     "features": []
    },
    {
-    "id": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/tool#0.3.0",
+    "id": "path+file:///workspace/tool#0.3.0",
     "dependencies": [
-     "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0"
+     "path+file:///workspace/app#0.2.0"
     ],
     "deps": [
      {
       "name": "app",
-      "pkg": "path+file:///private/tmp/polyglot-units/lab/cargo-ws/app#0.2.0",
+      "pkg": "path+file:///workspace/app#0.2.0",
       "dep_kinds": [
        {
         "kind": null,
@@ -298,10 +298,10 @@
   ],
   "root": null
  },
- "target_directory": "/private/tmp/polyglot-units/lab/cargo-ws/target",
- "build_directory": "/private/tmp/polyglot-units/lab/cargo-ws/target",
+ "target_directory": "/workspace/target",
+ "build_directory": "/workspace/target",
  "version": 1,
- "workspace_root": "/private/tmp/polyglot-units/lab/cargo-ws",
+ "workspace_root": "/workspace",
  "metadata": null,
  "_files": [
   "Cargo.toml",

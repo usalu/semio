@@ -16,6 +16,10 @@ describe("direct spawn scanner", () => {
       if ("scope" in row) expect(scanToolSpawnsV1(row.path, row.text).every(site => site.scope === row.scope)).toBe(true);
     });
   }
+  test("counts a Rust spawn after #[cfg(test)] as test code and ignores a two-argument Command::new of a command builder", () => {
+    const sites = scanToolSpawnsV1("a/z.rs", fixtures.cases.find(row => row.path === "a/z.rs")!.text);
+    expect(sites.map(site => `${site.tool}:${site.scope}`)).toEqual(["git:prod", "bun:test"]);
+  });
   test("reads the first argument across nested brackets, strings and templates", () => {
     expect(readArgumentV1("f(a(b, c), d)", 2)).toEqual({ text: "a(b, c)", end: 9 });
     expect(readArgumentV1("f(`x${y(1, 2)}`, 3)", 2).text).toBe("`x${y(1, 2)}`");
@@ -42,9 +46,9 @@ describe("direct spawn scanner", () => {
   test("counts the same Rust and Go spawns as ripgrep", () => {
     const rg = testRipgrepV1();
     if (rg === null) return;
-    const text = fixtures.cases.filter(row => row.path.endsWith(".rs") || row.path.endsWith(".go")).map(row => row.text).join("\n");
+    const text = fixtures.cases.filter(row => row.path === "a/x.rs" || row.path === "a/x.go").map(row => row.text).join("\n");
     const count = spawnSync(rg, ["-o", "--no-config", "-e", "Command::new\\(\"[a-z]+\"|exec\\.Command(?:Context)?\\([^\"]*\"[a-z]+\""], { input: text, encoding: "utf8" }).stdout.trim().split("\n").filter(Boolean).length;
-    const mine = fixtures.cases.filter(row => row.path.endsWith(".rs") || row.path.endsWith(".go")).flatMap(row => scanToolSpawnsV1(row.path, row.text)).length;
+    const mine = fixtures.cases.filter(row => row.path === "a/x.rs" || row.path === "a/x.go").flatMap(row => scanToolSpawnsV1(row.path, row.text)).length;
     expect(mine).toBe(count - 1);
   });
 });

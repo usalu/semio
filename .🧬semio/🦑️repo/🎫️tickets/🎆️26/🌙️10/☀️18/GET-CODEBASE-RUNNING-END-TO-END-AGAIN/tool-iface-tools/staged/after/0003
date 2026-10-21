@@ -5,18 +5,17 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// 🏭️ Third-party fixture generator for `s.fem.fem3d@1/🌐️any`.
+// 🏭️ Third-party fixture generator for `s.fem.fem2d@1/🌐️any`.
 //
-// A `FemSolid` is an outline (+ zero or more holes) extruded by its own `height`, offset by `baseZ` —
-// exactly what `crate::fem3d_engine::meshing::build_semio_mesh_snapshot` bridges into OBJ/STL. Every
-// recipe here builds the SAME kind of shape independently: `manifold-3d`'s own `CrossSection.extrude`
-// (a real solid-boolean kernel's native polygon-with-holes extrusion, not a re-derivation of our
-// triangulator) BUILDS it and is the sole source of its volume/area/genus truth, translated by `baseZ`,
-// and `three` (a real 3D engine, nothing of ours) EXPORTS it to OBJ/STL and RE-IMPORTS what it wrote.
-// Nothing here reimplements our `crate::mesh::triangulate`/`extrude_tri_mesh`/`split_to_tets`/
-// `boundary_faces` chain — that is the point: an expectation produced by two second parties proves the
-// CAPABILITY (a straight-edged polygon-with-holes prism, possibly floating above the origin, round-trips
-// through OBJ/STL) rather than that either library agrees with us.
+// A `FemRegion` is an outline (+ zero or more holes) extruded by its own `thickness` — exactly what
+// `crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot` bridges into OBJ/STL. Every recipe here
+// builds the SAME kind of shape independently: `manifold-3d`'s own `CrossSection.extrude` (a real
+// solid-boolean kernel's native polygon-with-holes extrusion, not a re-derivation of our triangulator)
+// BUILDS it and is the sole source of its volume/area/genus truth, and `three` (a real 3D engine,
+// nothing of ours) EXPORTS it to OBJ/STL and RE-IMPORTS what it wrote. Nothing here reimplements our
+// `crate::mesh::triangulate`/`extrude_tri_mesh`/`split_to_tets`/`boundary_faces` chain — that is the
+// point: an expectation produced by two second parties proves the CAPABILITY (a straight-edged
+// polygon-with-holes prism round-trips through OBJ/STL) rather than that either library agrees with us.
 //
 // Generation and execution are SEPARATE. A normal test run must never be able to rewrite the
 // expectation it is measured against, so this is its own command and its output is reviewed before
@@ -27,9 +26,7 @@
 //
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts
 //      — the pilot this file mirrors in CLI shape, bundle layout and manifest fields.
-// @see ../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts — the sibling 2D
-//      generator this file mirrors, plus the `baseZ` translation `FemSolid` adds over `FemRegion`.
-// @see ../🕸️meshing/… (crate::fem3d_engine::meshing::build_semio_mesh_snapshot) — the honest-geometry
+// @see ../🚪️io/📤️export/🧩️geometry/🦀️.rs (crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot) — the honest-geometry
 //      bridge whose OUTER CAPABILITY (not its triangulation) this corpus stands in for.
 
 //#endregion 🧲️Header
@@ -45,10 +42,10 @@ import type { CrossSection, Manifold } from "manifold-3d";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -59,12 +56,12 @@ import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 /** 👪️ The fixture families the corpus is sharded and reported by — never at artifact level. */
-export type Family = "rectangles" | "polygons" | "holes" | "scale" | "degenerate" | "elevated";
+export type Family = "rectangles" | "polygons" | "holes" | "scale" | "degenerate";
 
 export type Toolkit = Readonly<{ Manifold: typeof Manifold; CrossSection: typeof CrossSection }>;
 
-/** 🧪️ One corpus entry. A recipe DESCRIBES a `FemSolid`'s geometry (outline + holes + height + baseZ);
- *  it computes nothing. `build` returns the extruded, translated solid manifold-3d itself produced. */
+/** 🧪️ One corpus entry. A recipe DESCRIBES a `FemRegion`'s geometry (outline + holes + thickness); it
+ *  computes nothing. `build` returns the extruded solid manifold-3d itself produced. */
 export type Recipe = Readonly<{
   id: string;
   family: Family;
@@ -72,19 +69,20 @@ export type Recipe = Readonly<{
   notes: string;
   outline: readonly (readonly [number, number])[];
   holes: readonly (readonly (readonly [number, number])[])[];
-  height: number;
-  baseZ: number;
+  thickness: number;
 }>;
 
 const ENGINE_FAMILY = "manifold";
 const ENGINE_VERSION = "3.5.1";
 const EXPORT_ENGINE_FAMILY = "three";
 const EXPORT_ENGINE_VERSION = "0.182.0";
-const ORACLE = "manifold-fem3d-mesh-measure";
+const ORACLE = "manifold-fem2d-mesh-measure";
 const SEED = 4815162342;
 
 /** 🔺️ The weld grid a re-imported triangle SOUP is snapped onto before manifold-3d, scale-relative —
- *  `max(absoluteFloor, relative × boundingBoxDiagonal)` — never a fixed constant. */
+ *  `max(absoluteFloor, relative × boundingBoxDiagonal)` — never a fixed constant (a fixed grid either
+ *  merges real detail on a millimetre part or does nothing on one scaled to 1e6, exactly the failure
+ *  mode the `scale` family below exists to rule out). */
 const WELD_RELATIVE = 1e-7;
 const WELD_ABSOLUTE_FLOOR = 1e-9;
 function weldGridFor(diagonal: number): number {
@@ -102,15 +100,14 @@ async function manifold3d(): Promise<NonNullable<typeof toolkit>> {
   return toolkit;
 }
 
-/** 🌐️ `FemSolid.{outline,holes,height,baseZ}` → a real extruded, Z-translated `Manifold`, via
- *  manifold-3d's OWN polygon-with-holes handling: `EvenOdd` fill toggles fill state on every contour
- *  crossing regardless of winding, so a hole loop nested inside the outer loop subtracts itself without
- *  this generator having to agree with `crate::mesh`'s "either winding" convention on which way is
- *  which. `translate(0,0,baseZ)` mirrors the bridge fn's `z[i] + solid.base_z` offset exactly. */
-function extrudeSolid(t: Toolkit, recipe: Recipe): Manifold {
+/** 🌐️ `FemRegion.{outline,holes,thickness}` → a real extruded `Manifold`, via manifold-3d's OWN
+ *  polygon-with-holes handling: `EvenOdd` fill toggles fill state on every contour crossing regardless
+ *  of winding, so a hole loop nested inside the outer loop subtracts itself without this generator
+ *  having to agree with `crate::mesh`'s "either winding" convention on which way is which. */
+function extrudeRegion(t: Toolkit, recipe: Recipe): Manifold {
   const contours = [recipe.outline as unknown as [number, number][], ...recipe.holes.map((hole) => hole as unknown as [number, number][])];
   const cross = new t.CrossSection(contours, "EvenOdd");
-  return cross.extrude(recipe.height).translate(0, 0, recipe.baseZ);
+  return cross.extrude(recipe.thickness);
 }
 
 function toThree(m: ReturnType<Manifold["getMesh"]>): THREE.BufferGeometry {
@@ -166,57 +163,49 @@ function topology(shape: Manifold): { solids: number; genus: number | null; comp
 //#endregion 🧰️Kernel
 
 //#region 🧪️Corpus
-/** 🧪️ Every recipe is a `FemSolid`'s `{outline, holes, height, baseZ}` — nothing else in the document
+/** 🧪️ Every recipe is a `FemRegion`'s `{outline, holes, thickness}` — nothing else in the document
  *  reaches `build_semio_mesh_snapshot`, so nothing else needs a stand-in here. Units are metres,
- *  matching this subset's committed snapshot fixtures (e.g. a 6×4 m, 0.25 m thick roof slab at
- *  `baseZ: 3.5`). */
+ *  matching this subset's committed snapshot fixtures (e.g. a 4×2 m, 0.25 m thick slab). */
 const RECIPES: readonly Recipe[] = [
-  { id: "rect-unit-cube", family: "rectangles", tolerance: "fem-polygon-exact", notes: "1×1 m square, 1 m tall, resting on z=0 — the simplest possible FemSolid.", outline: [[0, 0], [1, 0], [1, 1], [0, 1]], holes: [], height: 1, baseZ: 0 },
-  { id: "rect-roof-slab", family: "elevated", tolerance: "fem-polygon-exact", notes: "6×4 m, 0.25 m tall, baseZ 3.5 m — mirrors the committed create-solid/appends-an-extruded-roof-slab scenario exactly (same outline+height+baseZ).", outline: [[0, 0], [6, 0], [6, 4], [0, 4]], holes: [], height: 0.25, baseZ: 3.5 },
-  { id: "rect-thin-plate", family: "rectangles", tolerance: "fem-polygon-exact", notes: "10×6 m footprint, 0.02 m tall, baseZ 0 — a high aspect-ratio plate.", outline: [[0, 0], [10, 0], [10, 6], [0, 6]], holes: [], height: 0.02, baseZ: 0 },
+  { id: "rect-unit-square", family: "rectangles", tolerance: "fem-polygon-exact", notes: "1×1 m square, 0.1 m thick — the simplest possible FemRegion.", outline: [[0, 0], [1, 0], [1, 1], [0, 1]], holes: [], thickness: 0.1 },
+  { id: "rect-floor-slab", family: "rectangles", tolerance: "fem-polygon-exact", notes: "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-d78275 scenario exactly (same outline+thickness).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [], thickness: 0.25 },
+  { id: "rect-thin-plate", family: "rectangles", tolerance: "fem-polygon-exact", notes: "10×6 m footprint, 0.02 m thick — a high aspect-ratio plate.", outline: [[0, 0], [10, 0], [10, 6], [0, 6]], holes: [], thickness: 0.02 },
 
-  { id: "polygon-l-shape", family: "polygons", tolerance: "fem-polygon-exact", notes: "an L-shaped (non-convex, re-entrant) footprint, 0.3 m tall, baseZ 0.", outline: [[0, 0], [3, 0], [3, 1], [1, 1], [1, 3], [0, 3]], holes: [], height: 0.3, baseZ: 0 },
-  { id: "polygon-triangle", family: "polygons", tolerance: "fem-polygon-exact", notes: "a triangular footprint, 2 m tall column, baseZ 0.", outline: [[0, 0], [5, 0], [2.5, 4]], holes: [], height: 2, baseZ: 0 },
+  { id: "polygon-l-shape", family: "polygons", tolerance: "fem-polygon-exact", notes: "an L-shaped (non-convex, re-entrant) footprint, 0.3 m thick.", outline: [[0, 0], [3, 0], [3, 1], [1, 1], [1, 3], [0, 3]], holes: [], thickness: 0.3 },
+  { id: "polygon-triangle", family: "polygons", tolerance: "fem-polygon-exact", notes: "a triangular footprint, 0.15 m thick.", outline: [[0, 0], [5, 0], [2.5, 4]], holes: [], thickness: 0.15 },
 
-  { id: "solid-one-hole", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, 0.25 m tall, one 1×1 m rectangular hole, baseZ 0 — genus 1.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 0 },
-  { id: "solid-two-holes", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, 0.25 m tall, two disjoint square holes, baseZ 0 — genus 2.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[0.5, 0.5], [1.2, 0.5], [1.2, 1.2], [0.5, 1.2]], [[2.8, 0.5], [3.5, 0.5], [3.5, 1.2], [2.8, 1.2]]], height: 0.25, baseZ: 0 },
+  { id: "region-one-hole", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, one 1×1 m rectangular hole (a stair opening) — genus 1.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], thickness: 0.25 },
+  { id: "region-two-holes", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, two disjoint square holes — genus 2.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[0.5, 0.5], [1.2, 0.5], [1.2, 1.2], [0.5, 1.2]], [[2.8, 0.5], [3.5, 0.5], [3.5, 1.2], [2.8, 1.2]]], thickness: 0.25 },
 
-  { id: "solid-one-hole-elevated-low", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ 2 m (a suspended floor slab).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 2 },
-  { id: "solid-one-hole-elevated-high", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ 30 m (a high floor slab).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: 30 },
-  { id: "solid-one-hole-elevated-negative", family: "elevated", tolerance: "fem-polygon-exact", notes: "solid-one-hole at baseZ -5 m (a basement slab below the origin).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], height: 0.25, baseZ: -5 },
+  { id: "scale-one-hole-1e-3", family: "scale", tolerance: "fem-polygon-exact", notes: "region-one-hole scaled ×1e-3 (millimetre-scale slab).", outline: [[0, 0], [0.004, 0], [0.004, 0.002], [0, 0.002]], holes: [[[0.001, 0.0005], [0.002, 0.0005], [0.002, 0.0015], [0.001, 0.0015]]], thickness: 0.00025 },
+  { id: "scale-one-hole-1e3", family: "scale", tolerance: "fem-polygon-exact", notes: "region-one-hole scaled ×1e3 (kilometre-scale slab).", outline: [[0, 0], [4000, 0], [4000, 2000], [0, 2000]], holes: [[[1000, 500], [2000, 500], [2000, 1500], [1000, 1500]]], thickness: 250 },
+  { id: "scale-one-hole-1e6", family: "scale", tolerance: "fem-polygon-exact", notes: "region-one-hole scaled ×1e6.", outline: [[0, 0], [4e6, 0], [4e6, 2e6], [0, 2e6]], holes: [[[1e6, 5e5], [2e6, 5e5], [2e6, 1.5e6], [1e6, 1.5e6]]], thickness: 250000 },
 
-  { id: "scale-one-hole-1e-3", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e-3 (millimetre-scale slab), baseZ scaled too.", outline: [[0, 0], [0.004, 0], [0.004, 0.002], [0, 0.002]], holes: [[[0.001, 0.0005], [0.002, 0.0005], [0.002, 0.0015], [0.001, 0.0015]]], height: 0.00025, baseZ: 0.002 },
-  { id: "scale-one-hole-1e3", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e3 (kilometre-scale slab), baseZ scaled too.", outline: [[0, 0], [4000, 0], [4000, 2000], [0, 2000]], holes: [[[1000, 500], [2000, 500], [2000, 1500], [1000, 1500]]], height: 250, baseZ: 2000 },
-  { id: "scale-one-hole-1e6", family: "scale", tolerance: "fem-polygon-exact", notes: "solid-one-hole scaled ×1e6, baseZ scaled too.", outline: [[0, 0], [4e6, 0], [4e6, 2e6], [0, 2e6]], holes: [[[1e6, 5e5], [2e6, 5e5], [2e6, 1.5e6], [1e6, 1.5e6]]], height: 250000, baseZ: 2000000 },
-
-  { id: "degenerate-hairline-height", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 2×1 m footprint at 1e-6 m height, baseZ 0 — height far below the weld grid's own absolute floor at metre scale, kept as a recorded edge case rather than dropped to make the corpus look clean.", outline: [[0, 0], [2, 0], [2, 1], [0, 1]], holes: [], height: 1e-6, baseZ: 0 },
-  { id: "degenerate-sliver-outline", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 5×0.01 m sliver footprint, 0.1 m tall, baseZ 0 — an extreme aspect ratio in-plane rather than through the height.", outline: [[0, 0], [5, 0], [5, 0.01], [0, 0.01]], holes: [], height: 0.1, baseZ: 0 },
+  { id: "degenerate-hairline-thickness", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 2×1 m footprint at 1e-6 m thickness — thickness far below the weld grid's own absolute floor at metre scale, kept as a recorded edge case rather than dropped to make the corpus look clean.", outline: [[0, 0], [2, 0], [2, 1], [0, 1]], holes: [], thickness: 1e-6 },
+  { id: "degenerate-sliver-outline", family: "degenerate", tolerance: "fem-polygon-exact", notes: "a 5×0.01 m sliver footprint, 0.1 m thick — an extreme aspect ratio in-plane rather than through the thickness.", outline: [[0, 0], [5, 0], [5, 0.01], [0, 0.01]], holes: [], thickness: 0.1 },
 ];
 
 const RECIPE_DIRECTORIES = {
-  "rect-unit-cube": "🧊️rect-unit-cube",
-  "rect-roof-slab": "🏠️rect-roof-slab",
+  "rect-unit-square": "⬜️rect-unit-square",
+  "rect-floor-slab": "🏢️rect-floor-slab",
   "rect-thin-plate": "🍽️rect-thin-plate",
   "polygon-l-shape": "🪜️polygon-l-shape",
   "polygon-triangle": "🔺️polygon-triangle",
-  "solid-one-hole": "🍩️solid-one-hole",
-  "solid-two-holes": "🕶️solid-two-holes",
-  "solid-one-hole-elevated-low": "⬇️solid-one-hole-elevated-low",
-  "solid-one-hole-elevated-high": "🎈️solid-one-hole-elevated-high",
-  "solid-one-hole-elevated-negative": "➖️solid-one-hole-elevated-negative",
+  "region-one-hole": "🍩️region-one-hole",
+  "region-two-holes": "🕶️region-two-holes",
   "scale-one-hole-1e-3": "🔬️scale-one-hole-1e-3",
   "scale-one-hole-1e3": "🔭️scale-one-hole-1e3",
   "scale-one-hole-1e6": "🌌️scale-one-hole-1e6",
-  "degenerate-hairline-height": "🧵️degenerate-hairline-height",
+  "degenerate-hairline-thickness": "🧵️degenerate-hairline-thickness",
   "degenerate-sliver-outline": "🪶️degenerate-sliver-outline",
 } as const;
 
 const EXPORTED_FILE_NAMES = { stl: "🧊️expected.stl", obj: "🗿️expected.obj" } as const;
 
 const CARRIER_FIXTURES = {
-  "create-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🧊️create-solid" },
-  "delete-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🚫️delete-solid" },
-  "replace-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🔄️replace-solid" },
+  "create-region": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🗺️create-region" },
+  "delete-region": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🚫️delete-region" },
+  "replace-region": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🔄️replace-region" },
   "move-selection": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🧭️move-selection" },
   "create-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/⚪️create-node" },
   "delete-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🕳️delete-node" },
@@ -228,11 +217,12 @@ const CARRIER_FIXTURES = {
   "replace-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🔁️replace-material" },
   "change-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🩹️change-material" },
   "change-load": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-load" },
-  "change-combination-term": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-combination-term" },
   "change-combination-name": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-combination-name" },
+  "change-combination-term": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-combination-term" },
+
   "change-element": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-element" },
   "change-support": { subset: "boundary", path: "🛡️boundary/🧪️tests/🧫️fixtures/🩹️change-support" },
-  "change-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-solid" },
+  "change-region": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-region" },
   "change-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-section" },
   "change-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-node" },
   "create-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/📐️create-section" },
@@ -307,7 +297,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
   const dir = join(outDir, directoryName);
   const files: { role: string; path: string; mediaType: string; sha256: string; bytes: number }[] = [];
 
-  const result = extrudeSolid(t, recipe);
+  const result = extrudeRegion(t, recipe);
   const empty = result.isEmpty();
   const measurements: Record<string, unknown> = { empty };
   if (!empty) {
@@ -338,7 +328,6 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     measurements.genus = shape.genus;
     measurements.componentGenus = shape.componentGenus;
     measurements.expectedGenus = recipe.holes.length;
-    measurements.expectedBaseZ = recipe.baseZ;
     measurements.weld = { grid: weld.grid, soupVertices: weld.soupVertices, weldedVertices: weld.weldedVertices, droppedDegenerateTriangles: weld.droppedDegenerateTriangles };
     measurements.crossFormatTriangleCounts = crossFormatTriangleCounts;
     measurements.crossFormatTriangleCountsAgree = crossFormatTriangleCounts.obj === measurements.triangleCount || crossFormatTriangleCounts.obj === weld.soupVertices / 3;
@@ -353,10 +342,8 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
       return Math.abs(sum) / 2;
     };
     const footprintArea = shoelace(recipe.outline) - recipe.holes.reduce((sum, hole) => sum + shoelace(hole), 0);
-    measurements.analyticVolume = footprintArea * recipe.height;
+    measurements.analyticVolume = footprintArea * recipe.thickness;
     measurements.analyticVolumeRelativeError = Math.abs((measurements.volume as number) - (measurements.analyticVolume as number)) / Math.max(measurements.analyticVolume as number, Number.EPSILON);
-    measurements.analyticMinZ = recipe.baseZ;
-    measurements.minZRelativeError = Math.abs(bounds.min[2] - recipe.baseZ) / Math.max(diagonal, Number.EPSILON);
   }
 
   const metricsBody = `${JSON.stringify(measurements, null, 2)}\n`;
@@ -366,8 +353,8 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
   return {
     id: recipe.id,
     class: "third-party-generated",
-    target: { artifact: "s.fem.fem3d", standard: "1", subset: "any" },
-    mutation: "replace-solid-geometry",
+    target: { artifact: "s.fem.fem2d", standard: "1", subset: "any" },
+    mutation: "replace-region-geometry",
     outcome: empty ? "empty" : "applied",
     units: { length: "metre", angle: "degree", handedness: "right", up: "z" },
     files,
@@ -377,7 +364,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
       exportEngine: { family: EXPORT_ENGINE_FAMILY, implementation: "three.js exporters + loaders", version: EXPORT_ENGINE_VERSION },
-      command: `bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       seed: SEED,
       platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
     },
@@ -396,7 +383,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
   if (command === "test-carrier") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
-    await receiveScriptProcessInvocation(process.env, invocation => runAdmittedCargoPackageTestsV1(["fem3d-1-any-json-engine"], engineDir, invocation, ["--lib", "--bins", ...rest]));
+    await receiveScriptProcessInvocation(process.env, invocation => runAdmittedCargoPackageTestsV1(["fem2d-1-any-json-engine"], engineDir, invocation, ["--lib", "--bins", ...rest]));
     return 0;
   }
   const value = (flag: string): string | null => {
@@ -460,17 +447,17 @@ async function main(argv: readonly string[]): Promise<number> {
       entries.push({
         id: `carrier-${kind}`,
         class: "third-party-generated",
-        target: { artifact: "s.fem.fem3d", standard: "1", subset: fixture.subset },
+        target: { artifact: "s.fem.fem2d", standard: "1", subset: fixture.subset },
         mutation: kind,
         outcome: "applied",
         units: { length: "metre", angle: "radian" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "json-rust-fem3d-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
-        comparisonProfile: "semantic-fem3d-carrier-v1",
+        generator: { oracle: "json-rust-fem2d-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
+        comparisonProfile: "semantic-fem2d-carrier-v1",
         reproducible: true,
         family: "mechanical",
-        notes: `A deterministic fem3d model carrying at least two of every collection, with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+        notes: `A deterministic fem2d model carrying at least two of every collection, with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
       });
     }
     process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);

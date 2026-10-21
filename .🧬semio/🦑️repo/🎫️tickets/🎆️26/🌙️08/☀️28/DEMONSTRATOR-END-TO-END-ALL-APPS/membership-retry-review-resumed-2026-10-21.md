@@ -1,0 +1,11 @@
+# Membership Retry Review — Resumed 2026-10-21
+
+Source-only audit of one UNIT74822 trace: reason membership, before null, after null, facts empty. No native check or source change.
+
+This exact shape is emitted by discoverBuildGraphV1 initial inventory catch when buildGraphErrorCodeV1(error) is BUILD_MEMBERSHIP_CHANGED. No before digest exists yet. It does not indicate two known membership hashes disagreed, nor an observed-content fact failed. Later initial/final digest mismatches carry before/after hashes; later inventory exceptions normally retain before.
+
+buildGraphMembershipV1 lstats each admitted files entry and known directory frontier; ENOENT/ENOTDIR becomes Build member removed during discovery:path, and symlink/wrong expected file-vs-directory becomes Build membership changed during discovery:path. The full workspace walker also translates removed directories to that code. Membership digest contains ordered path, file/directory kind and mode, not bytes/mtime. Therefore stable49 defining source hashes do not rule out transient removal/replacement of another admitted file, kind change or permission-mode transition. The original error identifies its path, but current reason-only retry discards error text/path; empty facts are expected because stale-fact comparison has not happened.
+
+Selected inventory uses closeBuildOwnerAdmissionV1 files from matched freshness inputs, direct imports and manifests. readBuildSourceInputMatchesV1 directory walk admits regular files and skips nested symlinks; its exact nonwildcard branch currently checks exists only, so an explicitly declared directory can theoretically become a wrong-kind file membership entry. No current offending exact directory pattern is established; do not treat this as root cause without the original error path. New publication ScriptRouter resolve directory roots are not a cause: workspaceUrlTargetV1 explicitly requires statSync(path).isFile before returning URL references.
+
+One observed retry can be the intended response to a genuine file race. A repeated same-path exception under unchanged physical kind would establish a concrete discovery mismatch; current trace alone does not. Preserve the guard and existing bounded retry. If repetition occurs, expose the already-existing canonical error path through the diagnostic owner rather than weakening file/symlink authority.

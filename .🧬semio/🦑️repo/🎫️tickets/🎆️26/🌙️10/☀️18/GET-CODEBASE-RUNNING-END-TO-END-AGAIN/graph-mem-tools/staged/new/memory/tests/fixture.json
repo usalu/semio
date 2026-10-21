@@ -2,6 +2,17 @@
  "version": 1,
  "policy": {
   "version": 1,
+  "languages": [
+   "en",
+   "de"
+  ],
+  "languageEnvironment": [
+   "SEMIO_LANGUAGE",
+   "SEMIO_DASHBOARD_LOCALE",
+   "LC_ALL",
+   "LC_MESSAGES",
+   "LANG"
+  ],
   "defaultBudgetMegabytes": 3072,
   "minimumBudgetMegabytes": 1024,
   "grantShare": 0.5,
@@ -5128,19 +5139,43 @@
  ],
  "languages": [
   {
-   "name": "dashboard-locale-first",
+   "name": "explicit-language-wins",
+   "environment": {
+    "SEMIO_LANGUAGE": "de",
+    "SEMIO_DASHBOARD_LOCALE": "en",
+    "LANG": "en_US.UTF-8"
+   },
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "dashboard-locale-before-system-locale",
    "environment": {
     "SEMIO_DASHBOARD_LOCALE": "de",
     "LANG": "en_US.UTF-8"
    },
-   "expect": "de"
+   "expect": [
+    "de"
+   ]
   },
   {
    "name": "system-locale-german",
    "environment": {
     "LANG": "de_DE.UTF-8"
    },
-   "expect": "de"
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "system-locale-english",
+   "environment": {
+    "LANG": "en_GB.UTF-8"
+   },
+   "expect": [
+    "en"
+   ]
   },
   {
    "name": "unsupported-locale-falls-through",
@@ -5148,19 +5183,9 @@
     "LC_ALL": "fr_FR.UTF-8",
     "LANG": "de_AT"
    },
-   "expect": "de"
-  },
-  {
-   "name": "nothing-set-is-english",
-   "environment": {},
-   "expect": "en"
-  },
-  {
-   "name": "unsupported-only-is-english",
-   "environment": {
-    "LANG": "fr_FR"
-   },
-   "expect": "en"
+   "expect": [
+    "de"
+   ]
   },
   {
    "name": "lc-all-beats-lang",
@@ -5168,7 +5193,27 @@
     "LC_ALL": "en_GB",
     "LANG": "de_DE"
    },
-   "expect": "en"
+   "expect": [
+    "en"
+   ]
+  },
+  {
+   "name": "nothing-set-prints-both-languages",
+   "environment": {},
+   "expect": [
+    "en",
+    "de"
+   ]
+  },
+  {
+   "name": "unsupported-only-prints-both-languages",
+   "environment": {
+    "LANG": "fr_FR"
+   },
+   "expect": [
+    "en",
+    "de"
+   ]
   }
  ],
  "governor": [
@@ -5435,6 +5480,33 @@
      "durationMilliseconds": 20000
     }
    ]
+  },
+  {
+   "name": "unresolved-language-prints-both",
+   "workers": 3,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 100,
+   "garbageShare": 0.0,
+   "expectWaits": true,
+   "language": "none",
+   "tasks": [
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    }
+   ]
   }
  ],
  "messageCases": [
@@ -5448,7 +5520,9 @@
    "environment": {
     "LANG": "en_US"
    },
-   "expect": "graph: waiting for memory (1234 of 3072 MB in use, 5 projects running)"
+   "expect": [
+    "graph: waiting for memory (1234 of 3072 MB in use, 5 projects running)"
+   ]
   },
   {
    "key": "waiting",
@@ -5460,7 +5534,22 @@
    "environment": {
     "LANG": "de_DE"
    },
-   "expect": "Graph: wartet auf Speicher (1234 von 3072 MB belegt, 5 Projekte laufen)"
+   "expect": [
+    "Graph: wartet auf Speicher (1234 von 3072 MB belegt, 5 Projekte laufen)"
+   ]
+  },
+  {
+   "key": "waiting",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: waiting for memory (1234 of 3072 MB in use, 5 projects running)",
+    "Graph: wartet auf Speicher (1234 von 3072 MB belegt, 5 Projekte laufen)"
+   ]
   },
   {
    "key": "serial",
@@ -5472,7 +5561,9 @@
    "environment": {
     "LANG": "en_US"
    },
-   "expect": "graph: memory above the budget of 3072 MB (1234 MB in use), inferring one project at a time"
+   "expect": [
+    "graph: memory above the budget of 3072 MB (1234 MB in use), inferring one project at a time"
+   ]
   },
   {
    "key": "serial",
@@ -5484,7 +5575,22 @@
    "environment": {
     "LANG": "de_DE"
    },
-   "expect": "Graph: Speicher über dem Budget von 3072 MB (1234 MB belegt), Projekte werden einzeln abgeleitet"
+   "expect": [
+    "Graph: Speicher über dem Budget von 3072 MB (1234 MB belegt), Projekte werden einzeln abgeleitet"
+   ]
+  },
+  {
+   "key": "serial",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: memory above the budget of 3072 MB (1234 MB in use), inferring one project at a time",
+    "Graph: Speicher über dem Budget von 3072 MB (1234 MB belegt), Projekte werden einzeln abgeleitet"
+   ]
   },
   {
    "key": "resumed",
@@ -5496,7 +5602,9 @@
    "environment": {
     "LANG": "en_US"
    },
-   "expect": "graph: memory below the budget again (1234 of 3072 MB), resuming"
+   "expect": [
+    "graph: memory below the budget again (1234 of 3072 MB), resuming"
+   ]
   },
   {
    "key": "resumed",
@@ -5508,7 +5616,22 @@
    "environment": {
     "LANG": "de_DE"
    },
-   "expect": "Graph: Speicher wieder unter dem Budget (1234 von 3072 MB), es geht weiter"
+   "expect": [
+    "Graph: Speicher wieder unter dem Budget (1234 von 3072 MB), es geht weiter"
+   ]
+  },
+  {
+   "key": "resumed",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: memory below the budget again (1234 of 3072 MB), resuming",
+    "Graph: Speicher wieder unter dem Budget (1234 von 3072 MB), es geht weiter"
+   ]
   }
  ]
 }

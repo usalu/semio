@@ -1,7 +1,8 @@
 //! 🧮️ Controlled original-source callers share the retained DSL printer and canonical symbol decision.
 use super::*;
 use semio_framework_dsl_record::native_encoding::{BorrowedExpressionSource,RetainedExpressionCursor};
-use semio_framework_value::{RetainedCloneGrant,paged_text::TextReadView};
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value_paged_text::paged_text::TextReadView;
 fn next(cursor:&mut RetainedExpressionCursor,source:&dyn BorrowedExpressionSource,byte:&mut[u8;1],control:&mut NativeEncodeControl<'_>)->Result<bool,PackRefusal>{control.checkpoint()?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cursor.next_copy_byte_demand()?,maximum_capacity_bytes:cursor.next_capacity_byte_demand()?,maximum_release_bytes:0,maximum_depth:cursor.next_depth_demand()?};control.charge(grant.maximum_capacity_bytes)?;let step=cursor.advance(source,byte,grant)?;control.step()?;Ok(step.written_bytes!=0)}
 pub(super) fn encode<'a>(source:&dyn BorrowedExpressionSource,maximum:usize,count:usize,mut symbol:impl FnMut(usize)->Result<TextReadView<'a>,ValueError>,output:&mut Output<'_>,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
  let mut cursor=RetainedExpressionCursor::default();cursor.set_maximum_depth(maximum);let result=(||->Result<(),PackRefusal>{let mut byte=[0;1];let mut length=0;while !cursor.is_complete(){if next(&mut cursor,source,&mut byte,control)?{length+=1;}}let mut selected=None;for index in 0..count{control.checkpoint()?;let text=symbol(index)?;if text.len()!=length{control.step()?;continue;}cursor.restart();let mut offset=0;let mut equal=true;while !cursor.is_complete(){if next(&mut cursor,source,&mut byte,control)?{equal&=text.byte_at(offset)==Some(byte[0]);offset+=1;if !equal{break;}}}if equal{selected=Some(index);break;}}

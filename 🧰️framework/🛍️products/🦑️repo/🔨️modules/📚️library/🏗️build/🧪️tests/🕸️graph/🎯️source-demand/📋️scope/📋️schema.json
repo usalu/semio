@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "targets"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "manifest",
+          "target",
+          "cache",
+          "command",
+          "inputs",
+          "metadata"
+        ],
+        "properties": {
+          "manifest": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "cache": {
+            "type": "boolean"
+          },
+          "command": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "execution",
+              "sourceInputObservation",
+              "runtimeSourceEntries",
+              "closure"
+            ],
+            "properties": {
+              "execution": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "version",
+                  "kind"
+                ],
+                "properties": {
+                  "version": {
+                    "const": 1
+                  },
+                  "kind": {
+                    "const": "source"
+                  }
+                }
+              },
+              "sourceInputObservation": {
+                "const": "freshness"
+              },
+              "runtimeSourceEntries": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 64,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "maxLength": 256
+                }
+              },
+              "closure": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "resources"
+                ],
+                "properties": {
+                  "resources": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 64,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 256
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

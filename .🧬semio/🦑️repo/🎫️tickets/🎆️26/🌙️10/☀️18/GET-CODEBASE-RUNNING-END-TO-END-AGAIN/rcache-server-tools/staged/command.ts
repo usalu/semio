@@ -160,8 +160,9 @@ async function askServerV1(contract:RemoteCacheContractV1,token:string|undefined
  try{
   const response=await fetch(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)]),headers:token===undefined?{}:{authorization:`Bearer ${token}`}});
   if(response.status!==200){await response.body?.cancel();return null;}
-  const document=await response.json() as RemoteCacheServerStatusV1;
-  return document.version===1?document:null;
+  const document=await response.json();
+  requireRemoteCacheShapeV1("ServerStatus",document,"Closed remote cache server status required");
+  return document as RemoteCacheServerStatusV1;
  }catch(error){
   if(signal.aborted)throw error;
   return null;
@@ -192,7 +193,11 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  const parsed=parseRemoteCacheArgumentsV1(["gc",...args]),languages=remoteCacheLanguagesV1(parsed.values["--lang"],context.environment),say=reporter(context,languages),policy=readRemoteCachePolicyV1().server;
  const directory=where(context.root,parsed.values["--directory"]??policy.directory),maximumBytes=parsed.values["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",parsed.values["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER),dryRun=parsed.flags.has("--dry-run"),json=parsed.flags.has("--json");
  const talk=json?()=>{}:say;
- if(!await stat(join(directory,"v1")).then(info=>info.isDirectory(),()=>false)){talk("gc.absent",{directory});return {exitCode:0,...(json?{result:{version:1,dryRun,directory,present:false}}:{})};}
+ if(!await stat(join(directory,"v1")).then(info=>info.isDirectory(),()=>false)){
+  talk("gc.absent",{directory});
+  const absent={version:1,dryRun,directory,present:false};if(json)requireRemoteCacheShapeV1("GcResult",absent,"Closed remote cache gc result required");
+  return {exitCode:0,...(json?{result:absent}:{})};
+ }
  talk("gc.start",{directory,bytes:formatRemoteCacheBytesV1(maximumBytes),days:policy.maximumAgeDays,mode:dryRun?"@gc.mode.plan":"@gc.mode.apply"});
  let report;
  try{
@@ -204,7 +209,8 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  if(report.locked){talk("gc.locked",{lock:report.lock});return {exitCode:1};}
  const value=report.value;
  talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes)});
- return {exitCode:0,...(json?{result:{directory,...value}}:{})};
+ const document={directory,...value};if(json)requireRemoteCacheShapeV1("GcResult",document,"Closed remote cache gc result required");
+ return {exitCode:0,...(json?{result:document}:{})};
 }
 
 /** 🧾️ Collects the workspace's store for `repo cache gc` and answers one language-neutral line for its report; the ledger delegates its remote cache area here, so both commands apply the same bounds. */

@@ -10,6 +10,8 @@ pub trait ErasedSnapshotRetirement: Send {
     fn next_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_depth_demand(&self) -> Result<usize, ValueError>;
     /// 🎟️ Quotes the original next action once, preserving its actual body hint through every nested owner.
-    fn next_demand(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError>;
+    fn next_demand(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? })
+    }
 }
 

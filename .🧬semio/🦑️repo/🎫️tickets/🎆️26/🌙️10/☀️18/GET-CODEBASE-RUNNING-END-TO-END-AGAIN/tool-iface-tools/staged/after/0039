@@ -5,96 +5,58 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// 🔬️ External measurement probes for `s.stdio.semio@v1/📐️cad`.
+// 🖊️ The `dxf-entities` family — sixteen recipes, one per mutation kind, class
+// `third-party-generated`. Every drawing is assembled with the `dxf` crate's own `Drawing`/`Entity`
+// builders and written by its own `save_file`; no byte of DXF here is produced by this repository.
 //
-// Everything here MARSHALS and INVOKES; nothing here reads a CAD file or computes a number. Every
-// measurement comes out of a third-party library in the sibling `🦀️oracle-probe` crate — `ruststep`
-// parses Part-21 and resolves the entity graph, the `dxf` crate parses ASCII DXF. Neither is ever
-// asked what a mutation SHOULD produce; both are asked only what a file CONTAINS.
+// The drawings are R12 (`$ACADVER AC1009`), matching the subset's dialect, and they carry SEVEN of
+// the nine `CadEntity` shapes. `Ellipse` and `Dimension` are absent because they are R13+ entities
+// that the `dxf` crate will not write into an R12 document — a measured constraint of the dialect,
+// recorded in the manifest as uncarried rather than worked around by silently promoting the version.
 //
-// The oracle is Rust rather than TypeScript because of what is actually available, not by preference:
-// `node_modules` carries no JavaScript DXF parser and no JavaScript Part-21 reader, and `brepjs` —
-// the one STEP-capable JS package vendored here — was MEASURED against a cad-shaped STEP file and
-// returns zero shapes, because OCCT transfers shapes through product/shape-representation structure
-// and this subset's export emits bare LINE/CIRCLE primitives. See the ticket note for that run.
-// The crate carries its own `[workspace]` and links nothing from this repository, so it builds while
-// the main workspace does not — the same pattern `…✳️cc6/🏭️bridge/` already uses.
+//   bun 📜️script.ts generate [--only <recipe>]
 //
-// TWO QUESTIONS, TWO PROBES. `*-witness` takes BEFORE and AFTER and asks whether the carrier encoded
-// the mutation at all; identical readings mean it did not, and the answer is `unsupported` rather
-// than an empty `ok`. `*-compare` takes EXPECTED and ACTUAL and asks whether they agree; there,
-// identical readings ARE the pass.
-//
-// Usage — one probe per invocation, one typed report on stdout:
-//   bun 📜️script.ts dxf-read     --input <a.dxf>
-//   bun 📜️script.ts step-read    --input <a.step>
-//   bun 📜️script.ts dxf-witness  --input <before.dxf>   --input <after.dxf>  --mutation <kind>
-//   bun 📜️script.ts step-witness --input <before.step>  --input <after.step> --mutation <kind>
-//   bun 📜️script.ts dxf-compare  --input <expected.dxf>  --input <actual.dxf>
-//   bun 📜️script.ts step-compare --input <expected.step> --input <actual.step>
-//
-// @see 📖️reader/🦀️.rs — the binary that does the reading
-// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see ../📜️script.ts — the family router that actually invokes the builder
 
 //#endregion 🧲️Header
 
-//#region 🔌️Adapters
-
-import { isAbsolute, resolve, join } from "node:path";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-//#endregion 🔌️Adapters
-
-//#region 🧬️Contract
-/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
-type ProbeReport = {
-  schema: "semio.repository-test.probe-report/v2";
-  probe: string;
-  probeVersion: string;
-  engine: { family: string; implementation: string; version: string };
-  status: "ok" | "failed" | "unsupported";
-  durationMs: number;
-  measurements: Record<string, unknown>;
-  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
-};
-
-const PROBES = ["dxf-read", "dxf-witness", "dxf-compare", "step-read", "step-witness", "step-compare"] as const;
-const CRATE_DIR = join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust");
-//#endregion 🧬️Contract
-
 //#region 🚪️Entry
-/** 🚨️ A probe that cannot RUN must say so in the report's own shape, never by printing nothing. */
-function failed(probe: string, message: string, detail?: string): ProbeReport {
-  return {
-    schema: "semio.repository-test.probe-report/v2",
-    probe,
-    probeVersion: "ruststep@0.4.0 + dxf@0.6.1",
-    engine: { family: probe.startsWith("step") ? "ruststep" : "dxf-rs", implementation: "unavailable", version: "0" },
-    status: "failed",
-    durationMs: 0,
-    measurements: {},
-    diagnostics: [{ severity: "error", message, ...(detail === undefined ? {} : { detail }) }],
-  };
-}
+
+import { join } from "node:path";
+import { spawnToolSyncV1 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
+const FAMILY = "dxf-entities";
+const ROUTER = join(import.meta.dir, "..", "📜️script.ts");
+
+const RECIPES = [
+  "add-layer-hidden-services",
+  "remove-layer-scratch",
+  "set-layer-walls-color",
+  "add-block-door",
+  "remove-block-window",
+  "set-block-base-point-door",
+  "add-entity-arc-fillet",
+  "remove-entity-middle-polyline",
+  "set-entity-layer-text-to-annotations",
+  "set-entity-geometry-circle-radius",
+  "add-block-entity-door-swing",
+  "remove-block-entity-window-mullion",
+  "set-block-entity-layer-door-leaf",
+  "set-block-entity-geometry-window-pane",
+] as const;
 
 function main(argv: readonly string[]): number {
-  const [probe = ""] = argv;
-  if (!(PROBES as readonly string[]).includes(probe)) {
-    console.error(`[probe] unknown probe ${JSON.stringify(probe)} — expected ${PROBES.join(" | ")}`);
-    return 2;
+  const onlyIndex = argv.indexOf("--only");
+  const requested = onlyIndex === -1 ? [...RECIPES] : argv.slice(onlyIndex + 1).filter((entry) => !entry.startsWith("--"));
+  const mine = requested.filter((recipe) => (RECIPES as readonly string[]).includes(recipe));
+  if (mine.length === 0) {
+    console.log(`[${FAMILY}] nothing to do`);
+    return 0;
   }
-  const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
-  const run = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", ...resolved], {
-    cwd: CRATE_DIR,
-    encoding: "utf8",
-  });
-  if (run.status !== 0) {
-    console.log(JSON.stringify(failed(probe, `oracle probe exited ${run.status}`, (run.stderr ?? "").trim().split("\n").slice(-6).join("\n"))));
-    return 1;
-  }
-  process.stdout.write(run.stdout);
-  return 0;
+  const run = spawnToolSyncV1("bun", [ROUTER, "generate", ...mine.flatMap((recipe) => ["--only", recipe])], { encoding: "utf8", stdio: ["ignore", "inherit", "inherit"] });
+  return run.status ?? 1;
 }
 
 if (import.meta.main) process.exit(main(process.argv.slice(2)));
-export type { ProbeReport };
+export { FAMILY, RECIPES };
 //#endregion 🚪️Entry

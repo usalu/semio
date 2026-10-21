@@ -12,6 +12,7 @@ const { existsSync, readFileSync } = observedFs;
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-nodes";
 import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";
+import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";
 let inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
@@ -62,6 +63,7 @@ export function settlementOptionsV1(context) {
 /** 🛡️ Infers the project nodes of every authored emoji-named project config. Nx's native walker sometimes hands back lossy paths with U+FFFD where a multi-byte emoji used to be: those are unopenable duplicates of a real file and are skipped. */
 export async function emojiProjectJsonNodes(configFiles, options, context) {
   const { workspaceRoot } = context, unavailable = new Map(), wantedRoots = options?.ownerRoots, wanted = root => !wantedRoots || wantedRoots.has(root);
+  const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal });
   const catalogContributions=await catalogBuildContributionsV1(workspaceRoot,options?.catalogProviders??[]);
   const owners=options?.ownerAdmission?{files:inferenceCandidates(configFiles,workspaceRoot),nativeCache:new Map(),nativeClosures:new Map()}:await discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context),{nativeCache,nativeClosures}=owners;configFiles=owners.files;
   const rootsByName = new Map(), scripts = createScriptInputCache(context);
@@ -128,9 +130,12 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
     if (rootsByName.has(name)) throw new Error(`Duplicate Build project ${name}: ${rootsByName.get(name)} and ${root}`);
     rootsByName.set(name, root);
     if (!wanted(root)) { results.push([configFile, { projects: { [name]: { name, root, projectType: "library", targets: {} } } }]); continue; }
+    const build = async () => {
     const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);
     const project = { name, root, projectType: "library", tags: ["language:cargo", "discovery:manifest"], targets: { ...targets, ...componentBuildTargets(root, workspaceRoot), ...playgroundSiteTargetsForAdmissionV1(root,playgroundCatalog,workspaceRoot,context.registry,options?.ownerAdmission?options.ownerAdmission.targets[name]??[]:undefined) } };
     results.push([configFile, { projects: { [name]: project } }]);
+    };
+    if (collector) await collector.guard({ project: name, root, phase: "cargo-targets" }, build); else await build();
   }
   const projects = results.flatMap(([, result]) => Object.values(result.projects));
   const projectsByRoot = new Map(projects.flatMap(project=>[[project.root,project.name],...(project.metadata?.nativeRoot?[[project.metadata.nativeRoot,project.name]]:[])]));
@@ -164,9 +169,10 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   };
   const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:"build:projects",stage:"running",activity:{resource,mode:"shared",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;
   await phases?.begin("inference",jobs.length);
-  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){await inferProject(jobs[cursor++]);await phases?.advance("inference",++finished);}});
+  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);}await phases?.advance("inference",++finished);}});
   await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});
   await phases?.end("inference",{projects:jobs.length});
+  if (collector) await collector.finish({ projects: jobs.length });
   if(wantedRoots)for(const entry of results)entry[1].projects=Object.fromEntries(Object.entries(entry[1].projects??{}).filter(([,project])=>wanted(project.root)));
   for(const row of [...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0))results.push([row.source,{projects:{},unavailable:[row]}]);
   if (options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock"))) results.push(["bun.lock", { externalNodes: readBunLockGraph(workspaceRoot).externalNodes }]);

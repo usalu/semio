@@ -1,7 +1,7 @@
-/** ⌨ `repo service …`: status, start, stop, restart, issue, drop-caches and probe of the resident service of this worktree. */
+/** ⌨ `repo service …`: status, start, stop, restart, issue, revoke, drop-caches and probe of the resident service of this worktree. */
 import {spawn} from "node:child_process";
 import {existsSync,readFileSync} from "node:fs";
-import {endpointsV1} from "../protocol/endpoint.mjs";
+import {canonicalRootV1,endpointsV1} from "../protocol/endpoint.mjs";
 import {POLICY_V1,renderTextV1} from "../protocol/policy.mjs";
 import {mintCapabilityV1} from "../protocol/capability.mjs";
 import {forwardCommandV1} from "../client/index.mjs";
@@ -28,7 +28,7 @@ const adminCapability=runtime=>{try{return mintCapabilityV1(readFileSync(runtime
 
 /** ⌨ Runs one subcommand and returns the process exit code. */
 export async function runResidentCommandV1(options){
- const{root,args,languages,environment=process.env,stdout=process.stdout,stderr=process.stderr}=options,runtime=endpointsV1(root,environment),sub=args[0];
+ const{root,args,languages,environment=process.env,stdout=process.stdout,stderr=process.stderr}=options,runtime=endpointsV1(canonicalRootV1(root),environment),sub=args[0];
  const print=text=>stdout.write(text.endsWith("\n")?text:text+"\n"),fail=text=>stderr.write(text.endsWith("\n")?text:text+"\n");
  const live=async()=>{const r=await ask({root,languages,environment},"ping",[]);return r.handled&&r.exit===0;};
  const stop=async()=>{
@@ -42,7 +42,7 @@ export async function runResidentCommandV1(options){
   if(args.includes("--foreground")){
    const{runForeground}=options;
    if(!runForeground){fail(say(languages,"service-failed",{reason:"no foreground runner"}));return 1;}
-   return runForeground({runtime,root,languages,environment});
+   return runForeground({runtime,root:canonicalRootV1(root),languages,environment});
   }
   const child=spawn(options.execPath??process.execPath,[...(options.scriptArguments??[]),"service","start","--foreground"],{cwd:root,env:{...environment,SEMIO_RESIDENT_CHILD:"1"},stdio:"ignore",detached:true,windowsHide:true});
   child.unref();
@@ -64,7 +64,7 @@ export async function runResidentCommandV1(options){
   case"start":return start();
   case"stop":return stop();
   case"restart":{await stop();return start();}
-  case"issue":case"drop-caches":{
+  case"issue":case"revoke":case"drop-caches":{
    const r=await ask({root,languages,environment},sub,args.slice(1),adminCapability(runtime));
    if(!r.handled){print(say(languages,"service-down",{}));return 1;}
    stdout.write(r.out);if(r.err)stderr.write(r.err);return r.exit;

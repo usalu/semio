@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "causes": [
+    { "message": "Finite selected source input closure required", "cause": "Finite selected source input closure required" },
+    { "message": "Own-output dependency refused for @semio-tech/framework-flow-flow-rs:build at /Users/ueli/Documents/semio/a/b.wasm", "cause": "Own-output dependency refused for <project>:build at <path>" },
+    { "message": "Native dependency semio-framework-artifact-3 has no Cargo manifest (digest 0123456789abcdef0123)", "cause": "Native dependency semio-framework-artifact-N has no Cargo manifest (digest <hash>)" },
+    { "message": "workspace:cpp   native\n  refused in C:\\repo\\x\\y", "cause": "workspace:cpp native refused in <path>" },
+    { "message": "", "cause": "" }
+  ],
+  "failures": [
+    { "project": "@a/one", "root": "r/one", "phase": "project", "message": "E 1" },
+    { "project": "@a/two", "root": "r/two", "phase": "project", "message": "E 2", "code": "X" },
+    { "project": "@a/three", "root": "r/three", "phase": "cargo-targets", "message": "other" },
+    { "project": "@a/four", "root": "r/four", "phase": "project", "message": "E 3" }
+  ],
+  "expectGroups": [
+    { "cause": "E N", "count": 3, "projects": ["@a/one", "@a/two", "@a/four"] },
+    { "cause": "other", "count": 1, "projects": ["@a/three"] }
+  ]
+}

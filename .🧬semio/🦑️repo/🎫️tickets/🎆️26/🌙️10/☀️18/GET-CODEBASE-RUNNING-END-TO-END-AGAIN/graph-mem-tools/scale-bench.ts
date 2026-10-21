@@ -7,8 +7,7 @@ rmSync(SCRATCH,{recursive:true,force:true});mkdirSync(SCRATCH,{recursive:true});
 type Op={anchor:string;replacement:string};const spec=VARIANT==="live"?{edits:{},newModules:{}}:JSON.parse(readFileSync(VARIANT,"utf8")),opsByPath:Record<string,Op[]>=spec.edits??{},newModules:Record<string,string>=spec.newModules??{};
 const applyOps=(text:string,ops:Op[],path:string)=>{let out=text;for(const {anchor,replacement} of ops){if(out.includes(replacement)&&!out.includes(anchor))continue;if(out.split(anchor).length!==2)throw Error("anchor drift in "+path+": "+anchor.slice(0,70));out=out.replace(anchor,()=>replacement);}return out;};
 Bun.plugin({name:"graph-mem-scale",setup(b){
- b.onResolve({filter:/\/🧠️[^/]*\/🟨️\.mjs$/},args=>{const hit=Object.keys(newModules).find(k=>args.path.endsWith(k.split("/").slice(-2).join("/")));return hit?{path:newModules[hit]}:undefined;});
- b.onLoad({filter:/(?:🕰️generations\/[^/]*|🔌️load\/[^/]*|observation\/[^/]*|project-nodes\/[^/]*)\.mjs$/},async args=>{const key=Object.keys(opsByPath).find(k=>args.path.endsWith(k));let t=await Bun.file(args.path).text();if(key)t=applyOps(t,opsByPath[key]!,key);return {contents:t,loader:"js"};});
+ b.onLoad({filter:/(?:🕰️generations\/[^/]*|🔌️load\/[^/]*|observation\/[^/]*|project-nodes\/[^/]*)\.mjs$/},async args=>{const key=Object.keys(opsByPath).find(k=>args.path.endsWith(k));let t=await Bun.file(args.path).text();if(key)t=applyOps(t,opsByPath[key]!,key);for(const staged of Object.values(newModules))t=t.replace(/"(?:\.\.\/)+🧠️memory\/🟨️\.mjs"/gu,()=>JSON.stringify(staged));return {contents:t,loader:"js"};});
 }});
 const generations:any=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs")),load:any=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs"));
 const observation:any=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));

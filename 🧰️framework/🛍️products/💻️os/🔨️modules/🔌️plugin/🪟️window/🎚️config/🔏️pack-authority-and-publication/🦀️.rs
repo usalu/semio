@@ -18,7 +18,7 @@ pub struct WindowConfigAuthority {
     pub revision: [u8; 32],
     pub snapshot: WindowConfigSnapshot,
     pub(super) pending_snapshot:Option<WindowConfigSnapshot>,
-    pub(super) retired_snapshots:semio_framework_value::retirement_queue::RetirementQueue,
+    pub(super) retired_snapshots:semio_framework_value_retirement_queue::RetirementQueue,
 }
 
 #[doc(hidden)]

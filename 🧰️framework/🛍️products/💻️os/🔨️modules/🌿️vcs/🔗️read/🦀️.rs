@@ -5,7 +5,7 @@ use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use semio_framework_value::retained_clone::{RetainedCloneBorrowAuthority,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits};
 use std::sync::Arc;
 fn fault(message:&'static str)->ValueError {ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
-use semio_framework_value::retained_clone::original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn};
+use semio_framework_value_original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct ArtifactHistoryReadKey {authority:usize,issuance:u64,key:ArtifactHistoryKey}

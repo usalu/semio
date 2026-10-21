@@ -63,6 +63,7 @@ pub use component::{
     ToolRunLimitError,
     ToolRunTickWriter,
     ToolRunCodecError,
+    validate_tick_payload,
     JobKindId,
     ToolRunRebasePolicy,
     ToolRunReconfigurePolicy,

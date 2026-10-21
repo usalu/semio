@@ -41,7 +41,6 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../�
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-value-dictionary = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-commands = { path = "../../🎮️commands/❓️add-question/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-commands-try = { path = "../../🎮️commands/↩️reset-try/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-config = { path = "../../🎚️config/📦️packages/🦀️rust" }
@@ -65,6 +64,7 @@ semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-dictionary = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 calamine = { version = "0.36.1", default-features = false }

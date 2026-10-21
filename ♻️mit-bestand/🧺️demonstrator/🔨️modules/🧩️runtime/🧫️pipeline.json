@@ -38,7 +38,11 @@
     "command": "🔨️modules/📦️site/📜️script.ts",
     "output": "dist/release/site",
     "owner": "demonstrator:site",
-    "profile": "release"
+    "profile": "release",
+    "artifactTargets": [
+      "semio-framework-os-flow-browser-package:wasm",
+      "semio-framework-canvas:stage-runtime-assets"
+    ]
   },
   "development": {
     "activationTarget": "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype",

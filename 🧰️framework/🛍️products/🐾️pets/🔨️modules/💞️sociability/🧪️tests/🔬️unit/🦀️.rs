@@ -30,7 +30,7 @@ fn keyboard_gesture(menagerie: &Menagerie, stage: Stage, species: &str, deed: De
     let asked = advance(menagerie, stage, &[StageEvent::Played(Played { species: species.to_string(), deed })]);
     if asked.actors[0].activity != Activity::Trick { return asked; }
     let ticks = asked.actors[0].until - asked.tick;
-    advance(menagerie, asked, &ticked(ticks))
+    advance(menagerie, asked, &ticked(ticks as u64))
 }
 
 #[test]

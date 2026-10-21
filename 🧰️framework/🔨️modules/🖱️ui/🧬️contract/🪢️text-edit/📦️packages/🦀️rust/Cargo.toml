@@ -21,8 +21,6 @@ default = []
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
-semio-framework-value-derive = { workspace = true }
-semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 serde_json.workspace = true

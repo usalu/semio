@@ -37,9 +37,7 @@ semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canva
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 # ⏯️ Decodes the `World3dScene.tool_run_trace` delta for the world's trace layer (`🌍️world/⏯️tool-run-trace`).
@@ -102,6 +100,7 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
 

@@ -46,7 +46,6 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../�
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-bim-model-authored = { path = "../../../🧬️schema/📏️authored/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-cascade-restore = { path = "../../../🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-components = { path = "../../../🧬️schema/💡️inferences/🪑️components/📦️packages/🦀️rust" }

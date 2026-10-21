@@ -1,3 +1,10 @@
+import "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts";
+import "../📥️inputs/💾️storage/🧪️tests/🟦️.ts";
+import "../📥️inputs/💾️storage/🧪️tests/💧️headroom/🟦️.ts";
+import "../🕸️graph/📥️inference/🔎️owner-discovery/🧪️tests/🔁️observation/🟦️.ts";
+import "../📥️inputs/💾️storage/🧪️tests/🔒️lifetime/🟦️.ts";
+import "../📥️inputs/💾️storage/🧪️tests/📏️quota/🔎️observation/🟦️.ts";
+import "../📥️inputs/💾️storage/🧪️tests/📒️ledger/🔎️observation/🟦️.ts";
 import "./🎯️source-roster/🟦️.ts";
 import "../⚙️operations/🧪️tests/🟦️.ts";
 import "../🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts";

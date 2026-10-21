@@ -56,9 +56,9 @@ semio-framework-replication-mutation-retained-field = { path = "../../🎮️mut
 semio-framework-replication-presence = { path = "../../📡️wire/👥️presence/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
-semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
+semio-framework-value-native-owned.workspace = true
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }

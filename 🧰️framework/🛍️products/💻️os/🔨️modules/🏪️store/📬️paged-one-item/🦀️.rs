@@ -16,7 +16,7 @@ use semio_framework_os_spr::{Edit, Mutation};
 use semio_framework_os_store_command::HistoryLane;
 use semio_framework_os_spr::ActorId;
 use semio_framework_value::retained_clone::{ RetainedCloneBirthDemand, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, RetainedCloneRef, RetainedCloneSourceTake};
-use semio_framework_value::snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};

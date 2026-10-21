@@ -1,12 +1,16 @@
 /** ♻️ Identifies the complete authored graph implementation, its policy authority and its dependency resolution authority. */
 import { buildModesV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { createHash } from "node:crypto";
+import { lstatSync } from "node:fs";
+import { implementationPinnedV1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 const { existsSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "revision";
+/** 🧷️ The revision this component instance computed first: a pinned invocation keeps it while the Source on disk moves on. */
+let loadedRevision;
 let readPhysicalSource, TARGET_EXECUTION_SCHEMA, TARGET_CACHE_SCHEMA, COMMAND_INPUT_MODULE, OWNER_ARGUMENTS_MODULE, OBSERVATION_MODULE, CARGO_EXECUTION_MODULE, CARGO_EXECUTION_SCHEMA, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA, BUILD_MODE_MODULE, BUILD_MODE_API, PROJECT_INPUT_MODULE, RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, readTaxonomyProjectionV1, LIBRARY_ROOT, buildPath, readBunLockGraph, goManifest, bunLockCacheHash, services;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
@@ -18,13 +22,32 @@ export function wire(registry) {
   ({ services } = registry);
 }
 
+/** 🗂️ Names the authored files beside the component sources whose bytes the implementation revision covers. */
+function implementationFiles() {
+  return ["🏗️build/📥️inputs/🔏️revision/🟨️.mjs", "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json", "⚡️caching/🔣️policy.json", "🏗️build/🔣️policy.json", "🔣️taxonomy.json", TARGET_EXECUTION_SCHEMA, TARGET_CACHE_SCHEMA, COMMAND_INPUT_MODULE, OWNER_ARGUMENTS_MODULE, OBSERVATION_MODULE, "🏗️build/👁️observation/📥️reuse/🟨️.mjs", "🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json", CARGO_EXECUTION_MODULE, CARGO_EXECUTION_SCHEMA, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA, BUILD_MODE_MODULE, BUILD_MODE_API, PROJECT_INPUT_MODULE, "🏗️build/🕸️graph/🚪️admission/🟦️.ts", "🏗️build/🧬️schema/🚪️admission.json", "🏗️build/📥️inputs/📋️data/🟨️.mjs", "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs", "🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🧮️digest/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/🔣️schema.json", "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🔒️lock/🟨️.mjs", "🏗️build/📥️inputs/🔒️lock/🔣️schema.json", "🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json", "⚡️caching/🗃️records/🟦️.ts", "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"];
+}
+
 /** ♻️ Identifies the complete authored graph implementation and policy authority. */
 export function implementationRevision() {
+  if (implementationPinnedV1() && loadedRevision !== undefined) return loadedRevision;
   const hash = createHash("sha256");
   for (const path of services.sourceFiles) hash.update(readPhysicalSource(path));
-  for (const path of ["🏗️build/📥️inputs/🔏️revision/🟨️.mjs", "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json", "⚡️caching/🔣️policy.json", "🏗️build/🔣️policy.json", "🔣️taxonomy.json", TARGET_EXECUTION_SCHEMA, TARGET_CACHE_SCHEMA, COMMAND_INPUT_MODULE, OWNER_ARGUMENTS_MODULE, OBSERVATION_MODULE, "🏗️build/👁️observation/📥️reuse/🟨️.mjs", "🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json", CARGO_EXECUTION_MODULE, CARGO_EXECUTION_SCHEMA, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA, BUILD_MODE_MODULE, BUILD_MODE_API, PROJECT_INPUT_MODULE, "🏗️build/🕸️graph/🚪️admission/🟦️.ts", "🏗️build/🧬️schema/🚪️admission.json", "🏗️build/📥️inputs/📋️data/🟨️.mjs", "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs", "🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🧮️digest/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/🔣️schema.json", "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🔒️lock/🟨️.mjs", "🏗️build/📥️inputs/🔒️lock/🔣️schema.json", "🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json", "⚡️caching/🗃️records/🟦️.ts", "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(path === "🔣️taxonomy.json" ? JSON.stringify(readTaxonomyProjectionV1(join(LIBRARY_ROOT, path))) : readPhysicalSource(join(LIBRARY_ROOT, path)));
+  for (const path of implementationFiles()) hash.update(path === "🔣️taxonomy.json" ? JSON.stringify(readTaxonomyProjectionV1(join(LIBRARY_ROOT, path))) : readPhysicalSource(join(LIBRARY_ROOT, path)));
   hash.update(JSON.stringify(buildModesV1()));
-  return hash.digest("hex");
+  const digest = hash.digest("hex");
+  loadedRevision ??= digest;
+  return digest;
+}
+
+/** 📋️ Lists the authored files of the implementation revision as workspace facts of the bytes they have right now; the taxonomy is a data input of the environment and is not listed. */
+export function implementationRows() {
+  const rows = new Map();
+  for (const path of [...services.sourceFiles, ...implementationFiles().filter((entry) => !entry.endsWith("taxonomy.json")).map((entry) => resolve(LIBRARY_ROOT, entry))]) {
+    if (rows.has(path)) continue;
+    const status = lstatSync(path), bytes = readPhysicalSource(path);
+    rows.set(path, { kind: "digest", path, fact: { sha256: createHash("sha256").update(bytes).digest("hex"), size: status.size, mtimeMs: status.mtimeMs } });
+  }
+  return [...rows.values()];
 }
 
 /** 🧬️ Identifies current dependency resolution authority using only owned immutable source facts.

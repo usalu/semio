@@ -257,7 +257,7 @@ describe("runtime guard", () => {
     try {
       mkdirSync(join(checkout, ".cache"), { recursive: true });
       const file = join(sandbox.tmp, "guard.test.ts");
-      writeFileSync(file, `import {test} from "bun:test";import {writeFileSync,mkdirSync,rmSync} from "node:fs";import {writeFile} from "node:fs/promises";import {spawnSync} from "node:child_process";import {createServer} from "node:net";import {join} from "node:path";import Ajv from ${JSON.stringify(Bun.resolveSync("ajv", import.meta.dir))};\nconst checkout=${JSON.stringify(checkout)},tmp=${JSON.stringify(sandbox.tmp)};\n${body}\n`);
+      writeFileSync(file, `import {test} from "bun:test";import {writeFileSync,mkdirSync,rmSync} from "node:fs";import {writeFile} from "node:fs/promises";import {spawnSync} from "node:child_process";import {createServer} from "node:net";import {join} from "node:path";import {Database} from "bun:sqlite";import Ajv from ${JSON.stringify(Bun.resolveSync("ajv", import.meta.dir))};\nconst checkout=${JSON.stringify(checkout)},tmp=${JSON.stringify(sandbox.tmp)};\n${body}\n`);
       const env: NodeJS.ProcessEnv = { ...process.env, ...sandbox.environment, [names.checkout]: checkout };
       const child = spawnSync(process.execPath, ["test", "--preload", preload, file], { cwd: sandbox.root, env, encoding: "utf8" });
       expect(child.status === 0, child.stdout + child.stderr).toBe(!expectFail);
@@ -275,7 +275,10 @@ describe("runtime guard", () => {
     expect(kernel.output).toContain("kernel-image refused: hdiutil attach");
     const kill = await run("enforce", `test("x",()=>{spawnSync("pkill",["-f","semio-test-never-matches"]);});`, true);
     expect(kill.output).toContain("process-kill refused: pkill");
-    const fine = await run("enforce", `test("f",async()=>{if(!new Ajv().compile({type:"object"})({}))throw Error("CommonJS dependency broke");mkdirSync(join(tmp,"d"));await writeFile(join(tmp,"d","f"),"x");rmSync(join(tmp,"d"),{recursive:true});const s=createServer();await new Promise<void>(r=>s.listen(0,"127.0.0.1",r));s.close();});`, false);
+    const database = await run("enforce", `test("d",()=>{new Database(":memory:").close();const ok=new Database(join(tmp,"ok.sqlite"));ok.close();new Database(join(checkout,".cache","lease.sqlite")).close();});`, true);
+    expect(database.output).toContain("protected-write refused: Database");
+    expect(database.checkout).not.toContain("lease.sqlite");
+    const fine = await run("enforce", `test("f",async()=>{if(!new Ajv().compile({type:"object"})({}))throw Error("CommonJS dependency broke");new Database(":memory:").close();new Database(join(tmp,"fine.sqlite"),{readonly:false,create:true}).close();mkdirSync(join(tmp,"d"));await writeFile(join(tmp,"d","f"),"x");rmSync(join(tmp,"d"),{recursive:true});const s=createServer();await new Promise<void>(r=>s.listen(0,"127.0.0.1",r));s.close();});`, false);
     expect(fine.report).toBe("");
   });
   test("report records every violation as a schema-valid row, lets the run finish and flags fixed ports", async () => {
@@ -301,5 +304,6 @@ describe("runtime guard", () => {
     for (const name of ["writeFile", "appendFile", "mkdir", "rm", "rmdir", "unlink", "rename", "copyFile", "cp", "truncate", "symlink", "link"]) expect(fsp, name).toContain(`export const ${name} = writes("${name}"`);
     for (const name of declared.guard.openFunctions) expect(fs, name).toContain(`export const ${name} = opens("${name}"`);
     for (const name of ["spawn", "spawnSync", "execFile", "execFileSync", "exec", "execSync"]) expect(child, name).toContain(`export const ${name} =`);
+    for (const name of Object.keys(declared.guard.sqliteTargets)) expect(readFileSync(join(root, "🛡️guard/🩻️sqlite/🟦️.ts"), "utf8"), name).toContain(`class ${name} extends`);
   });
 });

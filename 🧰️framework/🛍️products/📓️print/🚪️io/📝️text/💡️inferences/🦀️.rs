@@ -115,7 +115,7 @@ pub enum ChartOptionItems { Text,Identifier }
 pub struct ChartOptionDescriptor { pub syntax:ChartOptionSyntax,pub items:Option<ChartOptionItems>,pub item_count:Option<usize>,contract:&'static DslValue }
 fn option_schema()->Result<&'static DslValue,String>{
  static SCHEMA:std::sync::OnceLock<DslValue>=std::sync::OnceLock::new();
- Ok(SCHEMA.get_or_init(||semio_framework_value_derive::owned_json_file!("../../🧬️schema/🔣️.json")))
+ Ok(SCHEMA.get_or_init(||semio_framework_value_derive_resources::owned_json_file!("../../🧬️schema/🔣️.json")))
 }
 fn option_descriptor(owner:&str,key:&str,family:bool)->Result<ChartOptionDescriptor,String>{
  let schema=option_schema()?;

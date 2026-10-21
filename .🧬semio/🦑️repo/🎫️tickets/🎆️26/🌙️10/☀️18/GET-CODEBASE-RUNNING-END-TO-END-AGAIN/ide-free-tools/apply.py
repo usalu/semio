@@ -3,7 +3,7 @@
   apply.py                     dry run of every group on the live tree (read only)
   apply.py --write             apply (refuses on drift, on frozen trees without --allow-frozen, while a dependency sync/lock or show projects runs)
   apply.py --undo [--write]    reverse the same groups while the files still hold our result
-Groups (extension and manifests are opt-in: decision D1, they travel together with the round-5 lock/sync cycle): plans (429 plans into their tickets: moves, archive tickets, ticket.json source->local; one all-or-nothing group), code (plan source and MCP surfaces, tests, library registries),
+Groups (extension and manifests are OPT-IN: removing the VS Code extension is a user decision; they travel together, manifests also reach the round-5 lock-sync batch through merge-lock-sync.py --with-extension): plans (429 plans into their tickets: moves, archive tickets, ticket.json source->local; one all-or-nothing group), code (plan source and MCP surfaces, tests, library registries),
         guard (ide-census, dashboard authority), leftovers (.claude LSP, .github/hooks, .gitignore, tsconfig, python), agent-client (editor -> agent-client), extension (VS Code extension out of the repo),
         manifests (round-5 manifest rows: use --group manifests only together with lock-sync/run.py, see result-ide-free.md).
 --group G (repeatable), --without G (repeatable), --allow-frozen (the coordinator's GO for the library/process trees)."""

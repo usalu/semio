@@ -19,7 +19,7 @@ fn rejected_control_grants() -> [FlowVcsGrant; 4] {
 fn retained_fixture() -> FlowHostSnapshot {
     let mut host_snapshot = FlowHostSnapshot::default();
     host_snapshot.widgets.push(Widget::InputNote { id: "source".into(), text: "retained".into() });
-    host_snapshot.widgets.push(Widget::OutputPreview { id: "retained-preview".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::from(["value".into()]) });
+    host_snapshot.widgets.push(Widget::OutputPreview { id: "retained-preview".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::from(["value".into()]) });
     host_snapshot.synapses.push(SynapseSpec { id: "source-preview".into(), from: "source".into(), to: "retained-preview".into(), from_port: "text".into(), to_port: String::new() });
     host_snapshot.layout.insert("source".into(), WidgetLayout { x: 1.0, y: 2.0 });
     host_snapshot.layout.insert("retained-preview".into(), WidgetLayout { x: 4.0, y: 5.0 });

@@ -1,0 +1,5 @@
+# Late Capture Prefix Intent Preparation
+
+Prepared 2026-10-21T04:13:45.314Z as a new unexecuted input cohort. `🚀️prefix/intent-60e173ac3437.json` is 8829 bytes, SHA-256 `d81667b7f98589779c39da6ef0d5426a25b60170d03cf36cadac974116b4c4ca`. Cohort `60e173ac3437b0a1dae8ad7482714517`, capture `b1043cba0d6b0e2d0be1d400f84e736b`, tag `architecture-60e173ac3437`. This closed intent contains fixed immutable control pins and authority to observe current Source after Native startup and both actual unit children. It contains no expected HEAD, critical Source values, authored Source values, or Cargo version proof. Those facts must be physically observed by the accepted prefix before its new creator.
+
+Engine ID `9ef0c850-ba59-4f21-bd6a-85515b34dd15` remains a selection constraint only, not a current authentication or builder proof. The retained Linux native payload pin remains tooling-only until physically admitted and provisioned. No generated intent, native launch, capture or controller effect has been dispatched. Final schema/seal reviews remain mandatory. The older d459 and00b4 plans remain unchanged historical attempts.

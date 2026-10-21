@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import ledgerDocument from "../🧾️ledger/🔣️.json" with { type: "json" };
 import ledgerSchema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { runToolSpawnLawV1 } from "../⌨️command/🟦️.ts";
-import { pruneToolSpawnLedgerV1, readToolSpawnLedgerV1, scanRepositoryToolSpawnsV1, summarizeToolSpawnsV1, toolRegistryProblemsV1, toolSpawnFindingsV1, TOOL_SPAWN_LEDGER_FILE_V1, type ToolSpawnLedgerV1 } from "../🟦️.ts";
+import { pruneToolSpawnLedgerV1, readToolSpawnLedgerV1, renderToolSpawnLedgerV1, scanRepositoryToolSpawnsV1, summarizeToolSpawnsV1, toolRegistryProblemsV1, toolSpawnFindingsV1, TOOL_SPAWN_LEDGER_FILE_V1, type ToolSpawnLedgerV1 } from "../🟦️.ts";
 
 const empty: ToolSpawnLedgerV1 = { version: 1, entries: [], declared: [] };
 const sources: Record<string, string> = {
@@ -52,6 +52,14 @@ describe("direct tool spawn law", () => {
     const old: ToolSpawnLedgerV1 = { version: 1, entries: [{ path: "gen/🏭️generator/🟦️.ts", tool: "cargo", form: "spawn", scope: "prod", count: 9 }, { path: "gone.ts", tool: "go", form: "spawn", scope: "prod", count: 1 }], declared: [{ tool: "bun", scope: "prod", count: 5 }] };
     expect(pruneToolSpawnLedgerV1(old, actual)).toEqual({ version: 1, entries: [{ path: "gen/🏭️generator/🟦️.ts", tool: "cargo", form: "spawn", scope: "prod", count: 2 }], declared: [{ tool: "bun", scope: "prod", count: 1 }] });
     expect(pruneToolSpawnLedgerV1(old, actual, true)).toEqual(actual);
+  });
+  test("keeps the reasons of a ledger through render and prune", () => {
+    const ledger: ToolSpawnLedgerV1 = { version: 1, reasons: { test: { en: "Tests keep direct spawns.", de: "Tests behalten direkte Starts." } }, entries: [{ path: "a/🧪️tests/b.ts", tool: "git", form: "spawn", scope: "test", count: 1, reason: "moves with its owner" }], declared: [] };
+    const again = readToolSpawnLedgerV1(JSON.parse(renderToolSpawnLedgerV1(ledger)));
+    expect(again.reasons).toEqual(ledger.reasons);
+    expect(again.entries).toEqual(ledger.entries);
+    expect(pruneToolSpawnLedgerV1(ledger, ledger)).toEqual(ledger);
+    expect(() => readToolSpawnLedgerV1({ ...ledger, reasons: { test: { en: "only English" } } })).toThrow("invalid");
   });
   test("accepts a registry that matches the repository and reports one that does not", () => {
     const files = new Set(["x"]);

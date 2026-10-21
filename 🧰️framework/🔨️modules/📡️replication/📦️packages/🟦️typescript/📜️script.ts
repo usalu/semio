@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+import { resolve } from "node:path";
+import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { scriptInvocationBudget } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
@@ -37,6 +41,10 @@ class RetainedMutationTestScript extends BundleScript {
 class DiagnosticTransferTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-diagnostic-transfer accepts no arguments");const{testDiagnosticTransferOracle}=await import("../../🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts");testDiagnosticTransferOracle();}
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-map-delta",MapDeltaTestScript).register("test-diagnostic-transfer",DiagnosticTransferTestScript).register("test-retained-mutation",RetainedMutationTestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
+/** 🛫️ Runs the native wire-field neutral and physical receipt oracle with original cancellation. */
+class RetainedWireFieldTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-retained-wire-field accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../⚙️codec/🛬️retained/🧪️tests/🟦️.ts")],this.repoRoot,"replication:retained-wire-field",scriptInvocationBudget(this.invocation,TEST_LEVEL_BUDGET_MS.quick),{signal:this.invocation.control.signal});}
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-retained-wire-field",RetainedWireFieldTestScript).register("test-map-delta",MapDeltaTestScript).register("test-diagnostic-transfer",DiagnosticTransferTestScript).register("test-retained-mutation",RetainedMutationTestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

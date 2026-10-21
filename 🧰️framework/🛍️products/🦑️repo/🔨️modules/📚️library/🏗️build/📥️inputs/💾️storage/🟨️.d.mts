@@ -41,7 +41,7 @@ export function prepareBuildGraphOptionalHeadroomV1(image:import("../../../⚡�
 export function maintainBuildGraphOptionalCachesV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("@semio-tech/process/leases").ResourceLeaseControl):Promise<boolean>;
 
 /** 🧭️ Maps all admitted namespace identities into a fixed writer catalog. */
-export function buildGraphWriterResourceV1(workspace:string,kind:"selection"|"dataset",identity:string):string;
+export {buildGraphWriterResourceV1,buildGraphPublicationWriterResourceV1} from "./🔒️writer/🟨️.mjs";
 
 /** 🗂️ Admits closed directory kinds for an isolated writer. */
 export function buildGraphWriterDirectoryAdmittedV1(scope:{readonly kind:"selection"|"dataset";readonly identity:string},namespace:string):boolean;
@@ -54,3 +54,9 @@ export function buildGraphWriterMaintenanceDueV1(request:{readonly kind:"full"|"
 export function withRepositoryBuildGraphConsumerV1<T>(workspace:string,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 
 export function requireCurrentRepositoryBuildGraphConsumerV1():void;
+
+/** 🧾️ Counts actual optional deletions under an authenticated canonical writer without promising sufficient headroom. */
+export function retireBuildGraphOptionalHeadroomV1(image:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,custody:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1,request:Readonly<{minimumAvailableBytes:number}>):Promise<Readonly<{retainedOptionalBytes:number;availableBytes:number;requiredAvailableBytes:number;retiredBytes:number;retiredFiles:number}>>;
+
+/** 🧹️ Retires only idle isolated optional leaves beneath canonical image and ledger custody. */
+export function recoverBuildGraphOptionalScopesHeadroomV1(workspace:string,image:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,control:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<Readonly<{acquired:true;availableBytes:number;retiredBytes:number;retiredFiles:number}>>;

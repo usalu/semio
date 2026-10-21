@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "cargo-owner",
+      "cargo": true,
+      "native": true,
+      "authored": false,
+      "component": false,
+      "expected": "native"
+    },
+    {
+      "id": "json-native-overlap",
+      "cargo": false,
+      "native": true,
+      "authored": true,
+      "component": false,
+      "expected": "authored"
+    },
+    {
+      "id": "component-precedence",
+      "cargo": false,
+      "native": true,
+      "authored": true,
+      "component": true,
+      "expected": "component"
+    },
+    {
+      "id": "json-without-native",
+      "cargo": false,
+      "native": false,
+      "authored": true,
+      "component": false,
+      "expected": "authored"
+    }
+  ]
+}

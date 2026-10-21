@@ -10,7 +10,7 @@ pub use semio_framework_os_kernel::os_spr;
 /// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
 pub use semio_framework_os_kernel::os_store;
 pub use semio_framework_os_kernel::os_vcs;
-pub use semio_framework_value::ordered::{OrderedMap, OrderedSet};
+pub use semio_framework_value_ordered::ordered::{OrderedMap, OrderedSet};
 //#endregion 🔖️KernelModuleAliases
 
 //#region 🔖️InfiniteAlias

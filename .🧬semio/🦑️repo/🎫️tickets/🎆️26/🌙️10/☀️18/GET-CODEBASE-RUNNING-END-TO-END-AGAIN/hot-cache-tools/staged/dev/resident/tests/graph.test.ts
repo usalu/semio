@@ -4,6 +4,7 @@ import {POLICY_V1} from "../protocol/policy.mjs";
 import {createFilterV1,createWorkspaceStateV1} from "../state/index.mjs";
 import {createResidentHoldsV1,dirtyPathsFromJournalV1,membershipFromJournalV1} from "../graph-hooks/index.mjs";
 import {stateConfigurationFromBuildGraphV1} from "../ports/graph.mjs";
+import {residentGraphSeamsV1} from "../graph-hooks/host/index.mjs";
 import {cleanup,pick,rng,snapshot,tempRoot,writeTree} from "./common.ts";
 
 const GENERATIONS=process.env.SEMIO_GENERATIONS_MODULE??"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs";
@@ -107,5 +108,40 @@ describe("fact checks from the journal",()=>{
   const unknown=createResidentHoldsV1({dirty:async()=>undefined,fallback:async rows=>{asked.push(rows.map(r=>r.path));return false;}});
   expect(await unknown([{path:"q"}])).toBe(false);expect(asked.at(-1)).toEqual(["q"]);
   expect(dirtyPathsFromJournalV1({complete:false,changes:[]})).toBeUndefined();
+ });
+});
+
+describe("host seams",()=>{
+ const frontier={version:1,capturedAt:1,directories:[["",1,1]],members:[["a/x.ts",33188]]};
+ const previous={manifest:{membership:"D"},frontier} as any;
+ const counting=()=>{const calls={membership:0,holds:[] as string[][],adopted:[] as string[][],asked:[] as string[]};return calls;};
+ test("first call falls back after asking the cursor; the next call is answered by the journal without the stat pass",async()=>{
+  const calls=counting(),replies:any[]=[{instance:"i",seq:4},{complete:true,changes:[],cursor:{instance:"i",seq:9}},{complete:true,changes:[],cursor:{instance:"i",seq:9}}];
+  const seams=residentGraphSeamsV1({root:"/w",membership:async()=>{calls.membership++;return{digest:"D",frontier,changes:[]};},holds:async()=>true,adopt:files=>calls.adopted.push(files),ask:async(command,args)=>{calls.asked.push(command+" "+args.join(" "));return command==="adopt-frontier"?undefined:replies.shift();}});
+  const first=await seams.membership(undefined);
+  expect(first.digest).toBe("D");expect(calls.membership).toBe(1);expect(calls.asked).toEqual(["cursor ","adopt-frontier D i:4"]);
+  const second=await seams.membership(previous);
+  expect(calls.membership).toBe(1);expect(second.frontier).toBe(frontier);expect(calls.adopted).toEqual([["a/x.ts"]]);expect(calls.asked.slice(2)).toEqual(["dirty --digest D","adopt-frontier D i:9"]);
+ });
+ test("an incomplete answer, a missing service and mode off all fall back to the stat code",async()=>{
+  let stat=0;const membership=async()=>{stat++;return{digest:"E",frontier,changes:[]};};
+  const incomplete=residentGraphSeamsV1({root:"/w",membership,holds:async()=>true,ask:async()=>({complete:false,reason:"digest"})});
+  await incomplete.membership(previous);expect(stat).toBe(1);
+  const down=residentGraphSeamsV1({root:"/w",membership,holds:async()=>true,ask:async()=>undefined});
+  await down.membership(previous);expect(stat).toBe(2);
+  const off=residentGraphSeamsV1({root:"/w",membership,holds:async()=>true,environment:{SEMIO_BUILD_SERVICE:"off"}});
+  await off.membership(previous);expect(stat).toBe(3);
+ });
+ test("holds trusts rows the journal proves untouched, asks the old checker only about the rest, and coalesces parallel chunks into one question",async()=>{
+  const asked:string[]=[],checked:string[][]=[];
+  const seams=residentGraphSeamsV1({root:"/w",membership:async()=>({digest:"D",frontier,changes:[]}),holds:async rows=>{checked.push(rows.map(r=>r.path));return true;},ask:async command=>{asked.push(command);return command==="dirty"?{complete:true,changes:[{path:"a/x.ts",kind:"changed",directory:false}]}:undefined;}});
+  await seams.membership(undefined);
+  const results=await Promise.all([seams.holds([{path:"b/y.ts"},{path:"a/x.ts"}]),seams.holds([{path:"c/z.ts"}]),seams.holds([{path:"d/w.ts"}])]);
+  expect(results).toEqual([true,true,true]);expect(checked).toEqual([["a/x.ts"]]);expect(asked.filter(c=>c==="dirty").length).toBe(1);
+  const before=residentGraphSeamsV1({root:"/w",membership:async()=>({}),holds:async rows=>{checked.push(rows.map(r=>r.path));return false;},ask:async()=>undefined});
+  expect(await before.holds([{path:"q"}])).toBe(false);
+  const unreachable=residentGraphSeamsV1({root:"/w",membership:async()=>({digest:"D",frontier,changes:[]}),holds:async()=>false,ask:async()=>undefined});
+  await unreachable.membership(undefined);
+  expect(await unreachable.holds([{path:"q"}])).toBe(false);
  });
 });

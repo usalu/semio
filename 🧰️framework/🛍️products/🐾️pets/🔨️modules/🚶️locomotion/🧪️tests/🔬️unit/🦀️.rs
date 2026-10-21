@@ -8,6 +8,10 @@ use semio_framework_pets_staging_draft::draft::{draft_of, sealed};
 use crate::stage::tests::{actor_of, summoned, surveyed, ticked, troupe};
 use crate::stage::{advance, open_stage};
 use semio_framework_pets_contract::schema::{Facing, StageEvent, Ticked};
+use semio_framework_pets_clearance::{MARGIN, SEAM};
+use semio_framework_pets_contract::schema::Activity;
+use semio_framework_pets_staging_draft::draft::{beat_of, clip_of, shoulders};
+use semio_framework_pets_staging_draft::locomotion::guarded;
 
 #[test]
 fn a_hopper_that_finds_somebody_in_its_way_in_mid_hop_finishes_the_hop_on_the_spot() {

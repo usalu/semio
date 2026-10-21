@@ -39,9 +39,6 @@ semio-framework-schema-composition = { path = "../../../../../../../../../../../
 semio-framework-schema-registry = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-value-dictionary = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-definition = { path = "../../../../../../🧬️schema/📝️definition/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-tests = { path = "../../../../../../🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }

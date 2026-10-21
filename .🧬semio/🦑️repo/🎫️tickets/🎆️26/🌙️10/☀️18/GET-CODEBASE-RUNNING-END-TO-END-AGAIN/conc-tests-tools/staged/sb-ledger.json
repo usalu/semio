@@ -104,6 +104,18 @@
    "reason": "string/path construction under the shared temp name; the SUT reads it (use testScratchRootV1)"
   },
   {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧾️test-results/🧪️tests/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "constant name below the temp directory (use testScratchRootV1)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts",
+   "rule": "fixed-tmp-dir",
+   "count": 1,
+   "reason": "constant name below the temp directory (use testScratchRootV1)"
+  },
+  {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️mutation-taxonomy/🟦️.ts",
    "rule": "fixed-tmp-dir",
    "count": 1,
@@ -134,6 +146,12 @@
    "reason": "lists forbidden call names as strings; nothing is written"
   },
   {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts",
+   "rule": "native-image-unsandboxed",
+   "count": 1,
+   "reason": "source-text assertion on the backend selection (the call appears inside an expected-source template); no image is created"
+  },
+  {
    "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/🟦️.ts",
    "rule": "persistent-native-state",
    "count": 1,
@@ -144,6 +162,180 @@
    "rule": "persistent-native-state",
    "count": 1,
    "reason": "dev local-hub session callback proof under S_LOCAL_ONLY; no partition birth is requested by the test"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 3,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 3,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🪪️identity/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 5,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 3,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 2,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts",
+   "rule": "real-graph-image",
+   "count": 1,
+   "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts",
+   "rule": "real-image-lease",
+   "count": 4,
+   "reason": "names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🍎️.ts",
+   "rule": "real-image-lease",
+   "count": 1,
+   "reason": "names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+   "rule": "real-image-lease",
+   "count": 1,
+   "reason": "names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts",
+   "rule": "real-image-lease",
+   "count": 2,
+   "reason": "names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts",
+   "rule": "real-image-lease",
+   "count": 1,
+   "reason": "names the real image lease resource or path of the checkout (data for an assertion or a stub); convert together with its graph store call"
   },
   {
    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs",

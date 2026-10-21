@@ -1,0 +1,400 @@
+{
+ "host": {
+  "os": "macOS (Darwin 27)",
+  "cpus": 10,
+  "loadDuringRuns": "6.3 to 7.3 (three runs), 15 to 20 (custody probe)"
+ },
+ "what": "group 3: the service invocation. Real: resident service, native watcher (FSEvents), executor loop and pool, in-process client, the authority core (door, grant, admission, launch checks, task environment) from a real copy of the library (16.3k tracked files). Stand-ins: the tool (stamps its own start), the custody (mock) and a synthetic 400-project graph (56-task closure, 20.7k watched files). Script: staged/dev/bench/service-edit.mjs --owners 400 --n 40.",
+ "warmEditToFirstToolStart": {
+  "runs": [
+   {
+    "prime": {
+     "tasks": 56,
+     "exit": 0,
+     "files": 20734,
+     "owners": 400
+    },
+    "warmNoopInProcessClient": {
+     "roundTrip": {
+      "n": 20,
+      "p50": 11.51,
+      "p90": 12.77,
+      "p99": 12.89,
+      "max": 12.89
+     },
+     "load": 6.68
+    },
+    "warm": {
+     "editToToolStartMs": {
+      "n": 40,
+      "p50": 16.04,
+      "p90": 17.93,
+      "p99": 19.41,
+      "max": 19.41
+     },
+     "clientWallMs": {
+      "n": 40,
+      "p50": 290.67,
+      "p90": 337.82,
+      "p99": 349.34,
+      "max": 349.34
+     },
+     "firstAdmissionMs": {
+      "n": 40,
+      "p50": 0.87,
+      "p90": 0.98,
+      "p99": 1.03,
+      "max": 1.03
+     },
+     "firstLaunchChecksMs": {
+      "n": 40,
+      "p50": 0.28,
+      "p90": 0.34,
+      "p99": 0.35,
+      "max": 0.35
+     },
+     "serviceFenceMs": {
+      "n": 40,
+      "p50": 9.77,
+      "p90": 10.54,
+      "p99": 11.49,
+      "max": 11.49
+     },
+     "servicePlanMs": {
+      "n": 40,
+      "p50": 0.28,
+      "p90": 0.82,
+      "p99": 1.95,
+      "max": 1.95
+     },
+     "tasksExecuted": {
+      "n": 40,
+      "p50": 5,
+      "p90": 6,
+      "p99": 13,
+      "max": 13
+     },
+     "load": 6.64
+    },
+    "cold": {
+     "editToToolStartMs": {
+      "n": 15,
+      "p50": 377.68,
+      "p90": 390.91,
+      "p99": 404.71,
+      "max": 404.71
+     },
+     "segmentMs": {
+      "n": 15,
+      "p50": 352.98,
+      "p90": 364.33,
+      "p99": 378.31,
+      "max": 378.31
+     },
+     "moduleLoadMs": {
+      "n": 15,
+      "p50": 54.07,
+      "p90": 58.69,
+      "p99": 63.45,
+      "max": 63.45
+     },
+     "doorMs": {
+      "n": 15,
+      "p50": 294.67,
+      "p90": 301.2,
+      "p99": 309.94,
+      "max": 309.94
+     },
+     "admissionMs": {
+      "n": 15,
+      "p50": 3.63,
+      "p90": 4.1,
+      "p99": 4.13,
+      "max": 4.13
+     },
+     "launchChecksMs": {
+      "n": 15,
+      "p50": 0.73,
+      "p90": 0.85,
+      "p99": 0.94,
+      "max": 0.94
+     },
+     "load": 6.6
+    },
+    "auditRows": 712
+   },
+   {
+    "prime": {
+     "tasks": 56,
+     "exit": 0,
+     "files": 20734,
+     "owners": 400
+    },
+    "warmNoopInProcessClient": {
+     "roundTrip": {
+      "n": 20,
+      "p50": 12.04,
+      "p90": 12.83,
+      "p99": 13.13,
+      "max": 13.13
+     },
+     "load": 6.64
+    },
+    "warm": {
+     "editToToolStartMs": {
+      "n": 40,
+      "p50": 16.05,
+      "p90": 17.34,
+      "p99": 17.88,
+      "max": 17.88
+     },
+     "clientWallMs": {
+      "n": 40,
+      "p50": 286.21,
+      "p90": 335.58,
+      "p99": 339.59,
+      "max": 339.59
+     },
+     "firstAdmissionMs": {
+      "n": 40,
+      "p50": 0.83,
+      "p90": 0.91,
+      "p99": 1.24,
+      "max": 1.24
+     },
+     "firstLaunchChecksMs": {
+      "n": 40,
+      "p50": 0.26,
+      "p90": 0.29,
+      "p99": 0.35,
+      "max": 0.35
+     },
+     "serviceFenceMs": {
+      "n": 40,
+      "p50": 9.64,
+      "p90": 11.11,
+      "p99": 11.54,
+      "max": 11.54
+     },
+     "servicePlanMs": {
+      "n": 40,
+      "p50": 0.26,
+      "p90": 0.32,
+      "p99": 0.36,
+      "max": 0.36
+     },
+     "tasksExecuted": {
+      "n": 40,
+      "p50": 5,
+      "p90": 6,
+      "p99": 13,
+      "max": 13
+     },
+     "load": 6.32
+    },
+    "cold": {
+     "editToToolStartMs": {
+      "n": 15,
+      "p50": 380.96,
+      "p90": 732.37,
+      "p99": 898.06,
+      "max": 898.06
+     },
+     "segmentMs": {
+      "n": 15,
+      "p50": 355.88,
+      "p90": 689.29,
+      "p99": 821.64,
+      "max": 821.64
+     },
+     "moduleLoadMs": {
+      "n": 15,
+      "p50": 53.9,
+      "p90": 77.11,
+      "p99": 237.81,
+      "max": 237.81
+     },
+     "doorMs": {
+      "n": 15,
+      "p50": 296.91,
+      "p90": 579.68,
+      "p99": 599.57,
+      "max": 599.57
+     },
+     "admissionMs": {
+      "n": 15,
+      "p50": 3.51,
+      "p90": 4.14,
+      "p99": 11.03,
+      "max": 11.03
+     },
+     "launchChecksMs": {
+      "n": 15,
+      "p50": 0.72,
+      "p90": 1.04,
+      "p99": 1.58,
+      "max": 1.58
+     },
+     "load": 6.97
+    },
+    "auditRows": 712
+   },
+   {
+    "prime": {
+     "tasks": 56,
+     "exit": 0,
+     "files": 20734,
+     "owners": 400
+    },
+    "warmNoopInProcessClient": {
+     "roundTrip": {
+      "n": 20,
+      "p50": 11.41,
+      "p90": 12.63,
+      "p99": 12.79,
+      "max": 12.79
+     },
+     "load": 6.89
+    },
+    "warm": {
+     "editToToolStartMs": {
+      "n": 40,
+      "p50": 14.52,
+      "p90": 16.37,
+      "p99": 33.48,
+      "max": 33.48
+     },
+     "clientWallMs": {
+      "n": 40,
+      "p50": 264.35,
+      "p90": 338.63,
+      "p99": 364.39,
+      "max": 364.39
+     },
+     "firstAdmissionMs": {
+      "n": 40,
+      "p50": 0.8,
+      "p90": 0.9,
+      "p99": 0.95,
+      "max": 0.95
+     },
+     "firstLaunchChecksMs": {
+      "n": 40,
+      "p50": 0.26,
+      "p90": 0.3,
+      "p99": 0.33,
+      "max": 0.33
+     },
+     "serviceFenceMs": {
+      "n": 40,
+      "p50": 9.37,
+      "p90": 10.58,
+      "p99": 14.75,
+      "max": 14.75
+     },
+     "servicePlanMs": {
+      "n": 40,
+      "p50": 0.25,
+      "p90": 0.38,
+      "p99": 11.39,
+      "max": 11.39
+     },
+     "tasksExecuted": {
+      "n": 40,
+      "p50": 5,
+      "p90": 6,
+      "p99": 13,
+      "max": 13
+     },
+     "load": 7.34
+    },
+    "cold": {
+     "editToToolStartMs": {
+      "n": 15,
+      "p50": 378.23,
+      "p90": 383.05,
+      "p99": 384.36,
+      "max": 384.36
+     },
+     "segmentMs": {
+      "n": 15,
+      "p50": 353.51,
+      "p90": 357.8,
+      "p99": 360.26,
+      "max": 360.26
+     },
+     "moduleLoadMs": {
+      "n": 15,
+      "p50": 54.19,
+      "p90": 55.06,
+      "p99": 55.39,
+      "max": 55.39
+     },
+     "doorMs": {
+      "n": 15,
+      "p50": 296.17,
+      "p90": 299.59,
+      "p99": 301.31,
+      "max": 301.31
+     },
+     "admissionMs": {
+      "n": 15,
+      "p50": 3.42,
+      "p90": 3.87,
+      "p99": 4.01,
+      "max": 4.01
+     },
+     "launchChecksMs": {
+      "n": 15,
+      "p50": 0.73,
+      "p90": 0.76,
+      "p99": 0.77,
+      "max": 0.77
+     },
+     "load": 7.21
+    },
+    "auditRows": 712
+   }
+  ]
+ },
+ "readingGuide": "editToToolStartMs is measured from the tool's own start stamp minus the instant before the edit (microseconds, same clock). clientWallMs is the whole rebuild (5 dependent tasks p50, 30 ms of tool work each), not a start latency. cold = the same segment in a fresh process (module load, the real door, admission, launch checks, first tool) without service or executor.",
+ "custodyOnRealStoreCode": {
+  "what": "openRepositoryCustodySessionV1 + withRepositoryCacheStoreV1 from the live library in a scratch workspace (custody-probe.ts), all five partitions the executor opens: leases diagnostics dependencies tools graph; images created by the first open and detached afterwards",
+  "retainedSessionOpenMs": 42547.7,
+  "perCommandMs": [
+   299.3,
+   260.6,
+   279.5,
+   264.4,
+   288.3,
+   268.4,
+   263.3,
+   263.9,
+   266,
+   258.1,
+   252.6,
+   253.1,
+   265.2,
+   251,
+   244.6
+  ],
+  "perCommandMedianMs": 263.9,
+  "load": "15 to 20"
+ },
+ "doorFinding": {
+  "what": "resolveBuildInvocationV1 reads the build owner registry (JSON parse and validation) on every call; the door calls it twice per process birth",
+  "beforeMs": {
+   "firstDoor": 836,
+   "laterDoors": "550-930 (every call)"
+  },
+  "afterMs": {
+   "firstDoor": 295,
+   "laterDoorsInAResidentProcess": "0.2-0.5"
+  }
+ },
+ "composite": {
+  "p50Ms": "about 280 (16 + 264)",
+  "worstMeasuredMs": "about 335 (33 + 299)",
+  "excluded": "graph read, selection and store receipts between the custody and the first nx process (unmeasured, cli-latency item 1) and the launcher process (+13 ms measured in phase 2)"
+ }
+}

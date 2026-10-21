@@ -42,7 +42,7 @@
 
 use crate::swing::{reel_step, REEL_LEAST};
 use semio_framework_pets_contract::schema::{Facing, Gear, Perch, Pitch, Point, Rect, Reeling, Shot, Size, Ticks, TICKS_PER_SECOND};
-use semio_framework_pets_kinematics::terrain::{larger, segment_hits, smaller, stride_to, Fall};
+use semio_framework_pets_kinematics::terrain::{larger, segment_hits, smaller, stride_to, Fall, WALL_LIP};
 use semio_framework_pets_kinematics::trigonometry::{clamp, smoothstep};
 use serde::{Deserialize, Serialize};
 

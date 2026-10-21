@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "already-funded",
+      "available": 200,
+      "minimum": 150,
+      "busy": [],
+      "unknown": [],
+      "retire": [],
+      "expectedAvailable": 200
+    },
+    {
+      "id": "oldest-idle",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [],
+      "retire": [
+        "a"
+      ],
+      "expectedAvailable": 130
+    },
+    {
+      "id": "busy-oldest",
+      "available": 80,
+      "minimum": 120,
+      "busy": [
+        "a"
+      ],
+      "unknown": [],
+      "retire": [
+        "b"
+      ],
+      "expectedAvailable": 140
+    },
+    {
+      "id": "unknown-retained",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [
+        "a"
+      ],
+      "retire": [
+        "b"
+      ],
+      "expectedAvailable": 140
+    },
+    {
+      "id": "all-busy",
+      "available": 80,
+      "minimum": 120,
+      "busy": [
+        "a",
+        "b"
+      ],
+      "unknown": [],
+      "retire": [],
+      "expectedAvailable": 80
+    },
+    {
+      "id": "insufficient",
+      "available": 0,
+      "minimum": 150,
+      "busy": [],
+      "unknown": [],
+      "retire": [
+        "a",
+        "b"
+      ],
+      "expectedAvailable": 110
+    },
+    {
+      "id": "cancel-before-effect",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [],
+      "cancel": true,
+      "retire": [],
+      "expectedAvailable": 80
+    },
+    {
+      "id": "ledger-busy",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [],
+      "ledgerBusy": true,
+      "retire": [],
+      "expectedAvailable": 80
+    },
+    {
+      "id": "mutated-after-call",
+      "available": 80,
+      "minimum": 120,
+      "mutateTo": 80,
+      "busy": [],
+      "unknown": [],
+      "retire": [
+        "a"
+      ],
+      "expectedAvailable": 130
+    }
+  ],
+  "native": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 35651584,
+    "leafBytes": 1048576,
+    "requiredRecoveryBytes": 524288,
+    "requestMinimum": 0,
+    "requestMaximum": 33554432
+  },
+  "ancestorCases": [
+    {
+      "id": "wide-valid-tree",
+      "width": 1024,
+      "depth": 3,
+      "changed": "none",
+      "accepted": true,
+      "checks": 4
+    },
+    {
+      "id": "changed-parent",
+      "width": 1024,
+      "depth": 3,
+      "changed": "ancestor",
+      "accepted": false,
+      "checks": 1
+    },
+    {
+      "id": "changed-leaf",
+      "width": 1024,
+      "depth": 3,
+      "changed": "leaf",
+      "accepted": false,
+      "checks": 4
+    }
+  ]
+}

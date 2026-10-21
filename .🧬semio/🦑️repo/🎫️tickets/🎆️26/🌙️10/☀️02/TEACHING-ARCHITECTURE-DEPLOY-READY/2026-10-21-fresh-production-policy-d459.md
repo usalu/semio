@@ -1,0 +1,11 @@
+# Fresh Production Policy d459dd3a7345
+
+Prepared at2026-10-21T02:38:19.930Z from current host metadata; no create, Source, Git, archive, provision, controller, facts, export or final stage has executed. Native own7 unit validation is separately live with Cargo.
+
+Authored policy `🚀️fresh/production-d459dd3a7345.json` and eligible generated/fresh-parent-d459dd3a73458ef4a16c96b2e4b448be.json are byte-identical:35137B, raw SHA256 `02142dc6e346181534a2c01873b4c33a4067ad2f160dce33f037a030e0494e02`. Current102 critical Source entries are all actual ordinary single-link present files; no synthetic absence. The persistent control union is56 exact Ticket paths, and six authored deployment roles come from the same Source observations. HEAD metadata is `daa678dd3dcc0572c2a15fcf1a377372a837a58a` through `refs/heads/🐙ueli/⛳wip`; this is metadata only, not a genuine Git snapshot. Cargo version0.1.0,122740B/SHA25632adf4589be8502aa63dee245c500d5837d2495eaeaaec8a2a4c9f97f292f259.
+
+Engine9ef0c850-ba59-4f21-bd6a-85515b34dd15 is an existing selection constraint only; the actual creator must freshly authenticate it before side effects. Linux native payload11767992B/a71cd1075d52bca91cb65537129d37f8ae0059c5d7f85cb47f7e9215583fc96c is a previously physically audited retained publication, not guest provision/help proof. Initial critical/HEAD/Cargo/native/current control observations must be rechecked before dispatch. Python is the portable command name python3, with actual availability pending owned execution.
+
+Initial create plan generated/fresh-create-d459dd3a73458ef4a16c96b2e4b448be.json:1137B/raw SHA256 `6805b90c6402e024697145918dde48861dda6f6e4ec02747c13275ff0a06981d`; its compact Source-plan binding is `18027905d15c61e258b70750d4cc50007430bad811dac36e4204e78e6ea77ee0`. Identity and manifest are null as required. No future identity or receipt field is populated. New cohort/capture/run/seven distinct operation IDs are fresh; outputtag architecture-d459dd3a7345.
+
+Use manual exact owner calls and require genuine outer terminal0/null plus actual matching receipts at each boundary. The parent remains ten fixed owners and is not launched because the captured-neutral operation must succeed between provision and controller21. Every existing eighteen neutral and twenty-one controller obligation remains pending.

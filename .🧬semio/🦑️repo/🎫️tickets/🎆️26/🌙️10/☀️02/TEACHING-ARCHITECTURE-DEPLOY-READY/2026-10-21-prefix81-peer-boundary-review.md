@@ -1,0 +1,13 @@
+# Prefix81 Peer Source Boundary Review
+
+Bounded static review of the four requested peers found no concrete blocker to the previously accepted resource/producer boundary. No Source edit, restore, helper execution, test or Native command occurred.
+
+Current assembly37339/d97e6255d1bc2a82e50705dbb5af1fe660fbb51135fed571404e7044926a4160 keeps full source.generatedDependencies and joins every producer through applyBuildGeneratedTaskDependenciesV1 before normalized target publication. The reintroduced own-output filter remains absent. Its actual projectInputs callback still masks only command-group contract selection while final full command payload remains passed. Parentheses around producer null-coalescing do not weaken ownership. An exact full previous assembly body was not retained, so this is boundary review rather than a claimed textual diff of all3bytes.
+
+Current selected Source-demand test120032/e27840e18994849a5990a262a8d3faad013d706c6e1073896005d49233a8b6c5 retains the four strict assembly cases, real generated-producer-before-join evidence, explicit own-target refusal and full cache payload oracle. The focused program harness includes an empty presentationResourcesV1 port while exercising actual TypeScript closure roles. It does not suppress real generated producer evidence. Exact previous test body unavailable; no full textual diff claim.
+
+Current admission19672/fb119102f54c27287e8bd56bbc253c712588eb706aec5b96c2a487bc50211927 supports matching target observation declarations. Explicit declared entries always compile; unselected named-only inputs remain freshness; selected tasks default to compile; only an all-freshness observation set may keep matched inputs freshness. Unknown role values refuse. The old two-argument call behavior remains compile whenever selected or declared. Strict generated ownership API and closed data resource declaration admission remain present. Schema role enum and observation policy agree.
+
+Actual browser WASM manifest27384/4b5b97bf3a3ffc8504281c55d372f76ae70d2938f7686f68d64457ae9ebe8f7f adds exactly the49B wasm task sourceInputObservation=freshness line: removing that one line reconstructs the accepted27335B/SHA230f258f4bcdb9de447df79d1f149602282b86c101c65b2b0e3aa8016616802c. Both exact browser/host closure.resources declarations remain, and the prior test-producer-source freshness declaration remains. This matches the publication command reading runtime text; explicit/runtime/compiler entry escalation still comes from the unchanged role boundaries.
+
+All three code files parse without TypeScript diagnostics. This static review does not establish a new runtime pass, original Source authority or captured cohort. Full old Source bodies are not copied into Ticket.

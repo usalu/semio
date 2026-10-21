@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes staged/🧩️units/🧪️tests/🔣️.json: the language-agnostic test vectors. Graph, scenario, python and go expectations are hand-written here; the key hex values are computed by the independent oracle (stdlib only) and must be reproduced by the TypeScript implementation."""
+"""🧰️ Writes staged/🧩️units/🧪️tests/🔣️.json: the language-agnostic test vectors. Graph, scenario, python and go expectations are hand-written here; the key hex values are computed by the independent oracle (stdlib only) and must be reproduced by the TypeScript implementation."""
 import importlib.util, json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -180,13 +180,12 @@ PY["plan"] = [{
 # ---------------------------------------------------------------- go
 GO = {}
 GO["scan"] = [
-    {"name": "block-with-aliases", "source": "// Package doc.\npackage p\n\nimport (\n\t\"fmt\"\n\t_ \"embed\"\n\tm \"math\"\n\t. \"strings\"\n\t`raw/path`\n)\n\nfunc F() {}\n", "expect": {"package": "p", "imports": ["embed", "fmt", "math", "raw/path", "strings"], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "constraint-and-cgo", "source": "//go:build linux && !cgo\n\n// Package q.\npackage q\n\nimport \"C\"\nimport \"unsafe\"\n\nvar x = 1\nimport \"never\"\n", "expect": {"package": "q", "imports": ["C", "unsafe"], "constraint": "linux && !cgo", "legacyConstraints": [], "embeds": []}},
-    {"name": "separate-and-semicolon", "source": "package s\nimport \"a\"\nimport \"b\"; import \"c\"\n/* block */ import (\n  \"d\" ; \"e\"\n)\n", "expect": {"package": "s", "imports": ["a", "b", "c", "d", "e"], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "embed-directives", "source": "package e\n\nimport \"embed\"\n\n//go:embed assets/* \"name with space.txt\" other.txt\nvar fs embed.FS\n", "expect": {"package": "e", "imports": ["embed"], "constraint": None, "legacyConstraints": [], "embeds": ["assets/*", "name with space.txt", "other.txt"]}},
-    {"name": "legacy-build-line", "source": "// +build ignore\n\npackage l\n", "expect": {"package": "l", "imports": [], "constraint": None, "legacyConstraints": ["ignore"], "embeds": []}},
-    {"name": "no-imports", "source": "package n\n\nfunc F() {}\nimport \"late\"\n", "expect": {"package": "n", "imports": [], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "string-with-import-word", "source": "package w\n\nimport \"fmt\"\n\nvar s = \"import \\\"x\\\"\"\n", "expect": {"package": "w", "imports": ["fmt"], "constraint": None, "legacyConstraints": [], "embeds": []}},
+    {"name": "block-with-aliases", "source": "// Package doc.\npackage p\n\nimport (\n\t\"fmt\"\n\t_ \"embed\"\n\tm \"math\"\n\t. \"strings\"\n\t`raw/path`\n)\n\nfunc F() {}\n", "expect": {"package": "p", "imports": ["embed", "fmt", "math", "raw/path", "strings"], "constraint": None, "embeds": []}},
+    {"name": "constraint-and-cgo", "source": "//go:build linux && !cgo\n\n// Package q.\npackage q\n\nimport \"C\"\nimport \"unsafe\"\n\nvar x = 1\nimport \"never\"\n", "expect": {"package": "q", "imports": ["C", "unsafe"], "constraint": "linux && !cgo", "embeds": []}},
+    {"name": "separate-and-semicolon", "source": "package s\nimport \"a\"\nimport \"b\"; import \"c\"\n/* block */ import (\n  \"d\" ; \"e\"\n)\n", "expect": {"package": "s", "imports": ["a", "b", "c", "d", "e"], "constraint": None, "embeds": []}},
+    {"name": "embed-directives", "source": "package e\n\nimport \"embed\"\n\n//go:embed assets/* \"name with space.txt\" other.txt\nvar fs embed.FS\n", "expect": {"package": "e", "imports": ["embed"], "constraint": None, "embeds": ["assets/*", "name with space.txt", "other.txt"]}},
+    {"name": "no-imports", "source": "package n\n\nfunc F() {}\nimport \"late\"\n", "expect": {"package": "n", "imports": [], "constraint": None, "embeds": []}},
+    {"name": "string-with-import-word", "source": "package w\n\nimport \"fmt\"\n\nvar s = \"import \\\"x\\\"\"\n", "expect": {"package": "w", "imports": ["fmt"], "constraint": None, "embeds": []}},
 ]
 LIN = {"goos": "linux", "goarch": "amd64", "goMinor": 25, "cgo": True, "tags": []}
 DAR = {"goos": "darwin", "goarch": "arm64", "goMinor": 25, "cgo": False, "tags": ["extra"]}

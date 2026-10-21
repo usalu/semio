@@ -12,7 +12,7 @@ pub enum RetainedRecordBodyToken {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedRecordBodyPhase {
+pub(super) enum RetainedRecordBodyPhase {
     SymbolCount(RetainedVarint),
     SymbolLength { symbol: u64, cursor: RetainedVarint },
     SymbolText { symbol: u64, scalar_start: usize, utf8_len: usize, remaining: u64, cursor: RetainedUtf8 },

@@ -4,10 +4,16 @@ use super::*;
 use crate::schedule::Post;
 use semio_framework_pets_contract::schema::Arrival;
 use semio_framework_pets_contract::schema::Facing;
+use crate::draft::{index_of, turn};
+use crate::spacing::{bodies_of, extent_at, obstacles_for, wall_lean_of};
+use semio_framework_pets_clearance::{free_among, grown, meets};
+use semio_framework_pets_interaction::mischief::LIFT_TICKS;
+use semio_framework_pets_traversal::climbing::{GRIP_HANG, cling_of};
+use semio_framework_pets_contract::schema::{Foothold, Trip};
 
 //#region 🔖️Mischief
 /// 📬️ Reach a post on foot or with gear, then use a guarded poof only as the last resort.
-pub(crate) fn post_to(draft: &mut Draft<'_>, index: usize, post: &Post, side: Facing, span: Ticks, slip: bool, now: Ticks) -> Option<Ticks> {
+pub fn post_to(draft: &mut Draft<'_>, index: usize, post: &Post, side: Facing, span: Ticks, slip: bool, now: Ticks) -> Option<Ticks> {
     let body = &draft.stage.actors[index];
     match post {
         Post::Wall { pitch, y } => {
@@ -71,7 +77,7 @@ fn pop_to(draft: &mut Draft<'_>, index: usize, post: &Post, side: Facing, span: 
 }
 
 /// 🤜️ A ready actor pushes from its post while retaining enough grip to finish.
-pub(crate) fn push_at(draft: &mut Draft<'_>, index: usize, side: Facing, until: Ticks, now: Ticks) -> bool {
+pub fn push_at(draft: &mut Draft<'_>, index: usize, side: Facing, until: Ticks, now: Ticks) -> bool {
     let body = &draft.stage.actors[index];
     if body.leaving || body.partner.is_some() || trip_of(&draft.stage.trips, &body.species).is_some() { return false; }
     let clinging = body.footing == Footing::Wall && body.activity == Activity::Climb && body.pitch.is_some();
@@ -89,14 +95,14 @@ pub(crate) fn push_at(draft: &mut Draft<'_>, index: usize, side: Facing, until: 
 }
 
 /// 🫷️ A stopped pusher returns to its perch rest or a short wall rest.
-pub(crate) fn unpush(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn unpush(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let body = &draft.stage.actors[index];
     if body.activity != Activity::Push { return; }
     if body.footing == Footing::Wall && body.pitch.is_some() { rest(draft, index, 1, now); } else { settle(draft, index, now); }
 }
 
 /// 🧯️ End an unreclaimed prank quietly and start its cooldown.
-pub(crate) fn unlifted(draft: &mut Draft<'_>, now: Ticks) {
+pub fn unlifted(draft: &mut Draft<'_>, now: Ticks) {
     let Some(lift) = &draft.stage.lift else { return; };
     if now - lift.since > LIFT_TICKS { return; }
     let pusher = lift.pusher.clone();

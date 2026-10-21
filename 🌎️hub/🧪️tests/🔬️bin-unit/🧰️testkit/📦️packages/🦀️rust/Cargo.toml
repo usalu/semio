@@ -44,7 +44,6 @@ semio-hub-trusted-catalog-contract = { workspace = true, features = ["testkit", 
 semio-hub-trusted-catalog-descriptor = { workspace = true }
 semio-framework-artifact-reference = { path = "../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 axum = { version = "0.8", features = ["ws"] }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
@@ -61,6 +60,8 @@ db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨
 tokio-tungstenite = "0.26"
 blake3 = "1"
 semio-framework-server = { workspace = true }
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-hub-runtime = { workspace = true, features = ["testkit"] }

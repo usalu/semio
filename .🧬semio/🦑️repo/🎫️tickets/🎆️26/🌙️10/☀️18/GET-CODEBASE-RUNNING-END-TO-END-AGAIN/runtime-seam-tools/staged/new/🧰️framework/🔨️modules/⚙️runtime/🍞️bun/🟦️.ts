@@ -1,4 +1,5 @@
-import type { RuntimeAdapterV1, RuntimeBundleOptionsV1, RuntimeBundleResultV1, RuntimeChildV1, RuntimeFileV1, RuntimeNativeCallbackV1, RuntimeNativeReadV1, RuntimeNativeSymbolV1, RuntimeServeOptionsV1, RuntimeServerV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeSqliteConstructorV1, RuntimeTranspilerOptionsV1, RuntimeTranspilerV1 } from "../📋️contract/🟦️.ts";
+import type { RuntimeAdapterV1, RuntimeByteStreamV1, RuntimeBundleOptionsV1, RuntimeBundleResultV1, RuntimeChildV1, RuntimeFileV1, RuntimeNativeCallbackV1, RuntimeNativeReadV1, RuntimeNativeSymbolV1, RuntimeServeOptionsV1, RuntimeServerV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeSqliteConstructorV1, RuntimeTranspilerOptionsV1, RuntimeTranspilerV1 } from "../📋️contract/🟦️.ts";
+import { bunTestApiV1, bunTestCommandV1 } from "./🧪️test/🟦️.ts";
 import { isMainModuleV1 } from "../🪶️portable/🏁️main/🟦️.ts";
 
 const bun = (): any => (globalThis as { Bun?: unknown }).Bun;
@@ -11,7 +12,7 @@ function stdioOf(value: RuntimeSpawnOptionsV1["stdin"], fallback: string): unkno
   return typeof value === "string" ? Buffer.from(value) : value;
 }
 
-function empty(): ReadableStream<Uint8Array> { return new ReadableStream<Uint8Array>({ start: controller => controller.close() }); }
+function empty(): RuntimeByteStreamV1 { return new ReadableStream<Uint8Array>({ start: controller => controller.close() }) as unknown as RuntimeByteStreamV1; }
 
 function spawn(command: readonly string[], options: RuntimeSpawnOptionsV1 = {}): RuntimeChildV1 {
   const child = bun().spawn([...command], { cwd: options.cwd, env: options.env, stdin: stdioOf(options.stdin, "ignore"), stdout: options.stdout ?? "pipe", stderr: options.stderr ?? "inherit", timeout: options.timeout, signal: options.signal, detached: options.detached });
@@ -76,9 +77,13 @@ export const bunRuntimeAdapterV1: RuntimeAdapterV1 = {
   },
   ffiRead: (): RuntimeNativeReadV1 => ffi().read,
   ffiPointer: view => ffi().ptr(view),
+  ffiToArrayBuffer: (pointer, byteOffset, byteLength) => ffi().toArrayBuffer(pointer, byteOffset, byteLength),
   ffiCallback: (body, signature): RuntimeNativeCallbackV1 => { const callback = new (ffi().JSCallback)(body, { args: [...signature.args], returns: signature.returns, threadsafe: false }); return { pointer: callback.ptr, close: () => callback.close() }; },
   transpiler,
   bundle,
+  loaderPlugin: plugin => { bun().plugin(plugin); },
+  testApi: bunTestApiV1,
+  testCommand: bunTestCommandV1,
   semverSatisfies: (version, range) => bun().semver.satisfies(version, range),
   semverOrder: (left, right) => bun().semver.order(left, right),
   main: isMainModuleV1,

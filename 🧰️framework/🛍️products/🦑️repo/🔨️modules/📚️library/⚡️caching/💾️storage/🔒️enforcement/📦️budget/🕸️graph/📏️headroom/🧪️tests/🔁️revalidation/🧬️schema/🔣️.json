@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "minimumAvailableBytes",
+    "maximumRevalidations",
+    "cases",
+    "nativeCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "minimumAvailableBytes": {
+      "const": 10
+    },
+    "maximumRevalidations": {
+      "const": 8
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    },
+    "nativeCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reconsumeBeforeFresh",
+          "expectedOpens",
+          "expectedWithdrawals"
+        ],
+        "properties": {
+          "reconsumeBeforeFresh": {
+            "type": "boolean"
+          },
+          "expectedOpens": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 3
+          },
+          "expectedWithdrawals": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "steps",
+        "abortAfterWithdrawal",
+        "expected",
+        "wait"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "abortAfterWithdrawal": {
+          "enum": [
+            "none",
+            "cancel",
+            "deadline"
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "items": {
+            "$ref": "#/definitions/Step"
+          }
+        },
+        "expected": {
+          "$ref": "#/definitions/Expected"
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "outcome",
+        "observation",
+        "bodyAvailable",
+        "closeFailure"
+      ],
+      "properties": {
+        "available": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "outcome": {
+          "enum": [
+            "withdrawn",
+            "deferred",
+            "acquired",
+            "error",
+            "undefined",
+            "cancel",
+            "deadline",
+            "open-error"
+          ]
+        },
+        "observation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "bodyAvailable": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "closeFailure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "opens",
+        "closes",
+        "bodies",
+        "retiredFiles",
+        "available"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "funded",
+            "deferred",
+            "error",
+            "undefined",
+            "cancel",
+            "deadline",
+            "open-error",
+            "close",
+            "churn"
+          ]
+        },
+        "opens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
+        },
+        "closes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "bodies": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "available": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        }
+      }
+    }
+  }
+}

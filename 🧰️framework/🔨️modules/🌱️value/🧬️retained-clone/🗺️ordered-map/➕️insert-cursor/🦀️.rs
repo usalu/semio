@@ -37,7 +37,7 @@ impl RetainedOrderedMapInsertProgress {
 #[value(crate="crate")]
 struct InsertWorkspace<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{pub(super) map:RetainedOrderedMap<K,V>,pub(super) key:K,pub(super) value:V}
 
-struct InsertState<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> {
+pub(super) struct InsertState<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> {
     pub(super) map: Option<RetainedOrderedMap<K, V>>,
     pub(super) output: Option<RetainedOrderedMap<K, V>>,
     pub(super) key: Option<K>,

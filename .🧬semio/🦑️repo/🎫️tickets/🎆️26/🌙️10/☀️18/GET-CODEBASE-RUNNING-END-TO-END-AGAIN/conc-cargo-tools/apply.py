@@ -92,8 +92,10 @@ def plan(groups, rebase, upgrade=False):
     for relative in staged_files():
         source = read(resolve(STAGED, relative))
         target = os.path.join(ROOT, relative)
-        if relative not in patches.REWRITES and not (groups & {"lane", "admit"}):
-            continue
+        if relative not in patches.REWRITES:
+            owner = next((group for marker, group in patches.NEW_TEST_GROUPS.items() if marker in relative), "lane")
+            if owner not in groups and not (owner == "lane" and groups & {"lane", "admit", "buildscript", "broker"}):
+                continue
         if relative in patches.REWRITES:
             if patches.REWRITES[relative] not in groups:
                 continue

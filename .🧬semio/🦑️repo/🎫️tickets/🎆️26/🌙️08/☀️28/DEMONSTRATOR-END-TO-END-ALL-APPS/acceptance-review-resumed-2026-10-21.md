@@ -1,0 +1,53 @@
+# Acceptance Review — Resumed 2026-10-21
+
+Read-only source/fixture audit. No browser, build, test, process mutation, or application source edit.
+
+## Concrete Gap: GIS Content Can Be Wrong While Counts Pass
+
+The current `verfolgen undo-redo` case in `♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts` fills the authored label and confirms initial longitude/latitude controls, but observes only positions/routes/regions counts after execute, undo and redo. Dropping the label or using incorrect persisted coordinates would still pass. The parent accepted this as a focused false-pass gap; implementation belongs to parent. Full new-feature identity, label and coordinates plus undo/redo projection should be observed through supported production output.
+
+Important source constraint: there is currently no World3d-style JSON projection on TiledMapHost. `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx` exposes only `data-surface-id`. Searching its complete source subtree found no feature snapshot dataset/setAttribute. Its hover popup renders overlayIndex metadata label, so that can prove label only if the feature is actually hovered. Do not assert nonexistent data-features-json or data-host-snapshot-json.
+
+GIS source prefix: `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/`. `📌️panels/🔍️inspection/🦀️.rs` exposes `gis2d-play-inspector.feature.id` and `.feature.kind` once a feature is selected, plus count summaries; it exposes no selected label/coordinates. `📌️panels/🗿️artifact/🦀️.rs` publishes only the layer stack, not a feature roster. `🎮️commands/🗺️features/🦀️.rs` creates positions with id,label,kind marker,lon,lat, and defaults blank label to minted id. These exact stored fields are therefore the relevant acceptance contract. Parent was informed immediately that direct full projection is not already exposed in host DOM.
+
+## Current Suite Integrity
+
+The neutral artifact roster contains20 unique printable ASCII titles, maximum21characters. Source contains12 literal tests plus8 generated pane boot tests, matching the roster. All tests use the local extended test fixture. Its automatic browserHealth fixture attaches pageerror/console listeners before use and always asserts both collections in finally, including interaction and funding cases. The sole console allowance is an anchored exact browser404 missing-resource diagnostic; no generic error substring whitelist was introduced.
+
+Pane order is generator,koordinator,aggregator,energie,aussuchen,bearbeiten,verfolgen,statik and is bound to brandPaneIds. Each boot uses its own hash route and shell outcome, authored window IDs, and production content checks: node graph + world generator; four CAD worlds; two puzzle worlds; energy model/tree/zones/simulation; sourcing pool/empty curated/selection placeholder/empty grid; process world; painted GIS tiles; two FEM worlds. Empty sourcing cases are intentional, while dedicated curation/preview cases validate their nonempty transition.
+
+Recent edit cases retain source-derived contracts already reviewed in closure-audit: generator height6→6.5 with7widgets/6edges and geometry restoration; CAD minted raw instance/tree id with Box N and unchanged peer worlds; puzzle minted object id, matching mesh,11 selected-object vortices, two-view history restoration; process exact origin fields and enabled true→false with geometry history. No new concrete selector or payload defect found in these current source cases. GIS action/execute IDs and default0,0 args still align; its output gap is identified above.
+
+Energy case requires complete-ready-to-finalize, numeric final-step output, finalized status, a new distinct run id, enabled abort, aborted status and no accepted result. FEM retains the mandatory Home→wait zero projection→PageUp→wait nonzero projection sequence, exact settled Case: dead caption, paused transport, scale300→600 and restored history projections. These are completion/fault-sensitive rather than readiness-only checks. No runtime success claimed.
+
+## Existing GIS Export Oracle — No New Hook Needed
+
+Supported framework action `exportArtifactDocument` exists for every app window; English Export Document, German Dokument exportieren. Declaration owner: `🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🗃️utility-tool-and-document-actions/🦀️.rs`, document_transfer_action_definitions. It is in the ordinary palette and transfer ribbon category, audience Chrome. This provides an actual UI route for persisted-state comparison; GIS need not grow a diagnostic DOM attribute. No exact rendered ribbon element id was established during this bounded audit; use the declared action identity/labels through existing generic action chrome rather than inventing a selector.
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🧭️input-funnel/🟦️.ts` intercepts that action and invokes exportDocumentArchive. `📤️document-transfer-tabs/🔶️scope/🟦️.tsx` resolves the focused owned program, calls readAppDocumentArchive(instanceId), encodes it and delivers a normal browser download `.semio-archive`. Browser acceptance can await a download from this visible UI gesture at initial/add/undo/redo states and read its bytes on the test side.
+
+Public decoder: `@semio-tech/framework/wire-contracts` decodeDocumentArchiveBytes, source `🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts`. Decoded DocumentArchivePack contains parent_pack, parent_spr, members; members contain reference, owner/slot and envelope_pack. Decode canonical pack content with the existing public packs decoder and compare actual GIS positions feature id,label,lon,lat; compare semantic snapshot rather than whole archive bytes because the operation log changes across undo/redo. Envelope schema must be respected when extracting the parent snapshot. This is ordinary user export output, not direct runtime state injection.
+
+Center-click alternative is weaker: map config defaults camera {x:0,y:0,zoom:1}, while fixture add coordinates are longitude0/latitude0. But SetActiveExample explicitly calls fit_world_camera and publishes that result, so default configuration alone does not prove the served boot camera centers0,0. Do not assume viewport center is the added point. Supported hit selection emits feature id and inspector exposes feature.id/kind; hover popup exposes label. Neither verifies exact persisted coordinates without camera/projection evidence. Export is the complete existing oracle.
+
+## Archive Decode Correction and Exact Payload Authority
+
+The earlier archive recipe is incomplete: do NOT assume decodePackValue can decode GIS parent_pack. The packs module explicitly documents its schema-less wire record codec as distinct from whole typed ArtifactPack document containers. GIS binary snapshot owner `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs` delegates to typed ArtifactPack/owned_pack. Its IO TS barrel currently exports nothing. No existing public pure TypeScript GIS snapshot decoder was established in this audit.
+
+Exact semantic payload is in the parent, not a child: GisMapSnapshot.positions is Vec<MapFeature>; MapFeature contains id and data. AddFeature creates data with id,label,kind marker,lon,lat. Thus decoded assertion should select parent.positions minted feature and compare feature.id plus feature.data.label/lon/lat. Drawing/value members are derived mirrors and should not replace parent ownership assertions. The Rust sources are 🧬️schema/📸️snapshot/🦀️.rs, 🧬️schema/📍️feature/🦀️.rs and editor/🎮️commands/🗺️features/🦀️.rs.
+
+Archive wrapper decoder itself is pure byte-oriented source with type-only framework references; packs also has runtime dependencies on manifest value projection and replication codecs. Their public package entries exist, but Node Playwright transitive module safety has not been executed or conclusively established. No application/brand root import is recommended. No exact palette/ribbon DOM selector was established beyond canonical export action id/labels; generic UI owner must be consulted before implementing the user gesture. Earlier promise of a ready full helper is withdrawn pending those two facts.
+
+### Exact Existing Export Gesture
+
+Production `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/🟦️.tsx` resolves window actions and creates row id action.<actionId>. Zero-argument rows directly execute onClick; argument-bearing rows expand a form and get an execute child. Therefore for export use the existing GIS engagement toggle, then scope `[data-slot="window-action-pane"]` and click `[id="action.exportArtifactDocument"] [data-slot="tree-label"]`. Category section id is action.category.transfer. Begin page.waitForEvent(download) before this click. Do not look for framework.window.gis2dMain.action.exportArtifactDocument.execute: the zero-argument export has no form. This resolves the gesture uncertainty above.
+
+## Energy stable completion and restart review
+
+Current Energy case waits Finalized plus final-step text and accepted-result projection rather than transient Complete or redundant manual Finalize. This matches actual Energy projection and framework read-only automatic-finalization policy. Restart waits for a distinct nonempty numeric framework.toolRun group before Abort; six neutral rows reject empty/same/non-numeric/child ids, comparing actual pure helper with independent Ajv predicate. Console owner statically imports helper and actual TypeScript AST asserts browser case references finalized/finalStep/acceptedResult and isNewToolRunGroup without toolRunFinalize. Three production oracle paths resolve to existing files.
+
+Source authority caution: console test newly reads out-of-app Energy JSON and framework Rust plus acceptance spec as literal URL resources. Explicit DATA resources should preserve text-only oracle reads, particularly acceptance spec to avoid promoting browser imports into ordinary unit code closure. No native execution or passing result is claimed.
+
+## Final DATA resource readback
+
+Current unit/canonical metadata declares the two external Energy JSON/Rust oracle paths as closure.resources; fixture and AST external-read extraction agree, preserving Sourceversion1/runtime16/GISfreshness. Remaining narrow classification concern sent Runtime: console also reads local acceptance spec via literal newURL; current external-only oracle filter intentionally omits it. If commandUrlReferences promotes that recognized TS reference as code, mark the local acceptance spec as DATA too to preserve browser-code exclusion. No source edit was made by this audit.

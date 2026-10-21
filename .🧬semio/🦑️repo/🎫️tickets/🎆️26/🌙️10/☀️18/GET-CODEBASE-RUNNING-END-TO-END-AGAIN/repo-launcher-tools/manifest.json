@@ -1,0 +1,190 @@
+{
+ "version": 1,
+ "files": [
+  {
+   "path": ".github/actions/repo-launcher/action.yml",
+   "sha256": "ad5a25b9722c6fe7b13f214203b26470aed025fe032074d7b1ee558fdaecfd5d",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md",
+   "sha256": "cc019a630c435428d3e4b6f33d3be64996b49389c4dcaedbcb207e344eac4096",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh",
+   "sha256": "da236c01d6a71e7b80123386fed4dfefaa739d2bf20aa6659d6354caf57c35ca",
+   "mode": 493
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🔵️.ps1",
+   "sha256": "ebbe181aa92e40c1d1f6522f478375ac356c71a7cce9bd1e806b5024092417bd",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/go.mod",
+   "sha256": "c251d8b549f246166a3588909c664cede1851be9bd92066a40a5db709f45aa38",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go",
+   "sha256": "bce9aade1ccac58c90391149ee67290dd82332b1a944c7b06ac66207128b5188",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go",
+   "sha256": "a35511041ffdb5d5d392f1a849cd6898339968a55a515f89d0bc2fd1a7ba6d68",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐹️.go",
+   "sha256": "3e31e6f339311a3f898fbe8ef478fbb9b00fc7ea80b7382a8e7eb609d60d05cf",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📋️project.json",
+   "sha256": "57dac74b2c789d3994adc84a8245ea24e3cd0bfe2793b3f3dbd342e91865a433",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📜️script.ts",
+   "sha256": "156c2ba06d3335941dc392f7d1a6e29c0b95a3d9e5ec07bfe2d3bff349e5f178",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go",
+   "sha256": "5124a13a33fda120d7fe5265b0d5fd498211052a794551db2a7a0fd30b71a765",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/go.mod",
+   "sha256": "bc8e86abe84fdb94da0b616c71c2e80ed87c196f69519e2aa9684453947aecaf",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main/🐹️.go",
+   "sha256": "0c5fa4aa5d8d818668c2c255843506cc2e81082888ca74c1c011549e743a7cc5",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go",
+   "sha256": "56b9da7356e885997765de950b59b39500b008d22bcfb0e502f82a7cc189fb23",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗣️language/🐹️.go",
+   "sha256": "e0baf2aaf0296d660114853700483b1837997c3c126ecd5cbff020957321f2f3",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛎️command/🐹️.go",
+   "sha256": "dca3d31977bac5b42d7993068c216ec09d25aa33693785dd0fda832e226fa0e7",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🧭️workspace-root/🐹️.go",
+   "sha256": "fe8362811bd96cfbef76b030573be00c367b5de7c1659ab85b69c6b97b67e108",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go",
+   "sha256": "39e0b653544e4853f09ca6f4aba9333668d0f3ff18c83e489670cef467310dde",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+   "sha256": "790f2995b23e8e7a04d5cc1e7fb01c9c961c9b0842104cc9a53b726aae721359",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🧬️schema/🔣️.json",
+   "sha256": "0cc484f9a903923b82993dbb83d7050692253ac89f08f1605d5fa53823ac4960",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🐹️.go",
+   "sha256": "862e8b04c3921a8289d156b3bd080b5c96164c8e061cf1385b0608131fc97af8",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏗️entry-contract/🥒️.feature",
+   "sha256": "5be5e1b9bf4c27f5e99781e85ce661378e02520004ccecce1617a2d123fd929a",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🐹️.go",
+   "sha256": "30feb8d0a41cb5750ceff8328054078604f0b0107047c8fc0ed8c4d1dbabb514",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🥒️.feature",
+   "sha256": "61cfbe12fd72de3651690f4f0e3d2b7d734b276bea382d420facc4cdb7c29ce5",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🐹️.go",
+   "sha256": "e1161fa55b0985cb5e16c0fb82f3129c2f3cf77dba6564b121020198757eab96",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🥒️.feature",
+   "sha256": "3eb8624ee203272e2a7d4d005313a86c02566b597f333b622d77eb87f604eff8",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🐹️.go",
+   "sha256": "e2dfdff7b97e58b306e0294ca2d7b4b548384541fb57e9c95a9dcb567c8d51d1",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🥒️.feature",
+   "sha256": "4c6d1279c39f216b652b40b80ac176d58071959371164de35751cf8d561e1008",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-schema/🟦️.ts",
+   "sha256": "0f348fc4310769c7110db4983589a1060bc21e7c0244378d63915da7d5483fa6",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go",
+   "sha256": "306da821555cd2f9cb9bb9db74c5ee37bc1ff7d22ce0392dc83df67d142e319d",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🥒️.feature",
+   "sha256": "73a9301a9c806f66fffe5eb580f3f3d7eaac5fd6baf1734287f3c302d78c5660",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🐹️.go",
+   "sha256": "f723235e235b942adc79daff9a92ece50c654b5d270f4b94cefbd8e4bd1a57c0",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🥒️.feature",
+   "sha256": "6ea66b5aadf37948d74cae0fd241d53068e890cc0a73991c83aa6a34260208b6",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🐹️.go",
+   "sha256": "6cc84f68ccc9e29a5a0051868d9ad9f992fa22c55b02a690f4a44ab624b1687b",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️route-contract/🥒️.feature",
+   "sha256": "048684752ce88cb712bfeb4207520a494fda5315e99202fbf21aa8f717e56fd0",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go",
+   "sha256": "83419982dff22ce6abb0b88d959d0a1f3ae1b3c69d54083115e71af7722558fa",
+   "mode": 420
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧫️fixtures/🔣️.json",
+   "sha256": "61769a522428aa9996be22d9f82b90ddb83c3d08a2b2e2f7269c57e09a506af9",
+   "mode": 420
+  }
+ ]
+}

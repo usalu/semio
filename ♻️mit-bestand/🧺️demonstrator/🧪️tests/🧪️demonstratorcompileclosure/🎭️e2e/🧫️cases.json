@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "target": "test-e2e",
+  "executionKind": null,
+  "metadata": {
+    "sourceInputObservation": "freshness",
+    "runtimeSourceEntries": [
+      "{projectRoot}/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+      "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+    ],
+    "closure": {
+      "resources": [
+        "{projectRoot}/🪧️brand.ts"
+      ]
+    }
+  },
+  "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+  "dataReads": [
+    "{projectRoot}/🪧️brand.ts",
+    "{projectRoot}/🧪️tests/🎭️acceptance/🧬️curation/🧫️cases.json",
+    "{projectRoot}/🧪️tests/🎭️acceptance/🧬️simulation/🧫️cases.json",
+    "{projectRoot}/🧪️tests/🎭️acceptance/🧬️edits/🧫️cases.json"
+  ],
+  "roles": [
+    {
+      "observation": null,
+      "inputRole": "compile",
+      "nativeObservation": "compile"
+    },
+    {
+      "observation": "freshness",
+      "inputRole": "freshness",
+      "nativeObservation": "compile"
+    }
+  ],
+  "dependencies": {
+    "test-e2e": [
+      "serve-e2e"
+    ],
+    "serve-e2e": [
+      "prepare-e2e"
+    ],
+    "prepare-e2e": [
+      "activate-prototype",
+      "workspace:deps-browsers"
+    ],
+    "activate-prototype": [
+      "prepare-prototype",
+      "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype"
+    ],
+    "activate-lanes-prototype": [
+      "@semio-tech/framework-os-dev:activate-energy-react-prototype",
+      "@semio-tech/framework-os-dev:activate-fem3d-react-prototype",
+      "@semio-tech/framework-os-dev:activate-generator-react-prototype"
+    ],
+    "prepare-prototype": [
+      "@semio-tech/framework-os-dev:prepare-aggregator-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-aussuchen-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-bearbeiten-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-energy-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-fem3d-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-generation3d-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-generator-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-koordinator-react-prototype",
+      "@semio-tech/framework-os-dev:prepare-verfolgen-react-prototype",
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm",
+      "@semio-tech/puzzle-plugin:wasm"
+    ],
+    "build": [
+      "prepare-release",
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm",
+      "@semio-tech/puzzle-plugin:wasm"
+    ],
+    "prepare-release": [
+      "@semio-tech/framework-os-dev:prepare-aggregator-react-release",
+      "@semio-tech/framework-os-dev:prepare-aussuchen-react-release",
+      "@semio-tech/framework-os-dev:prepare-bearbeiten-react-release",
+      "@semio-tech/framework-os-dev:prepare-energy-react-release",
+      "@semio-tech/framework-os-dev:prepare-fem3d-react-release",
+      "@semio-tech/framework-os-dev:prepare-generation3d-react-release",
+      "@semio-tech/framework-os-dev:prepare-generator-react-release",
+      "@semio-tech/framework-os-dev:prepare-koordinator-react-release",
+      "@semio-tech/framework-os-dev:prepare-verfolgen-react-release",
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm",
+      "@semio-tech/puzzle-plugin:wasm"
+    ]
+  }
+}

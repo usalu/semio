@@ -34,6 +34,7 @@ semio-framework-schema-composition = { path = "../../../../../../../../🔨️mo
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-paged-text = { path = "../../../../../../../../🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { version = "1.0.219", features = ["derive"] }

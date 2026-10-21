@@ -1,73 +1,76 @@
 {
- "version": 1,
+ "version": 2,
  "edits": [
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
-   "anchor": " * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written\n * file); otherwise its failure is genuine and rethrown with its facts retained.",
-   "replacement": " * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written\n * file); otherwise its failure is genuine and rethrown with its facts retained. A failure that demands a restart (`BUILD_AUTHORITY_CHANGED`) or\n * that returns unchanged (same code and message) in the next round is genuine as well: a peer editing the tree must not keep a deterministic\n * failure looking transient for `limit` whole-inference rounds."
+   "anchor": "if(failed&&(failure?.code===\"BUILD_AUTHORITY_CHANGED\"||signature===previousFailure))",
+   "replacement": "if(failed&&(failure?.code===\"BUILD_AUTHORITY_CHANGED\"||failure?.code===\"BUILD_COLLECTED_ERRORS\"||signature===previousFailure))"
   },
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
-   "anchor": "accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};\n for(let round=0;;round++){",
-   "replacement": "accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};\n let previousFailure;\n for(let round=0;;round++){"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🔣️.json",
+   "anchor": "    { \"name\": \"accepted-first-round\",",
+   "replacement": "    { \"name\": \"collected-errors-are-final\", \"rounds\": [{ \"outcome\": \"failure\", \"message\": \"Error collection finished\", \"code\": \"BUILD_COLLECTED_ERRORS\", \"young\": true }, { \"outcome\": \"value\" }], \"expect\": { \"settled\": \"failure\", \"rounds\": 1, \"failure\": \"Error collection finished\", \"events\": [] } },\n    { \"name\": \"accepted-first-round\","
   },
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
-   "anchor": "  if(consistent&&!failed){accept(rows,captured.values());return value;}\n  if(consistent&&await observationsHold(",
-   "replacement": "  if(consistent&&!failed){accept(rows,captured.values());return value;}\n  const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return\"\";}})()]):undefined;\n  if(failed&&(failure?.code===\"BUILD_AUTHORITY_CHANGED\"||signature===previousFailure)){accept(rows,captured.values());throw failure;}\n  previousFailure=signature;\n  if(consistent&&await observationsHold("
-  },
-  {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🟨️.mjs",
-   "anchor": "/** 🖨️ Writes the summary of a finished construction: always one line, so a slow cold build explains itself. */",
-   "replacement": "/** 🔁️ Writes one machine readable row per repeated settlement round: the round, the first conflicting source or the failure (message, code, project) that made the whole inference start over; never silent, at most one row per round. */\nexport function writeGraphSettleRowV1(round){\n const text=value=>{try{return String(value?.message??value).slice(0,512);}catch{return\"\";}};\n process.stderr.write(\"[graph-settle] \"+JSON.stringify({round:round.round,...(round.conflict===undefined?{}:{conflict:round.conflict}),...(Object.hasOwn(round,\"failure\")?{failure:text(round.failure),...(round.failure?.code?{code:String(round.failure.code)}:{}),...(round.failure?.semioProject?{project:String(round.failure.semioProject)}:{})}:{})})+\"\\n\");\n}\n\n/** 🖨️ Writes the summary of a finished construction: always one line, so a slow cold build explains itself. */"
-  },
-  {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🟨️.d.mts",
-   "anchor": "export function writeGraphPhaseSummaryV1(rows:readonly GraphPhaseRowV1[]):void;",
-   "replacement": "export function writeGraphPhaseSummaryV1(rows:readonly GraphPhaseRowV1[]):void;\n/** 🔁️ One repeated settlement round: its index, the first conflicting source or the failure that made the whole inference start over. */\nexport interface GraphSettleRoundV1{readonly round:number;readonly conflict?:string;readonly failure?:unknown}\nexport function writeGraphSettleRowV1(round:GraphSettleRoundV1):void;"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🐍️oracle.py",
+   "anchor": "if row.get(\"code\")==\"BUILD_AUTHORITY_CHANGED\" or signature==previous:",
+   "replacement": "if row.get(\"code\") in (\"BUILD_AUTHORITY_CHANGED\",\"BUILD_COLLECTED_ERRORS\") or signature==previous:"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
-   "anchor": "import { createGraphPhaseClockV1, writeGraphPhaseRowV1 } from \"../../⏱️phases/🟨️.mjs\";",
-   "replacement": "import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from \"../../⏱️phases/🟨️.mjs\";"
+   "anchor": "import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from \"../../⏱️phases/🟨️.mjs\";",
+   "replacement": "import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from \"../../⏱️phases/🟨️.mjs\";\nimport { createErrorCollectorFromEnvV1 } from \"../../🧾️collect-errors/🟨️.mjs\";"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
-   "anchor": "/** 🧵️ Bounds concurrently inferred projects; one worker is the serial reference order. */",
-   "replacement": "/** 🏷️ Names the project a failing inference belongs to without replacing the error, so a repeated settlement round says which project stops the build. */\nasync function tagProjectFailureV1(root, run) {\n  try { return await run(); }\n  catch (error) { if (error !== null && typeof error === \"object\" && !Object.hasOwn(error, \"semioProject\") && Object.isExtensible(error)) Object.defineProperty(error, \"semioProject\", { value: root, configurable: true }); throw error; }\n}\n\n/** 🧵️ Bounds concurrently inferred projects; one worker is the serial reference order. */"
+   "anchor": "wanted = root => !wantedRoots || wantedRoots.has(root);",
+   "replacement": "wanted = root => !wantedRoots || wantedRoots.has(root);\n  const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal });"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
-   "anchor": "  return { signal: context.phaseControl?.signal, onRound: async () => { await yieldInferenceV1(context,\"build:settle\",0,true); } };",
-   "replacement": "  return { signal: context.phaseControl?.signal, onRound: async round => { writeGraphSettleRowV1(round); await yieldInferenceV1(context,\"build:settle\",0,true); } };"
+   "anchor": "    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);\n    const project = {",
+   "replacement": "    const build = async () => {\n    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);\n    const project = {"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
-   "anchor": "    result.projects[name]=await observeProjectInferenceV1({cachePath,",
-   "replacement": "    result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,"
+   "anchor": "    results.push([configFile, { projects: { [name]: project } }]);\n  }\n",
+   "replacement": "    results.push([configFile, { projects: { [name]: project } }]);\n    };\n    if (collector) await collector.guard({ project: name, root, phase: \"cargo-targets\" }, build); else await build();\n  }\n"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
-   "anchor": "return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}\n    });",
-   "replacement": "return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}\n    }));"
+   "anchor": "await inferProject(jobs[cursor++]);await phases?.advance(\"inference\",++finished);",
+   "replacement": "{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:\"project\"},()=>inferProject(job));else await inferProject(job);}await phases?.advance(\"inference\",++finished);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  await phases?.end(\"inference\",{projects:jobs.length});\n",
+   "replacement": "  await phases?.end(\"inference\",{projects:jobs.length});\n  if (collector) await collector.finish({ projects: jobs.length });\n"
   }
  ],
  "newFiles": [
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🟦️.ts",
-   "from": "staged/new/settle-repeat/test.ts"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🟨️.mjs",
+   "from": "staged/new/collect/module.mjs"
   },
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🔣️.json",
-   "from": "staged/new/settle-repeat/fixture.json"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🟨️.d.mts",
+   "from": "staged/new/collect/module.d.mts"
   },
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🧬️schema/🔣️.json",
-   "from": "staged/new/settle-repeat/schema.json"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🧬️schema/🔣️.json",
+   "from": "staged/new/collect/schema.json"
   },
   {
-   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🐍️oracle.py",
-   "from": "staged/new/settle-repeat/oracle.py"
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🧪️tests/🟦️.ts",
+   "from": "staged/new/collect/test.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🧪️tests/🔣️.json",
+   "from": "staged/new/collect/fixture.json"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🧪️tests/🐍️oracle.py",
+   "from": "staged/new/collect/oracle.py"
   }
  ]
 }

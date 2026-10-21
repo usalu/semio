@@ -1,4 +1,253 @@
 {
+ "implementation": [
+  {
+   "expected": {
+    "all": [],
+    "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "projects": []
+   },
+   "rows": []
+  },
+  {
+   "expected": {
+    "all": [],
+    "digest": "0e99922a72e31efc1e854d2edfac31fc810f0662faaf1a2e3516acebcccaff1d",
+    "projects": []
+   },
+   "rows": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/📥️inputs/💾️storage/📒️ledger/x.mjs"
+    }
+   ]
+  },
+  {
+   "expected": {
+    "all": [],
+    "digest": "89d8de786ad7eab20fea88e225ff705bdd398dc16ce14411c4372a548021a0ba",
+    "projects": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+     },
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/🏗️build/🕸️graph/📥️inference/🎯️target-policy/y.mjs"
+     }
+    ]
+   },
+   "rows": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/🕸️graph/📥️inference/🎯️target-policy/y.mjs"
+    }
+   ]
+  },
+  {
+   "expected": {
+    "all": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/a.mjs"
+     },
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/b.json"
+     }
+    ],
+    "digest": "81742029a3edcd83ac8a96c06ec57d16cd92ae91722c3daa993c742f53622cbc",
+    "projects": []
+   },
+   "rows": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/a.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/b.json"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/a.mjs"
+    }
+   ]
+  },
+  {
+   "expected": {
+    "all": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/a.mjs"
+     },
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/a.mjs"
+     }
+    ],
+    "digest": "61c5b671aa446eb8ce2473d78841c0390366dfaec02cf7139868678b1cffd1de",
+    "projects": []
+   },
+   "rows": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/a.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/a.mjs"
+    }
+   ]
+  },
+  {
+   "expected": {
+    "all": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/ü😀.mjs"
+     },
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/b.json"
+     }
+    ],
+    "digest": "d90bf5044e7edf9f28ecacae1fa44fd5e7dd66e6c1b4a4de560d738e68445d6e",
+    "projects": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/p.mjs"
+     }
+    ]
+   },
+   "rows": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/📥️inputs/💾️storage/📒️ledger/x.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/p.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/ü😀.mjs"
+    },
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/b.json"
+    }
+   ]
+  }
+ ],
  "language": [
   {
    "env": {},
@@ -396,6 +645,473 @@
    "replaceTags": [
     "tests",
     "policy"
+   ]
+  },
+  "part": {
+   "edgeOnly": [
+    {
+     "name": "b"
+    }
+   ],
+   "edges": [
+    {
+     "source": "a",
+     "target": "b"
+    },
+    {
+     "source": "b",
+     "target": "a"
+    },
+    {
+     "source": "npm:x",
+     "target": "npm:y"
+    },
+    {
+     "source": "t",
+     "target": "a"
+    }
+   ],
+   "env": {
+    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "rows": [
+     {
+      "fact": {
+       "extract": "project-json",
+       "value": {
+        "name": "a",
+        "nativeRoot": null
+       }
+      },
+      "kind": "field",
+      "path": "pkg/a/project.json"
+     }
+    ]
+   },
+   "externalNodes": {
+    "npm:x": {}
+   },
+   "owners": [
+    {
+     "config": "pkg/a/project.json",
+     "name": "a",
+     "node": {
+      "name": "a",
+      "root": "pkg/a",
+      "targets": {
+       "build": {},
+       "test": {}
+      }
+     },
+     "nodeRows": [
+      {
+       "fact": {
+        "s": 1
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/project.json"
+      },
+      {
+       "fact": {
+        "s": 2
+       },
+       "kind": "file",
+       "path": "/w/shared/x.json"
+      }
+     ],
+     "root": "pkg/a"
+    },
+    {
+     "name": "root",
+     "node": {
+      "name": "root",
+      "root": ".",
+      "targets": {}
+     },
+     "nodeRows": [
+      {
+       "fact": {
+        "s": 3
+       },
+       "kind": "file",
+       "path": "/w/own.json"
+      }
+     ],
+     "root": "."
+    },
+    {
+     "name": "u",
+     "nodeRows": [],
+     "root": "pkg/u",
+     "unavailable": {
+      "project": "u",
+      "reason": "bad",
+      "root": "pkg/u",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "pkg/u/project.json"
+     }
+    },
+    {
+     "name": "t",
+     "node": {
+      "name": "t",
+      "root": "pkg/a/tests",
+      "targets": {
+       "test": {}
+      }
+     },
+     "nodeRows": [],
+     "root": "pkg/a/tests",
+     "tag": "tests"
+    }
+   ],
+   "parseUnavailable": [
+    {
+     "reason": "json",
+     "root": "pkg/z",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "source": "pkg/z/project.json"
+    }
+   ],
+   "replaceTags": [
+    "tests",
+    "policy"
+   ],
+   "rows": [
+    {
+     "fact": {
+      "s": 1
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/project.json"
+    },
+    {
+     "fact": {
+      "s": 4
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/src/x.ts"
+    },
+    {
+     "fact": {
+      "s": 5
+     },
+     "kind": "file",
+     "path": "/w/pkg/b/src/y.ts"
+    },
+    {
+     "fact": {
+      "s": 6
+     },
+     "kind": "file",
+     "path": "/w/Cargo.toml"
+    },
+    {
+     "fact": {
+      "s": 7
+     },
+     "kind": "file",
+     "path": "/w/pkg/a/tests/a.feature"
+    }
+   ]
+  },
+  "stubs": {
+   "b": {
+    "kind": "project",
+    "root": "pkg/b",
+    "targets": [
+     "build"
+    ]
+   }
+  },
+  "workspaceRoot": "/w"
+ },
+ "shapeImplementation": {
+  "expected": {
+   "env": {
+    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "rows": [
+     {
+      "fact": {
+       "extract": "project-json",
+       "value": {
+        "name": "a",
+        "nativeRoot": null
+       }
+      },
+      "kind": "field",
+      "path": "pkg/a/project.json"
+     },
+     {
+      "fact": {
+       "s": 6
+      },
+      "kind": "file",
+      "path": "/w/Cargo.toml"
+     },
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/core/a.mjs"
+     }
+    ]
+   },
+   "global": {
+    "edges": [
+     {
+      "source": "npm:x",
+      "target": "npm:y"
+     }
+    ],
+    "externalNodes": {
+     "npm:x": {}
+    },
+    "unavailable": [
+     {
+      "reason": "json",
+      "root": "pkg/z",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "source": "pkg/z/project.json"
+     }
+    ],
+    "version": 1
+   },
+   "owners": [
+    {
+     "config": "pkg/a/project.json",
+     "edges": [
+      {
+       "source": "a",
+       "target": "b"
+      }
+     ],
+     "kind": "project",
+     "name": "a",
+     "node": {
+      "name": "a",
+      "root": "pkg/a",
+      "targets": {
+       "build": {},
+       "test": {}
+      }
+     },
+     "root": "pkg/a",
+     "rows": [
+      {
+       "fact": {
+        "s": 1
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/project.json"
+      },
+      {
+       "fact": {
+        "s": 2
+       },
+       "kind": "file",
+       "path": "/w/shared/x.json"
+      },
+      {
+       "fact": {
+        "s": 4
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/src/x.ts"
+      },
+      {
+       "fact": {
+        "s": 7
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/tests/a.feature"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/core/a.mjs"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+      }
+     ],
+     "targets": [
+      "build",
+      "test"
+     ]
+    },
+    {
+     "edges": [],
+     "kind": "project",
+     "name": "root",
+     "node": {
+      "name": "root",
+      "root": ".",
+      "targets": {}
+     },
+     "root": ".",
+     "rows": [
+      {
+       "fact": {
+        "s": 3
+       },
+       "kind": "file",
+       "path": "/w/own.json"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/core/a.mjs"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+      }
+     ],
+     "targets": []
+    },
+    {
+     "edges": [],
+     "kind": "unavailable",
+     "name": "u",
+     "node": {
+      "project": "u",
+      "reason": "bad",
+      "root": "pkg/u",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source": "pkg/u/project.json"
+     },
+     "root": "pkg/u",
+     "rows": [
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/core/a.mjs"
+      }
+     ],
+     "targets": []
+    },
+    {
+     "edges": [
+      {
+       "source": "t",
+       "target": "a"
+      }
+     ],
+     "kind": "project",
+     "name": "t",
+     "node": {
+      "name": "t",
+      "root": "pkg/a/tests",
+      "targets": {
+       "test": {}
+      }
+     },
+     "root": "pkg/a/tests",
+     "rows": [
+      {
+       "fact": {
+        "s": 7
+       },
+       "kind": "file",
+       "path": "/w/pkg/a/tests/a.feature"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/core/a.mjs"
+      },
+      {
+       "fact": {
+        "mtimeMs": 1700000000000.5,
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "size": 10
+       },
+       "kind": "digest",
+       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+      }
+     ],
+     "tag": "tests",
+     "targets": [
+      "test"
+     ]
+    },
+    {
+     "edges": [
+      {
+       "source": "b",
+       "target": "a"
+      }
+     ],
+     "name": "b",
+     "partial": "edges",
+     "rows": [
+      {
+       "fact": {
+        "s": 5
+       },
+       "kind": "file",
+       "path": "/w/pkg/b/src/y.ts"
+      }
+     ]
+    }
+   ],
+   "replaceTags": [
+    "tests",
+    "policy"
+   ]
+  },
+  "implementation": {
+   "all": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/core/a.mjs"
+    }
+   ],
+   "projects": [
+    {
+     "fact": {
+      "mtimeMs": 1700000000000.5,
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "size": 10
+     },
+     "kind": "digest",
+     "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+    }
    ]
   },
   "part": {

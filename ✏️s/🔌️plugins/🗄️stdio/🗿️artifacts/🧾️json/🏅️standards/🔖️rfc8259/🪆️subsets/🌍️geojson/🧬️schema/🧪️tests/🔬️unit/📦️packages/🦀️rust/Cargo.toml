@@ -36,8 +36,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-json-mutations = { path = "../../../../../../🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-json-mutations-2 = { path = "../../../../../../🛜️i-json/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
@@ -48,6 +46,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 blake3 = "1.8"
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }

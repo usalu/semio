@@ -3,24 +3,9 @@
 use super::*;
 
 // #region 🔖️Assembly
-
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum AssemblyCsrBuildStage {
-    ReserveRows,
-    InitializeRows,
-    Sort,
-    CountUnique,
-    ReserveIndices,
-    ReserveValues,
-    Merge,
-    ReserveIndptr,
-    Indptr,
-    Complete,
-}
-
-/// 🧵️ Retained completed-assembly to CSR conversion. Every sort comparison, duplicate
-/// merge, row count and output entry advances in a distinct worker opportunity.
+/// 🧵️ Retained completed-assembly to CSR conversion: the owning assembly stays borrowable for result recovery while its triplets
+/// move through one funded `CsrTripletBuild`, which advances every sort comparison, duplicate merge, row count and output entry
+/// in a distinct worker opportunity.
 pub struct AssemblyCsrBuild {
     pub(super) assembly: Option<AssemblyJob<'static>>,
     pub(super) csr: CsrTripletBuild,
@@ -257,7 +242,7 @@ impl AssembledSystem {
     }
 }
 
-fn element_contribution(plan: &AssemblyPlan, model: &AnalysisModel, element_index: usize) -> Result<PendingElementAssembly, FemError> {
+pub(crate) fn element_contribution(plan: &AssemblyPlan, model: &AnalysisModel, element_index: usize) -> Result<PendingElementAssembly, FemError> {
     let element = model.elements.get(element_index).ok_or(FemError::Singular)?;
     let node_ids = element.node_ids();
     let dofs = element.dofs_per_node();

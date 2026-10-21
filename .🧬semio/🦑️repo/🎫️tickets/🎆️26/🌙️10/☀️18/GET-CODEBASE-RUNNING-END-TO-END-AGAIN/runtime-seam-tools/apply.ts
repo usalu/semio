@@ -70,6 +70,7 @@ const manualPath = join(here, "manual-edits.json");
 const manualFiles: readonly ManualFileV1[] = existsSync(manualPath) ? JSON.parse(readFileSync(manualPath, "utf8")).files : [];
 const manualByPath = new Map(manualFiles.map(row => [row.path, row]));
 const finals: { path: string; source: string }[] = [];
+const pending: (() => void)[] = [];
 const report = { files: 0, changed: 0, edits: 0, manualApplied: 0, refused: [] as string[], remaining: [] as { path: string; findings: ManualV1[] }[], created: 0, identical: 0, changedPaths: [] as string[] };
 const backup = join(here, "../🗑️generated/runtime-seam/backup");
 const output = (path: string): string => (overlay === undefined ? join(root, path) : join(overlay, path));
@@ -99,10 +100,10 @@ for (const path of listCandidates()) {
   const findings = scanRuntimeLawSourceV1(text), leftover = findings.length;
   if (text !== original) {
     report.changedPaths.push(path); report.changed++; report.edits += result.edits; report.manualApplied += applied;
-    if (write || overlay !== undefined) {
+    if (write || overlay !== undefined) pending.push(() => {
       if (write && overlay === undefined && !flag("--no-backup")) { const saved = join(backup, path); if (!existsSync(saved)) { mkdirSync(dirname(saved), { recursive: true }); copyFileSync(join(root, path), saved); } }
       place(output(path), text, statSync(join(root, path)).mode & 0o7777);
-    }
+    });
   }
   if (leftover > 0) report.remaining.push({ path, findings: findings.map(row => ({ line: row.line, column: row.column, rule: row.rule, snippet: text.split("\n")[row.line - 1]!.trim().slice(0, 160) })) });
 }
@@ -111,8 +112,10 @@ for (const source of walk(STAGED)) {
   const path = relative(STAGED, source), target = output(path), content = readFileSync(source);
   if (existsSync(target)) { if (readFileSync(target).equals(content)) { report.identical++; continue; } report.refused.push(`${path}: differs from staged content`); continue; }
   report.created++;
-  if (write || overlay !== undefined) place(target, content, 0o644);
+  if (write || overlay !== undefined) pending.push(() => place(target, content, 0o644));
 }
+if (report.refused.length === 0) for (const action of pending) action();
+else if (write || overlay !== undefined) console.log(`NOTHING WRITTEN: ${report.refused.length} anchors refused`);
 
 const ledgerPath = join(here, "src/ledger.json");
 const law = existsSync(ledgerPath) ? checkRuntimeLawV1(finals, JSON.parse(readFileSync(ledgerPath, "utf8")).rows) : undefined;

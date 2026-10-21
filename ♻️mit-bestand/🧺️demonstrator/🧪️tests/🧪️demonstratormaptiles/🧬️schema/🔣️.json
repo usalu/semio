@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "canaries",
+    "cacheRuns"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "abortBefore",
+          "abortDuring",
+          "failed",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "abortBefore": {
+            "type": "boolean"
+          },
+          "abortDuring": {
+            "type": "boolean"
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "prefetchCalls",
+              "signalForwarded",
+              "buildCalls",
+              "cancelled",
+              "failure"
+            ],
+            "properties": {
+              "prefetchCalls": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "signalForwarded": {
+                "type": "boolean"
+              },
+              "buildCalls": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "cancelled": {
+                "type": "boolean"
+              },
+              "failure": {
+                "enum": [
+                  "none",
+                  "cancelled",
+                  "tiles"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "canaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "coordinate",
+          "included"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "vt",
+              "osm"
+            ]
+          },
+          "coordinate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "z",
+              "x",
+              "y"
+            ],
+            "properties": {
+              "z": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 19
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 524287
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 524287
+              }
+            }
+          },
+          "included": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cacheRuns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "warm"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "warm": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

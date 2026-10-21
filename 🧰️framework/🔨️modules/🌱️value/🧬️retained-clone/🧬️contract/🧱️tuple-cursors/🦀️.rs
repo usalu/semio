@@ -39,6 +39,7 @@ macro_rules! retained_clone_tuple {
             fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
                 if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
                 if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
+                if !retained_clone_grant_admits(grant,self.advance_demands(source,body)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
                 if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
                 if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}

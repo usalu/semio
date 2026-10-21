@@ -27,7 +27,6 @@ semio-framework-value-control-contract = { path = "../../../../🎟️control/�
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path = "../../../../🛫️encode/📦️packages/🦀️rust" }
-semio-framework-value-original-aliases = { path = "../../../../♻️retirement/📦️aliases/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }

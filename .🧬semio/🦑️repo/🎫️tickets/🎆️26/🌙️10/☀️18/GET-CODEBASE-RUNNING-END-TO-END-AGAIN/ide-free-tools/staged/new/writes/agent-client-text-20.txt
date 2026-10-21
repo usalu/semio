@@ -2,532 +2,515 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// 🔶️dispatch carries the hook result, the hook dispatch and the hook output formatting.
+// 🚦️run carries hook execution, the hook artifacts and the hook event dispatch.
 
 // #endregion 🧲️Header
 
 package hooks
 
 import (
+	context "context"
 	json "encoding/json"
 	fmt "fmt"
+	io "io"
+	os "os"
+	filepath "path/filepath"
 	strconv "strconv"
 	strings "strings"
+	time "time"
 
+	codebase "github.com/usalu/semio/repo/codebase"
+	languages "github.com/usalu/semio/repo/languages"
 	model "github.com/usalu/semio/repo/model"
 	providers "github.com/usalu/semio/repo/providers"
+	statutes "github.com/usalu/semio/repo/statutes"
+	testrunner "github.com/usalu/semio/repo/testrunner"
 	todos "github.com/usalu/semio/repo/todos"
+	workspace "github.com/usalu/semio/repo/workspace"
 )
 
-// #region 🔶️Dispatch
+// #region 🦀️Hooks
 
-// 🔶️HookResult is the outcome of a hook invocation: the two fields every hook exposes, plus the
-// event-specific payload the calling IDE reads back.
-type HookResult struct {
-	Allowed bool
-	Message string
-	Extra   map[string]interface{}
-	// 🧾️Order is the declaration order of the event-specific fields. `json.Marshal` of the typed
-	// `model.HookResult*` records the repo binary returns writes them in declaration order, and a
-	// Go map marshals sorted, so the order is carried explicitly here.
-	Order []string
-	// 🙈️MessageShadowed reports that `message` belongs to the event payload, not to the base.
-	// `model.HookResultAgentBase` declares `MessageID string \`json:"message,omitempty"\``, which
-	// shadows `model.HookResultBase.Message` on every agent result: the block reason stays readable
-	// through `GetMessage()` and never reaches the marshalled object.
-	MessageShadowed bool
+// 🏃️runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
+func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	return RunHookExecutionCtx(context.Background(), client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
 }
 
-// 🆕️NewHookResult builds a result carrying only the base fields.
-func NewHookResult(allowed bool, message string) HookResult {
-	return HookResult{Allowed: allowed, Message: message, Extra: map[string]interface{}{}}
-}
-
-// ✔️IsAllowed reports whether the invocation was allowed.
-func (r HookResult) IsAllowed() bool { return r.Allowed }
-
-// 💬️GetMessage answers the message the invocation carries.
-func (r HookResult) GetMessage() string { return r.Message }
-
-// ➕️With adds one event-specific field, keeping the order it was first added in.
-func (r HookResult) With(key string, value interface{}) HookResult {
-	if r.Extra == nil {
-		r.Extra = map[string]interface{}{}
-	}
-	if _, seen := r.Extra[key]; !seen {
-		order := make([]string, len(r.Order), len(r.Order)+1)
-		copy(order, r.Order)
-		r.Order = append(order, key)
-	}
-	r.Extra[key] = value
-	return r
-}
-
-// 🧾️Fields answers the members this result marshals to, in declaration order: `allowed`,
-// `message` when it is non-empty and not shadowed, then every event-specific field.
-func (r HookResult) Fields() []HookResultField {
-	fields := []HookResultField{{Key: "allowed", Value: r.Allowed}}
-	if r.Message != "" && !r.MessageShadowed {
-		fields = append(fields, HookResultField{Key: "message", Value: r.Message})
-	}
-	for _, key := range r.Order {
-		fields = append(fields, HookResultField{Key: key, Value: r.Extra[key]})
-	}
-	return fields
-}
-
-// 🧾️HookResultField is one marshalled member of a hook result.
-type HookResultField struct {
-	Key   string
-	Value interface{}
-}
-
-// 🧾️Payload answers the same members as an unordered map, for a caller that only looks values up.
-func (r HookResult) Payload() map[string]interface{} {
-	payload := map[string]interface{}{}
-	for _, field := range r.Fields() {
-		payload[field.Key] = field.Value
-	}
-	return payload
-}
-
-// 🧾️WriteOrderedObject writes an object whose members keep the given order, which a Go map cannot.
-func WriteOrderedObject(fields []HookResultField) ([]byte, error) {
-	var out strings.Builder
-	out.WriteString("{")
-	for index, field := range fields {
-		if index > 0 {
-			out.WriteString(",")
-		}
-		key, err := json.Marshal(field.Key)
-		if err != nil {
-			return nil, err
-		}
-		value, err := json.Marshal(field.Value)
-		if err != nil {
-			return nil, err
-		}
-		out.Write(key)
-		out.WriteString(":")
-		out.Write(value)
-	}
-	out.WriteString("}")
-	return []byte(out.String()), nil
-}
-
-// 📤️MarshalJSON renders the flat record every IDE reads, in declaration order.
-func (r HookResult) MarshalJSON() ([]byte, error) { return WriteOrderedObject(r.Fields()) }
-
-func insertWhenPresent(result HookResult, key string, value string) HookResult {
-	if value == "" {
-		return result
-	}
-	return result.With(key, value)
-}
-
-// 🔤️FirstNonEmpty answers the first non-blank value.
-func FirstNonEmpty(values ...string) string { return todos.FirstNonEmpty(values...) }
-
-func agentBase(ctx HookContext, environment HookEnvironment) HookResult {
-	input := ctx.Input
-	session := ExtractSessionID(input)
-	second := FirstNonEmpty(FindNestedString(input, "second"), ctx.Second)
-	parent := ResolveParentSessionID("", input)
-	if ctx.ParentInfo != "" {
-		parent = ResolveParentSessionID(ctx.ParentInfo, input)
-		if ctx.ParentInfo == "subagent" {
-			agentID := FindNestedString(input, "agent_id", "agentId")
-			if agentID != "" {
-				parentSession := FirstNonEmpty(ExtractParent(input), ExtractSessionID(input))
-				session = agentID
-				parent = NormalizeParentSessionID(parentSession)
-			} else if parent == "" {
-				parent = session
-			}
-		}
-	}
-	result := NewHookResult(true, "")
-	result.MessageShadowed = true
-	result = insertWhenPresent(result, "checkpoint", ExtractCheckpointID(input, environment))
-	result = insertWhenPresent(result, "session", session)
-	result = insertWhenPresent(result, "second", second)
-	result = insertWhenPresent(result, "client", ctx.Client)
-	result = insertWhenPresent(result, "llm", ExtractLLM(input))
-	result = insertWhenPresent(result, "effort", ExtractEffort(input))
-	result = insertWhenPresent(result, "transcript", ExtractTranscript(input))
-	result = insertWhenPresent(result, "message", ExtractMessageID(input))
-	return result.With("parent", parent)
-}
-
-// 🔶️DispatchHook builds the event-specific hook result for one context. Blocking is applied here
-// and nowhere else: `agent.tool.starting` and `agent.tool.terminal.starting` are the two events that
-// can refuse an invocation, and a refusal is carried as `allowed = false` plus the reason.
-func DispatchHook(ctx HookContext, environment HookEnvironment, tests TestFileResolver) HookResult {
-	event, known := ctx.ResolvedEvent()
-	if !known {
-		return NewHookResult(false, "unknown event: "+ctx.Event)
-	}
-	input := ctx.Input
-	if HookEventKind(event) == model.HookKindVersion {
-		message := ""
-		if event == model.HookVersionCheckpointStarting {
-			message = "checkpoint starting hook passed"
-		}
-		result := NewHookResult(true, message)
-		result = insertWhenPresent(result, "checkpoint", ExtractCheckpointID(input, environment))
-		if event == model.HookVersionCheckpointStarting || event == model.HookVersionCheckpointEnded {
-			result = insertWhenPresent(result, "description", ExtractCheckpointMessage(input, ctx.RepoRoot, environment))
-		}
-		return result
-	}
-	base := agentBase(ctx, environment)
-	switch event {
-	case model.HookAgentStarted:
-		return base
-	case model.HookAgentEnded:
-		return insertWhenPresent(base, "report", ExtractReport(input))
-	case model.HookAgentPromptSubmitting:
-		return insertWhenPresent(base, "prompt", FindNestedString(input, "prompt", "text"))
-	case model.HookAgentCompacting:
-		return insertWhenPresent(base, "chat", ExtractChat(input))
-	case model.HookAgentToolStarting:
-		toolName := FirstNonEmpty(ctx.ToolName, ExtractToolName(input))
-		args := FirstNonEmpty(ctx.ToolArgs, ExtractTerminalCommand(input, ctx.ToolArgs), ExtractCommand(input))
-		blocked, reason := IsToolBlocked(toolName, args)
-		result := HookResult{Allowed: !blocked, Message: reason, Extra: base.Extra, Order: base.Order, MessageShadowed: base.MessageShadowed}
-		result = insertWhenPresent(result, "name", toolName)
-		if toolInput := ExtractToolInputMap(input); toolInput != nil {
-			result = result.With("input", toolInput)
-		}
-		return result
-	case model.HookAgentToolEnded:
-		result := insertWhenPresent(base, "name", FirstNonEmpty(ctx.ToolName, ExtractToolName(input)))
-		if toolInput := ExtractToolInputMap(input); toolInput != nil {
-			result = result.With("input", toolInput)
-		}
-		if response, present := extractToolResponse(input); present {
-			result = result.With("response", response)
-		}
-		return result
-	case model.HookAgentToolPlanUpdatingStarting, model.HookAgentToolPlanUpdatingEnded:
-		steps := ExtractPlanSteps(input, ctx.ToolArgs)
-		if len(steps) == 0 {
-			return base
-		}
-		return base.With("steps", steps)
-	case model.HookAgentToolSearchStarting, model.HookAgentToolSearchEnded:
-		reads := ExtractSearchReads(input, ctx.ToolArgs)
-		result := base
-		if len(reads.Pages) > 0 {
-			result = result.With("pages", reads.Pages)
-		}
-		if len(reads.Ranges) > 0 {
-			result = result.With("ranges", reads.Ranges)
-		}
-		return result
-	case model.HookAgentToolCodeEditStarting:
-		edit := ExtractCodeEdit(input, ctx.ToolArgs)
-		result := insertWhenPresent(base, "path", edit.Path)
-		result = insertWhenPresent(result, "old", edit.Old)
-		result = insertWhenPresent(result, "new", edit.New)
-		if edit.All {
-			result = result.With("all", true)
-		}
-		return result
-	case model.HookAgentToolCodeEditEnded:
-		edit := ExtractCodeEdit(input, ctx.ToolArgs)
-		if edit.Path != "" {
-			environment.FormatFile(edit.Path)
-		}
-		result := insertWhenPresent(base, "path", edit.Path)
-		result = insertWhenPresent(result, "old", edit.Old)
-		return insertWhenPresent(result, "new", edit.New)
-	case model.HookAgentToolTestStarting:
-		selection := ExtractTestSelection(input, ctx.ToolArgs, tests)
-		result := base
-		if len(selection.Labs) > 0 {
-			result = result.With("labs", selection.Labs)
-		}
-		if len(selection.Tests) > 0 {
-			result = result.With("tests", selection.Tests)
-		}
-		return insertWhenPresent(result, "timeout", selection.Timeout)
-	case model.HookAgentToolTestEnded:
-		outcome := ExtractTestOutcome(input, tests)
-		result := base
-		if len(outcome.Files) > 0 {
-			result = result.With("files", outcome.Files)
-		}
-		if len(outcome.Succeeded) > 0 {
-			result = result.With("succeeded", outcome.Succeeded)
-		}
-		if len(outcome.Failed) > 0 {
-			result = result.With("failed", outcome.Failed)
-		}
-		return result
-	case model.HookAgentToolBuildStarting:
-		bundles := ExtractBuildBundles(input, ctx.ToolArgs)
-		result := insertWhenPresent(base, "name", FirstNonEmpty(ctx.ToolName, "build"))
-		return result.With("input", map[string]interface{}{"bundles": bundles})
-	case model.HookAgentToolBuildEnded:
-		outcome := ExtractBuildOutcome(input)
-		result := insertWhenPresent(base, "name", FirstNonEmpty(ctx.ToolName, "build"))
-		return result.With("response", map[string]interface{}{"succeeded": outcome.Succeeded, "failed": outcome.Failed})
-	case model.HookAgentToolTerminalStarting:
-		command := ExtractTerminalCommand(input, ctx.ToolArgs)
-		tool := FirstNonEmpty(ctx.ToolName, "run_in_terminal")
-		blocked, reason := IsToolBlocked(tool, FirstNonEmpty(command, ctx.ToolArgs))
-		result := HookResult{Allowed: !blocked, Message: reason, Extra: base.Extra, Order: base.Order, MessageShadowed: base.MessageShadowed}
-		result = insertWhenPresent(result, "name", FirstNonEmpty(ctx.ToolName, ExtractToolName(input)))
-		if toolInput := ExtractToolInputMap(input); toolInput != nil {
-			result = result.With("input", toolInput)
-		}
-		return insertWhenPresent(result, "command", command)
-	case model.HookAgentToolTerminalEnded:
-		outcome := ExtractTerminalOutcome(input)
-		result := insertWhenPresent(base, "name", FirstNonEmpty(ctx.ToolName, ExtractToolName(input)))
-		if toolInput := ExtractToolInputMap(input); toolInput != nil {
-			result = result.With("input", toolInput)
-		}
-		result = insertWhenPresent(result, "command", outcome.Command)
-		pid, _ := strconv.ParseInt(outcome.PID, 10, 64)
-		result = result.With("pid", pid)
-		if outcome.Terminated {
-			result = result.With("terminated", true)
-		}
-		result = result.With("stdout", outcome.Stdout)
-		return result.With("stderr", outcome.Stderr)
-	case model.HookAgentThinkingStarting, model.HookAgentThinkingEnded:
-		return HookResult{Allowed: base.Allowed, Message: FindNestedString(input, "text"), Extra: base.Extra, Order: base.Order, MessageShadowed: base.MessageShadowed}
-	default:
-		return base
+func RunHookExecutionCtx(ctx context.Context, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	done := make(chan error, 1)
+	go func() {
+		done <- runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
+	}()
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		return fmt.Errorf("hook timed out: %w", ctx.Err())
 	}
 }
 
-func extractToolResponse(input json.RawMessage) (interface{}, bool) {
-	data := decodeHookInputMap(input)
-	if data == nil {
-		return nil, false
-	}
-	if response, present := data["tool_response"]; present {
-		return response, true
-	}
-	if output, present := data["tool_output"]; present {
-		return output, true
-	}
-	output := FindNestedString(input, "tool_output", "toolOutput", "output", "response")
-	if output == "" {
-		return nil, false
-	}
-	return output, true
-}
-
-// 🧪️TestSelection is what a starting test event selected.
-type TestSelection struct {
-	Labs    []string `json:"labs"`
-	Tests   []string `json:"tests"`
-	Timeout string   `json:"timeout"`
-}
-
-// 🧪️TestOutcome is what a finished test event reports.
-type TestOutcome struct {
-	Files     []string `json:"files"`
-	Succeeded []string `json:"succeeded"`
-	Failed    []string `json:"failed"`
-}
-
-// 🏗️BuildOutcome is what a finished build event reports.
-type BuildOutcome struct {
-	Succeeded []string `json:"succeeded"`
-	Failed    []string `json:"failed"`
-}
-
-func stringMembers(source map[string]interface{}, keys ...string) []string {
-	collected := []string{}
-	for _, key := range keys {
-		switch typed := source[key].(type) {
-		case []interface{}:
-			for _, item := range typed {
-				if text, ok := item.(string); ok && text != "" {
-					collected = append(collected, text)
-				}
-			}
-		case string:
-			if typed != "" {
-				collected = append(collected, typed)
-			}
+func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	if toolName == "" {
+		if tn := extractToolNameFromStdin(input); tn != "" {
+			toolName = tn
 		}
 	}
-	return collected
-}
-
-// 🧪️ExtractTestSelection reads a starting test event: the files and test selectors it names, and its timeout.
-func ExtractTestSelection(input json.RawMessage, toolArgs string, tests TestFileResolver) TestSelection {
-	source := ExtractToolInputMap(input)
-	if source == nil {
-		source = parseToolArgs(toolArgs)
-	}
-	if source == nil {
-		source = map[string]interface{}{}
-	}
-	selection := TestSelection{Labs: []string{}, Tests: []string{}}
-	targetFiles := stringMembers(source, "files")
-	for _, named := range stringMembers(source, "testNames", "test_names", "tests") {
-		if looksLikeFilePath(named) {
-			targetFiles = append(targetFiles, named)
-		} else {
-			selection.Tests = append(selection.Tests, named)
-		}
-	}
-	for _, key := range []string{"timeout", "timeoutMs"} {
-		if raw, ok := source[key].(string); ok && raw != "" {
-			selection.Timeout = raw
-			break
-		}
-		if raw, ok := source[key].(float64); ok {
-			selection.Timeout = fmt.Sprintf("%d", int64(raw))
-			break
-		}
-	}
-	command := ExtractCommand(input)
-	if command == "" {
-		if raw, ok := source["command"].(string); ok {
-			command = raw
-		}
-	}
-	if command != "" && len(targetFiles) == 0 {
-		_, cwd := ExtractCommandAndCwd(input)
-		if resolved := tests.TestFiles(command, cwd); len(resolved) > 0 {
-			targetFiles = resolved
-		}
-	}
-	if len(targetFiles) > 0 && allBlank(selection.Tests) {
-		selection.Labs = tests.LabIDs(targetFiles)
-		if len(selection.Labs) > 0 {
-			selection.Tests = []string{}
-			return selection
-		}
-	}
-	return selection
-}
-
-func allBlank(values []string) bool {
-	for _, value := range values {
-		if value != "" {
-			return false
-		}
-	}
-	return true
-}
-
-// 🧪️ExtractTestOutcome reads a finished test event: the files it ran and which cases passed or failed.
-func ExtractTestOutcome(input json.RawMessage, tests TestFileResolver) TestOutcome {
-	outcome := TestOutcome{Files: []string{}, Succeeded: []string{}, Failed: []string{}}
-	data := decodeHookInputMap(input)
-	if data == nil {
-		return outcome
-	}
-	if toolInput := ExtractToolInputMap(input); toolInput != nil {
-		outcome.Files = stringMembers(toolInput, "files")
-	}
-	if len(outcome.Files) == 0 {
-		command, cwd := ExtractCommandAndCwd(input)
-		if command != "" {
-			if resolved := tests.TestFiles(command, cwd); resolved != nil {
-				outcome.Files = resolved
-			}
-		}
-	}
-	toolOutput := data
-	if nested, ok := data["tool_output"].(map[string]interface{}); ok {
-		toolOutput = nested
-	}
-	outcome.Succeeded = stringMembers(toolOutput, "succeeded", "passed", "passing")
-	outcome.Failed = stringMembers(toolOutput, "failed", "failing", "errors")
-	return outcome
-}
-
-// 🏗️ExtractBuildBundles answers the bundles a starting build event names.
-func ExtractBuildBundles(input json.RawMessage, toolArgs string) []string {
-	source := ExtractToolInputMap(input)
-	if source == nil {
-		source = parseToolArgs(toolArgs)
-	}
-	if source == nil {
-		return []string{}
-	}
-	return stringMembers(source, "bundles", "targets", "technologies", "label")
-}
-
-// 🏗️ExtractBuildOutcome reads a finished build event.
-func ExtractBuildOutcome(input json.RawMessage) BuildOutcome {
-	data := decodeHookInputMap(input)
-	if data == nil {
-		return BuildOutcome{Succeeded: []string{}, Failed: []string{}}
-	}
-	toolOutput := data
-	if nested, ok := data["tool_output"].(map[string]interface{}); ok {
-		toolOutput = nested
-	}
-	return BuildOutcome{Succeeded: stringMembers(toolOutput, "succeeded", "passed", "built"), Failed: stringMembers(toolOutput, "failed", "errors")}
-}
-
-// #endregion 🔶️Dispatch
-
-// #region 🖨️Formatting
-
-// 🖨️HookOutput is what the repo binary writes after a hook, and with which exit code.
-type HookOutput struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	ExitCode int    `json:"exitCode"`
-}
-
-// 🧾️FormatPlainHookOutput renders the bare record every non-VS-Code agent client reads.
-func FormatPlainHookOutput(result HookResult) string {
-	document, err := json.Marshal(result)
+	event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
 	if err != nil {
-		return ""
+		return err
 	}
-	return string(document)
-}
-
-// 🖨️RenderHookOutput renders a hook result the way the calling client reads it. Copilot Chat is the
-// only client whose result is wrapped, and it is written to stdout whether or not the invocation was
-// allowed. JSON mode prints the plain record for every other client; otherwise a refusal goes to
-// stderr with exit code 2 and an allowed result prints only its message.
-func RenderHookOutput(client string, event model.HookEvent, parentInfo string, nativeEventName string, result HookResult, jsonMode bool) HookOutput {
-	if provider := providers.GetAgentClientProvider(client); provider != nil && provider.Kind() == "copilot-chat" {
-		hookEventName := nativeEventName
+	if parentInfo == "" {
+		parentInfo = resolvedParent
+	}
+	hctx := model.HookContext{
+		Event:      event,
+		Client:     client,
+		Second:     time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:   repoRoot,
+		ToolName:   toolName,
+		ToolArgs:   toolArgs,
+		FilePath:   filePath,
+		ParentInfo: parentInfo,
+		Input:      input,
+	}
+	result := RunHook(hctx)
+	provider := providers.GetAgentClientProvider(client)
+	if provider != nil && provider.Kind() == "copilot-chat" {
+		hookEventName := extractHookEventNameFromStdin(input)
 		if hookEventName == "" {
 			hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
 		}
-		return HookOutput{Stdout: provider.FormatHookOutput(hookEventName, result)}
+		out := provider.FormatHookOutput(hookEventName, result)
+		fmt.Fprintln(stdout, out)
+		return nil
 	}
 	if jsonMode {
-		return HookOutput{Stdout: FormatPlainHookOutput(result)}
+		out, _ := json.Marshal(result)
+		fmt.Fprintln(stdout, string(out))
+		return nil
 	}
-	if !result.Allowed {
-		return HookOutput{Stderr: result.Message, ExitCode: 2}
+	if !result.IsAllowed() {
+		fmt.Fprintln(stderr, result.GetMessage())
+		return workspace.ExitError{Code: 2}
 	}
-	return HookOutput{Stdout: result.Message}
+	msg := result.GetMessage()
+	if msg != "" {
+		fmt.Fprintln(stdout, msg)
+	}
+	return nil
 }
 
-// 🔤️ResolveNativeEventName answers the native event name the client would use for a neutral event, or the payload's own name.
-func ResolveNativeEventName(client string, event model.HookEvent, parentInfo string, input json.RawMessage) string {
-	if named := ExtractHookEventName(input); named != "" {
-		return named
+// #endregion 🦀️Hooks
+
+// #region 📰️Todos
+
+// 🔶️ResolveHookEvent resolves a hook event.
+func ResolveHookEvent(name string, client string, toolName string, input json.RawMessage) (model.HookEvent, string, error) {
+	if event, err := model.ValidateHookEvent(name); err == nil {
+		return event, "", nil
+	}
+	kind := model.ToolKindGeneric
+	if strings.TrimSpace(toolName) != "" {
+		kind = todos.ClassifyTool(toolName)
+	}
+	if command := extractCommandFromStdin(input); command != "" {
+		segment, _ := testrunner.ExtractTestSegmentFromCommand(command)
+		commandKind := model.ClassifyCommandKind(todos.FirstNonEmpty(segment, command))
+		if kind == model.ToolKindGeneric || kind == model.ToolKindTerminal || commandKind == model.ToolKindTest || commandKind == model.ToolKindBuild || commandKind == model.ToolKindCodeSearch || commandKind == model.ToolKindCodeEdit {
+			kind = commandKind
+		}
+	}
+	if toolName == "Glob" && len(input) > 0 {
+		kind = model.ToolKindGeneric
 	}
 	provider := providers.GetAgentClientProvider(client)
-	if provider == nil {
-		return ""
+	if provider != nil {
+		return provider.ResolveNativeEvent(name, kind)
 	}
-	return provider.NativeEventFromHookEvent(event, parentInfo)
+	return providers.ResolveClaudeCompatibleEvent(name, kind)
 }
 
-// 🎆️AgentClientFor answers the agent-client provider for a client slug.
-func AgentClientFor(client string) providers.AgentClientProvider {
-	return providers.GetAgentClientProvider(client)
+// 🔹️RunHook runs a hook.
+func RunHook(ctx model.HookContext) model.HookResult {
+	previousRoot := workspace.GetRootDir()
+	defer func() {
+		workspace.SetRootDir(previousRoot)
+		workspace.GitignoreMutex.Lock()
+		workspace.CachedGitignore = nil
+		workspace.GitignoreLoaded = false
+		workspace.GitignoreMutex.Unlock()
+		codebase.InvalidateTechnologyCache()
+	}()
+	result := runHookCore(ctx)
+	writeHookArtifacts(ctx, result, SystemEnvironment{})
+	trackHookInOpenTicket(ctx, result)
+	return result
 }
 
-// #endregion 🖨️Formatting
+func runHookCore(ctx model.HookContext) model.HookResult {
+	repoRoot := ctx.RepoRoot
+	if repoRoot == "" {
+		repoRoot = workspace.GetRootDir()
+	}
+	if repoRoot != "" {
+		workspace.SetRootDir(repoRoot)
+	}
+	result := dispatchHook(ctx)
+	hookResult, ok := result.(model.HookResult)
+	if !ok {
+		return model.HookResultBase{Allowed: false, Message: "invalid hook result"}
+	}
+	return hookResult
+}
+
+func writeHookArtifacts(ctx model.HookContext, result model.HookResult, environment HookEnvironment) {
+	if HookEventKind(ctx.Event) == model.HookKindVersion {
+		return
+	}
+	repoRoot := ctx.RepoRoot
+	if repoRoot == "" {
+		repoRoot = workspace.GetRootDir()
+	}
+	if repoRoot == "" {
+		return
+	}
+	repoRoot = workspace.FindRepoRoot(repoRoot)
+	workspace.SetRootDir(repoRoot)
+	cfg := workspace.LoadRepoConfig(repoRoot)
+	if !cfg.Logging.Session {
+		return
+	}
+	now := time.Now().UTC()
+	sessionID := ExtractSessionIDFromInput(ctx.Input)
+	if sessionID == "" && ctx.Client == "kiro-cli" {
+		sessionID = fmt.Sprintf("kiro-%d", os.Getppid())
+	}
+	if sessionID == "" {
+		sessionID = "unknown"
+	}
+	logDir := filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "⚡️cache", "🤖️generated",
+		model.FormatYearDir(now.Year()%100),
+		model.FormatMonthDir(int(now.Month())),
+		model.FormatDayDir(now.Day()),
+		sessionID,
+	)
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		return
+	}
+	writeSessionHookLog(ctx, result, logDir, sessionID, cfg.Logging, environment)
+	if cfg.Logging.Operations {
+		logRepoOperationHook(ctx, result, logDir, now, sessionID, cfg.Logging)
+	}
+}
+
+// 📓️writeSessionHookLog records one hook invocation through the session store port, so the
+// filesystem is one implementation of where a session log lives rather than the only one.
+func writeSessionHookLog(ctx model.HookContext, result model.HookResult, logDir string, sessionID string, lg workspace.LoggingConfig, environment HookEnvironment) {
+	store := NewDirectorySessionStore(filepath.Dir(logDir))
+	_, _ = RecordSessionHook(store, HookContextOf(ctx), HookResultOf(result), sessionID, lg, environment)
+}
+
+// 🎯️HookContextOf lifts the model-level hook context into the port-isolated one this module dispatches on.
+func HookContextOf(ctx model.HookContext) HookContext {
+	return HookContext{Event: string(ctx.Event), Client: ctx.Client, Second: ctx.Second, RepoRoot: ctx.RepoRoot, ToolName: ctx.ToolName, ToolArgs: ctx.ToolArgs, FilePath: ctx.FilePath, ParentInfo: ctx.ParentInfo, Extra: ctx.Extra, Input: ctx.Input}
+}
+
+// 🔶️HookResultOf reduces a typed hook result to the flat record the session log and the formatter read.
+func HookResultOf(result model.HookResult) HookResult {
+	return HookResult{Allowed: result.IsAllowed(), Message: result.GetMessage()}
+}
+
+// ⬛️logRepoOperationHook logs repo operation hook.
+func logRepoOperationHook(hctx model.HookContext, result interface{}, operation string, t time.Time, msg string, lg workspace.LoggingConfig) {
+	if !lg.Operations {
+		return
+	}
+	logDir := strings.TrimSpace(operation)
+	sessionID := strings.TrimSpace(msg)
+	if logDir == "" || sessionID == "" {
+		return
+	}
+	resultToolName, resultCommand := todos.ExtractHookResultToolInfo(result)
+	toolName := todos.FirstNonEmpty(resultToolName, hctx.ToolName, extractToolNameFromStdin(hctx.Input))
+	repoOperation := todos.DeriveRepoOpFromMCPTool(toolName)
+	if repoOperation == "" {
+		repoOperation = todos.DeriveRepoOpFromCLICommand(todos.FirstNonEmpty(resultCommand, hctx.ToolArgs, extractCommandFromStdin(hctx.Input)))
+	}
+	if repoOperation == "" {
+		return
+	}
+	phase := "starting"
+	switch hctx.Event {
+	case model.HookAgentToolEnded, model.HookAgentToolPlanUpdatingEnded, model.HookAgentToolSearchEnded, model.HookAgentToolCodeEditEnded, model.HookAgentToolTestEnded, model.HookAgentToolBuildEnded, model.HookAgentToolTerminalEnded:
+		phase = "ended"
+	}
+	metaPath := filepath.Join(logDir, "session.json")
+	var meta model.SessionMeta
+	if data, err := os.ReadFile(metaPath); err == nil {
+		_ = json.Unmarshal(data, &meta)
+	}
+	inputMap := decodeHookInputMap(hctx.Input)
+	second := todos.FirstNonEmpty(findNestedStringValue(inputMap, "second"), hctx.Second, t.UTC().Format(time.RFC3339))
+	checkpoint := todos.ResolveEventCheckpointID(extractCheckpointSHAFromInput(hctx.Input))
+	eventJSON, _ := json.Marshal(map[string]interface{}{
+		"kind":        "agent." + repoOperation + "." + phase,
+		"client":      hctx.Client,
+		"session":     ResolveEventSessionID(sessionID),
+		"second":      ResolveEventSecondID(second),
+		"checkpoint":  checkpoint,
+		"contributor": "unknown",
+	})
+	entry := model.EventEntry{Event: eventJSON}
+	meta.Events = append(meta.Events, entry)
+	_ = workspace.WriteJSONFile(metaPath, meta)
+}
+
+func extractSearchDefinitionReadsFromInput(input json.RawMessage, toolArgs string) []model.HookSearchDefinition {
+	pages, ranges := todos.ExtractSearchFromInput(input, toolArgs)
+	_ = pages
+	filesToLines := map[string]map[int]struct{}{}
+	addLine := func(path string, line int) {
+		path = workspace.NormalizeHookPath(path)
+		if path == "" {
+			return
+		}
+		if _, ok := filesToLines[path]; !ok {
+			filesToLines[path] = map[int]struct{}{}
+		}
+		if line > 0 {
+			filesToLines[path][line] = struct{}{}
+		}
+	}
+	for _, ref := range ranges {
+		parts := strings.SplitN(ref, "#L", 2)
+		path := parts[0]
+		if len(parts) == 1 {
+			addLine(path, 0)
+			continue
+		}
+		lineSpec := parts[1]
+		if strings.Contains(lineSpec, "-L") {
+			rangeParts := strings.SplitN(lineSpec, "-L", 2)
+			start, _ := strconv.Atoi(rangeParts[0])
+			end, _ := strconv.Atoi(rangeParts[1])
+			for line := start; line <= end; line++ {
+				addLine(path, line)
+			}
+		} else if line, err := strconv.Atoi(lineSpec); err == nil {
+			addLine(path, line)
+		}
+	}
+	data := decodeHookInputMap(input)
+	if toolInfo, ok := data["tool_info"].(map[string]interface{}); ok {
+		if filePath, _ := toolInfo["file_path"].(string); filePath != "" {
+			addLine(filePath, 0)
+		}
+		commandLine, _ := toolInfo["command_line"].(string)
+		cwd, _ := toolInfo["cwd"].(string)
+		if commandLine != "" && shouldExecuteSearchCommand(commandLine) {
+			commandFiles, pattern := todos.ExtractSearchCommandFilesAndPattern(commandLine, cwd)
+			for _, filePath := range commandFiles {
+				matchedLines := todos.SearchLinesInFile(filePath, pattern)
+				if len(matchedLines) == 0 {
+					addLine(filePath, 0)
+					continue
+				}
+				for _, line := range matchedLines {
+					addLine(filePath, line)
+				}
+			}
+		}
+	}
+	return buildDefinitionReads(filesToLines)
+}
+
+func buildDefinitionReads(filesToLines map[string]map[int]struct{}) []model.HookSearchDefinition {
+	var result []model.HookSearchDefinition
+	for filePath, lines := range filesToLines {
+		normalized := workspace.NormalizeHookPath(filePath)
+		if normalized == "" {
+			continue
+		}
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(workspace.GetRootDir(), normalized)
+		}
+		content, err := os.ReadFile(absPath)
+		if err != nil {
+			continue
+		}
+		if _, ok := lines[0]; ok {
+			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
+			continue
+		}
+		lineCount := strings.Count(string(content), "\n") + 1
+		if len(lines) == 0 || spansEntireFile(lines, string(content), lineCount) {
+			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
+			continue
+		}
+		definitions := languages.ParseDefinitions(string(content), normalized)
+		matched := false
+		for _, definition := range definitions {
+			loc := 0
+			for line := range lines {
+				if line >= definition.StartLine && line <= definition.EndLine {
+					loc++
+				}
+			}
+			if loc > 0 {
+				matched = true
+				result = append(result, model.HookSearchDefinition{ID: definition.GetID(), Loc: loc})
+			}
+		}
+		if !matched {
+			result = append(result, model.HookSearchDefinition{ID: codebase.ResolvePathToFileID(normalized), Loc: 0})
+		}
+	}
+	return result
+}
+
+func shouldExecuteSearchCommand(command string) bool {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return false
+	}
+	if strings.Contains(command, ">") || strings.Contains(command, "sed -i") {
+		return false
+	}
+	segments := workspace.SplitCommandSegments(command)
+	if len(segments) == 0 {
+		segments = []string{command}
+	}
+	for _, segment := range segments {
+		fields := strings.Fields(segment)
+		if len(fields) == 0 {
+			continue
+		}
+		switch filepath.Base(fields[0]) {
+		case "grep", "rg", "ripgrep", "ag", "ack", "cat", "bat", "batcat", "less", "head", "tail":
+			return true
+		}
+	}
+	return false
+}
+
+func dispatchHook(ctx model.HookContext) interface{} {
+	base := model.HookResultAgentBase{
+		HookResultBase: model.HookResultBase{Allowed: true},
+		Checkpoint:     extractCheckpointSHAFromInput(ctx.Input),
+		Session:        ExtractSessionIDFromInput(ctx.Input),
+		Second:         todos.FirstNonEmpty(findNestedStringValue(decodeHookInputMap(ctx.Input), "second"), ctx.Second),
+		Client:         ctx.Client,
+		LLM:            extractLLMFromInput(ctx.Input),
+		Effort:         extractEffortFromInput(ctx.Input),
+		Transcript:     ExtractTranscriptFromInput(ctx.Input),
+		MessageID:      extractMessageIDFromInput(ctx.Input),
+		Parent:         resolveParentSessionID("", ctx.Input),
+	}
+	if ctx.ParentInfo != "" {
+		base.Parent = resolveParentSessionID(ctx.ParentInfo, ctx.Input)
+		if ctx.ParentInfo == "subagent" {
+			if agentID := findNestedStringValue(decodeHookInputMap(ctx.Input), "agent_id", "agentId"); agentID != "" {
+				parentSession := extractParentFromInput(ctx.Input)
+				if parentSession == "" {
+					parentSession = ExtractSessionIDFromInput(ctx.Input)
+				}
+				base.Session = agentID
+				base.Parent = normalizeParentSessionID(parentSession)
+			} else if base.Parent == "" {
+				base.Parent = base.Session
+			}
+		}
+	}
+	if len(ctx.Input) > 0 {
+		var raw map[string]interface{}
+		if err := json.Unmarshal(ctx.Input, &raw); err == nil {
+			base.Raw = raw
+		}
+	}
+	switch ctx.Event {
+	case model.HookAgentStarted:
+		return model.HookResultAgentStarted{HookResultAgentBase: base}
+	case model.HookAgentEnded:
+		return model.HookResultAgentEnded{HookResultAgentBase: base, Report: extractReportFromInput(ctx.Input)}
+	case model.HookAgentPromptSubmitting:
+		return model.HookResultAgentPromptSubmitting{HookResultAgentBase: base, Prompt: findNestedStringValue(decodeHookInputMap(ctx.Input), "prompt", "text")}
+	case model.HookAgentCompacting:
+		return model.HookResultAgentCompacting{HookResultAgentBase: base, Chat: extractChatFromInput(ctx.Input)}
+	case model.HookAgentToolStarting:
+		toolName := todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input))
+		toolInput := todos.ExtractToolInputFromStdin(ctx.Input)
+		blocked, reason := IsToolBlocked(toolName, todos.FirstNonEmpty(ctx.ToolArgs, extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs), extractCommandFromStdin(ctx.Input)))
+		base.Allowed = !blocked
+		base.Message = reason
+		return model.HookResultAgentToolStarting{HookResultAgentBase: base, Name: toolName, Input: toolInput}
+	case model.HookAgentToolEnded:
+		response := todos.ExtractToolResponseFromStdin(ctx.Input)
+		if len(response) == 0 {
+			if output := findNestedStringValue(decodeHookInputMap(ctx.Input), "tool_output", "toolOutput", "output", "response"); output != "" {
+				response, _ = json.Marshal(output)
+			}
+		}
+		return model.HookResultAgentToolEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Response: response}
+	case model.HookAgentToolPlanUpdatingStarting, model.HookAgentToolPlanUpdatingEnded:
+		return model.HookResultAgentToolPlanUpdating{HookResultAgentBase: base, Steps: todos.ExtractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)}
+	case model.HookAgentToolSearchStarting:
+		pages, ranges := todos.ExtractSearchFromInput(ctx.Input, ctx.ToolArgs)
+		return model.HookResultAgentToolSearchStarting{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
+	case model.HookAgentToolSearchEnded:
+		pages, ranges := todos.ExtractSearchFromInput(ctx.Input, ctx.ToolArgs)
+		return model.HookResultAgentToolSearchEnded{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
+	case model.HookAgentToolCodeEditStarting:
+		path, oldText, newText, all := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
+		return model.HookResultAgentToolCodeEditStarting{HookResultAgentBase: base, Path: path, Old: oldText, New: newText, All: all}
+	case model.HookAgentToolCodeEditEnded:
+		path, oldText, newText, _ := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
+		// Auto-format the edited file.
+		if path != "" {
+			statutes.RunFormatterForFile(path)
+		}
+		return model.HookResultAgentToolCodeEditEnded{HookResultAgentBase: base, Path: path, Old: oldText, New: newText}
+	case model.HookAgentToolTestStarting:
+		labs, tests, timeout := extractTestStartingFromInput(ctx.Input, ctx.ToolArgs)
+		return model.HookResultAgentToolTestStarting{HookResultAgentBase: base, Labs: labs, Tests: tests, Timeout: timeout}
+	case model.HookAgentToolTestEnded:
+		files, succeeded, failed := extractTestEndedFromInput(ctx.Input)
+		return model.HookResultAgentToolTestEnded{HookResultAgentBase: base, Files: files, Succeeded: succeeded, Failed: failed}
+	case model.HookAgentToolBuildStarting:
+		bundles := extractBuildBundlesFromInput(ctx.Input, ctx.ToolArgs)
+		payload, _ := json.Marshal(map[string]interface{}{"bundles": bundles})
+		return model.HookResultAgentToolStarting{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, "build"), Input: payload}
+	case model.HookAgentToolBuildEnded:
+		succeeded, failed := extractBuildEndedFromInput(ctx.Input)
+		payload, _ := json.Marshal(map[string]interface{}{"succeeded": succeeded, "failed": failed})
+		return model.HookResultAgentToolEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, "build"), Response: payload}
+	case model.HookAgentToolTerminalStarting:
+		command := extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs)
+		blocked, reason := IsToolBlocked(todos.FirstNonEmpty(ctx.ToolName, "run_in_terminal"), todos.FirstNonEmpty(command, ctx.ToolArgs))
+		base.Allowed = !blocked
+		base.Message = reason
+		return model.HookResultAgentToolTerminalStarting{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Command: command}
+	case model.HookAgentToolTerminalEnded:
+		command, pid, terminated, stdout, stderr := extractTerminalEndedFromInput(ctx.Input)
+		pidValue, _ := strconv.Atoi(pid)
+		stdoutJSON, _ := json.Marshal(stdout)
+		stderrJSON, _ := json.Marshal(stderr)
+		return model.HookResultAgentToolTerminalEnded{HookResultAgentBase: base, Name: todos.FirstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: todos.ExtractToolInputFromStdin(ctx.Input), Output: stdoutJSON, Command: command, PID: pidValue, Terminated: terminated, Stdout: stdoutJSON, Stderr: stderrJSON}
+	case model.HookAgentThinkingStarting:
+		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
+		return model.HookResultAgentThinkingStarting{HookResultAgentBase: base}
+	case model.HookAgentThinkingEnded:
+		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
+		return model.HookResultAgentThinkingEnded{HookResultAgentBase: base}
+	case model.HookVersionCheckpointStarting:
+		return runCheckpointStartingHook(ctx)
+	case model.HookVersionCheckpointEnded:
+		return model.HookResultVersionCheckpointEnded{HookResultBase: model.HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input), Description: extractCheckpointMessageFromInput(ctx.Input, ctx.RepoRoot)}
+	case model.HookVersionCheckinStarting, model.HookVersionCheckinEnded, model.HookVersionCheckoutStarting, model.HookVersionCheckoutEnded:
+		return model.HookResultVersionCheckpointEnded{HookResultBase: model.HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input)}
+	default:
+		return model.HookResultBase{Allowed: false, Message: "unknown event: " + string(ctx.Event)}
+	}
+}
+
+// #endregion 📰️Todos

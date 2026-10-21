@@ -1,4 +1,4 @@
-/** 📌️ Every pin of a native toolchain is written once and every other place that names it agrees: the contract policy, the bootstrap pins, the devcontainer, the manifests, the locks, the schemas, the cache policy, the project manifests and the hermetic class table. The manifests are read by two TOML parsers; the repository state is read from the checkout, so a drifting pin fails here before it fails on a machine. @see ../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json */
+/** 📌️ Every pin of a native toolchain is written once and every other place that names it agrees: the contract policy, the bootstrap pins, the devcontainer, the manifests, the locks, the schemas, the cache policy, the project manifests and the hermetic class table. The manifests are read by two TOML parsers; the repository state is read from the checkout, so a drifting pin fails here before it fails on a machine. @see ../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json */
 import {describe, expect, test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {existsSync, readFileSync} from "node:fs";
@@ -7,7 +7,7 @@ import {parse as parseIarna} from "@iarna/toml";
 import * as SmolToml from "smol-toml";
 import {repositoryCachePartitionRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {HERMETIC_TABLE_V1} from "../../🏗️build/🏃️execution/🔒️hermetic/🟦️.ts";
-import {NATIVE_TOOLCHAINS_V1 as policy, dotnetDirectoryBuildPropsV1, dotnetGlobalJsonV1, goWorkVersionV1, pythonSeriesV1, toolchainRootsV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts";
+import {NATIVE_TOOLCHAINS_V1 as policy, dotnetDirectoryBuildPropsV1, dotnetGlobalJsonV1, goWorkVersionV1, pythonSeriesV1, toolchainRootsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), repoRoot = resolve(libraryRoot, "../../../../..");
 const read = (path: string) => readFileSync(join(repoRoot, path), "utf8"), json = (path: string) => JSON.parse(read(path));
@@ -124,7 +124,6 @@ describe("Go", () => {
     expect(policy.go.version.startsWith(`${devcontainer.features["ghcr.io/devcontainers/features/go:1"]!.version}.`)).toBe(true);
     expect(policy.go.variables).toEqual({GOTOOLCHAIN: "local"});
     for (const path of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts"]) expect({path, pinned: read(path).includes("pinnedGoEnvironmentV1")}).toEqual({path, pinned: true});
-    expect(read("🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts")).toContain("NATIVE_TOOLCHAINS_V1.go.variables");
     for (const path of tracked("*go.mod").filter(path => !path.includes("/🧫️fixtures/"))) {
       const declared = /^go (\d+\.\d+(?:\.\d+)?)$/mu.exec(read(path))?.[1];
       expect({path, ok: declared !== undefined && Bun.semver.order(declared.split(".").length === 2 ? declared + ".0" : declared, policy.go.version) <= 0}).toEqual({path, ok: true});

@@ -1,9 +1,15 @@
 use semio_s_fem_algebra::*;
+use semio_s_fem_elements3d::Hex8;
+use semio_s_fem_elements3d::Tet4;
 use semio_s_fem_static::Elements;
-use semio_s_fem_model::ElementResult;
 use semio_s_fem_model::Dof;
-use semio_s_fem_model::SolidStress;
+use semio_s_fem_model::Element;
+use semio_s_fem_model::ElementContext;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::NodalLoad;
 use semio_s_fem_model::Node;
+use semio_s_fem_model::SolidStress;
+use semio_s_fem_model::Support;
 
 /// 🧮️ Linear displacement field `u=ux·x+uy·y+uz·z` (and analogous `v`,`w`) shared by the Tet4/Hex8
 /// patch tests — its gradient (hence strain) is constant everywhere, so a direct

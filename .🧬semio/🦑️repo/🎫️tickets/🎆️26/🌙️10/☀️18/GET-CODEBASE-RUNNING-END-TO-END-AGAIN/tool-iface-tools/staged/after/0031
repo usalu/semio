@@ -1,34 +1,117 @@
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { currentPlatform } from "@semio-tech/framework/test/adapter";
 import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-
 
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const CODEC_MANIFEST = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
-const ORACLE_ID = "image-tiff-6-0-mutate-reader";
-const ENGINE_FAMILY = "tiff";
-const ENGINE_VERSION = "0.11.3";
+const HERE = import.meta.dir;
+const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
+const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
+const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
+const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";
+const ENGINE_VERSION = "0.6.1";
+const SUBSET_IDS: Readonly<Record<string, string>> = { "📰️header": "header", "📊️tables": "tables", "🧩️entities": "entities", "🧱️blocks": "blocks" };
 
-type Recipe = Readonly<{ id: string; directoryName: string; mutation: string; notes: string }>;
-/** 🍳️ Six authored mutation recipes, generated through the independent TIFF encoder. */
+const FIXTURE_COORDINATES: Readonly<Record<string, readonly [string, string]>> = {
+  "drafting-plate": ["📰️header", "📐️drafting-plate"],
+  "no-mutation-no-op": ["📰️header", "⏸️no-mutation-no-op"],
+  "set-header-var-applied": ["📰️header", "🏷️set-header-var-applied"],
+  "remove-header-var-applied": ["📰️header", "🧹️remove-header-var-applied"],
+  "remove-header-var-rejected-missing": ["📰️header", "🔍️remove-header-var-rejected-missing"],
+  "insert-layer-applied": ["📊️tables", "🧱️insert-layer-applied"],
+  "insert-layer-rejected-duplicate": ["📊️tables", "🚫️insert-layer-rejected-duplicate"],
+  "remove-layer-applied": ["📊️tables", "🪨️remove-layer-applied"],
+  "remove-layer-rejected-missing": ["📊️tables", "🔍️remove-layer-rejected-missing"],
+  "set-layer-applied": ["📊️tables", "🎚️set-layer-applied"],
+  "set-layer-rejected-missing": ["📊️tables", "❓️set-layer-rejected-missing"],
+  "insert-style-applied": ["📊️tables", "🎨️insert-style-applied"],
+  "insert-style-rejected-duplicate": ["📊️tables", "👯️insert-style-rejected-duplicate"],
+  "remove-style-applied": ["📊️tables", "🧽️remove-style-applied"],
+  "remove-style-rejected-missing": ["📊️tables", "🫥️remove-style-rejected-missing"],
+  "set-style-applied": ["📊️tables", "🖌️set-style-applied"],
+  "set-style-rejected-missing": ["📊️tables", "❌️set-style-rejected-missing"],
+  "insert-linetype-applied": ["📊️tables", "🧵️insert-linetype-applied"],
+  "insert-linetype-rejected-duplicate": ["📊️tables", "🪢️insert-linetype-rejected-duplicate"],
+  "remove-linetype-applied": ["📊️tables", "🪚️remove-linetype-applied"],
+  "remove-linetype-rejected-missing": ["📊️tables", "🕳️remove-linetype-rejected-missing"],
+  "set-linetype-applied": ["📊️tables", "🪡️set-linetype-applied"],
+  "set-linetype-rejected-missing": ["📊️tables", "📭️set-linetype-rejected-missing"],
+  "insert-entity-applied": ["🧩️entities", "➕️insert-entity-applied"],
+  "insert-entity-rejected-out-of-bounds": ["🧩️entities", "🚧️insert-entity-rejected-out-of-bounds"],
+  "remove-entity-applied": ["🧩️entities", "➖️remove-entity-applied"],
+  "remove-entity-rejected-missing": ["🧩️entities", "🔍️remove-entity-rejected-missing"],
+  "set-entity-applied": ["🧩️entities", "🧩️set-entity-applied"],
+  "set-entity-rejected-out-of-bounds": ["🧩️entities", "⛔️set-entity-rejected-out-of-bounds"],
+  "insert-block-applied": ["🧱️blocks", "➕️insert-block-applied"],
+  "insert-block-rejected-out-of-bounds": ["🧱️blocks", "🚧️insert-block-rejected-out-of-bounds"],
+  "remove-block-applied": ["🧱️blocks", "➖️remove-block-applied"],
+  "remove-block-rejected-missing": ["🧱️blocks", "🔍️remove-block-rejected-missing"],
+  "set-block-applied": ["🧱️blocks", "🧱️set-block-applied"],
+  "set-block-rejected-out-of-bounds": ["🧱️blocks", "⛔️set-block-rejected-out-of-bounds"],
+};
+
+type Outcome = "applied" | "no-op" | "rejected";
+type Recipe = Readonly<{ id: string; kind: "single" | "pair"; mutation: string | null; outcome: Outcome | null; notes: string }>;
+
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🧫️fixtures/🦀️.rs` verbatim — `drafting-plate` (the
+ *  pre-existing single-document fixture, untouched) plus one entry per witnessable `(mutation,
+ *  outcome)` coordinate this retrofit adds. `set-header-var` carries `-applied` only — see that
+ *  file's own comment for the reachability proof (no fixture-less claim: verified from the real
+ *  validation code, not asserted). */
 const RECIPES: readonly Recipe[] = [
- {id:"insert-ifd-applied",directoryName:"📥️insert-ifd-applied",mutation:"insert-ifd",notes:"A second smaller image page is appended."},
- {id:"remove-ifd-applied",directoryName:"📤️remove-ifd-applied",mutation:"remove-ifd",notes:"The second image page is removed."},
- {id:"replace-tag-applied",directoryName:"🏷️replace-tag-applied",mutation:"replace-tag",notes:"ImageDescription changes while raster samples stay identical."},
- {id:"remove-tag-applied",directoryName:"🗑️remove-tag-applied",mutation:"remove-tag",notes:"ImageDescription is omitted while raster samples stay identical."},
- {id:"paint-region-applied",directoryName:"🎨️paint-region-applied",mutation:"paint-region",notes:"Only pixel 1,1 changes to RGB 9,8,7."},
- {id:"replace-samples-applied",directoryName:"🧮️replace-samples-applied",mutation:"replace-samples",notes:"Only the first three owned sample words change to 24,96,192."},
+  { id: "drafting-plate", kind: "single", mutation: null, outcome: null, notes: "Pre-existing base document for the cross-semio-implementation oracle's own testing shape. Untouched in content by this retrofit." },
+  { id: "no-mutation-no-op", kind: "pair", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after are the same document, encoded independently." },
+  { id: "set-header-var-applied", kind: "pair", mutation: "set-header-var", outcome: "applied", notes: "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save." },
+  { id: "remove-header-var-applied", kind: "pair", mutation: "remove-header-var", outcome: "applied", notes: "$INSBASE resets to the origin." },
+  { id: "remove-header-var-rejected-missing", kind: "pair", mutation: "remove-header-var", outcome: "rejected", notes: "Target name is genuinely absent from header_vars — invalid-remove-target, carrier-independent." },
+  { id: "insert-layer-applied", kind: "pair", mutation: "insert-layer", outcome: "applied", notes: "A new named LAYER row is inserted at a valid index." },
+  { id: "insert-layer-rejected-duplicate", kind: "pair", mutation: "insert-layer", outcome: "rejected", notes: "Target name already exists in the base layer table — invalid-add-target." },
+  { id: "remove-layer-applied", kind: "pair", mutation: "remove-layer", outcome: "applied", notes: "The named LAYER row is removed." },
+  { id: "remove-layer-rejected-missing", kind: "pair", mutation: "remove-layer", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
+  { id: "set-layer-applied", kind: "pair", mutation: "set-layer", outcome: "applied", notes: "The named LAYER row's colour and linetype are whole-value replaced." },
+  { id: "set-layer-rejected-missing", kind: "pair", mutation: "set-layer", outcome: "rejected", notes: "Target name is absent — invalid-modify-target (diff_set_layer always emits a modified entry, unlike set-header-var)." },
+  { id: "insert-style-applied", kind: "pair", mutation: "insert-style", outcome: "applied", notes: "A new named STYLE row is inserted at a valid index." },
+  { id: "insert-style-rejected-duplicate", kind: "pair", mutation: "insert-style", outcome: "rejected", notes: "Target name already exists — invalid-add-target." },
+  { id: "remove-style-applied", kind: "pair", mutation: "remove-style", outcome: "applied", notes: "The named STYLE row is removed." },
+  { id: "remove-style-rejected-missing", kind: "pair", mutation: "remove-style", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
+  { id: "set-style-applied", kind: "pair", mutation: "set-style", outcome: "applied", notes: "The named STYLE row's font is whole-value replaced." },
+  { id: "set-style-rejected-missing", kind: "pair", mutation: "set-style", outcome: "rejected", notes: "Target name is absent — invalid-modify-target." },
+  { id: "insert-linetype-applied", kind: "pair", mutation: "insert-linetype", outcome: "applied", notes: "A new named LTYPE row is inserted at a valid index." },
+  { id: "insert-linetype-rejected-duplicate", kind: "pair", mutation: "insert-linetype", outcome: "rejected", notes: "Target name already exists — invalid-add-target." },
+  { id: "remove-linetype-applied", kind: "pair", mutation: "remove-linetype", outcome: "applied", notes: "The named LTYPE row is removed." },
+  { id: "remove-linetype-rejected-missing", kind: "pair", mutation: "remove-linetype", outcome: "rejected", notes: "Target name is absent — invalid-remove-target." },
+  { id: "set-linetype-applied", kind: "pair", mutation: "set-linetype", outcome: "applied", notes: "The named LTYPE row's description is whole-value replaced." },
+  { id: "set-linetype-rejected-missing", kind: "pair", mutation: "set-linetype", outcome: "rejected", notes: "Target name is absent — invalid-modify-target." },
+  { id: "insert-entity-applied", kind: "pair", mutation: "insert-entity", outcome: "applied", notes: "A new entity is inserted at a valid middle index." },
+  { id: "insert-entity-rejected-out-of-bounds", kind: "pair", mutation: "insert-entity", outcome: "rejected", notes: "Index exceeds the evolving sequence length — invalid-add-index." },
+  { id: "remove-entity-applied", kind: "pair", mutation: "remove-entity", outcome: "applied", notes: "The entity at a valid middle index is removed." },
+  { id: "remove-entity-rejected-missing", kind: "pair", mutation: "remove-entity", outcome: "rejected", notes: "Index does not exist — invalid-remove-index." },
+  { id: "set-entity-applied", kind: "pair", mutation: "set-entity", outcome: "applied", notes: "The entity at a present index is whole-value replaced (the genuine modify branch, not the insert fallback)." },
+  { id: "set-entity-rejected-out-of-bounds", kind: "pair", mutation: "set-entity", outcome: "rejected", notes: "Index is absent AND beyond the evolving length, so even the insert fallback rejects it — invalid-add-index." },
+  { id: "insert-block-applied", kind: "pair", mutation: "insert-block", outcome: "applied", notes: "A new BLOCK is inserted at a valid index." },
+  { id: "insert-block-rejected-out-of-bounds", kind: "pair", mutation: "insert-block", outcome: "rejected", notes: "Index exceeds the evolving sequence length — invalid-add-index." },
+  { id: "remove-block-applied", kind: "pair", mutation: "remove-block", outcome: "applied", notes: "The BLOCK at a valid index is removed." },
+  { id: "remove-block-rejected-missing", kind: "pair", mutation: "remove-block", outcome: "rejected", notes: "Index does not exist — invalid-remove-index." },
+  { id: "set-block-applied", kind: "pair", mutation: "set-block", outcome: "applied", notes: "The BLOCK at a present index has its base point and nested entities whole-value replaced." },
+  { id: "set-block-rejected-out-of-bounds", kind: "pair", mutation: "set-block", outcome: "rejected", notes: "Index is absent AND beyond the evolving length — invalid-add-index via the insert fallback." },
 ];
 //#endregion 🧬️Contract
 
-//#region 🏭️Generate
-const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
+//#region 🔨️Build
+function ensureBuilt(): void {
+  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
+}
 
-function contentDigest(bytes: Buffer): string {
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+async function sha256(bytes: Buffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes));
+  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function platformId(): string {
@@ -37,87 +120,120 @@ function platformId(): string {
   return `${os}-${arch}`;
 }
 
-/** 🦀️ Shells out to the standalone `tiff-ifd-codec` binary — the ONLY place this file touches it. */
-function codecBuild(recipe: Recipe, outDir: string): void {
-  const result = spawnToolSyncV1("cargo", ["run", "--offline", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
+/** 🦀️ Shells out to the standalone engine binary — the ONLY place this file touches it. */
+function engineBuild(id: string, outDir: string): void {
+  const result = spawnSync(ENGINE_BIN, ["build", id, outDir], { encoding: "utf8" });
   if (result.status !== 0) {
-    throw new Error(`tiff-ifd-codec build ${recipe.id} failed (exit ${result.status}): ${result.stderr}`);
+    throw new Error(`engine build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
 }
+//#endregion 🔨️Build
 
-function fileEntry(role: string, dir: string, filename: string, id: string): { role: string; path: string; mediaType: string; sha256: string; bytes: number } {
+//#region 🏭️Generate
+async function fileEntry(role: string, dir: string, filename: string, id: string): Promise<{ role: string; path: string; mediaType: string; sha256: string; bytes: number }> {
   const abs = join(dir, filename);
   const bytes = readFileSync(abs);
-  return { role, path: `${FIXTURE_PATH_PREFIX}${id}/${filename}`, mediaType: "image/tiff", sha256: contentDigest(bytes), bytes: bytes.length };
+  return { role, path: `${FIXTURE_PATH_PREFIX}${id}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length };
 }
 
-function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
-  const dir = join(outDir, recipe.directoryName);
-  codecBuild(recipe, outDir);
-  if (!existsSync(join(dir, "➡️after.tiff"))) throw new Error(`recipe ${recipe.id} is declared applied but the codec produced no after.tiff`);
-  const files = [fileEntry("expected-before-tiff", dir, "⬅️before.tiff", recipe.directoryName), fileEntry("expected-after-tiff", dir, "➡️after.tiff", recipe.directoryName)];
+async function manifestForSingle(recipe: Recipe, outDir: string): Promise<Record<string, unknown>> {
+  const name = FIXTURE_COORDINATES[recipe.id]![1];
+  const dir = join(outDir, name);
+  const filename = "📐️drafting-plate.dxf";
+  engineBuild(recipe.id, dir);
+  const bytes = readFileSync(join(dir, filename));
+  return {
+    id: recipe.id,
+    class: "third-party-generated",
+    family: "mechanical",
+    files: [{ role: "primary-dxf", path: `${FIXTURE_PATH_PREFIX}${name}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length }],
+    provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: currentPlatform() },
+    reproducible: true,
+  };
+}
+
+async function manifestForPair(recipe: Recipe, outDir: string): Promise<Record<string, unknown>> {
+  const [subset, name] = FIXTURE_COORDINATES[recipe.id]!;
+  const dir = join(outDir, name);
+  engineBuild(recipe.id, dir);
+  const files: Awaited<ReturnType<typeof fileEntry>>[] = [await fileEntry("expected-before-dxf", dir, "⬅️before.dxf", name)];
+  const hasAfter = existsSync(join(dir, "➡️after.dxf"));
+  if (recipe.outcome === "rejected") {
+    if (hasAfter) throw new Error(`recipe ${recipe.id} is declared rejected but the engine produced an after.dxf anyway`);
+  } else {
+    if (!hasAfter) throw new Error(`recipe ${recipe.id} is declared ${recipe.outcome} but the engine produced no after.dxf`);
+    files.push(await fileEntry("expected-after-dxf", dir, "➡️after.dxf", name));
+  }
 
   return {
     id: recipe.id,
     class: "third-party-generated",
-    target: { artifact: "s.stdio.tiff", standard: "6.0", subset: "document" },
-    ...(recipe.mutation ? { mutation: recipe.mutation, outcome: "applied" } : {}),
+    target: { artifact: "s.stdio.dxf", standard: "r12", subset: SUBSET_IDS[subset] },
+    mutation: recipe.mutation,
+    outcome: recipe.outcome,
     units: { length: "unitless", angle: "degree" },
     files,
     generator: {
-      oracle: ORACLE_ID,
-      packageVersion: ENGINE_VERSION,
-      engineFamily: ENGINE_FAMILY,
+      oracle: READER_ORACLE_ID,
+      packageVersion: "0.6",
+      engineFamily: "dxf-rs",
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
-    provenance: { source: "generated", license: "MIT OR Apache-2.0 (tiff)", attribution: "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory", privacy: "no-personal-data" },
-    comparisonProfile: "semantic-raster-v1",
+    provenance: { source: "generated", license: "MIT (dxf)", attribution: "Generated with dxf (MIT) via the standalone engine binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
+    comparisonProfile: "semantic-dxf-r12-v1",
     reproducible: true,
     family: "structural",
     notes: recipe.notes,
   };
 }
+//#endregion 🏭️Generate
 
+//#region 🚪️Entry
 async function main(argv: readonly string[]): Promise<number> {
-  const [command = "generate", ...rest] = argv;
-  if (command === "test-oracle" || command === "test-conformance-oracle") return spawnToolSyncV1("cargo", ["test", "--offline", "--manifest-path", join(import.meta.dir,"../../../../../🔮️oracles/📦️packages/🦀️rust/Cargo.toml"), "--features", "oracles", "--lib", command === "test-oracle" ? "oracle_owned" : "baseline::component::tests", "--", "--nocapture"], { stdio: "inherit" }).status ?? 1;
-  if (command === "test") return spawnToolSyncV1("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
-  const value = (flag: string): string | null => {
-    const index = rest.indexOf(flag);
-    return index === -1 ? null : (rest[index + 1] ?? null);
-  };
-  const only = value("--only");
-  const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
-  if (recipes.length === 0) {
-    console.error(`[tiff generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
-    return 1;
-  }
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
-  mkdirSync(outDir, { recursive: true });
+  const [command = "", ...rest] = argv;
+  const outFlagIndex = rest.indexOf("--out");
+  const onlyIndex = rest.indexOf("--only");
+  const only = onlyIndex === -1 ? null : (rest[onlyIndex + 1] ?? null);
+  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
+  const outDir = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : fixtureOutRoot !== undefined && fixtureOutRoot.length > 0 ? fixtureOutRoot : null;
 
   if (command !== "generate" && command !== "manifests") {
-    console.error(`[tiff generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | test | test-oracle | test-conformance-oracle`);
+    console.error(`usage: 📜️script.ts <generate|manifests> [--only <recipe-id>] [--out <dir>]`);
+    return 2;
+  }
+
+  const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
+  if (recipes.length === 0) {
+    console.error(`[dxf generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
     return 1;
   }
+
+  if (outDir !== null) mkdirSync(outDir, { recursive: true });
+  ensureBuilt();
 
   const manifests: Record<string, unknown>[] = [];
   let failed = 0;
   for (const recipe of recipes) {
     try {
-      manifests.push(generateOne(recipe, outDir));
-      console.error(`[tiff generator] ${recipe.id}${recipe.mutation ? ` (${recipe.mutation}/applied)` : ""}`);
+      const coordinate = FIXTURE_COORDINATES[recipe.id];
+      if (!coordinate) throw new Error(`Missing authored fixture coordinate: ${recipe.id}`);
+      const destination = outDir ?? join(HERE, "..", "..", coordinate[0], "🧪️tests/🧫️fixtures");
+      const manifest = recipe.kind === "single" ? await manifestForSingle(recipe, destination) : await manifestForPair(recipe, destination);
+      manifests.push(manifest);
+      console.error(`[dxf generator] ${recipe.id}${recipe.mutation ? ` (${recipe.mutation}/${recipe.outcome})` : ""}`);
     } catch (error) {
       failed += 1;
-      console.error(`[tiff generator] ${recipe.id} FAILED — ${(error as Error).message}`);
+      console.error(`[dxf generator] ${recipe.id} FAILED — ${(error as Error).message}`);
     }
   }
 
   if (command === "manifests") {
     process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
   }
-  console.error(`[tiff generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
+  console.error(`[dxf generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
   return failed > 0 ? 1 : 0;
 }
 /** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */

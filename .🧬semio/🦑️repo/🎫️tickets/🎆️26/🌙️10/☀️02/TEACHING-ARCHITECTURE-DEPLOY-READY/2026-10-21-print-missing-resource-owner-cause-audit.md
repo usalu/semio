@@ -1,0 +1,11 @@
+# Print Missing Resource Owner Cause Audit
+
+Bounded read-only actual Source/JSON/TOML text and filesystem metadata; no Source function evaluation, commands/tests or edits. Actual attempt2 missing target is semio-framework-value-derive-resources, raised by testCaseDependencies guard at test.mjs309 after global inference.
+
+The source test-framework-products-print-da77cb is an intentionally inferred virtual test project for persistent actual product owner 🧰️framework/🛍️products/📓️print. Static projectNameFor strips emoji/nonalphanumeric segments; independent ownerpath SHA256 first6 is da77cb. Actual print/🧪️tests contains authored cases. Its virtual naming is normal plugin behavior, not evidence of leaked ephemeral fixture.
+
+Actual print/📦️packages/🦀️rust/Cargo.toml has a production dependency semio-framework-value-derive-resources with explicit path to 🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust. That actual Cargo.toml declares package name semio-framework-value-derive-resources, proc-macro true, lib path ../../🦀️.rs and dependency native-build-compiler-resources. Actual library Source exists as ordinary file. Directory currently contains only Cargo.toml, no authored project JSON. The authored registry has no row for this root or package name (registry rawSHA23f82404e8b112ae63b04727993207aad90b1df749c870f403eddbd457ca49a6). Thus a real native dependency supplies a Cargo fallback name that global project map cannot find; exact canonical project naming policy remains owner responsibility.
+
+Static nativeInputsFor153-175 explicitly resolves native dependency roots, prefers authored project JSON.name else cargoPackage.name, and emits nativeSources projects list. testCaseDependencies297-310 then requires each emitted target in context.projects and refuses missing identity. This refusal is consistent with persistent missing project/registry admission. It does not justify dropping dependency, weakening guard or excluding the real print test owner.
+
+No broad recursive Source scan was used. Root Cargo text matching is supporting metadata only; no full compiler graph or selected fixture execution proved. Registry may change after this observation. Coordinate HighCargo substantive schema-first ownership repair preserving83/guest8/prefixown6 and this guard.

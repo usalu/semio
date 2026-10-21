@@ -331,7 +331,7 @@ fn replace_fixture_preserves_live_camera() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
         synapses: vec![],
-        layout: protocol::value::ordered::OrderedMap::new(),
+        layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     assert_eq!(host.host_snapshot.camera.x, 120.0);
     assert_eq!(host.host_snapshot.camera.y, -45.0);

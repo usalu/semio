@@ -62,3 +62,20 @@ fn original_fallible_wire_copy_retains_exact_performed_prefix_and_same_physical_
  decoder.cancel();let(_,close)=observe(||decoder.close_step(grant).unwrap());let(received,progress)=decoder.take_receipt().unwrap();assert_eq!(received,grant);assert_eq!((close.requested_bytes,close.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(birth.requested_bytes,close.released_bytes);assert!(decoder.terminal_is_empty());let(_,drop)=observe(||std::mem::drop(decoder));assert_eq!((drop.requested_bytes,drop.released_bytes),(0,0));
  }
 }
+
+#[test]
+fn original_wire_retirement_selects_exact_buffer_release_and_terminal_drop(){
+ use semio_framework_value::retirement::{RetireOwned,RetirementStep};
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let rule=&law["retirement"];let p=&law["grant"];let n=|key:&str|p[key].as_u64().unwrap()as usize;let forward=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")};
+ for field in law["fields"].as_array().unwrap(){for cut in rule["cuts"].as_array().unwrap(){
+  let source=field["value"].as_str().unwrap().as_bytes();let mut decoder=RetainedWireFieldDecode::new(source,field["text"].as_bool().unwrap());
+  for _ in 0..cut.as_u64().unwrap(){decoder.take_receipt();if decoder.is_ready(){break;}decoder.advance(source,forward).unwrap();}
+  let capacity=decoder.output.as_ref().map_or(0,Vec::capacity);let expected=RetirementDemand{copy_bytes:rule["copyBytes"].as_u64().unwrap()as usize,capacity_bytes:rule["capacityBytes"].as_u64().unwrap()as usize,release_bytes:capacity,depth:rule["liveDepth"].as_u64().unwrap()as usize};let wrapper=decoder.retirement_birth_bytes().unwrap();
+  let(mut cursor,heap)=observe(||decoder.retirement());assert_eq!((heap.requested_bytes,heap.released_bytes),(wrapper,0));assert!(!cursor.terminal_is_empty());
+  for body in rule["bodies"].as_array().unwrap(){let(d,heap)=observe(||cursor.next_demand(body.as_u64().unwrap()as usize).unwrap());assert_eq!(d,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:expected.copy_bytes,maximum_capacity_bytes:expected.capacity_bytes,maximum_release_bytes:expected.release_bytes,maximum_depth:expected.depth};
+  for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:0,..grant}),(capacity>0).then(||RetainedCloneGrant{maximum_release_bytes:capacity-1,..grant})].into_iter().flatten(){let(step,heap)=observe(||cursor.close_step(denied));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cursor.next_demand(0).unwrap(),expected);}
+  let(step,heap)=observe(||cursor.close_step(grant));let RetirementStep::Progress(progress)=step else{panic!("funded original wire retirement must progress")};assert!(progress.fits(grant));assert_eq!(progress.released_bytes,capacity);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(cursor.terminal_is_empty());assert_eq!(cursor.next_demand(4096).unwrap(),RetirementDemand::default());
+  assert_eq!(cursor.terminal_release_bytes(),Some(wrapper));let(_,heap)=observe(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,wrapper));
+ }}
+}

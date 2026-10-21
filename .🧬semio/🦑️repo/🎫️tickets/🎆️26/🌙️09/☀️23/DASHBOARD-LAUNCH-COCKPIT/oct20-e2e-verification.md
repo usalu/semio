@@ -432,3 +432,111 @@ Current FS expected body roster is50 (10base+24management+12history+1encoder+1wo
 ## Current Sole Resolver Request
 
 Controls owns Root offline lock refresh94746. Its bounded primary log shows ordinary capacity queue only: by279seconds,3584MB needed,8659MB spare above6553MB floor, host load37.19 above the configured ceiling,1running and0ahead. No Cargo body/lock result exists at this observation. Memory availability alone is not admission; no floor, queue, reserve or foreign process was modified. Root filesystem53 and Source34 remain pending until genuine resolver whole settlement and exact tuple review. Current curated attribution has744paths,max193UTF16,58intentionalabsences,0AGENTS/0generatedentries.
+
+Fresh all-ready request28597 uses native managed repo cargo Root update --workspace --offline, log `🗑️generated/e2e-selector-root-lock-registered.log`, artifacts slr2. At178seconds owner reports capacity-only, queue2ahead→0ahead,1running/load30.87; no Cargo body or publication. Canonical probe registration and all final reviewed source/manifest/plan inputs are frozen. Current exact attribution747paths/max193UTF16/58intentionalabsences; no AGENTS/generated entries. This is still pending resolution and runtime acceptance.
+
+
+## 21 October — Current Filesystem Runtime Gate
+
+Actual repository-owned process35120 settled with exit0 on21October2026. The current full filesystem library compiled in2.12seconds and ran53 tests:53passed,0failed,0ignored,0filtered,30.74seconds. This supersedes the earlier87435 compile-only refusal after the precise `last.take()` ownership repair. The actual roster includes browser/buffer/worker, segmented recovery/history, two-chain-walk paging counters and18sealed-record callback cuts. One existing unused `remove_empty_in` warning remains.
+
+Evidence: `🗑️generated/e2e-filesystem-segmented-history-hsg3.log`, artifacts `🗑️generated/hsg3`. Whole settlement was observed through the owned execution API, not inferred from the trailing progress event. MacOS runtime only; Windows/Linux checks, Source34, value lifecycle matrix, canonical installation and installed journeys remain pending. Native compiler custody was handed to Controls after actual settlement; selected source remains frozen for the concurrent Source21.
+
+
+## Final Developer Entry Reread
+
+Fresh devcontainer configuration has no IDE customization/launch block and enters the native bootstrap before repository-owned lifecycle targets. Its `vscode` account paths are the upstream container user, not an IDE launch dependency; they are retained. Build skill routes human controls through dashboard metadata and agent execution through declared owners, forbids IDE launch/task/solution/workspace assets, and requires physical custody for recovery. Existing quick_validate was launched through repository-owned exec60894 and remains capacity-queued; document reread is not validator/runtime proof.
+
+
+## Source21 Live Presentation Observation
+
+At2026-10-21T01:00Z the p21c log continued genuine inference/selected closure and had163918bytes. Plain running-frame counts in that partial snapshot: [["build:projects",182],["build:selected-compile-closure",154],["build:selected-declaration",112],["build:selected-native-closure",105],["build:selected-command-sources",100],["build:selected-catalog-targets",97],["build:modules",85],["build:selected-source-inputs",73],["build:selected-normalization",60],["build:selected-native-preparation",60],["build:selected-source-closure",60],["build:selected-compile-imports",44]]. These finite observed names include progress families outside the current five-frame selected-stage policy. This is a live presentation observation, not a new test failure or authorization to edit selected inputs before whole settlement. High received the observation; retain authority callbacks and review presentation only at the next quiet boundary.
+
+
+## Build Skill Validator Attempt60894
+
+Actual repo-owned exec60894 settled whole1 before Python validator execution. After host-capacity admission, requireBuildGraphModuleAuthorityV1 refused changed loaded implementation (`70a9136f68374f09ff95f69704f10b5e84d5567662fa05f9aa7fc4d65984b035` to `b9552c6083e883e4e782de14a3f355f6a15a44a22ddcf22f78c642bdaab4bed3`), publication unchanged `a4e8db13331728264e4ad98f5838437b86381a358215ac35c33007741a75479b`. Root selected sources were frozen; no peer ownership or cause is inferred. Retain guard unchanged and retry genuine declared operation after current source work settles. Log: `🗑️generated/e2e-build-skill-validation.log`. Validator remains pending.
+
+
+## Graph Authority Boundary Reread
+
+Fresh graphModuleAuthorityV1 hashes an explicit finite list of implementation/schema modules and policy declarations; ticket report/output paths are not in that list. This bounded source reread does not identify which input changed during60894 and does not justify disabling its current-instance guard. Retain actual refusal and repeat on settled selected inputs.
+
+
+## Actual Local Cross-Target Boundary
+
+See oct21-cross-target-capability.md. Windows30084 whole101 is missingstd capability evidence; Windows/Linux execution and source-branch checks remain unmet. Preserve exact sealed host+two-wasm policy.
+
+
+## Current Quiet Compiler Repairs
+
+Controls19181 RootOS wholelib attempt settled101 before test bodies: replication retained wire cursor omitted required RetirementCursor::next_demand. Low reviewed exact concrete-selector delegation under existing private cancelled/drained constructor invariant. Controls is adding an actual neutral/schema/SQLite-checked lifecycle law and explicit owning framework wire wholelib gate, separately from original16owners/69 advertised triples. The earlier retained-map InsertState visibility mismatch is corrected at its existing parent-only boundary; neither prior compiler result is a test pass.
+
+At01:07:48Z bounded post-refusal graph-input digest comparison observed the admission schema changed since the01:03capture; no writer identity or reason inferred. This supports preserving Source current-instance checks and retrying genuine operations; no snapshot publication or shared cache content was changed by Root.
+
+
+## Skill Validator Retry92363
+
+Actual owned92363 settled whole1 before validator body. Primary changed to `Bounded physical Source revision required` through revision.capture/current → argument schema import. Exact pre/post25-point observations identify ten changed implementation/schema files with01:15:39Z physical mtimes, including the revision reader; no actor is inferred. A fresh reader inspection shows current() recaptures its own module with the originally loaded byteLength, so a grown replacement can hit this bound before the later stale-reader comparison. This is actual source-change guard evidence, not a validator pass, new quota permission or proof that the requested argument schema itself exceeded65536bytes. No shared runtime or receipt was mutated. Logs: `🗑️generated/e2e-build-skill-validation-v2.log`, `e2e-build-skill-v2-authority-before.json`, `e2e-build-skill-v2-authority-after.json`.
+
+Read-only compact peer chat snapshot revision14 records its own source-change refusal/no tests and current scoped retry preparation. No message was sent to that chat. This does not identify writers or resource holders.
+
+
+## Scoped Concurrent Value Repairs
+
+High examined exact Source21 inputs and inference branches: default/^default/testEnv/reads plus invocation; named reads is only the filesystem domain, nxdefault covers processprojectRoot/sharedGlobals, no implicit/native package dependency enumeration for the freshness Source branch, and no declared ValueRetirement Rust body overlap. Existing Value-only Rust repairs may therefore proceed during the admitted Source run while keeping manifests, locks, filesystem and commonJS frozen; strict current-instance guards remain authoritative.
+
+Low reviewed the existing firstparty PageAllocation-backed reserve port needed by two genuine fault-injection laws. Exposing it as a deliberate public allocator-policy interface requires verifying sufficient actual capacity after an apparently successful policy returns, before Vec.push can allocate outside recorded accounting. Controls is including under-reserving as well as excess-policy laws; no external runtime dependency or synthetic receipt is introduced.
+
+
+## Active Resolver and Current Source Wave
+
+Standalone journey workspace had no Cargo.lock at preflight. Genuine repo-owned generate-lockfile request61235 launched with exact journey manifest, jlk1/e2e-journey-workspace-lock-jlk1.log; it remains capacity-queued and has not authored a lock or established resolution success. Source61470 reached full1038 inference and ordinary build:refresh, still no primary/test body/whole. Root validator5944 remains genuine full graph inference, not yet Python validation. No runtime pass follows from these active phases.
+
+
+## Genuine Standalone Journey Lock61235
+
+Actual repository-owned resolver61235 settled whole0 after ordinary capacity admission. Cargo updated its index and resolved41 additional packages (42 lock rows including the local root) against the exact standalone journey manifest; actual lock was absent at preflight. {"process":61235,"exit":0,"path":"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.lock","bytes":9208,"sha256":"a8dfbaf524082987c46780c5e00d975a68efd5dc3977101d29a7179b1af95c4b","packages":42,"compilerBodies":0,"testBodies":0}. This is genuine lock resolution only; no compiler/test body or installed journey is claimed. Log `🗑️generated/e2e-journey-workspace-lock-jlk1.log`; source Cargo.lock is retained and attributed in Root inventory. Rust slot released to Controls after actual terminal.
+
+
+## Editor Text Input Source Reread
+
+Actual terminal on_paste forwards a document paste as one TUI event. The Textarea editor normalizes/filter text once, computes selection, and applies a single String::replace_range through the bounded reversible Edit path; it does not insert pasted document characters one at a time. Native file-query paste paints once after its256-byte query bound. The editor source fixes maximum document1048576bytes, history16777216bytes/4096events and preserves observed CRLF choice. This source reading is not a runtime timing, input-ingress-bound, grapheme or installed journey pass; current registered native/PTY/load gates remain authoritative. No source was changed by this reread.
+
+
+## Source Diagnostic Restart Decision
+
+High61470 reached four explicit current-owner candidate refreshes over45minutes without Bun bodies or primary. Existing owner SEMIO_BUILD_TRACE_AUTHORITY=true emits a bounded closed graph-retry diagnostic; no source or guard mutation is needed. Root released High to cancel ONLY its exact owned61470 via normal terminal control, observe actual whole and retain it as owned cancellation rather than natural failure/pass, then launch the same declared target with trace and fresh artifacts/snapshot. Root55876 producer check and Controls69748 supplemental request remain separate and untouched. This decision is based on repeated actual opaque invalidation and uses the existing enforcing path; no holder identity, stale-grant cleanup, private store or bypass is inferred.
+
+
+## Native Dashboard Controller Handoff
+
+Controls83719 actually settled whole101 before RootOS bodies. Precise duplicateTransactionRef and pack sibling visibility compiler errors were resolved; next actual closure exposes replication-history21 and mutation-retained4 compiler errors. Controls/Low are diagnosing semantic imports/dependencies/stable-output wiring while holding Cargo manifests/locks/toolchain for Root shortgate. No RootOS pass is inferred.
+
+Root now owns sole Native TTY6451 for actual terminal source_ controller gate, exact existing product Cargo manifest/prototype shared store/--locked/128MiB stack, log 🗑️generated/e2e-terminal-source-controller-tdc1.log and tdc1 artifacts. It is launched, not a compiler/body/pass result. Terminal/Value selected inputs stay fixed; unrelated isolated Rust owner preparation may continue. Explicit language gate follows actual settlement, then compiler is released to Controls. Source45514 and Root55876 are separate Source owners and untouched.
+
+
+## Controller6451 Actual Lock Refusal
+
+Exact ownedTTY6451 naturally settled whole1, managed Cargo child101, before compiler/test bodies. Primary explicitly names current Root Cargo.lock: cannot update with--locked. This is not a terminal compiler error or nine-law result. Paired pre-resolution source/lock metadata/package-row observations are retained in generated/e2e-terminal-lock-before.json without copying tracked Source into the ticket. Root returned sole Native to Controls for coherent reviewed dependency/Output repairs and genuine owned resolution; language gate is held rather than repeating the same known lock refusal. --locked, existing store and Original admission remain intact. Source45514 may truthfully refresh/refuse actual overlapping input change; no guard bypass or other-task freeze is introduced.
+
+
+## Source45514 Actual Hold-And-Wait Refusal
+
+Exact owned45514 naturally settled whole1 before tests. Primary SEMIO_LEASE_ORDER retained an exclusive repository-graph-facts shard5 (rank3) while requesting shared native-fixed-image .cache/b/g (rank6); enforcing hold-and-wait fired after15.719seconds. Reported blocker PID is an observation only, without task attribution or permission to signal it. No quota values or Source pass were produced.
+
+High and Low traced the current storage helper. An earlier cached layout suggested graphstore open itself was under factsEX, but fresh physical read corrects that: current graphstore SH is already opened before factsEX. Remaining initial/forced maintenance calls still occur under factsEX and open the graph partition. Preserve the peer opening order. The owner is authoring a bounded outside-EX maintenance/retry loop: unwind ledger/facts/store before a fresh maintenance attempt, retain before/final Source checks and prevent body replay. No guard/rank/budget waiver is authorized or needed by this diagnosis. Actual fix/review and genuine nextSource21 result remain pending.
+
+## 21 October, Current Terminal Compiler Admission
+
+Root process 72790 ended with actual exit 101 after genuine paired workspace resolutions admitted the selected locked Cargo compiler. No test body ran. Exactly two terminal libtest errors remained: an obsolete wrapper referenced the moved Source-only scenario proof and an explicit locale fixture attempted to convert an &str directly into Option<String>. The execution owner corrected the two existing test leaves; independent review confirmed the actual behavior laws remain mounted and the locale has no fallback. Root process 53385 is the actual retry, using the same selected owner, filter, shared store and locked arguments. Its result remains pending.
+
+Root process 53385 ended with actual exit 101: compilation succeeded in 7.75 seconds; nine controller bodies ran in 1.16 seconds, seven passed and two failed, zero ignored and 72 unrelated tests filtered. The retained history list/inspection token assertion and committed rename editor read-only assertion failed. Their current expectations remain the repair target; this is not a partial acceptance. Native slot handed to Controls for genuine pack workspace resolution/downstream compiler while the execution owner repairs terminal behavior.
+
+## 21 October, Controller and Language Runtime Frontiers
+
+Root 78296: actual whole exit 101, compile 42.97 seconds, nine controller bodies in 1.62 seconds, eight passed and one failed, zero ignored/72 filtered. The real Load row reset passes. History submission and backend active-change assertions pass, but the final compound revision/first-row assertion fails. The notice alone does not prove stale revision; exact revision and canonical retained-row membership/order must be isolated before a production fix.
+
+Root 17454: actual whole exit 101, compile 6.75 seconds. Nine preference language bodies ran: eight passed, one failed, zero ignored/16 filtered, 0.12 seconds. Cargo stopped after this first package, so eight terminal language laws did not run. Independent declaration/Rust/Intl review identifies the LANGUAGE=de-only expected-en vector as obsolete: declared LC_ALL/LC_MESSAGES/LANG names none here and no default returns null. Product logic is not changed without evidence. Native slot released to Controls; exact affected sequence corpus recovery remains separate.
+
+High 80585 ended by genuine owned PTY cancellation with actual whole exit 1 and Original interruption. No Source test body ran. Three actual observed-fact retries and subsequent shared-image queue are retained; no source guard or lease waiver was used. The released Source boundary permits required GUI escape/load assertion/performance fixes before a single subsequent current-source producer.

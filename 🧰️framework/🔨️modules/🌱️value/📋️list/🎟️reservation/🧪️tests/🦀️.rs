@@ -21,3 +21,28 @@ fn original_paged_list_reservation_preserves_every4096_pointer_and_partial_final
  let mut partial=PagedList::<Row,4096>::empty();let mut born=0;while partial.capacity()<13{let(p,h)=observe(||partial.reserve_capacity_one_funded(13,g).unwrap());assert!(p.fits(g));assert_eq!(h,(p.retained_capacity_bytes,0));assert_eq!(p.copied_bytes,0);born+=h.0;}for key in 0..13{let mut input=Some(Row{key,body:[0;88]});partial.adopt_reserved(&mut input).unwrap();}let pointer=partial.backing_ptr(0).unwrap();let(denied,h)=observe(||partial.reserve_one_funded(g));assert!(denied.is_err());assert_eq!(h,(0,0));assert_eq!(partial.backing_ptr(0),Some(pointer));assert_eq!(partial.capacity(),13);assert_eq!(born,close(&mut partial,g));let(_,h)=observe(||drop(partial));assert_eq!(h,(0,0));
  let mut too_wide=PagedList::<[u8;65537],1>::empty();let(p,h)=observe(||too_wide.reserve_one_funded(g).unwrap());assert_eq!(p.copied_bytes,0);assert_eq!(h,(p.retained_capacity_bytes,0));let born=h.0;let(p,h)=observe(||too_wide.reserve_one_funded(g).unwrap());assert_eq!(p,Default::default());assert_eq!(h,(0,0));assert_eq!(too_wide.capacity(),0);assert_eq!(born,close(&mut too_wide,g));let(_,h)=observe(||drop(too_wide));assert_eq!(h,(0,0));
 }
+
+struct NoMetadataAllocation;
+unsafe impl PageAllocation for NoMetadataAllocation{fn reserve<T>(_:&mut Vec<T>,_:usize)->Result<(),std::collections::TryReserveError>{Ok(())}}
+struct PartialPayloadAllocation;
+unsafe impl PageAllocation for PartialPayloadAllocation{fn reserve<T>(owner:&mut Vec<T>,slots:usize)->Result<(),std::collections::TryReserveError>{owner.try_reserve_exact(slots/2)}}
+
+#[test]
+fn allocation_policy_refuses_empty_metadata_without_hidden_push_allocation(){
+ let mut owner=PagedList::<u64,4>::empty();let demand=owner.next_allocation_bytes().unwrap();let(error,heap)=observe(||owner.reserve_one_using::<NoMetadataAllocation>(demand).unwrap_err());assert_eq!(error.kind,PagedListRefusalKind::InvariantViolated);assert_eq!(error.allocated_bytes,0);assert_eq!(heap,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),(0,0,0));assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
+}
+
+#[test]
+fn allocation_policy_quarantines_partial_payload_until_exact_funded_release(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["allocationPolicy"];let row=&policy["cases"][1];assert_eq!(size_of::<u64>(),policy["elementBytes"].as_u64().unwrap()as usize);let mut owner=PagedList::<u64,4>::empty();let metadata=owner.next_allocation_bytes().unwrap();let(p,heap)=observe(||owner.reserve_one(metadata).unwrap());assert_eq!(heap,(p.allocated_bytes,0));let root=owner.root.as_ptr();let requested=owner.next_allocation_bytes().unwrap();assert_eq!(requested,policy["requestedSlots"].as_u64().unwrap()as usize*size_of::<u64>());
+ let(error,heap)=observe(||owner.reserve_one_using::<PartialPayloadAllocation>(requested).unwrap_err());let retained=row["retainedBytes"].as_u64().unwrap()as usize;assert_eq!(error.kind,PagedListRefusalKind::InvariantViolated);assert_eq!(error.allocated_bytes,retained);assert_eq!(heap,(retained,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),(0,0,metadata+retained));assert!(!owner.has_reserved_slot());assert_eq!(owner.root.as_ptr(),root);
+ let(error,heap)=observe(||owner.reserve_one(requested).unwrap_err());assert_eq!(error.allocated_bytes,0);assert_eq!(heap,(0,0));assert_eq!(owner.root.as_ptr(),root);assert_eq!(owner.next_release_allocation_bytes().unwrap(),retained);assert_eq!(owner.next_release_depth_demand().unwrap(),3);let(p,heap)=observe(||owner.release_empty_page(retained-1).unwrap());assert!(!p.progressed);assert_eq!(heap,(0,0));assert_eq!(owner.allocated_bytes(),metadata+retained);
+ let(p,heap)=observe(||owner.release_empty_page(retained).unwrap());assert!(p.progressed);assert_eq!(p.released_allocation_bytes,retained);assert_eq!(heap,(0,retained));assert_eq!((owner.capacity(),owner.allocated_bytes()),(0,metadata));assert_eq!(owner.next_release_depth_demand().unwrap(),2);assert_eq!(owner.root.as_ptr(),root);assert_eq!(close(&mut owner,grant()),metadata);assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
+}
+
+#[test]
+fn allocation_policy_partial_payload_hands_back_without_hidden_disposal(){
+ let mut owner=PagedList::<u64,4>::empty();let metadata=owner.next_allocation_bytes().unwrap();owner.reserve_one(metadata).unwrap();let requested=owner.next_allocation_bytes().unwrap();let(error,heap)=observe(||owner.reserve_one_using::<PartialPayloadAllocation>(requested).unwrap_err());let retained=error.allocated_bytes;assert_eq!(retained,2*size_of::<u64>());assert_eq!(heap,(retained,0));let mut parent=semio_framework_value_allocation_return::ParentAllocationReturn::<2>::try_new(65536,131072).unwrap();
+ let(p,heap)=observe(||owner.return_empty_page(&mut parent,0).unwrap());assert!(!p.progressed);assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),0);let(p,heap)=observe(||owner.return_empty_page(&mut parent,1).unwrap());assert!(p.progressed);assert_eq!(p.returned_allocation_bytes,retained);assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),retained);assert_eq!(owner.allocated_bytes(),metadata);assert_eq!(close(&mut owner,grant()),metadata);
+ let(_,heap)=observe(||parent.close_step(1,retained-1));assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),retained);let(_,heap)=observe(||parent.close_step(1,retained));assert_eq!(heap,(0,retained));assert!(parent.terminal_is_empty());let(_,heap)=observe(||drop((owner,parent)));assert_eq!(heap,(0,0));
+}

@@ -24,10 +24,10 @@ path = "../../🦀️.rs"
 semio-framework-tool-run = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

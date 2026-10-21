@@ -151,7 +151,7 @@ pub struct WindowTransientAuthority {
     pub generation: u64,
     pub snapshot: WindowTransientSnapshot,
     pending_snapshot:Option<WindowTransientSnapshot>,
-    retired_snapshots:semio_framework_value::retirement_queue::RetirementQueue,
+    retired_snapshots:semio_framework_value_retirement_queue::RetirementQueue,
 }
 
 #[doc(hidden)]

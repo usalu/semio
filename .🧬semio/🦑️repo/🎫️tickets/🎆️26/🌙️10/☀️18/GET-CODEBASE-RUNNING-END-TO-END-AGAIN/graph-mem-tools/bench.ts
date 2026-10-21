@@ -10,11 +10,11 @@ const applyOps=(text:string,ops:Op[],path:string)=>{let out=text;for(const {anch
 const scratchDir=(name:string)=>`(process.getBuiltinModule("fs").mkdirSync(${JSON.stringify(join(SCRATCH,name))},{recursive:true}),${JSON.stringify(join(SCRATCH,name))})`;
 const DEBUG=env.DEBUGEXPORT==="1";
 Bun.plugin({name:"graph-mem-patches",setup(b){
- b.onResolve({filter:/\/🧠️[^/]*\/🟨️\.mjs$/},args=>{const hit=Object.keys(newModules).find(k=>args.path.endsWith(k.split("/").slice(-2).join("/")));return hit?{path:newModules[hit]}:undefined;});
  b.onLoad({filter:/(?:inference\/[^/]*\/[^/]*|inputs\/[^/]*|observation\/[^/]*)\.mjs$/},async args=>{
  const key=Object.keys(opsByPath).find(k=>args.path.endsWith(k)),isInputs=args.path.endsWith("🏗️build/📥️inputs/🟨️.mjs");
  let t=await Bun.file(args.path).text();
  if(key)t=applyOps(t,opsByPath[key]!,key);
+ for(const staged of Object.values(newModules))t=t.replace(/"(?:\.\.\/)+🧠️memory\/🟨️\.mjs"/gu,()=>JSON.stringify(staged));
  if(DEBUG&&args.path.endsWith("👁️observation/🟨️.mjs"))t+=`\nexport const __debugV1={projectImages,originalInferencePublications,internedObservations,usedInference,settledReads,sourceAnalysisImages,loadObservations,blocksByIdentity,blocksByDigest,blocksWritten,projectComputations,clear(name){({projectImages,originalInferencePublications,internedObservations,usedInference,settledReads,sourceAnalysisImages,loadObservations,blocksByIdentity,blocksByDigest,blocksWritten,projectComputations})[name].clear();}};\n`;
  if(isInputs)t=t.replace('repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-lock-closures")',scratchDir("lock")).replace('repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures")',scratchDir("input"));
  return {contents:t,loader:"js"};});

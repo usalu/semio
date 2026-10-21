@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Leaving
 /// 👋️ An actor starts to leave: it lets go of its partner and walks to the nearer end of its perch when that is within three of its widths and nobody stands in the way, then fades; farther away, hemmed in or in the air, it fades where it is.
-pub(crate) fn leave(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn leave(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let kind = draft.kinds[index];
     release(draft, index, now);
     draft.stage.actors[index].leaving = true;

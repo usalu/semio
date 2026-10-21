@@ -15,7 +15,7 @@ FIX=e(0x1F9EB,"fixtures")
 def d(name): return SB_DIR+"/"+name
 LAYOUT=e(0x1F4D0,"layout"); IMAGES=e(0x1F5BC,"images"); PORTS=e(0x1F50C,"ports"); RECLAIM=e(0x267B,"reclaim"); ROOT=e(0x1F4C1,"root")
 GUARD=e(0x1F6E1,"guard"); PRELOAD=e(0x1F50C,"preload"); SHIMFS=e(0x1FA7B,"fs"); SHIMFSP=e(0x1FA7B,"fs-promises"); SHIMCP=e(0x1FA7B,"child-process")
-SCAN=e(0x1F50D,"scan"); LAW=e(0x2696,"law"); LEDGER=chr(0x1F4D2)+V+"ledger.json"; ORACLE=chr(0x1F40D)+V+"oracle.py"
+SHIMSQL=e(0x1FA7B,"sqlite"); SCAN=e(0x1F50D,"scan"); LAW=e(0x2696,"law"); LEDGER=chr(0x1F4D2)+V+"ledger.json"; ORACLE=chr(0x1F40D)+V+"oracle.py"
 NEW={
  "sb-protocol.json": d(JSON),
  "sb-schema.json": d(f"{SCHEMA}/{JSON}"),
@@ -30,6 +30,7 @@ NEW={
  "sb-shim-fs.ts": d(f"{GUARD}/{SHIMFS}/{IDX}"),
  "sb-shim-fsp.ts": d(f"{GUARD}/{SHIMFSP}/{IDX}"),
  "sb-shim-cp.ts": d(f"{GUARD}/{SHIMCP}/{IDX}"),
+ "sb-shim-sqlite.ts": d(f"{GUARD}/{SHIMSQL}/{IDX}"),
  "sb-scan.ts": d(f"{SCAN}/{IDX}"),
  "sb-test.ts": d(f"{TESTS}/{IDX}"),
  "sb-corpus.json": d(f"{TESTS}/{FIX}/{JSON}"),

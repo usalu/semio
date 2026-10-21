@@ -227,6 +227,7 @@
         ],
         "maximumDepth": 128,
         "maximumReferences": 65536,
+        "maximumLiterals": 4194304,
         "defaultInputs": [
           "default"
         ]
@@ -474,6 +475,117 @@
         },
         "upgradeNative": {
           "type": "boolean"
+        }
+      }
+    },
+    "GeneratedImportDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "importer": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "specifier": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "ImportResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specifier",
+        "suffix",
+        "source"
+      ],
+      "properties": {
+        "specifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suffix": {
+          "type": "string"
+        },
+        "source": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceInputScanGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "files",
+        "scans",
+        "matched",
+        "compileMatched",
+        "compileByTarget"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "patterns",
+              "compile"
+            ],
+            "properties": {
+              "patterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "compile": {
+                "type": "boolean"
+              },
+              "target": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "matched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "compileMatched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "compileByTarget": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     }

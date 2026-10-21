@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "project": "@semio-tech/framework-pack-rs",
+  "target": "test-inline-symbol-source",
+  "declaration": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📋️project.json",
+  "dispatcher": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+  "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+  "freshnessData": [
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🦀️.rs"
+  ],
+  "executionKind": "Source",
+  "sourceInputObservation": "freshness",
+  "runtimeSourceEntries": [
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts"
+  ],
+  "cache": false,
+  "outputs": [],
+  "forwardAllArgs": false,
+  "control": "existing owned Bun test helper, Original invocation.signal and capped30000ms, closed no args",
+  "typedCompiler": false,
+  "status": "physically registered and Low source-accepted; runtime unrun",
+  "requiredBodies": [
+    "retained inline symbols preserve original wire indices and independent canonical UTF8",
+    "inline source handback separates bounded aliases from exact caller wire retirement"
+  ]
+}

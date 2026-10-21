@@ -4,7 +4,7 @@ use semio_framework_dsl_record::{BorrowedRecordSpec,BorrowedShape,RecordFields};
 use semio_framework_value::{DslValue, Number, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of};
-use crate::intrinsic::{DocumentDriver,Driver};
+use crate::{RetainedDocumentDriver,RetainedValueDriver};
 #[path="📦️document/🦀️.rs"]
 mod document_cursor;
 use document_cursor::RecordCursor;
@@ -39,7 +39,7 @@ impl RetainedRecordReceiving{
  /// 📦️ Reuses complete Pack anchor, catalog, verified body and referenced-chunk receiving under one original source.
  pub fn admit_document(source:&[u8],range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
   if range.0>range.1||range.1>source.len(){return Err(invalid("original Pack Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Pack Record exceeds declared file maximum"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
-  let maximum=usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX);let frames=usize::from(limits.max_depth)+1;let cursor=RecordCursor::Document(DocumentDriver::record(limits,range.1-range.0,maximum).map_err(pack)?);
+  let maximum=usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX);let frames=usize::from(limits.max_depth)+1;let cursor=RecordCursor::Document(RetainedDocumentDriver::record(limits,range.1-range.0,maximum).map_err(pack)?);
   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
  }
  fn validate(&self,source:&[u8])->Result<(),ValueError>{if self.source!=(source.as_ptr()as usize,source.len()){return Err(invalid("original Record source identity changed"))}Ok(())}
@@ -129,7 +129,7 @@ impl RetainedRecordReceiving{
  }
  pub fn is_ready(&self)->bool{self.complete&&!self.closing&&self.owned.output.is_some()}
  pub fn take_into(&mut self,output:&mut Option<RecordValue>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=RetirementDemand{copy_bytes:size_of::<RecordValue>(),depth:1,..Default::default()};if !self.is_ready()||output.is_some()||!funded(grant,demand){return Ok(Default::default())}*output=self.owned.output.take();Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})}
- pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<Owned>(),depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:owned.next_copy_byte_demand()?,capacity_bytes:owned.next_capacity_byte_demand(body)?,release_bytes:owned.next_release_byte_demand()?,depth:owned.next_depth_demand()?})}}self.cursor.source_close_demands().map_err(pack)}
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<Owned>(),depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return owned.next_demand(body)}}self.cursor.source_close_demands().map_err(pack)}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
   if !self.closing{let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let original=std::mem::take(&mut*self.owned);match ControlledRetirement::new(original){Ok(owned)=>self.retiring=Some(owned),Err((error,original))=>{*self.owned=original;return Err(error)}}self.pending=None;self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
@@ -145,6 +145,7 @@ impl semio_framework_value::retirement::RetireOwned for RetainedRecordReceiving{
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for ReceivingRetirement{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.depth)}

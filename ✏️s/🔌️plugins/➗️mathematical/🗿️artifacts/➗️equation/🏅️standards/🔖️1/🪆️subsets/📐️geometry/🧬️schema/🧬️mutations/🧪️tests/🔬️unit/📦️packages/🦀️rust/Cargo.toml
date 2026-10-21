@@ -42,7 +42,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-mathematical-equation-mut-family = { path = "../../../../../../../🕸️graph/🧬️schema/🧬️mutations/➕️create-node/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-editor = { path = "../../../../../../../✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-s-artifact-mathematical-equation-examples = { path = "../../../../../../../✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust" }

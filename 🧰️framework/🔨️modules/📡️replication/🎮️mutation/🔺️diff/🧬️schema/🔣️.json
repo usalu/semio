@@ -7,7 +7,8 @@
     "rows",
     "expected",
     "expectedInverse",
-    "composition"
+    "composition",
+    "fragmentCapabilities"
   ],
   "properties": {
     "version": {
@@ -70,6 +71,41 @@
               "object",
               "null"
             ]
+          }
+        }
+      }
+    },
+    "fragmentCapabilities": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "copy",
+          "depth",
+          "admitted"
+        ],
+        "properties": {
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "admitted": {
+            "type": "boolean"
           }
         }
       }

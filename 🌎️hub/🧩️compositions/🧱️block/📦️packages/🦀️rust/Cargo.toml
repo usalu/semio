@@ -36,7 +36,6 @@ semio-s-artifact-block-3d-viewer = { workspace = true }
 semio-s-artifact-block-3d-model = { workspace = true }
 semio-s-artifact-block-3d-editor = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-s-artifact-block-2d = { workspace = true }
 semio-s-artifact-block-3d = { workspace = true }

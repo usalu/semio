@@ -35,6 +35,7 @@ semio-framework-pack-format = { path = "../../../../📐️format/📦️package
 semio-framework-pack-record-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-paged-text = { path = "../../../../../🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
 [dev-dependencies]

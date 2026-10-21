@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ordinary",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": null
+      }
+    },
+    {
+      "id": "directory",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": false,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": "not-regular"
+      }
+    },
+    {
+      "id": "symbolic-observation",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": true,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": "symbolic-link"
+      }
+    },
+    {
+      "id": "unlinked",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 0,
+        "sameDevice": true,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": "link-count"
+      }
+    },
+    {
+      "id": "hardlinked",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 2,
+        "sameDevice": true,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": "link-count"
+      }
+    },
+    {
+      "id": "different-device",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": false,
+        "bytes": 8192,
+        "maximumBytes": 32768,
+        "reason": "device"
+      }
+    },
+    {
+      "id": "too-large",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 32769,
+        "maximumBytes": 32768,
+        "reason": "extent"
+      }
+    },
+    {
+      "id": "exact-boundary",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 32768,
+        "maximumBytes": 32768,
+        "reason": null
+      }
+    },
+    {
+      "id": "nonempty-wal",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite-wal",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 1,
+        "maximumBytes": 0,
+        "reason": "extent"
+      }
+    },
+    {
+      "id": "empty-wal-regular-observation-only",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite-wal",
+        "regular": true,
+        "symbolicLink": false,
+        "links": 1,
+        "sameDevice": true,
+        "bytes": 0,
+        "maximumBytes": 0,
+        "reason": null
+      }
+    },
+    {
+      "id": "first-failed-predicate",
+      "observation": {
+        "version": 1,
+        "leaf": "optional.sqlite",
+        "regular": false,
+        "symbolicLink": true,
+        "links": 2,
+        "sameDevice": false,
+        "bytes": 32769,
+        "maximumBytes": 32768,
+        "reason": "not-regular"
+      }
+    }
+  ]
+}

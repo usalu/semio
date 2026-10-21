@@ -44,8 +44,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-note-note-delete-blocks = { path = "../../../../../../🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/📦️packages/🦀️rust" }
 semio-s-artifact-note-note-diff = { path = "../../../../../🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-note-note-kinds-catalog = { path = "../../../../../🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/📦️packages/🦀️rust" }
@@ -66,6 +64,8 @@ semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-actor = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }
